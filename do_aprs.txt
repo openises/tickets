@@ -1,0 +1,32 @@
+function do_aprsX() {	//	http://db.aprsworld.net/datamart/csv.php?call=MSR% 
+		
+	$query	= "SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE `mobile` = 1";
+	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	while ($row = stripslashes_deep(mysql_fetch_array($result))) {			// look at EACH callsign
+		$url = "http://db.aprsworld.net/datamart/csv.php?call=". $row[callsign];		
+		$raw="";		
+		if ($fp = @fopen($url, r)) {		
+			while (!feof($fp)) $raw .= fgets($fp, 128);		
+				fclose($fp);		
+				}		
+		
+		for ($i=0;$i<count($data);$i++) {		
+			$fields = explode (",",  $data[$i] , 50 );		
+			$fields = str_replace (  '"',  '',  $fields);		// drop quotes		
+			$fields = trim_deep($fields);		
+			$fields = mysql_real_escape_string_deep($fields);
+			}
+	
+		if (count($fields) == 15) {				// sanity check
+			$query = "DELETE FROM `tracks` WHERE `source` = " . $row[callsign] . " AND `updated` < NOW() - INTERVAL 30 MINUTE;"	// last position this callsign
+			
+			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	
+			$query  = "INSERT INTO $GLOBALS[mysql_prefix]tracks (`packet_id`,  `source`,  `latitude`,  `longitude`,  `course`,  `speed`,  		
+				`altitude`,  `symbol_table`,  `symbol_code`,  `status`,  `closest_city`,  `mapserver_url_street`,  `mapserver_url_regional`,  		
+				`packet_date`,  `updated`) VALUES ( '$fields[0]',  '$fields[1]',  '$fields[2]',  '$fields[3]',  '$fields[4]',  '$fields[5]',  '$fields[6]',  		
+				'$fields[7]',  '$fields[8]',  '$fields[9]',  '$fields[10]',  '$fields[11]',  '$fields[12]',  '$fields[13]', NOW())";		
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);		
+			}		// end if (count($fields) == 15)
+		}		// end while ($row =...)
+	}		// end function do_aprs() 

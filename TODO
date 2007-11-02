@@ -1,0 +1,19 @@
+TODO for PHP Ticket
+-------------------
+
+note: some of these are just suggestions, no guarantee for implementation
+[x] = importance/likely to get fixed first
+
+[5] POP/IMAP support for importing email and convert to tickets
+[3] file attachment support
+[4] seperate contact list, link contacts to tickets
+[3] "email ticket" option for emailing the ticket data
+[2] automatic purging of tickets after a date (setting)
+[2] fix all do_error() output to format: "file.php::function($parameters)"
+[3] restrict all user access to tickets if they're only allowed to see their own,
+    meaning printing functions etc has to check for this restriction
+[2] restrict settings to string/bool values etc for bugfree preferences
+[1] create backends for postgresql/others?
+[3] improved search capabilities
+[2] maxlengths for input boxes to prevent sql errs
+[2] associate ticket with others (follow-ups) with custom [ticket#1] tags?

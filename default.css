@@ -1,0 +1,40 @@
+BODY { BACKGROUND-COLOR: #EFEFEF; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+INPUT { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+SELECT { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
+/* TD { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none; VERTICAL-ALIGN: top;  } */
+TD { background-color: inherit; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none; VERTICAL-ALIGN: top;  }
+.print_TD { BACKGROUND-COLOR: #FFFFFF; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.td_label { background-color: inherit;FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.td_mand { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #CC0000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.td_data { background-color: inherit;FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+#td_header { FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.td_link { FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; }
+.header { FONT-WEIGHT: bold; FONT-SIZE: 12pt; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none } 
+.text { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.warn { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #CC0000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.severity_high { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #C00000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.severity_medium { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #008000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_green { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #009000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_orange { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #EBA500; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_blue { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #0000E0; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_red { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #C00000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_small { FONT-WEIGHT: normal; FONT-SIZE: 9px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_medium { FONT-WEIGHT: normal; FONT-SIZE: 16px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.text_big { FONT-WEIGHT: normal; FONT-SIZE: 18px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.found  { BACKGROUND-COLOR: #ffffff; COLOR: #000000;}
+#detailmap, #mapDiv { font: normal 10px verdana; }
+#detailmap 	{width: 300px; height: 120px; border:1px solid gray; }
+#infowin 	{width:	300px; overflow:auto; } 
+/*.even 	{ background-color: #DEE3E7;} */
+/*.odd   	{ background-color: #EFEFEF; } */
+tr.even 	{ background-color: #DEE3E7;}
+tr.odd 	{ background-color: #EFEFEF;}
+tr.plain 	{ background-color: #FFFFFF;}
+td {cursor: pointer; cursor: hand;} 
+.hovermenu ul{font: bold 13px arial;padding-left: 0;margin-left: 0;height: 20px;}
+.hovermenu ul li{list-style: none;display: inline;}
+.hovermenu ul li a{padding: 2px 0.5em;text-decoration: none;float: left;color: black;background-color: #FFF2BF;border: 2px solid #FFF2BF;}
+.hovermenu ul li a:hover{background-color: #FFE271;border-style: outset;}
+/* Apply mousedown effect only to NON IE browsers */
+html>body .hovermenu ul li a:active{ border-style: inset;}

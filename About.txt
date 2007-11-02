@@ -1,0 +1,20 @@
+This archive contains a total of 112 Google Map markers. I
+was rather surprised that the base set of indexed markers
+supplied by Google was so small, and only indexed by letter.
+So I created my own set, numbered from zero to ninty-nine.
+The base image is the same as the Google default marker, so
+the default drop-shadow image works fine.
+
+Their are two sets of the first ten markers (zero through
+nine), one with a leading zero, and one without (with the
+single digit centered in the marker). The naming convention
+should make it simple to tell which set is which.
+
+This archive also includes the default "dot" marker, simply
+to avoid having to code a different URL when you want a
+non-indexed marker. And I included the blank marker I used
+as the basis for all the numbered markers, in case you want
+to create some of your own. I used the Arial Narrow font for
+the numbers, which seemed to work well.
+
+Questions? Contact me at webmaster@LocusPrime.net
