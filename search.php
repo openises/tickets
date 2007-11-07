@@ -15,6 +15,11 @@ $evenodd = array ("even", "odd");
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
+function ck_frames() {		//  onLoad = "ck_frames()"
+	if(self.location.href==parent.location.href) {
+		self.location.href = 'index.php';
+		}
+
 <?php
 	print "var user = '";
 	print $_SESSION['user_name'];
@@ -36,7 +41,7 @@ function validate(theForm) {
 <SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 </HEAD>
 
-<BODY>
+<BODY onLoad = "ck_frames()">
 <?php 
 	$post_frm_query = (array_key_exists('frm_query', ($_POST))) ? $_POST['frm_query']  : "" ;
 

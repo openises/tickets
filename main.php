@@ -41,7 +41,7 @@
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>
 
-<BODY onunload="GUnload()">
+<BODY onload = "if(self.location.href==parent.location.href) {self.location.href = 'index.php'; }" onunload="GUnload()">
 <?php
 	$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		"";
 	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			"";
@@ -63,5 +63,6 @@
 	else {
 		list_tickets();
 		}
+
 ?>
 </BODY></HTML>

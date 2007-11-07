@@ -16,6 +16,12 @@
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT>
+function ck_frames() {		//  onLoad = "ck_frames()"
+	if(self.location.href==parent.location.href) {
+		self.location.href = 'index.php';
+		}
+	}		// end function ck_frames()
+	
 	if(document.all && !document.getElementById) {		// accomodate IE							
 		document.getElementById = function(id) {							
 			return document.all[id];							
@@ -40,7 +46,7 @@
 		}				// end function validate(theForm)
 	</SCRIPT>
 	</HEAD>
-<BODY>
+<BODY onLoad = "ck_frames()">
 <?php 
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
@@ -97,8 +103,11 @@
 		show_ticket($row['ticket_id']);
 		}
 	else if ($get_action == 'edit') {		//get and show action to update
-		$result = mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]patient WHERE id='$_GET[id]'");
-		$row = mysql_fetch_array($result);
+		$query = "SELECT * FROM $GLOBALS[mysql_prefix]patient WHERE id='$_GET[id]'";
+		$result = mysql_query($query);
+		$row = stripslashes_deep(mysql_fetch_array($result));
+//		dump($row);
+//		dump(stripslashes($row['description']));
 ?>
 		<FONT CLASS="header">Edit Patient Record</FONT><BR /><BR />
 		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">

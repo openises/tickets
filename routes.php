@@ -108,6 +108,11 @@ $_GET = stripslashes_deep($_GET);
 		return j;
 		}		// end function min()
 
+	function ck_frames() {		// onLoad = "ck_frames()"
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
 </SCRIPT>
 <?php
 	$query = "SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE ID=" . $_GET['ticket_id'];			// get Incident location
@@ -115,7 +120,7 @@ $_GET = stripslashes_deep($_GET);
 	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
 	unset ($result);
 ?>
-	<BODY onunload='GUnload()'>
+	<BODY onLoad = "ck_frames()" onunload='GUnload()'>
 	<TABLE ID='outer' BORDER = 0>
 	<TR><TD VALIGN='top'><DIV ID='side_bar' STYLE='width: 400px'></DIV>
 		<BR>
@@ -306,6 +311,7 @@ $_GET = stripslashes_deep($_GET);
 //				}
 //			});				// end GEvent.addListener() "click"
 <?php
+		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 	
 		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -316,7 +322,7 @@ $_GET = stripslashes_deep($_GET);
 	
 					$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 					$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($row['name'], 48) . "</TD></TR>";
-					$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten($row['description'], 32) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='odd'><TD>Status:</TD><TD>" . $row['status'] . " </TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";

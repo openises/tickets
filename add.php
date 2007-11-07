@@ -17,16 +17,19 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 
 		$frm_problemstart = "$_POST[frm_year_problemstart]-$_POST[frm_month_problemstart]-$_POST[frm_day_problemstart] $_POST[frm_hour_problemstart]:$_POST[frm_minute_problemstart]:00$post_frm_meridiem_problemstart";
 
-		if (!get_variable('military_time'))	{			//put together date from the dropdown box and textbox values
+//		if (!get_variable('military_time'))	{			//put together date from the dropdown box and textbox values
+		$do_ampm = (!get_variable('military_time')==1);
+		if ($do_ampm){
 			if ($post_frm_meridiem_problemstart == 'pm'){
 				$_POST['frm_hour_problemstart'] = ($_POST['frm_hour_problemstart'] + 12) % 24;
 				}
 			if (isset($_POST['frm_meridiem_problemend'])) {
 				if ($_POST['frm_meridiem_problemend'] == 'pm'){
-					$_POST[frm_hour_problemend] = ($_POST[frm_hour_problemend] + 12) % 24;
+					$_POST['frm_hour_problemend'] = ($_POST['frm_hour_problemend'] + 12) % 24;
 					}
 				}
-			}
+			}		// end if ($do_ampm)
+			
 		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart($_POST['frm_year_problemend'] . "-" . $_POST['frm_month_problemend'] . "-" . $_POST['frm_day_problemend']." " . $_POST['frm_hour_problemend'] . ":". $_POST['frm_minute_problemend'] .":00") : "NULL";
 			
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
@@ -78,8 +81,15 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 			<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 			<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 			<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+			<SCRIPT>
+				function ck_frames() {		// ck_frames()
+					if(self.location.href==parent.location.href) {
+						self.location.href = 'index.php';
+						}
+					}		// end function ck_frames()
+			</SCRIPT>
 			</HEAD>
-			<BODY onunload="GUnload()">
+			<BODY onLoad = "ck_frames()" onunload="GUnload()">
 <?php
 			print "<FONT CLASS=\"header\">Added Ticket: '".substr($_POST['frm_description'],0,50)."' by user '$_SESSION[user_name]'</FONT><BR /><BR />";
 			list_tickets();
@@ -118,11 +128,13 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-</HEAD>
-<BODY onunload="GUnload()">
-
 <SCRIPT SRC="graticule.js" type="text/javascript"></SCRIPT>
 <SCRIPT>
+	function ck_frames() {		// onLoad = "ck_frames()"
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
 	var map;						// note globals
 	var geocoder = null;
 	geocoder = new GClientGeocoder();
@@ -513,7 +525,9 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		document.add.frm_month_problemend.disabled = false;
 		document.add.frm_day_problemend.disabled = false;
 	<?php
-		if (!get_variable('military_time')){
+		$show_ampm = (!get_variable('military_time')==1);
+		if ($show_ampm){	//put am/pm optionlist if not military time
+//			dump (get_variable('military_time'));
 			print "\tdocument.add.frm_meridiem_problemend.disabled = false;\n";
 			}
 	?>
@@ -540,7 +554,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 </SCRIPT>
 </HEAD>
 
-<BODY onload="load()" onunload="GUnload()"> 
+<BODY onload="ck_frames(); load()" onunload="GUnload()">  <!-- 558 -->
 
 <TABLE BORDER="0"ID = "outer">
 <TR><TD COLSPAN='2' ALIGN='center'><FONT CLASS='header'>New Run Ticket</FONT><BR /><BR /></TD></TR>
@@ -607,6 +621,9 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <FORM NAME='can_Form' ACTION="main.php">
 </FORM>	
 </BODY></HTML>
-<?php /*
-onLoad = "document.add.frm_lat.disabled.. added 10/28/2007
-*/	?>
+<?php 
+/*
+10/28/07  added onLoad = "document.add.frm_lat.disabled..
+11/3 added frame jump prevention
+*/	
+?>

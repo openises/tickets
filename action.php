@@ -16,7 +16,13 @@
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT src="./incs/multiSelect.js"></SCRIPT>
-<SCRIPT>				
+<SCRIPT>
+	function ck_frames() {		//  onLoad = "ck_frames()"
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
+
 	if(document.all && !document.getElementById) {		// accomodate IE							
 		document.getElementById = function(id) {							
 			return document.all[id];							
@@ -41,8 +47,10 @@
 		}				// end function validate(theForm)
 	</SCRIPT>
 	</HEAD>
-<BODY>
-<?php 
+<BODY onLoad = "ck_frames()">
+<?php
+	$do_yr_asof = false;		// js year housekeeping
+
 	$get_action = (empty($_GET['action']))? "" : $_GET['action'];
 	
 //	if ($_GET['action'] == 'add') {		/* update ticket */
@@ -117,6 +125,8 @@
 		$result = mysql_query($query)or do_error($query,$query, mysql_error(), __FILE__, __LINE__);
 		$row = stripslashes_deep(mysql_fetch_array($result));
 		$responders = explode(" ", $row['responder']);				// to array
+//		dump ($row);
+		$do_yr_asof = true;
 ?>
 		<FONT CLASS="header">Edit Action</FONT><BR /><BR />
 		<FORM METHOD="post" NAME='action'  onSubmit='return validate(document.action)' ACTION="action.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
@@ -132,9 +142,9 @@
 		print "<TD><SELECT NAME='frm_responder[]' style='width: 150px; height: " . $height ."px;' multiple><OPTION VALUE='0' $selected>NA</OPTION>\n";
 		$optstyles = array (1 => "Meds", 2 => "Fire", 3 => "Poli", 4 => "Othr");		// see css
     	while ($rowtemp = stripslashes_deep(mysql_fetch_array($result))) {
-    		$temp = $row[type];
-    		$selected = (in_array($rowtemp[id], $responders))? " SELECTED" : "";
-			print "<OPTION VALUE='$rowtemp[id]'$selected>$rowtemp[name]</OPTION>\n";
+    		$temp = $row['action_type'];
+    		$selected = (in_array($rowtemp['id'], $responders))? " SELECTED" : "";
+			print "<OPTION VALUE='" . $rowtemp['id'] . "'" . $selected . ">" . $rowtemp['name'] . "</OPTION>\n";
 			}
 		unset ($rowtemp);
 		print "</SELECT></TD></TR>\n";
@@ -149,11 +159,12 @@
 		</TD></TR>
 
 		<TR CLASS='odd'><TD></TD><TD ALIGN='center'><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back()" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Submit"></TD></TR>
-		</TABLE><BR />
+		</TABLE></FORM><BR />
 <?php
 		}		// end if ($_GET['action'] == 'edit')
 		
 	else {											// do form
+		$do_yr_asof = true;
 //		add_header($_GET['ticket_id']);
 //		print __LINE__ . "<BR>";
 ?>
@@ -195,6 +206,9 @@
 <INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
 </FORM>	
 </BODY>
+<?php
+	if ($do_yr_asof) { 		// for ADD and EDIT only
+?>
 <SCRIPT LANGUAGE="Javascript">
 var now = new Date();
 if (now.getYear()>2000) {
@@ -217,4 +231,7 @@ if (document.forms[0].frm_hour_asof.value<10) 	{ document.forms[0].frm_hour_asof
 if (document.forms[0].frm_minute_asof.value<10) 	{ document.forms[0].frm_minute_asof.value = "0" + document.forms[0].frm_minute_asof.value; }
 
 </SCRIPT>
+<?php
+	}		// end 	if ($do_yr_asof)
+?>
 </HTML>

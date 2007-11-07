@@ -4,7 +4,16 @@
 <HTML>
 <HEAD>
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-</HEAD><BODY>
+<SCRIPT>
+function ck_frames() {		//  onLoad = "ck_frames()"
+	if(self.location.href==parent.location.href) {
+		self.location.href = 'index.php';
+		}
+	}		// end function ck_frames()
+	
+</SCRIPT>
+
+</HEAD><BODY onLoad = "ck_frames()">
 <FONT CLASS="header">Tickets Help</FONT><BR /><BR />
 <LI> <A HREF="help.php?q=tickets">Background</A>
 <LI> <A HREF="help.php?q=tickets">Tickets, Actions, and Patient Data</A>

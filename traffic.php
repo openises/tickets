@@ -45,9 +45,17 @@
 <STYLE>
  BODY { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 </STYLE>
+<SCRIPT>
+function ck_frames() {		//  onLoad = "ck_frames()"
+	if(self.location.href==parent.location.href) {
+		self.location.href = 'index.php';
+		}
+	}		// end function ck_frames()
+	
+</SCRIPT>
 	</head>
 
-	<body onload="load()" onunload="GUnload()">
+	<BODY onload="ck_frames(); load()" onunload="GUnload()">
     <center><font size="+1"><b><nobr>Click map traffic light for display&nbsp;&nbsp;<img src="traffic.png" border=0></nobr></b></font><br/><br/>	
 		<div id="map" style="width: 960px; height: 600px"></div>
     <br clear="all"/>

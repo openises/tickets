@@ -15,8 +15,7 @@ extract($_GET);
 function list_responders($addon = '', $start) {
 ?>
 <SCRIPT>
-
-var color=0;
+	var color=0;
 	var colors = new Array ('odd', 'even');
 
 	function hideGroup(color) {
@@ -284,8 +283,9 @@ var color=0;
 			}		// end mobile
 //										common to all modes
 		$the_bull = ($mode == 0)? "" : "<FONT COLOR=" . $bulls[$mode] ."><B>&bull;</B></FONT>";
+		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 			
-		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten($row['description'], 16) . "</TD>";
+		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 16) . "</TD>";
 		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($row['status'], 16) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
 		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
 ?>
@@ -295,7 +295,7 @@ var color=0;
 <?php
 		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten($row['description'], 32) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $row['status'] . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
@@ -305,7 +305,7 @@ var color=0;
 		switch ($mode) {
 			case 0:				// not mobile
 ?>			
-				do_sidebar ("<?php print $sidebar_line; ?>", i);
+				do_sidebar ("<?php print str_replace($eols, " ", $sidebar_line); ?>", i);
 				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['name'], 10));?>", "<?php print $tab_1;?>"),
 					new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
@@ -316,7 +316,7 @@ var color=0;
 			case 2:				// moving
 			case 3:				// fast
 ?>			
-				do_sidebar ("<?php print $sidebar_line; ?>", i);
+				do_sidebar ("<?php print str_replace($eols, " ", $sidebar_line); ?>", i);
 <?php			
 				$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 				$tab_2 .="<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $last['source'] . "</B></TD></TR>";
@@ -336,7 +336,7 @@ var color=0;
 			    break;
 			case 4:				// mobile - no track
 ?>
-				do_sidebar_nm ("<?php print $sidebar_line; ?>", i, <?php print $row['id'];?>);	// special sidebar link - adds id for view
+				do_sidebar_nm ("<?php print str_replace($eols, " ", $sidebar_line); ?>", i, <?php print $row['id'];?>);	// special sidebar link - adds id for view
 				var do_map = false;
 <?php			
 			    break;
@@ -392,9 +392,17 @@ var color=0;
 ?>	
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
 	parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+
+	function ck_frames() {		// ck_frames()
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
+	</SCRIPT>
+
 </SCRIPT>
 	</HEAD>
-	<BODY onunload="GUnload()">
+	<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<TABLE ID='outer'><TR CLASS='even'><TD ALIGN='center' colspan=2><B><FONT SIZE='+1'>Unit Tracks</FONT></B></TD></TR><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>

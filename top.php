@@ -1,6 +1,12 @@
 <?php 
 require_once('functions.inc.php');
 $version = get_variable('_version');
+$newvers = "2.4a";
+if ($version==$newvers) {
+	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value` = '" . $newvers . "' WHERE `settings`.`id` =1 LIMIT 1 ;";
+	$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
+	$version = $newvers;
+	}
 ?>
 	
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -115,7 +121,7 @@ function toggle_aprs() {
 	
 </SCRIPT>
 </HEAD>
-<BODY onLoad = "start_poll();" onunload="stop_poll();">
+<BODY onLoad = "if(self.location.href==parent.location.href) {self.location.href = 'index.php';}; start_poll();" onunload="stop_poll();">
 <!-- <BODY> -->
 <table border=0 cellpadding=0><tr valign='top'>
 <td><img src="t.gif" border=0></td>
@@ -151,3 +157,8 @@ function toggle_aprs() {
 </TD></TR></TABLE>
 <FORM NAME="go" action="#" TARGET = "main"></FORM>
 </BODY></HTML>
+<?php
+/*
+11/3 added frame jump prevention
+*/
+?>

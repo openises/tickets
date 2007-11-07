@@ -20,6 +20,13 @@ if (!isset($func)) {$func = "summ";}
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<SCRIPT>
+		function ck_frames() {
+			if(self.location.href==parent.location.href) {
+				self.location.href = 'index.php';
+				}
+			}		// end function ck_frames()
+	</SCRIPT>
 
 <?php
 	print "<SCRIPT>\n";
@@ -210,7 +217,7 @@ if (!isset($func)) {$func = "summ";}
 	switch ($func){
 
 		case 'notify': 
-			print "</HEAD>\n<BODY>\n";
+			print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 		if (array_key_exists('id', ($_GET))) {
 			print "<FONT CLASS='header'>Add Notify Event</FONT><BR /><BR />";
 			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />"; 
@@ -316,7 +323,7 @@ if (!isset($func)) {$func = "summ";}
     break;
 
 case 'profile' :					//update profile
-		print "</HEAD>\n<BODY>\n";
+		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 		$get_go = (array_key_exists('go', ($_GET)))? $_GET['go']  : "" ;
 		if ($get_go == 'true') {			//check passwords
 			$set_passwd = FALSE;
@@ -379,7 +386,7 @@ case 'profile' :					//update profile
     break;
 
 case 'optimize' :
-		print "</HEAD>\n<BODY>\n";
+		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 		if (is_administrator())	{
 			optimize_db();
 			print '<FONT CLASS="header">Database optimized.</FONT><BR /><BR />';
@@ -389,7 +396,7 @@ case 'optimize' :
     break;
 
 case 'reset' :
-		print "</HEAD>\n<BODY>\n";
+		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 		if (is_administrator())		{
 			if ($_GET['auth'] != 'true') {
 				?><FONT CLASS="header">Reset Database</FONT><BR />This operation requires confirmation by entering "yes" into this box.<BR />
@@ -420,7 +427,7 @@ case 'reset' :
     break;
 
 case 'settings' :
-		print "</HEAD>\n<BODY>\n";
+		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 		if (is_administrator())	{
 			if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
 				foreach ($_POST as $VarName=>$VarValue) {
@@ -461,7 +468,7 @@ case 'settings' :
     break;
 
 case 'user' :
-	print "</HEAD>\n<BODY>\n";
+	print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 	if ((array_key_exists('id', ($_GET))) && ($_GET['id'] != '')) {
 		if (is_administrator()) {
 			$id = $_GET['id'];
@@ -699,7 +706,7 @@ case 'responder' :
 ?>		
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD>
-		<BODY onunload="GUnload()">
+		<BODY  onLoad = "ck_frames()" onunload="GUnload()">
 		<FONT CLASS="header">Add Unit</FONT><BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='addform'>
@@ -754,7 +761,7 @@ case 'responder' :
 ?>		
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD>
-		<BODY onunload="GUnload()">
+		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<FONT CLASS="header">Edit Unit Data</FONT><BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='editform'>
@@ -809,7 +816,7 @@ case 'responder' :
 ?>			
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD>
-		<BODY onunload="GUnload()">
+		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 			<FONT CLASS="header">Unit Data</FONT><BR /><BR />
 			<TABLE BORDER=0 ID='outer'><TR><TD>
 			<TABLE BORDER="0" ID='viewform'>
@@ -862,7 +869,7 @@ case 'responder' :
 		<META HTTP-EQUIV="REFRESH" CONTENT="180">
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD><!-- 797 -->
-		<BODY onunload="GUnload()">
+		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<TABLE ID='outer'><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>
@@ -906,7 +913,7 @@ case 'center' :
 ?>
 	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 	</HEAD>
-	<BODY onunload="GUnload()">
+	<BODY onLoad = "ck_frames()" onunload="GUnload()">
 <?php
 
 	$get_update = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['update'])))) ) ? "" : $_GET['update'] ;
@@ -950,7 +957,7 @@ case 'center' :
 			<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
 		</FORM></TABLE>
 		</TD><TD><DIV ID='map' style='width: 500px; height: 400px; border-style: outset'></DIV>
-		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Drag/Zoom to new default position</SPAN></FONT></CENTER>
+		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Drag/Zoom and double-click to new default position</SPAN></FONT></CENTER>
 		</TD></TR>
 		</TABLE>
 		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
@@ -969,12 +976,12 @@ case 'api_key' :
 		$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`='$_POST[frm_value]' WHERE `name`='gmaps_api_key';";
 		
 		$result = mysql_query($query) or die("do_insert_settings($name,$value) failed, execution halted");
-		print '<BODY>\n<FONT CLASS="header">GMaps API Key saved to database.</FONT><BR /><BR />';
+		print '<BODY onLoad = "ck_frames()">\n<FONT CLASS="header">GMaps API Key saved to database.</FONT><BR /><BR />';
 		}
 	else {
 		$curr_key = get_variable('gmaps_api_key')
 ?>	
-		<BODY>
+		<BODY onLoad = 'ck_frames()'>
 		<TABLE BORDER="0">
 		<FORM METHOD="POST" NAME= "api_Form"  onSubmit="return validate_key(document.api_Form);" ACTION="config.php?func=api_key&update=true">
 		<TR CLASS = "even"><TD CLASS="td_label" ALIGN='center'>Obtain GMaps API key at http://www.google.com/apis/maps/signup.html</TD></TR>
@@ -1007,7 +1014,7 @@ case 'api_key' :
     break;
     
 case 'delete' :	
-	print "<BODY>\n";
+	print "<BODY onLoad = 'ck_frames()'>\n";
 	$subfunc = (array_key_exists ('subfunc',$_GET ))? $_GET['subfunc']: "list";
 	switch ($subfunc) {
 		case 'list':
@@ -1040,7 +1047,8 @@ case 'delete' :
 <?php
 				}				// end if (mysql_affected_rows()>0)
 			else {
-				print "<B><br />No Closed Tickets!</B><br /><br />";
+				print "</FORM><BR />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>No Closed Tickets!</B><br /><br />";
+				print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' VALUE='Continue' onClick = 'document.can_Form.submit();'>";
 				}
 ?>
 			
@@ -1098,7 +1106,7 @@ case 'delete' :
 	
 ?>
 		</HEAD>
-		<BODY>
+		<BODY onLoad = 'ck_frames()'>
 		<LI><A HREF="config.php?func=user&add=true">Add user</A>
 		<LI><A HREF="config.php?func=responder">Units</A>
 		<LI><A HREF="config.php?func=reset">Reset Database</A>

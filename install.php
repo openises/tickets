@@ -1,5 +1,5 @@
 <?php
-$version = "2.4 beta";		// see usage below
+$version = "2.4.a beta";		// see usage below
 
 switch(strtoupper($_SERVER["HTTP_HOST"])) {
 	case '127.0.0.1': {$api_key = "ABQIAAAAiLlX5dJnXCkZR5Yil2cQ5BRi_j0U6kJrkFvY4-OX2XYmEAa76BSxM3tBbKeopztUxxRu-Em4ds4HHg";
@@ -258,6 +258,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 	
 	//insert settings
 	function insert_settings() {
+		global $version;
 		$thekey = $_POST['frm_api_key'];
 		do_insert_settings('_aprs_time','0');	
 		do_insert_settings('gmaps_api_key',$thekey);	
@@ -281,7 +282,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		do_insert_settings('link_url','');		
 		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
 		do_insert_settings('map_caption','Your area');
-		do_insert_settings('military_time','0');
+		do_insert_settings('military_time','1');
 		do_insert_settings('restrict_user_add','0');
 		do_insert_settings('restrict_user_tickets','0');
 		do_insert_settings('ticket_per_page','0');

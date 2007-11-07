@@ -40,6 +40,7 @@ $evenodd = array ("even", "odd");	// class names for alternating table row color
 mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd']) or do_error('functions.inc.php::mysql_open()', 'mysql_connect() failed', mysql_error(),basename( __FILE__),__LINE__);
 mysql_select_db($GLOBALS['mysql_db']) or do_error('functions.inc.php::mysql_select_db()', 'mysql_select_db() failed', mysql_error(), basename( __FILE__), __LINE__);
 /* check for mysql tables, if non-existent, point to install.php */
+/*		bypass 11/5/07
 $failed = 0;
 if (!mysql_table_exists("$GLOBALS[mysql_prefix]ticket")) 	{ print "MySQL table '$GLOBALS[mysql_prefix]ticket' is missing<BR />"; $failed = 1; 	}
 if (!mysql_table_exists("$GLOBALS[mysql_prefix]action")) 	{ print "MySQL table '$GLOBALS[mysql_prefix]action' is missing<BR />"; $failed = 1; 	}
@@ -51,7 +52,7 @@ if ($failed) {
 	print "Some or several tables missing in database, please run <a href=\"install.php\">install.php</a> if you haven't or check your database.";
 	exit();
 	}
-
+*/	
 function mysql_table_exists($table) {/* check if mysql table exists */
 	$query = "SELECT COUNT(*) FROM $table";
 	$result = mysql_query($query);
@@ -87,6 +88,8 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 	$get_offset = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['offset'])))) ) ? "" : $_GET['offset'] ;
 
 	$closed = (isset($_GET['status']) && ($_GET['status']==$GLOBALS['STATUS_CLOSED']))? "Closed" : "";
+	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+
 ?>
 <TABLE BORDER=0>
 	<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header'>Current <?php print $closed; ?> Run Tickets</FONT></TD></TR>
@@ -94,7 +97,7 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 <!--	<TR><TD WIDTH = 360 VALIGN='TOP' ><DIV ID='side_bar'></DIV></TD> -->
 	<TR><TD VALIGN='TOP' ><DIV ID='side_bar'></DIV></TD>			
 		<TD></TD>			
-		<TD CLASS='td_label'><DIV ID='map' STYLE='WIDTH: 550PX; HEIGHT: 450PX'></DIV>	
+		<TD CLASS='td_label'><DIV ID='map' STYLE='WIDTH: 512PX; HEIGHT: 450PX'></DIV>	
 		<BR /><CENTER><FONT CLASS='header'><?php echo get_variable('map_caption');?></FONT><BR /><BR />
 		Units: <A HREF="#" onClick = "hideGroup(0)">	<IMG SRC = './markers/sm_yellow.png' BORDER=0></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Incident Priority:&nbsp;&nbsp;&nbsp;&nbsp;
@@ -175,10 +178,12 @@ if (GBrowserIsCompatible()) {
 		marker.id = color;				// for hide/unhide
 		
 		GEvent.addListener(marker, "click", function() {			// here for both side bar and icon click
+//			alert(178);
 			map.closeInfoWindow();
 			which = id;
 			gmarkers[which].hide();			
 			marker.openInfoWindowTabsHtml(infoTabs[id]);
+//			alert(183);
 			var dMapDiv = document.getElementById("detailmap");
 			var detailmap = new GMap2(dMapDiv);
 			detailmap.addControl(new GSmallMapControl());
@@ -203,7 +208,6 @@ if (GBrowserIsCompatible()) {
 	icons[<?php print $GLOBALS['SEVERITY_NORMAL']; ?>+1] = "./markers/BlueIcons/marker";	
 	icons[<?php print $GLOBALS['SEVERITY_MEDIUM']; ?>+1] = "./markers/GreenIcons/marker";
 	icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =   "./markers/RedIcons/marker";		//	BlueIcons/GreenIcons/YellowIcons/RedIcons
-
 
 	var map;
 	var center;
@@ -311,7 +315,7 @@ if (GBrowserIsCompatible()) {
 		
 
 		$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
-		$tab_2 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten($row['description'], 120) . "</TD></TR>";
+		$tab_2 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 120) . "</TD></TR>";	// str_replace("\r\n", " ", $my_string)
 		$tab_2 .= "<TR CLASS='odd'><TD>Comments:</TD><TD>" . shorten($row['comments'], 120) . "</TD></TR>";
 		$tab_2 .= "<TR><TD>&nbsp;</TD></TR>";
 		$tab_2 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'>";
@@ -334,11 +338,12 @@ if (GBrowserIsCompatible()) {
 			}
 		else { $strike = $strikend = "";}
 			
-		$sidebar_line = "<TD CLASS='$severityclass'>$strike" . shorten($row['scope'], 30) . " $strikend</TD><TD CLASS='td_data'> " . $P .  " </TD><TD CLASS='td_data'> " . $A . " </TD><TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
+		$sidebar_line = "<TD CLASS='$severityclass'>$strike" . shorten($row['scope'], 30) . " $strikend</TD><TD CLASS='td_data'> " . $P;
+		$sidebar_line .= " </TD><TD CLASS='td_data'> " . $A . " </TD><TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
 ?>
 		var myinfoTabs = [
 			new GInfoWindowTab("<?php print nl2brr(shorten($row['scope'], 12));?>", "<?php print $tab_1;?>"),
-			new GInfoWindowTab("More ...", "<?php print $tab_2;?>"),
+			new GInfoWindowTab("More ...", "<?php print str_replace($eols, " ", $tab_2);?>"),
 			new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
 			];
 
@@ -409,7 +414,7 @@ if (GBrowserIsCompatible()) {
 <?php
 		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten($row['description'], 32) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $row['status'] . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
@@ -530,8 +535,8 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		print "<TR><TD CLASS='print_TD'><B>Address</B>:</TD>	<TD CLASS='print_TD'>" . $row['street']. "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>City</B>:</TD>		<TD CLASS='print_TD'>" . $row['city']. "&nbsp;&nbsp;&nbsp;&nbsp;<B>St</B>:" . $row['state'] . "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Priority:</B></TD>	<TD CLASS='print_TD'>" . get_severity($row['severity']).	"</TD></TR>\n";
-		print "<TR><TD CLASS='print_TD'><B>Description:</B></TD><TD CLASS='print_TD'>" . $row['description']. "</TD></TR>";
-		print "<TR><TD CLASS='print_TD'><B>Comments:</B></TD>	<TD CLASS='print_TD'>" . $row['comments']. "</TD></TR>";
+		print "<TR><TD CLASS='print_TD'><B>Description:</B></TD><TD CLASS='print_TD'>" . nl2br ($row['description']). "</TD></TR>";
+		print "<TR><TD CLASS='print_TD'><B>Comments:</B></TD>	<TD CLASS='print_TD'>" . nl2br ($row['comments']). "</TD></TR>";
 /*		print "<TR><TD CLASS='print_TD'><B>Owner:</B></TD>		<TD CLASS='print_TD'>" . get_owner($row['owner']). "</TD></TR>\n"; 
 		print "<TR><TD CLASS='print_TD'><B>Issued:</B></TD>		<TD CLASS='print_TD'>" . format_date($row['date']). "</TD></TR>\n"; */
 		print "<TR><TD CLASS='print_TD'><B>Run Start:</B></TD>	<TD CLASS='print_TD'>" . format_date($row['problemstart']). "</TD></TR>";
@@ -552,8 +557,8 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 	print do_ticket($row, "500px", $search = FALSE) ;
 	
 	print "<TD ALIGN='left'>";
-	print "<TABLE ID='theMap'><TR CLASS='odd' ><TD  ALIGN='center'><DIV ID='map' STYLE='WIDTH:" . ($_SESSION['scr_width']-32)/2 . "px; HEIGHT: 450PX'></DIV><BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A></TD></TR></TABLE>\n";
-//	print "<TABLE ID='theMap'><TR CLASS='odd' ><TD  ALIGN='center'><DIV ID='map' STYLE='WIDTH:600px; HEIGHT: 450PX'></DIV><BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A></TD></TR></TABLE>\n";
+//	print "<TABLE ID='theMap'><TR CLASS='odd' ><TD  ALIGN='center'><DIV ID='map' STYLE='WIDTH:" . ($_SESSION['scr_width']-32)/2 . "px; HEIGHT: 450PX'></DIV><BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A></TD></TR></TABLE>\n";
+	print "<TABLE ID='theMap'><TR CLASS='odd' ><TD  ALIGN='center'><DIV ID='map' STYLE='WIDTH:512px; HEIGHT: 450PX'></DIV><BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A></TD></TR></TABLE>\n";
 	print "</TD></TR>";
 	print "<TR CLASS='odd' ><TD COLSPAN='2' CLASS='print_TD'>";
 	$lat = $row['lat']; $lng = $row['lng'];	
@@ -716,8 +721,8 @@ function do_ticket($theRow, $theWidth, $search=FALSE) {						// returns table
 		}
 	
 	$print .= "<TR CLASS='even' ><TD>Priority:</TD>					<TD CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Description:</TD>	<TD>" . highlight($search, $theRow['description']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Comments:</TD>	<TD>" . highlight($search, $theRow['comments']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Description:</TD>	<TD>" . highlight($search, nl2br($theRow['description'])) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Comments:</TD>	<TD>" . highlight($search, nl2br($theRow['comments'])) . "</TD></TR>\n";
 
 	$print .= "<TR CLASS='odd' ><TD>Run Start:</TD>					<TD>" . format_date($theRow['problemstart']);
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;" . format_date($theRow['problemend']) . "</TD></TR>\n";
@@ -755,6 +760,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	$query = "SELECT `id`, `name` FROM $GLOBALS[mysql_prefix]responder";
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$responderlist = array();
+	$responderlist[0] = "NA";	
 	while ($act_row = stripslashes_deep(mysql_fetch_array($result))){
 		$responderlist[$act_row['id']] = $act_row['name'];
 		}
@@ -769,7 +775,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 		$print .= "<TD NOWRAP>" . $act_row['name'] . "</TD><TD NOWRAP>". format_date($act_row['updated']) . "</TD>";
 		$print .= "<TD NOWRAP> by <B>".get_owner($act_row['user'])."</B>";
 		
-		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD>" . $act_row['description'] . "</TD>";
+		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD>" . nl2br($act_row['description']) . "</TD>";
 		if ($links) {
 			$print .= "<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
 				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD></TR>\n";	
@@ -800,7 +806,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 			$print .= "<TD NOWRAP>" . $respstring . "</TD><TD NOWRAP>".format_date($act_row['updated']) ."</TD>";
 			$print .= "<TD NOWRAP>by <B>".get_owner($act_row['user'])."</B> ";
 			$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
-			$print .= "</TD><TD WIDTH='100%'>" . $act_row['description'] . "</TD>";
+			$print .= "</TD><TD WIDTH='100%'>" . nl2br($act_row['description']) . "</TD>";
 			if ($links) {
 				$print .= "<TD><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
 					<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD></TR>\n";	
@@ -1063,19 +1069,25 @@ function do_login($requested_page, $outinfo = FALSE){			/* do login/session code
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+		<SCRIPT>
+		function do_onload () {
+			if(self.location.href==parent.location.href) {			// prevent frame jump
+				self.location.href = 'index.php';
+				}; 		
+			document.login_form.scr_width.value=screen.availWidth;
+			document.login_form.scr_height.value=screen.availHeight;
+			}		// end function do_onload () 
 <?php
 	if ($outinfo) {		// clarify logout/in
 ?>	
-<SCRIPT>
-		parent.frames["upper"].document.getElementById("whom").innerHTML  = "not";
-		parent.frames["upper"].document.getElementById("level").innerHTML  = "na";
-</SCRIPT>
+			parent.frames["upper"].document.getElementById("whom").innerHTML  = "not";
+			parent.frames["upper"].document.getElementById("level").innerHTML  = "na";
 <?php	
 		}
-	
 ?>	
-		</HEAD>	
-		<BODY onLoad = "document.login_form.scr_width.value=screen.availWidth;document.login_form.scr_height.value=screen.availHeight;">
+		</SCRIPT>
+		</HEAD>
+		<BODY onLoad = "do_onload()">
 		<CENTER><BR />
 		<?php if(get_variable('_version') != '') print "<SPAN style='FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000000;'>" . get_variable('login_banner')."</SPAN><BR /><BR />"; ?>
 		</FONT><FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form">
@@ -1161,8 +1173,8 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 		$day   		= date('d',$default_date);
 		$minute		= date('i',$default_date);
 		$meridiem	= date('a',$default_date);
-		if (get_variable('military_time')) 	$hour = date('H',$default_date);
-		else 								$hour = date('h',$default_date);;
+		if (get_variable('military_time')==1) 	$hour = date('H',$default_date);
+		else 									$hour = date('h',$default_date);;
 		}
 	else {
 		$year 		= date('Y', $local);
@@ -1170,8 +1182,8 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 		$day 		= date('d', $local);
 		$minute		= date('i', $local);
 		$meridiem	= date('a', $local);
-		if (get_variable('military_time')) 	$hour = date('H', $local);
-		else 								$hour = date('h', $local);
+		if (get_variable('military_time')==1) 	$hour = date('H', $local);
+		else 									$hour = date('h', $local);
 		}
 	print "<SELECT name='frm_year_$date_suffix' $dis_str>";
 	for($i = 2007; $i < 2008; $i++){
@@ -1198,15 +1210,14 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 	print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_hour_$date_suffix' VALUE='$hour' $dis_str>:";
 	print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_minute_$date_suffix' VALUE='$minute' $dis_str>";
 //	dump (!get_variable('military_time'));
-/*
-	if (!get_variable('military_time')){	//put am/pm optionlist if not military time
+	$show_ampm = (!get_variable('military_time')==1);
+	if ($show_ampm){	//put am/pm optionlist if not military time
 		print "\n<SELECT NAME='frm_meridiem_$date_suffix' $dis_str><OPTION value='am'";
 		if ($meridiem == 'am') print ' selected';
 		print ">am</OPTION><OPTION value='pm'";
 		if ($meridiem == 'pm') print ' selected';
 		print ">pm</OPTION></SELECT>";
 		}
-*/		
 	}		// end function generate_date_dropdown(
 
 function report_action($action_type,$ticket_id,$value1='',$value2=''){/* insert reporting actions */
@@ -1418,6 +1429,8 @@ function do_aprs() {			//	populates the APRS tracks table
 	}		// end function do_aprs() 
 
 /*
-quotes line 355 9/29
+9/29 quotes line 355 
+11/02 corrections to list and show ticket to handle newlines in Description and Comments fields.
+11/03 added function do_onload () frame jump prevention
 */
 ?>

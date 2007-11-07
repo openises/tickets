@@ -35,7 +35,7 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		print '<LI> Deleting settings...';
 
 		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]settings") or do_error('reset_db()::mysql_query(delete settings)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		do_insert_settings('_version','2.4 beta');
+		do_insert_settings('_version','2.4.a beta');
 		do_insert_settings('host','www.yourdomain.com');
 		do_insert_settings('framesize','50');
 		do_insert_settings('frameborder','1');
@@ -93,14 +93,15 @@ function show_stats(){/* show database/user stats */
 	$pluralC = ($cops_in_db==1)? "": "s";
 	$pluralO = ($othrs_in_db==1)? "": "s";
 	
-	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>Summary</TD></TR><TR>";		// print phpversion();
-	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='right'><B>" . phpversion() . "</B></TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='right'><B>$GLOBALS[mysql_db]</B> on <B>$GLOBALS[mysql_host]</B> running mysql <B>".mysql_get_server_info()."</B></TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='right'>$ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db)." closed, $ticket_in_db total</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='right'>$meds_in_db Med'l unit$pluralM, $fire_in_db Fire unit$pluralF, $cops_in_db Police unit$pluralC, $othrs_in_db Other$pluralO, ".($meds_in_db+$fire_in_db+ $cops_in_db +$othrs_in_db)." total</TD></TR>";
+	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>Summary</TD></TR><TR>";	
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . get_variable('_version') . "</B></TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'><B>" . phpversion() . "</B></TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'><B>$GLOBALS[mysql_db]</B> on <B>$GLOBALS[mysql_host]</B> running mysql <B>".mysql_get_server_info()."</B></TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db)." closed, $ticket_in_db total</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>$meds_in_db Med'l unit$pluralM, $fire_in_db Fire unit$pluralF, $cops_in_db Police unit$pluralC, $othrs_in_db Other$pluralO, ".($meds_in_db+$fire_in_db+ $cops_in_db +$othrs_in_db)." total</TD></TR>";
 	
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='right'>$user_in_db user$pluralU, $admin_in_db administrator$pluralA, $guest_in_db guest$pluralG, ".($user_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='right'>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$user_in_db user$pluralU, $admin_in_db administrator$pluralA, $guest_in_db guest$pluralG, ".($user_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
 	print $_SESSION['user_name'];
 
 	switch($_SESSION['level']) {
@@ -109,14 +110,14 @@ function show_stats(){/* show database/user stats */
 		case $GLOBALS['LEVEL_GUEST']: 			print ' (guest)'; 			break;
 		}
 
-	print "</TD></TR><TR CLASS='odd'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"right\">";	//
+	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
 	$_SESSION['ticket_per_page'] == 0 ? print "unlimited" : print $_SESSION['ticket_per_page'];
 	print " tickets/page, order by '<B>".str_replace('DESC','descending',$_SESSION['sortorder'])."</B>'</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='right'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='right'>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
 	print $_SERVER["HTTP_USER_AGENT"];
 	print  "</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='right'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 

@@ -166,6 +166,8 @@ var color=0;
 
 <?php
 
+	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+
 	$types = array();	$types[$GLOBALS['TYPE_MEDS']] = "Medical";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
 						$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
 
@@ -208,7 +210,7 @@ var color=0;
 //										common to all modes
 		$the_bull = ($mode == 0)? "" : "<FONT COLOR=" . $bulls[$mode] ."><B>&bull;</B></FONT>";
 			
-		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten($row['description'], 16) . "</TD>";
+		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 16) . "</TD>"; 
 		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($row['status'], 16) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
 		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
 ?>
@@ -218,7 +220,7 @@ var color=0;
 <?php
 		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten($row['description'], 32) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $row['status'] . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";

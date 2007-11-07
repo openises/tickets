@@ -149,10 +149,17 @@
 			document.edit.frm_minute_problemend.disabled = true;		
 			}
 	}
+
+	function ck_frames() {		// onLoad = "ck_frames()"
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
+	
 </SCRIPT>
 </HEAD>
 
-<BODY onunload="GUnload()">
+<BODY onLoad = "ck_frames()" onunload="GUnload()">
 <?php 
 	$id = $_GET['id'];
 
@@ -410,3 +417,8 @@
 </FORM>	
 
 </BODY></HTML>
+<?php
+/*
+11/3 added frame jump prevention
+*/
+?>
