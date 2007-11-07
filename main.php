@@ -63,6 +63,5 @@
 	else {
 		list_tickets();
 		}
-
 ?>
 </BODY></HTML>

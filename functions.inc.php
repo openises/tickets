@@ -40,8 +40,8 @@ $evenodd = array ("even", "odd");	// class names for alternating table row color
 mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd']) or do_error('functions.inc.php::mysql_open()', 'mysql_connect() failed', mysql_error(),basename( __FILE__),__LINE__);
 mysql_select_db($GLOBALS['mysql_db']) or do_error('functions.inc.php::mysql_select_db()', 'mysql_select_db() failed', mysql_error(), basename( __FILE__), __LINE__);
 /* check for mysql tables, if non-existent, point to install.php */
-/*		bypass 11/5/07
 $failed = 0;
+/*
 if (!mysql_table_exists("$GLOBALS[mysql_prefix]ticket")) 	{ print "MySQL table '$GLOBALS[mysql_prefix]ticket' is missing<BR />"; $failed = 1; 	}
 if (!mysql_table_exists("$GLOBALS[mysql_prefix]action")) 	{ print "MySQL table '$GLOBALS[mysql_prefix]action' is missing<BR />"; $failed = 1; 	}
 if (!mysql_table_exists("$GLOBALS[mysql_prefix]patient")) 	{ print "MySQL table '$GLOBALS[mysql_prefix]patient' is missing<BR />"; $failed = 1; 	}
@@ -52,7 +52,7 @@ if ($failed) {
 	print "Some or several tables missing in database, please run <a href=\"install.php\">install.php</a> if you haven't or check your database.";
 	exit();
 	}
-*/	
+*/
 function mysql_table_exists($table) {/* check if mysql table exists */
 	$query = "SELECT COUNT(*) FROM $table";
 	$result = mysql_query($query);

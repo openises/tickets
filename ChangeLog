@@ -1,17 +1,11 @@
 2.4.a
 =====
-+ Corrections applied to accommodate multi-line descriptions on tickets and units
++ Corrections applied to accommodate multi-line deascriptions on tickets and units
 + Frame jump prevention applied to all body onLoad events
-+ am/pm date/time handling corrected
-+ File existence checks bypassed, for performance
-+ Map sizes changed to 256 multiples, for performance
-+ Tickets version no. display added to config summary.
 
 2.4 
 =====
 + Routes module was added to show driving directions from units to incident
-+ Delete tickets function added - for closed tickets only
-+ Problem-end-date handling corrected.
 
 2.3 
 =====
