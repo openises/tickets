@@ -96,20 +96,20 @@ function imap_import($mailbox,$delete_msg=0) {
 		
 		//insert ticket
 		print "<li> Importing email from '$from', subject: '".substr($subject,0,50)."', body contains <B>".strlen($action)."</B> characters<BR />";
-		add_ticket($subject,$from,'','NOW()','NOW()',$GLOBALS[STATUS_OPEN],$GLOBALS[SEVERITY_NORMAL],$_SESSION[user_id]);
-		//$query = "INSERT INTO $GLOBALS[mysql_prefix]ticket (affected,scope,owner,description,problemstart,problemend,status,date,severity) VALUES('$from','',$_SESSION[user_id],'$subject','2002-03-05 18:30:00','2002-03-05 18:30:00',$GLOBALS[STATUS_OPEN],NOW(),$GLOBALS[SEVERITY_NORMAL])";
+		add_ticket($subject,$from,'','NOW()','NOW()',$GLOBALS[STATUS_OPEN],$GLOBALS[SEVERITY_NORMAL],$my_session[user_id]);
+		//$query = "INSERT INTO $GLOBALS[mysql_prefix]ticket (affected,scope,owner,description,problemstart,problemend,status,date,severity) VALUES('$from','',$my_session[user_id],'$subject','2002-03-05 18:30:00','2002-03-05 18:30:00',$GLOBALS[STATUS_OPEN],NOW(),$GLOBALS[SEVERITY_NORMAL])";
 		//mysql_query($query) or do_error("imap_import($delete_msg)::mysql_query()", 'mysql query failed', mysql_error());
 		//insert action (i.e. the body of the message)
 		//$action 	= strip_html($action); //fix formatting, custom tags etc.
 		$ticket_id 	= mysql_insert_id();
 		
 		if ($action) { //is $action empty?		
-     		$query 		= "INSERT INTO $GLOBALS[mysql_prefix]action (description,ticket_id,date,user,action_type) VALUES('$action','$ticket_id',NOW(),$_SESSION[user_id],$GLOBALS[ACTION_COMMENT])";
+     		$query 		= "INSERT INTO $GLOBALS[mysql_prefix]action (description,ticket_id,date,user,action_type) VALUES('$action','$ticket_id',NOW(),$my_session[user_id],$GLOBALS[ACTION_COMMENT])";
 			mysql_query($query) or do_error("imap_import($delete_msg)::mysql_query()", 'mysql query failed', mysql_error());
 			}
 		
 		if ($action_html) {
-			$query 		= "INSERT INTO $GLOBALS[mysql_prefix]action (description,ticket_id,date,user,action_type) VALUES('$action_html','$ticket_id',NOW(),$_SESSION[user_id],$GLOBALS[ACTION_COMMENT])";
+			$query 		= "INSERT INTO $GLOBALS[mysql_prefix]action (description,ticket_id,date,user,action_type) VALUES('$action_html','$ticket_id',NOW(),$my_session[user_id],$GLOBALS[ACTION_COMMENT])";
 			mysql_query($query) or do_error("imap_import($delete_msg)::mysql_query()", 'mysql query failed', mysql_error());
 			}	
 		

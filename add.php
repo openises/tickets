@@ -1,4 +1,5 @@
-<?php 
+<?php
+//	http://www.google.com/search?q=Cheryl+McNaught+Annapolis+MD
 require_once('functions.inc.php');
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
@@ -34,13 +35,14 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 			
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		if(empty($post_frm_owner)) {$post_frm_owner=0;}
-		$post_frm_owner=(empty($post_frm_owner))? 0: $post_frm_owner;
+		$post_frm_owner=(empty($post_frm_owner))? 0: $post_frm_owner;				// in_types_id -- 
 
-		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]ticket` (`contact`,`street`,`city`,`state`,`phone`,`lat`,`lng`,
+		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]ticket` (`in_types_id`, `contact`,`street`,`city`,`state`,`phone`,`lat`,`lng`,
 											`scope`,`affected`,`description`,`comments`,`owner`,`severity`,`status`,
 											`date`,`problemstart`,`problemend`,`updated`)
-							VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+							VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
 							
+								quote_smart(trim($_POST['frm_in_types_id'])),
 								quote_smart(trim($_POST['frm_contact'])),
 								quote_smart(trim($_POST['frm_street'])),
 								quote_smart(trim($_POST['frm_city'])),
@@ -62,14 +64,26 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
 
 		$ticket_id = mysql_insert_id();								// just inserted id
-//		report_action($GLOBALS[ACTION_OPEN],0,0,$_POST[$frm_owner]);
-
-		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder` LIMIT 1";	//  any at all?
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		if (mysql_affected_rows()>0) {
+		do_log($GLOBALS['LOG_INCIDENT_OPEN'], $ticket_id);
+		
+//		$frm_unit_id = 0; $frm_status_id=1;$frm_comments = "New";				// into assignments
+//		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`)
+//						VALUES (%s,%s,%s,%s,%s,%s)",
+//							quote_smart($now),
+//							quote_smart($frm_status_id),
+//							quote_smart($ticket_id),
+//							quote_smart($frm_unit_id),
+//							quote_smart($frm_comments),
+//							quote_smart($post_frm_owner));
+//
+//		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+//
+//		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder` LIMIT 1";	//  any at all?
+//		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+//		if (mysql_affected_rows()>0) {
 			header("Location: routes.php?ticket_id=$ticket_id");				// show routes from units to incident
-			}
-		else {
+//			}
+//		else {
 ?>
 			<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 			<html xmlns="http://www.w3.org/1999/xhtml">
@@ -87,32 +101,20 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 						self.location.href = 'index.php';
 						}
 					}		// end function ck_frames()
+			parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+			parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+			parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+
 			</SCRIPT>
 			</HEAD>
 			<BODY onLoad = "ck_frames()" onunload="GUnload()">
 <?php
-			print "<FONT CLASS=\"header\">Added Ticket: '".substr($_POST['frm_description'],0,50)."' by user '$_SESSION[user_name]'</FONT><BR /><BR />";
+			print "<FONT CLASS=\"header\">Added Ticket: '".substr($_POST['frm_description'],0,50)."' by user '$my_session[user_name]'</FONT><BR /><BR />";
 			list_tickets();
-			}
+//			}
 		}				// end if ($_GET['add'] ...
 		
 	else {
-			$log_file = "log.dat";
-			$tab = "\t";
-			$tzoffset = 5*60*60;
-			$localtime=(gmdate("M d h:i a", date('U') - $tzoffset));
-			
-			if (!file_exists($log_file)) {
-			   if ($f = fopen($log_file,"w")) fclose($f);
-			   chmod ($log_file, 0666);};
-			
-			$lf = fopen($log_file,"a");
-			$newdata = $tab . $localtime . $tab . basename(__FILE__) . $tab .gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\n"; //_SERVER["REMOTE_ADDR"]
-			$newdata = stripslashes($newdata);
-			fwrite($lf,$newdata);
-			fclose($lf);		
-		
-
 		if (is_guest() && !get_variable('guest_add_ticket')) {
 			print '<FONT CLASS="warn">Guest users may not add tickets on this system.  Contact administrator for further information.</FONT>';
 			exit();
@@ -135,6 +137,11 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 			self.location.href = 'index.php';
 			}
 		}		// end function ck_frames()
+
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+
 	var map;						// note globals
 	var geocoder = null;
 	geocoder = new GClientGeocoder();
@@ -144,9 +151,13 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 	var grid = false;				// toggle
 	var thePoint;
 	
+	String.prototype.trim = function () {
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+
 	function writeConsole(content) {
 		top.consoleRef=window.open('','myconsole',
-			'width=800,height=250' +',menubar=0' +',toolbar=0' +',status=0' +',scrollbars=0' +',resizable=0')
+			'width=800,height=250' +',menubar=0' +',toolbar=0' +',status=0' +',scrollbars=1' +',resizable=1')
 	 	top.consoleRef.document.writeln('<html><head><title>Console</title></head>'
 			+'<body bgcolor=white onLoad="self.focus()">' +content +'</body></html>'
 			)				// end top.consoleRef.document.writeln()
@@ -156,63 +167,6 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 	function getRes() {
 		return window.screen.width + ' x ' + window.screen.height;
 		}
-
-	function doLog(){
-		document.theLog.frm_res.value=getRes();
-		setQueryString();
-		var url="../cris/areas_sc.php";					// server_side 'create/insert entry'
-//		alert ("53 " + url);
-		
-		httpRequest("POST",url,true);
-		}				// end function sendData()
-		
-	function setQueryString(){							// pick up 2nd form -- fix!!!
-		queryString="";
-		var frm = document.forms[0];
-		for(var i = 0; i < frm.elements.length; i++)  {
-			queryString += frm.elements[i].name+ "="+ encodeURIComponent(frm.elements[i].value)+"&";
-			}
-		
-		queryString= queryString.substring(0, queryString.length-1);		// drop terminal &
-		}				// end function setQueryString()
-			
-	function httpRequest(reqType,url,asynch){	// Wrapper function for constructing a Request object. Parameters:
-		if(window.XMLHttpRequest){				//		reqType: 	HTTP request type: GET or POST.
-			request = new XMLHttpRequest();		//		url: 		URL of the server program.
-			} 									//  	asynch: 	Whether to send the request asynchronously or not.
-		else if (window.ActiveXObject){						
-			request=new ActiveXObject("Msxml2.XMLHTTP");
-			if (! request){
-				request=new ActiveXObject("Microsoft.XMLHTTP");
-				}
-		 	}
-		if(request)	{initReq(reqType,url,asynch);}		//the request could still be null if neither ActiveXObject
-														//initializations succeeded
-		else 		{alert("83: Browser problem; pls notify developer."); }
-		}
-		
-	function initReq(reqType,url,bool){					// Initialize a Request object that is already constructed 
-		request.onreadystatechange=handleCheck;			// Specify the function that will handle the HTTP response 
-		request.open(reqType,url,bool);
-		request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-		request.send(queryString);
-		}
-	  	
-	function handleCheck(){								//event handler for XMLHttpRequest
-		if(request.readyState == 4){
-			if(request.status == 200){
-//				alert (93);
-				if (request.responseText[0] == '-') {	// error id			
-					writeConsole(request.responseText);
-					alert ("error 81");
-					}
-				} 
-//			else {
-//				alert("error 85: A XMLHttpRequest problem has occurred; pls notify developer.");
-//				}
-			}		//end outer if
-		}		// end function handleCheck()
-
 
 	function toglGrid() {						// toggle
 		grid = !grid;
@@ -234,6 +188,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 	
 	function domap() {										// called from phone, addr lookups
 		map = new GMap2(document.getElementById('map'));
+		document.getElementById("map").style.backgroundImage = "url(./markers/loading.jpg)";
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
 		map.setCenter(new GLatLng(document.add.frm_lat.value, document.add.frm_lng.value), 13);			// larger # => tighter zoom
@@ -409,7 +364,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 					}
 				);
 			}
-		}				// end function addrlkup()
+		}				// end function addr lkup()
 	
 	function do_lat (lat) {
 		document.add.frm_lat.disabled=false;
@@ -421,74 +376,80 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		document.add.frm_lng.value=lng.toFixed(6);
 		document.add.frm_lng.disabled=true;
 		}
+
+//	*****************************************************************		
+	function syncAjax(strURL) {							// synchronous ajax function
+		if (window.XMLHttpRequest) {						 
+			AJAX=new XMLHttpRequest();						 
+			} 
+		else {																 
+			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		if (AJAX) {
+			AJAX.open("GET", strURL, false);														 
+			AJAX.send(null);							// form name ???
+			return AJAX.responseText;																				 
+			} 
+		else {
+			alert ("57: failed")
+			return false;
+			}																						 
+		}		// end function sync Ajax(strURL)
 	
-	function phonelkup() {
+	function do_phone_lkup() {		// 
 		var goodno = document.add.frm_phone.value.replace(/\D/g, "" );							// strip all non-digits
 		if (goodno.length != 10) {
-//			document.add.sub_but.disabled = false;
-			alert ("10-digit phone no. reqd. (any format)"); document.add.frm_phone.focus(); return false;}
-	
-		var url = "./incs/phonelkup.php?phone=" + document.add.frm_phone.value;
-		var callback = phonelkupresults;
-		executePXhr(callback, url);
-		}
-	
-	function executePXhr(callback, url) {				// phone-specific - see above
-		if (window.XMLHttpRequest) {					//  for native XMLHttpRequest object
-			request = new XMLHttpRequest();
-			request.onreadystatechange = callback;
-			request.open("GET", url, true);
-			request.send(null);
+			alert ("10-digit phone no. reqd - any format)"); document.add.frm_phone.focus(); return false;
 			}
-		else if (window.ActiveXObject) { 				//  for IE/Windows ActiveX version
-			request = new ActiveXObject("Microsoft.XMLHTTP");
-			if (request) {
-				request.onreadystatechange = callback;
-				request.open("GET", url, true);
-				request.send();
-				}
+		else {
+			do_lkup(goodno);			// generic lookup
 			}
-		}
+		}		// end function do_phone_lkup()
 	
-	function phonelkupresults() {					// only if request shows "loaded"
-		if (request.readyState == 4) {					// only if "OK"
-			if (request.status == 200){
-				if (request.responseText.substring(0,1) == '-') {writeConsole(request.responseText) ;}
-	
-				var response= request.responseText.split('\t');
-				if (response.length<8) {
-					alert ("phone lookup failed")
-					return false;
-					}
-				else {				// if successful
-					document.add.frm_contact.value=	response[1];
-					document.add.frm_street.value=	response[2];
-					var response2 = response[3].split(' ');				// parse address
-					
-					document.add.frm_city.value=	response2[0];
-					if (response2.length>3) {document.add.frm_city.value+=response2[1];}		// ex: Something City
-					document.add.frm_city.value = document.add.frm_city.value.substring(0, document.add.frm_city.value.length-1);	// drop trailing comma
-					document.add.frm_state.value=	response2[response2.length - 2];
-	
-					do_lat (response[6])
-					do_lng (response[7])
-					domap();
-					}
-				}		// end if (request.status == 200)
-			else {
-//				alert("374 error.");
-//				document.add.sub_but.disabled = false;
+	function do_name_lkup() {		// 
+		if ((document.add.frm_contact.value.length==0) || (document.add.frm_city.value.length==0) || (document.add.frm_state.value.length==0)) {
+				alert ("Name, city, state required for name lookup");
+				return false;
 				}
-			}			// end if (request.readyState == 4)
-		}		// end function
+			var name_str = document.add.frm_contact.value + " " + document.add.frm_city.value + " " + document.add.frm_state.value;
+			var test = do_lkup(name_str);			// generic lookup
+		}		// end function do_name_lkup()
 	
-	function validate(theForm) {
+	function do_lkup(instr) {								// generic
+		var url = "plkup.php?qq=" + URLEncode(instr);		// phone no. or addr string
+		var payload = syncAjax(url);						// send lookup url
+		if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
+			alert ("lookup failed");
+			return false;
+			}
+		else {
+			var temp1=payload.split(";");					// good return - now parse results
+			document.add.frm_contact.value=temp1[0].trim();
+			document.add.frm_phone.value=temp1[1].trim();
+			var temp2=temp1[2].split(",");					// 	address portion
+			if (temp2.length>3) {
+				for (var i=0;i<temp2.length;i++) {
+					alert (temp2[i]);
+					}
+				}
+			document.add.frm_street.value=temp2[0].trim();				// street
+			document.add.frm_city.value=temp2[1].trim();				// city
+			document.add.frm_state.value=temp2[2].trim();				// state
+			addrlkup();													// to map
+			}				// end if/else (payload.substring(... )
+		}		// end function do_phone_lkup()
+	
+	
+// *********************************************************************		
+		
+	function validate(theForm) {	// 
 	
 //		alert (theForm.frm_status.value);
 //		alert (theForm.re_but.checked) 
 		var errmsg="";
 		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_CLOSED'];?>) && (!theForm.re_but.checked)) 
 													{errmsg+= "\tRun end-date is required for Status=Closed\n";}
+		if (theForm.frm_in_types_id.value == 0)		{errmsg+= "\tIncident type is required\n";}
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
 		if (theForm.frm_description.value == "")	{errmsg+= "\tDescription is required\n";}
@@ -549,67 +510,65 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 ?>
 		document.add.frm_hour_problemend.disabled = true;	
 		document.add.frm_minute_problemend.disabled = true;
-		}
+		}		// function reset_end()
 
 </SCRIPT>
 </HEAD>
 
 <BODY onload="ck_frames(); load()" onunload="GUnload()">  <!-- 558 -->
 
-<TABLE BORDER="0"ID = "outer">
-<TR><TD COLSPAN='2' ALIGN='center'><FONT CLASS='header'>New Run Ticket</FONT><BR /><BR /></TD></TR>
+<TABLE BORDER="0" ID = "outer">
+<TR><TD COLSPAN='2' ALIGN='center'><FONT CLASS='header'>New Call</FONT><BR /><BR /></TD></TR>
 
 <TR><TD>
-<TABLE BORDER="0">
+<TABLE BORDER="0"></TD><TD>
 <FORM METHOD="post" ACTION="add.php?add=true" NAME="add" onSubmit="return validate(document.add)">
-<TR CLASS='even'><TD CLASS="td_label">Reported By: <font color='red' size='-1'>*</font></TD>	<TD><INPUT SIZE="48" TYPE="text" NAME="frm_contact" VALUE="" MAXLENGTH="48"></TD></TR>
-<TR CLASS='odd'><TD CLASS="td_label">Phone:</TD>		<TD><INPUT SIZE="16" TYPE="text" NAME="frm_phone" VALUE="" MAXLENGTH="16"></TD></TR>
-<TR CLASS='even'><TD CLASS='td_label'>Status:</TD><TD>
-				<SELECT NAME='frm_status'><OPTION VALUE='<?php print $GLOBALS['STATUS_OPEN'];?>' selected>Open</OPTION><OPTION VALUE='<?php print $GLOBALS['STATUS_CLOSED']; ?>'>Closed</OPTION></SELECT></TD></TR>
-
+<TR CLASS='even'><TD CLASS="td_label" onClick="Javascript:do_name_lkup();">Reported By:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+	<TD ALIGN='center' onClick="Javascript:do_name_lkup();"><IMG SRC="glasses.png" BORDER="0"/></TD>
+	<TD><INPUT SIZE="48" TYPE="text" NAME="frm_contact" VALUE="" MAXLENGTH="48"></TD></TR>
+<TR CLASS='odd'><TD CLASS="td_label" onClick="Javascript:do_phone_lkup();">Phone:</TD><TD ALIGN='center' onClick="Javascript:do_phone_lkup();"><IMG SRC="glasses.png" BORDER="0"/></TD>		<TD><INPUT SIZE="16" TYPE="text" NAME="frm_phone" VALUE="" MAXLENGTH="16">
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Status:</SPAN>
+		<SELECT NAME='frm_status'><OPTION VALUE='<?php print $GLOBALS['STATUS_OPEN'];?>' selected>Open</OPTION><OPTION VALUE='<?php print $GLOBALS['STATUS_CLOSED']; ?>'>Closed</OPTION></SELECT></TD></TR>
 <TR CLASS='odd'><TD CLASS="td_label" COLSPAN=2>&nbsp;</TD></TR>
-<TR CLASS='even'><TD CLASS="td_label">Incident: <font color='red' size='-1'>*</font></TD>		<TD><INPUT SIZE="48" TYPE="text" NAME="frm_scope" VALUE="" MAXLENGTH="48"></TD></TR>
-<TR CLASS='odd'><TD CLASS="td_label">Address:</TD>		<TD><INPUT SIZE="48" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="48"></TD></TR>
-<TR CLASS='even'><TD CLASS="td_label"><a href="#" onClick="Javascript:addrlkup();">City:&nbsp;&nbsp;<IMG SRC="glasses.png" BORDER="0"/></A></TD> <TD><INPUT SIZE="32" TYPE="text" 		NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;St:&nbsp;&nbsp;<INPUT SIZE="2" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="2"></TD></TR>
-<TR CLASS='odd'><TD CLASS="td_label">Priority:</TD>		<TD><SELECT NAME="frm_severity">
-<OPTION VALUE="0" SELECTED><?php print get_severity($GLOBALS['SEVERITY_NORMAL']);?></OPTION>
-<OPTION VALUE="1"><?php print get_severity($GLOBALS['SEVERITY_MEDIUM']);?></OPTION>
-<OPTION VALUE="2"><?php print get_severity($GLOBALS['SEVERITY_HIGH']);?></OPTION>
-</SELECT></TD></TR>
-<TR CLASS='even' VALIGN="top"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD><TD><TEXTAREA NAME="frm_description" COLS="35" ROWS="4"></TEXTAREA></TD></TR>
-<!--
-<TR CLASS='even'><TD CLASS="td_label">Affected:</TD><TD><INPUT SIZE="48" TYPE="text" 	NAME="frm_affected" VALUE="" MAXLENGTH="48"></TD></TR>
--->
+<TR CLASS='even'><TD CLASS="td_label">Priority:</TD><TD></TD>		<TD><SELECT NAME="frm_severity">
+	<OPTION VALUE="0" SELECTED><?php print get_severity($GLOBALS['SEVERITY_NORMAL']);?></OPTION>
+	<OPTION VALUE="1"><?php print get_severity($GLOBALS['SEVERITY_MEDIUM']);?></OPTION>
+	<OPTION VALUE="2"><?php print get_severity($GLOBALS['SEVERITY_HIGH']);?></OPTION>
+	</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	
+	<SPAN CLASS="td_label">Nature: <SELECT NAME="frm_in_types_id">
+	<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-/*
-	if (get_variable("restrict_user_add") && !($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR'])) {
-		print "<INPUT TYPE=\"hidden\" NAME=\"frm_owner\" VALUE=\"$_SESSION[user_id]\">";
-		}
-	else {		//generate dropdown menu of users
-		$result = mysql_query("SELECT id,user FROM $GLOBALS[mysql_prefix]user") or do_error('add.php::generate_owner_dropdown','mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		print '<TR><TD CLASS="td_label">Owner:</TD><TD><SELECT NAME="frm_owner">';
-    	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-			print "<OPTION VALUE=\"$row[id]\" ";
-			if ($row[id] == $_SESSION[user_id]) print "SELECTED";
-			print ">$row[user]</OPTION>";
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`";
+		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		while ($temp_row = stripslashes_deep(mysql_fetch_array($temp_result))) {
+			print "\t<OPTION VALUE=" . $temp_row['id'] . ">" . $temp_row['type'] . "</OPTION><\n";
 			}
-		print '</SELECT></TD></TR>';
-		}
-*/
 ?>
-<TR CLASS='odd'><TD CLASS="td_label">Run Start: &nbsp;&nbsp;</TD><TD><?php print generate_date_dropdown('problemstart');?></TD></TR>
-<TR CLASS='even' valign="middle"><TD CLASS="td_label">Run End: &nbsp;&nbsp;<input type="radio" name="re_but" onClick ="do_end();" /></TD><TD>
+	</SELECT></TD></TR>
+	
+<TR CLASS='odd'><TD CLASS="td_label">Incident name: <font color='red' size='-1'>*</font></TD><TD></TD>		<TD><INPUT SIZE="61" TYPE="text" NAME="frm_scope" VALUE="" MAXLENGTH="61"></TD></TR>
+<TR CLASS='even'><TD CLASS="td_label">Location:</TD><TD></TD>		<TD><INPUT SIZE="61" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="61"></TD></TR>
+<TR CLASS='odd'><TD CLASS="td_label" onClick="Javascript:addrlkup();">City:</TD><TD ALIGN='center' onClick="Javascript:addrlkup();"><IMG SRC="glasses.png" BORDER="0"/></TD> <TD><INPUT SIZE="32" TYPE="text" 		NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;St:&nbsp;&nbsp;<INPUT SIZE="2" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="2"></TD></TR>
+<TR CLASS='even' VALIGN="top"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD><TD></TD><TD><TEXTAREA NAME="frm_description" COLS="45" ROWS="2"></TEXTAREA></TD></TR>
+<!--
+<TR CLASS='even'><TD CLASS="td_label">Affected:</TD><TD></TD><TD><INPUT SIZE="48" TYPE="text" 	NAME="frm_affected" VALUE="" MAXLENGTH="48"></TD></TR>
+-->
+<TR CLASS='odd'><TD CLASS="td_label">Run Start: &nbsp;&nbsp;</TD><TD></TD><TD><?php print generate_date_dropdown('problemstart');?></TD></TR>
+<TR CLASS='even' valign="middle"><TD CLASS="td_label">Run End: &nbsp;&nbsp;<input type="radio" name="re_but" onClick ="do_end();" /></TD><TD></TD><TD>
 	<SPAN style = "visibility:hidden" ID = "runend1"><?php print generate_date_dropdown('problemend','' , TRUE);?></SPAN>
 	</TD></TR>
-<TR CLASS='odd' VALIGN="top"><TD CLASS="td_label">Comments:</TD><TD><TEXTAREA NAME="frm_comments" COLS="35" ROWS="4"></TEXTAREA></TD></TR>
-<TR CLASS='even'><TD CLASS="td_label">Map: <font color='red' size='-1'>*</font></TD><TD ALIGN="center">Lat:<INPUT SIZE="12" TYPE="text" 			NAME="frm_lat" VALUE="" MAXLENGTH="12">
+<TR CLASS='odd' VALIGN="top"><TD CLASS="td_label">Comments:</TD><TD></TD><TD><TEXTAREA NAME="frm_comments" COLS="45" ROWS="2"></TEXTAREA></TD></TR>
+<TR CLASS='even'><TD CLASS="td_label">Map: <font color='red' size='-1'>*</font></TD><TD></TD><TD ALIGN="center">Lat:<INPUT SIZE="12" TYPE="text" 			NAME="frm_lat" VALUE="" MAXLENGTH="12">
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lon:&nbsp;&nbsp;<INPUT SIZE="12" TYPE="text" NAME="frm_lng" VALUE="" MAXLENGTH="12"></TD></TR>
-<TR CLASS='odd'><TD COLSPAN="2" ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onclick= "reset_end();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
-<TR CLASS='even'><TD COLSPAN="2" ALIGN="center"><br /><IMG SRC="glasses.png" BORDER="0"/>: Lookup fields</TD></TR>
+<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'><IMG SRC="glasses.png" BORDER="0"/>&nbsp;&nbsp;Lookups:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick = "Javascript:do_phone_lkup();">Phone</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick = "Javascript:do_name_lkup();">Name</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick = "Javascript:addrlkup();">Address</A></TD></TR>
+<TR CLASS='even'><TD COLSPAN="3" ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onclick= "reset_end();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
+<TR CLASS='odd'><TD COLSPAN="3" ALIGN="center"><br /><IMG SRC="glasses.png" BORDER="0"/>: Lookup fields</TD></TR>
+
 </FORM></TABLE>
 </TD><TD>
-<TABLE ID='four'><TR><TD id='three' ALIGN='center'><div id='map' style='width: 500px; height: 500px'></div>
+<TABLE ID='four'><TR><TD id='three' ALIGN='center'><div id='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px'></div>
 <BR /><CENTER><FONT CLASS='header'><?php echo get_variable('map_caption');?></FONT><BR /><BR />
 
 <A HREF='#' onClick='toglGrid()'><u>Grid</U></A></TD></TR /></TABLE>
@@ -625,5 +584,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 /*
 10/28/07  added onLoad = "document.add.frm_lat.disabled..
 11/3 added frame jump prevention
+11/9 added map under image
 */	
+
 ?>

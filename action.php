@@ -3,7 +3,6 @@
 
 	require_once('functions.inc.php'); 
 	do_login(basename(__FILE__));
-	$api_key = get_variable('gmaps_api_key');
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -14,7 +13,6 @@
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT src="./incs/multiSelect.js"></SCRIPT>
 <SCRIPT>
 	function ck_frames() {		//  onLoad = "ck_frames()"
@@ -28,14 +26,9 @@
 			return document.all[id];							
 			}							
 		}				
-<?php
-	print "var user = '";
-	print $_SESSION['user_name'];
-	print "'\n";
-	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";		// get_level_text ($_SESSION['level'])
-?>	
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
-	parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 	function validate(theForm) {
 		var errmsg="";
@@ -50,6 +43,13 @@
 <BODY onLoad = "ck_frames()">
 <?php
 	$do_yr_asof = false;		// js year housekeeping
+
+	$optstyles = array ();		// see css
+	$optstyles[$GLOBALS['TYPE_EMS']]= "ems";
+	$optstyles[$GLOBALS['TYPE_FIRE']]= "fire";
+	$optstyles[$GLOBALS['TYPE_COPS']]= "cops";
+	$optstyles[$GLOBALS['TYPE_MUTU']]= "mutu";
+	$optstyles[$GLOBALS['TYPE_OTHR']]= "othr";		
 
 	$get_action = (empty($_GET['action']))? "" : $_GET['action'];
 	
@@ -73,9 +73,11 @@
 
 			$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
 			
-     		$query 	= "INSERT INTO $GLOBALS[mysql_prefix]action (description,ticket_id,date,user,action_type, updated, responder) VALUES('$_POST[frm_description]','$_GET[ticket_id]','$now',$_SESSION[user_id],$GLOBALS[ACTION_COMMENT] ,'$frm_asof','$responder' )";
+     		$query 	= "INSERT INTO $GLOBALS[mysql_prefix]action (description,ticket_id,date,user,action_type, updated, responder) VALUES('$_POST[frm_description]','$_GET[ticket_id]','$now',$my_session[user_id],$GLOBALS[ACTION_COMMENT] ,'$frm_asof','$responder' )";
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), __FILE__, __LINE__);
 
+			$ticket_id = mysql_insert_id();								// just inserted id
+			do_log($GLOBALS['LOG_ACTION_ADD'], mysql_insert_id(), $_GET[ticket_id]);
 			$query = "UPDATE $GLOBALS[mysql_prefix]ticket SET `updated` = '$frm_asof' WHERE `id`='$_GET[ticket_id]'";
 			$result = mysql_query($query) or do_error($query,$query, mysql_error(), __FILE__, __LINE__);
 
@@ -135,19 +137,17 @@
 <?php
 //						generate dropdown menu of responders -- if(in_array($rowtemp[id], $row[responder]))
 
-		$query = "SELECT * FROM $GLOBALS[mysql_prefix]responder";
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `type` ASC";
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$height = (mysql_affected_rows() + 1) * 16;
 		$selected = (in_array("0", $responders))? "SELECTED" : "";	// NA is special case
 		print "<TD><SELECT NAME='frm_responder[]' style='width: 150px; height: " . $height ."px;' multiple><OPTION VALUE='0' $selected>NA</OPTION>\n";
-		$optstyles = array (1 => "Meds", 2 => "Fire", 3 => "Poli", 4 => "Othr");		// see css
     	while ($rowtemp = stripslashes_deep(mysql_fetch_array($result))) {
-    		$temp = $row['action_type'];
     		$selected = (in_array($rowtemp['id'], $responders))? " SELECTED" : "";
-			print "<OPTION VALUE='" . $rowtemp['id'] . "'" . $selected . ">" . $rowtemp['name'] . "</OPTION>\n";
+			print "\t<OPTION VALUE='" . $rowtemp['id'] . "'" . $selected . ">" . $rowtemp['name'] . "</OPTION>\n";
 			}
 		unset ($rowtemp);
-		print "</SELECT></TD></TR>\n";
+		print "\t</SELECT></TD></TR>\n";
 ?>
 		<TR CLASS='even'>
 		<TD CLASS="td_label">As of: &nbsp;&nbsp;</TD><TD>
@@ -174,19 +174,16 @@
 		<TR CLASS='even'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description"></TEXTAREA></TD></TR>
 <?php
 //						generate dropdown menu of responders
-//		$query = "SELECT `id`,`name`,`type` FROM $GLOBALS[mysql_prefix]responder";
-		$query = "SELECT `id`,`name`,`type` FROM $GLOBALS[mysql_prefix]responder";
+		$query = "SELECT `id`,`name`,`type` FROM $GLOBALS[mysql_prefix]responder ORDER BY `type` ASC";
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$height = (mysql_affected_rows() + 1) * 16;
 		print "<TR CLASS='odd' ><TD CLASS='td_label'>Units:</TD>";
-		print "<TD><SELECT NAME='frm_responder[]' style='width: 150px; height: " . $height ."px;' multiple><OPTION VALUE='0'>NA</OPTION>\n";
+		print "<TD><SELECT NAME='frm_responder[]' style='width: 250px; height: " . $height ."px;' multiple><OPTION VALUE='0'>NA</OPTION>\n";
 		
-		$optstyles = array (1 => "Meds", 2 => "Fire", 3 => "Poli", 4 => "Othr");		// see css
     	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-    		$temp = $row['type'];
-			print "<OPTION CLASS='" . $optstyles[$temp] . "' VALUE='" . $row['id'] . "'>" . $row['name'] . "</OPTION>\n";
+			print "\t<OPTION CLASS='" . $optstyles[$row['type']] . "' VALUE='" . $row['id'] . "'>" . $row['name'] . "</OPTION>\n";
 			}
-		print "</SELECT>\n</TD></TR>";
+		print "\t</SELECT>\n</TD></TR>";
 ?>
 		<TR CLASS='even'>
 		<TD CLASS="td_label">As of: &nbsp;&nbsp;</TD><TD>

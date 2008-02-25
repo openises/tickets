@@ -1,7 +1,6 @@
 <?php 
 	require_once('functions.inc.php'); 
 	do_login(basename(__FILE__));
-	$api_key = get_variable('gmaps_api_key');
 	$get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) ) ? "" : $_GET['action'] ;
 	
 ?> 
@@ -14,7 +13,6 @@
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT>
 function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
@@ -27,14 +25,11 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			return document.all[id];							
 			}							
 		}				
-<?php
-	print "var user = '";
-	print $_SESSION['user_name'];
-	print "'\n";
-	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";
-?>	
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
-	parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+
 	function validate(theForm) {
 		var errmsg="";
 		if (theForm.frm_name.value == "")			{errmsg+= "\tNAME is required\n";}
@@ -61,8 +56,9 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			$post_frm_meridiem_asof = empty($_POST['frm_meridiem_asof'])? "" : $_POST['frm_meridiem_asof'] ;
 			$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$post_frm_meridiem_asof";
 
-     		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]patient` (`description`,`ticket_id`,`date`,`user`,`action_type`, `name`, `updated`) VALUES('$_POST[frm_description]','$_GET[ticket_id]','$now',$_SESSION[user_id],$GLOBALS[ACTION_COMMENT], '$_POST[frm_name]', '$frm_asof')";
+     		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]patient` (`description`,`ticket_id`,`date`,`user`,`action_type`, `name`, `updated`) VALUES('$_POST[frm_description]','$_GET[ticket_id]','$now',$my_session[user_id],$GLOBALS[ACTION_COMMENT], '$_POST[frm_name]', '$frm_asof')";
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			do_log($GLOBALS['LOG_PATIENT_ADD'], mysql_insert_id(), $_GET[ticket_id]);
 
 			$result = mysql_query("UPDATE $GLOBALS[mysql_prefix]ticket SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'") or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
 

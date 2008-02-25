@@ -8,6 +8,7 @@ function optimize_db(){
 	}
 /* reset database to defaults */
 function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
+	global $my_session;
 	/* if($purge) {
 		print '<LI> Purging closed tickets...NOT IMPLEMENTED';
 		//$result = mysql_query("DELETE FROM action") or do_error("functions.php.inc::reset_db($user,$ticket,$settings)", 'mysql query failed', mysql_error(), __FILE__, __LINE__);
@@ -35,51 +36,56 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		print '<LI> Deleting settings...';
 
 		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]settings") or do_error('reset_db()::mysql_query(delete settings)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		do_insert_settings('_version','2.4.a beta');
-		do_insert_settings('host','www.yourdomain.com');
-		do_insert_settings('framesize','50');
-		do_insert_settings('frameborder','1');
-		do_insert_settings('allow_notify','0');
-		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
-		do_insert_settings('ticket_per_page','0');
-		do_insert_settings('abbreviate_description','65');
+		do_insert_settings('_aprs_time','0');
+		do_insert_settings('_version','2.5 beta');
 		do_insert_settings('abbreviate_affected','30');
-		do_insert_settings('validate_email','1');
+		do_insert_settings('abbreviate_description','65');
 		do_insert_settings('allow_custom_tags','0');
-		do_insert_settings('restrict_user_tickets','0');
-		do_insert_settings('restrict_user_add','0');
+		do_insert_settings('allow_notify','0');
+		do_insert_settings('aprs_poll','0');			// new 10/15/07
+		do_insert_settings('call_board','0');			// new 1/10/08
+		do_insert_settings('chat_time','4');			// new 1/16/08
 		do_insert_settings('date_format','Y-M-d H:i');
-		do_insert_settings('ticket_table_width','640');
-		do_insert_settings('guest_add_ticket','0');
-		do_insert_settings('military_time','0');
-		do_insert_settings('gmaps_api_key','0');		// frm_api_key
+		do_insert_settings('def_city','');
 		do_insert_settings('def_lat','39.1');			// approx center US
 		do_insert_settings('def_lng','-90.7');
-		do_insert_settings('def_zoom','3');
-		do_insert_settings('map_caption','Your area');
 		do_insert_settings('def_st','');
-		do_insert_settings('def_city','');
+		do_insert_settings('def_zoom','3');
 		do_insert_settings('delta_mins','0');
-		do_insert_settings('_aprs_time','0');
-		do_insert_settings('aprs_poll','0');			// new 10/15/07
-		do_insert_settings('UTM','0');
-		do_insert_settings('aprs_poll','0');
+		do_insert_settings('email_reply_to','');		// new 1/10/08
+		do_insert_settings('frameborder','1');
+		do_insert_settings('framesize','50');
+		do_insert_settings('gmaps_api_key','0');		// frm_api_key
+		do_insert_settings('guest_add_ticket','0');
+		do_insert_settings('host','www.yourdomain.com');
 		do_insert_settings('link_capt','');
 		do_insert_settings('link_url','');
-		}
+		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
+		do_insert_settings('map_caption','Your area');
+		do_insert_settings('map_height','512');
+		do_insert_settings('map_width','512');
+		do_insert_settings('military_time','0');
+		do_insert_settings('restrict_user_add','0');
+		do_insert_settings('restrict_user_tickets','0');
+		do_insert_settings('ticket_per_page','0');
+		do_insert_settings('ticket_table_width','640');
+		do_insert_settings('UTM','0');
+		do_insert_settings('validate_email','1');
+		}	//
+
 
 	print '<LI> Database reset done<BR /><BR />';
 	}
 
 function show_stats(){/* show database/user stats */
-
+	global $my_session;
 	//get variables from db
 	$user_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_USER]"));
 	$admin_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_ADMINISTRATOR]"));
 	$guest_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_GUEST]"));
 	$ticket_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket"));
 	$ticket_open_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE status='$GLOBALS[STATUS_OPEN]'"));
-	$meds_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_MEDS]"));
+	$meds_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_EMS]"));
 	$fire_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_FIRE]"));
 	$cops_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_COPS]"));
 	$othrs_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_OTHR]"));
@@ -102,27 +108,27 @@ function show_stats(){/* show database/user stats */
 	
 	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$user_in_db user$pluralU, $admin_in_db administrator$pluralA, $guest_in_db guest$pluralG, ".($user_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
-	print $_SESSION['user_name'];
+	print $my_session['user_name'];
 
-	switch($_SESSION['level']) {
+	switch($my_session['level']) {
 		case $GLOBALS['LEVEL_ADMINISTRATOR']: 	print ' (administrator)'; 	break;
 		case $GLOBALS['LEVEL_USER']: 			print ' (user)'; 			break;
 		case $GLOBALS['LEVEL_GUEST']: 			print ' (guest)'; 			break;
 		}
 
 	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
-	$_SESSION['ticket_per_page'] == 0 ? print "unlimited" : print $_SESSION['ticket_per_page'];
-	print " tickets/page, order by '<B>".str_replace('DESC','descending',$_SESSION['sortorder'])."</B>'</TD></TR>";
+	$my_session['ticket_per_page'] == 0 ? print "unlimited" : print $my_session['ticket_per_page'];
+	print " tickets/page, order by '<B>".str_replace('DESC','descending',$my_session['sortorder'])."</B>'</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
 	print "<TR CLASS='even'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
 	print $_SERVER["HTTP_USER_AGENT"];
 	print  "</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $my_session['scr_width'] . " x " . $my_session['scr_height'] . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 
 function list_users(){/* list users */
-	global $colors;
+	global $my_session, $colors;
 	$result = mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user") or do_error('list_users()::mysql_query()', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	if (!check_for_rows("SELECT id FROM $GLOBALS[mysql_prefix]user")) { print '<B>[no users found]</B><BR />'; return; 	}
 	print "<TABLE BORDER='0'>";
@@ -145,13 +151,17 @@ function list_users(){/* list users */
 	}
 
 function reload_session(){/* reload session variables from db after profile update */
-	$query 	= "SELECT * FROM $GLOBALS[mysql_prefix]user WHERE user='$_SESSION[user_name]'";
+	global $my_session;
+
+	$query 	= "SELECT * FROM $GLOBALS[mysql_prefix]user WHERE user='$my_session[user_name]'";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	$row 	= mysql_fetch_array($result);
-	$_SESSION['level'] 				= $row['level'];
-	$_SESSION['reporting']	 		= $row['reporting'];
-	$_SESSION['ticket_per_page'] 	= $row['ticket_per_page'];
-	$_SESSION['sortorder']			= $row['sortorder'].($row['sort_desc'] ? "DESC" : "");
+	$my_session 	= mysql_fetch_array($result);
+/*	
+	$my_session['level'] 				= $row['level'];
+	$my_session['reporting']	 		= $row['reporting'];
+	$my_session['ticket_per_page'] 	= $row['ticket_per_page'];
+	$my_session['sortorder']			= $row['sortorder'].($row['sort_desc'] ? "DESC" : "");
+*/
 	}
 
 function do_insert_settings($name,$value){/* insert new values into settings table */
@@ -196,37 +206,41 @@ function validate_email($email){ 	//really validate?/* validate email, code cour
 
 function get_setting_help($setting){/* get help for settings */
 	switch($setting) {
+		case '_aprs_time':				return 'Not user-settable; used for APRS time between polls'; break;
 		case '_version': 				return 'Tickets version number'; break;
-		case 'host': 					return 'Hostname where Tickets is run'; break;
-		case 'framesize': 				return 'Size of the top frame in pixels'; break;
-		case 'frameborder': 			return 'Size of frameborder'; break;
-		case 'allow_notify': 			return 'Allow/deny notification of ticket updates'; break;
-		case 'login_banner': 			return 'Message to be shown at login screen'; break;
-		case 'abbreviate_description': 	return 'Abbreviates descriptions at this length when listing tickets, 0 to turn off'; break;
-		case 'validate_email': 			return 'Simple email validation check for notifies'; break;
 		case 'abbreviate_affected': 	return 'Abbreviates \'affected\' string at this length when listing tickets, 0 to turn off'; break;
+		case 'abbreviate_description': 	return 'Abbreviates descriptions at this length when listing tickets, 0 to turn off'; break;
 		case 'allow_custom_tags': 		return 'Enable/disable use of custom tags for rowbreak, italics etc.'; break;
-		case 'restrict_user_tickets': 	return 'Restrict to showing only tickets to current user'; break;
-		case 'restrict_user_add': 		return 'Restrict user to only post tickets as himself'; break;
-		case 'reporting': 				return 'Enable/disable automatic ticket reporting (see help for more info)'; break;
+		case 'allow_notify': 			return 'Allow/deny notification of ticket updates'; break;
+		case 'aprs_poll':				return 'APRS will be polled every n minutes.  Use 0 for no poll'; break;
+		case 'call_board':				return 'Call Board feature - Use 0 for no Call Board'; break;
+		case 'chat_time':				return 'Keep n hours of Chat'; break;
 		case 'date_format': 			return 'Format dates according to php function date() variables'; break;
-		case 'ticket_table_width': 		return 'Width of table when showing ticket'; break;
-		case 'ticket_per_page': 		return 'Number of tickets per page to show'; break;
-		case 'guest_add_ticket': 		return 'Allow guest users to add tickets - NOT RECOMMENDED'; break;
-		case 'military_time': 			return 'Enter dates as military time (no am/pm)'; break;
+		case 'def_city':				return 'Default city name'; break;
 		case 'def_lat':					return 'Map center default lattitude'; break;
 		case 'def_lng':					return 'Map center default longitude'; break;
-		case 'def_zoom':				return 'Map default zoom'; break;
-		case 'gmaps_api_key':			return 'Google maps API key - see HELP/README re how to obtain'; break;
-		case 'map_caption':				return 'Map caption - cosmetic'; break;
 		case 'def_st':					return 'Default two-letter state'; break;
-		case 'def_city':				return 'Default city name'; break;
+		case 'def_zoom':				return 'Map default zoom'; break;
 		case 'delta_mins':				return 'Minutes delta - for server/users time synchronization'; break;
-		case '_aprs_time':				return 'Not user-settable; used for APRS time between polls'; break;
-		case 'aprs_poll':				return 'APRS will be polled every n minutes.  Use 0 for no poll'; break;
-		case 'UTM':						return 'Shows UTM values in addition to Lat/Long'; break;
+		case 'frameborder': 			return 'Size of frameborder'; break;
+		case 'framesize': 				return 'Size of the top frame in pixels'; break;
+		case 'gmaps_api_key':			return 'Google maps API key - see HELP/README re how to obtain'; break;
+		case 'guest_add_ticket': 		return 'Allow guest users to add tickets - NOT RECOMMENDED'; break;
+		case 'host': 					return 'Hostname where Tickets is run'; break;
 		case 'link_capt':				return 'Caption to be used for external link button'; break;
 		case 'link_url':				return 'URL of external page link'; break;
+		case 'login_banner': 			return 'Message to be shown at login screen'; break;
+		case 'map_caption':				return 'Map caption - cosmetic'; break;
+		case 'map_height':				return 'Map height - pixels'; break;
+		case 'map_width':				return 'Map width - pixels'; break;
+		case 'military_time': 			return 'Enter dates as military time (no am/pm)'; break;
+		case 'reporting': 				return 'Enable/disable automatic ticket reporting (see help for more info)'; break;
+		case 'restrict_user_add': 		return 'Restrict user to only post tickets as himself'; break;
+		case 'restrict_user_tickets': 	return 'Restrict to showing only tickets to current user'; break;
+		case 'ticket_per_page': 		return 'Number of tickets per page to show'; break;
+		case 'ticket_table_width': 		return 'Width of table when showing ticket'; break;
+		case 'UTM':						return 'Shows UTM values in addition to Lat/Long'; break;
+		case 'validate_email': 			return 'Simple email validation check for notifies'; break;
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}

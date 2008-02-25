@@ -168,12 +168,24 @@ var color=0;
 
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 
-	$types = array();	$types[$GLOBALS['TYPE_MEDS']] = "Medical";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
-						$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
+	$types = array();	$types[$GLOBALS['TYPE_EMS']] = "Medical";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
+						$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_MUTU']] = "Mutual";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
 
 	$query = "DELETE FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`=1 and `lat`=0";
 	$result = mysql_query($query);
 
+	$status_vals = array();											// build array of $status_vals
+	$status_vals[''] = $status_vals['0']="TBD";
+
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";	
+	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+
+	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+		$temp = $row_st['id'];
+		$status_vals[$temp] = $row_st['status_val'];
+		}
+	unset($result_st);
+	
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
@@ -211,17 +223,17 @@ var color=0;
 		$the_bull = ($mode == 0)? "" : "<FONT COLOR=" . $bulls[$mode] ."><B>&bull;</B></FONT>";
 			
 		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 16) . "</TD>"; 
-		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($row['status'], 16) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
-		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
-?>
+		$temp = $row['un_status_id'];
 
-		var do_map = true;		// default
-		
-<?php
-		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
+		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($status_vals[$temp], 10) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
+		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
+
+		print "\tvar do_map = true;\n";		// default
+
+		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $row['status'] . " </TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . shorten($status_vals[$temp], 10) . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:&nbsp;&nbsp;&nbsp;&nbsp;" . $toedit . "<A HREF='config.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
@@ -243,7 +255,7 @@ var color=0;
 ?>			
 				do_sidebar ("<?php print $sidebar_line; ?>", i);
 <?php			
-				$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
+				$tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
 				$tab_2 .="<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $rowtr['source'] . "</B></TD></TR>";
 				$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
 				$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";

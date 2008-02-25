@@ -57,6 +57,7 @@
 		`affected`= " .		quote_smart(trim($post_frm_affected)) . ",
 		`owner`= " . 		quote_smart(trim($post_frm_owner)) . ",
 		`severity`= " . 	quote_smart(trim($_POST['frm_severity'])) . ",
+		`in_types_id`= " . 	quote_smart(trim($_POST['frm_in_types_id'])) . ",
 		`status`=" . 		quote_smart(trim($_POST['frm_status'])) . ",
 		`problemstart`=".	quote_smart(trim($frm_problemstart)) . ",
 		`problemend`=".		$frm_problemend . ",
@@ -66,6 +67,12 @@
 		WHERE ID='$id'";
 
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		if (($_POST['frm_status'])== $GLOBALS['STATUS_OPEN']) {		// log the change
+			do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id);	
+			}
+		else {
+			do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $id);
+			}
 
 		print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
 		notify_user($id, $GLOBALS['NOTIFY_TICKET']);
@@ -87,6 +94,10 @@
 	<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT SRC="graticule.js" type="text/javascript"></SCRIPT>
 <SCRIPT>
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+
 	var map;
 	var grid = false;										// toggle
 	var thePoint;
@@ -164,7 +175,7 @@
 	$id = $_GET['id'];
 
 	if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {		/* update ticket */
-		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id'")) {
+		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id' LIMIT 1")) {
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
 			}
 		else {
@@ -190,9 +201,8 @@
 			} 
 
 		else {				// OK, do form
-			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]ticket WHERE ID='$id'") or do_error('edit.php::show_ticket', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]ticket WHERE ID='$id' LIMIT 1") or do_error('edit.php::show_ticket', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			$row = stripslashes_deep(mysql_fetch_array($result));
-
 			if (good_date($row['problemend'])) {
 ?>
 				<script>
@@ -201,34 +211,55 @@
 <?php			
 				}
 			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' >\n";
-			print "<TR CLASS='odd'><TD COLSPAN='2' ALIGN='center'><FONT CLASS='header'>Edit Run Ticket</FONT><BR /><BR /></TD></TR>";
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left'>";
 	
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
 			print "<TABLE BORDER='0' ID='data'>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Incident:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Phone:</TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_phone' VALUE='" . $row['phone'] . "' MAXLENGTH='16'></TD></TR>\n";
+			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='header'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
+			print "<TR CLASS='even'><TD CLASS='td_label'>Description:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Priority:</TD><TD><SELECT NAME='frm_severity'>";
+			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
+			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
+			$hsel = ($row['severity']==$GLOBALS['SEVERITY_HIGH'])? "SELECTED" : "" ;
+			
+			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_NORMAL'] . "' $nsel>normal</OPTION>";
+			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_MEDIUM'] . "' $msel>medium</OPTION>";
+			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>high</OPTION>";
+			print "</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nature:\n";
+
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`"; 
+			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			print "<SELECT NAME='frm_in_types_id'>";
+			while ($row2 = stripslashes_deep(mysql_fetch_array($result))) {
+				$sel = ($row['in_types_id'] == $row2['id'])? " SELECTED" : "" ;
+				print "<OPTION VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
+				}
+			unset ($result);
+			print "</SELECT>";
+			print "</TD></TR>\n";
+			
+			print "<TR CLASS='even'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Phone:</TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_phone' VALUE='" . $row['phone'] . "' MAXLENGTH='16'></TD></TR>\n";
 			$selO = ($row['status']==$GLOBALS['STATUS_OPEN'])?   "SELECTED" :"";
 			$selC = ($row['status']==$GLOBALS['STATUS_CLOSED'])? "SELECTED" :"" ;
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Status:</TD><TD>
+			print "<TR CLASS='even'><TD CLASS='td_label'>Status:</TD><TD>
 				<SELECT NAME='frm_status'><OPTION VALUE='" . $GLOBALS['STATUS_OPEN'] . "' $selO>Open</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_CLOSED'] . "'$selC>Closed</OPTION></SELECT></TD></TR>";
-			print "<TR CLASS='even'><TD COLSPAN='2'>&nbsp;</TD></TR>";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Address:</TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>City:</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
+			print "<TR CLASS='odd'><TD COLSPAN='2'>&nbsp;</TD></TR>";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>City:</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
 			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; St:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
-//			print "<TR CLASS='odd'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
+//			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
 	
-			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Description:</TD>";
+			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD>";
 			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='35' ROWS='4'>" . $row['description'] . "</TEXTAREA></TD></TR>\n";
-			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Comments:</TD>";
+			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Comments:</TD>";
 			
 			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='35' ROWS='4'>" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
 			//lookup owners
 /*			if (get_variable('restrict_user_add') && !(is_administrator()))
-				print "<INPUT TYPE='hidden' NAME='frm_owner' VALUE='$_SESSION[user_id]'>";
+				print "<INPUT TYPE='hidden' NAME='frm_owner' VALUE='$my_session[user_id]'>";
 			else {
-				print '<TR CLASS='odd'><TD CLASS="td_label">Owner:</TD><TD>';
+				print '<TR CLASS='even'><TD CLASS="td_label">Owner:</TD><TD>';
 				$result2 = mysql_query("SELECT id,user FROM $GLOBALS[mysql_prefix]user") or do_error('edit.php::lookup_owner', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 				print '<SELECT NAME="frm_owner">';
 				while ($row2 = stripslashes_deep(mysql_fetch_array($result2))) {
@@ -238,36 +269,26 @@
 				print '</SELECT></TD></TR>';
 				}
 */				
-			print "<TR CLASS='even'><TD CLASS='td_label'>Priority:</TD><TD><SELECT NAME='frm_severity'>";
-			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
-			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
-			$hsel = ($row['severity']==$GLOBALS['SEVERITY_HIGH'])? "SELECTED" : "" ;
-			
-			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_NORMAL'] . "' $nsel>normal</OPTION>";
-			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_MEDIUM'] . "' $msel>medium</OPTION>";
-			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>high</OPTION>";
-			print "</SELECT></TD></TR>\n";
-			
-			print "\n<TR CLASS='odd'><TD CLASS='td_label'>Run Start:</TD><TD>";
+			print "\n<TR CLASS='even'><TD CLASS='td_label'>Run Start:</TD><TD>";
 			print  generate_date_dropdown("problemstart",$row['problemstart']);
 			print "</TD></TR>\n";
 			if (good_date($row['problemend'])) {
-				print "\n<TR CLASS='even'><TD CLASS='td_label'>Run End:</TD><TD>";
+				print "\n<TR CLASS='odd'><TD CLASS='td_label'>Run End:</TD><TD>";
 				generate_date_dropdown("problemend",$row['problemend']);
 				print "</TD></TR>\n";
 				}
 			else {
-				print "\n<TR CLASS='even' valign='middle'><TD CLASS='td_label'>Run End: &nbsp;&nbsp;<input type='radio' name='re_but' onClick ='do_end();' /></TD><TD>";
+				print "\n<TR CLASS='odd' valign='middle'><TD CLASS='td_label'>Run End: &nbsp;&nbsp;<input type='radio' name='re_but' onClick ='do_end();' /></TD><TD>";
 				print "<SPAN style = 'visibility:hidden' ID = 'runend1'>";
 				generate_date_dropdown('problemend','' , TRUE);
 				print "</SPAN></TD></TR>\n";
 				}
 
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Map:</TD><TD>&nbsp;&nbsp;Lat:&nbsp;&nbsp;<INPUT SIZE='12' TYPE='text' NAME='frm_lat' VALUE='" . $row['lat'] . "' MAXLENGTH='12' disabled>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Map:</TD><TD>&nbsp;&nbsp;Lat:&nbsp;&nbsp;<INPUT SIZE='12' TYPE='text' NAME='frm_lat' VALUE='" . $row['lat'] . "' MAXLENGTH='12' disabled>\n";
 			print "&nbsp;&nbsp;&nbsp;&nbsp;Lon:&nbsp;&nbsp;<INPUT SIZE='12' TYPE='text' NAME='frm_lng' VALUE='" . $row['lng'] . "' MAXLENGTH='12' disabled></TD></TR>\n";
 			$lat = $row['lat']; $lng = $row['lng'];	
-			print "<TR CLASS='odd'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='document.can_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='document.can_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='reset' VALUE='Reset' onclick= 'reset_end(); resetmap($lat, $lng);' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>";
 ?>	
 			<INPUT TYPE="hidden" NAME="frm_status_default" VALUE="<?php print $row['status'];?>">
@@ -278,7 +299,7 @@
 <?php
 			print "</TABLE>";		// end data
 			print "</td><td>";
-			print "<TABLE ID='mymap' border = 0><TR><TD ALIGN='center'><DIV ID='map' STYLE='WIDTH: 450PX; HEIGHT: 480PX'></DIV>
+			print "<TABLE ID='mymap' border = 0><TR><TD ALIGN='center'><DIV ID='map' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX'></DIV>
 				<BR /><A HREF='#' onClick='toglGrid()'><u>Grid</U></A></TD></TR></TABLE ID='mymap'>\n";
 			
 			print "</TD></TR>";
@@ -336,7 +357,7 @@
 
 <?php
 		$street = empty($row['street'])? "" : "<BR/>" . $row['street'] . "<BR/>" . $row['city'] . " " . $row['state'] ;
-		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
+		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['scope'], 120)  . "</B></TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Reported by:</TD><TD>" . shorten($row['contact'], 32) . "</TD></TR>";

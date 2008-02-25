@@ -3,7 +3,6 @@ require_once('functions.inc.php');
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
 
-
 //	require_once('config.inc.php');
 //	require_once('responders.php');
 //	foreach ($_POST as $VarName=>$VarValue) {echo "POST:$VarName => $VarValue, <BR />";};
@@ -13,8 +12,13 @@ $api_key = get_variable('gmaps_api_key');
 extract($_GET);
 
 function list_responders($addon = '', $start) {
+global $my_session;
 ?>
 <SCRIPT>
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+
 	var color=0;
 	var colors = new Array ('odd', 'even');
 
@@ -216,18 +220,25 @@ function list_responders($addon = '', $start) {
 
 <?php
 
-	$types = array();	$types[$GLOBALS['TYPE_MEDS']] = "Medical";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
-						$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
+	$types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
+						$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_MUTU']] = "Mutual";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
 
 	$query = "DELETE FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`=1 and `lat`=0";
 	$result = mysql_query($query);
+	
+	$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]un_status`";		// build unit status array
+	$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$status_vals[0]="TBD";
+	while ($temp_row = mysql_fetch_array($temp_result)) {					// build array of values
+		$status_vals[$temp_row['id']]=$temp_row['status_val'];
+		}	
 
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-		// major while ... for RESPONDER data starts here
-
 	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black"); 
+
+		// major while ... for RESPONDER data starts here
 							
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
 		$toedit = (is_guest())? "" : "<A HREF='config.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
@@ -286,17 +297,17 @@ function list_responders($addon = '', $start) {
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 			
 		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 16) . "</TD>";
-		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($row['status'], 16) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
+		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($status_vals[$row['un_status_id']], 16) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
 		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
 ?>
 
 		var do_map = true;		// default
 		
 <?php
-		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
+		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $row['status'] . " </TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $status_vals[$row['un_status_id']] . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:&nbsp;&nbsp;&nbsp;&nbsp;" . $toedit . "<A HREF='config.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
@@ -318,7 +329,7 @@ function list_responders($addon = '', $start) {
 ?>			
 				do_sidebar ("<?php print str_replace($eols, " ", $sidebar_line); ?>", i);
 <?php			
-				$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
+				$tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
 				$tab_2 .="<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $last['source'] . "</B></TD></TR>";
 				$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $last['course'] . ", Speed:  " . $last['speed'] . ", Alt: " . $last['altitude'] . "</TD></TR>";
 				$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $last['closest_city'] . "</TD></TR>";
@@ -386,12 +397,13 @@ function list_responders($addon = '', $start) {
 <?php
 	print "<SCRIPT>\n";
 	print "var user = '";
-	print $_SESSION['user_name'];
+	print $my_session['user_name'];
 	print "'\n";
-	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";
+	print "\nvar level = '" . get_level_text ($my_session['level']) . "'\n";
 ?>	
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
 	parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print basename( __FILE__);?>";
 
 	function ck_frames() {		// ck_frames()
 		if(self.location.href==parent.location.href) {
@@ -406,11 +418,12 @@ function list_responders($addon = '', $start) {
 		<TABLE ID='outer'><TR CLASS='even'><TD ALIGN='center' colspan=2><B><FONT SIZE='+1'>Unit Tracks</FONT></B></TD></TR><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>
-			<DIV ID='map' style='width: 500px; height: 400px; border-style: outset'></DIV>
+			<DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 			<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
-				Medical: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-				Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-				Police: 	<IMG SRC = './markers/sm_blue.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
+				EMS: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;
+				Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;
+				Police: 	<IMG SRC = './markers/sm_blue.png' BORDER=0>&nbsp;&nbsp;&nbsp;
+				Mutual:		<IMG SRC = './markers/sm_white.png' BORDER=0>&nbsp;&nbsp;
 				Other: 		<IMG SRC = './markers/sm_green.png' BORDER=0>		
 			</TD></TR></TABLE><!-- end outer -->
 			

@@ -15,19 +15,16 @@ $evenodd = array ("even", "odd");
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
+
 function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
 		}
+	}
 
-<?php
-	print "var user = '";
-	print $_SESSION['user_name'];
-	print "'\n";
-	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";
-?>	
-		parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
-		parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 function validate(theForm) {
 	function TrimString(sInString) {
@@ -60,7 +57,7 @@ function validate(theForm) {
 			}
 		
 		if (get_variable('restrict_user_tickets') && !(is_administrator()))		//is user restricted to his/her own tickets?
-			$restrict_ticket = "AND owner='$_SESSION[user_id]'";
+			$restrict_ticket = "AND owner='$my_session[user_id]'";
 		else{
 			$restrict_ticket = "";
 			}

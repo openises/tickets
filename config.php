@@ -2,13 +2,15 @@
 	require_once('functions.inc.php');
 	require_once('config.inc.php');
 	require_once('responders.php');
-	do_login(basename(__FILE__));
-//	foreach ($_POST as $VarName=>$VarValue) {echo "POST:$VarName => $VarValue, <BR />";};
-//	foreach ($_GET as $VarName=>$VarValue) 	{echo "GET:$VarName => $VarValue, <BR />";};
-//	echo "<BR/>";
-
-extract($_GET);
-if (!isset($func)) {$func = "summ";}
+	if ($istest) {
+		foreach ($_POST as $VarName=>$VarValue) 	{echo "POST:$VarName => $VarValue, <BR />";};
+		foreach ($_GET as $VarName=>$VarValue) 		{echo "GET:$VarName => $VarValue, <BR />";};
+		echo "<BR/>";
+		}
+	do_login(basename(__FILE__));	// session_start()
+	extract($_GET);
+	if (!isset($func)) {$func = "summ";}
+	$reload_top = FALSE;		
 	
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -25,18 +27,16 @@ if (!isset($func)) {$func = "summ";}
 			if(self.location.href==parent.location.href) {
 				self.location.href = 'index.php';
 				}
-			}		// end function ck_frames()
-	</SCRIPT>
-
 <?php
-	print "<SCRIPT>\n";
-	print "var user = '";
-	print $_SESSION['user_name'];
-	print "'\n";
-	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";
-?>	
-//	parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
-//	parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+	dump ($reload_top);
+	if ($reload_top) {
+		print "\n\talert(32);\n";
+		}
+?>
+			}		// end function ck_frames()
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name']; ?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML  = "<?php print get_level_text($my_session['level']); ?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 	function do_Cancel() {
 		window.location = "config.php?func=responder";
@@ -88,7 +88,6 @@ if (!isset($func)) {$func = "summ";}
 		}				// end function validate(theForm)
 
 	function validate_res(theForm) {			// Responder form contents validation	
-//		alert (theForm.frm_mobile.checked);
 		if (theForm.frm_remove) {
 			if (theForm.frm_remove.checked) {
 				if(confirm("Please confirm removing this Unit")) 	{return true;}
@@ -102,7 +101,7 @@ if (!isset($func)) {$func = "summ";}
 			}
 		if (theForm.frm_name.value=="")				{errmsg+="\tUnit NAME is required.\n";}
 		if (theForm.frm_descr.value=="")			{errmsg+="\tUnit DESCRIPTION is required.\n";}
-		if (theForm.frm_status.value=="")			{errmsg+="\tUnit STATUS is required.\n";}
+		if (theForm.frm_un_status_id.value==0)		{errmsg+="\tUnit STATUS is required.\n";}
 		if (!got_type)								{errmsg+="\tUnit TYPE is required.\n";}
 		if (!theForm.frm_mobile.checked) {		// fixed
 			theForm.frm_lat.disabled=false;
@@ -274,14 +273,14 @@ if (!isset($func)) {$func = "summ";}
 		
 			$on_ticket = (isset($_POST['frm_on_ticket']))? $_POST['frm_on_ticket']:0 ;
 			$on_action = (isset($_POST['frm_on_action']))? $_POST['frm_on_action']:0 ;
-			$query = "INSERT INTO $GLOBALS[mysql_prefix]notify SET ticket_id='$_POST[frm_id]',user='$_SESSION[user_id]',email_address='$_POST[frm_email]',execute_path='$_POST[frm_execute]',on_action='$on_action',on_ticket='$on_ticket'";
+			$query = "INSERT INTO $GLOBALS[mysql_prefix]notify SET ticket_id='$_POST[frm_id]',user='$my_session[user_id]',email_address='$_POST[frm_email]',execute_path='$_POST[frm_execute]',on_action='$on_action',on_ticket='$on_ticket'";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 			print "<FONT SIZE='3'><B>Notify added.</B></FONT><BR /><BR />";
 			}
 		else {
-			if ($_SESSION['user_id'])
-				$query = "SELECT * FROM $GLOBALS[mysql_prefix]notify WHERE user='$_SESSION[user_id]'";
+			if ($my_session['user_id'])
+				$query = "SELECT * FROM $GLOBALS[mysql_prefix]notify WHERE user='$my_session[user_id]'";
 			else
 				$query = "SELECT * FROM $GLOBALS[mysql_prefix]notify";
 				
@@ -341,23 +340,23 @@ case 'profile' :					//update profile
 				print '<FONT CLASS="warn">BOTH password fields are required. Password is not updated.</FONT><BR />';
 				}
 			if(!$set_passwd) {		// skip password update
-				$query = "UPDATE $GLOBALS[mysql_prefix]user SET info='$_POST[frm_info]',email='$_POST[frm_email]',sortorder='$_POST[frm_sortorder]',sort_desc='$frm_sort_desc',ticket_per_page='$_POST[frm_ticket_per_page]' WHERE id='$_SESSION[user_id]'";
+				$query = "UPDATE $GLOBALS[mysql_prefix]user SET info='$_POST[frm_info]',email='$_POST[frm_email]',sortorder='$_POST[frm_sortorder]',sort_desc='$frm_sort_desc',ticket_per_page='$_POST[frm_ticket_per_page]' WHERE id='$my_session[user_id]'";
 				}
 			else {
-				$query = "UPDATE $GLOBALS[mysql_prefix]user SET passwd=PASSWORD('$_POST[frm_passwd]'),info='$_POST[frm_info]',email='$_POST[frm_email]',sortorder='$_POST[frm_sortorder]',sort_desc='$frm_sort_desc',ticket_per_page='$_POST[frm_ticket_per_page]' WHERE id='$_SESSION[user_id]'";
+				$query = "UPDATE $GLOBALS[mysql_prefix]user SET passwd=PASSWORD('$_POST[frm_passwd]'),info='$_POST[frm_info]',email='$_POST[frm_email]',sortorder='$_POST[frm_sortorder]',sort_desc='$frm_sort_desc',ticket_per_page='$_POST[frm_ticket_per_page]' WHERE id='$my_session[user_id]'";
 				}
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			reload_session();
 			print '<B>Your profile has been updated.</B><BR /><BR />';
 			}
 		else {
-			$query = "SELECT id FROM $GLOBALS[mysql_prefix]user WHERE id='" . $_SESSION['user_id'] . "'";
-			if ($_SESSION['user_id'] < 0 OR check_for_rows($query) == 0) {
-				print __LINE__ . " Invalid user id '$_SESSION[user_id]'.";
+			$query = "SELECT id FROM $GLOBALS[mysql_prefix]user WHERE id='" . $my_session['user_id'] . "'";
+			if ($my_session['user_id'] < 0 OR check_for_rows($query) == 0) {
+				print __LINE__ . " Invalid user id '$my_session[user_id]'.";
 				exit();
 				}
 
-			$query	= "SELECT * FROM $GLOBALS[mysql_prefix]user WHERE id='$_SESSION[user_id]'";
+			$query	= "SELECT * FROM $GLOBALS[mysql_prefix]user WHERE id='$my_session[user_id]'";
 			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			$row	= mysql_fetch_array($result);
 
@@ -374,7 +373,7 @@ case 'profile' :					//update profile
 			<OPTION value="description" <?php if($row['sortorder']=='description') print " selected";?>>Description</OPTION>
 			<OPTION value="affected" <?php if($row['sortorder']=='affected') print " selected";?>>Affected</OPTION>
 			</SELECT>&nbsp; Descending <INPUT TYPE="checkbox" value="1" name="frm_sort_desc" <?php if ($row['sort_desc']) print "checked";?>></TD></TR>
-			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_SESSION['user_id'];?>">
+			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $my_session['user_id'];?>">
 			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
@@ -431,11 +430,10 @@ case 'settings' :
 		if (is_administrator())	{
 			if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
 				foreach ($_POST as $VarName=>$VarValue) {
-				
 					$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`=". quote_smart($VarValue)." WHERE `name`='".$VarName."'";
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-					}		
-	
+					}
+				$reload_top = TRUE;			// reload top frame for possible new settings value
 				print '<FONT CLASS="header">Settings saved.</FONT><BR /><BR />';
 				}
 			else {
@@ -628,287 +626,6 @@ case 'user' :
 		}				// end if($_GET['add'] ...		
     break;
 
-case 'responder' :
-	function finished ($caption) {
-		print "</HEAD><BODY onLoad = 'document.fin_form.submit();'>";
-		print "<FORM NAME='fin_form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
-		print "<INPUT TYPE='hidden' NAME='caption' VALUE='" . $caption . "'>";
-		print "<INPUT TYPE='hidden' NAME='func' VALUE='responder'>";
-		print "</FORM></BODY></HTML>";	
-		}
-
-	function do_calls($id = 0) {
-		$print = "\n<SCRIPT>\n";
-		$print .="\t\tvar calls = new Array();\n";
-		$query	= "SELECT `id`, `callsign` FROM `$GLOBALS[mysql_prefix]responder` where `id` != $id";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		while($row = stripslashes_deep(mysql_fetch_array($result))) {
-			if (!empty($row['callsign'])) {
-				$print .="\t\tcalls.push('" .$row['callsign'] . "');\n";
-				}
-			}				// end while();
-		$print .= "</SCRIPT>\n";
-		return $print;
-		}		// end function 
-
-	$_postfrm_remove = 	(array_key_exists ('frm_remove',$_POST ))? $_POST['frm_remove']: "";
-	$_getgoedit = 		(array_key_exists ('goedit',$_GET )) ? $_GET['goedit']: "";
-	$_getgoadd = 		(array_key_exists ('goadd',$_GET ))? $_GET['goadd']: "";
-	$_getedit = 		(array_key_exists ('edit',$_GET))? $_GET['edit']:  "";
-	$_getadd = 			(array_key_exists ('add',$_GET))? $_GET['add']:  "";
-	$_getview = 		(array_key_exists ('view',$_GET ))? $_GET['view']: "";
-
-	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-	$caption = "";
-	if ($_postfrm_remove == 'yes') {					//delete Responder	
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]responder WHERE id='$_POST[frm_id]'";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$caption = "<B>Unit <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been deleted from database.</B><BR /><BR />";
-		}
-	else {
-		if ($_getgoedit == 'true') {
-			$frm_mobile = ((array_key_exists ('frm_mobile',$_POST )) && ($_POST['frm_mobile']=='on'))? 1 : 0 ;		
-			$query = "UPDATE $GLOBALS[mysql_prefix]responder SET 
-				`name`='$_POST[frm_name]',
-				`description`='$_POST[frm_descr]',
-				`status`='$_POST[frm_status]',
-				`callsign`='$_POST[frm_callsign]',
-				`mobile`='$frm_mobile',
-				`contact_name`='$_POST[frm_contact_name]',
-				`contact_via`='$_POST[frm_contact_via]',
-				`lat`='$_POST[frm_lat]',
-				`lng`='$_POST[frm_lng]',
-				`type`='$_POST[frm_type]',
-				`updated`='$now' 
-				WHERE `id`='$_POST[frm_id]';";		// 
-	
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$caption = "<B>Unit <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been updated.</B><BR /><BR />";
-			finished ($caption);			// wrap it up
-			}
-		}				// end else {}
-		
-	if ($_getgoadd == 'true') {
-		$frm_mobile = ((array_key_exists ('frm_mobile',$_POST )) && ($_POST['frm_mobile']=='on'))? 1 : 0 ;		
-	
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
-			name, description, status, callsign, mobile, contact_name, contact_via, lat, lng, type, updated ) 
-			VALUES(
-			'$_POST[frm_name]', '$_POST[frm_descr]', '$_POST[frm_status]', '$_POST[frm_callsign]', '$frm_mobile', '$_POST[frm_contact_name]', '$_POST[frm_contact_via]', '$_POST[frm_lat]', '$_POST[frm_lng]', '$_POST[frm_type]', '$now')";
-
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$caption = "<B>Unit <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been added.</B><BR /><BR />";
-		finished ($caption);		// wrap it up
-		}							// end if ($_getgoadd == 'true')
-	
-	if ($_getadd == 'true') {
-		print do_calls();		// call signs to JS array for validation
-?>		
-		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		</HEAD>
-		<BODY  onLoad = "ck_frames()" onunload="GUnload()">
-		<FONT CLASS="header">Add Unit</FONT><BR /><BR />
-		<TABLE BORDER=0 ID='outer'><TR><TD>
-		<TABLE BORDER="0" ID='addform'>
-		<!-- 688 good -->
-		<FORM NAME= "res_add_Form" METHOD="POST" onSubmit="return validate_res(document.res_add_Form);" ACTION="config.php?func=responder&goadd=true">
-		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>		<TD><INPUT SIZE="48" MAXLENGTH="80" TYPE="text" NAME="frm_status" VALUE="" /></TD></TR>
-		<TR CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile"></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" /></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MEDS'];?>" NAME="frm_type"> Medical<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE'];?>" NAME="frm_type"> Fire<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS'];?>" NAME="frm_type"> Police<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR'];?>" NAME="frm_type"> Other<BR />
-			</TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="" disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="" disabled /></TD></TR>
-		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel"   onClick = "document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
-		</FORM></TABLE> <!-- end inner left -->
-		</TD><TD ALIGN='center'>
-		<DIV ID='map' style='width: 500px; height: 400px; border-style: outset'></DIV>
-		<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
-			Medical: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-			Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-			Police: 	<IMG SRC = './markers/sm_blue.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-			Other: 		<IMG SRC = './markers/sm_green.png' BORDER=0>		
-		</TD></TR></TABLE><!-- end outer -->
-
-<?php
-		map("a") ;				// call GMap js ADD mode
-?>
-		<FORM NAME='can_Form' METHOD="get" ACTION = "config.php">
-		<INPUT TYPE='hidden' NAME = 'func' VALUE='responder'/>
-		</FORM>
-		</BODY>
-		</HTML>
-<?php
-		exit();
-		}		// end if ($_GET['add'])
-
-	if ($_getedit == 'true') {
-		$id = $_GET['id'];
-		$query	= "SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE id=$id";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$row	= mysql_fetch_array($result);		
-		$type_checks = array ("", "", "", "", "");
-		$type_checks[$row['type']] = " checked";
-		$checked = (!empty($row['mobile']))? " checked" : "" ;
-		print do_calls($id);								// generate JS calls array
-?>		
-		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		</HEAD>
-		<BODY onLoad = "ck_frames()" onunload="GUnload()">
-		<FONT CLASS="header">Edit Unit Data</FONT><BR /><BR />
-		<TABLE BORDER=0 ID='outer'><TR><TD>
-		<TABLE BORDER="0" ID='editform'>
-		<FORM METHOD="POST" NAME= "res_edit_Form" onSubmit="return validate_res(document.res_edit_Form);" ACTION="config.php?func=responder&goedit=true">
-		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>		<TD><INPUT SIZE="48" MAXLENGTH="80" TYPE="text" NAME="frm_status" VALUE="<?php print $row['status'] ;?>" /></TD></TR>
-		<TR VALIGN = 'baseline' CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'] ;?>" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
-<?php
-		$type_checks = array ("", "", "", "", "");	// all empty
-		$type_checks[$row['type']] = " checked";		// set the nth entry
-?>		
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MEDS']; ?>" NAME="frm_type" <?php print $type_checks[1];?>> Medical<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE']; ?>" NAME="frm_type" <?php print $type_checks[2];?>> Fire<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS']; ?>" NAME="frm_type" <?php print $type_checks[3];?>> Police<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[4];?>> Other<BR />
-		</TD></TR>
-	
-		<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
-		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS="even"><TD CLASS="td_label">Remove Unit:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" ></TD></TR>
-		<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick= "do_Cancel();return false;" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
-		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
-		</FORM></TABLE>
-		</TD><TD><DIV ID='map' style='width: 400px; height: 400px; border-style: inset'></DIV></TD></TR></TABLE>
-<?php
-		print do_calls($id);		// generate JS calls array
-		map("e") ;				// call GMap js EDIT mode
-?>
-		<FORM NAME='can_Form' METHOD="get" ACTION = "config.php">
-		<INPUT TYPE='hidden' NAME = 'func' VALUE='responder'/>
-		</FORM>
-		</BODY>
-		</HTML>
-<?php
-		exit();
-		}		// end if ($_GET['edit'])
-
-		if ($_getview == 'true') {
-			$id = $_GET['id'];
-			$query	= "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder WHERE id=$id";
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row	= mysql_fetch_array($result);		
-			$type_checks = array ("", "", "", "", "");
-			$type_checks[$row['type']] = " checked";
-			$checked = (!empty($row['mobile']))? " checked" : "" ;			
-			$coords =  $row['lat'] . "," . $row['lng'];		// for UTM
-?>			
-		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		</HEAD>
-		<BODY onLoad = "ck_frames()" onunload="GUnload()">
-			<FONT CLASS="header">Unit Data</FONT><BR /><BR />
-			<TABLE BORDER=0 ID='outer'><TR><TD>
-			<TABLE BORDER="0" ID='viewform'>
-			<FORM METHOD="POST" NAME= "res_view_Form" ACTION="config.php?func=responder">
-			<TR CLASS = "even"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'] ;?></TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Description: </TD>	<TD><?php print $row['description'];?></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>		<TD><?php print $row['status'] ;?> </TD></TR>
-			<TR VALIGN = 'baseline' CLASS = "odd"><TD CLASS="td_label">Callsign:</TD>		<TD><?php print $row['callsign'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT disabled TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><?php print $row['contact_name'] ;?></TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><?php print $row['contact_via'] ;?></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Type: </TD><TD>
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MEDS']; ?>" NAME="frm_type" <?php print $type_checks[1];?>> Medical<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE']; ?>" NAME="frm_type" <?php print $type_checks[2];?>> Fire<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS']; ?>" NAME="frm_type" <?php print $type_checks[3];?>> Police<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[4];?>> Other<BR />
-				</TD></TR>
-			<TR CLASS = 'odd'><TD CLASS="td_label">As of:</TD>							<TD><?php print format_date($row['updated']); ?></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Map:<TD ALIGN='center'><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
-<?php
-		$utm = get_variable('UTM');
-		if ($utm==1) {
-			$coords =  $row['lat'] . "," . $row['lng'];
-			print "<TR CLASS='odd'><TD CLASS='td_label'>UTM:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
-			}
-		$toedit = (is_guest())? "" : "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
-?>			
-			<TR><TD>&nbsp;</TD></TR>
-			<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'><?php print $toedit; ?></TD></TR>
-			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
-			</FORM></TABLE>
-			</TD><TD><DIV ID='map' style="width: 400px; height: 400px; border-style: inset"></DIV></TD></TR></TABLE>
-			<FORM NAME="can_Form" METHOD="post" ACTION = "config.php"></FORM>		
-			<FORM NAME="to_edit_Form" METHOD="post" ACTION = "config.php?func=responder&edit=true&id=<?php print $id; ?>"></FORM>		
-			</BODY>					<!-- END RESPONDER VIEW -->
-<?php
-			map("v") ;				// call GMap js EDIT mode
-?>
-			</BODY>
-			</HTML>
-<?php
-			exit();
-			}		// end if ($_GET['view'])
-
-		$do_list_and_map = TRUE;
-		
-		if($do_list_and_map) {
-			if (!isset($mapmode)) {$mapmode="a";}
-			print $caption;
-?>
-		<META HTTP-EQUIV="REFRESH" CONTENT="180">
-		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		</HEAD><!-- 797 -->
-		<BODY onLoad = "ck_frames()" onunload="GUnload()">
-		<TABLE ID='outer'><TR><TD>
-			<DIV ID='side_bar'></DIV>
-			</TD><TD ALIGN='center'>
-			<DIV ID='map' style='width: 500px; height: 400px; border-style: outset'></DIV>
-			<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
-				Medical: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-				Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-				Police: 	<IMG SRC = './markers/sm_blue.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;
-				Other: 		<IMG SRC = './markers/sm_green.png' BORDER=0>		
-			</TD></TR></TABLE><!-- end outer -->
-			
-			<FORM NAME='view_form' METHOD='get' ACTION='config.php'>
-			<INPUT TYPE='hidden' NAME='func' VALUE='responder'>
-			<INPUT TYPE='hidden' NAME='view' VALUE='true'>
-			<INPUT TYPE='hidden' NAME='id' VALUE=''>
-			</FORM>
-			
-			<FORM NAME='add_Form' METHOD='get' ACTION='config.php'>
-			<INPUT TYPE='hidden' NAME='func' VALUE='responder'>
-			<INPUT TYPE='hidden' NAME='add' VALUE='true'>
-			</FORM>
-			
-			<FORM NAME='can_Form' METHOD="get" ACTION = "config.php?func=responder"></FORM>
-			<FORM NAME='tracks_Form' METHOD="get" ACTION = "tracks.php"></FORM>
-			</BODY>				<!-- END RESPONDER LIST and ADD -->
-<?php
-		print do_calls();		// generate JS calls array
-//		$button = (is_guest())? "": "<TR><TD COLSPAN='99' ALIGN='center'><BR /><INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'></TD></TR>";
-
-		$buttons = "<TR><TD COLSPAN=99 ALIGN='center'><BR /><INPUT TYPE = 'button' onClick = 'document.tracks_Form.submit();' VALUE='Unit Tracks'>";
-		$buttons .= (is_guest())? "":"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>";
-		$buttons .= "</TD></TR>";
-
-		print list_responders($buttons, 0);
-		print "\n</HTML> \n";
-		exit();
-		}				// end if($do_list_and_map)
-    break;
-
 case 'center' :
 ?>
 	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
@@ -956,7 +673,7 @@ case 'center' :
 		<TR CLASS = "even"><TD COLSPAN=5 ALIGN='center'>
 			<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
 		</FORM></TABLE>
-		</TD><TD><DIV ID='map' style='width: 500px; height: 400px; border-style: outset'></DIV>
+		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Drag/Zoom and double-click to new default position</SPAN></FONT></CENTER>
 		</TD></TR>
 		</TABLE>
@@ -1121,6 +838,14 @@ case 'delete' :
 ?>
 		<LI><A HREF="config.php?func=profile">Edit My Profile</A>
 		<LI><A HREF="config.php?func=notify">Edit My Notifies</A>
+		<LI></LI>
+		<LI><A HREF="tables.php?tablename=contacts">Contacts</A>
+		<LI><A HREF="tables.php?tablename=in_types">Incident types</A>
+		<LI><A HREF="tables.php?tablename=un_status">Unit status types</A>
+		<LI><A HREF="tables.php?tablename=log">Log</A>
+<!--	<LI><A HREF="tables.php?tablename=session">Session</A>
+		<LI><A HREF="tables.php?tablename=ticket">Tickets</A> 
+		<LI><A HREF="tables.php?tablename=responder">Units</A> -->
 		<BR /><BR />
 <?php
 		list_users();
@@ -1138,7 +863,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 //
 		function writeConsole(content) {
 			top.consoleRef=window.open('','myconsole',
-				'width=800,height=250' +',menubar=0' +',toolbar=0' +',status=0' +',scrollbars=0' +',resizable=0')
+				'width=800,height=250' +',menubar=0' +',toolbar=0' +',status=0' +',scrollbars=1' +',resizable=1')
 		 	top.consoleRef.document.writeln('<html><head><title>Console</title></head>'
 				+'<body bgcolor=white onLoad="self.focus()">' +content +'</body></HTML>'
 				)				// end top.consoleRef.document.writeln()

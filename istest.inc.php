@@ -2,9 +2,10 @@
 error_reporting(E_ALL);
 //$istest = TRUE;
 $istest = FALSE;
-if ($istest) {  
+//session_start();
+//if ($istest) {  
 //	show_variables();
-	}
+//	}
 
 	//==================================================================
 	// A "Best Practice" query
@@ -42,7 +43,7 @@ if ($istest) {
 
   //=====================================================================
 
-  // display $_GET, $_POST, $_COOKIE, and $_SESSION variables for debugging
+  // display $_GET, $_POST, $_COOKIE, and $my_session variables for debugging
   function show_variables() {
 	 print '<div id="debug" style="padding:10px;z-index:99;background-color:#fff;color:#000;">';
 	 print '<h3 style="text-decoration: underline">DEBUG DUMP</h3>';
@@ -79,9 +80,9 @@ if ($istest) {
 	 	}
 
 	 print '<br /><b>SESSION variables</b>:<br />';
-	 foreach($_SESSION as $key => $val) {
+	 foreach($my_session as $key => $val) {
 		 print "$key: ";
-		 if(is_array($_SESSION[$key]))
+		 if(is_array($my_session[$key]))
 			 print_r($val);
 		 else
 			 print $val;

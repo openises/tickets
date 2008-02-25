@@ -1,7 +1,8 @@
 <?php
 	require_once('functions.inc.php');
 	$api_key = get_variable('gmaps_api_key');		// empty($_GET)
-	if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {  
+	
+	if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
 		do_logout();
 		exit();
 		}
@@ -26,15 +27,9 @@
 			return document.all[id];							
 			}							
 		}				
-
-<?php
-	print "var user = '";
-	print $_SESSION['user_name'];
-	print "'\n";
-	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";
-?>	
-		parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
-		parent.frames["upper"].document.getElementById("level").innerHTML  = level;
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 	</SCRIPT>
 <script src="graticule.js" type="text/javascript"></script>
 	
@@ -63,5 +58,6 @@
 	else {
 		list_tickets();
 		}
+
 ?>
 </BODY></HTML>
