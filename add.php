@@ -1,5 +1,6 @@
 <?php
 //	http://www.google.com/search?q=Cheryl+McNaught+Annapolis+MD
+error_reporting(E_ALL);
 require_once('functions.inc.php');
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
@@ -8,7 +9,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 $post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
 $post_frm_owner = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_owner'])))) ) ? "" : $_POST['frm_owner'] ;
 $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
-
+//	dump();
 //	if ($_GET['add'] == 'true')	{
 	if ($get_add == 'true')	{
 
@@ -34,7 +35,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart($_POST['frm_year_problemend'] . "-" . $_POST['frm_month_problemend'] . "-" . $_POST['frm_day_problemend']." " . $_POST['frm_hour_problemend'] . ":". $_POST['frm_minute_problemend'] .":00") : "NULL";
 			
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-		if(empty($post_frm_owner)) {$post_frm_owner=0;}
+//		if(empty($post_frm_owner)) {$post_frm_owner=0;}
 		$post_frm_owner=(empty($post_frm_owner))? 0: $post_frm_owner;				// in_types_id -- 
 
 		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]ticket` (`in_types_id`, `contact`,`street`,`city`,`state`,`phone`,`lat`,`lng`,
@@ -54,7 +55,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 								quote_smart(trim($post_frm_affected)),
 								quote_smart(trim($_POST['frm_description'])),
 								quote_smart(trim($_POST['frm_comments'])),
-								quote_smart($post_frm_owner),
+								quote_smart($my_session['user_id']),
 								quote_smart($_POST['frm_severity']),
 								$GLOBALS['STATUS_OPEN'],
 								quote_smart($now),
@@ -66,20 +67,20 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		$ticket_id = mysql_insert_id();								// just inserted id
 		do_log($GLOBALS['LOG_INCIDENT_OPEN'], $ticket_id);
 		
-//		$frm_unit_id = 0; $frm_status_id=1;$frm_comments = "New";				// into assignments
-//		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`)
-//						VALUES (%s,%s,%s,%s,%s,%s)",
-//							quote_smart($now),
-//							quote_smart($frm_status_id),
-//							quote_smart($ticket_id),
-//							quote_smart($frm_unit_id),
-//							quote_smart($frm_comments),
-//							quote_smart($post_frm_owner));
-//
-//		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-//
-//		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder` LIMIT 1";	//  any at all?
-//		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$frm_unit_id = 0; $frm_status_id=1;$frm_comments = "New";				// into assignments
+		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`)
+						VALUES (%s,%s,%s,%s,%s,%s)",
+							quote_smart($now),
+							quote_smart($frm_status_id),
+							quote_smart($ticket_id),
+							quote_smart($frm_unit_id),
+							quote_smart($frm_comments),
+							quote_smart($my_session['user_id']));
+
+		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+
+		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder` LIMIT 1";	//  any at all?
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 //		if (mysql_affected_rows()>0) {
 			header("Location: routes.php?ticket_id=$ticket_id");				// show routes from units to incident
 //			}
@@ -101,9 +102,12 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 						self.location.href = 'index.php';
 						}
 					}		// end function ck_frames()
+		if (parent.frames["upper"]) {
 			parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 			parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 			parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+			}
+
 
 			</SCRIPT>
 			</HEAD>
@@ -133,9 +137,9 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <SCRIPT SRC="graticule.js" type="text/javascript"></SCRIPT>
 <SCRIPT>
 	function ck_frames() {		// onLoad = "ck_frames()"
-		if(self.location.href==parent.location.href) {
-			self.location.href = 'index.php';
-			}
+//		if(self.location.href==parent.location.href) {
+//			self.location.href = 'index.php';
+//			}
 		}		// end function ck_frames()
 
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
@@ -449,10 +453,10 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		var errmsg="";
 		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_CLOSED'];?>) && (!theForm.re_but.checked)) 
 													{errmsg+= "\tRun end-date is required for Status=Closed\n";}
-		if (theForm.frm_in_types_id.value == 0)		{errmsg+= "\tIncident type is required\n";}
+		if (theForm.frm_in_types_id.value == 0)		{errmsg+= "\tNature of Incident is required\n";}
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
-		if (theForm.frm_description.value == "")	{errmsg+= "\tDescription is required\n";}
+		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
 			theForm.frm_lat.disabled=false;
 		if (theForm.frm_lat.value == "")			{errmsg+= "\tMap position is required\n";}
 			theForm.frm_lat.disabled=true;
@@ -537,13 +541,24 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 	</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	
 	<SPAN CLASS="td_label">Nature: <SELECT NAME="frm_in_types_id">
-	<OPTION VALUE=0 SELECTED>Select</OPTION>
+	<OPTION VALUE=0 CLASS='main' SELECTED>Select</OPTION>
 <?php
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`";
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$the_grp = strval(rand());			//  force initial optgroup value
+		$i = 0;
 		while ($temp_row = stripslashes_deep(mysql_fetch_array($temp_result))) {
-			print "\t<OPTION VALUE=" . $temp_row['id'] . ">" . $temp_row['type'] . "</OPTION><\n";
-			}
+			if ($the_grp != $temp_row['group']) {
+				print ($i == 0)? "": "</OPTGROUP>\n";
+				$the_grp = $temp_row['group'];
+				print "<OPTGROUP LABEL='{$temp_row['group']}'>\n";
+				}
+
+//			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' onMouseOver = 'this.title='''> {$temp_row['type']} </OPTION>\n";
+			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' title='{$temp_row['description']}'> {$temp_row['type']} </OPTION>\n";
+			$i++;
+			}		// end while()
+		print "\n</OPTGROUP>\n";
 ?>
 	</SELECT></TD></TR>
 	
@@ -551,7 +566,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <TR CLASS='even'><TD CLASS="td_label">Location:</TD><TD></TD>		<TD><INPUT SIZE="61" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="61"></TD></TR>
 <TR CLASS='odd'><TD CLASS="td_label" onClick="Javascript:addrlkup();">City:</TD><TD ALIGN='center' onClick="Javascript:addrlkup();"><IMG SRC="glasses.png" BORDER="0"/></TD> <TD><INPUT SIZE="32" TYPE="text" 		NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;St:&nbsp;&nbsp;<INPUT SIZE="2" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="2"></TD></TR>
-<TR CLASS='even' VALIGN="top"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD><TD></TD><TD><TEXTAREA NAME="frm_description" COLS="45" ROWS="2"></TEXTAREA></TD></TR>
+<TR CLASS='even' VALIGN="top"><TD CLASS="td_label">Synopsis: <font color='red' size='-1'>*</font></TD><TD></TD><TD><TEXTAREA NAME="frm_description" COLS="45" ROWS="2"></TEXTAREA></TD></TR>
 <!--
 <TR CLASS='even'><TD CLASS="td_label">Affected:</TD><TD></TD><TD><INPUT SIZE="48" TYPE="text" 	NAME="frm_affected" VALUE="" MAXLENGTH="48"></TD></TR>
 -->
@@ -563,7 +578,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <TR CLASS='even'><TD CLASS="td_label">Map: <font color='red' size='-1'>*</font></TD><TD></TD><TD ALIGN="center">Lat:<INPUT SIZE="12" TYPE="text" 			NAME="frm_lat" VALUE="" MAXLENGTH="12">
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lon:&nbsp;&nbsp;<INPUT SIZE="12" TYPE="text" NAME="frm_lng" VALUE="" MAXLENGTH="12"></TD></TR>
 <TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'><IMG SRC="glasses.png" BORDER="0"/>&nbsp;&nbsp;Lookups:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick = "Javascript:do_phone_lkup();">Phone</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick = "Javascript:do_name_lkup();">Name</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick = "Javascript:addrlkup();">Address</A></TD></TR>
-<TR CLASS='even'><TD COLSPAN="3" ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onclick= "reset_end();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
+<TR CLASS='even'><TD COLSPAN="3" ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onclick= "reset_end();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
 <TR CLASS='odd'><TD COLSPAN="3" ALIGN="center"><br /><IMG SRC="glasses.png" BORDER="0"/>: Lookup fields</TD></TR>
 
 </FORM></TABLE>
@@ -575,6 +590,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 </TD></TR>
 </TABLE>
 <?php 
+//	dump($my_session['user_id']);
 	} //end if/else
 ?>
 <FORM NAME='can_Form' ACTION="main.php">

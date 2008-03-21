@@ -1,8 +1,12 @@
 <?php 
+error_reporting(E_ALL);
 require_once('functions.inc.php');
 do_login(basename(__FILE__));
-//session_start();
-//dump($my_session);
+
+if ($istest) {
+	dump ($_GET);
+	dump ($_POST);
+	}
 extract($_GET);
 	
 ?>
@@ -22,12 +26,10 @@ extract($_GET);
 				}
 			}		// end function ck_frames()
 
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
-
-	function do_Cancel() {
-		window.location = "config.php?func=responder";
+	if (parent.frames["upper"]) {
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 		}
 
 	var type;					// Global variable - identifies browser family
@@ -295,10 +297,11 @@ var color=0;
 		}
 
 	var icons=[];						// note globals
-	icons[1] = "./markers/YellowIcons/marker";		//e.g.,marker9.png
-	icons[2] = "./markers/RedIcons/marker";
-	icons[3] = "./markers/BlueIcons/marker";
-	icons[4] = "./markers/GreenIcons/marker";		//	BlueIcons/GreenIcons/YellowIcons/RedIcons
+	icons[1] = "./markers/YellowIcons/marker";		// e.g.,marker9.png
+	icons[2] = "./markers/RedIcons/marker";			// BlueIcons/GreenIcons/YellowIcons/RedIcons/WhiteIcons
+	icons[3] = "./markers/BlueIcons/marker";		// see GLOBALS re ordering
+	icons[4] = "./markers/GreenIcons/marker";
+	icons[5] = "./markers/WhiteIcons/marker";
 
 	var map;
 	var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders'>";
@@ -630,7 +633,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			}				// end while();
 		$print .= "</SCRIPT>\n";
 		return $print;
-		}		// end function 
+		}		// end function do calls($id = 0)
 
 	$_postfrm_remove = 	(array_key_exists ('frm_remove',$_POST ))? $_POST['frm_remove']: "";
 	$_getgoedit = 		(array_key_exists ('goedit',$_GET )) ? $_GET['goedit']: "";
@@ -652,6 +655,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
 				`name`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
 				`description`= " . 	quote_smart(trim($_POST['frm_descr'])) . ",
+				`capab`= " . 		quote_smart(trim($_POST['frm_capab'])) . ",
 				`un_status_id`= " . quote_smart(trim($_POST['frm_un_status_id'])) . ",
 				`callsign`= " . 	quote_smart(trim($_POST['frm_callsign'])) . ",
 				`mobile`= " . 		$frm_mobile . ",
@@ -675,10 +679,11 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		$frm_mobile = ((array_key_exists ('frm_mobile',$_POST )) && ($_POST['frm_mobile']=='on'))? 1 : 0 ;		
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
-			`name`, `description`, `un_status_id`, `callsign`, `mobile`, `contact_name`, `contact_via`, `lat`, `lng`, `type`, `user_id`, `updated` ) 
+			`name`, `description`, `capab`, `un_status_id`, `callsign`, `mobile`, `contact_name`, `contact_via`, `lat`, `lng`, `type`, `user_id`, `updated` ) 
 			VALUES (" .
 				quote_smart(trim($_POST['frm_name'])) . "," .
 				quote_smart(trim($_POST['frm_descr'])) . "," .
+				quote_smart(trim($_POST['frm_capab'])) . "," .
 				quote_smart(trim($_POST['frm_un_status_id'])) . "," .
 				quote_smart(trim($_POST['frm_callsign'])) . "," .
 				$frm_mobile . "," .
@@ -708,35 +713,46 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		<FONT CLASS="header">Add Unit</FONT><BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='addform'>
-		<!-- 688 good -->
 		<FORM NAME= "res_add_Form" METHOD="POST" onSubmit="return validate_res(document.res_add_Form);" ACTION="units.php?func=responder&goadd=true">
 		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
 		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
-			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
-				<OPTION VALUE=0 SELECTED>Select one</OPTION>
-<?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";	
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
-		print "\t<OPTION VALUE=" . $row_st['id'] .">" . $row_st['status_val']. "<OPTION>";
-		}
-	unset($result_st);
-?>
-				</TD></TR>
-		<TR CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile"></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" /></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
+		<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>	<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2></TEXTAREA></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
 			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS'];?>" NAME="frm_type"> EMS<BR />
 			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE'];?>" NAME="frm_type"> Fire<BR />
 			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS'];?>" NAME="frm_type"> Police<BR />
 			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU'];?>" NAME="frm_type"> Mutual Assist<BR />
 			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR'];?>" NAME="frm_type"> Other<BR />
 			</TD></TR>
+
+		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
+			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
+				<OPTION VALUE=0 SELECTED>Select one</OPTION>
+<?php
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
+	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$the_grp = strval(rand());			//  force initial optgroup value
+	$i = 0;
+	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+		if ($the_grp != $row_st['group']) {
+			print ($i == 0)? "": "\t</OPTGROUP>\n";
+			$the_grp = $row_st['group'];
+			print "\t<OPTGROUP LABEL='$the_grp'>\n";
+			}
+		print "\t<OPTION VALUE=' {$row_st['id']}'  CLASS='{$row_st['group']}' title='{$row_st['description']}'> {$row_st['status_val']} </OPTION>\n";
+//		print "\t<OPTION VALUE=" . $row_st['id'] . ">" . $row_st['status_val'] . "</OPTION>\n";
+		$i++;
+		}		// end while()
+	print "\n</OPTGROUP>\n";
+	unset($result_st);
+?>
+		</SELECT></TD></TR>
+		<TR CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile"></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" /></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" /></TD></TR>
 		<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="" disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="" disabled /></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel"   onClick = "document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
+		<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
 		<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
 
 		</FORM></TABLE> <!-- end inner left -->
@@ -781,25 +797,8 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		<FORM METHOD="POST" NAME= "res_edit_Form" onSubmit="return validate_res(document.res_edit_Form);" ACTION="units.php?func=responder&goedit=true">
 		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" /></TD></TR>
 		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
-			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_edit_Form.frm_log_it.value='1'">
-<?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";	
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$sel = ($row['un_status_id'] == 0)? " SELECTED" : "";
-	print "<OPTION VALUE=0" . $sel . ">TBD</OPTION>";
-	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
-		$sel = ($row['un_status_id']== $row_st['id'])? " SELECTED" : "";
-		print "\t<OPTION VALUE=" . $row_st['id'] . $sel .">" . $row_st['status_val']. "<OPTION>";
-		}
-	unset($result_st);
-?>
-				</TD></TR>
-		<TR VALIGN = 'baseline' CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'] ;?>" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
+		<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>										<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2><?php print $row['capab'];?></TEXTAREA></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
 <?php
 		$type_checks = array ("", "", "", "", "", "");	// all empty
 		$type_checks[$row['type']] = " checked";		// set the nth entry
@@ -811,11 +810,38 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU']; ?>" NAME="frm_type" <?php print $type_checks[4];?>> Mutual<BR />
 		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[5];?>> Other<BR />
 		</TD></TR>
+
+		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
+			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_edit_Form.frm_log_it.value='1'">
+<?php
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";	
+	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+
+	$the_grp = strval(rand());			//  force initial optgroup value
+	$i = 0;
+	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+		if ($the_grp != $row_st['group']) {
+			print ($i == 0)? "": "</OPTGROUP>\n";
+			$the_grp = $row_st['group'];
+			print "<OPTGROUP LABEL='$the_grp'>\n";
+			}
+		$sel = ($row['un_status_id']== $row_st['id'])? " SELECTED" : "";
+		print "\t<OPTION VALUE=" . $row_st['id'] . $sel .">" . $row_st['status_val']. "<OPTION>\n";
+		$i++;
+		}
+	unset($result_st);
+?>
+	</SELECT></TD></TR>
+
+		<TR VALIGN = 'baseline' CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'] ;?>" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
 	
 		<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS="even"><TD CLASS="td_label">Remove Unit:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" ></TD></TR>
-		<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick= "do_Cancel();return false;" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
+		<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
 		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
 		<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
 		</FORM></TABLE>
@@ -836,15 +862,22 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		if ($_getview == 'true') {
 			$id = $_GET['id'];
 			$query	= "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder WHERE id=$id";
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row	= mysql_fetch_array($result);		
-			unset($result);
-
-			$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id`=" . $row['un_status_id'];	// status value
-			$result_st	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row_st	= mysql_fetch_array($result_st);
-			unset($result_st);
+//			dump ($query);			
 			
+			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+//			dump (mysql_affected_rows());
+			$row	= stripslashes_deep(mysql_fetch_array($result));
+//			dump ($row);			
+//			unset($result);
+//			dump ($row);			
+
+			if (isset($row['un_status_id'])) {
+				$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id`=" . $row['un_status_id'];	// status value
+				$result_st	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$row_st	= mysql_fetch_array($result_st);
+				unset($result_st);
+				}
+			$un_st_val = (isset($row['un_status_id']))? $row_st['status_val'] : "?";
 			$type_checks = array ("", "", "", "", "", "");
 			$type_checks[$row['type']] = " checked";
 			$checked = (!empty($row['mobile']))? " checked" : "" ;			
@@ -859,29 +892,30 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			<FORM METHOD="POST" NAME= "res_view_Form" ACTION="units.php?func=responder">
 			<TR CLASS = "even"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'] ;?></TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label">Description: </TD>	<TD><?php print $row['description'];?></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>		<TD><?php print $row_st['status_val'] ;?> </TD></TR>
-			<TR VALIGN = 'baseline' CLASS = "odd"><TD CLASS="td_label">Callsign:</TD>		<TD><?php print $row['callsign'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT disabled TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><?php print $row['contact_name'] ;?></TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><?php print $row['contact_via'] ;?></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Type: </TD><TD>
+			<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>	<TD><?php print $row['capab'];?></TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Status:</TD>		<TD><?php print $un_st_val;?> </TD></TR>
+			<TR VALIGN = 'baseline' CLASS = "even"><TD CLASS="td_label">Callsign:</TD>		<TD><?php print $row['callsign'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT disabled TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Contact name:</TD>	<TD><?php print $row['contact_name'] ;?></TD></TR>
+			<TR CLASS = "even"><TD CLASS="td_label">Contact via:</TD>	<TD><?php print $row['contact_via'] ;?></TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Type: </TD><TD>
 				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS']; ?>" NAME="frm_type" <?php print $type_checks[1];?>> EMS<BR />
 				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE']; ?>" NAME="frm_type" <?php print $type_checks[2];?>> Fire<BR />
 				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS']; ?>" NAME="frm_type" <?php print $type_checks[3];?>> Police<BR />
 				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU']; ?>" NAME="frm_type" <?php print $type_checks[4];?>> Mutual<BR />
 				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[5];?>> Other<BR />
 				</TD></TR>
-			<TR CLASS = 'odd'><TD CLASS="td_label">As of:</TD>							<TD><?php print format_date($row['updated']); ?></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Map:<TD ALIGN='center'><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
+			<TR CLASS = 'even'><TD CLASS="td_label">As of:</TD>							<TD><?php print format_date($row['updated']); ?></TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD ALIGN='center'><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
 <?php
 		$utm = get_variable('UTM');
 		if ($utm==1) {
 			$coords =  $row['lat'] . "," . $row['lng'];
-			print "<TR CLASS='odd'><TD CLASS='td_label'>UTM:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>UTM:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
 			}
 		$toedit = (is_guest())? "" : "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 ?>			
 			<TR><TD>&nbsp;</TD></TR>
-			<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'><?php print $toedit; ?></TD></TR>
+			<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'><?php print $toedit; ?></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
 			</FORM></TABLE>
 			</TD><TD><DIV ID='map' style="width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset"></DIV></TD></TR></TABLE>

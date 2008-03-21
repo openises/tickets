@@ -63,7 +63,7 @@ http://www.noc.kth.se/opentickets/index.html
 + Ability to send notification upon ticket changes by email
 + Printable tickets
 + Search capabilities - with results highlighted
-+ All HTML is using CSS
++ CSS Is used extensively.
 
 
 -- Requirements
@@ -81,7 +81,7 @@ http://www.noc.kth.se/opentickets/index.html
   script, next step.
 + Point yr browser to whatever/install.php, and go there.
 + Fill in the install form, including the GMaps API key. (URL of source is provided on the form.)
-+ The install script does a lot, including creating two login accounts - Admin/admin and guest/guest.
++ The install script does a lot, including creating two login accounts - admin/admin and guest/guest.
   You'll be notified of success at the script's completion -- in a second or two.
 + One of the first things you may want to do is to set up yr own default map center.  (While the Show 
     Tickets map is automatically centered on existing tickets, the NEW TICKET form uses the default 

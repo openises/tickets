@@ -1,7 +1,15 @@
 <?php 
-	require_once('functions.inc.php'); 
-	do_login(basename(__FILE__));
-	$get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) ) ? "" : $_GET['action'] ;
+require_once('functions.inc.php'); 
+do_login(basename(__FILE__));
+
+if($istest) {
+	print "GET<br />\n";
+	dump($_GET);
+	print "POST<br />\n";
+	dump($_POST);
+	}
+	
+$get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) ) ? "" : $_GET['action'] ;
 	
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -13,6 +21,16 @@
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<?php
+if ($get_action == 'add') {		
+	$api_key = get_variable('gmaps_api_key');		// empty($_GET)
+?>
+<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT src="graticule.js" type="text/javascript"></SCRIPT>
+<?php
+	}	
+?>
+
 <SCRIPT>
 function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
@@ -26,9 +44,11 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			}							
 		}				
 
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+	if (parent.frames["upper"]) {
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
 
 	function validate(theForm) {
 		var errmsg="";
@@ -41,8 +61,8 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		}				// end function validate(theForm)
 	</SCRIPT>
 	</HEAD>
-<BODY onLoad = "ck_frames()">
 <?php 
+	print ($get_action == "add")? "<BODY onload = 'ck_frames();' onunload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
@@ -58,7 +78,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 
      		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]patient` (`description`,`ticket_id`,`date`,`user`,`action_type`, `name`, `updated`) VALUES('$_POST[frm_description]','$_GET[ticket_id]','$now',$my_session[user_id],$GLOBALS[ACTION_COMMENT], '$_POST[frm_name]', '$frm_asof')";
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-			do_log($GLOBALS['LOG_PATIENT_ADD'], mysql_insert_id(), $_GET[ticket_id]);
+			do_log($GLOBALS['LOG_PATIENT_ADD'], mysql_insert_id(), $_GET['ticket_id']);
 
 			$result = mysql_query("UPDATE $GLOBALS[mysql_prefix]ticket SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'") or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
 
@@ -79,7 +99,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		else {
 			print "<FONT CLASS='header'>Really delete Patient record # '$_GET[id]'?</FONT><BR /><BR />";
 			print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=$_GET[id]&ticket_id=$_GET[ticket_id]&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();' ></FORM>";
+			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'></FORM>";
 			}
 		}
 	else if ($get_action == 'update') {		//update patient record and show ticket
@@ -118,7 +138,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="">
 		</TD></TR>
 
-		<TR CLASS='odd' ><TD></TD><TD ALIGN='center'><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back()" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Submit"></TD></TR>
+		<TR CLASS='odd' ><TD></TD><TD ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Submit"></TD></TR>
 		</TABLE><BR />
 		<?php
 		}
@@ -136,7 +156,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		<INPUT SIZE=2 NAME="frm_hour_asof" VALUE="">:
 		<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="">
 		</TD></TR>
-		<TR CLASS='odd'><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Submit"></TD></TR>
+		<TR CLASS='odd'><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Submit"></TD></TR>
 		</TABLE><BR />
 		</FORM>
 <?php

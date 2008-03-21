@@ -6,6 +6,7 @@ require_once('istest.inc.php');
 require_once('mysql.inc.php');
 require_once("phpcoord.php");				// UTM converter	
 require_once("functions_major.inc.php");	// added 12/19/07
+//$GLOBALS['mysql_prefix'] 			= $mysql_prefix;
 /* constants - do NOT change */
 $GLOBALS['STATUS_CLOSED'] 			= 1;
 $GLOBALS['STATUS_OPEN']   			= 2;
@@ -48,6 +49,9 @@ $GLOBALS['LOG_ACTION_ADD']			=13;
 $GLOBALS['LOG_PATIENT_ADD']			=14;
 $GLOBALS['LOG_UNIT_STATUS']			=20;
 $GLOBALS['LOG_UNIT_COMPLETE']		=21;		// 	run complete
+$GLOBALS['LOG_UNIT_CHANGE']			=22;
+
+$GLOBALS['SESSION_TIME_LIMIT']		=120;		// minutes of inactivity
 
 $evenodd = array ("even", "odd");	// class names for alternating table row colors
 
@@ -77,14 +81,15 @@ if ($failed) {
 	exit();
 	}
 
-$the_time_limit = 2*60*60;
+$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 $sess_key = get_sess_key();
 $query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $my_session = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result)): "";
 
 function mysql_table_exists($table) {/* check if mysql table exists */
-	$query = "SELECT COUNT(*) FROM `$GLOBALS[mysql_prefix]$table`";
+	$query = "SELECT COUNT(*) FROM `$table`";
+//	dump($query);
 	$result = mysql_query($query);
 	$num_rows = @mysql_num_rows($result);
 	if($num_rows)
@@ -201,11 +206,11 @@ function show_log ($theid, $show_cfs=FALSE) {
 	
 	$query = "
 		SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log`
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (log.responder_id = r.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON (log.info = s.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (log.who = u.id)
-		WHERE log.ticket_id = $theid
+		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]log.ticket_id = t.id)
+		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON ($GLOBALS[mysql_prefix]log.responder_id = r.id)
+		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON ($GLOBALS[mysql_prefix]log.info = s.id)
+		LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON ($GLOBALS[mysql_prefix]log.who = u.id)
+		WHERE $GLOBALS[mysql_prefix]log.ticket_id = $theid
 		";
 		
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
@@ -248,7 +253,7 @@ function format_date($date){							/* format date to defined type */
 	}				// end function format_date($date)
 	
 function good_date($date) {
-	return (is_string ($date) && strlen($date)==10);
+	return (is_string ($date) && ((strlen($date)==10)));
 	}
 
 function format_sb_date($date){							/* format sidebar date */ 
@@ -424,7 +429,7 @@ function do_logout(){						/* logout - destroy session data */
 		do_log($GLOBALS['LOG_SIGN_OUT']);				// log the logout	
 		}
 	$sess_key = get_sess_key();
-	$the_time_limit = 2*60*60;
+$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 
 	$query = "DELETE FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' OR `last_in` < '" .(time()-$the_time_limit) . "'";
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -787,52 +792,74 @@ function do_log($code, $ticket_id="", $responder_id="", $info="") {		// generic 
 // =====================================================================================
 function do_login($requested_page, $outinfo = FALSE) {			/* do login/session code - returns array*/
 	global $my_session;
+	function get_new_key() {						// returns newly-developed session key
+		return sha1(ip_address_to_number($_SERVER['REMOTE_ADDR']));
+		}
 
-	$the_time_limit = 2*60*60;
+$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 	$sess_key = get_sess_key();
 	
-	$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
 	if(mysql_affected_rows()==1) {												// logged in OK - normal path, update time last_in
-		$queryU = "UPDATE $GLOBALS[mysql_prefix]session SET `last_in` = '" . time() . "' WHERE `sess_id`='{$sess_key}'";
-		$resultU = mysql_query($queryU) or do_error($query,$query, mysql_error(), __FILE__, __LINE__);
-		return stripslashes_deep(mysql_fetch_array($result));					// array to calling page
+//		$queryU = "UPDATE `$GLOBALS[mysql_prefix]session` SET `last_in` = '" . time() . "' WHERE `sess_id`='{$sess_key}'";
+//		$resultU = mysql_query($queryU) or do_error($query,$query, mysql_error(), __FILE__, __LINE__);
+//		return stripslashes_deep(mysql_fetch_array($result));					// array to calling page
+		return upd_lastin();													// session array
 		}
-		
-	else {								// not logged in; now either get form data or db check form entries
-										// first, db check
-		if((!empty($_POST))&&(check_for_rows("SELECT user,passwd FROM $GLOBALS[mysql_prefix]user WHERE user='$_POST[frm_user]' AND passwd=PASSWORD('$_POST[frm_passwd]')"))) {
-			$query 	= "SELECT * FROM $GLOBALS[mysql_prefix]user WHERE user='" . mysql_real_escape_string($_POST['frm_user']) . "' LIMIT 1";
+															// not logged in; now either get form data or db check form entries 		
+	else { if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
+			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`=" . quote_smart($_POST['frm_user']). " AND `passwd`=PASSWORD(" . quote_smart($_POST['frm_passwd']) . ") LIMIT 1";
 			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_array($result));
-			if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
-			$dir = ($row['sort_desc']) ? " DESC " : "";
-			
-//  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
+			if (mysql_affected_rows()==1) {
+				$row = stripslashes_deep(mysql_fetch_array($result));
+				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
+				$dir = ($row['sort_desc']) ? " DESC " : "";
+				$now = time() - (get_variable('delta_mins')*60);
+				
+	//  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
+	
+				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]session` ( `sess_id`, `user_name`, `user_id`, `level`,  `ticket_per_page`, `sortorder`, `scr_width`, `scr_height`,  `browser`,  `last_in`)
+								VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+									quote_smart(get_new_key()),
+									quote_smart($_POST['frm_user']),
+									quote_smart($row['id']),
+									quote_smart($row['level']),
+									quote_smart($row['ticket_per_page']),
+									quote_smart($row['sortorder'] .$dir),
+									quote_smart($_POST['scr_width']),
+									quote_smart($_POST['scr_height']),
+									quote_smart($_SERVER['HTTP_USER_AGENT']),
+									quote_smart($now));
+				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+				
+				do_log($GLOBALS['LOG_SIGN_IN']);	// log it													
+								
+//				mail  ($to ,$subject ,$message, $additional_headers );
+				$to = "3ashore@comcast.net";
+				$subject = "Tickets/Fatcow Login";
+				$message = "From: " . gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\nBrowser:" . $_SERVER['HTTP_USER_AGENT'];
+				$message .= "\nBy: " . $_POST['frm_user'];
+				$message .= "\nScreen: " . $_POST['scr_width'] . " x " .$_POST['scr_height'];
+//				mail($admin_email, $msgtitle, $msgcontent,"From: webmaster@{$_SERVER['SERVER_NAME']}", "-fwebmaster@{$_SERVER['SERVER_NAME']}"	);
+				
+//				mail  ($to ,$subject ,$message);
 
-			$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]session` ( `sess_id`, `user_name`, `user_id`, `level`,  `ticket_per_page`, `sortorder`, `scr_width`, `scr_height`,  `browser`,  `last_in`)
-							VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-								quote_smart($sess_key),
-								quote_smart($_POST['frm_user']),
-								quote_smart($row['id']),
-								quote_smart($row['level']),
-								quote_smart($row['ticket_per_page']),
-								quote_smart($row['sortorder'] .$dir),
-								quote_smart($_POST['scr_width']),
-								quote_smart($_POST['scr_height']),
-								quote_smart($_SERVER['HTTP_USER_AGENT']),
-								quote_smart(time()));
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-			
-			do_log($GLOBALS['LOG_SIGN_IN']);	// log it
-												// and read it back for return
-			
-			$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "'  LIMIT 1";
-			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$my_session = stripslashes_deep(mysql_fetch_array($result));
-			return $my_session;				// to calling page
-			}				// end if((!empty($_POST))&&(check_for_rows(...)
+				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+				header('Cache-Control: no-store, no-cache, must-revalidate');
+				header('Cache-Control: post-check=0, pre-check=0', FALSE);
+				header('Pragma: no-cache');
+
+				$host  = $_SERVER['HTTP_HOST'];
+				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+				$extra = 'main.php';
+				header("Location: http://$host$uri/$extra");
+				exit;				
+				
+				return $my_session;				// to calling page
+				}			// end if (mysql_affected_rows()==1)
+			}			// end if((!empty($_POST))&&(check_for_rows(...)
 
 //			if no form data or values fail
 
@@ -846,25 +873,38 @@ function do_login($requested_page, $outinfo = FALSE) {			/* do login/session cod
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 		<SCRIPT>
-		
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 			};
 		
+		if (parent.frames["upper"]) {		// ????
+			parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
+			}
+		
 		function do_onload () {
+//			alert (parent.frames[1].name);			// 
+//			alert (this.window.name);				// in a popup
 			if (this.window.name!="main") {self.close();}			// in a popup
 			if(self.location.href==parent.location.href) {			// prevent frame jump
 				self.location.href = 'index.php';
-				}; 		
+				};
+			if (parent.frames["upper"]) {		// should always be true
+				parent.frames["upper"].document.getElementById("whom").innerHTML  = "not";
+				parent.frames["upper"].document.getElementById("level").innerHTML  = "na";
+				parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
+				}
+			else {
+//				alert("F I P - 889");
+//				alert(this.window.name);
+				self.location.href = 'index.php';				
+				}
 			document.login_form.scr_width.value=screen.availWidth;
 			document.login_form.scr_height.value=screen.availHeight;
-			document.login_form.frm_user.focus();
+//			document.login_form.frm_user.focus();
 			}		// end function do_onload () 
 <?php
 	if ($outinfo) {		// clarify logout/in
 ?>	
-			parent.frames["upper"].document.getElementById("whom").innerHTML  = "not";
-			parent.frames["upper"].document.getElementById("level").innerHTML  = "na";
 <?php	
 		}		// end if ($outinfo)
 ?>	
@@ -873,14 +913,15 @@ function do_login($requested_page, $outinfo = FALSE) {			/* do login/session cod
 		</HEAD>
 		<BODY onLoad = "do_onload()">
 		<CENTER><BR />
-<?php 	
+<?php
 		if(get_variable('_version') != '') print "<SPAN style='FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000000;'>" . get_variable('login_banner')."</SPAN><BR /><BR />";
 ?>
 		</FONT><FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form">
 		<TABLE BORDER="0">
 		
 <?php
-		if(!empty($_POST)) { print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>Login failed.Pls enter correct values and try again.</FONT><BR /><BR /></TH></TR>";}
+
+		if(array_key_exists('frm_passwd', $_POST)) { print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>Login failed.Pls enter correct values and try again.</FONT><BR /><BR /></TH></TR>";}
 ?>
 		<TR CLASS='even'><TD ROWSPAN=6 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png'><BR /><BR />
 		&nbsp;&nbsp;<a href="http://www.openaprs.net/"><img src="http://www.openaprs.net/images/tag/openaprs.png" width="88" height="31"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label">User:</TD><TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();"></TD></TR>
@@ -905,6 +946,18 @@ function ip_address_to_number($IPaddress) {
 
 function get_sess_key() {
 	return sha1(ip_address_to_number($_SERVER['REMOTE_ADDR']));
+	}
+
+function upd_lastin() {						// updates session last-in time, returns session array
+	$sess_key = get_sess_key();
+	$now = time() - (get_variable('delta_mins')*60);
+	$query = "UPDATE `$GLOBALS[mysql_prefix]session` SET `last_in` = '" . $now . "' WHERE `sess_id`='{$sess_key}' LIMIT 1";
+	$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
+
+//	$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
+	$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' LIMIT 1";
+	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	return stripslashes_deep(mysql_fetch_array($result));
 	}
 
 function totime($string){			// given a MySQL-format date/time, returns the unix equivalent
@@ -946,4 +999,9 @@ function xml2php($xml) {
 		}
 	return $array;
 	}
+
+function get_stuff($in_file) {				// return file contents as string
+	return file_get_contents($in_file);;
+	}				// end function get_stuff()
+	
 ?>

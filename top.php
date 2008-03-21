@@ -1,17 +1,11 @@
 <?php 
 require_once('functions.inc.php');
 $version = get_variable('_version');
-$newvers = "2.5";
-if ($version==$newvers) {
-	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value` = '" . $newvers . "' WHERE `settings`.`id` =1 LIMIT 1 ;";
-	$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
-	$version = $newvers;
-	}
 
 $sess_key = get_sess_key();
 $the_time_limit = 2*60*60;
 
-$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $row = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result)) : "";
 //  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
@@ -44,6 +38,23 @@ html>body .hovermenu ul li a:active{ border-style: inset;} */
 
 </style>
 <SCRIPT>
+function isNull(val) {								// checks var stuff = null;
+	return val === null;
+	}
+
+var gout_str = "not";								// value if not logged-in
+
+function logged_in() {
+	var temp = document.getElementById("whom").innerHTML==gout_str;
+	return !temp;
+	}
+	
+function ck_frames() {		// onLoad = "ck_frames()"
+	if(self.location.href==parent.location.href) {
+		self.location.href = 'index.php';
+		}
+	}		// end function ck_frames()
+
 var which = "";	// id of last-invoked li
 function go_there (where, id) {
 	if (!which=="") {
@@ -132,52 +143,56 @@ function toggle_aprs() {
 	else 		{start_poll();}
 	}
 
-//function do_callBoard() {
-//	newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=720,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-//	while (!newwindow_cb) {
-//		window.setTimeout("", 200);					// check every 200 ms.
-//		}
-//	newwindow_cb.focus();
-//	}		// end function do_callBoard()
-	
+var newwindow_cb = null;
+
 function do_callBoard() {
-	newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=720,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-	var i;												// note: visible outside 'for' loop
-	for(i=0;i<8;i++) {
-		if (!newwindow_cb) {
-			window.setTimeout("", 250);					// check every 250 ms.
+	if (logged_in()) {
+		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=740,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (isNull(newwindow_cb)) {
+			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+			return;
 			}
-		else {break; }
-		}		// end for(i=0;...)
-	if (i==8) {
-		alert ("Call Board functions requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
-		return;
-		}
-	else {
 		newwindow_cb.focus();
 		}
 	}		// end function do callBoard()
+
+var newwindow_c = null;
 	
 function do_chat() {
-	newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-	while (!newwindow_c) {
-		window.setTimeout("", 200);
+	if (logged_in()) {	
+		newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (isNull(newwindow_c)) {
+			alert ("Chat operation requires popups to be enabled. Please adjust your browser options - or else turn off the Chat option setting.");
+			return;
+			}
+		newwindow_c.focus();
 		}
-	newwindow_c.focus();
-
 	}
-function do_ems_card(filename) {
-	newwindow_em=window.open(filename, "emsCard",  "titlebar, resizable=1, scrollbars, height=480,width=720,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
-	while (!newwindow_em) {
-		window.setTimeout("", 200);
+
+var newwindow_em = null;
+
+function do_emd_card(filename) {
+	newwindow_em=window.open(filename, "emdCard",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+	if (isNull(do_emd_card)) {
+		alert ("EMD Card operation requires popups to be enabled. Please adjust your browser options.");
+		return;
 		}
 	newwindow_em.focus();
 	}
+
+function shut_down(){
+	if (!isNull(newwindow_cb)) {
+		newwindow_cb.close();
+		}
+	if (!isNull(newwindow_c)) {
+		newwindow_c.close();	
+		}
+	}			// end function shut_down()
 	
 </SCRIPT>
 </HEAD>
 <!-- <BODY onLoad = "if(self.location.href==parent.location.href) {self.location.href = 'index.php';}; start_poll();" onunload=stop_poll();> -->
-<BODY>
+<BODY onLoad = "ck_frames()" onunload="shut_down()">
 <table border=0 cellpadding=0>
 <tr valign='top'>
 	<td><img src="t.gif" border=0></td>
@@ -199,20 +214,24 @@ function do_ems_card(filename) {
 <li id = "reps"><A HREF="reports.php" target="main">Reports</A></li>
 <li id = "config"><A HREF="config.php" target="main">Configuration</A></li>
 <?php
-$dir = "./cards";
-$dh  = opendir($dir);
-while (false !== ($filename = readdir($dh))) {
-	if (!is_dir($filename)) {
-	    $card_file = $filename;		// at least one file
-	    break;
-	    }
-	}
-if (!empty($filename)){		
-	print"<li id = \"emscard\"><A HREF='#' onClick = \"do_ems_card('".$dir . "/" . $filename . "')\">EM Card</A></li>\n";
+$dir = "./emd_cards";
+
+if (file_exists ($dir)) {
+	$dh  = opendir($dir);
+	while (false !== ($filename = readdir($dh))) {
+		if (!is_dir($filename)) {
+		    $card_file = $filename;		// at least one file, use first encountered
+		    break;
+		    }
+		}
+	if (!empty($card_file)){		
+		print"<li id = \"emdcard\"><A HREF='#' onClick = \"do_emd_card('".$dir . "/" . $filename . "')\">EM Card</A></li>\n";
+		}
 	}
 
-	if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' onClick = 'do_chat()'>Chat</A></li>\n";}
+if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' onClick = 'do_chat()'>Chat</A></li>\n";}
 ?>	
+
 <li id = "help"><A HREF="help.php" target="main">Help</A></li>
 <?php
 	$caption = get_variable('link_capt');
@@ -221,12 +240,12 @@ if (!empty($filename)){
 		}
 
 	$call_board = get_variable('call_board');
-	if (intval($call_board)==1) {
+	if (!(intval($call_board)==0)) {
 		print"<li id = 'callboard'><A HREF='#' onClick = 'do_callBoard()'>Call Board</A></li>\n";
 		}
 ?>
 
-<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "stop_poll()">Logout</A></li>
+<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "document.getElementById('whom').innerHTML=gout_str; stop_poll()">Logout</A></li>
 </ul>
 </SPAN>
 </NOBR>
@@ -235,6 +254,7 @@ if (!empty($filename)){
 </BODY></HTML>
 <?php
 /*
-11/3 added frame jump prevention
+11/3/07 added frame jump prevention
+3/25/08 added module identification
 */
 ?>

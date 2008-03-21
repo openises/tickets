@@ -35,7 +35,7 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 	<TR><TD CLASS='td_label' COLSPAN=3 ALIGN='center'>
 		&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="mailto:shoreas@Gmail.com?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
 		</TD></TR></TABLE>
-	<FORM NAME='view_form' METHOD='get' ACTION='config.php'>
+	<FORM NAME='view_form' METHOD='get' ACTION='units.php'>
 	<INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 	<INPUT TYPE='hidden' NAME='view' VALUE='true'>
 	<INPUT TYPE='hidden' NAME='id' VALUE=''>
@@ -47,7 +47,6 @@ if (GBrowserIsCompatible()) {
 
 //	document.getElementById("map").style.backgroundImage = "url(./markers/loading.jpg)";
 	document.getElementById("map").style.backgroundImage = "url('http://maps.google.com/staticmap?center=<?php echo get_variable('def_lat');?>,<?php echo get_variable('def_lng');?>&zoom=<?php echo get_variable('def_zoom');?>&size=<?php echo get_variable('map_width');?>x<?php echo get_variable('map_height');?>&key=<?php echo get_variable('gmaps_api_key');?> ')";
-
 
 	var colors = new Array ('odd', 'even');
 
@@ -99,6 +98,7 @@ if (GBrowserIsCompatible()) {
 		}		// end function do_sidebar ()
 
 	function createMarker(point, tabs, color, id) {					// Creates marker and sets up click event infowindow
+//		alert (color);
 		points = true;
 		var icon = new GIcon(baseIcon);
 		icon.image = icons[color] + ((id % 100)) + ".png";			// e.g.,marker9.png, 100 icons limit
@@ -133,18 +133,17 @@ if (GBrowserIsCompatible()) {
 		}	
 		
 	var icons=[];						// note globals
-	icons[0] = 											   "./markers/YellowIcons/marker";	// tickets icons - e.g.,marker9.png
+	icons[0] = 											   "./markers/YellowIcons/marker";	// Yellow units
 	icons[<?php print $GLOBALS['SEVERITY_NORMAL']; ?>+1] = "./markers/BlueIcons/marker";	
 	icons[<?php print $GLOBALS['SEVERITY_MEDIUM']; ?>+1] = "./markers/GreenIcons/marker";
 	icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =   "./markers/RedIcons/marker";		
-	icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =   "./markers/WhiteIcons/marker";
+	icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+2] =   "./markers/WhiteIcons/marker";
 
 	var map;
 	var center;
 	var zoom;
 	var points = false;
 
-//	var Eastern_Shore = new GGeoXml("http://www.marylandlandtax.org/LVTprojects/state_md/map_testing/Eastern_Shore.kml");    
 <?php
 
 $kml_olays = array();
@@ -180,6 +179,7 @@ while (false !== ($filename = readdir($dh))) {
 	var bounds = new GLatLngBounds();						// create  bounding box
 //	map.addControl(new GOverviewMapControl());
 	map.addMapType(G_PHYSICAL_MAP);
+	map.enableScrollWheelZoom(); 	
 
 	var baseIcon = new GIcon();
 	baseIcon.shadow = "./markers/sm_shadow.png";		// ./markers/sm_shadow.png
@@ -189,7 +189,6 @@ while (false !== ($filename = readdir($dh))) {
 	baseIcon.iconAnchor = new GPoint(9, 34);
 	baseIcon.infoWindowAnchor = new GPoint(9, 2);
 	baseIcon.infoShadowAnchor = new GPoint(18, 25);
-	map.enableScrollWheelZoom(); 	
 	GEvent.addListener(map, "infowindowclose", function() {		// re-center after  move/zoom
 //		alert (center);
 		map.setCenter(center,zoom);
@@ -216,10 +215,10 @@ while (false !== ($filename = readdir($dh))) {
 	$where = ($get_status==2)? " WHERE `status`='2' OR (`status`='1'  AND `problemend` > (NOW() - INTERVAL 24 HOUR)) ": " WHERE `status`='1' ";
 
 	if ($sort_by_field && $sort_value) {					//sort by field?
-		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, in_types.type AS `type`, in_types.id AS `t_id` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON ticket.in_types_id=in_types.id  WHERE $sort_by_field='$sort_value' $restrict_ticket ORDER BY $order_by";
+		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, in_types.type AS `type`, in_types.id AS `t_id` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON $GLOBALS[mysql_prefix]ticket.in_types_id=in_types.id  WHERE $sort_by_field='$sort_value' $restrict_ticket ORDER BY $order_by";
 		}
 	else {
-		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, in_types.type AS `type`, in_types.id AS `t_id` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON ticket.in_types_id=in_types.id $where $restrict_ticket ORDER BY $order_by $limit";
+		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, $GLOBALS[mysql_prefix]in_types.type AS `type`, $GLOBALS[mysql_prefix]in_types.id AS `t_id` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON $GLOBALS[mysql_prefix]ticket.in_types_id=$GLOBALS[mysql_prefix]in_types.id $where $restrict_ticket ORDER BY $order_by $limit";
 		}
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 							// major while ... starts here
@@ -337,12 +336,12 @@ while (false !== ($filename = readdir($dh))) {
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	//
 //	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder WHERE `id` = 9999 ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	print (mysql_affected_rows()==0)? "\n\t\tside_bar_html += \"<TR CLASS='even'><TD></TD><TD ALIGN='center' COLSPAN=99><B>No Units!</B></TD></TR>\"\n" : "\n\t\tside_bar_html += \"<TR CLASS='even'><TD></TD><TD ALIGN='center'><B>Unit</B></TD><TD ALIGN='center' COLSPAN=2><B>Status</B></TD><TD>M</TD><TD></TD></TR>\"\n" ;
+	print (mysql_affected_rows()==0)? "\n\t\tside_bar_html += \"<TR CLASS='even'><TD></TD><TD ALIGN='center' COLSPAN=99><B>No units!</B></TD></TR>\"\n" : "\n\t\tside_bar_html += \"<TR CLASS='even'><TD></TD><TD ALIGN='center'><B>Unit</B></TD><TD ALIGN='center' COLSPAN=2><B>Status</B></TD><TD>M</TD><TD></TD></TR>\"\n" ;
 	
 	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black");			// major while ... for RESPONDER data starts here
 							
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-		$toedit = (is_guest())? "" : "<A HREF='config.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
+		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 		$mobile = ($row['mobile']==1);
 //		dump ($mobile);
 		if (!$mobile) {
@@ -388,7 +387,7 @@ while (false !== ($filename = readdir($dh))) {
 		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $status_vals[$row['un_status_id']] . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:&nbsp;&nbsp;&nbsp;&nbsp;" . $toedit . "<A HREF='config.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:&nbsp;&nbsp;&nbsp;&nbsp;" . $toedit . "<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
 		$tab_1 .= "<TABLE>";
 
 		switch ($mode) {
@@ -482,7 +481,16 @@ else {
 	//	} { -- dummy
 
 function show_ticket($id,$print='false', $search = FALSE) {								/* show specified ticket */
-	global $my_session;
+
+	global $my_session, $istest;
+
+	if($istest) {
+		print "GET<br />\n";
+		dump($_GET);
+		print "POST<br />\n";
+		dump($_POST);
+		}
+	
 
 	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id'")) {	/* sanity check */
 		print "Invalid Ticket ID: '$id'<BR />";

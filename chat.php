@@ -4,6 +4,7 @@
 	extract ($_GET);
 	if (!isset($my_session)) {session_start();}
 	extract ($my_session);
+//	dump ($my_session);
 
 /*	chat_messages : id message when chat_room_id user_id 	*/
 

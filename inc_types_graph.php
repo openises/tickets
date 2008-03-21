@@ -2,7 +2,7 @@
 require_once('functions.inc.php'); 
 extract($_GET);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `type` ASC";		// array of incident types text
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`  ORDER BY `group` ASC,`sort` ASC", `type` ASC";		// array of incident types text
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 while($row = stripslashes_deep(mysql_fetch_array($result))) {
 	$inc_types_text[$row['id']] = $row['type'];

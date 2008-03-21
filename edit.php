@@ -2,6 +2,13 @@
 	require_once('functions.inc.php'); 
 	do_login(basename(__FILE__));
 
+	if($istest) {
+		print "GET<br />\n";
+		dump($_GET);
+		print "POST<br />\n";
+		dump($_POST);
+		}	
+
 	function edit_ticket($id) {							/* post changes */
 		$post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
 		$post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
@@ -94,10 +101,12 @@
 	<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT SRC="graticule.js" type="text/javascript"></SCRIPT>
 <SCRIPT>
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
+	if (parent.frames["upper"]) {
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
 	var map;
 	var grid = false;										// toggle
 	var thePoint;
@@ -120,7 +129,7 @@
 														{errmsg+= "\tClosed ticket requires run end date\n";}
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")		{errmsg+= "\tIncident name is required\n";}
-		if (theForm.frm_description.value == "")	{errmsg+= "\tDescription is required\n";}
+		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -216,7 +225,7 @@
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
 			print "<TABLE BORDER='0' ID='data'>\n";
 			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='header'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Description:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
+			print "<TR CLASS='even'><TD CLASS='td_label'>Synopsis:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
 			print "<TR CLASS='odd'><TD CLASS='td_label'>Priority:</TD><TD><SELECT NAME='frm_severity'>";
 			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
 			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
@@ -227,15 +236,24 @@
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>high</OPTION>";
 			print "</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nature:\n";
 
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`"; 
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			print "<SELECT NAME='frm_in_types_id'>";
+			$the_grp = strval(rand());						// force initial optgroup value
+			$i = 0;
 			while ($row2 = stripslashes_deep(mysql_fetch_array($result))) {
+				if ($the_grp != $row2['group']) {
+					print ($i == 0)? "": "</OPTGROUP>\n";
+					$the_grp = $row2['group'];
+					print "<OPTGROUP LABEL='$the_grp'>\n";
+					}
+			
 				$sel = ($row['in_types_id'] == $row2['id'])? " SELECTED" : "" ;
 				print "<OPTION VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
+				$i++;
 				}
 			unset ($result);
-			print "</SELECT>";
+			print "</OPTGROUP></SELECT>";
 			print "</TD></TR>\n";
 			
 			print "<TR CLASS='even'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
@@ -250,7 +268,7 @@
 			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; St:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
 //			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
 	
-			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD>";
+			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
 			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='35' ROWS='4'>" . $row['description'] . "</TEXTAREA></TD></TR>\n";
 			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Comments:</TD>";
 			
@@ -288,7 +306,7 @@
 			print "<TR CLASS='odd'><TD CLASS='td_label'>Map:</TD><TD>&nbsp;&nbsp;Lat:&nbsp;&nbsp;<INPUT SIZE='12' TYPE='text' NAME='frm_lat' VALUE='" . $row['lat'] . "' MAXLENGTH='12' disabled>\n";
 			print "&nbsp;&nbsp;&nbsp;&nbsp;Lon:&nbsp;&nbsp;<INPUT SIZE='12' TYPE='text' NAME='frm_lng' VALUE='" . $row['lng'] . "' MAXLENGTH='12' disabled></TD></TR>\n";
 			$lat = $row['lat']; $lng = $row['lng'];	
-			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='document.can_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='reset' VALUE='Reset' onclick= 'reset_end(); resetmap($lat, $lng);' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>";
 ?>	
 			<INPUT TYPE="hidden" NAME="frm_status_default" VALUE="<?php print $row['status'];?>">

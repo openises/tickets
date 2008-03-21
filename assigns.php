@@ -1,12 +1,14 @@
 <?php
+error_reporting(E_ALL);
 require_once('functions.inc.php'); 
-do_login(basename(__FILE__));
+
 if($istest) {
 	print "GET<br />\n";
 	dump($_GET);
 	print "POST<br />\n";
 	dump($_POST);
 	}
+upd_lastin();				// update session time
 	
 extract($_GET);
 extract($_POST);
@@ -24,11 +26,17 @@ $func = (empty($_POST))? "list" : $_POST['func'];
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
+//alert (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML);
+if ((!window.opener) || (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML == "not"))
+		{self.location.href = 'index.php';}				// must run only as window, with user logged in
+var myuser = "<?php print isset($my_session)?$my_session['user_name']: "not";?>";
+var mylevel = "<?php print isset($my_session)?get_level_text($my_session['level']): "na";?>";
+var myscript = "<?php print isset($my_session)? LessExtension(basename( __FILE__)): "login";?>";
 
 if (window.opener && !window.opener.closed) {
-	window.opener.document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	window.opener.document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	window.opener.document.getElementById("script").innerHTML = "<?php print LessExtension(basename( __FILE__));?>";
+	window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML = 	myuser;
+	window.opener.parent.frames["upper"].document.getElementById("level").innerHTML =	mylevel;
+	window.opener.parent.frames["upper"].document.getElementById("script").innerHTML = 	myscript;
 	}
 
 	function editA(id) {							// edit assigns
@@ -46,11 +54,26 @@ if (window.opener && !window.opener.closed) {
 		document.T_nav_form.id.value=id;
 		document.T_nav_form.action='main.php';
 		document.T_nav_form.submit();
+		window.opener.focus();		
+		}
+
+	function editT(id) {			// edit ticket
+		document.T_nav_form.id.value=id;
+		document.T_nav_form.action='edit.php';
+		document.T_nav_form.submit();
+		window.opener.focus();		
 		}
 
 	function viewU(id) {			// view unit
 		document.U_nav_form.id.value=id;
 		document.U_nav_form.submit();
+		window.opener.focus();
+		}
+
+	function editU(id) {			// edit unit
+		document.U_edit_form.id.value=id;
+		document.U_edit_form.submit();
+		window.opener.focus();
 		}
 
 </SCRIPT>
@@ -63,7 +86,7 @@ switch ($func) {					// ========================================================
 	print "assigns = new Array();\n";
 	
 	$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of FROM `$GLOBALS[mysql_prefix]assigns` ORDER BY `as_of` DESC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	while($row = stripslashes_deep(mysql_fetch_array($result))) {
 		print "assigns['" .$row['ticket_id'] .":" . $row['responder_id'] . "']=true;\n";
 		}
@@ -101,8 +124,7 @@ switch ($func) {					// ========================================================
 <?php
 
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = " . $GLOBALS['STATUS_OPEN']. " ORDER BY `scope`"; 
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-//				if (mysql_affected_rows()>0) 
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 				while ($row = mysql_fetch_array($result))  {
 					print "\t\t<OPTION value='" . $row['id'] . "'>" . $row['scope'] . "</OPTION>\n";		
 					}
@@ -115,7 +137,7 @@ switch ($func) {					// ========================================================
 				<OPTION value= '' selected>Select</OPTION>
 <?php
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ";	//  
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 				while ($row = mysql_fetch_array($result))  {
 					print "\t\t<OPTION value='" . $row['id'] . "'>" . $row['name'] . "</OPTION>\n";		
 					}
@@ -124,13 +146,25 @@ switch ($func) {					// ========================================================
 		<TR CLASS="odd" VALIGN="baseline">
 			<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;Unit Status:</TD>
 			<TD><SELECT name="frm_status_id"  onChange = "document.add_Form.frm_log_it.value='1'"> 
-				<OPTION value= '' selected>Select</OPTION>
+				<OPTION VALUE= '' SELECTED>Select</OPTION>
+
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ";	//  unit status
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				while ($row = mysql_fetch_array($result))  {
-					print "\t\t<OPTION value='" . $row['id'] . "'>" . $row['status_val'] . "</OPTION>\n";		
-					}
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
+		$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$the_grp = strval(rand());			//  force initial OPTGROUP value
+		$i = 0;
+		while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
+			if ($the_grp != $row['group']) {
+				print ($i == 0)? "": "\t</OPTGROUP>\n";
+				$the_grp = $row['group'];
+				print "\t<OPTGROUP LABEL='$the_grp'>\n";
+				}
+			print "\t<OPTION VALUE=' {$row['id']}'  CLASS='{$row['group']}' title='{$row['description']}'> {$row['type']} </OPTION>\n";
+//			print "\t<OPTION VALUE=" . $row['id'] . ">" . $row['status_val'] . "</OPTION>\n";
+			$i++;
+			}		// end while()
+		print "\n</OPTGROUP>\n";
+		unset($result_st);
 ?>
 				</SELECT>	
 			</TD></TR>
@@ -140,7 +174,7 @@ switch ($func) {					// ========================================================
 		
 		<TR CLASS="odd" VALIGN="baseline"><TD colspan="99" ALIGN="center">
 			<BR>
-			<INPUT TYPE="button" VALUE="Cancel" onclick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;	
+			<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;	
 			<INPUT TYPE="button" VALUE="Reset" onclick="Javascript: this.form.reset();">&nbsp;&nbsp;&nbsp;&nbsp;	
 			<INPUT TYPE="submit" VALUE="               Submit           " name="sub_but" >  
 			</TD></TR>
@@ -167,8 +201,7 @@ switch ($func) {					// ========================================================
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 								// apply status update to unit status
 			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status_id']) . " WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-//			do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_unit_id, $frm_status_id, $frm_ticket_id);
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 			do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $frm_unit_id, $frm_status_id);
 ?>
 	</HEAD>
@@ -182,81 +215,265 @@ switch ($func) {					// ========================================================
 		break;				// end case 'add_db' 
 	
 	case 'list' :			// ==============================================================================
-	
+ 		$unit_scr = "http://" . $_SERVER["SERVER_ADDR"] . ":". $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
+		$temparr = explode ("/", $unit_scr);
+		$temparr[count($temparr)-1] = "units.php";
+		$unit_scr=implode ("/", $temparr);
 ?>
 <SCRIPT>
 
 function reSizeScr() {
 	var lines = document.can_Form.lines.value;
-//	height = (((lines * 18)+180)<100)? 100: (lines * 18)+180 ;
-	window.resizeTo(740,((lines * 18)+180));		// derived via trial/error (more of the latter, mostly)
+	window.resizeTo(740,((lines * 18)+230));		// derived via trial/error (more of the latter, mostly)
 	}
+  
+String.prototype.trim = function () {
+	return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+	};
+
+function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
+													// NOT correspond with what browsers actually do...
+	var SAFECHARS = "0123456789" +					// Numeric
+					"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +	// Alphabetic
+					"abcdefghijklmnopqrstuvwxyz" +	// guess
+					"-_.!~*'()";					// RFC2396 Mark characters
+	var HEX = "0123456789ABCDEF";
+
+	var encoded = "";
+	for (var i = 0; i < plaintext.length; i++ ) {
+		var ch = plaintext.charAt(i);
+	    if (ch == " ") {
+		    encoded += "+";				// x-www-urlencoded, rather than %20
+		} else if (SAFECHARS.indexOf(ch) != -1) {
+		    encoded += ch;
+		} else {
+		    var charCode = ch.charCodeAt(0);
+			if (charCode > 255) {
+			    alert( "Unicode Character '"
+                        + ch
+                        + "' cannot be encoded using standard URL encoding.\n" +
+				          "(URL encoding only supports 8-bit characters.)\n" +
+						  "A space (+) will be substituted." );
+				encoded += "+";
+			} else {
+				encoded += "%";
+				encoded += HEX.charAt((charCode >> 4) & 0xF);
+				encoded += HEX.charAt(charCode & 0xF);
+				}
+			}
+		} 			// end for(...)
+	return encoded;
+	};			// end function
+
+function URLDecode(encoded ){   					// Replace + with ' '
+   var HEXCHARS = "0123456789ABCDEFabcdef";  		// Replace %xx with equivalent character
+   var plaintext = "";   							// Place [ERROR] in output if %xx is invalid.
+   var i = 0;
+   while (i < encoded.length) {
+       var ch = encoded.charAt(i);
+	   if (ch == "+") {
+	       plaintext += " ";
+		   i++;
+	   } else if (ch == "%") {
+			if (i < (encoded.length-2)
+					&& HEXCHARS.indexOf(encoded.charAt(i+1)) != -1
+					&& HEXCHARS.indexOf(encoded.charAt(i+2)) != -1 ) {
+				plaintext += unescape( encoded.substr(i,3) );
+				i += 3;
+			} else {
+				alert( '-- invalid escape combination near ...' + encoded.substr(i) );
+				plaintext += "%[ERROR]";
+				i++;
+			}
+		} else {
+			plaintext += ch;
+			i++;
+			}
+	} 				// end  while (...)
+	return plaintext;
+	};				// end function URLDecode()
+
+function syncAjax(strURL) {							// synchronous ajax function
+	if (window.XMLHttpRequest) {						 
+		AJAX=new XMLHttpRequest();						 
+		} 
+	else {																 
+		AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+	if (AJAX) {
+		AJAX.open("GET", strURL, false);														 
+		AJAX.send(null);							// form name
+//		alert ("332 " + AJAX.responseText);
+		return AJAX.responseText;																				 
+		} 
+	else {
+		alert ("57: failed")
+		return false;
+		}																						 
+	}		// end function sync Ajax(strURL)
+
+	var button_live = false;
+	function show_but(id) {
+		if (button_live) {
+			alert ("Please complete button action.");
+			return false;
+			}
+		else {
+			var theid = "TD"+id;
+			elem = document.getElementById(theid);
+			elem.style.display = "block";
+			button_live = true;
+			return false;
+			}
+		}		// end function show_but(id)
+
+	function hide_but(id) {
+		var theid = "TD"+id;
+		elem = document.getElementById(theid);
+		elem.style.display = "none";
+		button_live = false;
+		return false;
+		}
+
+	var last_form_no;
+	function to_server(the_Form) {							// write unit status data via ajax xfer
+	//	$frm_ticket_id, $frm_responder_id, $frm_status_id	
+		var querystr = "?frm_ticket_id=" + URLEncode(the_Form.frm_ticket_id.value.trim());
+		querystr += "&frm_responder_id=" + URLEncode(the_Form.frm_responder_id.value.trim());
+		querystr += "&frm_status_id=" + URLEncode(the_Form.frm_status_id.value.trim());
+	
+		var url = "as_up_un_status.php" + querystr;			// 
+		var payload = syncAjax(url);						// 
+		if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
+			alert ("352: msg failed ");
+			return false;
+			}
+		else {
+// 			var bull_str = "<B>&bull;</B>&nbsp;";
+ 			var bull_str = "<B>&bull;</B> ";
+			var form_no = the_Form.name.substring(1);
+			hide_but(form_no);								// hide the buttons
+
+			if (last_form_no) {
+				var elem = "myDate" + last_form_no;
+				var temp = document.getElementById(elem).innerHTML;
+				document.getElementById(elem).innerHTML = temp.substr(9);		// drop the bullet
+				}
+			var elem = "myDate" + form_no;
+			document.getElementById(elem).innerHTML = bull_str + payload;
+			window.opener.parent.frames['main'].location.href = "<?php print $unit_scr;?>";	// force
+			last_form_no = form_no;
+			}				// end if/else (payload.substring(... )
+		}		// end function to_server()
 
 </SCRIPT>	
 	</HEAD>
-<BODY onLoad = "reSizeScr ()";>
+<BODY onLoad = "reSizeScr()";>
 <?php
+		function get_un_stat_sel($s_id, $b_id) {					// status id
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
+			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$the_grp = strval(rand());			//  force initial OPTGROUP value
+			$i = 0;
+			$outstr = "\n\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)'>\n";
+			while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
+				if ($the_grp != $row['group']) {
+					$outstr .= ($i == 0)? "": "\t</OPTGROUP>\n";
+					$the_grp = $row['group'];
+					$outstr .= "\t<OPTGROUP LABEL='$the_grp'>\n";
+					}
+				$sel = ($row['id']==$s_id)? " SELECTED": "";
+				$outstr .= "\t\t<OPTION VALUE=" . $row['id'] . $sel .">" . $row['status_val'] . "</OPTION>\n";
+				$i++;
+				}		// end while()
+			$outstr .= "\n\t</OPTGROUP></SELECT>\n";
+			return $outstr;
+			unset($result_st);
+			}
+
 		$priorities = array("text_black","text_blue","text_red" );
-		print "<TABLE BORDER=0 ALIGN='center' WIDTH='90%' ID='call_board' STYLE='display:block'>";
-		print "<TR CLASS='even'><TD COLSPAN=3 ALIGN = 'right'><B>Call Board</B></TD><TD COLSPAN=4 ALIGN='center'<FONT SIZE='-3'><I> (* click line for details)</I></FONT></TD></TR>\n";
+		print "<TABLE BORDER=0 ALIGN='center' WIDTH='100%' ID='call_board' STYLE='display:block'>";
+		print "<TR CLASS='even'><TD COLSPAN=8 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (* click for details)</I></FONT></TD></TR>\n";
 
-		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `assigns`.`id` AS `assign_id` , `assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
-			`s`.`status_val` AS `thestatus`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 	ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]assigns`.`status_id` = `s`.`id`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` 		ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+		$status_vals_ar = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+			$sep = (empty($row['description']))? "": ":";
+			$status_vals_ar[$row['id']] = $row['status_val'] . $sep . $row['description'] ;
+			}
+
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , `$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
+			`r`.`id` AS `theunitid`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
 			ORDER BY `as_of` ASC ";
-
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$i = 1;	
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$lines = mysql_affected_rows();
-		if ($lines>0) {
+//		$lines = mysql_affected_rows();
+
+		if (mysql_affected_rows()>0) {
+			$doUnit = (is_guest())? "viewU" : "editU";
 			$now = time() - (get_variable('delta_mins')*60);
 			$delta = 24*60*60;							// 24 hours
 			$items = mysql_affected_rows();
-			$header= "<TR CLASS='odd'><TD ALIGN='center'>* Call</TD><TD ALIGN='center'>Addr</TD><TD ALIGN='center'>* Comment</TD><TD ALIGN='center'>* Unit</TD><TD ALIGN='center'>Unit Status</TD><TD ALIGN='center'>As of</TD><TD ALIGN='center'>By</TD></TR>\n";
+			$header = "<TR CLASS='even'><TD COLSPAN=3 ALIGN='center'>Dispatch</TD><TD COLSPAN=2 ALIGN='center'>Incident</TD><TD COLSPAN=2 ALIGN='center'>Unit</TD><TD></TD></TR>\n";
+			$header .= "<TR CLASS='odd'><TD ALIGN='center'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>* Descr</TD><TD ALIGN='center'>* Addr</TD><TD ALIGN='center'>Comment</TD><TD ALIGN='center'>* Unit</TD><TD COLSPAN=1 ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD><TD></TD></TR>\n";
 			while($row = stripslashes_deep(mysql_fetch_array($result))) {
 				if (((empty($row['clear'])) || (!empty($row['clear']) && ((totime($row['clear']) > ($now-$delta)))))) {
 					if ($i == 1) {print $header;}
 					$theClass = $priorities[$row['severity']];
 					print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>\n";
+					print "<FORM NAME='F$i' METHOD='get' ACTION=''>\n";
 
 					if (!empty($row['clear'])) {
 						$strike = "<STRIKE>"; $strikend = "</STRIKE>";		// strikethrough on closed assigns
 						}
 					else {
 						$strike = $strikend = "";
-						}	
-		
-					print "\t<TD onClick = viewT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['theticket'] . "'><U>" . $strike . shorten($row['theticket'], 16) . $strikend . "</U></TD>\n";		// call
+						}			
 	
 					$address = (empty($row['street']))? "" : $row['street'] . ", ";
 					$address .= $row['city'];
+
+					print "\t<TD CLASS='$theClass' ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
+					print "\t<TD CLASS='$theClass'  TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'><U>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</U></TD>\n";				// comment
 					
-					print "\t<TD TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD>\n";		// address
-					print "\t<TD onClick = editA(" . $row['assign_id'] . ") TITLE='" . shorten ($row['assign_comments'], 72) . "'><U>" . $strike .  shorten ($row['assign_comments'], 16) . $strikend .  "</U></TD>\n";				// comment
-					$unit_name = ($row['theunit']=="")? "??": $row['theunit'];
-					print "\t<TD TITLE = '" .$unit_name . "' onClick = viewU('" . $row['responder_id'] . "') ><U>" .  $strike . shorten($unit_name, 16)  . $strikend . "</U></TD>\n";						// unit
-					print "\t<TD>" .  $strike . shorten ($row['thestatus'], 12) .  $strikend . "</TD>\n";						// status
-					print "\t<TD>" .  $strike . date("d H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
-					print "\t<TD TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
-					print "</TR>";
+					print "\t<TD onClick = editT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . $row['theticket'] . "'><U>" . $strike . shorten($row['theticket'], 16) . $strikend . "</U></TD>\n";		// call
+					print "\t<TD CLASS='$theClass' TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD>\n";		// address
+					if (!$row['responder_id']==0) {
+						print "\t<TD TITLE = '" . $row['theunit'] . "' onClick = $doUnit('" . $row['responder_id'] . "') ><U>" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</U></TD>\n";						// unit
+						$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
+	//					print "\t<TD TITLE= '$unit_st_val'>" .  $strike . shorten ($unit_st_val, 12) .  $strikend . "</TD>\n";						// status
+						print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
+						print "\t<TD ID=TD$i STYLE='display:none'>\n\t<INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i)\">\n";
+						print "\t<INPUT TYPE='button' VALUE='Cancel'  style = 'height: 1.5em;' onClick=\"document.F$i.reset();hide_but($i)\"></TD>\n";
+						}
+					else {
+						print "<TD COLSPAN=3></TD>";
+						}
+					
+					print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['responder_id'] . "'>\n";
+					print "\t<INPUT TYPE='hidden' NAME='frm_ticket_id' VALUE='" . $row['ticket_id'] . "'>\n";
+					print "</FORM>\n</TR>\n";
 					$i++;
 					}
 				}		// end while($row ...)
-			}		// end if ($lines>0) 
+				$lines = $i;
+			}		// end if (mysql_affected_rows()>0) 
 		if ($i>1) {
 			print "<TR CLASS='" . $evenodd[($i+1)%2] . "'><TD COLSPAN=99 ALIGN='center'>";
 			print "<FONT SIZE='-1'><I>Call severity:&nbsp;&nbsp;&nbsp;&nbsp;<span CLASS='text_black'>Normal</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_blue'>Medium</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_red'>High</span></I></FONT>";
 			print "</TD></TR>";				
-			}				// if (mysql_affected_rows()>0)
+			}				
 		else {
 			print "<TR><TH COLSPAN=99>&nbsp;</TH></TR>";
 			print "<TR><TH COLSPAN=99><BR />No Current Call Assignments<BR /></TH></TR>";
 			}
 		print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>&nbsp;<TD COLSPAN=99 ALIGN='center'>";
-		print "<INPUT TYPE='button' VALUE = 'Add' onClick = 'document.add_form.submit()'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		print "<INPUT TYPE='button' VALUE = 'Add' onClick = \"document.nav_form.func.value='add'; document.nav_form.submit()\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 		print "<INPUT TYPE='button' VALUE = 'Close' onClick = 'self.close()'>";
 
 		print "</TD></TR>";
@@ -283,7 +500,7 @@ function reSizeScr() {
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
 			WHERE `assigns`.`id` = $frm_id LIMIT 1";
 
-		$asgn_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$asgn_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$asgn_row = stripslashes_deep(mysql_fetch_array($asgn_result));
 
 ?>
@@ -326,7 +543,7 @@ function reSizeScr() {
 		
 		<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
 			<br>
-			<INPUT TYPE="BUTTON" VALUE="Cancel" onclick="document.can_Form.submit();" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
+			<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
 			</TD></TR>
 		 </tbody></table>
 		<INPUT TYPE='hidden' NAME='func' value= ''>
@@ -340,27 +557,45 @@ function reSizeScr() {
 	case 'edit':		// ======================================================================================
 ?>
 <SCRIPT>
-		function validate_ed(theForm) {
-			var errmsg="";
-			if (document.forms[0].frm_status_id.value == "")	{errmsg+= "\tSelect Status\n";}
+	var incident_st = unit_st = assign_st = true;		// changes to false on activation
 
-			if (errmsg!="") {
-				alert ("Please correct the following and re-submit:\n\n" + errmsg);
-				return false;
-				}
-			else {
-				document.forms[0].submit();
-				}
-			}				// end function validate_ed(theForm)
-			
+	function do_reset(the_Form) {
+		incident_st = unit_st = assign_st = true;
+		the_Form.reset();
+		}		// end function do_reset()
+	
+	
 
-		function confirmation() {
-			var answer = confirm("This dispatch run completed?")
-			if (answer){
-				document.edit_Form.delete_db.value='true'; 
-				document.edit_Form.submit();
-				}
-			}		// end function confirmation()
+	function validate_ed(theForm) {
+		var errmsg="";
+		if (theForm.frm_unit_id) {						// defined?
+			if (theForm.frm_unit_id.value == 0)			{errmsg+= "\tSelect Unit\n";}
+			}
+		if (theForm.frm_unit_status_id) {
+			if (theForm.frm_unit_status_id.value == 0)	{errmsg+= "\tSelect Unit Status\n";}
+			}
+
+		if (errmsg!="") {
+			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			return false;
+			}
+		else {
+				theForm.frm_inc_status_id.disabled = incident_st;
+				theForm.frm_unit_status_id.disabled = unit_st;
+//				theForm..disabled = assign_st_id.disabled = assign_st;
+		
+			theForm.submit();
+			}
+		}				// end function validate_ed(theForm)
+		
+
+	function confirmation() {
+		var answer = confirm("This dispatch run completed?")
+		if (answer){
+			document.edit_Form.delete_db.value='true'; 
+			document.edit_Form.submit();
+			}
+		}		// end function confirmation()
 	function reSizeScr() {
 		window.resizeTo(740,300);		
 		}
@@ -368,76 +603,105 @@ function reSizeScr() {
 	</HEAD>
 	<BODY onLoad = "reSizeScr()">
 <?php	
-
-		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `assigns`.`id` AS `assign_id` , `assigns`.`comments` AS `assign_comments`,
-			`u`.`user` AS `theuser`	FROM `$GLOBALS[mysql_prefix]assigns` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
-			WHERE `assigns`.`id` = $frm_id LIMIT 1";
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , `$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
+			`s`.`status_val` AS `thestatus`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 	ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]assigns`.`status_id` = `s`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` 		ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+			WHERE `$GLOBALS[mysql_prefix]assigns`.`id` = $frm_id LIMIT 1";
 
 		$asgn_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$asgn_row = stripslashes_deep(mysql_fetch_array($asgn_result));
-//		dump ($query);
 		$clear = (empty($asgn_row['clear'])) ? "": "<FONT COLOR='red'><B>Cleared</B></FONT>";
 		$disabled = (empty($asgn_row['clear'])) ? "": " DISABLED ";
 ?>
 		<TABLE BORDER=0 ALIGN='center'>
 		<FORM NAME="edit_Form" onSubmit="return validate_ed(document.edit_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">
-		<TR CLASS="odd"><TD colspan=2 ALIGN="center">Edit this Call Assignment (#<?php print $asgn_row['id'] ?>) <?php print $clear; ?></TD></TR>
+		<TR CLASS="odd"><TD CLASS="td_label" colspan=99 ALIGN="center">Edit this Call Assignment (#<?php print $asgn_row['assign_id'] ?>) <?php print $clear; ?></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS='even' VALIGN='baseline'><TD CLASS='td_label' ALIGN='right'>As of:</TD><TD><?php print format_date($asgn_row['as_of']);?>
-			&nbsp;&nbsp;&nbsp;&nbsp;By <?php print $asgn_row['user'];?></TD></TR>		
 
-		<TR CLASS="odd" VALIGN="baseline">
+		<TR CLASS="even" VALIGN="bottom">
 			<TD CLASS="td_label" ALIGN="right">Incident:</TD>
-			<TD><SELECT NAME="frm_ticket_id" onChange = "document.edit_Form.frm_log_it.value='1'" <?php print $disabled;?>>
+			<TD TITLE = "<?php print $asgn_row['scope']; ?>"><?php print shorten($asgn_row['scope'], 32); ?>&nbsp;&nbsp;&nbsp;&nbsp;
 <?php	
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = " . $GLOBALS['STATUS_OPEN']. " ORDER BY `scope`"; 
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				while ($row2 = mysql_fetch_array($result))  {
-					$sel = ($asgn_row['ticket_id']== $row2['id'])? " SELECTED": "";
-					print "\t\t<OPTION value='" . $row2['id'] ."'  $sel>" . $row2['scope'] . "</OPTION>\n";		
-					}
-?>
-				</SELECT>	
+				$selO = ($asgn_row['status']==$GLOBALS['STATUS_OPEN'])?   " SELECTED" :"";
+				$selC = ($asgn_row['status']==$GLOBALS['STATUS_CLOSED'])? " SELECTED" :"" ;
+?>			
+				</TD><TD CLASS="td_label"> Status:&nbsp;</TD><TD><SELECT NAME='frm_inc_status_id' onChange="Javascript: incident_st = false;">
+				<OPTION VALUE= <?php print $GLOBALS['STATUS_OPEN'] .  $selO; ?> >Open</OPTION>
+				<OPTION VALUE= <?php print $GLOBALS['STATUS_CLOSED'] .  $selC; ?> >Closed</OPTION>
+				</SELECT>
+
 			</TD></TR>
-		<TR CLASS="even" VALIGN="baseline">
-			<TD CLASS="td_label" ALIGN="right">Unit:</TD>
-			<TD><SELECT name="frm_unit_id" onChange = "document.edit_Form.frm_log_it.value='1'" <?php print $disabled;?>>
-<?php	// UNITS
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ";	//  
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				while ($row2 = mysql_fetch_array($result))  {
-					$sel = ($asgn_row['responder_id']== $row2['id'])? " SELECTED": "";
-					print "\t\t<OPTION value='" . $row2['id'] . "' $sel>" . $row2['name'] . "</OPTION>\n";		
-					}
-?>
-		</SELECT></TD></TR>
 		<TR CLASS="odd" VALIGN="baseline">
-			<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;Unit Status:</TD>
-			<TD><SELECT name="frm_status_id"  onChange = "document.edit_Form.frm_log_it.value='1'" <?php print $disabled;?>> 
-<?php	// UNIT STATUS
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ";	//  unit status
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				while ($row2 = mysql_fetch_array($result))  {
-					$sel = ($asgn_row['status_id']== $row2['id'])? " SELECTED": "";
-					print "\t\t<OPTION value='" . $row2['id'] . "' $sel>" . $row2['status_val'] . "</OPTION>\n";		
+			<TD CLASS="td_label" ALIGN="right">Unit:</TD>
+<?php
+			if ($asgn_row['responder_id']==0) {
+?>			
+				<TD><SELECT name="frm_unit_id" onChange = "document.edit_Form.frm_log_it.value='1'" >
+					<OPTION value= '0' selected>Select</OPTION>
+<?php
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ";	//  
+				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+				while ($row = mysql_fetch_array($result))  {
+					print "\t\t<OPTION value='" . $row['id'] . "'>" . $row['name'] . "</OPTION>\n";		
 					}
+				print "</SELECT>\n";
+				$do_unit = FALSE;
+				}
+			else {
+?>
+				<TD TITLE = "<?php print $asgn_row['name']; ?>"><?php print shorten($asgn_row['name'], 32);?>&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+<?php
+				$do_unit = TRUE;
+				}
+?>			
+			<TD CLASS="td_label">Unit Status:</TD><TD>
+			<SELECT name="frm_unit_status_id"  onChange = "Javascript: unit_st=false; document.edit_Form.frm_log_it.value='1'" <?php print $disabled;?> > 
+<?php																// UNIT STATUS
+			if (intval($asgn_row['responder_id'])==0) {
+				print "\t<OPTION VALUE=0 SELECTED>Select</OPTION>\n";
+				}
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$the_grp = strval(rand());			//  force initial optgroup value
+			$i = 0;
+			while ($row2 = stripslashes_deep(mysql_fetch_array($result))) {
+				if ($the_grp != $row2['group']) {
+					print ($i == 0)? "": "\t</OPTGROUP>\n";
+					$the_grp = $row2['group'];
+					print "\t<OPTGROUP LABEL='$the_grp'>\n";
+					}
+				print "\t<OPTION VALUE=" . $row2['id'] . ">" . $row2['status_val'] . "</OPTION>\n";
+				$i++;
+				}		// end while()
+			print "\t</OPTGROUP>\n";
+			unset($result);
 ?>
 				</SELECT>	
 			</TD></TR>
 		<TR CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Comments:</TD>
-			<TD><INPUT MAXLENGTH="64" SIZE="64" NAME="frm_comments" VALUE="<?php print $asgn_row['comments']; ?>" TYPE="text"<?php print $disabled;?>></TD></TR>
+			<TD colspan=3><INPUT MAXLENGTH="64" SIZE="64" NAME="frm_comments" VALUE="<?php print $asgn_row['assign_comments']; ?>" TYPE="text"<?php print $disabled;?>></TD></TR>
 		
-		<TR CLASS="odd" VALIGN="baseline"><TD colspan="99" ALIGN="center">
+		<TR CLASS='odd' VALIGN='baseline'><TD CLASS='td_label' ALIGN='right'>As of:</TD>
+			<TD><?php print format_date($asgn_row['as_of']);?></TD>
+			<TD CLASS="td_label">By:</TD><TD> <?php print $asgn_row['user'];?></TD>
+			</TR>		
+
+		<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
 			<br>
-			<INPUT TYPE="BUTTON" VALUE="Cancel" onclick="document.can_Form.submit();" style="height: 1.5em;">
+			<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();" style="height: 1.5em;">
 <?php
 			if (!$disabled) {
 ?>			
 			&nbsp;&nbsp;&nbsp;&nbsp;	
-			<INPUT TYPE="BUTTON" VALUE="Reset"  onclick="Javascript: this.form.reset();" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
-			<INPUT TYPE="BUTTON" VALUE=" Submit " name="sub_but" onClick = "validate_ed(document.edit_Form)" style="width: 12em;height: 1.5em;" ><br><br>
+			<INPUT TYPE="BUTTON" VALUE="Reset"  onclick="Javascript: do_reset(document.edit_Form)" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
+			<INPUT TYPE="BUTTON" VALUE=" Submit " name="sub_but" onClick = "validate_ed(document.edit_Form)" style="width: 12em;height: 1.5em;" >
+			</TD></TR>
+			<TR CLASS='odd'><TD>&nbsp;</TD></TR>
+			<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'>
 			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;">
 <?php
 			}
@@ -448,7 +712,11 @@ function reSizeScr() {
 		<INPUT TYPE='hidden' NAME='func' value= 'edit_db'>
 		<INPUT TYPE='hidden' NAME='delete_db' value= ''>
 		<INPUT TYPE='hidden' NAME='frm_id' value= '<?php print $frm_id; ?>'>
-		<INPUT TYPE='hidden' NAME='frm_unit_id' value= '<?php print $asgn_row['responder_id'];?>'>
+<?php
+		if ($do_unit) {
+			print "<INPUT TYPE='hidden' NAME='frm_unit_id' value= '" .  $asgn_row['responder_id'] . "'>\n";
+			}
+?>		
 		<INPUT TYPE='hidden' NAME='frm_ticket_id' value= '<?php print $asgn_row['ticket_id'];?>'>
 		<INPUT TYPE='hidden' NAME='frm_log_it' value=''/>
 		<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
@@ -458,29 +726,41 @@ function reSizeScr() {
 		break;			// end 	case 'edit':
 		
 	case 'edit_db':		// ===============================================================================================
+	
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+		
+		if (isset($frm_inc_status_id)) {
+			$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `status`= " . quote_smart($frm_inc_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_ticket_id) ." LIMIT 1";
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $frm_ticket_id);
+			}
+			
+		if (isset($frm_unit_status_id)) {
+			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_unit_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_unit_id) ." LIMIT 1";
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			
+			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET  `responder_id` = " . quote_smart($frm_unit_id) . ", `as_of` = " . quote_smart($now) . ", `comments` = " . quote_smart($_POST['frm_comments']) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			do_log($GLOBALS['LOG_UNIT_CHANGE'], $frm_unit_id);	
+			}
 
-		if (!empty($delete_db)) 	{
+		if (!empty($delete_db)) 	{			// run is completed?
 			$age_delta = 60*60*24;
 			$cutoff = mysql_format_date(time() - (get_variable('delta_mins')*60) - $age_delta);
 
 			$query  = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NOT NULL AND `clear` < " . quote_smart($cutoff);		// delete all older assigns 
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 		
 			do_log($GLOBALS['LOG_UNIT_COMPLETE'], $frm_ticket_id, $frm_unit_id);		// set clear times
 			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `clear`= " . quote_smart($now) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 
 			$message = "Run completion recorded";
 			}
 		else {
 			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 
-			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status_id']) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_unit_id) ." LIMIT 1";
-
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			if (intval($frm_log_it)==1) { do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $frm_unit_id, $frm_status_id);}
 			$message = "Update Applied";
 			}
 ?>
@@ -490,6 +770,7 @@ function reSizeScr() {
 	<FORM NAME='ed_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
 	<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()">
 	<INPUT TYPE='hidden' NAME='func' VALUE='list'>
+	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
 	</FORM></BODY></HTML>
 <?php	
 		break;				// end 	case 'edit_db'
@@ -499,14 +780,9 @@ function reSizeScr() {
 	}				// end switch ($func)
 ?>
 
-<FORM NAME='nav_form' METHOD='' ACTION = "">
+<FORM NAME='nav_form' METHOD='post' ACTION = "">
 <INPUT TYPE='hidden' NAME='frm_id' VALUE=''>
 <INPUT TYPE='hidden' NAME='func' VALUE=''>
-<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
-</FORM>
-
-<FORM NAME='add_form' METHOD='POST' ACTION = "<?php print basename(__FILE__); ?>">
-<INPUT TYPE='hidden' NAME='func' VALUE='add'>
 <INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
 </FORM>
 
@@ -519,6 +795,13 @@ function reSizeScr() {
 <INPUT TYPE='hidden' 	NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' 	NAME='view' VALUE='true'>
 </FORM>
+
+<FORM NAME='U_edit_form' METHOD='get' TARGET = 'main' ACTION = "units.php">
+<INPUT TYPE='hidden' 	NAME='id' VALUE=''>
+<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'>
+<INPUT TYPE='hidden' 	NAME='edit' VALUE='true'>
+</FORM>
+
 <FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>">
 <INPUT TYPE='hidden' NAME='func' VALUE='list'>
 <INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>

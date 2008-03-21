@@ -7,7 +7,7 @@
 		exit();
 		}
 	else {
-	do_login(basename(__FILE__));
+		do_login(basename(__FILE__));
 		}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -26,24 +26,34 @@
 		document.getElementById = function(id) {							
 			return document.all[id];							
 			}							
-		}				
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+	if (parent.frames["upper"]) {
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+		
+	function ck_frames() {		//  onLoad = "ck_frames()"
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
+	
+		
 	</SCRIPT>
 <script src="graticule.js" type="text/javascript"></script>
 	
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>
 
-<BODY onload = "if(self.location.href==parent.location.href) {self.location.href = 'index.php'; }" onunload="GUnload()">
+<BODY onload = "ck_frames();" onunload="GUnload();">
 <?php
-	$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		"";
-	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			"";
-	$get_sort_by_field = 	(array_key_exists('sort_by_field', ($_GET)))?	$_GET['sort_by_field']:	"" ;
-	$get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	"" ;
+	$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
+	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
+	$get_sort_by_field = 	(array_key_exists('sort_by_field', ($_GET)))?	$_GET['sort_by_field']:	NULL;
+	$get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	NULL;
 
-	if ($get_print == 'true') {
+	if ($get_print) {
 		show_ticket($get_id,'true');
 		print "<BR /><P ALIGN='left'>";
 		}
@@ -52,12 +62,11 @@
 		show_ticket($get_id);
 		print "<BR /><P ALIGN='left'>";
 		}
-	else if ($get_sort_by_field && $_GET['sort_value']) {
+	else if ($get_sort_by_field && $get_sort_value) {
 		list_tickets($get_sort_by_field, $get_sort_value);
 		}
 	else {
 		list_tickets();
 		}
-
 ?>
 </BODY></HTML>

@@ -1,4 +1,5 @@
 <?php 
+	error_reporting(E_ALL);
 	require_once('functions.inc.php');
 	require_once('config.inc.php');
 	require_once('responders.php');
@@ -28,18 +29,22 @@
 				self.location.href = 'index.php';
 				}
 <?php
-	dump ($reload_top);
-	if ($reload_top) {
-		print "\n\talert(32);\n";
-		}
+//	dump ($reload_top);
+//	if ($reload_top) {
+//		print "\n\talert(32);\n";
+//		}
 ?>
 			}		// end function ck_frames()
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name']; ?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML  = "<?php print get_level_text($my_session['level']); ?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
-	function do_Cancel() {
-		window.location = "config.php?func=responder";
+	if (parent.frames["upper"]) {
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+
+	function do_Post(the_table) {
+		document.tables.tablename.value=the_table;
+		document.tables.submit();
 		}
 
 	var type;					// Global variable - identifies browser family
@@ -229,7 +234,7 @@
 			<TR CLASS='odd'></TR><TD CLASS="td_label">On Patient/Action Change:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_action"></TD></TR>
 			<TR CLASS='even'><TD CLASS="td_label">On Ticket Change: &nbsp;&nbsp;</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_ticket"></TD></TR>
 				<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_GET['id'];?>">
-			<TR CLASS='odd'><TD></TD><TD ALIGN="center"><INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
+			<TR CLASS='odd'><TD></TD><TD ALIGN="center"><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
@@ -304,7 +309,7 @@
 					print "<INPUT TYPE='hidden' NAME='frm_id[$i]' VALUE='" . $row['id'] . "'></TR>\n";
 					$i++;
 					}
-				print "<TR CLASS='" .$colors[$i%2]  ."'><TD COLSPAN=99 ALIGN='center'><INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				print "<TR CLASS='" .$colors[$i%2]  ."'><TD COLSPAN=99 ALIGN='center'><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 					<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Continue'></TD></TR></FORM>";
 				print "</TABLE><BR />";
 ?>
@@ -374,7 +379,7 @@ case 'profile' :					//update profile
 			<OPTION value="affected" <?php if($row['sortorder']=='affected') print " selected";?>>Affected</OPTION>
 			</SELECT>&nbsp; Descending <INPUT TYPE="checkbox" value="1" name="frm_sort_desc" <?php if ($row['sort_desc']) print "checked";?>></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $my_session['user_id'];?>">
-			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
+			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
@@ -406,7 +411,7 @@ case 'reset' :
 				<TR><TD CLASS="td_label">Reset users:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_user"></TD></TR>
 				<TR><TD CLASS="td_label">Reset settings:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_settings"></TD></TR>
 				<TR><TD CLASS="td_label">Really reset database? &nbsp;&nbsp;</TD><TD><INPUT MAXLENGTH="20" SIZE="40" TYPE="text" NAME="frm_confirm"></TD></TR>
-				<TR><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
+				<TR><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
 				</FORM></TABLE>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 				</BODY>
@@ -452,7 +457,7 @@ case 'settings' :
 					}		// str_replace ( search, replace, subject)
 				
 				print "<TR><TD></TD><TD ALIGN='center'>
-					<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR></FORM></TABLE>";
+					<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR></FORM></TABLE>";
 ?>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 				</BODY>
@@ -498,7 +503,7 @@ case 'user' :
 ?>			
 			</TD></TR>
 			<TR CLASS="even"><TD CLASS="td_label">Remove User:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove"></TD></TR>
-			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
+			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
@@ -589,7 +594,7 @@ case 'user' :
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" <?php print is_guest()?"checked":"";?>> Guest<BR />
 						</TD></TR>
 					<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="40" MAXLENGTH="80" TYPE="text" VALUE="<?php print $_POST['frm_info'];?>" NAME="frm_info"></TD></TR>
-					<TR CLASS="even"><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Add User"></TD></TR>
+					<TR CLASS="even"><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Add User"></TD></TR>
 					</FORM></TABLE>
 					<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 					</BODY>
@@ -612,7 +617,7 @@ case 'user' :
 				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level"> User<BR />
 				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level"> Guest<BR />
 				</TD></TR>
-				<TR CLASS="even"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Add this user"></TD></TR>
+				<TR CLASS="even"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Add this user"></TD></TR>
 				</FORM></TABLE>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 				</BODY>
@@ -671,7 +676,7 @@ case 'center' :
 			<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS = "even"><TD COLSPAN=5 ALIGN='center'>
-			<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
+			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
 		</FORM></TABLE>
 		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Drag/Zoom and double-click to new default position</SPAN></FONT></CENTER>
@@ -706,7 +711,7 @@ case 'api_key' :
 		<TR CLASS = "even"><TD CLASS="td_label">Copy/paste key:</TD></TR>
 		<TR CLASS = "odd"><TD><INPUT MAXLENGTH="88" SIZE="120" TYPE="text" NAME="frm_value" VALUE="<?php print $curr_key; ?>" /></TD></TR>
 		<TR CLASS = "even"><TD ALIGN='center'>
-			<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
+			<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
 		</FORM></TABLE>
 		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 		</BODY>
@@ -729,6 +734,32 @@ case 'api_key' :
 		exit();
 		}		// end  else	
     break;
+    
+case 'dump' :				// see mysql.inc.php	for MySQL parameters
+	require_once('./incs/MySQLDump.class.php');
+	
+	$backup = new MySQLDump(); //create new instance of MySQLDump
+	
+	$the_db = $mysql_prefix . $mysql_db;
+	$backup->connect($mysql_host,$mysql_user,$mysql_passwd,$the_db);		// connect
+	if (!$backup->connected) { die('Error: '.$backup->mysql_error); } 		// MySQL parameters from mysql.inc.php
+	$backup->list_tables(); 												// list all tables
+	$broj = count($backup->tables); 										// count all tables, $backup->tables 
+																			//   will be array of table names
+	echo "<pre>\n"; //start preformatted output
+	echo "\n\n-- start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start \n";
+	echo "\n-- Dumping tables for database: $mysql_db\n"; //write "intro" ;)
+	
+	for ($i=0;$i<$broj;$i++) {						//dump all tables:
+		$table_name = $backup->tables[$i]; 			//get table name
+		$backup->dump_table($table_name); 			//dump it to output (buffer)
+		echo htmlspecialchars($backup->output); 	//write output
+		}
+	echo "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
+	
+	echo "\n<pre>"; 
+	
+	break;
     
 case 'delete' :	
 	print "<BODY onLoad = 'ck_frames()'>\n";
@@ -755,7 +786,7 @@ case 'delete' :
 						}		// end while($row ...)
 				print "<TR CLASS='" . $evenodd[$i%2] . "'><TD ALIGN='center' COLSPAN=3>";
 ?>
-				<INPUT TYPE='button' VALUE='Cancel' 	onClick = 'document.can_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<INPUT TYPE='button' VALUE='Cancel' 	onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='button' VALUE='Select All' onClick = 'all_ticks(true)';>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='button' VALUE='Reset' 		onClick = 'document.del_Form.reset();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='button' VALUE='Continue' 	onClick = 'collect(); document.del_Form.submit()'></TD></TR>
@@ -781,7 +812,7 @@ case 'delete' :
 			<BR /><BR /><BR /><FONT CLASS='warn' SIZE = "+1"><B>Please confirm deletions - cannot be undone!</B></FONT><BR /><BR />
 			<FORM METHOD="POST" NAME= "del_Form" ACTION="config.php?func=delete&subfunc=do_del">
 			<INPUT TYPE='hidden' NAME='idstr' VALUE="<?php print $_POST['idstr'];?>">
-			<INPUT TYPE='button' VALUE='Cancel'  onClick='document.can_Form.submit();'>&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Confirmed'></TD></TR>
+			<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'>&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Confirmed'></TD></TR>
 			</FORM>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
@@ -799,7 +830,7 @@ case 'delete' :
 				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 				$query = "DELETE from $GLOBALS[mysql_prefix]patient_bu WHERE `ticket_id` = " . $temp[$i];
 				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				dump ($query);
+//				dump ($query);
 				}
 ?>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php">	
@@ -825,33 +856,49 @@ case 'delete' :
 		</HEAD>
 		<BODY onLoad = 'ck_frames()'>
 		<LI><A HREF="config.php?func=user&add=true">Add user</A>
-		<LI><A HREF="config.php?func=responder">Units</A>
+<!--		<LI><A HREF="config.php?func=responder">Units</A> -->
 		<LI><A HREF="config.php?func=reset">Reset Database</A>
 		<LI><A HREF="config.php?func=optimize">Optimize Database</A>
 		<LI><A HREF="config.php?func=settings">Edit Settings</A>
 		<LI><A HREF="config.php?func=center">Set Default Map</A>
 		<LI><A HREF="config.php?func=api_key">Set GMaps API key</A>
 		<LI><A HREF="config.php?func=delete">Delete Tickets</A>
+		<LI><A HREF="config.php?func=dump">Dump DB to screen</A>
 <?php 
-		}
+		}							// end if (is_administrator())
 	if (!is_guest()) {				// USER OR ADMIN
 ?>
 		<LI><A HREF="config.php?func=profile">Edit My Profile</A>
 		<LI><A HREF="config.php?func=notify">Edit My Notifies</A>
 		<LI></LI>
-		<LI><A HREF="tables.php?tablename=contacts">Contacts</A>
-		<LI><A HREF="tables.php?tablename=in_types">Incident types</A>
-		<LI><A HREF="tables.php?tablename=un_status">Unit status types</A>
-		<LI><A HREF="tables.php?tablename=log">Log</A>
-<!--	<LI><A HREF="tables.php?tablename=session">Session</A>
-		<LI><A HREF="tables.php?tablename=ticket">Tickets</A> 
-		<LI><A HREF="tables.php?tablename=responder">Units</A> -->
+		<LI><A HREF="#" onClick = "do_Post('contacts');">Contacts</A>
+		<LI><A HREF="#" onClick = "do_Post('in_types');">Incident types</A>
+		<LI><A HREF="#" onClick = "do_Post('un_status');">Unit status types</A>
+<?php
+	if ($istest) {
+?>
+			<LI><A HREF="#" onClick = "do_Post('log');">Log</A>
+			<LI><A HREF="#" onClick = "do_Post('session');">Session</A>
+			<LI><A HREF="#" onClick = "do_Post('settings');">Settings</A>
+			<LI><A HREF="#" onClick = "do_Post('ticket');">Tickets</A>
+			<LI><A HREF="#" onClick = "do_Post('responder');">Units</A>
+<?php
+			}
+?>			
 		<BR /><BR />
 <?php
 		list_users();
 		}
 	show_stats();
-	print "</BODY>\n";
+	
+?>
+	<FORM NAME='tables' METHOD = 'post' ACTION='tables.php'>
+	<INPUT TYPE='hidden' NAME='func' VALUE='r'>
+	<INPUT TYPE='hidden' NAME='tablename' VALUE=''>
+	</FORM>
+
+<?php
+print "</BODY>\n";
 	
 function map($mode) {				// RESPONDER ADD AND EDIT
 	global $row;

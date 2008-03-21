@@ -43,6 +43,9 @@ if (!empty($_POST)) {
 							quote_smart($frm_by_id));
 //		dump ($query );
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+//										remove placeholder inserted by 'add'		
+		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
+		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 							// apply status update to unit status
 		$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($assigns[$i])  ." LIMIT 1";
 //		dump ($query );
@@ -51,9 +54,13 @@ if (!empty($_POST)) {
 		}
 ?>	
 <SCRIPT>
+
+if (parent.frames["upper"]) {
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+	}
+
 </SCRIPT>
 </HEAD>
 <BODY>
@@ -418,7 +425,7 @@ function list_responders($addon = '') {
 			}
 		print "\n";
 
-		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM $GLOBALS[mysql_prefix]responder
+		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM $GLOBALS[mysql_prefix]responder
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
 			ORDER BY `name` ASC";	
 
@@ -545,7 +552,7 @@ function list_responders($addon = '') {
 <?php
 			$thefunc = (is_guest())? "guest()" : "validate()";		// reject guest attempts
 ?>
-			side_bar_html+= "<TR><TD COLSPAN=99 ALIGN='center'><INPUT TYPE='button' VALUE='Cancel' onClick='document.can_Form.submit();'>";
+			side_bar_html+= "<TR><TD COLSPAN=99 ALIGN='center'><INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'>";
 			side_bar_html+= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value='DISPATCH SELECTED UNITS' onClick = '<?php print $thefunc;?>' />";
 			side_bar_html+= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='RESET' VALUE='Reset' onClick = 'doReset()'>";
 			side_bar_html+= "</TD></TR>";
