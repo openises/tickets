@@ -6,15 +6,12 @@
 //
 //	Made available under the terms of GNU General Public License (GPL) http://www.gnu.org/copyleft/gpl.html
 //
-
-//$gmap=TRUE;
+//$tablename = "dispatches"; 
+$tablename = "ticket"; 
+$gmap=TRUE;
 require_once('functions.inc.php'); 
-do_login(basename(__FILE__));
 
-if($istest) {
-	dump ($_GET);
-	dump ($_POST);
-	}
+$key_str			= "_id";			// FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier 
 
 /* cosmetic stuff from here - MAY  be changed */
 
@@ -29,6 +26,7 @@ $text_type_max		= 90;				// text input fields exceeding this size limit will be 
 $text_list_max		= 32;				// text input fields exceeding this size limit will be treated as <textarea>
 $fill_from_last		= FALSE;			// if set to TRUE, new recrods are populated from last created
 $doUTM				= FALSE;			// if set, coord displays UTM
+$istest 			= TRUE;				// if set to TRUE, displays form variables for trouble-shooting atope each loaded page
 
 /* maps irv_settings for use IF you are implementing maps */
 
@@ -40,18 +38,19 @@ $def_county			= "58";				// Sarasota
 $def_lat			= NULL;				// default center lattitude - if present, overrides county centroid 
 $def_lon			= NULL;				// guess!
 $radius				= 10;				// radius of circle on default center (miles)
-$do_hints			= TRUE;			// if true, print data hints at input fields
+$do_hints			= FALSE;			// if true, print data hints at input fields
 
 if (($mysql_db=="")||($mysql_user=="")) {print "<br><br><br><br>" ; die(" - - - - - - - - - -  - - - - - - - - - - Please set values for both \$mysql_db and \$mysql_user in settings.inc.php! - - - - - - - - - - ");}
 
-$key_str = "_id";						// FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier 
-$FK_id = strtolower($key_str);			// set for case independence
-$id_lg = strlen($FK_id);				// lgth of foreign key id string
+$FK_id = strtolower($key_str);				// set for case independence
+$id_lg = strlen($FK_id);					// lgth of foreign key id string
 
-extract($HTTP_POST_VARS);
+if (!empty($_GET)) extract($_GET);
+    else if (!empty($HTTP_POST_VARS)) extract($HTTP_POST_VARS);
 
-if (!isset($sortby))	{
-	$sortby = "";				
+if (!isset($_POST['func']))	{
+	$func = "r";					// Select table, of C R U D or Select
+	$sortby="";						// controls sort direction
 	}
 $evenodd = array ("even", "odd");	// for table row colors
 $hints = array("int"=>"numeric", "blob"=>"blob", "string"=>"text", "datetime"=>"date/time", "time"=>"time", "timestamp"=>"date/time", "date"=>"date", "real"=>"float'g pt.");
@@ -61,7 +60,7 @@ $arDate_formats = array(array ("-",0, 1, 2), array ("/", 2, 0, 1));
 
 if ((isset($tablename)) && (!isset($indexname))) {
 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	while ($property = mysql_fetch_field($result)) {		// through each field this table
 		if (($property->primary_key) == 1){
 			$indexname = $property->name;					// IMPORTANT!
@@ -70,7 +69,7 @@ if ((isset($tablename)) && (!isset($indexname))) {
 			}
 		}
 	unset($result);
-	}		// 74
+	}
 
 function fnDatabaseExists($dbName) {					//Verifies existence of a MySQL database
 	global $mysql_host, $mysql_user, $mysql_passwd;
@@ -85,7 +84,7 @@ function fnDatabaseExists($dbName) {					//Verifies existence of a MySQL databas
 //		mysql_close($oConn);
 		}
 	return ($bRetVal);
-	}		// 89
+	}
 
 function fnSubTableExists($TableName) {					// returns name of substitution table, or FALSE
 	global $id_lg, $primaries, $secondaries ;
@@ -95,7 +94,7 @@ function fnSubTableExists($TableName) {					// returns name of substitution tabl
 		}
 	else 																		{
 		return FALSE;}
-	}		// 99
+	}
 	
 function fnDoCal($id) {
 	global $calstuff;
@@ -111,7 +110,7 @@ function fnDoCal($id) {
 function fnCalButt ($id) {									// displays the calendar gif button
 	print "<img src='./markers/img.gif' id='ft$id' style='cursor: pointer; border: 1px solid red;' title='Date selector'";
     print " onmouseover=\"this.style.background='red';\" onmouseout=\"this.style.background=''\" />";
-	}		// 115
+	}
 
 $calstuff="";						// JS calendar string gets built here
 
@@ -129,12 +128,12 @@ while ($row = mysql_fetch_row($result)) {
 			$ctrp++;
 			$gotit = TRUE;
 			break;
-			}		// 133
+			}
 		}
 	if (!$gotit) {														// not a primary
 		$secondaries[$ctrs] = $row[0];
 		$ctrs++;
-		}			// 138			
+		}				
 	}
 unset ($result);
 unset ($result2);
@@ -169,15 +168,6 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 ?>
 
 <SCRIPT type="text/javascript">
-
-
-try {
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
-	}
-catch(e) {
-	}
 function getElement(aID){ 
 	return (document.getElementById) ? document.getElementById(aID) : document.all[aID];
 	} 
@@ -189,23 +179,23 @@ function JSfnBrowserSniffer() {													//detects the capabilities of the br
 		else if (document.layers) type="NN";									//Netscape Communicator 4
 		else if (!document.all && document.getElementById) type="MO";			//Mozila e.g. Netscape 6 upwards
 		else type = "IE";														//????????????
-		}		// 188
+		}
 	
 	
 	function JSfnShowLayer(id, action){												// Show and hide a span/layer -- Seems to work with all versions NN4 plus other browsers
 		if (type=="IE") 				eval("document.all." + id + ".style.visibility='" + action + "'");  	// id is the name of the span/layer, action is either hidden or visible
 		if (type=="NN") 				eval("document." + id + ".visibility='" + action + "'");
 		if (type=="MO" || type=="OP") 	eval("document.getElementById('" + id + "').style.visibility='" + action + "'");
-		}		// 195
+		}
 	
 	function JSfnHideit (spanid) {
 		JSfnShowLayer(spanid, "hidden");
-		}		// 199
+		}
 	
 	function JSfnShowit (spanid) {
 		JSfnShowLayer(spanid, "visible");
-		}		// 203
-		
+		}
+
 	function JSfnChangeClass(id, newClass) {	// ex: onBlur="JSfnChangeClass(this.id, 'dirty');"
 		identity=document.getElementById(id);
 		identity.className=newClass;
@@ -261,7 +251,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 		var minutes = curdate.getMinutes();
 		if (minutes<10) {minutes= "0"+minutes;}
 		return year + "-" + month + "-" + mday + " " + hours + ":" + minutes;
-		}		// 260
+		}
 
 	function JSfnTrim(argvalue) {					// drops leading and trailing spaces and cr's
 		var tmpstr = ltrim(argvalue);
@@ -337,7 +327,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 			print "\n\t\tmands = new Array();\t\t\t// array of mandatory fieldnames\n ";			
 			print "\t\ttypes = new Array();\t\t\t// array of fieldname types\n ";			
 			$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";			// check value where possible - by mysql_field_type
-			$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);		// check presence/absence
+			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);		// check presence/absence
 			while ($property = mysql_fetch_field($result)) {
 				$thename = $property->name;
 				$thetype = $property->type; 
@@ -404,63 +394,16 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 <?php
 	}			// end if (($func == ...
 ?>
+</SCRIPT>
 
-if(document.all && !document.getElementById) {		// accomodate IE							
-		document.getElementById = function(id) {							
-			return document.all[id];							
-			}			//
-		}				
-
-	function do_clear(theForm) {
-		for (i=0;i<theForm.elements.length;i++) {		// 
-			if (theForm.elements[i].type == 'text') {
-				theForm.elements[i].value="";
-				}
-			}
-		the_num = 0;
-		}		// end function do_clear()
-	
-	var the_num = 0;
-	
-	function get_next() {
-		the_num++;
-		return the_num;
-		}		// 425
-	
-	function validate(theForm) {
-		for (i=0;i<theForm.elements.length;i++) {	// 
-//			if ((theForm.elements[i].type == 'text') && (typeof(theForm.elements[i].value) != 'number')) {
-			if ((theForm.elements[i].type == 'text') && (isNaN(theForm.elements[i].value))) {
-				alert (theForm.elements[i].name);
-				alert (theForm.elements[i].type);
-				alert (theForm.elements[i].value);
-				alert (theForm.elements[i].value.type);
-				alert (theForm.elements[i].value.length);
-				alert ("Numeric values are required");
-				return false;
-				break;
-				}
-			}		// end for (i ...
-		for (i=0;i<theForm.elements.length;i++) {	// 
-			if ((theForm.elements[i].type == 'text') && (theForm.elements[i].value == '')) { 
-				alert ("Please complete the form");
-				return false;
-				break;
-				}			// end if (...
-			}			//  end for (i ...
-		}			// end function validate(theForm)
-		
-	</SCRIPT>
 
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-</HEAD>
+
 <BODY>
-<?php 
-$the_table = (strlen($tablename)>0)? $tablename : "tbd"; 
-?>
+<?php $the_table = (strlen($tablename)>0)? $tablename : "tbd"; ?>
 <CENTER><BR /><H3>Table: <SPAN STYLE="background: white">&nbsp;<?php print $the_table; ?>&nbsp;</SPAN> <BR /></H3></CENTER>
 <FORM NAME="detail" METHOD="post" 	ACTION="<?php print $_SERVER['PHP_SELF'] ?>">
-<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename; ?>"/>
+<INPUT TYPE="hidden" NAME="tablename" 	VALUE=""/>
 <INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
 <INPUT TYPE="hidden" NAME="id"  		VALUE=""/>
 <INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
@@ -470,7 +413,7 @@ $the_table = (strlen($tablename)>0)? $tablename : "tbd";
 <?php
 if (($func == "c")||($func == "u")) {			// not required for all functions
 	$query ="DESCRIBE `$mysql_prefix$tablename`";									// collect table field attributes
-	$resultattr = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$resultattr = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$arrayattr = array();
 	$i = 0;
 	while ($rowattr = mysql_fetch_array($resultattr))  {							// write each data row attr
@@ -489,7 +432,7 @@ switch ($func) {
 	if ($fill_from_last) {
 		$the_id = $indexname;													// for form pre-filling
 		$query = "SELECT * FROM `$mysql_prefix$tablename` WHERE `$the_id` = (SELECT MAX(`$the_id`) FROM `$mysql_prefix$tablename`)";
-		$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 		if (mysql_affected_rows()==0) 	{$row = NULL ;}
 		else							{$row = mysql_fetch_array($result);}
 		unset ($result);
@@ -510,7 +453,7 @@ switch ($func) {
 <?php
 
 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$lineno = 0;
 
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
@@ -552,11 +495,11 @@ switch ($func) {
 						$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
 						if (mysql_table_exists($thetable)) {											// does non-empty table exist?
 							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
-							$temp_result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 							$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name		
 							
 							$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";
-							$temp_result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 							print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
 							while ($temp_row = mysql_fetch_array($temp_result))  {							// each row
 								$temp = (isset($temp_row[2]))? " - " . substr(trim($temp_row[2]), 0, 6) : ""; 
@@ -612,7 +555,7 @@ switch ($func) {
 		
 			
 				default:
-					print __LINE__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
+					print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
 				}					// end switch 
 			}		// end if ... != "auto_increment") 
 		}		// end for ($i = ...
@@ -631,8 +574,7 @@ switch ($func) {
 <?php
 	break;														// end 'Create record'
 
-	case "r":													// Retrieve/List ============================
-
+	case "r":																			// Retrieve/List =================
 	function fnLinkTDm ( $theclass, $theid, $thestring) {		// returns <td ... /td>
 		$breakat = 24;
 		if (strlen($thestring) > $breakat) {
@@ -668,7 +610,7 @@ switch ($func) {
 		}
 	if (!isset ($numrows))	{
 		$query ="SELECT * FROM `$mysql_prefix$tablename` ";						// get row count only
-		$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 		$numrows = mysql_affected_rows();
 		unset ($result);
 		$pageNum = 1;
@@ -681,10 +623,8 @@ switch ($func) {
 	$limit = " LIMIT $offset, $rowsPerPage";
 	$query = $select . $limit ;
 //	echo $query;
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	print "<TABLE ALIGN=\"center\" BORDER=\"0\" CELLPADDING=\"2\">\n";
-
-	$do_sort = FALSE;
 
 	if (mysql_affected_rows() == 0) {
 		$page="";
@@ -699,13 +639,11 @@ switch ($func) {
 		$subst = array();											// will hold substitution values for colnames like 'what_id'
 
 		for ($i = 0; $i < $cols; $i++) {							// write table header, etc.
-			if (mysql_field_name($result, $i) =="sort") {$do_sort = TRUE;}
-
 			if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
 				$query = "SELECT * FROM $mysql_prefix$temp";	 
-//				echo __LINE__ . $query . "<br>";
-				$temp_result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+//				echo __line__ . $query . "<br>";
+				$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 				while ($temp_row = mysql_fetch_array($temp_result))  {											// each row/value => $substitutions array
 					$subst[fnSubTableExists(mysql_field_name($result, $i))][$temp_row[0]] = $temp_row[1];		// assign value to column_name[index]  value
 					}						// end while ($temp_row = ...
@@ -727,10 +665,10 @@ switch ($func) {
 				$lgth = strlen(mysql_field_name($result, $i));								// shortened column name
 				if (isset($row[$i])) {														// not empty
 					if (mysql_field_type($result, $i)=="datetime") {						// if type is "datetime" do date format
-						print "<TD CLASS=\"mylink\"  TITLE = \"" . stripslashes($row[$i]) . "\">" . format_date(strval(strtotime($row[$i]))) . "</TD>";
+						print "<TD CLASS=\"mylink\" >" . format_date(strtotime($row[$i])) . "</TD>";
 						} 																	// end "datetime"
 					elseif (mysql_field_type($result, $i)=="time") { 
-						print "<TD CLASS=\"mylink\"  TITLE = \"" . stripslashes($row[$i]) . "\">" . substr($row[$i],0,5) . "</TD>";
+						print "<TD CLASS=\"mylink\" >" . substr($row[$i],0,5) . "</TD>";
 						}
 					else {
 						if ($i == $links_col) {												// 'name' or 'descr' or default
@@ -749,7 +687,7 @@ switch ($func) {
 							else { 									// not substitution or date
 								$thedata = (strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
-							print "<TD CLASS=\"mylink\" TITLE = \"" . stripslashes($row[$i]) . "\">" . $thedata . "</TD>";			// type not "datetime" and name not "descript"
+							print "<TD CLASS=\"mylink\" >" . $thedata . "</TD>";			// type not "datetime" and name not "descript"
 							}		// end else ...
 						}	// end not "datetime"
 					}	// end if (isset() ...
@@ -789,13 +727,8 @@ switch ($func) {
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE="<?php print $sortdir; ?>"/>
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r">
-	<CENTER><BR><INPUT TYPE="button" 	VALUE=" <?php print ucfirst($tablename); ?> Properties" onClick = "Javascript: document.retform.func.value='p'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" VALUE="Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry" onclick= "this.form.func.value='c'; this.form.submit();" />
-<?php	
-	if ($do_sort) {
-		print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=\"button\" VALUE=\"Set sort order\" onclick= \"this.form.func.value='o'; this.form.submit();\" />";
-		}
-?>		
+	<CENTER><BR><INPUT TYPE="button" 	VALUE=" <?php print ucfirst($tablename); ?> Properties" onClick = "Javascript: document.retform.func.value='p'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
+	<INPUT TYPE="button" VALUE="Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry" onclick= "this.form.func.value='c'; this.form.submit();" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	</FORM>
 	</TD></TR></TABLE>
 <?php
@@ -817,7 +750,7 @@ switch ($func) {
 	<TR><TD>&nbsp;</TD></TR>
 <?php
 	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";					// target row
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);			// use $result for meta-information reference
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
 	$row = mysql_fetch_array($result);																		// $row has data
 	$lineno = 0;															// for alternating row colors
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
@@ -855,11 +788,11 @@ switch ($func) {
 					$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
 					if (mysql_table_exists($thetable)) {											// does table exist?
 						$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
-						$temp_result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+						$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 						$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column 
 						
 						$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";	// get option values
-						$temp_result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+						$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 						print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
 						if ($row[mysql_field_name($result, $i)]=='0') {print "\t\t<OPTION VALUE='0' selected>Select</OPTION>\n" ;}				// no selection made
 						while ($sel_row = mysql_fetch_array($temp_result))  {								// each row - assume 2nd column has values
@@ -913,7 +846,7 @@ switch ($func) {
 				break;
 		
 			default:
-				print __LINE__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
+				print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
 			}					// end switch 
 		}		// end for ($i = ...
 
@@ -928,8 +861,7 @@ switch ($func) {
 	</FORM>
 	</TD></TR></TABLE>
 <?php
-	break;														// end Update ==========================
-	
+	break;		// end Update ==========================
 	case "pc":													// Process 'Create record' data =================
 	function fnQuote_Smart($value) {    // Stripslashes
 	    if (get_magic_quotes_gpc()) {
@@ -950,7 +882,7 @@ switch ($func) {
 		}		// end foreach () ...
 																// now drop trailing comma
 	$query  = "INSERT INTO $mysql_prefix$tablename (" . substr($temp1, 0, (strlen($temp1) - 1)) . ") VALUES (" . substr($temp2, 0, (strlen($temp2) - 1)) . ")";
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	unset ($result);
 ?>
 	<CENTER><BR /><BR />
@@ -963,13 +895,13 @@ switch ($func) {
 	</FORM>
 <?php
 	$query = "SELECT MAX(id) AS id FROM `$mysql_prefix$tablename`" ;
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$row = mysql_fetch_array($result);
 	$id = $row['id'];
 	
-	unset ($result);		// end case "pc" ======	note: fall through to view ==============
+	unset ($result);
 
-//	break;			
+//	break;
 
 	case "v":		// View detail	========================
 ?>
@@ -986,7 +918,7 @@ switch ($func) {
 	else				{print "<TR CLASS=\"even\" VALIGN=\"top\"><TD COLSPAN=\"2\" ALIGN=\"CENTER\"><FONT SIZE=\"+1\">Table '$tablename' - View Entry</FONT></TD></TR>";}
 	print "<TR><TD>&nbsp;</TD></TR>";
 	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$row = mysql_fetch_array($result);
 	$lineno = 0;
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
@@ -995,7 +927,7 @@ switch ($func) {
 		if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
 			$query ="SELECT * FROM `$mysql_prefix$temp` WHERE `$indexname` = $row[$i] LIMIT 1";				
-			$temp_result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query); 
+			$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query); 
 			if (mysql_affected_rows()>0) 	{										// defined?
 				$temp_row = mysql_fetch_array($temp_result);						// yes
 				print $temp_row[1];			// value, whatever name
@@ -1043,11 +975,10 @@ switch ($func) {
 	</FORM>
 	</TD></TR></TABLE>
 <?php
-	break;				// end View ==========================
+	break;		// end View ==========================
 
 
-	case "pu":			// Process Update 	==================
-	
+	case "pu":																	// Process Update 	================
 		function fnQuote_Smart($value) {    // Stripslashes
 		    if (get_magic_quotes_gpc()) {
 		        $value = stripslashes($value);
@@ -1059,12 +990,12 @@ switch ($func) {
 		    return $value;
 			}
 
-	$query = "UPDATE `$mysql_prefix$tablename` SET ";
+	$query = "UPDATE $mysql_prefix$tablename SET ";
 	foreach ($_POST as $VarName=>$VarValue) {
 		if ((substr($VarName, 0, 4)=="frm_") && ($VarName != $indexname)) { $query .= "`" . substr($VarName, 4, 99) . "`" . "='" . $VarValue . "',";}		// field names - note tic's
 		}
 	$query = substr($query, 0, (strlen($query) - 1)) . " WHERE `" .$indexname . "` = $id LIMIT 1";
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	unset ($result);
 ?>
 	<TABLE BORDER="0" ALIGN="center">
@@ -1080,12 +1011,11 @@ switch ($func) {
 	<INPUT TYPE="button" VALUE="Continue" onclick="this.form.submit();"/>
 	</FORM>
 <?php
-	break;					// end Process Update 	=================
+	break;		// end Process Update 	=================
 
-	case "d":				// Delete ==============================
-	
-	$query ="DELETE FROM `$mysql_prefix$tablename` WHERE `" . $indexname . "` = $id LIMIT 1";
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	case "d":																		// Delete ===========================
+	$query ="DELETE FROM $mysql_prefix$tablename WHERE `" . $indexname . "` = $id LIMIT 1";
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	unset ($result);
 ?>
 	<TABLE BORDER="0" ALIGN="center">
@@ -1104,93 +1034,7 @@ switch ($func) {
 <?php
 	break;		// end Delete ======================
 
-	case "o":	// Sort Order ===========================
-?>	
-
-	<FORM NAME="order" METHOD="post" ACTION = "<?php print basename(__FILE__); ?>" onsubmit="return validate(document.order);" >
-	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>
-	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="func" 		VALUE="po">	<!-- process order update -->
-	<TABLE ALIGN="center">
-	<TR CLASS='even'><TH COLSPAN=99 >Set sort order values</TH></TR>
-<?php
-	switch ($tablename) {
-
-		case "in_types":	// Sort Order ===========================
-		//	id - type  - group - description - sort
-		$query = "SELECT * FROM `$mysql_prefix$tablename` ORDER BY `sort` ASC";
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), __FILE__, __LINE__);
-	
-		$i = 0;
-		while ($row= stripslashes_deep(mysql_fetch_array($result))) {
-			$f_name = "F_" . $row['id'];
-			print "<TR CLASS='" . $evenodd[($i+1)%2] . "'><TD>" . $row['type'] . " " . $row['group'] . "</TD><TD>" . $row['description'] . "</TD><TD>\n\t\t<INPUT TYPE='text' SIZE=3 NAME='" . $f_name . "' VALUE='" . $row['sort'] . "' onFocus = \"this.value= get_next()\"></TD></TR>\n";
-			$i++;
-			}
-	
-		break;		
-	
-		case "un_status":	// Sort Order ===========================
-		//	id  - status_val  - description  - group  - sort
-
-		$query = "SELECT * FROM `$mysql_prefix$tablename` ORDER BY `sort` ASC";
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), __FILE__, __LINE__);
-	
-		$i = 0;
-		while ($row= stripslashes_deep(mysql_fetch_array($result))) {
-			$f_name = "F_" . $row['id'];
-			print "<TR CLASS='" . $evenodd[($i+1)%2] . "'><TD>" . $row['status_val'] . " " . $row['group'] . "</TD><TD>" . $row['description'] . "</TD><TD>\n\t\t<INPUT TYPE='text' SIZE=3 NAME='" . $f_name . "' VALUE='" . $row['sort'] . "' onFocus = \"this.value= get_next()\"></TD></TR>\n";
-			$i++;
-			}
-
-		break;
-		default:
-		print __LINE__ . $func . " ERROR - ERROR - ERROR - ERROR - ERROR" ;
-		}	// end switch ($func)	========================================
-
-?>
-<TR><TD>&nbsp;</TD></TR>
-<TR><TD COLSPAN='99' ALIGN='center'>
-<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE='button' VALUE='Clear and click' onClick = "do_clear(document.order);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE='submit' VALUE='Continue'><BR /><BR />
-<INPUT TYPE='button' VALUE='Cancel' onClick = "Javascript: document.retform.func.value='r';document.retform.submit();">
-</FORM>
-</TD></TR>
-</TABLE>
-
-<?php	
-	
-	break;		// end  Order ===============================
-	
-	case "po":	// Process Order form ========================
-//						id - type  - group - description - sort
-	foreach ($_POST as $VarName=>$VarValue) {
-		if (substr($VarName, 0, 2)=="F_")  { 
-			$the_key = substr($VarName, 2, 99);
- 			$query = "UPDATE `$mysql_prefix$tablename` SET `sort` = '$VarValue' WHERE `id` = $the_key  LIMIT 1" ;
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), __FILE__, __LINE__);
-			}		// end if ()
-	
-		}		// end foreach
-?>
-	<TABLE BORDER="0" ALIGN="center">
-	<TR CLASS="even" VALIGN="top"><TD ALIGN="CENTER"><FONT SIZE="+1">Sort Update complete</TD></TR>
-	<TR><TD>&nbsp;</TD></TR></TABLE>
-	<CENTER>
-	<FORM NAME="po" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
-	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename ?>"/>
-	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
-	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
-	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>  <!-- retrieve -->
-	<INPUT TYPE="button" VALUE="Continue" onclick="this.form.submit();"/>
-	</FORM>
-<?php
-
-	break;		// end Process Order 		==================
-
-	case "p":	// Properties  				==================
+	case "p":	// Properties  ===========================
 ?>
 	<TABLE BORDER="0" ALIGN="center">
 	<TR><TD>&nbsp;</TD></TR>
@@ -1198,7 +1042,7 @@ switch ($func) {
 	<?php
 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	print "\n<table align=\"CENTER\" BORDER=\"0\">";
 	print "<TR VALIGN=\"top\" CLASS = \"even\"><TH>Field name</TH><TH>Field Type</TH><TH>Default value</TH><TH>Max length</TH><TH>Not NULL</TH><TH>Numeric Field</TH><TH>BLOB</TH><TH>Primary Key</TH><TH>Unique Key</TH><TH>Mutliple Key</TH><TH>Unsigned</TH><TH>Zero-filled</TH></TR>";
 	$lineno = 0;
@@ -1224,10 +1068,8 @@ switch ($func) {
 	unset ($result);
 	print "<TR><TD COLSPAN=\"99\">&nbsp;</TD></TR></TABLE>";
 
-//	$query ="DESCRIBE $mysql_prefix`$tablename`";
-	$query = "SHOW COLUMNS FROM `$mysql_prefix$tablename`";	// FULL option here
-	
-	$result = mysql_query($query) or do_error(basename(__FILE__), __LINE__, 'mysql_error', $query);
+	$query ="DESCRIBE $mysql_prefix`$tablename`";
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	print "\n<table align=\"CENTER\" BORDER=\"0\">";
 	print "\n<TR><TH>Field</TH><TH>Type</TH><TH>Null</TH><TH>Key</TH><TH COLSPAN=3>Default/Extra</TH></TR>";
 	$lineno = 0;
@@ -1235,9 +1077,7 @@ switch ($func) {
 		$lineno++;
 		print "\n<TR VALIGN=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";		// alternate line bg colors
 		for($i = 0; $i < count($row)-1; $i++){										// each column
-			if((isset($row[$i])) && (!is_null($row[$i]))) {
-			print "<TD>$row[$i]</TD>";
-			}
+			if((isset($row[$i])) && (!is_null($row[$i]))) {print "<TD>$row[$i]</TD>";}
 			}
 		print "</TR>";
 
@@ -1252,7 +1092,7 @@ switch ($func) {
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>  <!-- retrieve -->
-	<CENTER><BR><INPUT TYPE="button" 	VALUE="Continue" onClick = "Javascript: alert (1222); document.retform.func.value='r'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
+	<CENTER><BR><INPUT TYPE="button" 	VALUE="Continue" onClick = "Javascript: document.retform.func.value='r'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
 	<INPUT TYPE="button" VALUE="Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry" onclick= "this.form.func.value='c'; this.form.submit();" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	</FORM>
 	<?php
@@ -1265,14 +1105,12 @@ switch ($func) {
 	fnTables();
 	break;
 	default:
-	print __LINE__ . $func . " ERROR - ERROR - ERROR - ERROR - ERROR" ;
-	}	// end switch ($func)	========================================
-	
-if ($istest) {
-	if (($func == "r") || ($func == "p")) {			// limit visibility
-		fnTables();
-		}
-	}
+	print __line__ . $func . " ERROR - ERROR - ERROR - ERROR - ERROR" ;
+	}	// end switch ($func)
+
+//if (($func == "r") || ($func == "p")) {			// limit visibility
+//	fnTables();
+//	}
 	
 function fnTables () {							/// displays tables comprising db $mysql_db
 	global $mysql_db, $FK_id, $id_lg, $primaries, $secondaries;
@@ -1303,20 +1141,19 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 
 	print "<TR VALIGN=\"top\"><TD><B><nobr>Primary Tables:</nobr></B></TD><TD ALIGN='center'>";
 	for($i = 0; $i < $ctrp; $i++) {
-		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$primaries[$i]'; document.s.indexname.value='id'; document.s.submit();\"> $primaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
+		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$primaries[$i]'; document.s.indexname.value='99'; document.s.submit();\"> $primaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
 		}
 	print "</TD></TR><TR><TD>&nbsp;</TD></TR><TR VALIGN=\"top\"><TD><A HREF='#'onclick = \"Javascript:JSfnShowit('support')\"> <B>Support:</A>&nbsp;&nbsp;</B></TD><TD ALIGN='center'><SPAN ID='support' STYLE = 'visibility: hidden'>";
 	for($i = 0; $i < $ctrs; $i++) {
-		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$secondaries[$i]'; document.s.indexname.value='id'; document.s.submit();\"> $secondaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
+		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$secondaries[$i]'; document.s.indexname.value='99'; document.s.submit();\"> $secondaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
 		}
 	print "<A HREF='#'onclick = \"Javascript:JSfnHideit('support')\"> <B>:Hide</A></SPAN></TD></TR></TABLE>";
 	}
-
 ?>
 <!-- ----------Common--------------- -->
 <FORM NAME="s" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>">
-<INPUT TYPE = "hidden" NAME="tablename" VALUE="<?php print $tablename; ?>"/>
-<INPUT TYPE = "hidden" NAME="indexname" VALUE=""/>
+<INPUT TYPE = "hidden" NAME="tablename" VALUE=""/>
+<INPUT TYPE = "hidden" NAME="indexname" VALUE="99"/>
 <INPUT TYPE = "hidden" NAME="sortby"	VALUE=""/>
 <INPUT TYPE = "hidden" NAME="sortdir"	VALUE="0"/>
 <INPUT TYPE = "hidden" NAME="func" VALUE="r"/>
@@ -1326,7 +1163,7 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 <FORM NAME="retform" method="post" action="<?php print $_SERVER['PHP_SELF'] ?>">
 <INPUT TYPE = "hidden" NAME="tablename" VALUE="<?php print $tablename; ?>"/>
 <INPUT TYPE = "hidden" NAME="indexname" VALUE="<?php print $indexname; ?>"/>
-<INPUT TYPE = "hidden" NAME="sortby"	VALUE=""/>
+<INPUT TYPE = "hidden" NAME="sortby"	VALUE="<?php print $indexname ;?>"/>
 <INPUT TYPE = "hidden" NAME="sortdir"	VALUE=0 />
 <INPUT TYPE = "hidden" NAME="func" VALUE="r"/>
 </FORM>

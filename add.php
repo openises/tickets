@@ -102,10 +102,12 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 						self.location.href = 'index.php';
 						}
 					}		// end function ck_frames()
-		if (parent.frames["upper"]) {
+		try {
 			parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 			parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 			parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+			}
+		catch(e) {
 			}
 
 

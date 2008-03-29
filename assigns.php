@@ -14,6 +14,7 @@ extract($_GET);
 extract($_POST);
 $evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 $func = (empty($_POST))? "list" : $_POST['func'];
+$delta = 48*60*60;									// 48 hours
 
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -33,10 +34,12 @@ var myuser = "<?php print isset($my_session)?$my_session['user_name']: "not";?>"
 var mylevel = "<?php print isset($my_session)?get_level_text($my_session['level']): "na";?>";
 var myscript = "<?php print isset($my_session)? LessExtension(basename( __FILE__)): "login";?>";
 
-if (window.opener && !window.opener.closed) {
+try {
 	window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML = 	myuser;
 	window.opener.parent.frames["upper"].document.getElementById("level").innerHTML =	mylevel;
 	window.opener.parent.frames["upper"].document.getElementById("script").innerHTML = 	myscript;
+	}
+catch(e) {
 	}
 
 	function editA(id) {							// edit assigns
@@ -45,8 +48,6 @@ if (window.opener && !window.opener.closed) {
 		print "\t\tdocument.nav_form.func.value=";	// guest priv's = 'read-only'
 		print is_guest()? "'view';" : "'edit';";
 ?>	
-		document.nav_form.action="<?php print basename(__FILE__); ?>";
-		document.nav_form.method='POST';
 		document.nav_form.submit();
 		}
 
@@ -91,7 +92,7 @@ switch ($func) {					// ========================================================
 		print "assigns['" .$row['ticket_id'] .":" . $row['responder_id'] . "']=true;\n";
 		}
 ?>		
-	function validate(theForm) {
+	function validate_ad(theForm) {
 		var errmsg="";
 		if (theForm.frm_ticket_id.value == "")	{errmsg+= "\tSelect Incident\n";}
 		if (theForm.frm_unit_id.value == "")	{errmsg+= "\tSelect Unit\n";}
@@ -108,14 +109,14 @@ switch ($func) {					// ========================================================
 		}				// end function vali date(theForm)
 
 	function reSizeScr() {
-		window.resizeTo(740,300);		
+		window.resizeTo(800,300);		
 		}
 
 	</SCRIPT>
 	</HEAD>
 	<BODY onLoad = "reSizeScr()">
 		<TABLE BORDER=0 ALIGN='center'>
-		<FORM NAME="add_Form" onSubmit="return validate(document.add_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">
+		<FORM NAME="add_Form" onSubmit="return validate_ad(document.add_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">
 		<TR CLASS="even"><th colspan=2 ALIGN="center">Assign Unit to Incident</th></TR>
 		<TR CLASS="odd" VALIGN="baseline">
 			<TD CLASS="td_label" ALIGN="right">Incident:</TD>
@@ -215,6 +216,7 @@ switch ($func) {					// ========================================================
 		break;				// end case 'add_db' 
 	
 	case 'list' :			// ==============================================================================
+	
  		$unit_scr = "http://" . $_SERVER["SERVER_ADDR"] . ":". $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
 		$temparr = explode ("/", $unit_scr);
 		$temparr[count($temparr)-1] = "units.php";
@@ -222,151 +224,150 @@ switch ($func) {					// ========================================================
 ?>
 <SCRIPT>
 
-function reSizeScr() {
-	var lines = document.can_Form.lines.value;
-	window.resizeTo(740,((lines * 18)+230));		// derived via trial/error (more of the latter, mostly)
-	}
-  
-String.prototype.trim = function () {
-	return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-	};
-
-function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
-													// NOT correspond with what browsers actually do...
-	var SAFECHARS = "0123456789" +					// Numeric
-					"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +	// Alphabetic
-					"abcdefghijklmnopqrstuvwxyz" +	// guess
-					"-_.!~*'()";					// RFC2396 Mark characters
-	var HEX = "0123456789ABCDEF";
-
-	var encoded = "";
-	for (var i = 0; i < plaintext.length; i++ ) {
-		var ch = plaintext.charAt(i);
-	    if (ch == " ") {
-		    encoded += "+";				// x-www-urlencoded, rather than %20
-		} else if (SAFECHARS.indexOf(ch) != -1) {
-		    encoded += ch;
-		} else {
-		    var charCode = ch.charCodeAt(0);
-			if (charCode > 255) {
-			    alert( "Unicode Character '"
-                        + ch
-                        + "' cannot be encoded using standard URL encoding.\n" +
-				          "(URL encoding only supports 8-bit characters.)\n" +
-						  "A space (+) will be substituted." );
-				encoded += "+";
-			} else {
-				encoded += "%";
-				encoded += HEX.charAt((charCode >> 4) & 0xF);
-				encoded += HEX.charAt(charCode & 0xF);
-				}
-			}
-		} 			// end for(...)
-	return encoded;
-	};			// end function
-
-function URLDecode(encoded ){   					// Replace + with ' '
-   var HEXCHARS = "0123456789ABCDEFabcdef";  		// Replace %xx with equivalent character
-   var plaintext = "";   							// Place [ERROR] in output if %xx is invalid.
-   var i = 0;
-   while (i < encoded.length) {
-       var ch = encoded.charAt(i);
-	   if (ch == "+") {
-	       plaintext += " ";
-		   i++;
-	   } else if (ch == "%") {
-			if (i < (encoded.length-2)
-					&& HEXCHARS.indexOf(encoded.charAt(i+1)) != -1
-					&& HEXCHARS.indexOf(encoded.charAt(i+2)) != -1 ) {
-				plaintext += unescape( encoded.substr(i,3) );
-				i += 3;
-			} else {
-				alert( '-- invalid escape combination near ...' + encoded.substr(i) );
-				plaintext += "%[ERROR]";
-				i++;
-			}
-		} else {
-			plaintext += ch;
-			i++;
-			}
-	} 				// end  while (...)
-	return plaintext;
-	};				// end function URLDecode()
-
-function syncAjax(strURL) {							// synchronous ajax function
-	if (window.XMLHttpRequest) {						 
-		AJAX=new XMLHttpRequest();						 
-		} 
-	else {																 
-		AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+	function reSizeScr() {
+		var lines = document.can_Form.lines.value;
+		window.resizeTo(800,((lines * 18)+230));		// derived via trial/error (more of the latter, mostly)
 		}
-	if (AJAX) {
-		AJAX.open("GET", strURL, false);														 
-		AJAX.send(null);							// form name
-//		alert ("332 " + AJAX.responseText);
-		return AJAX.responseText;																				 
-		} 
-	else {
-		alert ("57: failed")
-		return false;
-		}																						 
-	}		// end function sync Ajax(strURL)
-
-	var button_live = false;
-	function show_but(id) {
-		if (button_live) {
-			alert ("Please complete button action.");
-			return false;
+	  
+	String.prototype.trim = function () {
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+	
+	function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
+														// NOT correspond with what browsers actually do...
+		var SAFECHARS = "0123456789" +					// Numeric
+						"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +	// Alphabetic
+						"abcdefghijklmnopqrstuvwxyz" +	// guess
+						"-_.!~*'()";					// RFC2396 Mark characters
+		var HEX = "0123456789ABCDEF";
+	
+		var encoded = "";
+		for (var i = 0; i < plaintext.length; i++ ) {
+			var ch = plaintext.charAt(i);
+		    if (ch == " ") {
+			    encoded += "+";				// x-www-urlencoded, rather than %20
+			} else if (SAFECHARS.indexOf(ch) != -1) {
+			    encoded += ch;
+			} else {
+			    var charCode = ch.charCodeAt(0);
+				if (charCode > 255) {
+				    alert( "Unicode Character '"
+	                        + ch
+	                        + "' cannot be encoded using standard URL encoding.\n" +
+					          "(URL encoding only supports 8-bit characters.)\n" +
+							  "A space (+) will be substituted." );
+					encoded += "+";
+				} else {
+					encoded += "%";
+					encoded += HEX.charAt((charCode >> 4) & 0xF);
+					encoded += HEX.charAt(charCode & 0xF);
+					}
+				}
+			} 			// end for(...)
+		return encoded;
+		};			// end function
+	
+	function URLDecode(encoded ){   					// Replace + with ' '
+	   var HEXCHARS = "0123456789ABCDEFabcdef";  		// Replace %xx with equivalent character
+	   var plaintext = "";   							// Place [ERROR] in output if %xx is invalid.
+	   var i = 0;
+	   while (i < encoded.length) {
+	       var ch = encoded.charAt(i);
+		   if (ch == "+") {
+		       plaintext += " ";
+			   i++;
+		   } else if (ch == "%") {
+				if (i < (encoded.length-2)
+						&& HEXCHARS.indexOf(encoded.charAt(i+1)) != -1
+						&& HEXCHARS.indexOf(encoded.charAt(i+2)) != -1 ) {
+					plaintext += unescape( encoded.substr(i,3) );
+					i += 3;
+				} else {
+					alert( '-- invalid escape combination near ...' + encoded.substr(i) );
+					plaintext += "%[ERROR]";
+					i++;
+				}
+			} else {
+				plaintext += ch;
+				i++;
+				}
+		} 				// end  while (...)
+		return plaintext;
+		};				// end function URLDecode()
+	
+	function syncAjax(strURL) {							// synchronous ajax function
+		if (window.XMLHttpRequest) {						 
+			AJAX=new XMLHttpRequest();						 
+			} 
+		else {																 
+			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
 			}
+		if (AJAX) {
+			AJAX.open("GET", strURL, false);														 
+			AJAX.send(null);							// form name
+//			alert ("332 " + AJAX.responseText);
+			return AJAX.responseText;																				 
+			} 
 		else {
+			alert ("57: failed")
+			return false;
+			}																						 
+		}		// end function sync Ajax(strURL)
+	
+		var button_live = false;
+		function show_but(id) {
+			if (button_live) {
+				alert ("Please complete button action.");
+				return false;
+				}
+			else {
+				var theid = "TD"+id;
+				elem = document.getElementById(theid);
+				elem.style.display = "block";
+				button_live = true;
+				return false;
+				}
+			}		// end function show_but(id)
+	
+		function hide_but(id) {
 			var theid = "TD"+id;
 			elem = document.getElementById(theid);
-			elem.style.display = "block";
-			button_live = true;
+			elem.style.display = "none";
+			button_live = false;
 			return false;
 			}
-		}		// end function show_but(id)
-
-	function hide_but(id) {
-		var theid = "TD"+id;
-		elem = document.getElementById(theid);
-		elem.style.display = "none";
-		button_live = false;
-		return false;
-		}
-
-	var last_form_no;
-	function to_server(the_Form) {							// write unit status data via ajax xfer
-	//	$frm_ticket_id, $frm_responder_id, $frm_status_id	
-		var querystr = "?frm_ticket_id=" + URLEncode(the_Form.frm_ticket_id.value.trim());
-		querystr += "&frm_responder_id=" + URLEncode(the_Form.frm_responder_id.value.trim());
-		querystr += "&frm_status_id=" + URLEncode(the_Form.frm_status_id.value.trim());
 	
-		var url = "as_up_un_status.php" + querystr;			// 
-		var payload = syncAjax(url);						// 
-		if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
-			alert ("352: msg failed ");
-			return false;
-			}
-		else {
-// 			var bull_str = "<B>&bull;</B>&nbsp;";
- 			var bull_str = "<B>&bull;</B> ";
-			var form_no = the_Form.name.substring(1);
-			hide_but(form_no);								// hide the buttons
-
-			if (last_form_no) {
-				var elem = "myDate" + last_form_no;
-				var temp = document.getElementById(elem).innerHTML;
-				document.getElementById(elem).innerHTML = temp.substr(9);		// drop the bullet
+		var last_form_no;
+		function to_server(the_Form) {							// write unit status data via ajax xfer
+			var querystr = "?frm_ticket_id=" + URLEncode(the_Form.frm_ticket_id.value.trim());
+			querystr += "&frm_responder_id=" + URLEncode(the_Form.frm_responder_id.value.trim());
+			querystr += "&frm_status_id=" + URLEncode(the_Form.frm_status_id.value.trim());
+		
+			var url = "as_up_un_status.php" + querystr;			// 
+			var payload = syncAjax(url);						// 
+			if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
+				alert ("352: msg failed ");
+				return false;
 				}
-			var elem = "myDate" + form_no;
-			document.getElementById(elem).innerHTML = bull_str + payload;
-			window.opener.parent.frames['main'].location.href = "<?php print $unit_scr;?>";	// force
-			last_form_no = form_no;
-			}				// end if/else (payload.substring(... )
-		}		// end function to_server()
-
-</SCRIPT>	
+			else {
+	 			var bull_str = "<B>&bull;</B> ";
+				var form_no = the_Form.name.substring(1);
+				hide_but(form_no);								// hide the buttons
+	
+				if (last_form_no) {
+					var elem = "myDate" + last_form_no;
+					var temp = document.getElementById(elem).innerHTML;
+					document.getElementById(elem).innerHTML = temp.substr(9);		// drop the bullet
+					}
+				var elem = "myDate" + form_no;
+				document.getElementById(elem).innerHTML = bull_str + payload;
+//				window.opener.parent.frames['main'].location.href = "<?php print $unit_scr;?>";	// force
+//				window.opener.parent.frames['main'].window.location.href = "<?php print $unit_scr;?>";	// force
+				last_form_no = form_no;
+				}				// end if/else (payload.substring(... )
+			}		// end function to_server()
+	
+	</SCRIPT>	
 	</HEAD>
 <BODY onLoad = "reSizeScr()";>
 <?php
@@ -392,8 +393,8 @@ function syncAjax(strURL) {							// synchronous ajax function
 			}
 
 		$priorities = array("text_black","text_blue","text_red" );
-		print "<TABLE BORDER=0 ALIGN='center' WIDTH='100%' ID='call_board' STYLE='display:block'>";
-		print "<TR CLASS='even'><TD COLSPAN=8 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (* click for details)</I></FONT></TD></TR>\n";
+		print "<TABLE BORDER=0 ALIGN='center' WIDTH='100%'  cellspacing = 1 CELLPADDING = 2 ID='call_board' STYLE='display:block'>";
+		print "<TR CLASS='even'><TD COLSPAN=11 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (* click for details)</I></FONT></TD></TR>\n";
 
 		$status_vals_ar = array();
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
@@ -411,17 +412,15 @@ function syncAjax(strURL) {							// synchronous ajax function
 			ORDER BY `as_of` ASC ";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$i = 1;	
-//		$lines = mysql_affected_rows();
-
 		if (mysql_affected_rows()>0) {
 			$doUnit = (is_guest())? "viewU" : "editU";
 			$now = time() - (get_variable('delta_mins')*60);
-			$delta = 24*60*60;							// 24 hours
 			$items = mysql_affected_rows();
-			$header = "<TR CLASS='even'><TD COLSPAN=3 ALIGN='center'>Dispatch</TD><TD COLSPAN=2 ALIGN='center'>Incident</TD><TD COLSPAN=2 ALIGN='center'>Unit</TD><TD></TD></TR>\n";
-			$header .= "<TR CLASS='odd'><TD ALIGN='center'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>* Descr</TD><TD ALIGN='center'>* Addr</TD><TD ALIGN='center'>Comment</TD><TD ALIGN='center'>* Unit</TD><TD COLSPAN=1 ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD><TD></TD></TR>\n";
+			$header = "<TR CLASS='even'><TD COLSPAN=4 ALIGN='center'>Dispatch</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=2 ALIGN='center'>Incident</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=2 ALIGN='center'>Unit</TD><TD></TD></TR>\n";
+			$header .= "<TR CLASS='odd'><TD ALIGN='center'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Descr</TD><TD ALIGN='center'>Cleared</TD><TD></TD>";
+			$header .= "<TD ALIGN='center'>Addr</TD><TD ALIGN='center'>Comment</TD><TD>&nbsp;&nbsp;</TD><TD ALIGN='center'>Unit</TD><TD ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD></TR>\n";
 			while($row = stripslashes_deep(mysql_fetch_array($result))) {
-				if (((empty($row['clear'])) || (!empty($row['clear']) && ((totime($row['clear']) > ($now-$delta)))))) {
+				if  ((!(is_date($row['clear']))) || ((is_date($row['clear'])) && ((totime($row['clear']) > ($now-$delta))))) {
 					if ($i == 1) {print $header;}
 					$theClass = $priorities[$row['severity']];
 					print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>\n";
@@ -437,14 +436,16 @@ function syncAjax(strURL) {							// synchronous ajax function
 					$address = (empty($row['street']))? "" : $row['street'] . ", ";
 					$address .= $row['city'];
 
-					print "\t<TD CLASS='$theClass' ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
-					print "\t<TD CLASS='$theClass'  TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'><U>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</U></TD>\n";				// comment
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";				// comment
+					$ago = (is_date($row['clear']))? ezDate($row['clear']): "";
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ><NOBR>$ago</NOBR></TD><TD></TD>"; 
 					
-					print "\t<TD onClick = editT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . $row['theticket'] . "'><U>" . $strike . shorten($row['theticket'], 16) . $strikend . "</U></TD>\n";		// call
-					print "\t<TD CLASS='$theClass' TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD>\n";		// address
-					if (!$row['responder_id']==0) {
-						print "\t<TD TITLE = '" . $row['theunit'] . "' onClick = $doUnit('" . $row['responder_id'] . "') ><U>" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</U></TD>\n";						// unit
+					print "\t<TD onClick = editT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . $row['theticket'] . "'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call
+					print "\t<TD onClick = editT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD><TD></TD>\n";		// address
+					if (!($row['responder_id']==0)) {
+						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . $row['theunit'] . "'  >" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</TD>\n";						// unit
 						$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
 	//					print "\t<TD TITLE= '$unit_st_val'>" .  $strike . shorten ($unit_st_val, 12) .  $strikend . "</TD>\n";						// status
 						print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
@@ -463,6 +464,9 @@ function syncAjax(strURL) {							// synchronous ajax function
 				}		// end while($row ...)
 				$lines = $i;
 			}		// end if (mysql_affected_rows()>0) 
+//		dump($i);
+		$lines = $i;
+
 		if ($i>1) {
 			print "<TR CLASS='" . $evenodd[($i+1)%2] . "'><TD COLSPAN=99 ALIGN='center'>";
 			print "<FONT SIZE='-1'><I>Call severity:&nbsp;&nbsp;&nbsp;&nbsp;<span CLASS='text_black'>Normal</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_blue'>Medium</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_red'>High</span></I></FONT>";
@@ -485,14 +489,14 @@ function syncAjax(strURL) {							// synchronous ajax function
 ?>
 	<SCRIPT>
 	function reSizeScr() {
-		window.resizeTo(740,300);		
+		window.resizeTo(800,300);		
 		}
 	</SCRIPT>
 	</HEAD>
 	<BODY onLoad = "reSizeScr()">
 <?php	
 													// if (!empty($row['clear']))	
-		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `assigns`.`id` AS `assign_id` , `assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(`dispatched`) AS `dispatched`, UNIX_TIMESTAMP(`responding`) AS `responding`, UNIX_TIMESTAMP(`in-quarters`) AS `in-quarters`, UNIX_TIMESTAMP(`clear`) AS `clear`,  `assigns`.`id` AS `assign_id` , `assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
 			`s`.`status_val` AS `thestatus`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 	ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]assigns`.`status_id` = `s`.`id`)
@@ -537,13 +541,24 @@ function syncAjax(strURL) {							// synchronous ajax function
 			}
 ?>
 		</TD></TR>
+		
+		<TR CLASS = 'odd'><TD CLASS="td_label" ALIGN="right">Dispatched:</TD>	<TD><?php print (format_date($asgn_row['dispatched'])) ;?></TD></TR>
+		<TR CLASS = 'even'><TD CLASS="td_label" ALIGN="right">Responding:</TD>	<TD><?php print (format_date($asgn_row['responding'])) ;?></TD></TR>
+		<TR CLASS = 'odd'><TD CLASS="td_label" ALIGN="right">On-scene:</TD>		<TD><?php print (format_date($asgn_row['in-quarters'])) ;?></TD></TR>
+		<TR CLASS = 'even'><TD CLASS="td_label" ALIGN="right">Clear:</TD>		<TD><?php print (format_date($asgn_row['clear'])) ;?></TD></TR>
+		
 		<TR CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Comments:</TD>
-			<TD><?php print $asgn_row['comments']; ?></TD></TR>
+			<TD><?php print $asgn_row['assign_comments']; ?></TD></TR>
 		
 		<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
 			<br>
 			<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
+<?php
+		if(!is_guest()){
+			print "<INPUT TYPE='BUTTON' VALUE='Edit' onClick='document.nav_form.func.value=\"edit\";document.nav_form.submit();' style='height: 1.5em;'>\n";
+			}
+?>			
 			</TD></TR>
 		 </tbody></table>
 		<INPUT TYPE='hidden' NAME='func' value= ''>
@@ -560,8 +575,10 @@ function syncAjax(strURL) {							// synchronous ajax function
 	var incident_st = unit_st = assign_st = true;		// changes to false on activation
 
 	function do_reset(the_Form) {
-		incident_st = unit_st = assign_st = true;
-		the_Form.reset();
+//		incident_st = unit_st = assign_st = true;
+		the_Form.func.value='edit';
+		the_Form.frm_id.value='<?php print $frm_id;?>';		
+		the_Form.submit();
 		}		// end function do_reset()
 	
 	
@@ -580,9 +597,9 @@ function syncAjax(strURL) {							// synchronous ajax function
 			return false;
 			}
 		else {
-				theForm.frm_inc_status_id.disabled = incident_st;
-				theForm.frm_unit_status_id.disabled = unit_st;
-//				theForm..disabled = assign_st_id.disabled = assign_st;
+			theForm.frm_inc_status_id.disabled = incident_st;
+			theForm.frm_unit_status_id.disabled = unit_st;
+//			theForm..disabled = assign_st_id.disabled = assign_st;
 		
 			theForm.submit();
 			}
@@ -597,7 +614,19 @@ function syncAjax(strURL) {							// synchronous ajax function
 			}
 		}		// end function confirmation()
 	function reSizeScr() {
-		window.resizeTo(740,300);		
+		window.resizeTo(800,300);		
+		}
+	function enable(instr) {
+		var element= instr
+		document.getElementById(element).style.visibility = "visible";
+//		var i = document.forms[0].length;
+		for (i=0; i<document.forms[0].length;i++){
+				var start = document.forms[0].elements[i].name.length - instr.length
+				if (instr == document.forms[0].elements[i].name.substring(start,99)) {
+//					alert (document.forms[0].elements[i].name.substring(start,99));
+					document.forms[0].elements[i].disabled = false;
+					}
+			}
 		}
 	</SCRIPT>
 	</HEAD>
@@ -613,12 +642,15 @@ function syncAjax(strURL) {							// synchronous ajax function
 
 		$asgn_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$asgn_row = stripslashes_deep(mysql_fetch_array($asgn_result));
-		$clear = (empty($asgn_row['clear'])) ? "": "<FONT COLOR='red'><B>Cleared</B></FONT>";
-		$disabled = (empty($asgn_row['clear'])) ? "": " DISABLED ";
+		$clear = (is_date($asgn_row['clear']))? "<FONT COLOR='red'><B>Cleared</B></FONT>": "";
+//		$disabled = (empty($asgn_row['clear']))? "": " DISABLED ";
+		$disabled = "";
+
 ?>
 		<TABLE BORDER=0 ALIGN='center'>
 		<FORM NAME="edit_Form" onSubmit="return validate_ed(document.edit_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">
-		<TR CLASS="odd"><TD CLASS="td_label" colspan=99 ALIGN="center">Edit this Call Assignment (#<?php print $asgn_row['assign_id'] ?>) <?php print $clear; ?></TD></TR>
+		<TR CLASS="odd"><TD CLASS="td_label" colspan=99 ALIGN="center">Edit this Call Assignment (#<?php print $asgn_row['assign_id'] ?>) 
+		<?php print $clear; ?></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 
 		<TR CLASS="even" VALIGN="bottom">
@@ -683,11 +715,80 @@ function syncAjax(strURL) {							// synchronous ajax function
 			</TD></TR>
 		<TR CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Comments:</TD>
-			<TD colspan=3><INPUT MAXLENGTH="64" SIZE="64" NAME="frm_comments" VALUE="<?php print $asgn_row['assign_comments']; ?>" TYPE="text"<?php print $disabled;?>></TD></TR>
-		
+			<TD colspan=3><INPUT MAXLENGTH="64" SIZE="64" NAME="frm_comments" VALUE="<?php print $asgn_row['assign_comments']; ?>" TYPE="text" <?php print $disabled;?>></TD></TR>
+<?php
+	 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		// mysql format
+
+//	 	dump($asgn_row['dispatched']);
+		if (is_date($asgn_row['dispatched'])) {
+			$the_date = $asgn_row['dispatched'];
+			$the_vis = "visible";
+			$the_dis = FALSE;
+			}
+		else {
+			$the_date = $now;
+			$the_vis = "hidden";
+			$the_dis = TRUE;
+			}
+		print "\n<TR CLASS='odd'><TD CLASS='td_label'>Dispatched:</TD>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('dispatched')\" ><SPAN ID = 'dispatched' STYLE = 'visibility:" . $the_vis ."'>";
+		generate_date_dropdown("dispatched",totime($the_date), $the_dis);	// ($date_suffix,$default_date=0, $disabled=FALSE)
+		print "</SPAN></TD></TR>\n";
+
+//	 	dump($asgn_row['responding']);
+		if (is_date($asgn_row['responding'])) {
+			$the_date = $asgn_row['responding'];
+			$the_vis = "visible";
+			$the_dis = FALSE;
+			}
+		else {
+			$the_date = $now;
+			$the_vis = "hidden";
+			$the_dis = TRUE;
+			}
+		$the_date = (is_date($asgn_row['responding']))? $asgn_row['responding']	: $now ;
+		print "\n<TR CLASS='even'><TD CLASS='td_label'>Responding:</TD>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('responding')\" ><SPAN ID = 'responding' STYLE = 'visibility:" . $the_vis ."'>";
+		generate_date_dropdown("responding",totime($the_date), $the_dis);
+		print "</SPAN></TD></TR>\n";
+			
+//	 	dump($asgn_row['in-quarters']);
+		if (is_date($asgn_row['in-quarters'])) {
+			$the_date = $asgn_row['in-quarters'];
+			$the_vis = "visible";
+			$the_dis = FALSE;
+			}
+		else {
+			$the_date = $now;
+			$the_vis = "hidden";
+			$the_dis = TRUE;
+			}
+		$the_date = (is_date($asgn_row['in-quarters']))? $asgn_row['in-quarters']	: $now ;
+		print "\n<TR CLASS='odd'><TD CLASS='td_label'>On-scene:</TD>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('quarters')\" ><SPAN ID = 'quarters' STYLE = 'visibility:" . $the_vis ."'>";
+		generate_date_dropdown("quarters",totime($the_date), $the_dis);
+		print "</SPAN></TD></TR>\n";
+
+//	 	dump($asgn_row['clear']);
+		if (is_date($asgn_row['clear'])) {
+			$the_date = $asgn_row['clear'];
+			$the_vis = "visible";
+			$the_dis = FALSE;
+			}
+		else {
+			$the_date = $now;
+			$the_vis = "hidden";
+			$the_dis = TRUE;
+			}
+		$the_date = (is_date($asgn_row['clear']))? $asgn_row['clear']	: $now ;
+		print "\n<TR CLASS='even'><TD CLASS='td_label'>Clear:</TD>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('clear')\" ><SPAN ID = 'clear' STYLE = 'visibility:" . $the_vis ."'>";
+		generate_date_dropdown("clear",totime($the_date), $the_dis);
+		print "</SPAN></TD></TR>\n";
+			
+?>
 		<TR CLASS='odd' VALIGN='baseline'><TD CLASS='td_label' ALIGN='right'>As of:</TD>
-			<TD><?php print format_date($asgn_row['as_of']);?></TD>
-			<TD CLASS="td_label">By:</TD><TD> <?php print $asgn_row['user'];?></TD>
+			<TD colspan=2><?php print format_date($asgn_row['as_of']);?>&nbsp;&nbsp;&nbsp;&nbsp;By: <?php print $asgn_row['user'];?></TD>
 			</TR>		
 
 		<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
@@ -697,29 +798,29 @@ function syncAjax(strURL) {							// synchronous ajax function
 			if (!$disabled) {
 ?>			
 			&nbsp;&nbsp;&nbsp;&nbsp;	
-			<INPUT TYPE="BUTTON" VALUE="Reset"  onclick="Javascript: do_reset(document.edit_Form)" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
-			<INPUT TYPE="BUTTON" VALUE=" Submit " name="sub_but" onClick = "validate_ed(document.edit_Form)" style="width: 12em;height: 1.5em;" >
+			<INPUT TYPE="BUTTON" VALUE="Reset"  onclick="Javascript: do_reset(document.edit_Form)" style="height: 1.5em;"/>&nbsp;&nbsp;&nbsp;&nbsp;	
+			<INPUT TYPE="BUTTON" VALUE=" Submit " name="sub_but" onClick = "validate_ed(document.edit_Form)" style="width: 12em;height: 1.5em;" />
 			</TD></TR>
 			<TR CLASS='odd'><TD>&nbsp;</TD></TR>
 			<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'>
-			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;">
+			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;"/>
 <?php
 			}
 ?>			
 			</TD></TR>
 		 </tbody></table>
-		<INPUT TYPE='hidden' NAME='frm_by_id' value= "<?php print $my_session['user_id'];?>">
-		<INPUT TYPE='hidden' NAME='func' value= 'edit_db'>
-		<INPUT TYPE='hidden' NAME='delete_db' value= ''>
-		<INPUT TYPE='hidden' NAME='frm_id' value= '<?php print $frm_id; ?>'>
+		<INPUT TYPE='hidden' NAME='frm_by_id' value= "<?php print $my_session['user_id'];?>"/>
+		<INPUT TYPE='hidden' NAME='func' value= 'edit_db'/>
+		<INPUT TYPE='hidden' NAME='delete_db' value= ''/>
+		<INPUT TYPE='hidden' NAME='frm_id' value= '<?php print $frm_id; ?>'/>
 <?php
 		if ($do_unit) {
-			print "<INPUT TYPE='hidden' NAME='frm_unit_id' value= '" .  $asgn_row['responder_id'] . "'>\n";
+			print "\t\t<INPUT TYPE='hidden' NAME='frm_unit_id' value= '" .  $asgn_row['responder_id'] . "'/>\n";
 			}
 ?>		
-		<INPUT TYPE='hidden' NAME='frm_ticket_id' value= '<?php print $asgn_row['ticket_id'];?>'>
+		<INPUT TYPE='hidden' NAME='frm_ticket_id' value= '<?php print $asgn_row['ticket_id'];?>'/>
 		<INPUT TYPE='hidden' NAME='frm_log_it' value=''/>
-		<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
+		<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
 		</FORM>
 		
 <?php
@@ -738,9 +839,6 @@ function syncAjax(strURL) {							// synchronous ajax function
 		if (isset($frm_unit_status_id)) {
 			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_unit_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_unit_id) ." LIMIT 1";
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET  `responder_id` = " . quote_smart($frm_unit_id) . ", `as_of` = " . quote_smart($now) . ", `comments` = " . quote_smart($_POST['frm_comments']) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 			do_log($GLOBALS['LOG_UNIT_CHANGE'], $frm_unit_id);	
 			}
 
@@ -757,9 +855,23 @@ function syncAjax(strURL) {							// synchronous ajax function
 
 			$message = "Run completion recorded";
 			}
-		else {
-			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+
+		else {	
+		
+			$frm_dispatched =	(array_key_exists('frm_year_dispatched', $_POST))? 	quote_smart($_POST['frm_year_dispatched'] . "-" . $_POST['frm_month_dispatched'] . "-" . $_POST['frm_day_dispatched']." " . $_POST['frm_hour_dispatched'] . ":". $_POST['frm_minute_dispatched'] .":00") : "";
+			$frm_responding = 	(array_key_exists('frm_year_responding', $_POST))? 	quote_smart($_POST['frm_year_responding'] . "-" . $_POST['frm_month_responding'] . "-" . $_POST['frm_day_responding']." " . $_POST['frm_hour_responding'] . ":". $_POST['frm_minute_responding'] .":00") : "";
+			$frm_quarters = 	(array_key_exists('frm_year_quarters', $_POST))?  	quote_smart($_POST['frm_year_quarters'] . "-" . $_POST['frm_month_quarters'] . "-" . $_POST['frm_day_quarters']." " . $_POST['frm_hour_quarters'] . ":". $_POST['frm_minute_quarters'] .":00") : "";
+			$frm_clear = 		(array_key_exists('frm_year_clear', $_POST))?  		quote_smart($_POST['frm_year_clear'] . "-" . $_POST['frm_month_clear'] . "-" . $_POST['frm_day_clear']." " . $_POST['frm_hour_clear'] . ":". $_POST['frm_minute_clear'] .":00") : "";
+			
+			$date_part = (empty($frm_dispatched))? 	"": ", `dispatched`= " . 	$frm_dispatched ;
+			$date_part .= (empty($frm_responding))? "": ", `responding`= " . 	$frm_responding;
+			$date_part .= (empty($frm_quarters))? 	"": ", `in-quarters`= " . 	$frm_quarters;
+			$date_part .= (empty($frm_clear))? 		"": ", `clear`= " . 		$frm_clear;
+
+			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) ;
+			$query .= $date_part;
+			$query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
+			$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
 
 			$message = "Update Applied";
 			}
@@ -768,9 +880,9 @@ function syncAjax(strURL) {							// synchronous ajax function
 <BODY>
 	<BR><BR><CENTER><H3><?php print $message; ?></H3><BR><BR>
 	<FORM NAME='ed_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
-	<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()">
-	<INPUT TYPE='hidden' NAME='func' VALUE='list'>
-	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
+	<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()"/>
+	<INPUT TYPE='hidden' NAME='func' VALUE='list'/>
+	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
 	</FORM></BODY></HTML>
 <?php	
 		break;				// end 	case 'edit_db'
@@ -780,31 +892,31 @@ function syncAjax(strURL) {							// synchronous ajax function
 	}				// end switch ($func)
 ?>
 
-<FORM NAME='nav_form' METHOD='post' ACTION = "">
-<INPUT TYPE='hidden' NAME='frm_id' VALUE=''>
-<INPUT TYPE='hidden' NAME='func' VALUE=''>
-<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
+<FORM NAME='nav_form' METHOD='post' ACTION = "<?php print basename(__FILE__); ?>">
+<INPUT TYPE='hidden' NAME='frm_id' VALUE=''/>
+<INPUT TYPE='hidden' NAME='func' VALUE=''/>
+<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
 </FORM>
 
 <FORM NAME='T_nav_form' METHOD='get' TARGET = 'main' ACTION = "main.php">
-<INPUT TYPE='hidden' NAME='id' VALUE=''>
+<INPUT TYPE='hidden' NAME='id' VALUE=''/>
 </FORM>
 
 <FORM NAME='U_nav_form' METHOD='get' TARGET = 'main' ACTION = "units.php">
-<INPUT TYPE='hidden' 	NAME='id' VALUE=''>
-<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'>
-<INPUT TYPE='hidden' 	NAME='view' VALUE='true'>
+<INPUT TYPE='hidden' 	NAME='id' VALUE=''/>
+<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'/>
+<INPUT TYPE='hidden' 	NAME='view' VALUE='true'/>
 </FORM>
 
 <FORM NAME='U_edit_form' METHOD='get' TARGET = 'main' ACTION = "units.php">
-<INPUT TYPE='hidden' 	NAME='id' VALUE=''>
-<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'>
-<INPUT TYPE='hidden' 	NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' 	NAME='id' VALUE=''/>
+<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'/>
+<INPUT TYPE='hidden' 	NAME='edit' VALUE='true'/>
 </FORM>
 
-<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>">
-<INPUT TYPE='hidden' NAME='func' VALUE='list'>
-<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'>
+<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"/>
+<INPUT TYPE='hidden' NAME='func' VALUE='list'/>
+<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
 </FORM>
 </BODY></HTML>
 

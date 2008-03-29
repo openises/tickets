@@ -1,4 +1,4 @@
-Notes re Tickets CAD V2.5 B:
+Notes re Tickets CAD V2.6 A:
 
 1.  The Call Board function provides a display of current incident-unit assignments. (In effect, a Situation Management tool.)  Clicks there will provide a convenient direct link to incident and unit information.  Cleared incidents are shown with a strike-through for 24 hours in order to communicate that information to later shifts.
 2.  Incident types are supported, with the few you'll see able to be extended by admin-privileged users as needed.  See note 32. below.
@@ -11,7 +11,7 @@ Notes re Tickets CAD V2.5 B:
 
 To install:
 9.  Create an empty MySQL database entry.  Remember its name, the host name, your user name and password.
-10. Unzip the tickets_2_5_beta zip into whatever directory from which you plan to run Tickets.
+10. Unzip the tickets_2_6_A_beta zip into whatever directory from which you plan to run Tickets.
 11. Navigate to, say, http://localhost/tickets/install.php -- or its equivalent on your machine.
 12. There, you'll be challenged for the database information used in step 9. above.
 13. At some point -- maybe this one -- you'll need a valid GMaps API key.  It's free.  Obtain from Google at 

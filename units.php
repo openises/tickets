@@ -26,10 +26,12 @@ extract($_GET);
 				}
 			}		// end function ck_frames()
 
-	if (parent.frames["upper"]) {
+	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+	catch(e) {
 		}
 
 	var type;					// Global variable - identifies browser family
@@ -41,6 +43,12 @@ extract($_GET);
 		else if (document.layers) type="NN";									//Netscape Communicator 4
 		else if (!document.all && document.getElementById) type="MO";			//Mozila e.g. Netscape 6 upwards
 		else type = "IE";														//????????????
+		}
+		
+	function to_routes(id) {
+//		alert (id);
+		document.routes_Form.ticket_id.value=id;
+		document.routes_Form.submit();
 		}
 	
 	function whatBrows() {					//Displays the generic browser type
@@ -306,7 +314,7 @@ var color=0;
 	var map;
 	var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders'>";
 	side_bar_html += "<TR class='even'>	<TD colspan=99 ALIGN='center'><B>Units</B></TD></TR>";
-	side_bar_html += "<TR class='odd'>	<TD colspan=99 ALIGN='center'>Click line or icon for information</TD></TR>";
+	side_bar_html += "<TR class='odd'>	<TD colspan=99 ALIGN='center'>Click line or icon for details - or to dispatch</TD></TR>";
 	side_bar_html += "<TR class='even'>	<TD></TD><TD ALIGN='center'>Name</TD><TD ALIGN='center'>Description</TD><TD ALIGN='center'>Status</TD><TD>M</TD><TD ALIGN='center'>As of</TD></TR>";
 	var gmarkers = [];
 	var infoTabs = [];
@@ -392,7 +400,7 @@ var color=0;
 	
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
+	dump (mysql_affected_rows());
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  while() for RESPONDER ==========
 	
 		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
@@ -888,7 +896,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 			<FONT CLASS="header">Unit Data</FONT><BR /><BR />
 			<TABLE BORDER=0 ID='outer'><TR><TD>
-			<TABLE BORDER="0" ID='viewform'>
+			<TABLE BORDER="0" ID='view_unit' STYLE='display: block'>
 			<FORM METHOD="POST" NAME= "res_view_Form" ACTION="units.php?func=responder">
 			<TR CLASS = "even"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'] ;?></TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label">Description: </TD>	<TD><?php print $row['description'];?></TD></TR>
@@ -915,12 +923,55 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		$toedit = (is_guest())? "" : "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 ?>			
 			<TR><TD>&nbsp;</TD></TR>
-			<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'><?php print $toedit; ?></TD></TR>
+<?php
+		if (!is_guest()) {
+?>		
+			<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'>
+			<INPUT TYPE="button" VALUE="to Edit" 	onClick= "to_edit_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<INPUT TYPE="button" VALUE="to Dispatch" 	onClick= "document.getElementById('incidents').style.display='block'; document.getElementById('view_unit').style.display='none';">
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
+			</TD></TR>
+<?php
+			}
+?>			
 			</FORM></TABLE>
+			<BR /><BR /><BR />
+			<TABLE BORDER=1 ID = 'incidents' STYLE = 'display:none' >
+			<TR CLASS='even'><TH COLSPAN=99> Click incident to assign to <?php print $row['name'] ;?></TH></TR>
+			
+<?php
+		$query = "SELECT * FROM $GLOBALS[mysql_prefix]ticket ORDER BY `id`";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+							// major while ... starts here
+		$i=0;
+		while ($row = stripslashes_deep(mysql_fetch_array($result))) 	{
+			switch($row['severity'])		{		//color tickets by severity
+			 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
+				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
+				default: 							$severityclass=''; break;
+				}
+//			dump ($row);
+
+			print "\t<TR CLASS ='" .  $evenodd[($i+1)%2] . "' onClick = 'to_routes(\"" . $row['id'] . "\")'>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row['scope']}'>" . shorten($row['scope'], 24) . "</TD>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row['description']}'>" . shorten($row['description'], 24) . "</TD>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row['street']} {$row['city']}'>" . shorten($row['street'], 24) . "</TD>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row['city']}'>" . shorten($row['city'], 10). "</TD>";
+			print "\t\t</TR>\n";
+			$i++;
+			}
+?>
+			<TR><TD ALIGN="center" COLSPAN=99><BR /><BR />
+				<INPUT TYPE="button" VALUE="Cancel" onClick = "document.getElementById('incidents').style.display='none'; document.getElementById('view_unit').style.display='block';">
+			</TD></TR>
+			</TABLE><BR><BR>
 			</TD><TD><DIV ID='map' style="width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset"></DIV></TD></TR></TABLE>
 			<FORM NAME="can_Form" METHOD="post" ACTION = "units.php"></FORM>		
 			<FORM NAME="to_edit_Form" METHOD="post" ACTION = "units.php?func=responder&edit=true&id=<?php print $id; ?>"></FORM>		
+			<FORM NAME="routes_Form" METHOD="get" ACTION = "routes.php">
+			<INPUT TYPE="hidden" NAME="ticket_id" 	VALUE="">
+			<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
+			</FORM>		
 			</BODY>					<!-- END RESPONDER VIEW -->
 <?php
 			map("v") ;				// call GMap js EDIT mode

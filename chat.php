@@ -27,10 +27,12 @@
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
 
-if (window.opener && !window.opener.closed) {
+try {
 	window.opener.document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 	window.opener.document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 	window.opener.document.getElementById("script").innerHTML = "<?php print LessExtension(basename( __FILE__));?>";
+	}
+catch(e) {
 	}
 
     var colors = new Array();

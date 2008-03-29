@@ -43,10 +43,12 @@ if ($get_action == 'add') {
 			}							
 		}				
 
-	if (parent.frames["upper"]) {
+	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+	catch(e) {
 		}
 
 	function validate(theForm) {

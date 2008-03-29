@@ -53,7 +53,7 @@ $GLOBALS['LOG_UNIT_CHANGE']			=22;
 
 $GLOBALS['SESSION_TIME_LIMIT']		=120;		// minutes of inactivity
 
-$evenodd = array ("even", "odd");	// class names for alternating table row colors
+$evenodd = array ("even", "odd");	// class names for alternating table row css colors
 
 /* connect to mysql database */
 
@@ -483,8 +483,8 @@ function is_user(){/* is user admin? */
 																	/* print date and time in dropdown menus */ 
 function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {			// 'extra allows 'disabled'
 	$dis_str = ($disabled)? " disabled" : "" ;
-	$td = array ("E" => "5", "C" => "6", "M" => "7", "W" => "8");					// hours west of GMT
-	$deltam = get_variable('delta_mins');											// align server clock minutes
+	$td = array ("E" => "5", "C" => "6", "M" => "7", "W" => "8");							// hours west of GMT
+	$deltam = get_variable('delta_mins');													// align server clock minutes
 	$local = mktime(date("G"), date("i")-$deltam, date("s"), date("m"), date("d"), date("Y"));
 	
 	if ($default_date)	{	//default to current date/time if no values are given
@@ -624,6 +624,13 @@ function mysql_format_date($indate="") {			// returns MySQL-format date given ar
 	if (empty($indate)) {$indate = time();}
 	return date("Y-m-d H:i:s", $indate);
 	}
+
+function is_date($DateEntry) {						// returns true for valid non-zero date
+	$Date_Array = explode('-',$DateEntry);			// "2007-00-00 00:00:00"
+	if (count($Date_Array)!=3) 									return FALSE;
+	if((strlen($Date_Array[0])!=4)|| ($Date_Array[0]=="0000")) 	return FALSE;
+	else {return TRUE;}	
+	}		// end function Is_Date()
 
 function toUTM($coordsIn) {							// UTM converter - assume comma separator
 	$temp = explode(",", $coordsIn);
@@ -836,16 +843,6 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 				
 				do_log($GLOBALS['LOG_SIGN_IN']);	// log it													
 								
-//				mail  ($to ,$subject ,$message, $additional_headers );
-				$to = "3ashore@comcast.net";
-				$subject = "Tickets/Fatcow Login";
-				$message = "From: " . gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\nBrowser:" . $_SERVER['HTTP_USER_AGENT'];
-				$message .= "\nBy: " . $_POST['frm_user'];
-				$message .= "\nScreen: " . $_POST['scr_width'] . " x " .$_POST['scr_height'];
-//				mail($admin_email, $msgtitle, $msgcontent,"From: webmaster@{$_SERVER['SERVER_NAME']}", "-fwebmaster@{$_SERVER['SERVER_NAME']}"	);
-				
-//				mail  ($to ,$subject ,$message);
-
 				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 				header('Cache-Control: no-store, no-cache, must-revalidate');
 				header('Cache-Control: post-check=0, pre-check=0', FALSE);
@@ -876,38 +873,69 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 			};
-		
-		if (parent.frames["upper"]) {		// ????
-			parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
+			
+//		function getBrowserWidth(){
+//		    if (window.innerWidth){
+//		        return window.innerWidth;}
+//		    else if (document.documentElement && document.documentElement.clientWidth != 0){
+//		        return document.documentElement.clientWidth;    }
+//		    else if (document.body){return document.body.clientWidth;}
+//		        return 0;
+//			}
+//		function getBrowserHeight(){
+//		    if (window.innerHeight){
+//		        return window.innerHeight;}
+//		    else if (document.documentElement && document.documentElement.clientHeight != 0){
+//		        return document.documentElement.clientHeight;    }
+//		    else if (document.body){return document.body.clientHeight;}
+//		        return 0;
+//			}
+
+		function getBrowserWidth(){
+			var val="";
+		    if (window.innerWidth){
+		        var val= window.innerWidth;}
+		    else if (document.documentElement && document.documentElement.clientWidth != 0){
+		        var val= document.documentElement.clientWidth;    }
+		    else if (window.screen.width && window.screen.width != 0){
+		        var val= window.screen.width;    }
+		    else if (document.body){var val= document.body.clientWidth;}
+		        return(isNaN(val))? 1024: val;
 			}
+		function getBrowserHeight(){
+			var val="";
+		    if (window.innerHeight){
+		        var val= window.innerHeight;}
+		    else if (document.documentElement && document.documentElement.clientHeight != 0){
+		        var val= document.documentElement.clientHeight;    }
+		    else if (window.screen.height && window.screen.height != 0){
+		        var val= window.screen.height;    }
+		    else if (document.body){var val= document.body.clientHeight;}
+		        return(isNaN(val))? 740: val;
+			}
+
+		
+//		if (parent.frames["upper"]) {		// ????
+//			parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
+//			}
 		
 		function do_onload () {
-//			alert (parent.frames[1].name);			// 
-//			alert (this.window.name);				// in a popup
 			if (this.window.name!="main") {self.close();}			// in a popup
 			if(self.location.href==parent.location.href) {			// prevent frame jump
 				self.location.href = 'index.php';
 				};
-			if (parent.frames["upper"]) {		// should always be true
+			try {		// should always be true
 				parent.frames["upper"].document.getElementById("whom").innerHTML  = "not";
 				parent.frames["upper"].document.getElementById("level").innerHTML  = "na";
 				parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
 				}
-			else {
-//				alert("F I P - 889");
-//				alert(this.window.name);
-				self.location.href = 'index.php';				
+			catch(e) {
 				}
-			document.login_form.scr_width.value=screen.availWidth;
-			document.login_form.scr_height.value=screen.availHeight;
+			document.login_form.scr_width.value=getBrowserWidth();
+			document.login_form.scr_height.value=getBrowserHeight();
 //			document.login_form.frm_user.focus();
 			}		// end function do_onload () 
-<?php
-	if ($outinfo) {		// clarify logout/in
-?>	
-<?php	
-		}		// end if ($outinfo)
-?>	
+
 		window.setTimeout("document.forms[0].frm_user.focus()", 1000);
 		</SCRIPT>
 		</HEAD>
@@ -922,9 +950,11 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 <?php
 
 		if(array_key_exists('frm_passwd', $_POST)) { print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>Login failed.Pls enter correct values and try again.</FONT><BR /><BR /></TH></TR>";}
+		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";;
+
 ?>
 		<TR CLASS='even'><TD ROWSPAN=6 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png'><BR /><BR />
-		&nbsp;&nbsp;<a href="http://www.openaprs.net/"><img src="http://www.openaprs.net/images/tag/openaprs.png" width="88" height="31"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label">User:</TD><TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();"></TD></TR>
+		&nbsp;&nbsp;<a href="http://www.openaprs.net/"><img src="openaprs.png"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label">User:</TD><TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();"></TD></TR>
 		<TR CLASS='odd'><TD CLASS="td_label">Password: &nbsp;&nbsp;</TD><TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"></TD></TR>
 		<TR CLASS='even'><TD></TD><TD><INPUT TYPE="submit" VALUE="Log In"></TD></TR>
 		<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD></TR>
@@ -932,6 +962,7 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 		<TR CLASS='even' HEIGHT = "30px" VALIGN="top"><TD COLSPAN=2 ALIGN='center' CLASS="td_label" ><BR /><A HREF="http://groups.google.com/group/open-source-cad"><U>Join our newsgroup </U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="mailto:shoreas@Gmail.com?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A><BR /><BR /></TD>
 		<INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
+		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
 		</FORM></CENTER>
 		</HTML>
 <?php
@@ -1004,4 +1035,27 @@ function get_stuff($in_file) {				// return file contents as string
 	return file_get_contents($in_file);;
 	}				// end function get_stuff()
 	
+function get_ext($filename) {				// return extension in lower-case
+	$exts = split("[/\\.]", $filename) ;
+	return strtolower($exts[count($exts)-1]);
+	}
+
+function ezDate($d) {
+	$temp = strtotime(str_replace("-","/",$d));
+	$ts = time() - $temp;
+	if (($ts < 0) || ($ts > 315360000)) {return FALSE;}							// sanity check
+	
+	if($ts>31536000) $val = round($ts/31536000,0).' year';
+	else if($ts>2419200) $val = round($ts/2419200,0).' month';
+	else if($ts>604800) $val = round($ts/604800,0).' week';
+	else if($ts>86400) $val = round($ts/86400,0).' day';
+	else if($ts>3600) $val = round($ts/3600,0).' hour';
+	else if($ts>60) $val = round($ts/60,0).' minute';
+  	else $val = $ts.' second';
+	if(!($val==1)) $val .= 's';
+	$val .= " ago";
+	return $val;
+	} 
+	
+		
 ?>

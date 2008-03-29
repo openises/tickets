@@ -147,7 +147,7 @@ var newwindow_cb = null;
 
 function do_callBoard() {
 	if (logged_in()) {
-		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=740,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_cb)) {
 			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
 			return;
@@ -190,6 +190,9 @@ function shut_down(){
 	}			// end function shut_down()
 	
 </SCRIPT>
+<NOSCRIPT>
+	Tickets requires a JavaScript-capable browser.
+</NOSCRIPT>	
 </HEAD>
 <!-- <BODY onLoad = "if(self.location.href==parent.location.href) {self.location.href = 'index.php';}; start_poll();" onunload=stop_poll();> -->
 <BODY onLoad = "ck_frames()" onunload="shut_down()">
@@ -219,8 +222,8 @@ $dir = "./emd_cards";
 if (file_exists ($dir)) {
 	$dh  = opendir($dir);
 	while (false !== ($filename = readdir($dh))) {
-		if (!is_dir($filename)) {
-		    $card_file = $filename;		// at least one file, use first encountered
+		if ((!is_dir($filename)) && (get_ext($filename)=="pdf"))  {
+		    $card_file = $filename;						// at least one pdf, use first encountered
 		    break;
 		    }
 		}

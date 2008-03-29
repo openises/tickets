@@ -291,9 +291,10 @@ while (false !== ($filename = readdir($dh))) {
 			}
 		else { $strike = $strikend = "";}
 			
-		$sidebar_line = "<TD CLASS='$severityclass'>$strike" . shorten($row['scope'], 20) . " $strikend</TD>";
-		$sidebar_line .= "<TD CLASS='$severityclass'>$strike" . shorten($row['type'], 20) . " $strikend</TD>";
-		$sidebar_line .= "<TD CLASS='td_data'> " . $P . " </TD><TD CLASS='td_data'> " . $A . " </TD><TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
+		$sidebar_line = "<TD CLASS='$severityclass'><NOBR>$strike" . shorten($row['scope'], 20) . " $strikend</NOBR></TD>";
+		$sidebar_line .= "<TD CLASS='$severityclass'><NOBR>$strike" . shorten($row['type'], 20) . " $strikend</NOBR></TD>";
+		$sidebar_line .= "<TD CLASS='td_data'><NOBR> " . $P . " </TD><TD CLASS='td_data'> " . $A . " </NOBR></TD>";
+		$sidebar_line .= "<TD CLASS='td_data'><NOBR> " . format_sb_date($row['updated']) . "</NOBR></TD>";
 ?>
 		var myinfoTabs = [
 			new GInfoWindowTab("<?php print nl2brr(shorten($row['scope'], 12));?>", "<?php print $tab_1;?>"),
@@ -371,11 +372,11 @@ while (false !== ($filename = readdir($dh))) {
 //										common to all modes
 		$the_bull = ($mode == 0)? "" : "<B><FONT COLOR=" . $bulls[$mode] .">&bull;</FONT></B>";
 			
-		$sidebar_line = "<TD>" . shorten($row['name'], 20) . "</TD>";
+		$sidebar_line = "<TD><NOBR>" . shorten($row['name'], 20) . "</NOBR></TD>";
 		$temp = $row['un_status_id'];
-		$sidebar_line .= "<TD COLSPAN=2>" . shorten($status_vals[$temp], 10 ) . "</TD>";
-		$sidebar_line .= "<TD CLASS='td_data'> " . $the_bull . "</TD>";
-		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
+		$sidebar_line .= "<TD COLSPAN=2><NOBR>" . shorten($status_vals[$temp], 10 ) . "</NOBR></TD>";
+		$sidebar_line .= "<TD CLASS='td_data'><NOBR> " . $the_bull . "</TD>";
+		$sidebar_line .= "<TD CLASS='td_data'><NOBR> " . format_sb_date($row['updated']) . "</NOBR></TD>";
 ?>
 
 		var do_map = true;		// default

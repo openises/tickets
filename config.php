@@ -35,11 +35,12 @@
 //		}
 ?>
 			}		// end function ck_frames()
-
-	if (parent.frames["upper"]) {
+	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+	catch(e) {
 		}
 
 	function do_Post(the_table) {
@@ -737,7 +738,6 @@ case 'api_key' :
     
 case 'dump' :				// see mysql.inc.php	for MySQL parameters
 	require_once('./incs/MySQLDump.class.php');
-	
 	$backup = new MySQLDump(); //create new instance of MySQLDump
 	
 	$the_db = $mysql_prefix . $mysql_db;

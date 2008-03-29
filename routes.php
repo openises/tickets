@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 require_once('functions.inc.php');
 $my_session = do_login(basename(__FILE__));		// returns session array
 if($istest) {
-	dump(__FILE__);
+	dump(basename(__FILE__));
 	print "GET<br />\n";
 	dump($_GET);
 	print "POST<br />\n";
@@ -41,24 +41,24 @@ if (!empty($_POST)) {
 							quote_smart($assigns[$i]),
 							quote_smart($frm_comments),
 							quote_smart($frm_by_id));
-//		dump ($query );
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 //										remove placeholder inserted by 'add'		
 		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 							// apply status update to unit status
 		$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($assigns[$i])  ." LIMIT 1";
-//		dump ($query );
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $assigns[$i], $frm_status_id);
 		}
 ?>	
 <SCRIPT>
 
-if (parent.frames["upper"]) {
+try {
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+	}
+catch(e) {
 	}
 
 </SCRIPT>
@@ -207,12 +207,13 @@ function doReset() {
 	</BODY>
 
 <?php
-	print list_responders();
+	$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
+	print list_responders("", $unit_id);
 	print "</HTML> \n";
 
 	}			// end if/else !empty($_POST)
 
-function list_responders($addon = '') {
+function list_responders($addon = "", $unit_id ="") {
 	global $row_ticket, $my_session;
 	
 ?>
@@ -312,7 +313,8 @@ function list_responders($addon = '') {
 					}
 				}
 			if (msgstr.length==0) {
-				alert ("Please select one or more Units, or cancel");
+				var more = (nr_units>1)? "s": ""
+				alert ("Please select unit" + more + ", or cancel");
 				return false;
 				}
 			else {
@@ -414,6 +416,7 @@ function list_responders($addon = '') {
 		unit_sets = 	new Array();				// settings
 		unit_ids = 		new Array();				// id's
 		unit_assigns = 	new Array();				// unit id's assigned this incident
+		var nr_units = 	0;
 <?php
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 		
@@ -425,16 +428,20 @@ function list_responders($addon = '') {
 			}
 		print "\n";
 
+		$where = (empty($unit_id))? "" : " WHERE `responder`.`id` = $unit_id ";
 		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM $GLOBALS[mysql_prefix]responder
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
-			ORDER BY `name` ASC";	
+			$where
+			ORDER BY `name` ASC, `unit_id` ASC";	
 
+//		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		if(mysql_affected_rows()>0) {
 													// major while ... for RESPONDER data starts here
 			$i = 1;				// sidebar/icon index
 			while ($unit_row = stripslashes_deep(mysql_fetch_array($result))) {
 ?>
+				nr_units++;
 				var i = <?php print $i;?>;						// top of loop
 				unit_names[i] = '<?php print $unit_row['name'];?>';	// unit name
 				unit_sets[i] = false;								// pre-set checkbox settings				
@@ -538,7 +545,7 @@ function list_responders($addon = '') {
 			
 //					responders complete
 ?>
-		if (i == 1) {
+		if (nr_units==0) {
 			side_bar_html +="<TR CLASS='odd'><TD ALIGN='center' COLSPAN=99><BR /><B>No Units!</B></TD></TR>";;		
 			map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);
 			}

@@ -4,5 +4,5 @@
 	$mysql_db 		= 'tickets2_5_db';
 	$mysql_user 	= 'root';
 	$mysql_passwd 	= '';
-	$mysql_prefix 	= 'ZZ';
+	$mysql_prefix 	= '';
 ?>
