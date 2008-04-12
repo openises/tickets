@@ -769,7 +769,9 @@ case 'delete' :
 ?>		
 			<FORM METHOD="POST" NAME= "del_Form" ACTION="config.php?func=delete&subfunc=confirm">
 <?php
-//			$query = "SELECT *,UNIX_TIMESTAMP(problemend) AS problemend FROM $GLOBALS[mysql_prefix]ticket";
+			$entities = array ("action", "patient", "notify", "assigns");
+			$ent_captions = array ("Actions: ", "Patients: ", "Notifies: ", "Assigns: ");
+
 			$query	= "SELECT *,UNIX_TIMESTAMP(problemend) AS problemend FROM $GLOBALS[mysql_prefix]ticket WHERE `status` = " . $GLOBALS['STATUS_CLOSED']. " ORDER BY `scope`";
 	
 			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -779,11 +781,21 @@ case 'delete' :
 				print "<TR CLASS = 'odd'><TD COLSPAN=3>&nbsp;</TD></TR>";
 					$i = 0;
 					while($row = stripslashes_deep(mysql_fetch_array($result))) {
-						print "<TR CLASS='" . $evenodd[$i%2] . "'><TD CLASS='td_label'>" . shorten($row['scope'], 50) . "</TD>";
-						print "<TD CLASS='td_label'>" . format_sb_date($row['problemend']) . "</TD>";
+						print "<TR CLASS='" . $evenodd[$i%2] . "'><TD CLASS='td_label' TITLE = \"" .$row['scope'] . "\">" . shorten($row['scope'], 50) . "</TD>";
+						print "<TD TITLE = \"" .$row['description'] . "\">" . format_sb_date($row['problemend']) . "</TD>";
 						print "<TD CLASS='td_label'><INPUT TYPE='checkbox' NAME = 'T" . $row['id'] . "'></TD></TR>\n";
+						print "<TR CLASS='" . $evenodd[$i%2] . "'><TD></TD><TD>";  		// counts of related entries
+						$sep = "";
+						for ($j=0; $j<count($entities); $j++) {
+							$query	= "SELECT `id` FROM `" . "$GLOBALS[mysql_prefix]" . $entities[$j] . "` WHERE `ticket_id` = " . $row['id'];
+							$temp = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+							print $sep . $ent_captions[$j] . mysql_affected_rows();
+							$sep = ", ";
+							}
+						print "</TD><TD></TD></TR>";
 						$i++;
 						}		// end while($row ...)
+				print "<TR><TD ALIGN='center' COLSPAN=3>&nbsp;</TD></TR>";
 				print "<TR CLASS='" . $evenodd[$i%2] . "'><TD ALIGN='center' COLSPAN=3>";
 ?>
 				<INPUT TYPE='button' VALUE='Cancel' 	onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -826,9 +838,11 @@ case 'delete' :
 			for ($i=0; $i<count($temp); $i++) {
 				$query = "DELETE from $GLOBALS[mysql_prefix]ticket WHERE `id` = " . $temp[$i] . " LIMIT 1";
 				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				$query = "DELETE from $GLOBALS[mysql_prefix]action_bu WHERE `ticket_id` = " . $temp[$i] ;
+				$query = "DELETE from $GLOBALS[mysql_prefix]action WHERE `ticket_id` = " . $temp[$i] ;
 				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				$query = "DELETE from $GLOBALS[mysql_prefix]patient_bu WHERE `ticket_id` = " . $temp[$i];
+				$query = "DELETE from $GLOBALS[mysql_prefix]patient WHERE `ticket_id` = " . $temp[$i];
+				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE from $GLOBALS[mysql_prefix]notify WHERE `ticket_id` = " . $temp[$i];
 				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 //				dump ($query);
 				}
@@ -882,6 +896,7 @@ case 'delete' :
 			<LI><A HREF="#" onClick = "do_Post('settings');">Settings</A>
 			<LI><A HREF="#" onClick = "do_Post('ticket');">Tickets</A>
 			<LI><A HREF="#" onClick = "do_Post('responder');">Units</A>
+			<LI><A HREF="#" onClick = "do_Post('associations');">Associations</A>
 <?php
 			}
 ?>			
