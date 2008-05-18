@@ -1,4 +1,4 @@
-Notes re Tickets CAD V2.6 A:
+Notes re Tickets CAD V2.6B:
 
 1.  The Call Board function provides a display of current incident-unit assignments. (In effect, a Situation Management tool.)  Clicks there will provide a convenient direct link to incident and unit information.  Cleared incidents are shown with a strike-through for 24 hours in order to communicate that information to later shifts.
 2.  Incident types are supported, with the few you'll see able to be extended by admin-privileged users as needed.  See note 32. below.
@@ -33,7 +33,7 @@ After installing but prior to use:
 25. Set Unit status values: Config/Unit status types.
 26. Set email addresses: Config/Contacts.  You'll need these if you'll be emailing incident data.
 27. To apply kml files, insert these into the tickets/kml_files subdirectory.
-28. To use your own EMS card file, replace the one in the ticket/emd_cards subdirectory. (FYI, Bob Austin will be providing updates to the one currently included.)
+28. To use your own EMS card file, replace the PDF in the ticket/emd_cards subdirectory. (FYI, Bob Austin will be providing updates to the one currently included.)
 
 Odds and ends:
 
@@ -43,7 +43,14 @@ Odds and ends:
 32. In the 'incident types' and 'unit status' drop-down lists, you can set background colors by suitable css settings for the option 'group'.  See the ones already set in default.css .
 33. We make extensive use of mouseover hints in a number of places, esp where we need to truncate the data shown.
 
+Changes from CAD V2.6 (the immediate predecessor version)
+
+34.  Significant corrections and improvements to the Call Board operation.
+35.  A file that was missing from the 'Dump to Screen' operation is now included.
+36.  Some minor performance improvements made.
+37.  V 2.6_C beta fixes a problem that surfaces in tables.php under some PHP versions, and a problem in units.php supporting IE.
+
 The above may well be too terse.  Let me know where further expansion wd be useful.
 
-Mar 5, '08
+May 17, '08
 Arnie Shore

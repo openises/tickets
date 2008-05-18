@@ -400,7 +400,7 @@ var color=0;
 	
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	dump (mysql_affected_rows());
+//	dump (mysql_affected_rows());
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  while() for RESPONDER ==========
 	
 		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;

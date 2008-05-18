@@ -48,7 +48,8 @@ $key_str = "_id";						// FOREIGN KEY (parent_id) REFERENCES parent(id) relation
 $FK_id = strtolower($key_str);			// set for case independence
 $id_lg = strlen($FK_id);				// lgth of foreign key id string
 
-extract($HTTP_POST_VARS);
+//extract($HTTP_POST_VARS);
+extract($_POST);
 
 if (!isset($sortby))	{
 	$sortby = "";				

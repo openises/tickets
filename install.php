@@ -1,5 +1,5 @@
 <?php
-$version = "2.6A beta";		// see usage below
+$version = "2.6 C beta";		// see usage below
 
 function dump($variable) {
 	echo "\n<PRE>";				// pretty it a bit
