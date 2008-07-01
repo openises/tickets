@@ -1,4 +1,18 @@
 <?php 
+// 5/23/08	added check for associated assign records before allowing deletions line 843 area
+// 5/29/08	addded do_kml calls 
+// 6/1/08	revised 'type' display
+// 6/1/08	added latest APRS data to 'view' display
+// 6/2/08   do_log revisions for explicit parameter values
+// 6/7/08   added show incidents for dispatch -  
+// 6/10/08  added js trim function numerous JS checks
+// 6/11/08  revised mobile/fixed JS datatypes to radio buttons
+// 6/15/08	revised terminology to 'Station', 'Mobile unit'
+// 6/17/08	added tracks handling for date/time, per tracks.php
+// 6/25/08	added APRS window handling
+// 6/27/08	added condionality for Dispatch button
+// 6/27/08	added conditional to detect active dispatches
+
 error_reporting(E_ALL);
 require_once('functions.inc.php');
 do_login(basename(__FILE__));
@@ -8,8 +22,12 @@ if ($istest) {
 	dump ($_POST);
 	}
 extract($_GET);
-	
+extract($_POST);
+
+$types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
+					$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_MUTU']] = "Mutual";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
 ?>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Tickets - Configuration Module</TITLE>
@@ -20,6 +38,10 @@ extract($_GET);
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 	<SCRIPT>
+	String.prototype.trim = function () {						// added 6/10/08
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+	
 		function ck_frames() {
 			if(self.location.href==parent.location.href) {
 				self.location.href = 'index.php';
@@ -34,6 +56,10 @@ extract($_GET);
 	catch(e) {
 		}
 
+	function isNull(val) {								// checks var stuff = null;
+		return val === null;
+		}
+
 	var type;					// Global variable - identifies browser family
 	BrowserSniffer();
 
@@ -45,8 +71,41 @@ extract($_GET);
 		else type = "IE";														//????????????
 		}
 		
+	var starting = false;
+
+	function do_aprs_window() {				// 6/25/08
+		var url = "http://www.openaprs.net/?center=" + <?php print get_variable('def_lat');?> + "," + <?php print get_variable('def_lng');?>;
+//		alert(url);
+		var spec ="titlebar, resizable=1, scrollbars, height=640,width=640,status=0,toolbar=0,menubar=0,location=0, left=50,top=250,screenX=50,screenY=250";
+		newwindow=window.open(url, 'openaprs',  spec);
+		if (isNull(newwindow)) {
+			alert ("APRS display requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow.focus();
+		}				// end function
+
+	function do_track(callsign) {
+//		alert(70);
+		if (parent.frames["upper"].logged_in()) {
+//			if(starting) {return;}					// 6/6/08
+//			starting=true;	
+			map.closeInfoWindow();
+			var width = <?php print get_variable('map_width');?>+360;
+			var spec ="titlebar, resizable=1, scrollbars, height=640,width=" + width + ",status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300";
+			var url = "track_u.php?source="+callsign;
+			
+			newwindow=window.open(url, callsign,  spec);
+			if (isNull(newwindow)) {
+				alert ("Track display requires popups to be enabled. Please adjust your browser options.");
+				return;
+				}
+//			starting = false;
+			newwindow.focus();
+			}
+		}				// end function
+
 	function to_routes(id) {
-//		alert (id);
 		document.routes_Form.ticket_id.value=id;
 		document.routes_Form.submit();
 		}
@@ -69,27 +128,13 @@ extract($_GET);
 		ShowLayer(elid, "block");
 		}
 
-	function validate_cen(theForm) {			// Map center  validation	
-		var errmsg="";
-		if (theForm.frm_lat.value=="")			{errmsg+="\tMap center is required.\n";}
-		if (theForm.frm_map_caption.value=="")	{errmsg+="\tMap caption is required.\n";}
-		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
-			return false;
-			}
-		else {										// good to go!
-			theForm.frm_lat.disabled = false;
-			theForm.frm_lng.disabled = false;
-			theForm.frm_zoom.disabled = false;
-			return true;
-			}
-		}				// end function validate(theForm)
-
-	function validate_res(theForm) {			// Responder form contents validation	
+	function validate_res(theForm) {					// Responder form contents validation	
 		if (theForm.frm_remove) {
 			if (theForm.frm_remove.checked) {
-				if(confirm("Please confirm removing this Unit")) 	{return true;}
-				else 													{return false;}
+				var str = "Please confirm removing '" + theForm.frm_name.value + "'";
+//				if(confirm("Please confirm removing this.")) 	{return true;}
+				if(confirm(str)) 	{return true;}
+				else 				{return false;}
 				}
 			}
 		var errmsg="";
@@ -97,71 +142,46 @@ extract($_GET);
 		for (i=0; i<theForm.frm_type.length; i++){
 			if (theForm.frm_type[i].checked) {	got_type = true;	}
 			}
-		if (theForm.frm_name.value=="")				{errmsg+="\tUnit NAME is required.\n";}
-		if (theForm.frm_descr.value=="")			{errmsg+="\tUnit DESCRIPTION is required.\n";}
-		if (theForm.frm_un_status_id.value==0)		{errmsg+="\tUnit STATUS is required.\n";}
-		if (!got_type)								{errmsg+="\tUnit TYPE is required.\n";}
-		if (!theForm.frm_mobile.checked) {		// fixed
-			theForm.frm_lat.disabled=false;
-			if (theForm.frm_lat.value == "") 		{errmsg+= "\tMAP LOCATION is required\n";}
+		if (theForm.frm_name.value.trim()=="")				{errmsg+="\tUnit NAME is required.\n";}
+		if (theForm.frm_descr.value.trim()=="")				{errmsg+="\tUnit DESCRIPTION is required.\n";}
+		if (theForm.frm_un_status_id.value.trim()==0)		{errmsg+="\tUnit STATUS is required.\n";}
+		if (!got_type)										{errmsg+="\tUnit TYPE is required.\n";}
+		var gotmap = false;
+		if (theForm.frm_lat) {
+			theForm.frm_lat.disabled=false;					// set map boolean
+			gotmap = (!theForm.frm_lat.value == "");
 			theForm.frm_lat.disabled=true;
 			}
-		else {										// mobile
-			if (theForm.frm_callsign.value=="")		{errmsg+="\tCALLSIGN is required.\n";}
-			else {									// not empty
+
+		if (theForm.frm_mobile.value==1) {
+			if  (gotmap)									{errmsg+= "\tMAP LOCATION not allowed for mobile units\n";}
+			if (theForm.frm_callsign.value.trim()=="") 		{errmsg+= "\tCALL SIGN is required for mobile units\n";}
+			else {
 				for (i=0; i< calls.length;i++) {	// duplicate?
-					if (calls[i] == theForm.frm_callsign.value) {
+					if (calls[i] == theForm.frm_callsign.value.trim()) {
 						errmsg+="\tDuplicate CALLSIGN - not permitted.\n";
 						break;
 						}			
-					}		// end for (...)
-				}			// end else {}
-			}				// end mobile
+					}		// end dupl check
+				}		// end else ...
+			}		// end theForm.frm_mobile.value==1
+			
+		else {				// fixed-location unit
+			if (!gotmap) 								{errmsg+= "\tMAP LOCATION is required for Stations\n";}
+//			if (!theForm.frm_callsign.value.trim()=="") {errmsg+= "\tCALL SIGN not used for fixed-location units\n";}
+			}
+			
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
 			}
 		else {										// good to go!
-			theForm.frm_lat.disabled = false;
-			theForm.frm_lng.disabled = false;
-			return true;
-			}
-		}				// end function validate(theForm)
-
-	function validate_user(theForm) {			// Responder form contents validation
-		if (theForm.frm_remove) {
-			if (theForm.frm_remove.checked) {
-				if(confirm("Please confirm removing this Unit")) 	{return true;}
-				else 														{return false;}
+			if (theForm.frm_mobile.value==0) {		// mobile, no coords
+				theForm.frm_lat.disabled = false;
+				theForm.frm_lng.disabled = false;
+				theForm.frm_callsign.disabled = false;
 				}
-			}
-		var errmsg="";
-		var got_level = false;
-		for (i=0; i<theForm.frm_level.length; i++){
-			if (theForm.frm_level[i].checked) {	got_level = true;	}
-			}
-		if (theForm.frm_user.value=="")				{errmsg+="\tUserID is required.\n";}
-		if (theForm.frm_passwd.value=="")			{errmsg+="\tPASSWORD is required.\n";}
-		if (theForm.frm_passwd_confirm.value=="")	{errmsg+="\tCONFIRM PASSWORD is required.\n";}
-		if (theForm.frm_passwd.value!=theForm.frm_passwd_confirm.value) {errmsg+="\tPASSWORD and CONFIRM PASSWORD fail to match.\n";}
-		if (!got_level)								{errmsg+="\tUser LEVEL is required.\n";}
-		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
-			return false;
-			}
-		else {										// good to go!
-			return true;
-			}
-		}				// end function validate(theForm)
-
-	function validate_set(theForm) {			// limited form contents validation  
-		var errmsg="";
-		if (theForm.gmaps_api_key.value.length!=86)			{errmsg+= "\tInvalid GMaps API key\n";}
-		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
-			return false;
-			}
-		else {										// good to go!
+			theForm.frm_m_or_f.disabled = true;	
 			return true;
 			}
 		}				// end function validate(theForm)
@@ -207,12 +227,60 @@ extract($_GET);
 			}			// end for (...)
 		}				// end function all_ticks()
 		
+	function do_disp(){												// show incidents for dispatch - added 6/7/08
+		document.getElementById('incidents').style.display='block';
+		document.getElementById('view_unit').style.display='none';
+		}
+
+	function set_f(the_form) {		// position: fixed - 6/11/08
+//		the_form.frm_callsign.disabled = true;
+		the_form.frm_mobile.value=0;
+		}
+	function set_m(the_form) {		// position: mobile - 6/11/08
+//		the_form.frm_callsign.disabled = false;
+		map.clearOverlays();
+		
+		document.forms[0].frm_lat.disabled=false;
+		document.forms[0].frm_lat.value="";
+		document.forms[0].frm_lat.disabled=true;
+		
+		document.forms[0].frm_lng.disabled=false;
+		document.forms[0].frm_lng.value="";
+		document.forms[0].frm_lng.disabled=true;
+
+		the_form.frm_mobile.value=1;		
+		}
+
 	</SCRIPT>
 	
 
 <?php
+
 function list_responders($addon = '', $start) {
-global $my_session;
+	global $types, $my_session;
+
+	$calls = array();									// // 6/17/08
+	$calls_nr = array();
+	$calls_time = array();
+	
+	$query = "SELECT * , UNIX_TIMESTAMP(packet_date) AS `packet_date` FROM `$GLOBALS[mysql_prefix]tracks` ORDER BY `packet_date` ASC";		// 6/17/08
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	while ($row = mysql_fetch_array($result)) {
+		if (isset($calls[$row['source']])) {		// array_key_exists ( mixed key, array search )
+			$calls_nr[$row['source']]++;
+			}
+		else {
+//			array_push ($calls, trim($row['source']));
+			$calls[trim($row['source'])] = TRUE;
+			$calls_nr[$row['source']] = 1;
+			}
+		$calls_time[$row['source']] = $row['packet_date'];		// save latest - note query order
+		}
+
+//	dump($calls);
+//	dump($calls_nr);
+//	dump($calls_time);
+
 ?>
 <SCRIPT>
 
@@ -271,21 +339,25 @@ var color=0;
 		}				// end function create Marker()
 		
 	function do_sidebar (sidebar, id) {
+//		alert("284 "+ id);
 		side_bar_html += "<TR CLASS='" + colors[(id)%2] +"' onClick = myclick(" + id + ");>";
 		side_bar_html += "<TD CLASS='td_label'>" + (id+1) + ". "+ sidebar +"</TD></TR>\n";
 		}
 
 	function do_sidebar_nm (sidebar, line_no, rcd_id) {							// no map - view responder // view_Form
+//		alert("290 "+ rcd_id);
 		side_bar_html += "<TR CLASS='" + colors[(line_no)%2] +"' onClick = myclick_nm(" + rcd_id + ");>";
 		side_bar_html += "<TD CLASS='td_label'>" + (line_no+1) + ". "+ sidebar +"</TD></TR>\n";
 		}
 
 	function myclick_nm(v_id) {				// Responds to sidebar click - view responder data
+//		alert("myclick_nm "+ v_id);
 		document.view_form.id.value=v_id;
 		document.view_form.submit();
 		}
 
 	function myclick(id) {					// Responds to sidebar click, then triggers listener above -  note [id]
+//		alert("myclick "+ id);
 		GEvent.trigger(gmarkers[id], "click");
 		}
 
@@ -328,7 +400,7 @@ var color=0;
 	map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
 
 	var bounds = new GLatLngBounds();						// create  bounding box
-	map.addControl(new GOverviewMapControl());
+//	map.addControl(new GOverviewMapControl());
 	map.enableScrollWheelZoom(); 	
 
 	var listIcon = new GIcon();
@@ -354,36 +426,8 @@ var color=0;
 		map.addOverlay(gmarkers[which])
 		});
 
-	GEvent.addListener(map, "click", function(marker, point) {
-//		if (marker) {
-//			document.forms[0].frm_lat.disabled=document.forms[0].frm_lat.disabled=false;
-//			document.forms[0].frm_lat.value=document.forms[0].frm_lng.value="";
-//			document.forms[0].frm_lat.disabled=document.forms[0].frm_lat.disabled=true;
-//			}
-//		if (point) {				// new - ADD
-//			myZoom = map.getZoom();
-//			map.clearOverlays();
-//			do_lat (point.lat())							// display
-//			do_lng (point.lng())
-//			map.setCenter(point, myZoom);		// panTo(center)
-//			map.panTo(point);				// panTo(center)
-//			if (document.forms[0].frm_zoom) {				// get zoom?
-//				document.forms[0].frm_zoom.disabled = false;
-//				document.forms[0].frm_zoom.value = myZoom;
-//				document.forms[0].frm_zoom.disabled = true;
-//				}
-//			marker = new GMarker(point, {icon: newIcon, draggable:true});
-//			map.addOverlay(marker);
-//
-//			}
-		});				// end GEvent.addListener() "click"
-
 <?php
-
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
-
-	$types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
-						$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_MUTU']] = "Mutual";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
 
 	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black"); 
 	$status_vals = array();											// build array of $status_vals
@@ -400,18 +444,19 @@ var color=0;
 	
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//	dump (mysql_affected_rows());
+	$aprs = FALSE;
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  while() for RESPONDER ==========
 	
-		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
-		if ($row['mobile']==0) {							// for fixed units
-			$mode = ($row['lat']==0)? 4 :  0;				// toss invalid lat's
-?>
-		var point = new GLatLng(<?php print $row['lat'];?>, <?php print $row['lng'];?>);	// mobile position
+		$toedit = ((is_administrator() || is_super()))?  "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;":"" ;
+		$totrack  = ((intval($row['mobile'])==0)||(empty($row['callsign'])))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><B><U>Tracks</B></U></SPAN>" ;
 
-<?php
+		if (intval($row['mobile'])==0) {							// for fixed units
+			$mode = 0;
+			
+			print "\t\tvar point = new GLatLng(" . $row['lat'] .", " .  $row['lng'] . ");\n";	// fixed position
+			print "\t\tpoints=true;\n";
 			}			// end fixed
-		else {			// is mobile, do infowin
+		else {								// is mobile, any tracks?
 			$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
 				WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
 			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -420,22 +465,36 @@ var color=0;
 				$rowtr = stripslashes_deep(mysql_fetch_array($result_tr));
 				$mode = ($rowtr['speed'] == 0)? 1: 2 ;
 				if ($rowtr['speed'] >= 50) { $mode = 3;}
-?>
-				var point = new GLatLng(<?php print $rowtr['latitude'];?>, <?php print $rowtr['longitude'];?>);	// mobile position
-<?php
+				print "\t\tvar point = new GLatLng(" . $rowtr['latitude'] . ", " . $rowtr['longitude'] . ");\n";	// latest mobile position
+				print "\t\tpoints=true;\n";			
 				}				// end got tracks 
-			else {				// no track data, do sidebar only
+			else {				// mobile unit but no track data
 				$mode = 4;			
 				}			// end if/else (mysql_affected_rows()>0;) - no track data
 			}		// end mobile
 //										common to all modes
+//		dump ($mode);
 		$the_bull = ($mode == 0)? "" : "<FONT COLOR=" . $bulls[$mode] ."><B>&bull;</B></FONT>";
 			
 		$sidebar_line = "<TD>" . shorten($row['name'], 30) . "</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 16) . "</TD>"; 
 		$temp = $row['un_status_id'];
 
 		$sidebar_line .= "<TD CLASS='td_data'> " . shorten($status_vals[$temp], 10) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
-		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
+
+//		$the_time = (isset($calls[$row['callsign']]))? $calls_time[$row['callsign']]: $row['updated'];		// latest report time
+		if (isset($calls[$row['callsign']])) {
+//			print __LINE__;
+			$the_time = $calls_time[$row['callsign']];
+			$the_class = "aprs";
+			$aprs = TRUE;				// show legend
+			}
+		else {
+			$the_time = $row['updated'];
+			$the_class = "td_data";
+			}
+		
+		$sidebar_line .= "<TD CLASS='$the_class'> " . format_sb_date($the_time) . "</TD>";				// 6/17/08
+//		$sidebar_line .= "<TD CLASS='td_data'> " . format_sb_date($row['updated']) . "</TD>";
 
 		print "\tvar do_map = true;\n";		// default
 
@@ -445,7 +504,7 @@ var color=0;
 		$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $status_vals[$temp] . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:&nbsp;&nbsp;&nbsp;&nbsp;" . $toedit . "<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:" . $totrack . $toedit . "<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
 		$tab_1 .= "</TABLE>";
 
 		switch ($mode) {
@@ -469,7 +528,7 @@ var color=0;
 				$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
 				$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
 				$tab_2 .= "<TR CLASS='odd'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
-				$tab_2 .= "<TR CLASS='even'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . "</TD></TR>";
+				$tab_2 .= "<TR CLASS='even'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . "(UTC)</TD></TR>";
 				$tab_2 .= "</TABLE>";
 ?>
 
@@ -499,6 +558,7 @@ var color=0;
 <?php
 
 		}				// end  ==========  while() for RESPONDER ==========
+	$aprs_legend = ($aprs)? "<TD CLASS='aprs' ALIGN='center'>APRS time</TD>": "<TD></TD>";
 ?>
 	if (!points) {		// any?
 		map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);
@@ -508,27 +568,31 @@ var color=0;
 		zoom = map.getBoundsZoomLevel(bounds)-1;
 		map.setCenter(center,zoom);
 		}
-	side_bar_html+= "<TR CLASS='" + colors[i%2] +"'><TD COLSPAN=6>&nbsp;</TD></TR>";
+	side_bar_html+= "<TR CLASS='" + colors[i%2] +"'><TD COLSPAN=5>&nbsp;</TD><?php print $aprs_legend;?></TR>";
 	side_bar_html+= "<TR CLASS='" + colors[(i+1)%2] +"'><TD COLSPAN=6 ALIGN='center'><B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'><B>&bull;</B></FONT></TD></TR>";
 <?php
+
 	if(!empty($addon)) {
 		print "\n\tside_bar_html +=\"" . $addon . "\"\n";
 		}
 ?>
 	side_bar_html +="</TABLE>\n";
 	document.getElementById("side_bar").innerHTML += side_bar_html;	// append the assembled side_bar_html contents to the side_bar div
+
+<?php
+	do_kml();
+?>
+
+
 </SCRIPT>
 <?php
 	}				// end function list_responders() ===========================================================
 	
-function map($mode) {				// RESPONDER ADD AND EDIT
-	global $row;
-			if (($mode=="a") || (empty($row['lat']))) 	{$lat = get_variable('def_lat'); $lng = get_variable('def_lng'); $gotpt=FALSE;}
-			else 										{$lat = $row['lat']; $lng = $row['lng']; $gotpt=TRUE;}
+function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 ?>
 
 <SCRIPT>
-//
+		var mode = "<?php print $mode; ?>";
 		function writeConsole(content) {
 			top.consoleRef=window.open('','myconsole',
 				'width=800,height=250' +',menubar=0' +',toolbar=0' +',status=0' +',scrollbars=0' +',resizable=1')
@@ -563,56 +627,59 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
-		map.addControl(new GOverviewMapControl());
+//		map.addControl(new GOverviewMapControl());
 		var tab1contents;				// info window contents - first/only tab
 										// default point - possible dummy
 		map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
 		map.enableScrollWheelZoom(); 	
 
 <?php
-		if ($gotpt) 	{		// got a location?
+		if ($icon)	{							// icon display?
 ?>		
-	 		var point = new GLatLng(<?php print $row['lat'] . ", " . $row['lng']; ?>);
-			var marker = new GMarker(point, {icon: myIcon, draggable:true});
-//			map.addOverlay(marker);
+	 		var point = new GLatLng(<?php print $lat . ", " . $lng; ?>);
+			var marker = new GMarker(point, {icon: myIcon, draggable:false});
 	 		map.addOverlay(new GMarker(point, myIcon));
-			GEvent.addListener(marker, "dragend", function() {
-//				alert (780);
-				var point = marker.getPoint();
-				map.panTo(point);
-				});		// end GEvent.addListener "dragend"
 <?php
-			}
-		if (!((isset ($mode)) && ($mode=="v"))) {	// disallow if view mode
+			}		// end if ($icon)
+			
+		if (!($mode=="v")) {						// disallow if view mode
 ?>
+	var the_zoom = <?php print get_variable('def_zoom');?>;
 
-		GEvent.addListener(map, "click", function(marker, point) {
-			if (marker) {
-				map.removeOverlay(marker);
-				document.forms[0].frm_lat.disabled=document.forms[0].frm_lat.disabled=false;
-				document.forms[0].frm_lat.value=document.forms[0].frm_lng.value="";
-				document.forms[0].frm_lat.disabled=document.forms[0].frm_lat.disabled=true;
+	map.enableScrollWheelZoom();
+	if ((mode=="a") || ((mode=="e") && (document.forms[0].frm_mobile.value==0))){	
+
+		the_marker = new GMarker(map.getCenter(), {draggable: true	});
+	
+		GEvent.addListener(map, "click", function(overlay, latlng) {
+//			alert(document.forms[0].frm_mobile.value==1);
+			if(document.forms[0].frm_mobile.value==1) {
+				alert("Map position not allowed for mobile units!");
+				return;
 				}
-			if (point) {
-				myZoom = map.getZoom();
+
+			if (latlng) {
 				map.clearOverlays();
-				do_lat (point.lat())							// display
-				do_lng (point.lng())
-//				map.setCenter(point, myZoom);		// panTo(center)
-				map.panTo(point);				// panTo(center)
-				if (document.forms[0].frm_zoom) {				// get zoom?
-					document.forms[0].frm_zoom.disabled = false;
-					document.forms[0].frm_zoom.value = myZoom;
-					document.forms[0].frm_zoom.disabled = true;					
-					}	
-				marker = new GMarker(point, {icon: myIcon, draggable:true});
+				marker = new GMarker(latlng, {draggable:true});
+				map.setCenter(marker.getPoint(), the_zoom);
+				do_lat(marker.getPoint().lat());			// set form values
+				do_lng(marker.getPoint().lng());
+	
+				GEvent.addListener(marker, "dragend", function() {
+					map.setCenter(marker.getPoint(), 13);
+					do_lat (marker.getPoint().lat());		// set form values
+					do_lng (marker.getPoint().lng());
+					
+					});
 				map.addOverlay(marker);
-				
-//				map.openInfoWindowHtml(point,tab1contents);
-				}
-			});				// end GEvent.addListener() "click"
+				}		// end if (latlng)
+			});		// end GEvent.addListener()
+	
+		}		//  end if ((mode=="a") ...
 <?php
 			}				// end if ($mode=="v")
+
+		do_kml();			// kml functions
 ?>			
 			
 	</SCRIPT>
@@ -620,12 +687,10 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 	}		// end function map()
 
 	function finished ($caption) {
-//		print "</HEAD><BODY onLoad = 'document.fin_form.submit();'>";
 		print "</HEAD><BODY>";
 		print "<FORM NAME='fin_form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
 		print "<INPUT TYPE='hidden' NAME='caption' VALUE='" . $caption . "'>";
 		print "<INPUT TYPE='hidden' NAME='func' VALUE='responder'>";
-//		print "<INPUT TYPE='submit'  VALUE='Continue'>";
 		print "</FORM></BODY></HTML>";	
 		}
 
@@ -641,7 +706,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			}				// end while();
 		$print .= "</SCRIPT>\n";
 		return $print;
-		}		// end function do calls($id = 0)
+		}		// end function do calls()
 
 	$_postfrm_remove = 	(array_key_exists ('frm_remove',$_POST ))? $_POST['frm_remove']: "";
 	$_getgoedit = 		(array_key_exists ('goedit',$_GET )) ? $_GET['goedit']: "";
@@ -649,42 +714,51 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 	$_getedit = 		(array_key_exists ('edit',$_GET))? $_GET['edit']:  "";
 	$_getadd = 			(array_key_exists ('add',$_GET))? $_GET['add']:  "";
 	$_getview = 		(array_key_exists ('view',$_GET ))? $_GET['view']: "";
+	$_dodisp = 			(array_key_exists ('disp',$_GET ))? $_GET['disp']: "";
 
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Responder	
 		$query = "DELETE FROM $GLOBALS[mysql_prefix]responder WHERE `id`=" . $_POST['frm_id'];
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$caption = "<B>Unit <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been deleted from database.</B><BR /><BR />";
+		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		}
 	else {
 		if ($_getgoedit == 'true') {
-			$frm_mobile = ((array_key_exists ('frm_mobile',$_POST )) && ($_POST['frm_mobile']=='on'))? 1 : 0 ;		
+			$station = (intval($frm_mobile)==0);			// 
 			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
 				`name`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
 				`description`= " . 	quote_smart(trim($_POST['frm_descr'])) . ",
 				`capab`= " . 		quote_smart(trim($_POST['frm_capab'])) . ",
 				`un_status_id`= " . quote_smart(trim($_POST['frm_un_status_id'])) . ",
-				`callsign`= " . 	quote_smart(trim($_POST['frm_callsign'])) . ",
-				`mobile`= " . 		$frm_mobile . ",
+				`callsign`= " . 	quote_smart(trim($_POST['frm_callsign']));
+
+			if ($station) {
+				$query .= ",
+				`lat`= " . 			quote_smart(trim($_POST['frm_lat'])) . ",
+				`lng`= " . 			quote_smart(trim($_POST['frm_lng']));			
+				}
+			$query .= ", 				
 				`contact_name`= " . quote_smart(trim($_POST['frm_contact_name'])) . ",
 				`contact_via`= " . 	quote_smart(trim($_POST['frm_contact_via'])) . ",
-				`lat`= " . 			quote_smart(trim($_POST['frm_lat'])) . ",
-				`lng`= " . 			quote_smart(trim($_POST['frm_lng'])) . ",
 				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
 				`user_id`= " . 		quote_smart(trim($my_session['user_id'])) . ",
 				`updated`= " . 		quote_smart(trim($now)) . " 
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";		// 	
-	
+				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
+
+//			dump ($query);	
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], "", $_POST['frm_id'], $_POST['frm_un_status_id']);}
-			
-			$caption = "<B>Unit <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been updated.</B><BR /><BR />";
+			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08 
+			$mobstr = ($frm_mobile)? "Mobile Unit": "Station ";
+			$caption = "<B>" . $mobstr . " '<i>" . stripslashes_deep($_POST['frm_name']) . "</i>' data has been updated.</B><BR /><BR />";
 			}
 		}				// end else {}
 		
 	if ($_getgoadd == 'true') {
-		$frm_mobile = ((array_key_exists ('frm_mobile',$_POST )) && ($_POST['frm_mobile']=='on'))? 1 : 0 ;		
+
+		$is_mobile = ($_POST['frm_mobile']==1);		// set boolean
+		$frm_lat = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_lat']));
+		$frm_lng = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_lng']));
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
 			`name`, `description`, `capab`, `un_status_id`, `callsign`, `mobile`, `contact_name`, `contact_via`, `lat`, `lng`, `type`, `user_id`, `updated` ) 
@@ -697,21 +771,28 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 				$frm_mobile . "," .
 				quote_smart(trim($_POST['frm_contact_name'])) . "," .
 				quote_smart(trim($_POST['frm_contact_via'])) . "," .
-				quote_smart(trim($_POST['frm_lat'])) . "," .
-				quote_smart(trim($_POST['frm_lng'])) . "," .
+				$frm_lat . "," .
+				$frm_lng . "," .
 				quote_smart(trim($_POST['frm_type'])) . "," .
 				quote_smart(trim($my_session['user_id'])) . "," .
 				quote_smart(trim($now)) . ");";
 
+//		dump($query);
 
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 //		do_log($GLOBALS['LOG_UNIT_STATUS'], mysql_insert_id(), $_POST['frm_un_status_id']);
-		do_log($GLOBALS['LOG_UNIT_STATUS'], "", mysql_insert_id(), $_POST['frm_un_status_id']);
+		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, mysql_insert_id(), $_POST['frm_un_status_id']);	// 6/2/08 
+
+		$mobstr = ($frm_mobile)? "Mobile Unit ": "Station ";
+		$caption = "<B>" .$mobstr . " <i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been updated.</B><BR /><BR />";
 		
-		$caption = "<B>Unit <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been added.</B><BR /><BR />";
 		finished ($caption);		// wrap it up
 		}							// end if ($_getgoadd == 'true')
-	
+
+// add ===========================================================================================================================	
+// add ===========================================================================================================================	
+// add ===========================================================================================================================	
+
 	if ($_getadd == 'true') {
 		print do_calls();		// call signs to JS array for validation
 ?>		
@@ -722,18 +803,21 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='addform'>
 		<FORM NAME= "res_add_Form" METHOD="POST" onSubmit="return validate_res(document.res_add_Form);" ACTION="units.php?func=responder&goadd=true">
-		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>	<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2></TEXTAREA></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS'];?>" NAME="frm_type"> EMS<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE'];?>" NAME="frm_type"> Fire<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS'];?>" NAME="frm_type"> Police<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU'];?>" NAME="frm_type"> Mutual Assist<BR />
-			<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR'];?>" NAME="frm_type"> Other<BR />
+		<TR CLASS = "even" VALIGN='top'><TD CLASS="td_label">Unit category:</TD>		
+			<TD ALIGN='center'>	<!-- // 6/11/08, 6/15/08 -->
+				Station &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print "" ;?> onClick = 'set_f(this.form)' CHECKED/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				Mobile unit &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print "";?>  onClick = 'set_m(this.form)'/>
+			</TD></TR>
+		<TR CLASS = "odd" VALIGN='middle'><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD><FONT SIZE='-2'>
+		   EMS  &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS'];?>"  NAME="frm_type">   &nbsp;
+		   Fire &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE'];?>" NAME="frm_type">   &nbsp;
+		   Police &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS'];?>" NAME="frm_type"> &nbsp;
+		   Mutual &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU'];?>" NAME="frm_type"> &nbsp;
+		   Other &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR'];?>" NAME="frm_type">  &nbsp;
+
 			</TD></TR>
 
-		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
+		<TR CLASS = "even"><TD CLASS="td_label">Status: <font color='red' size='-1'>*</font></TD>
 			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
 				<OPTION VALUE=0 SELECTED>Select one</OPTION>
 <?php
@@ -754,18 +838,23 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 	print "\n</OPTGROUP>\n";
 	unset($result_st);
 ?>
-		</SELECT></TD></TR>
-		<TR CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile"></TD></TR>
+		</SELECT>
+		&nbsp;&nbsp;&nbsp;&nbsp;Callsign: <INPUT SIZE="12" MAXLENGTH="12" TYPE="text" NAME="frm_callsign" VALUE=""/></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2></TEXTAREA></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Capability: </TD>	<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2></TEXTAREA></TD></TR>
 		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" /></TD></TR>
 		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="" disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="" disabled /></TD></TR>
-		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="" disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="" disabled /></TD></TR>
+		<TR><TD COLSPAN=2 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD></TR>
+		<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'>
+		<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onClick = "this.form.reset();set_f(this.form);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
 		<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
-
+		<INPUT TYPE='hidden' NAME = 'frm_mobile' VALUE=0 />
 		</FORM></TABLE> <!-- end inner left -->
 		</TD><TD ALIGN='center'>
 		<DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
+		<BR /><BR /><B>Click/drag to station location</B>
 		<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
 			EMS: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;
 			Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;
@@ -775,7 +864,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		</TD></TR></TABLE><!-- end outer -->
 
 <?php
-		map("a") ;				// call GMap js ADD mode
+		map("a",get_variable('def_lat') , get_variable('def_lng'), FALSE) ;				// call GMap js ADD mode, no icon
 ?>
 		<FORM NAME='can_Form' METHOD="get" ACTION = "units.php">
 		<INPUT TYPE='hidden' NAME = 'func' VALUE='responder'/>
@@ -786,40 +875,56 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 		exit();
 		}		// end if ($_GET['add'])
 
+// edit =================================================================================================================
+// edit =================================================================================================================
+// edit =================================================================================================================
+
 	if ($_getedit == 'true') {
 		$id = $_GET['id'];
 		$query	= "SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE id=$id";
 		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$row	= mysql_fetch_array($result);		
+		$row	= mysql_fetch_array($result);
+//		dump($row);
+		$lat = $row['lat'];
+		$lng = $row['lng'];
+		
 		$type_checks = array ("", "", "", "", "");
 		$type_checks[$row['type']] = " checked";
-		$checked = (!empty($row['mobile']))? " checked" : "" ;
+//		$checked = (!empty($row['mobile']))? " checked" : "" ;
 		print do_calls($id);								// generate JS calls array
-?>		
+		$m_or_f = ($row['mobile']==1)? "Mobile Unit": "Station";
+
+		$fixed = ($row['mobile']==0)? " CHECKED" :"" ;
+		$mobile = ($row['mobile']==1)? " CHECKED"  : "";
+	
+		$dis = empty($row['mobile'])? " DISABLED": "";
+?>
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD>
 		<BODY onLoad = "ck_frames()" onunload="GUnload()">
-		<FONT CLASS="header">Edit Unit Data</FONT>&nbsp;&nbsp;(#<?php print $id; ?> )<BR /><BR />
+		<FONT CLASS="header">&nbsp;Edit <?php print $m_or_f . " '" . $row['name'];?>' Data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)<BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='editform'>
 		<FORM METHOD="POST" NAME= "res_edit_Form" onSubmit="return validate_res(document.res_edit_Form);" ACTION="units.php?func=responder&goedit=true">
-		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>										<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2><?php print $row['capab'];?></TEXTAREA></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
+
+<!--	<TR VALIGN = 'baseline' CLASS = "even" VALIGN='bottom'><TD CLASS="td_label">Unit category:</TD>
+			<TD ALIGN='center'>
+				Station &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print $fixed ;?> DISABLED />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				Mobile unit &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print $mobile ;?>  DISABLED /></TD></TR>-->
+		<TR CLASS = "even" VALIGN='middle'><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD><FONT SIZE='-2'>
 <?php
 		$type_checks = array ("", "", "", "", "", "");	// all empty
 		$type_checks[$row['type']] = " checked";		// set the nth entry
 
 ?>		
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS']; ?>" NAME="frm_type" <?php print $type_checks[1];?>> EMS<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE']; ?>" NAME="frm_type" <?php print $type_checks[2];?>> Fire<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS']; ?>" NAME="frm_type" <?php print $type_checks[3];?>> Police<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU']; ?>" NAME="frm_type" <?php print $type_checks[4];?>> Mutual<BR />
-		<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[5];?>> Other<BR />
-		</TD></TR>
+		&nbsp;EMS   &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS']; ?>"  NAME="frm_type" <?php print $type_checks[1];?>>
+		&nbsp;Fire  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE']; ?>" NAME="frm_type" <?php print $type_checks[2];?>>
+		&nbsp;Police  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS']; ?>" NAME="frm_type" <?php print $type_checks[3];?>>
+		&nbsp;Mutual  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU']; ?>" NAME="frm_type" <?php print $type_checks[4];?>>
+		&nbsp;Other  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[5];?>>
 
-		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
+		</TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Status:</TD>
 			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_edit_Form.frm_log_it.value='1'">
 <?php
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";	
@@ -834,29 +939,64 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			print "<OPTGROUP LABEL='$the_grp'>\n";
 			}
 		$sel = ($row['un_status_id']== $row_st['id'])? " SELECTED" : "";
-		print "\t<OPTION VALUE=" . $row_st['id'] . $sel .">" . $row_st['status_val']. "<OPTION>\n";
+		print "\t<OPTION VALUE=" . $row_st['id'] . $sel .">" . $row_st['status_val']. "</OPTION>\n";
 		$i++;
 		}
+	print "\n\t</SELECT>\n";
 	unset($result_st);
-?>
-	</SELECT></TD></TR>
+																							// check any assign records this unit - added 5/23/08	
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`=$id AND `clear` IS NULL";		// 6/27/08
+//	dump($query);
+	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-		<TR VALIGN = 'baseline' CLASS = "odd" VALIGN='bottom'><TD CLASS="td_label">Callsign:</TD>		<TD><INPUT SIZE="24" MAXLENGTH="24" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'] ;?>" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
-	
+	$cbcount = mysql_affected_rows();				// count of incomplete assigns
+	$dis_rmv = ($cbcount==0)? "": " DISABLED";		// allow/disallow removal 
+	$cbtext = ($cbcount==0)? "": "&nbsp;&nbsp;<FONT size=-2>(NA - calls in progress: " .$cbcount . " )</FONT>";
+?>
+	&nbsp;&nbsp;&nbsp;&nbsp;Callsign: <INPUT SIZE="12" MAXLENGTH="12" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>" />
+	</TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" /></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>										<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2><?php print $row['capab'];?></TEXTAREA></TD></TR>
+
+
+		<TR CLASS = "odd"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
+<?php
+		$map_capt = ($row['mobile']==0)? "<BR /><BR /><CENTER><B>Click/drag to revise station location</B>" : "";
+//		$dis = empty($row['mobile'])? "": " DISABLED";
+		if (empty($row['mobile'])){				// fixed?
+?>
 		<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
+<?php
+			}
+?>			
 		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS="even"><TD CLASS="td_label">Remove Unit:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" ></TD></TR>
-		<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
+		<TR CLASS="even" VALIGN='baseline'><TD CLASS="td_label">Remove Unit:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
+		<?php print $cbtext; ?></TD></TR>
+		<TR CLASS = "odd">
+			<TD COLSPAN=2 ALIGN='center'><BR><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
 		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
 		<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
+		<INPUT TYPE='hidden' NAME = 'frm_mobile' VALUE=<?php print $row['mobile'] ;?> />
 		</FORM></TABLE>
-		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset'></DIV></TD></TR></TABLE>
+		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset'></DIV>
+		<?php print $map_capt; ?></TD></TR></TABLE>
 <?php
-		print do_calls($id);		// generate JS calls array
-		map("e") ;				// call GMap js EDIT mode
+		print do_calls($id);					// generate JS calls array
+		if (empty($row['mobile'])){				// fixed?
+			map("e", $lat, $lng, TRUE) ;		// do icon
+			}
+		else {									// mobile
+			if(empty($lat)) {															// possible	no data, use default
+				map("e", get_variable('def_lat'),  get_variable('def_lng'), FALSE) ;	// no icon
+				}
+			else {
+				map("e", $lat, $lng, TRUE) ;	// do icon
+				}
+			}		// end mobile
 ?>
 		<FORM NAME='can_Form' METHOD="get" ACTION = "units.php">
 		<INPUT TYPE='hidden' NAME = 'func' VALUE='responder'/>
@@ -866,18 +1006,19 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 <?php
 		exit();
 		}		// end if ($_GET['edit'])
+// edit =================================================================================================================
+// edit =================================================================================================================
+// edit =================================================================================================================
+	
 
 		if ($_getview == 'true') {
 			$id = $_GET['id'];
 			$query	= "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]responder WHERE id=$id";
-//			dump ($query);			
 			
 			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-//			dump (mysql_affected_rows());
 			$row	= stripslashes_deep(mysql_fetch_array($result));
-//			dump ($row);			
-//			unset($result);
-//			dump ($row);			
+			$lat = $row['lat'];
+			$lng = $row['lng'];
 
 			if (isset($row['un_status_id'])) {
 				$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id`=" . $row['un_status_id'];	// status value
@@ -889,46 +1030,87 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			$type_checks = array ("", "", "", "", "", "");
 			$type_checks[$row['type']] = " checked";
 			$checked = (!empty($row['mobile']))? " checked" : "" ;			
+
 			$coords =  $row['lat'] . "," . $row['lng'];		// for UTM
+			
+			$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
+				WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
+			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			if (mysql_affected_rows()>0) {						// got track stuff?
+				$rowtr = stripslashes_deep(mysql_fetch_array($result_tr));
+				$lat = $rowtr['latitude'];
+				$lng = $rowtr['longitude'];				
+				}
 ?>			
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD>
-		<BODY onLoad = "ck_frames()" onunload="GUnload()">
-			<FONT CLASS="header">Unit Data</FONT><BR /><BR />
+<?php
+		if ($_dodisp == 'true') {
+			print "<BODY onLoad = 'ck_frames(); do_disp();' onunload='GUnload()'>\n";
+			}
+		else {
+			print "<BODY onLoad = 'ck_frames()' onunload='GUnload()'>\n";
+			}
+		$fixed = ($row['mobile']==1)? "" :" CHECKED" ;
+		$mobile = ($row['mobile']==1)? " CHECKED"  : "";
+//		$call = (!$row['mobile']==1)? "": "Callsign: " . $row['callsign'];
+
+		$m_or_f = ($row['mobile']==1)? "Mobile Unit": "Station";
+
+?>
+			<FONT CLASS="header">&nbsp;<?php print $m_or_f." '" . $row['name'] ;?>' Data</FONT> (#<?php print$row['id'];?>) <BR /><BR />
 			<TABLE BORDER=0 ID='outer'><TR><TD>
 			<TABLE BORDER="0" ID='view_unit' STYLE='display: block'>
 			<FORM METHOD="POST" NAME= "res_view_Form" ACTION="units.php?func=responder">
-			<TR CLASS = "even"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'] ;?></TD></TR>
+<!--			<TR VALIGN = 'baseline' CLASS = "odd"><TD CLASS="td_label">Unit category:</TD><TD ALIGN='center'>
+			Station &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print $fixed ;?> DISABLED />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			Mobile unit &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print $mobile ;?>  DISABLED />
+			</TD></TR> -->
+			<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>		<TD><?php print $un_st_val;?>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Call: <?php print $row['callsign'];?>
+			</TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'] ;?></TD></TR>
+			<TR CLASS = "even"><TD CLASS="td_label">Type: </TD><TD><?php print $types[$row['type']];?></TD></TR> <!-- // 6/1/08 -->
 			<TR CLASS = "odd"><TD CLASS="td_label">Description: </TD>	<TD><?php print $row['description'];?></TD></TR>
 			<TR CLASS = "even"><TD CLASS="td_label">Capability: </TD>	<TD><?php print $row['capab'];?></TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Status:</TD>		<TD><?php print $un_st_val;?> </TD></TR>
-			<TR VALIGN = 'baseline' CLASS = "even"><TD CLASS="td_label">Callsign:</TD>		<TD><?php print $row['callsign'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label">Mobile:</SPAN>&nbsp;&nbsp;<INPUT disabled TYPE="checkbox" NAME="frm_mobile" <?php print $checked ; ?>></TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label">Contact name:</TD>	<TD><?php print $row['contact_name'] ;?></TD></TR>
 			<TR CLASS = "even"><TD CLASS="td_label">Contact via:</TD>	<TD><?php print $row['contact_via'] ;?></TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Type: </TD><TD>
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_EMS']; ?>" NAME="frm_type" <?php print $type_checks[1];?>> EMS<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_FIRE']; ?>" NAME="frm_type" <?php print $type_checks[2];?>> Fire<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_COPS']; ?>" NAME="frm_type" <?php print $type_checks[3];?>> Police<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_MUTU']; ?>" NAME="frm_type" <?php print $type_checks[4];?>> Mutual<BR />
-				<INPUT disabled TYPE="radio" VALUE="<?php print $GLOBALS['TYPE_OTHR']; ?>" NAME="frm_type" <?php print $type_checks[5];?>> Other<BR />
-				</TD></TR>
-			<TR CLASS = 'even'><TD CLASS="td_label">As of:</TD>							<TD><?php print format_date($row['updated']); ?></TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Map:<TD ALIGN='center'><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $row['lat'] ;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $row['lng'] ;?>" SIZE=12 disabled /></TD></TR>
+				
+			<TR CLASS = 'odd'><TD CLASS="td_label">As of:</TD>							<TD><?php print format_date($row['updated']); ?></TD></TR>
+			<TR CLASS = "even"><TD CLASS="td_label">Map:<TD ALIGN='center'><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print $lat;?>" SIZE=12 disabled />&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print $lng;?>" SIZE=12 disabled /></TD></TR>
 <?php
-		$utm = get_variable('UTM');
-		if ($utm==1) {
-			$coords =  $row['lat'] . "," . $row['lng'];
+		if (get_variable('UTM')==1) {
+			$coords =  $lat . "," . $lng;
 			print "<TR CLASS='even'><TD CLASS='td_label'>UTM:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
 			}
-		$toedit = (is_guest())? "" : "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
+
+		if (isset($rowtr)) {																	// got tracks?
+			print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>APRS</B></TD></TR>";
+			print "<TR CLASS='even'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
+			print "<TR CLASS='odd'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
+			print "<TR CLASS='even'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
+			print "<TR CLASS='odd'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
+			$lat = $rowtr['latitude'];
+			$lng = $rowtr['longitude'];
+			}
+
+		$toedit = (is_administrator() || is_super())? "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;": "" ;
 ?>			
 			<TR><TD>&nbsp;</TD></TR>
 <?php
-		if (!is_guest()) {
+		if (is_administrator() || is_super()) {
 ?>		
-			<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'>
+			<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'>
+			<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			
 			<INPUT TYPE="button" VALUE="to Edit" 	onClick= "to_edit_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<?php
+		if (!(empty($lat))) {						// 6/27/08 - dispatch able?
+?>		
 			<INPUT TYPE="button" VALUE="to Dispatch" 	onClick= "document.getElementById('incidents').style.display='block'; document.getElementById('view_unit').style.display='none';">
+			
+<?php
+			}
+?>			
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
 			</TD></TR>
 <?php
@@ -939,7 +1121,7 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			<TABLE BORDER=1 ID = 'incidents' STYLE = 'display:none' >
 			<TR CLASS='even'><TH COLSPAN=99> Click incident to assign to <?php print $row['name'] ;?></TH></TR>
 			
-<?php
+<?php																								// 6/1/08 - added
 		$query = "SELECT * FROM $GLOBALS[mysql_prefix]ticket ORDER BY `id`";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 							// major while ... starts here
@@ -974,7 +1156,17 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			</FORM>		
 			</BODY>					<!-- END RESPONDER VIEW -->
 <?php
-			map("v") ;				// call GMap js EDIT mode
+			if (!(empty($row['mobile']))){							// fixed?
+				map("v", $lat, $lng, TRUE) ;						// do icon
+				}
+			else {													// mobile
+				if(empty($lat)) {									// possible
+					map("v", get_variable('def_lat'),  get_variable('def_lng'), FALSE) ;	// default center, no icon
+					}
+				else {
+					map("v", $lat, $lng, TRUE) ;						// do icon
+					}
+				}		// end mobile
 ?>
 			</BODY>
 			</HTML>
@@ -1019,10 +1211,10 @@ function map($mode) {				// RESPONDER ADD AND EDIT
 			</BODY>				<!-- END RESPONDER LIST and ADD -->
 <?php
 		print do_calls();		// generate JS calls array
-//		$button = (is_guest())? "": "<TR><TD COLSPAN='99' ALIGN='center'><BR /><INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'></TD></TR>";
 
 		$buttons = "<TR><TD COLSPAN=99 ALIGN='center'><BR /><INPUT TYPE = 'button' onClick = 'document.tracks_Form.submit();' VALUE='Unit Tracks'>";
-		$buttons .= (is_guest())? "":"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>";
+		$buttons .= (is_administrator() || is_super())? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>":"";
+//		$buttons .= (intval(get_variable('aprs_poll'))>0)? "<BR><BR><INPUT TYPE='button' value= 'APRS'  onClick ='do_aprs_window();'>": "";
 		$buttons .= "</TD></TR>";
 
 		print list_responders($buttons, 0);

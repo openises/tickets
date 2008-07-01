@@ -1,8 +1,5 @@
 <?php
-// 5/23/08	fix to status_val field name
-// 6/4/08	Deletion logic revised to remove  timed-based inactive and add explicit deletions
-// 06/26/08	added $doTick to assign view/edit ticket functions by priv level			
-
+// 6/23/08	fix to status_val field name
 error_reporting(E_ALL);
 require_once('functions.inc.php'); 
 
@@ -19,6 +16,7 @@ extract($_POST);
 $evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 $func = (empty($_POST))? "list" : $_POST['func'];
 $delta = 48*60*60;									// 48 hours
+//$delta = 1*60*60;									// 48 hours
 
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -101,7 +99,6 @@ switch ($func) {					// ========================================================
 		if (theForm.frm_ticket_id.value == "")	{errmsg+= "\tSelect Incident\n";}
 		if (theForm.frm_unit_id.value == "")	{errmsg+= "\tSelect Unit\n";}
 		if (theForm.frm_status_id.value == "")	{errmsg+= "\tSelect Status\n";}
-		if (theForm.frm_comments.value == "")	{errmsg+= "\Comments required\n";}
 		if (assigns[theForm.frm_ticket_id.value + ":" +theForm.frm_unit_id.value]) {
 									errmsg+= "\tDuplicates existing assignment\n";}
 		if (errmsg!="") {
@@ -400,7 +397,7 @@ switch ($func) {					// ========================================================
 		$priorities = array("text_black","text_blue","text_red" );
 
 		print "<TABLE BORDER=0 ALIGN='center' WIDTH='100%'  cellspacing = 1 CELLPADDING = 2 ID='call_board' STYLE='display:block'>";
-		print "<TR CLASS='even'><TD COLSPAN=12 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD></TR>\n";
+		print "<TR CLASS='even'><TD COLSPAN=12 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (* click for details)</I></FONT></TD></TR>\n";
 
 		$status_vals_ar = array();
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
@@ -420,12 +417,11 @@ switch ($func) {					// ========================================================
 		$i = 1;	
 		if (mysql_affected_rows()>0) {
 			$doUnit = (is_guest())? "viewU" : "editU";
-			$doTick = (is_guest())? "viewT" : "editT";				// 06/26/08
 			$now = time() - (get_variable('delta_mins')*60);
 			$items = mysql_affected_rows();
-			$header = "<TR CLASS='even'><TD COLSPAN=5 ALIGN='center' CLASS='aprs'>Dispatch</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=2 ALIGN='center' CLASS='aprs'>Incident</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=3 ALIGN='center' CLASS='aprs'>Unit</TD></TR>\n";
+			$header = "<TR CLASS='even'><TD COLSPAN=5 ALIGN='center'>Dispatch</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=2 ALIGN='center'>Incident</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=2 ALIGN='center'>Unit</TD><TD></TD></TR>\n";
 			$header .= "<TR CLASS='odd'><TD>id</TD><TD ALIGN='center'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Descr</TD><TD ALIGN='center'>Cleared</TD><TD></TD>";
-			$header .= "<TD ALIGN='center'>Comment</TD><TD ALIGN='center'>Addr</TD><TD>&nbsp;&nbsp;</TD><TD ALIGN='center'>Unit</TD><TD ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD></TR>\n";
+			$header .= "<TD ALIGN='center'>Addr</TD><TD ALIGN='center'>Comment</TD><TD>&nbsp;&nbsp;</TD><TD ALIGN='center'>Unit</TD><TD ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD></TR>\n";
 			while($row = stripslashes_deep(mysql_fetch_array($result))) {
 				if  ((!(is_date($row['clear']))) || ((is_date($row['clear'])) && ((totime($row['clear']) > ($now-$delta))))) {
 					if ($i == 1) {print $header;}
@@ -438,7 +434,7 @@ switch ($func) {					// ========================================================
 					print "<TD> {$row['assign_id']} </TD>";
 					print "<FORM NAME='F$i' METHOD='get' ACTION=''>\n";
 
-					if (is_date($row['clear'])) {							// 6/26/08
+					if (!empty($row['clear'])) {
 						$strike = "<STRIKE>"; $strikend = "</STRIKE>";		// strikethrough on closed assigns
 						}
 					else {
@@ -455,8 +451,8 @@ switch ($func) {					// ========================================================
 					$ago = (is_date($row['clear']))? ezDate($row['clear']): "";
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ><NOBR>$ago</NOBR></TD><TD></TD>"; 
 					
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . $row['theticket'] . "'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD><TD></TD>\n";		// address
+					print "\t<TD onClick = editT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . $row['theticket'] . "'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call
+					print "\t<TD onClick = editT('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD><TD></TD>\n";		// address
 					if (!($row['responder_id']==0)) {
 						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . $row['theunit'] . "'  >" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</TD>\n";						// unit
 						$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
@@ -509,7 +505,7 @@ switch ($func) {					// ========================================================
 	</HEAD>
 	<BODY onLoad = "reSizeScr()">
 <?php	
-													// if (!empty($row['clear'])) ??????
+													// if (!empty($row['clear']))	
 		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(`dispatched`) AS `dispatched`, UNIX_TIMESTAMP(`responding`) AS `responding`, UNIX_TIMESTAMP(`in-quarters`) AS `in-quarters`, UNIX_TIMESTAMP(`clear`) AS `clear`,  `assigns`.`id` AS `assign_id` , `assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
 			`s`.`status_val` AS `thestatus`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 	ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
@@ -594,6 +590,8 @@ switch ($func) {					// ========================================================
 		the_Form.frm_id.value='<?php print $frm_id;?>';		
 		the_Form.submit();
 		}		// end function do_reset()
+	
+	
 
 	function validate_ed(theForm) {
 		var errmsg="";
@@ -603,7 +601,6 @@ switch ($func) {					// ========================================================
 		if (theForm.frm_unit_status_id) {
 			if (theForm.frm_unit_status_id.value == 0)	{errmsg+= "\tSelect Unit Status\n";}
 			}
-		if (theForm.frm_comments.value == "")			{errmsg+= "\Comments required\n";}
 
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
@@ -622,7 +619,7 @@ switch ($func) {					// ========================================================
 	function confirmation() {
 		var answer = confirm("This dispatch run completed?")
 		if (answer){
-			document.edit_Form.frm_complete.value=1; 
+			document.edit_Form.delete_db.value='true'; 
 			document.edit_Form.submit();
 			}
 		}		// end function confirmation()
@@ -794,7 +791,7 @@ switch ($func) {					// ========================================================
 			}
 		$the_date = (is_date($asgn_row['clear']))? $asgn_row['clear']	: $now ;
 		print "\n<TR CLASS='even'><TD CLASS='td_label'>Clear:</TD>";
-		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"document.edit_Form.frm_complete.value=1; enable('clear')\" ><SPAN ID = 'clear' STYLE = 'visibility:" . $the_vis ."'>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('clear')\" ><SPAN ID = 'clear' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("clear",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
 			
@@ -816,9 +813,9 @@ switch ($func) {					// ========================================================
 			<TR CLASS='odd'><TD>&nbsp;</TD></TR>
 			<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'>
 <?php
-			if(!(is_date($clear))){				// 6/4/08	// 6/26/08
+			if(empty($clear)){
 ?>		
-<!--			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;"/> -->
+				<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;"/>
 <?php
 				}
 			else {
@@ -832,7 +829,7 @@ switch ($func) {					// ========================================================
 		 </tbody></table>
 		<INPUT TYPE='hidden' NAME='frm_by_id' value= "<?php print $my_session['user_id'];?>"/>
 		<INPUT TYPE='hidden' NAME='func' value= 'edit_db'/>
-		<INPUT TYPE='hidden' NAME='frm_complete' value= ''/> 
+		<INPUT TYPE='hidden' NAME='delete_db' value= ''/>
 		<INPUT TYPE='hidden' NAME='frm_id' value= '<?php print $frm_id; ?>'/>
 <?php
 		if ($do_unit) {
@@ -851,7 +848,7 @@ switch ($func) {					// ========================================================
 <?php
 		break;			// end 	case 'edit':
 		
-	case 'edit_db':		// ======================================================== 
+	case 'edit_db':		// ===============================================================================================
 	
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		
@@ -867,7 +864,13 @@ switch ($func) {					// ========================================================
 			do_log($GLOBALS['LOG_UNIT_CHANGE'], $frm_unit_id);	
 			}
 
-		if (!(empty($frm_complete))) 	{			// is run completed?  6/4/08	// 6/26/08		
+		if (!empty($delete_db)) 	{			// run is completed?
+			$age_delta = 60*60*24;
+			$cutoff = mysql_format_date(time() - (get_variable('delta_mins')*60) - $age_delta);
+
+			$query  = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NOT NULL AND `clear` < " . quote_smart($cutoff);		// delete all older assigns 
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		
 			do_log($GLOBALS['LOG_UNIT_COMPLETE'], $frm_ticket_id, $frm_unit_id);		// set clear times
 			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `clear`= " . quote_smart($now) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
@@ -906,22 +909,10 @@ switch ($func) {					// ========================================================
 <?php	
 		break;				// end 	case 'edit_db'
 		
-	case 'delete_db':		// ==============================  6/4/08	
-	
-			$query  = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";	
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	case 'delete_db':		// ===============================================================================================
+		
 
-			$message = "Assign record deleted";
-?>
-		</HEAD>
-<BODY>
-	<BR><BR><CENTER><H3><?php print $message; ?></H3><BR><BR><BR>
-	<FORM NAME='ed_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
-	<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()"/>
-	<INPUT TYPE='hidden' NAME='func' VALUE='list'/>
-	</FORM></BODY></HTML>
-<?php	
-		break;			// end case 'delete_db':
+		break;			// end 	case 'delete_db':
 
 	default:				// =======================================================================================
 		print "	error: " . __LINE__;

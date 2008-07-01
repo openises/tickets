@@ -14,7 +14,7 @@
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <link rel="shortcut icon" href="favicon.ico">
 </HEAD>
-<FRAMESET ROWS="<?php print get_variable('framesize')+24;?>,*" BORDER="<?php print get_variable('frameborder')-1;?>">
+<FRAMESET ROWS="<?php print get_variable('framesize')+25;?>,*" BORDER="<?php print get_variable('frameborder')-1;?>">
 	<FRAME SRC="top.php" NAME="upper" SCROLLING="no">
 	<FRAME SRC="main.php" NAME="main">
 	<NOFRAMES>

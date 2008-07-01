@@ -1,4 +1,5 @@
-<?php 
+<?php
+// 5/29/08 - added do_kml() call
 	require_once('functions.inc.php'); 
 	do_login(basename(__FILE__));
 
@@ -212,7 +213,7 @@
 			} 
 
 		else {				// OK, do form
-			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]ticket WHERE ID='$id' LIMIT 1") or do_error('edit.php::show_ticket', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]ticket WHERE ID='$id' LIMIT 1") or do_error('', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			$row = stripslashes_deep(mysql_fetch_array($result));
 			if (good_date($row['problemend'])) {
 ?>
@@ -384,6 +385,9 @@
 		$tab_1 .= "<TR CLASS='odd'><TD>Phone:</TD><TD>" . format_phone ($row['phone']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Addr:</TD><TD>" . $street . "</TD></TR>";
 		$tab_1 .= "<TABLE>";
+
+		do_kml();			// kml functions
+
 ?>
 		map.openInfoWindowHtml(point, "<?php print $tab_1;?>");		
 

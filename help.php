@@ -78,7 +78,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		item's final disposition.<BR /><BR />
 		When the issue described in a ticket is updated, <B>action</B> and/or <B>patient</B> records may be written to reflect that 
 		change, these being largely unstructured values with a date recording the date/time the item was added.<BR /><BR />
-		On the main <b>Current Run Tickets</b> screen, colored bullets indentify mobile Units, with the bullet color identifying
+		On the main <b>Current Call Tickets</b> screen, colored bullets indentify mobile Units, with the bullet color identifying
 		The unit's last reported speed;  red denotes stopped, green denotes a moving unit, and white denotes a rapidly-traveling unit 
 		(50mph or over).  On that screen, for access to detailed information, click on the sidebar line or else the icon.  Directly
 		beneath the map are icons which, when clicked, show only those incidents of the selected urgency - similar to 'layer' displays

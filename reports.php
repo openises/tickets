@@ -1,4 +1,5 @@
 <?php
+// 6/6/08 revised to accommodate deleted incident and unit records, these identified by a # at its index value
 require_once('functions.inc.php'); 
 do_login(basename(__FILE__));
 
@@ -51,23 +52,17 @@ else {
 
 	var which='<?php print $group;?>';					// global - which report default
 	
-	function editA(id) {			// edit assigns
-		document.nav_form.frm_id.value=id;
-		document.nav_form.func.value='edit';
-		document.nav_form.action="<?php print basename(__FILE__); ?>";
-		document.nav_form.method='POST';
-		document.nav_form.submit();
-		}
-
 	function viewT(id) {			// view ticket
-		document.T_nav_form.id.value=id;
-		document.T_nav_form.action='main.php';
-		document.T_nav_form.submit();
+		return;
+//		document.T_nav_form.id.value=id;
+//		document.T_nav_form.action='main.php';
+//		document.T_nav_form.submit();
 		}
 
 	function viewU(id) {			// view unit
-		document.U_nav_form.id.value=id;
-		document.U_nav_form.submit();
+		return;
+//		document.U_nav_form.id.value=id;
+//		document.U_nav_form.submit();
 		}
 	function toUDRnav(date_in) {					// daily report
 		document.udr_form.frm_date.value=date_in;	// set date params
@@ -201,6 +196,8 @@ else {
 			$incidents[$temp_row['id']]=$temp_row['scope'];
 			$severity[$temp_row['id']]=$temp_row['severity'];
 			}
+			
+//		dump($severity);
 
 		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
@@ -224,15 +221,6 @@ else {
 			$users[$temp_row['id']]=$temp_row['user'];
 			}
 		$priorities = array("text_black","text_blue","text_red" );
-		$i = 1;	
-
-//		collect status values in use
-
-		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `info` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$i++;
-		print "\n<TABLE ALIGN='left' BORDER = 0 WIDTH='800px'>\n<TR CLASS='even' style='height: 24px'>\n";
-
 		$titles = array ();
 		$titles['dr'] = "Units - Daily Report - ";
 		$titles['cm'] = "Units - Current Month-to-date - ";
@@ -242,26 +230,36 @@ else {
 		$titles['cy'] = "Units - Current Year-to-date - ";
 		$titles['ly'] = "Units - Last Year - ";
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
-		
+		print "\n<TABLE ALIGN='left' BORDER = 0 WIDTH='800px'>\n<TR CLASS='even' style='height: 24px'>\n";
 		print "<TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
-//		print "<TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . " to " . $from_to[3] . "</TH></TR>";
+
+		$i = 1;	
+
+//		collect status values in use
+		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `info` ASC";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$i++;
 
 		$caption =  "<TR CLASS = 'odd'><TD></TD><TD ALIGN='center'><U>Unit</U></TD>";
 		$curr_unit = "";
 		$statuses = array();
 		while($row = stripslashes_deep(mysql_fetch_array($result))) {			// build header row
-			$statuses[$row['info']] = "";										// define the entry
-			$query = "SELECT `status_val` FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $row['info'] . " LIMIT 1" ;// status type
-			$result_val= mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			$row_val = stripslashes_deep(mysql_fetch_array($result_val));
-			$caption .= "\t<TD ALIGN='CENTER'>&nbsp;&nbsp;" . shorten($row_val['status_val'], 12) . "&nbsp;&nbsp;</TD>\n";
+			if (!empty($row['info'])){
+				$statuses[$row['info']] = "";										// define the entry
+				$query = "SELECT `status_val` FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $row['info'] . " LIMIT 1" ;// status type
+				$result_val= mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				$row_val = stripslashes_deep(mysql_fetch_array($result_val));
+				$caption .= "\t<TD ALIGN='CENTER'>&nbsp;&nbsp;" . shorten($row_val['status_val'], 12) . "&nbsp;&nbsp;</TD>\n";
+				}
 			}
 		$caption .=  "<TD ALIGN='center'><U>Incident</U></TD></TR>\n";
 		$blank = $statuses;
 
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
 		
-		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]log`" .  $where . " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `when` ASC,`unit` ASC, `incident` ASC, `status` ASC" ;
+//		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]log`" .  $where . " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `when` ASC,`unit` ASC, `incident` ASC, `status` ASC" ;
+		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]log`" .  $where . " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `unit` ASC, `incident` ASC, `status` ASC, `when` ASC" ;
+
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$i = 0;
 		if (mysql_affected_rows()>0) {				// main loop - top
@@ -290,15 +288,22 @@ else {
 						$do_date=$row['when_num'];
 						$curr_date_test = date ('z', $row['when_num']);
 						}
-					$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): $curr_unit ;
+					$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
+//					dump($theUnitName);
 
-					print "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>";		// flush
+					print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>#" . $curr_unit . " ??? </TD>";
+
+//					print "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>";		// flush
 					foreach($statuses as $key => $val) {
 						print "<TD ALIGN='center'> $val </TD>";
 						}
-					if ($row['incident']>0) {
-						$theIncidentName = (array_key_exists($row['incident'], $incidents))? $incidents[$row['incident']]: $row['incident'] ;
-						print "<TD CLASS='" . $priorities[$severity[$row['incident']]] . "' onClick = 'viewT(" . $row['incident'] . ")'><B>" . shorten($theIncidentName, 20) . "</B></TD>";			// incident 
+					if ($row['incident']>0) {				// 6/6/08
+						$theIncidentName = (array_key_exists($row['incident'], $incidents))? $incidents[$row['incident']]: "#" . $row['incident'] ;
+						$theSeverity = (array_key_exists($row['incident'], $severity))? $severity[$row['incident']]: 0;
+//						print "<TD CLASS='" . $priorities[$theSeverity] . "' onClick = 'viewT(" . $row['incident'] . ")'><B>" . shorten($theIncidentName, 20) . "</B></TD>";	// incident 
+						print (array_key_exists($row['incident'], $incidents))?	"<TD CLASS='" . $priorities[$theSeverity] . "' onClick = 'viewT(" . $row['incident'] . ")'><B>" . shorten($theIncidentName, 20) . "</B></TD>":	"<TD>#" . $row['incident']. " ??</TD>";
+
+
 						}
 					else {
 						print "<TD></TD>";
@@ -322,19 +327,26 @@ else {
 			else {
 				print "<TD></TD>";
 				}
-			$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): $curr_unit ;
+			$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16):  "#" . $curr_unit ;
 			print "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>";		// flush tail-end Charlie
 			
 			foreach($statuses as $key => $val) {
 				print "<TD ALIGN='center'> $val </TD>";
 				}
 			if ($theIncident_id>0) {
-				print "<TD CLASS='" . $priorities[$severity[$theIncident_id]] . "' onClick = 'viewT(" . $theIncident_id . ")'><B>" . shorten($incidents[$theIncident_id],20) . "</B></TD>";
+//				dump($theIncident_id);
+//				dump(array_key_exists($theIncident_id, $severity)); 	// false
+				$theIncidentName = (array_key_exists($theIncident_id, $incidents))? $incidents[$theIncident_id]: "#" . $theIncident_id ;
+				$theSeverity = (array_key_exists($theIncident_id, $severity))? $severity[$theIncident_id]: 0;
+				
+//				print "<TD CLASS='" . $priorities[$severity[$theIncident_id]] . "' onClick = 'viewT(" . $theIncident_id . ")'><B>" . shorten($incidents[$theIncident_id],20) . "</B></TD>";
+				print "<TD CLASS='" . $priorities[$theSeverity] . "' onClick = 'viewT(" . $theIncident_id . ")'><B>" . shorten($theIncidentName,20) . "</B></TD>";
 				}
 			else {
 				print "<TD></TD>";
 				}				
 			print "</TR>\n";
+			print "<TR><TD COLSPAN=99 ALIGN='center'><HR COLOR='red' size = 1 width='50%'></TD></TR>";
 			}		// end if (mysql_affected_rows()>0)
 		else {
 			print "\n<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'><br /><I>No Unit data for this period</I><BR /></TD></TR>\n";
@@ -355,7 +367,7 @@ else {
 //		dump ($from_to);
 	
 		$types = array();
-		$types[$GLOBALS['LOG_SIGN_IN']]				="Login";
+		$types[$GLOBALS['LOG_SIGN_IN']]				="Login";				// 6/26/08
 		$types[$GLOBALS['LOG_SIGN_OUT']]			="Logout";
 		$types[$GLOBALS['LOG_COMMENT']]				="Comment";		// misc comment
 		$types[$GLOBALS['LOG_INCIDENT_OPEN']]		="Incident open";
@@ -363,8 +375,10 @@ else {
 		$types[$GLOBALS['LOG_INCIDENT_CHANGE']]		="Incident change";
 		$types[$GLOBALS['LOG_ACTION_ADD']]			="Action added";
 		$types[$GLOBALS['LOG_PATIENT_ADD']]			="Patient added";
-		$types[$GLOBALS['LOG_UNIT_STATUS']]			="Unit status change";	
-		$types[$GLOBALS['LOG_UNIT_COMPLETE']]		="Unit run complete";	
+		$types[$GLOBALS['LOG_INCIDENT_DELETE']]		="Incident delete";			// 6/26/08
+		$types[$GLOBALS['LOG_UNIT_STATUS']]			="Unit status change";
+		$types[$GLOBALS['LOG_UNIT_COMPLETE']]		="Unit complete";
+		$types[$GLOBALS['LOG_UNIT_CHANGE']]			="Unit change";				// 6/26/08
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
 
 		$query = "
@@ -408,6 +422,7 @@ else {
 			while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// main loop - top
 				if ($row['code']<20) {
 					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
+					
 					if(!(date("z", $row['when']) == $curr_date))  {								// date change?
 						print "<TD>" . date ('D, M j', $row['when']) ."</TD>";
 						$curr_date = date("z", $row['when']);
@@ -424,6 +439,7 @@ else {
 					$i++;
 					}				
 				}		// end while($row = ...)
+			print "<TR><TD COLSPAN=99 ALIGN='center'><HR COLOR='red' size = 1 width='50%'></TD></TR>";
 			}		// end if (mysql_affected_rows() ...
 		else {
 			print "<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'><br /><I>No data for this period</I><BR /></TD></TR>\n";
@@ -538,6 +554,7 @@ $c_urlstr =  "city_graph.php?p1=" . urlencode($from_to[0]) . "&p2=" . urlencode(
 <img src="<?php print $c_urlstr;?>" border=0>
 </NOBR>
 </TD></TR>
+<TR><TD COLSPAN=99 ALIGN='center'><HR COLOR='red' size = 1 width='50%'></TD></TR>
 </TABLE>
 <?php
 			
@@ -642,7 +659,9 @@ $GLOBALS['LOG_INCIDENT_CLOSE']		=11;
 $GLOBALS['LOG_INCIDENT_CHANGE']		=12;
 $GLOBALS['LOG_ACTION_ADD']			=13;
 $GLOBALS['LOG_PATIENT_ADD']			=14;
+$GLOBALS['LOG_INCIDENT_DELETE']		=15;		// added 6/4/08 
 $GLOBALS['LOG_UNIT_STATUS']			=20;
 $GLOBALS['LOG_UNIT_COMPLETE']		=21;		// 	run complete
+$GLOBALS['LOG_UNIT_CHANGE']			=22;
 */
 ?>

@@ -71,4 +71,7 @@
 		list_tickets();
 		}
 ?>
+<FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
+<INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_CLOSED'];?>'>
+</FORM>
 </BODY></HTML>

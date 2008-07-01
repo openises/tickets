@@ -1,5 +1,5 @@
 <?php
-/* config.inc.php contains config specific functions */
+// 6/9/08 - revised to add 'super' priv's level
 $colors = array ('odd', 'even');
 
 /* run the OPTIMIZE sql query on all tables */
@@ -9,19 +9,25 @@ function optimize_db(){
 /* reset database to defaults */
 function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 	global $my_session;
-	/* if($purge) {
-		print '<LI> Purging closed tickets...NOT IMPLEMENTED';
-		//$result = mysql_query("DELETE FROM action") or do_error("functions.php.inc::reset_db($user,$ticket,$settings)", 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		//$result = mysql_query("DELETE FROM ticket WHERE status = '$GLOBALS[STATUS_CLOSED]'") or do_error("functions.php.inc::reset_db($user,$ticket,$settings)",'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		//SELECT action.id FROM action,ticket WHERE action.ticket_id=ticket.id and ticket.status=2;
-		} */
 	if($ticket)	{
-		print '<LI> Deleting tickets...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]ticket") or do_error("functions.php.inc::reset_db($user,$ticket,$settings)",'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	 	print '<LI> Deleting actions...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]action") or do_error("functions.php.inc::reset_db($user,$ticket,$settings)", 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]action") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	 	print '<LI> Deleting assigns...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]assigns") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	 	print '<LI> Deleting chat_messages...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]chat_messages") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	 	print '<LI> Deleting log...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]log") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	 	print '<LI> Deleting notifies...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]notify") or do_error("functions.php.inc::reset_db($user,$ticket,$settings)", 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]notify") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	 	print '<LI> Deleting patient...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]patient") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	 	print '<LI> Deleting responder...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]responder") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		print '<LI> Deleting tickets...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]ticket") or do_error("",'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	 	print '<LI> Deleting tracks...';
+		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]tracks") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		}
 
 	if($user)	{
@@ -58,6 +64,7 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		do_insert_settings('gmaps_api_key','0');		// frm_api_key
 		do_insert_settings('guest_add_ticket','0');
 		do_insert_settings('host','www.yourdomain.com');
+		do_insert_settings('kml_files','1');			//	 'new 6/7/08
 		do_insert_settings('link_capt','');
 		do_insert_settings('link_url','');
 		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
@@ -77,26 +84,78 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 	print '<LI> Database reset done<BR /><BR />';
 	}
 
-function show_stats(){/* show database/user stats */
+function browser($instr) {
+	if ( strpos($instr, 'Gecko') ) {
+		if ( strpos($instr, 'Netscape') )	{
+			$browser = 'Netscape (Gecko/Netscape)';
+			}
+		else if ( strpos($instr, 'Firefox') )	 {
+			$browser = 'Mozilla Firefox (Gecko/Firefox)';
+			}
+		else {
+			$browser = 'Mozilla (Gecko/Mozilla)';
+			}
+		}
+	else if ( strpos($instr, 'MSIE') ) {
+		if ( strpos($instr, 'Opera') )	{
+			$browser = 'Opera (MSIE/Opera/Compatible)';
+			}
+		else {
+			$browser = 'Internet Explorer (MSIE/Compatible)';
+			}
+		}
+	else {
+		if ( strpos($instr, 'Opera') )	{
+			$browser = 'Opera (MSIE/Opera/Compatible)';
+			}
+		else {
+			$browser = 'Others browsers';
+			}
+		}
+	return $browser;
+	}		// end function
+
+function logged_on() {
+	global $colors;
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` ORDER BY `user_name`";	// 6/15/08 
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$print = "<TABLE BORDER=1><TR CLASS='even'><TH COLSPAN=99>Logged on</TD></TR>\n";
+	$i=0;
+	while($row = stripslashes_deep(mysql_fetch_array($result))) {
+		$print .= "<TR CLASS='" . $colors[$i%2] . "'>";
+		$print .= "<TD><B>" . $row['user_name'] . "</B></TD>";
+		$print .= "<TD>" . browser($row['browser']) . "</TD>";
+		$print .= "<TD>" . format_date($row['last_in']) . "</TD>";	 	// already adjusted for server time offset
+		$print .= "<TR>\n";	
+		}
+	$print .= "</TABLE>\n";
+	return $print;
+	}			// end function logged_on()
+
+function show_stats(){			/* 6/9/08 show database/user stats */
 	global $my_session;
 	//get variables from db
 	$user_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_USER]"));
 	$admin_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_ADMINISTRATOR]"));
 	$guest_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_GUEST]"));
+	$super_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_SUPER]"));
 	$ticket_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket"));
 	$ticket_open_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE status='$GLOBALS[STATUS_OPEN]'"));
 	$meds_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_EMS]"));
 	$fire_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_FIRE]"));
 	$cops_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_COPS]"));
+	$mutus_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_MUTU]"));
 	$othrs_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_OTHR]"));
 
 	$pluralG = ($guest_in_db==1)? "": "s";
 	$pluralU = ($user_in_db==1)? "": "s";
 	$pluralA = ($admin_in_db==1)? "": "s";
+	$pluralS = ($super_in_db==1)? "": "s";
 	
 	$pluralM = ($meds_in_db==1)? "": "s";
 	$pluralF = ($fire_in_db==1)? "": "s";
 	$pluralC = ($cops_in_db==1)? "": "s";
+	$pluralU = ($mutus_in_db==1)? "": "s";
 	$pluralO = ($othrs_in_db==1)? "": "s";
 	
 	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>Summary</TD></TR><TR>";	
@@ -104,17 +163,11 @@ function show_stats(){/* show database/user stats */
 	print "<TR CLASS='even'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'><B>" . phpversion() . "</B></TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'><B>$GLOBALS[mysql_db]</B> on <B>$GLOBALS[mysql_host]</B> running mysql <B>".mysql_get_server_info()."</B></TD></TR>";
 	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db)." closed, $ticket_in_db total</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>$meds_in_db Med'l unit$pluralM, $fire_in_db Fire unit$pluralF, $cops_in_db Police unit$pluralC, $othrs_in_db Other$pluralO, ".($meds_in_db+$fire_in_db+ $cops_in_db +$othrs_in_db)." total</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>$meds_in_db Med'l unit$pluralM, $fire_in_db Fire unit$pluralF, $cops_in_db Police unit$pluralC, $mutus_in_db Mutual$pluralU, $othrs_in_db Other$pluralO, ".($meds_in_db+$fire_in_db+ $cops_in_db + $mutus_in_db +$othrs_in_db)." total</TD></TR>";
 	
-	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$user_in_db user$pluralU, $admin_in_db administrator$pluralA, $guest_in_db guest$pluralG, ".($user_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $user_in_db User$pluralU, $guest_in_db Guest$pluralG, ".($super_in_db+$user_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
-	print $my_session['user_name'];
-
-	switch($my_session['level']) {
-		case $GLOBALS['LEVEL_ADMINISTRATOR']: 	print ' (administrator)'; 	break;
-		case $GLOBALS['LEVEL_USER']: 			print ' (user)'; 			break;
-		case $GLOBALS['LEVEL_GUEST']: 			print ' (guest)'; 			break;
-		}
+	print $my_session['user_name'] . ": " .	get_level_text ($my_session['level']);
 
 	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
 	$my_session['ticket_per_page'] == 0 ? print "unlimited" : print $my_session['ticket_per_page'];
@@ -139,6 +192,7 @@ function list_users(){/* list users */
 		print "<TR CLASS='" . $colors[$i%2] . "'><TD><A HREF=\"config.php?func=user&id=" . $row['id'] . "\">#" . $row['id'] . "</A></TD><TD>" . $row['user'] . "</TD><TD>" . $row['callsign'] . "</TD><TD>" . $row['info'] . "</TD><TD>";
 
 		switch($row['level'])	{
+			case $GLOBALS['LEVEL_SUPER']:			print "super";			break;		// 6/9/08
 			case $GLOBALS['LEVEL_ADMINISTRATOR']:	print "administrator";	break;
 			case $GLOBALS['LEVEL_USER']:			print "user";			break;
 			case $GLOBALS['LEVEL_GUEST']:			print "guest";			break;
@@ -222,6 +276,7 @@ function get_setting_help($setting){/* get help for settings */
 		case 'def_st':					return 'Default two-letter state'; break;
 		case 'def_zoom':				return 'Map default zoom'; break;
 		case 'delta_mins':				return 'Minutes delta - for server/users time synchronization'; break;
+		case 'email_reply_to':			return 'The default reply-to address for emailing incident information'; break;
 		case 'frameborder': 			return 'Size of frameborder'; break;
 		case 'framesize': 				return 'Size of the top frame in pixels'; break;
 		case 'gmaps_api_key':			return 'Google maps API key - see HELP/README re how to obtain'; break;
@@ -230,6 +285,7 @@ function get_setting_help($setting){/* get help for settings */
 		case 'link_capt':				return 'Caption to be used for external link button'; break;
 		case 'link_url':				return 'URL of external page link'; break;
 		case 'login_banner': 			return 'Message to be shown at login screen'; break;
+		case 'kml_files':  				return 'Don\'t/Do display KML files - 0/1'; break;
 		case 'map_caption':				return 'Map caption - cosmetic'; break;
 		case 'map_height':				return 'Map height - pixels'; break;
 		case 'map_width':				return 'Map width - pixels'; break;
@@ -240,8 +296,10 @@ function get_setting_help($setting){/* get help for settings */
 		case 'ticket_per_page': 		return 'Number of tickets per page to show'; break;
 		case 'ticket_table_width': 		return 'Width of table when showing ticket'; break;
 		case 'UTM':						return 'Shows UTM values in addition to Lat/Long'; break;
-		case 'validate_email': 			return 'Simple email validation check for notifies'; break;
+		case 'validate_email': 			return 'Simple email validation check for notifies. Enter 1 for yes'; break;
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}
+//		case 'kml files':  				return 'Dont/Do display KML files - 0/1'; break;
+
 ?>

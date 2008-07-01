@@ -1,5 +1,5 @@
 <?php
-
+// 6/9/08  added  'Closed Calls' button
 //	{ -- dummy
 
 function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ===================================================
@@ -15,7 +15,7 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 
 ?>
 <TABLE BORDER=0>
-	<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header'>Current <?php print $closed; ?> Run Tickets</FONT></TD></TR>
+	<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header'>Current <?php print $closed; ?> Call Tickets</FONT></TD></TR>
 	<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'>&nbsp;</TD></TR>
 	<TR><TD VALIGN='TOP' width='400px' ><DIV ID='side_bar'></DIV></TD>			
 		<TD></TD>			
@@ -466,6 +466,10 @@ while (false !== ($filename = readdir($dh))) {
 	if (mysql_affected_rows()>0) {		
 		print "\n\tside_bar_html+= \"<TR CLASS='\" + colors[i%2] +\"'><TD COLSPAN=99 ALIGN='center'>&nbsp;&nbsp;<B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'>&bull;</FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'>&bull;</FONT>&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'>&bull;</FONT>&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'>&bull;</FONT>&nbsp;&nbsp;</TD></TR>\";\n";
 		}
+	if(empty($closed)) {									// 6/9/08  added button
+		print "\n\tvar button = \"<INPUT TYPE='button' VALUE='Closed Calls' onClick = 'document.to_closed.submit()'>\"\n";
+		print "\n\tside_bar_html+= \"<TR><TD COLSPAN=99 ALIGN='center'><BR>\" + button + \"</TD></TR>\";\n";
+		}
 ?>		
 	side_bar_html +="</TABLE>\n";
 	document.getElementById("side_bar").innerHTML = side_bar_html;	// put the assembled side_bar_html contents into the side_bar div
@@ -520,8 +524,9 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 //		print do_ticket($row, "800px", $search = FALSE) ;
 	
 		print "<TABLE BORDER='0' CLASS='print_TD' width='800px'>";		
-		print "<TR><TD CLASS='print_TD'><B>Incident</B>:</TD>	<TD CLASS='print_TD'>" . $row['scope'].	"</TD></TR>\n"; 
-		print "<TR><TD CLASS='print_TD'><B>ID</B>:</TD>			<TD CLASS='print_TD'>" . $row['id'].	"</TD></TR>\n";
+		print "<TR><TD CLASS='print_TD'><B>Incident</B>:</TD>	<TD CLASS='print_TD'>" . $row['scope'].	"&nbsp;&nbsp;<I>(#" . $row['id'] . ")</I></TD></TR>\n"; 
+		print "<TR><TD CLASS='print_TD'><B>Priority:</B></TD>	<TD CLASS='print_TD'>" . get_severity($row['severity']);
+		print  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Nature:</B>&nbsp;&nbsp;" . get_type($row['in_types_id']) . "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Written</B>:</TD>	<TD CLASS='print_TD'>" . format_date($row['date']) . "</TD></TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Updated</B>:</TD>	<TD CLASS='print_TD'>" . format_date($row['updated']) . "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Reported by</B>:</TD><TD CLASS='print_TD'>" . $row['contact'].	"</TD></TR>\n";
@@ -530,16 +535,15 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		print "<TR><TD CLASS='print_TD' COLSPAN='2'></TD></TR>\n";
 
 		print "<TR><TD CLASS='print_TD'><B>Address</B>:</TD>	<TD CLASS='print_TD'>" . $row['street']. "</TD></TR>\n";
-		print "<TR><TD CLASS='print_TD'><B>City</B>:</TD>		<TD CLASS='print_TD'>" . $row['city']. "&nbsp;&nbsp;&nbsp;&nbsp;<B>St</B>:" . $row['state'] . "</TD></TR>\n";
-		print "<TR><TD CLASS='print_TD'><B>Priority:</B></TD>	<TD CLASS='print_TD'>" . get_severity($row['severity']).	"</TD></TR>\n";
-		print "<TR><TD CLASS='print_TD'><B>Description:</B></TD><TD CLASS='print_TD'>" . nl2br ($row['description']). "</TD></TR>";
+		print "<TR><TD CLASS='print_TD'><B>City</B>:</TD>		<TD CLASS='print_TD'>" . $row['city']. "&nbsp;&nbsp;&nbsp;&nbsp;<B>St</B>: " . $row['state'] . "</TD></TR>\n";
+		print "<TR VALIGN='top'><TD CLASS='print_TD'>Description:</TD>	<TD>" .  nl2br($row['description']) . "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Comments:</B></TD>	<TD CLASS='print_TD'>" . nl2br ($row['comments']). "</TD></TR>";
 /*		print "<TR><TD CLASS='print_TD'><B>Owner:</B></TD>		<TD CLASS='print_TD'>" . get_owner($row['owner']). "</TD></TR>\n"; 
 		print "<TR><TD CLASS='print_TD'><B>Issued:</B></TD>		<TD CLASS='print_TD'>" . format_date($row['date']). "</TD></TR>\n"; */
 		print "<TR><TD CLASS='print_TD'><B>Run Start:</B></TD>	<TD CLASS='print_TD'>" . format_date($row['problemstart']). "</TD></TR>";
 		print "<TR><TD CLASS='print_TD'><B>Run End:</B></TD>	<TD CLASS='print_TD'>" . format_date($row['problemend']).	"</TD></TR>";
 /*		print "<TR><TD CLASS='print_TD'><B>Affected:</B></TD>	<TD CLASS='print_TD'>" . $row['affected']. "</TD></TR>\n"; */
-		print "<TR><TD CLASS='print_TD'><B>Map</B>:</TD>		<TD CLASS='print_TD'>&nbsp;&nbsp;<B>Lat</B>: " . $row['lat']. "&nbsp;&nbsp;&nbsp;&nbsp; <B>Lon</B>: " . $row['lng'] . "</TD></TR>\n"; 
+		print "<TR><TD CLASS='print_TD'><B>Map</B>:</TD>		<TD CLASS='print_TD'><B>Lat</B>: " . $row['lat']. "&nbsp;&nbsp;&nbsp;&nbsp; <B>Lon</B>: " . $row['lng'] . "</TD></TR>\n"; 
 
 		print show_actions($row['id'], "date", FALSE, FALSE);		// lists actions and patient data, print
 		
@@ -662,6 +666,9 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 	$tab_1 .= "<TR CLASS='odd'><TD>Phone:</TD><TD>" . format_phone ($row['phone']) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD>Addr:</TD><TD>" . $street . " </TD></TR>";
 	$tab_1 .= "<TABLE>";
+
+	do_kml();			// kml functions
+
 ?>
 	map.openInfoWindowHtml(point, "<?php print $tab_1;?>");		
 	
@@ -714,8 +721,8 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print = "<TABLE BORDER='0'ID='left' width='" . $theWidth . "'>\n";		// 
 	
 	$print .= "<TR CLASS='even'><TD CLASS='td_data' COLSPAN=2 ALIGN='center'><B>Incident: <I>" . $theRow['scope'] . "</B>&nbsp;&nbsp;(#" . $theRow['id'] . ")</I></TD></TR>\n"; 
-	$print .= "<TR CLASS='odd' ><TD>Priority:</TD>					<TD CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
-	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Type:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
+	$print .= "<TR CLASS='odd' ><TD>Priority:</TD> <TD CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
+	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nature:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
 	$print .= "</TD></TR>\n";
 	$print .= "<TR CLASS='even'><TD>Written:</TD>		<TD>" . format_date($theRow['date']) . "</TD></TD></TR>\n";
 	$print .= "<TR CLASS='odd' ><TD>Updated:</TD>		<TD>" . format_date($theRow['updated']) . "</TD></TR>\n";

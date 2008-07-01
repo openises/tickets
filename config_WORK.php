@@ -2,9 +2,7 @@
 // 5/28/08 - revised map center to allow icon drag			
 // 6/4/08 - added do_log($GLOBALS['LOG_INCIDENT_DELETE']				
 // 6/4/08 - added submit()			
-// 6/4/08 - corrected table names
-// 6/9/08 - added user type 'super'
-
+// 6/4/08 - corrected table names			
 	error_reporting(E_ALL);
 	require_once('functions.inc.php');
 	require_once('config.inc.php');
@@ -32,7 +30,6 @@
 	<SCRIPT>
 		function ck_frames() {
 			if(self.location.href==parent.location.href) {
-//				alert(self.location.href + " " +parent.location.href );
 				self.location.href = 'index.php';
 				}
 <?php
@@ -146,11 +143,10 @@
 	function validate_user(theForm) {			// Responder form contents validation
 		if (theForm.frm_remove) {
 			if (theForm.frm_remove.checked) {
-				if(confirm("Please confirm this removal.")) {return true;}
-				else 										{return false;}
+				if(confirm("Please confirm removing this Unit")) 	{return true;}
+				else 														{return false;}
 				}
 			}
-
 		var errmsg="";
 		var got_level = false;
 		for (i=0; i<theForm.frm_level.length; i++){
@@ -195,12 +191,12 @@
 
 	function do_lat (lat) {
 		document.forms[0].frm_lat.disabled=false;
-		document.forms[0].frm_lat.value=lat;
+		document.forms[0].frm_lat.value=lat.toFixed(6);
 		document.forms[0].frm_lat.disabled=true;
 		}
 	function do_lng (lng) {
 		document.forms[0].frm_lng.disabled=false;
-		document.forms[0].frm_lng.value=lng;
+		document.forms[0].frm_lng.value=lng.toFixed(6);
 		document.forms[0].frm_lng.disabled=true;
 		}
 	function do_zoom (zoom) {
@@ -405,33 +401,49 @@ case 'profile' :					//update profile
     break;
 
 case 'optimize' :
-	print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
-	optimize_db();
-	print '<FONT CLASS="header">Database optimization complete.</FONT><BR /><BR />';
+		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+		if (is_administrator())	{
+			optimize_db();
+			print '<FONT CLASS="header">Database optimized.</FONT><BR /><BR />';
+			}
+		else
+			print '<FONT CLASS="warn">Not authorized.</FONT><BR /><BR />';
     break;
 
 case 'reset' :
-?>
-			</HEAD>\n<BODY onLoad = 'ck_frames()'>
-			<FONT CLASS="header">Reset Database</FONT><BR />This operation requires confirmation by entering "yes" into this box.<BR />
-			<FONT CLASS="warn"><BR />Warning! This deletes all previous tickets, actions, patients, users, resets<BR /> settings and creates a default admin user.</FONT><BR /><BR />
-			<TABLE BORDER="0"><FORM METHOD="POST" ACTION="config.php?func=reset&auth=true">
-			<!-- <TR><TD CLASS="td_label">Purge closed tickets:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_purge"></TD></TR> -->
-			<TR><TD CLASS="td_label">Reset tickets/actions:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_ticket"></TD></TR>
-			<TR><TD CLASS="td_label">Reset users:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_user"></TD></TR>
-			<TR><TD CLASS="td_label">Reset settings:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_settings"></TD></TR>
-			<TR><TD CLASS="td_label">Really reset database? &nbsp;&nbsp;</TD><TD><INPUT MAXLENGTH="20" SIZE="40" TYPE="text" NAME="frm_confirm"></TD></TR>
-			<TR><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
-			</FORM></TABLE>
-			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
-			</BODY>
-			</HTML>
+		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+		if (is_administrator())		{
+			if ($_GET['auth'] != 'true') {
+				?><FONT CLASS="header">Reset Database</FONT><BR />This operation requires confirmation by entering "yes" into this box.<BR />
+				<FONT CLASS="warn"><BR />Warning! This deletes all previous tickets, actions, patients, users, resets<BR /> settings and creates a default admin user.</FONT><BR /><BR />
+				<TABLE BORDER="0"><FORM METHOD="POST" ACTION="config.php?func=reset&auth=true">
+				<!-- <TR><TD CLASS="td_label">Purge closed tickets:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_purge"></TD></TR> -->
+				<TR><TD CLASS="td_label">Reset tickets/actions:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_ticket"></TD></TR>
+				<TR><TD CLASS="td_label">Reset users:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_user"></TD></TR>
+				<TR><TD CLASS="td_label">Reset settings:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_settings"></TD></TR>
+				<TR><TD CLASS="td_label">Really reset database? &nbsp;&nbsp;</TD><TD><INPUT MAXLENGTH="20" SIZE="40" TYPE="text" NAME="frm_confirm"></TD></TR>
+				<TR><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
+				</FORM></TABLE>
+				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
+				</BODY>
+				</HTML>
 <?php
-			exit();
+				exit();
+				}
+			else {
+				if ($_POST['frm_confirm'] == 'yes')
+					reset_db($_POST['frm_user'],$_POST['frm_ticket'],$_POST['frm_settings'],$_POST['frm_purge']);
+				else
+					print '<FONT CLASS="warn">Not authorized or confirmation failed.</FONT><BR /><BR />'; 
+				}
+			}
+		else
+			print '<FONT CLASS="warn">Not authorized.</FONT><BR /><BR />';
     break;
 
 case 'settings' :
 		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+		if (is_administrator())	{
 			if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
 				foreach ($_POST as $VarName=>$VarValue) {
 					$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`=". quote_smart($VarValue)." WHERE `name`='".$VarName."'";
@@ -464,6 +476,9 @@ case 'settings' :
 <?php
 				exit();
 				}
+			}
+		else
+			print '<FONT CLASS="warn">Not authorized.</FONT><BR /><BR />';
     break;
 
 case 'user' :
@@ -496,10 +511,6 @@ case 'user' :
 			print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_GUEST'] . 		"' $checked> Guest<BR />\n";
 			$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_ADMINISTRATOR']))? 	"checked":"" ;
 			print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' $checked> Administrator<BR />\n";
-			if (is_super()) {				// 6/9/08
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SUPER']))? 	"checked":"" ;
-				print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' $checked> Super<BR />\n";
-				}
 ?>			
 			</TD></TR>
 			<TR CLASS="even"><TD CLASS="td_label">Remove User:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove"></TD></TR>
@@ -589,14 +600,6 @@ case 'user' :
 					<TR CLASS="even"><TD CLASS="td_label">Confirm Password: &nbsp;&nbsp;</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
 					<TR CLASS="odd"><TD CLASS="td_label">Callsign:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_callsign'];?>" NAME="frm_callsign"></TD></TR>
 					<TR CLASS="even"><TD CLASS="td_label">Level:</TD><TD>
-<?php
-				if (is_super()) {				// 6/9/08
-?>				
-						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level" <?php print is_super()?"checked":"";?>> Super<BR />
-<?php
-					}
-?>				
-						
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level" <?php print is_administrator()?"checked":"";?>> Administrator<BR />
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level" <?php print is_user()?"checked":"";?>> User<BR />
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" <?php print is_guest()?"checked":"";?>> Guest<BR />
@@ -621,13 +624,6 @@ case 'user' :
 				<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="47" MAXLENGTH="80" TYPE="text" NAME="frm_info"></TD></TR>
 				<TR CLASS="even"><TD CLASS="td_label">Email:</TD><TD><INPUT SIZE="47" MAXLENGTH="47" TYPE="text" NAME="frm_email"></TD></TR>
 				<TR CLASS="odd"><TD CLASS="td_label">Level:</TD><TD>
-<?php
-				if (is_super()) {			// 6/9/08
-?>				
-				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level"> Super<BR />
-<?php
-					}
-?>				
 				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level"> Administrator<BR />
 				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level"> User<BR />
 				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level"> Guest<BR />
@@ -877,33 +873,30 @@ case 'delete' :
 			exit();
 	
 		    break;
-		    
 	
 		default :   
-		}				// end switch ($subfunc)    
+		}				// end switch ($subfunc)
+    
     
 	default:
 	}						// end switch ($func)
 		
-	if (is_administrator() || is_super()) { 	// SHOW MENU BASED ON USER LEVEL
+	if (is_administrator()) { 	// SHOW MENU BASED ON USER LEVEL
+	
 ?>
 		</HEAD>
 		<BODY onLoad = 'ck_frames()'>
 		<LI><A HREF="config.php?func=user&add=true">Add user</A>
+<!--		<LI><A HREF="config.php?func=responder">Units</A> -->
+		<LI><A HREF="config.php?func=reset">Reset Database</A>
+		<LI><A HREF="config.php?func=optimize">Optimize Database</A>
 		<LI><A HREF="config.php?func=settings">Edit Settings</A>
 		<LI><A HREF="config.php?func=center">Set Default Map</A>
 		<LI><A HREF="config.php?func=api_key">Set GMaps API key</A>
-<?php
-		if(is_super()) {								// 6/9/08
-?>	
-			<LI><A HREF="config.php?func=reset">Reset Database</A>
-			<LI><A HREF="config.php?func=optimize">Optimize Database</A>
-			<LI><A HREF="config.php?func=delete">Delete Closed Tickets</A>
-			<LI><A HREF="config.php?func=dump">Dump DB to screen</A>
-			<LI><A HREF="#" onClick = "do_Post('session');">Session</A>
-	<?php
-			}								// end if(is_super()
-		}								// end if (is_administrator()|| is_super() )
+		<LI><A HREF="config.php?func=delete">Delete Closed Tickets</A>
+		<LI><A HREF="config.php?func=dump">Dump DB to screen</A>
+<?php 
+		}							// end if (is_administrator())
 	if (!is_guest()) {				// USER OR ADMIN
 ?>
 		<LI><A HREF="config.php?func=profile">Edit My Profile</A>
@@ -916,6 +909,7 @@ case 'delete' :
 	if ($istest) {
 ?>
 			<LI><A HREF="#" onClick = "do_Post('log');">Log</A>
+			<LI><A HREF="#" onClick = "do_Post('session');">Session</A>
 			<LI><A HREF="#" onClick = "do_Post('settings');">Settings</A>
 			<LI><A HREF="#" onClick = "do_Post('ticket');">Tickets</A>
 			<LI><A HREF="#" onClick = "do_Post('responder');">Units</A>
@@ -926,9 +920,6 @@ case 'delete' :
 <?php
 		list_users();
 		}
-
-	print logged_on();
-	print "<BR /><BR />";
 	show_stats();
 	
 ?>
@@ -987,41 +978,33 @@ function map_cen () {				// specific to map center
 	map.addControl(new GMapTypeControl());
 	map.addControl(new GOverviewMapControl());
 
-//	map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
-
-	var center = new GLatLng(<?php print get_variable('def_lat') ?>, <?php print get_variable('def_lng'); ?>);
-	map.setCenter(center, <?php print get_variable('def_zoom');?>);
-	marker = new GMarker(center, {draggable:false});
-	map.addOverlay(marker);
+	map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
+	var marker = new GMarker(map.center, {draggable: true});
 	map.enableScrollWheelZoom(); 	
 
-	GEvent.addListener(map, "click", function(overlay, latlng) {
-		if (latlng) {
-			map.clearOverlays();
-			marker = new GMarker(latlng, {draggable:true});
-			map.setCenter(marker.getPoint());
-			do_lat (latlng.lat().toFixed(6));
-			do_lng (latlng.lng().toFixed(6));
-			GEvent.addListener(marker, "dragend", function() {
-//				alert(997);
-				map.setCenter(marker.getPoint());
-				do_lat (marker.getPoint().lat().toFixed(6));
-				do_lng (marker.getPoint().lng().toFixed(6));
-				
-				});
-			map.addOverlay(marker);
-			}		// end if (latlng)
-		});		// end GEvent.addListener()
+	GEvent.addListener(map, "zoomend", function(oldzoom,newzoom) {
+		if (document.forms[0].frm_zoom) {						// get zoom?
+			document.forms[0].frm_zoom.disabled = false;
+			document.forms[0].frm_zoom.value = newzoom;
+			document.forms[0].frm_zoom.disabled = true;					
+			};
+		});
 		
-	var theCenter ;
-	
-	GEvent.addListener(map, "zoomstart", function() {
-		theCenter = marker.getPoint();							// save center
+	GEvent.addListener(map, "dragend", function(marker, point) {
+		alert(994);
+		map.panTo(point);
+		do_lat (point.lat());							// display
+		do_lng (point.lng());
 		});
 
-	GEvent.addListener(map, "zoomend", function(oldzoom,newzoom) {
-		do_zoom (newzoom);										// set form values
-		map.setCenter(theCenter);								// to original center
+	GEvent.addListener(map, "click", function(marker, point) {
+		if (point) {
+			map.clearOverlays();
+			map.addOverlay(new GMarker(point));				// display
+			map.panTo(point);
+			do_lat (point.lat());				
+			do_lng (point.lng());
+			}
 		});
 
 	</SCRIPT>
@@ -1029,3 +1012,5 @@ function map_cen () {				// specific to map center
 	}		// end function map_cen()
 ?>
 </HTML>
+
+function(marker, point)

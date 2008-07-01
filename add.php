@@ -1,5 +1,6 @@
 <?php
-//	http://www.google.com/search?q=Cheryl+McNaught+Annapolis+MD
+// 5/29/08 - added do_kml() call
+
 error_reporting(E_ALL);
 require_once('functions.inc.php');
 do_login(basename(__FILE__));
@@ -9,8 +10,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 $post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
 $post_frm_owner = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_owner'])))) ) ? "" : $_POST['frm_owner'] ;
 $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
-//	dump();
-//	if ($_GET['add'] == 'true')	{
+
 	if ($get_add == 'true')	{
 
 		$_POST['frm_description'] 	= strip_html($_POST['frm_description']);		//replace HTML tags with customs
@@ -200,7 +200,6 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		map.setCenter(new GLatLng(document.add.frm_lat.value, document.add.frm_lng.value), 13);			// larger # => tighter zoom
 		map.addControl(new GOverviewMapControl());
 		map.enableScrollWheelZoom(); 	
-	
 		var myIcon = new GIcon();
 		myIcon.image = "./markers/blank.png";
 		myIcon.shadow = "./markers/sm_shadow.png";
@@ -284,7 +283,10 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 				if (grid) {map.addOverlay(new LatLonGraticule());}
 				}
 			});
- 			document.add.frm_lat.disabled=document.add.frm_lng.disabled=true;			
+ 			document.add.frm_lat.disabled=document.add.frm_lng.disabled=true;
+<?php
+		do_kml();
+?>		
 			}			// end if (GBrowserIsCompatible())
 		}			// end function load()
 

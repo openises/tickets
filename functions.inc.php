@@ -1,4 +1,13 @@
 <?php
+// 5/23/08 - added function do_kml() - generates JS for kml files - 
+// 5/31/08 - added function do_log() default values
+// 6/4/08 - added $GLOBALS['LOG_INCIDENT_DELETE']	
+// 6/9/08 - added $GLOBALS['LEVEL_SUPER']
+// 6/16/08 - added reference $GLOBALS['LEVEL_SUPER']
+// 6/26/08 - added DELETE abandoned SESSION records
+// 6/26/08 - added log entries to  show_log()
+// 6/28/08 - added $my_session refresh at login
+
 //	{						-- dummy
 //	SELECT ticket.*, notify.id AS nid FROM ticket LEFT JOIN notify ON ticket.id=notify.ticket_id		These work
 // 	SELECT * FROM ASSIGNS LEFT JOIN ticket ON ASSIGNS.ticket_id = assigns.id LEFT JOIN responder ON responder.id = assigns.responder_id
@@ -6,6 +15,11 @@ require_once('istest.inc.php');
 require_once('mysql.inc.php');
 require_once("phpcoord.php");				// UTM converter	
 require_once("functions_major.inc.php");	// added 12/19/07
+define ('NOT_STR', '*not*');
+define ('NA_STR', '*na*');
+define ('ADM_STR', 'Admin');
+define ('SUPR_STR', 'Super');				// added 6/16/08
+
 //$GLOBALS['mysql_prefix'] 			= $mysql_prefix;
 /* constants - do NOT change */
 $GLOBALS['STATUS_CLOSED'] 			= 1;
@@ -29,11 +43,12 @@ $GLOBALS['ACTION_COMMENT']			= 10;
 $GLOBALS['SEVERITY_NORMAL'] 		= 0;
 $GLOBALS['SEVERITY_MEDIUM'] 		= 1;
 $GLOBALS['SEVERITY_HIGH'] 			= 2;
+$GLOBALS['LEVEL_SUPER'] 			= 0;		// 6/9/08
 $GLOBALS['LEVEL_ADMINISTRATOR'] 	= 1;
 $GLOBALS['LEVEL_USER'] 				= 2;
 $GLOBALS['LEVEL_GUEST'] 			= 3;
 
-$GLOBALS['TYPE_EMS']				= 1;		 // added by AS 12/1/07
+$GLOBALS['TYPE_EMS']				= 1;		 // added 12/1/07
 $GLOBALS['TYPE_FIRE'] 				= 2;
 $GLOBALS['TYPE_COPS'] 				= 3;
 $GLOBALS['TYPE_MUTU'] 				= 4; 		// Mutual Aid added 12/21/07
@@ -47,6 +62,7 @@ $GLOBALS['LOG_INCIDENT_CLOSE']		=11;
 $GLOBALS['LOG_INCIDENT_CHANGE']		=12;
 $GLOBALS['LOG_ACTION_ADD']			=13;
 $GLOBALS['LOG_PATIENT_ADD']			=14;
+$GLOBALS['LOG_INCIDENT_DELETE']		=15;		// added 6/4/08 
 $GLOBALS['LOG_UNIT_STATUS']			=20;
 $GLOBALS['LOG_UNIT_COMPLETE']		=21;		// 	run complete
 $GLOBALS['LOG_UNIT_CHANGE']			=22;
@@ -83,7 +99,7 @@ if ($failed) {
 
 $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 $sess_key = get_sess_key();
-$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $my_session = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result)): "";
 
@@ -201,8 +217,10 @@ function show_log ($theid, $show_cfs=FALSE) {
 	$types[$GLOBALS['LOG_INCIDENT_CHANGE']]		="Incident change";
 	$types[$GLOBALS['LOG_ACTION_ADD']]			="Action added";
 	$types[$GLOBALS['LOG_PATIENT_ADD']]			="Patient added";
+	$types[$GLOBALS['LOG_INCIDENT_DELETE']]		="Incident delete";			// 6/26/08
 	$types[$GLOBALS['LOG_UNIT_STATUS']]			="Unit status change";
 	$types[$GLOBALS['LOG_UNIT_COMPLETE']]		="Unit complete";
+	$types[$GLOBALS['LOG_UNIT_CHANGE']]			="Unit change";				// 6/26/08
 	
 	$query = "
 		SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log`
@@ -426,10 +444,10 @@ function get_variable($which){								/* get variable from db settings table, re
 function do_logout(){						/* logout - destroy session data */
 	global $my_session;
 	if (!empty($my_session)) {				// logged in?
-		do_log($GLOBALS['LOG_SIGN_OUT']);				// log the logout	
+		do_log($GLOBALS['LOG_SIGN_OUT'],0,0,$my_session['user_id']);				// log the logout	
 		}
 	$sess_key = get_sess_key();
-$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
+	$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 
 	$query = "DELETE FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' OR `last_in` < '" .(time()-$the_time_limit) . "'";
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -446,9 +464,9 @@ function do_error($err_function,$err,$custom_err='',$file='',$line=''){/* raise 
 
 function add_header($ticket_id)		{/* add header with links */
 	print "<BR /><NOBR><FONT SIZE='2'>This Call: ";	
-	if (!is_guest()){
+	if (is_administrator() || is_super()){
 		print "<A HREF='edit.php?id=$ticket_id'>Edit </A> | ";
-		print "<A HREF='edit.php?id=$ticket_id&delete=1'>Delete </A> | ";
+//		print "<A HREF='edit.php?id=$ticket_id&delete=1'>Delete </A> | ";
 		if (!is_closed($ticket_id)) {
 			print "<A HREF='action.php?ticket_id=$ticket_id'>Add Action</A> | ";
 			print "<A HREF='patient.php?ticket_id=$ticket_id'>Add Patient</A> | ";
@@ -465,14 +483,17 @@ function is_closed($id){/* is ticket closed? */
 	return check_for_rows("SELECT id,status FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id' AND status='$GLOBALS[STATUS_CLOSED]'");
 	}
 
-function is_administrator(){/* is user admin? */
+function is_super(){				// added 6/9/08
 	global $my_session;
-	if ($my_session['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) return 1;
+	if ($my_session['level'] == $GLOBALS['LEVEL_SUPER']) return 1;
+	}
+function is_administrator(){/* is user admin or super? */
+	global $my_session;
+	if (($my_session['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($my_session['level'] == $GLOBALS['LEVEL_SUPER'])) return 1;
 	}
 
 function is_guest(){/* is user guest? */
 	global $my_session;
-//	if ($my_session['level'] == $GLOBALS['LEVEL_GUEST']) return 1;
 	return ($my_session['level'] == $GLOBALS['LEVEL_GUEST']);
 	}
 
@@ -609,6 +630,7 @@ function nl2brr($text) {
 
 function get_level_text ($level) {
 	switch ($level) {
+		case $GLOBALS['LEVEL_SUPER'] 			: return "Super"; break;
 		case $GLOBALS['LEVEL_ADMINISTRATOR'] 	: return "Admin"; break;
 		case $GLOBALS['LEVEL_USER'] 			: return "User"; break;
 		case $GLOBALS['LEVEL_GUEST'] 			: return "Guest"; break;;
@@ -690,14 +712,24 @@ function do_aprs() {			//	populates the APRS tracks table
 		}
 
 	$when = get_variable('_aprs_time');
+//	dump ($when);
+//	dump (time());
 	if(time() < $when) {
 		return;
 	} else {
+	
+		$pkt_ids = array();																// 6/17/08
+		$query = "SELECT `packet_id` FROM `$GLOBALS[mysql_prefix]tracks`";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		while ($row = mysql_fetch_array($result)) {
+			$pkt_ids[trim($row['packet_id'])] = TRUE;
+			}
+
 		$next = time() + $delay*60;
 		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$next' WHERE `name`='_aprs_time'";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-		$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `packet_date`< (NOW() - INTERVAL 30 DAY)"; // remove ALL expired track records 
+		$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `packet_date`< (NOW() - INTERVAL 7 DAY)"; // remove ALL expired track records 
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		
 		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1";  // work each call sign
@@ -713,47 +745,50 @@ function do_aprs() {			//	populates the APRS tracks table
 					}
 			$raw = str_replace("\r",'',$raw);								// Strip Carriage Returns
 			$data = explode ("\n",  $raw , 50 );							// Break each line
+//			dump($data);
 			if (count($data) > 1) {
 				$data[1] = str_replace("\",\"", '|', $data[1]); 			// Convert to pipe delimited
 				$data[1] = str_replace("\"", '', $data[1]);	  				// Strip remaining quotes
 				$fields = explode ("|",  $data[1]);				 			// Break out the fields
 				$fields = mysql_real_escape_string_deep($fields);
 				if ((count($fields) == 14) && (date_OK ($fields[13])))  {	// APRS data sanity check
-					$packet_id = $fields[1] . $fields[13]; 					// source, date - unique
-
-					$query  = "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '$fields[1]' AND  `packet_date`< (NOW() - INTERVAL 24 HOUR)"; // remove expired track records this source
-					$temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					$error = FALSE;
-
-					$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]tracks` (`packet_id`,
-															`source`,`latitude`,`longitude`,`course`,
-															`speed`,`altitude`,`symbol_table`,`symbol_code`,
-															`status`,`closest_city`,`mapserver_url_street`,
-															`mapserver_url_regional`,`packet_date`,`updated`)
-										VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-															NOW() + INTERVAL 1 MINUTE)",
-											quote_smart($packet_id),
-											quote_smart($fields[1]),
-											quote_smart($fields[2]),
-											quote_smart($fields[3]),
-											quote_smart($fields[4]),
-											quote_smart($fields[5]),
-											quote_smart($fields[6]),
-											quote_smart($fields[7]),
-											quote_smart($fields[8]),
-											quote_smart($fields[9]),
-											quote_smart($fields[10]),
-											quote_smart($fields[11]),
-											quote_smart($fields[12]),
-											quote_smart($fields[13]));
-
-					$result_tr = mysql_query($query) or $error = TRUE ;
-					if(!$error) {											// update as_of date/time
-						$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-						$query = sprintf("UPDATE `$GLOBALS[mysql_prefix]responder` SET `updated` = '$now' WHERE `responder`.`callsign`= %s LIMIT 1",
-							quote_smart($fields[1]));
-						$result_tr = mysql_query($query);	
-						}
+					$packet_id = trim($fields[1]) . trim($fields[13]); 					// source, date - unique
+					if(!(isset($pkt_ids[$packet_id]))) {				// 6/17/08 - avoid duplicate reports						
+						$query  = "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '$fields[1]' AND  `packet_date`< (NOW() - INTERVAL 7 DAY)"; // remove expired track records this source
+						$temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						$error = FALSE;
+	
+						$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]tracks` (`packet_id`,
+																`source`,`latitude`,`longitude`,`course`,
+																`speed`,`altitude`,`symbol_table`,`symbol_code`,
+																`status`,`closest_city`,`mapserver_url_street`,
+																`mapserver_url_regional`,`packet_date`,`updated`)
+											VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+																NOW() + INTERVAL 1 MINUTE)",
+												quote_smart($packet_id),
+												quote_smart($fields[1]),
+												quote_smart($fields[2]),
+												quote_smart($fields[3]),
+												quote_smart($fields[4]),
+												quote_smart($fields[5]),
+												quote_smart($fields[6]),
+												quote_smart($fields[7]),
+												quote_smart($fields[8]),
+												quote_smart($fields[9]),
+												quote_smart($fields[10]),
+												quote_smart($fields[11]),
+												quote_smart($fields[12]),
+												quote_smart($fields[13]));
+	
+						$result_tr = mysql_query($query) or $error = TRUE ;
+						if(!$error) {											// update as_of date/time
+							$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+							$query = sprintf("UPDATE `$GLOBALS[mysql_prefix]responder` SET `updated` = '$now' WHERE `responder`.`callsign`= %s LIMIT 1",
+								quote_smart($fields[1]));
+							$result_tr = mysql_query($query);	
+							}
+							
+						}			// end if(!(isset(...)
 					
 					}				// end if (count()== 15)		
 				}		// end for ($i...)		
@@ -765,7 +800,7 @@ function do_aprs() {			//	populates the APRS tracks table
 
 
 
-function do_log($code, $ticket_id="", $responder_id="", $info="") {		// generic log table writer
+function do_log($code, $ticket_id=0, $responder_id=0, $info="") {		// generic log table writer - 5/31/08
 	global $my_session;
 //	dump ($my_session);
 	$who = (!empty($my_session))? $my_session['user_id']: 0;
@@ -799,20 +834,17 @@ function do_log($code, $ticket_id="", $responder_id="", $info="") {		// generic 
 // =====================================================================================
 function do_login($requested_page, $outinfo = FALSE) {			/* do login/session code - returns array*/
 	global $my_session;
-	function get_new_key() {						// returns newly-developed session key
-		return sha1(ip_address_to_number($_SERVER['REMOTE_ADDR']));
-		}
+//	function get_new_key() {						// returns newly-developed session key
+//		return sha1(ip_address_to_number($_SERVER['REMOTE_ADDR']));
+//		}
 
-$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
+	$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 	$sess_key = get_sess_key();
 	
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
 	if(mysql_affected_rows()==1) {												// logged in OK - normal path, update time last_in
-//		$queryU = "UPDATE `$GLOBALS[mysql_prefix]session` SET `last_in` = '" . time() . "' WHERE `sess_id`='{$sess_key}'";
-//		$resultU = mysql_query($queryU) or do_error($query,$query, mysql_error(), __FILE__, __LINE__);
-//		return stripslashes_deep(mysql_fetch_array($result));					// array to calling page
 		return upd_lastin();													// session array
 		}
 															// not logged in; now either get form data or db check form entries 		
@@ -824,12 +856,15 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
 				$now = time() - (get_variable('delta_mins')*60);
+				$key = get_sess_key();				// 6/28/08
 				
 	//  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
+				$query = "DELETE FROM `$GLOBALS[mysql_prefix]session` WHERE `user_id` = " . $row['id'];						// 6/26/08
+				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 	
 				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]session` ( `sess_id`, `user_name`, `user_id`, `level`,  `ticket_per_page`, `sortorder`, `scr_width`, `scr_height`,  `browser`,  `last_in`)
 								VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-									quote_smart(get_new_key()),
+									quote_smart($key),
 									quote_smart($_POST['frm_user']),
 									quote_smart($row['id']),
 									quote_smart($row['level']),
@@ -840,13 +875,28 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 									quote_smart($_SERVER['HTTP_USER_AGENT']),
 									quote_smart($now));
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+				$the_id = mysql_insert_id();																	// 6/28/08
 				
-				do_log($GLOBALS['LOG_SIGN_IN']);	// log it													
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `id` = $the_id LIMIT 1";			// re-establish $my_session
+				$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				$my_session = stripslashes_deep(mysql_fetch_array($result));
+				
+				do_log($GLOBALS['LOG_SIGN_IN'],0,0,$row['id']);	// log it													
+
+				$to = "";
+				$subject = "";
+				$message = "From: " . gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\nBrowser:" . $_SERVER['HTTP_USER_AGENT'];
+				$message .= "\nBy: " . $_POST['frm_user'];
+				$message .= "\nScreen: " . $_POST['scr_width'] . " x " .$_POST['scr_height'];
+				$message .= "\nReferrer: " . $_POST['frm_referer'];
+
+//				mail  ($to, $subject, $message);
 								
 				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 				header('Cache-Control: no-store, no-cache, must-revalidate');
 				header('Cache-Control: post-check=0, pre-check=0', FALSE);
 				header('Pragma: no-cache');
+				
 
 				$host  = $_SERVER['HTTP_HOST'];
 				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
@@ -925,8 +975,8 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 				self.location.href = 'index.php';
 				};
 			try {		// should always be true
-				parent.frames["upper"].document.getElementById("whom").innerHTML  = "not";
-				parent.frames["upper"].document.getElementById("level").innerHTML  = "na";
+				parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php echo NOT_STR;?>" ;
+				parent.frames["upper"].document.getElementById("level").innerHTML  = "<?php echo NA_STR;?>" ;
 				parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
 				}
 			catch(e) {
@@ -953,13 +1003,18 @@ $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";;
 
 ?>
-		<TR CLASS='even'><TD ROWSPAN=6 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png'><BR /><BR />
+		<TR CLASS='even'><TD ROWSPAN=5 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png'><BR /><BR />
 		&nbsp;&nbsp;<a href="http://www.openaprs.net/"><img src="openaprs.png"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label">User:</TD><TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();"></TD></TR>
 		<TR CLASS='odd'><TD CLASS="td_label">Password: &nbsp;&nbsp;</TD><TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"></TD></TR>
 		<TR CLASS='even'><TD></TD><TD><INPUT TYPE="submit" VALUE="Log In"></TD></TR>
 		<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD></TR>
 		<TR CLASS='odd'><TD COLSPAN=2>&nbsp;</TD></TR>
-		<TR CLASS='even' HEIGHT = "30px" VALIGN="top"><TD COLSPAN=2 ALIGN='center' CLASS="td_label" ><BR /><A HREF="http://groups.google.com/group/open-source-cad"><U>Join our newsgroup </U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="mailto:shoreas@Gmail.com?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A><BR /><BR /></TD>
+		<TR CLASS='even'><TD COLSPAN=3><BR>&nbsp;</TD></TR>
+
+		<TR><TD COLSPAN=3 ALIGN='center'><A HREF='https://sourceforge.net/project/showfiles.php?group_id=145201&package_id=170510' TARGET = '_blank'><BR /><BR /><U>SourceForge Download</U></A>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='http://demo-userguide.wikidot.com/start' TARGET = '_blank'><FONT COLOR='red'>New!</FONT> <U>Tickets Documentation</U> - draft</A></TD></TR>
+		</TABLE>
+
 		<INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
@@ -985,7 +1040,6 @@ function upd_lastin() {						// updates session last-in time, returns session ar
 	$query = "UPDATE `$GLOBALS[mysql_prefix]session` SET `last_in` = '" . $now . "' WHERE `sess_id`='{$sess_key}' LIMIT 1";
 	$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
 
-//	$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 	$query = "SELECT * FROM $GLOBALS[mysql_prefix]session WHERE `sess_id` = '" . $sess_key . "' LIMIT 1";
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	return stripslashes_deep(mysql_fetch_array($result));
@@ -1057,5 +1111,23 @@ function ezDate($d) {
 	return $val;
 	} 
 	
+function do_kml() {									// emits JS for kml-type files in noted directory - added 5/23/08
+	$dir = "./kml_files";							// required as directory
+	if (is_dir($dir)){										
+		$dh  = opendir($dir);
+		$temp = explode ("/", $_SERVER['REQUEST_URI']);
+		$temp[count($temp)-1] = substr($dir, 2);				// home subdir
+		$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp) . "/";
+		while (false !== ($filename = readdir($dh))) {
+			switch (get_ext($filename)) {						// drop all other types, incl directories
+				case "kml":
+				case "kmz":
+				case "xml":
+					$url = $server_str . $filename;
+					echo "\tmap.addOverlay(new GGeoXml(\"" . $url . "\"));\n";
+				}		// end switch ()
+			}		// end while ()
+		}		// end is_dir()
+	}		// end function do_kml()
 		
 ?>

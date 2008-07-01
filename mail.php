@@ -43,16 +43,20 @@ if (!empty ($_POST)) {
 			}
 		$temp = trim(stripslashes_deep($_POST['frm_text']));
 		$message  = empty($temp)? "" : "Note: " . $temp . $eol;
-		$message  .= "Ticket on ".get_variable('host').$eol;
-		$message .= "Incident ID: " . $t_row['id'] . $eol;
-		$message .= "Caller: " . $t_row['contact'] .", Phone: " . format_phone ($t_row['phone']) . $eol;
-		$message .= "Incident name: " . $t_row['scope'] . $eol;
+		$message .= "Tickets host: ".get_variable('host').$eol;
+		$message .= "Incident: " . $t_row['scope'] . " (#" .$t_row['id'] . ")" . $eol;
+		$message .= "Priority: " . get_severity($t_row['severity']);
+		$message .= "      Nature: " . get_type($t_row['in_types_id']) . $eol;
+		$message .= "Written: " . $t_row['date'] . $eol;
+		$message .= "Updated: " . $t_row['updated'] . $eol;
+		$message .= "Reported by: " . $t_row['contact'] .", Phone: " . format_phone ($t_row['phone']) . $eol;
+		$message .= "Phone: " . format_phone ($t_row['phone']) .  $eol;
+		$message .= "Status: ".get_status($t_row['status']).$eol.$eol;
+		$message .= "Address: " . $t_row['street'] . " "  . $t_row['city'] . " " . $t_row['state'] . $eol;
 		$message .= "Description: ".wordwrap($t_row['description']).$eol;
-		$message .= "Location: " . $t_row['street'] . " "  . $t_row['city'] . " " . $t_row['state'] . $eol;
-		$message .= "Status: ".get_status($t_row['status']).$eol;
-		$message .= "Incident Start: " . $t_row['problemstart'] . " Incident End: " . $t_row['problemend'] .$eol;
 		$message .= "Comments: ".wordwrap($t_row['comments']).$eol;
-		$message .= "Coords: " . $t_row['lat'] . " " . $t_row['lng'] . "\n";
+		$message .= "Run Start: " . $t_row['problemstart'] . " Incident End: " . $t_row['problemend'] .$eol;
+		$message .= "Map: " . $t_row['lat'] . " " . $t_row['lng'] . "\n";
 		$message = wordwrap($message, 70);
 //	add patient record to message
 		$query = "SELECT * FROM $GLOBALS[mysql_prefix]patient WHERE ticket_id='$ticket_id'";
@@ -164,9 +168,9 @@ if (!empty ($_POST)) {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$height = (mysql_affected_rows() + 1) * 16;
-		print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple ONFOCUS = 'alert(161)'>\n";
+		print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple >\n";
     	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-			print "\t<OPTION VALUE='" . $row['email'] . "' onClick = 'alert(163)'>" . $row['name'] . "</OPTION>\n";
+			print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "</OPTION>\n";
 			}
 		print "\t</SELECT>\n</TD></TR>";
 ?>

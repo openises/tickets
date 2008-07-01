@@ -1,0 +1,65 @@
+Notes re Tickets CAD V2.7 Beta:
+
+1.  The Call Board function provides a display of current incident-unit assignments. (In effect, a Situation Management tool.)  Clicks there will provide a convenient direct link to incident and unit information.  Cleared incidents are shown with a strike-through for 24 hours in order to communicate that information to later shifts.
+2.  Incident types are supported, with the few you'll see able to be extended by admin-privileged users as needed.  See note 32. below.
+3.  Given a new call/incident, the next screen shows its location against existing response units, plus their straight-line distances and driving directions -  via both text and map.  Driving directions from any unit may be called up, with the closest one shown as the initial default.
+4.  In writing up a new call, the automatic lookup is fairly effective for residential land-line phones, names (with city/state information), and street address.  When found, these return map locations.  (AKA geo-coding.)
+5.  Any number of units may be committed to a given incident, as well as vice-versa.  A closed incident remains visible for 24 hours with a strike-through - for ready identification.
+6.  The Reports function provides for day/week/month/year summaries, with pie-chart displays by location, priority, and incident-type.
+7.  The EM Card function allows you access to the default one provided by Bob Austin, or yr own if you have one.
+8.  There's a light-weight chat function available, which some teams find useful for in-the-center chat.
+
+To install:
+9.  Create an empty MySQL database entry.  You'll need to know its name, the host name, your user name and password.
+10. Unzip the tickets_2_7_beta zip into whatever directory from which you plan to run Tickets.
+11. Navigate to, say, http://localhost/tickets/install.php -- or its equivalent on your machine.
+12. There, you'll be challenged for the database information used in step 9. above.
+13. At some point -- maybe this one -- you'll need a valid GMaps API key.  It's free.  Obtain from Google at 
+        http://www.google.com/apis/maps/signup.html
+
+After installing but prior to use:
+
+14. Note that the automatically-generated 'admin' account - despite its name - has privileges level of 'super'.  Only such supers can create new user accounts of this level, which shd be rarely done.
+15. For security, you should create your user accounts, with suitable access privileges: Configuration/Add User.  Remove the automatically-created admin/admin account as soon as you've tested your own account with 'super' priveleges.  Similar for guest/guest.
+16. Also for security, you should hide the install.php file.  Unintended access can cause havoc.
+17. Set a number of settings, like aprs poll, call board, chat time, login banner, host: Configuration/Edit settings. (Mouseover item to see explanation.)  
+18. Set default map center:  Configuration/Set Default Map
+19. Incident types: Configuration/Incident types fire, traffic
+20. Unit status values: Configuration/Unit status types (available, unavailable)
+21. Set map center, etc:  Configuration/Set Default Map  (the lookup city entry can help.)
+22. Set GMaps API key:  Configuration/Set GMaps API key if needed.
+23. Set Incident types: Configuration/Incident types/Add New In_types entry (ex: Animal, Domestic Violence, Public Nuisance)  Set Group and Sort to control the order within the dropdown list.
+24. Set Settings, incl Call Board, chat time Default City, map height and width: Configuration/Settings (Again, mouseover item to see explanation) 
+25. Set Response Units: Units/Add a Unit.  Mobile units will require a call sign entry, and these will receive APRS polling.  (Calls must match exactly their aprsworld entry.)
+26. Set Unit status values: Config/Unit status types.
+27. Set email addresses: Config/Contacts.  You'll need these if you'll be emailing incident data.
+28. To apply kml files, insert these into the tickets/kml_files subdirectory.
+29. To use your own EMS card file, replace the PDF in the ticket/emd_cards subdirectory. (FYI, Bob Austin will be providing updates to the one currently included.)
+
+Odds and ends:
+
+30: Tickets DOES use popups for certain functions.  These will need to be unblocked.
+31. On a Win32 platform, whether IIS or Apache, the mail function is problematic; it may or may not work correctly.
+32. The map height and width are user-settable, via item 16 above.
+33. In the 'incident types' and 'unit status' drop-down lists, you can set background colors by suitable css settings for the option 'group'.  See the ones already set in default.css .
+34. We make extensive use of mouseover hints in a number of places, esp where we need to truncate the data shown.
+35. Lots more corrections and improvements to the Units and Call Board  operations.
+36. Some performance improvements made.
+37. KML file useage is now a settable option. (0/1 for no/yes)
+38. New privilege level 'super' added, with potentally dangerous database maintenance options restricted to that level.
+
+Changes from CAD V2.7 (the immediate predecessor version)
+
+35. LOTS more corrections and improvements to the Units, Call Board, and report features.  Fixed units are now referred to as 'stations', and may have a call sign.
+36. APRS functions notably cleaned up.  We now keep the most recent seven days' tracks.
+37. Tracks improved, and  allows each mobile unit track to occupy its own window - as many as you have mobile units.
+38. On tracked units, the as-of time obtained via APRS data is so identified.
+39. The Configuration summary now shows who's logged on, or failed to log off.
+40. The Units Edit form now shows the number of active dispatches, if any.  Such would make the unit non-removeable.
+41. Reports changed to accommodate gracefully references to deleted units and incidents.
+42. Login revised to allow reports to show station login data correctly.
+
+The above may well be too terse.  Let me know where further expansion wd be useful.
+
+June 27, '08
+Arnie Shore

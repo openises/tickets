@@ -1,4 +1,5 @@
-<?php 
+<?php
+//revised 5/23/08 per AD7PE - line 432 
 error_reporting(E_ALL);
 require_once('functions.inc.php');
 $my_session = do_login(basename(__FILE__));		// returns session array
@@ -33,14 +34,15 @@ if (!empty($_POST)) {
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
 	$assigns = explode (",", $_POST['frm_id_str']);		// comma sep'd
 	for ($i=0;$i<count($assigns); $i++) {
-		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`)
-						VALUES (%s,%s,%s,%s,%s,%s)",
+		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`)
+						VALUES (%s,%s,%s,%s,%s,%s,%s)",
 							quote_smart($now),
 							quote_smart($frm_status_id),
 							quote_smart($frm_ticket_id),
 							quote_smart($assigns[$i]),
 							quote_smart($frm_comments),
-							quote_smart($frm_by_id));
+							quote_smart($frm_by_id),
+							quote_smart($now));
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 //										remove placeholder inserted by 'add'		
 		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
@@ -420,15 +422,16 @@ function list_responders($addon = "", $unit_id ="") {
 <?php
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 		
-//						build js array of responders to this ticket
+//						build js array of responders to this ticket - possibly none
 		$query = "SELECT `ticket_id`, `responder_id` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $_GET['ticket_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+//		dump($query);
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 		while ($assigns_row = stripslashes_deep(mysql_fetch_array($result))) {
 			print "\t\tunit_assigns[' '+ " . $assigns_row['responder_id']. "]= true;\n";	// note string forced
 			}
 		print "\n";
 
-		$where = (empty($unit_id))? "" : " WHERE `responder`.`id` = $unit_id ";
+		$where = (empty($unit_id))? "" : " WHERE `$GLOBALS[mysql_prefix]responder`.`id` = $unit_id ";		// revised 5/23/08 per AD7PE 
 		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM $GLOBALS[mysql_prefix]responder
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
 			$where
@@ -447,7 +450,7 @@ function list_responders($addon = "", $unit_id ="") {
 				unit_sets[i] = false;								// pre-set checkbox settings				
 				unit_ids[i] = <?php print $unit_row['unit_id'];?>;			
 <?php
-
+//				dump ($unit_row);
 				if ($unit_row['lat'] !=0) {
 					$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
 					$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($unit_row['name'], 48) . "</TD></TR>";
@@ -468,7 +471,6 @@ function list_responders($addon = "", $unit_id ="") {
 					$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
 						WHERE `source`= '$unit_row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";
 					$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			
 					if (mysql_affected_rows()>0) {		// got a track?
 						$track_row = stripslashes_deep(mysql_fetch_array($result_tr));			// most recent track report
 			

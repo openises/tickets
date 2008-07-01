@@ -1,5 +1,11 @@
 <?php
-$version = "2.6 C beta";		// see usage below
+// 6/7/08 - added kml files setting
+// 6/9/08 - revised default 'admin' account level to 'super'
+// 6/12/08 - revised version number only
+// 6/27/08 - revised version number only
+// 6/28/08 - revised version number only
+
+$version = "2.7.d beta";		// see usage below
 
 function dump($variable) {
 	echo "\n<PRE>";				// pretty it a bit
@@ -100,21 +106,6 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		table_exists($db_prefix."un_status",$drop_tables);
 		table_exists($db_prefix."user",$drop_tables);
 		table_exists($db_prefix."session",$drop_tables);
-	// -- phpMyAdmin SQL Dump
-	// -- version 2.9.2
-	// -- http://www.phpmyadmin.net
-	// --
-	// -- Host: localhost
-	// -- Generation Time: Jan 17, 2008 at 08:28 AM
-	// -- Server version: 5.0.27
-	// -- PHP Version: 5.2.1
-	// --
-	// -- Database: `tickets_db`
-	// --
-
-	// --
-	// -- Table structure for table `action`
-	// --
 
 		$tables = "";
 		
@@ -236,7 +227,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		mysql_query($query) or die("INSERT INTO TABLE failed, execution halted at line ". __LINE__);
 
 	// --
-	// -- Table structure for table `log`
+	// -- Table structure for table `log` - revised 6/7/08
 	// --
 
 		$table_name = prefix("log");
@@ -248,7 +239,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		  `code` tinyint(7) NOT NULL default '0',
 		  `ticket_id` int(7) default NULL,
 		  `responder_id` int(7) default NULL,
-		  `info` int(4) default NULL,
+		  `info` varchar( 40 ) NULL DEFAULT NULL,
 		  PRIMARY KEY  (`id`),
 		  UNIQUE KEY `ID` (`id`)
 		) ENGINE=InnoDB COMMENT='Log of station actions';";
@@ -492,11 +483,11 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		print "<LI> Created tables " . $tables . "<BR />";
 		}
 
-	//create default admin user and guest
-	function create_user() {
+
+	function create_user() {	// create default admin user (note: priv's level 'super') and guest // 6/9/08 
 		$tablename = prefix("user");
 		print "<P>";
-		mysql_query("INSERT INTO `$tablename` (user,passwd,info,level,ticket_per_page,sort_desc,sortorder,reporting) VALUES('admin',PASSWORD('admin'),'Administrator',1,0,1,'date',0)") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		mysql_query("INSERT INTO `$tablename` (user,passwd,info,level,ticket_per_page,sort_desc,sortorder,reporting) VALUES('admin',PASSWORD('admin'),'Administrator',0,0,1,'date',0)") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
 		print "<LI> Created user '<B>admin</B>'";
 		mysql_query("INSERT INTO `$tablename` (user,passwd,info,level,ticket_per_page,sort_desc,sortorder,reporting) VALUES('guest',PASSWORD('guest'),'Guest',3,0,1,'date',0)") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
 		print "<LI> Created user '<B>guest</B>'";
@@ -527,10 +518,9 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		do_insert_settings('frameborder','1');
 		do_insert_settings('framesize','50');
 		do_insert_settings('gmaps_api_key',$_POST['frm_api_key']);		//
-//		do_insert_settings('gmaps_api_key',$thekey);		//
-//		do_insert_settings('gmaps_api_key',$_POST['frm_api_key']);		// frm_api_key
 		do_insert_settings('guest_add_ticket','0');
-		do_insert_settings('host','www.yourdomain.com');
+		do_insert_settings('host','www.yourdomain.com');	
+		do_insert_settings('kml_files','1');		//	 'new 6/7/08
 		do_insert_settings('link_capt','');
 		do_insert_settings('link_url','');
 		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');

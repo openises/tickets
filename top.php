@@ -1,7 +1,40 @@
 <?php 
+/*
+11/3/07 added frame jump prevention
+3/25/08 added module identification
+5/28/08	added guest can no longer toggle APRS
+5/28/08	added version force update and log schema change. 
+6/6/08	added double-click prevention
+6/9/08  removed 'Closed Calls' button
+6/16/08 added start_poll() to body onload();
+6/26/08 added conditional to KML_files insert
+*/
 require_once('functions.inc.php');
-$version = get_variable('_version');
 
+$version = get_variable('_version');
+/*
+
+$this_version = "2.7.c beta";								// 5/28/08
+if (!($version == $this_version)) {		// current?
+	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]log` CHANGE `info` `info` VARCHAR( 40 ) NULL DEFAULT NULL ";						// 5/28/08
+	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+
+	$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]settings` WHERE `name` = 'kml_files' LIMIT 1";									// 6/26/08
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	if (mysql_affected_rows()==0) {
+		$query = "INSERT INTO `$GLOBALS[mysql_prefix]settings` (`id`, `name`, `value`) VALUES (NULL, 'kml_files', '1');";			// 5/28/08	 
+		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		}
+	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($this_version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+
+	$temp = explode ("/", $_SERVER['REQUEST_URI']);			// set redirect target
+	$temp[count($temp)-1] = "index.php";					// startup script
+	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp);
+//	dump($server_str);
+	header("Location:" .$server_str ); 						// Redirect browser 
+	}
+*/
 $sess_key = get_sess_key();
 $the_time_limit = 2*60*60;
 
@@ -9,9 +42,8 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $row = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result)) : "";
 //  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
-$whom = (empty($row))? "na": $row['user_name'];
-$level =(empty($row))? "na": get_level_text($row['level']);	
-
+$whom = (empty($row))? NOT_STR: $row['user_name'];
+$level =(empty($row))? NA_STR: get_level_text($row['level']);	
 ?>
 	
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -38,14 +70,17 @@ html>body .hovermenu ul li a:active{ border-style: inset;} */
 
 </style>
 <SCRIPT>
+var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
+var ADM_STR = '<?php echo ADM_STR;?>';			// Admin priv level, defined in functions.inc.php 
+var SUPR_STR = '<?php echo SUPR_STR;?>';		// super priv level, defined in functions.inc.php 6/16/08
+var starting = false;							// 6/6/08
+
 function isNull(val) {								// checks var stuff = null;
 	return val === null;
 	}
 
-var gout_str = "not";								// value if not logged-in
-
-function logged_in() {
-	var temp = document.getElementById("whom").innerHTML==gout_str;
+function logged_in() {								// returns boolean
+	var temp = document.getElementById("whom").innerHTML==NOT_STR;
 	return !temp;
 	}
 	
@@ -54,6 +89,16 @@ function ck_frames() {		// onLoad = "ck_frames()"
 		self.location.href = 'index.php';
 		}
 	}		// end function ck_frames()
+
+function shut_down(){
+	if (aprs) {window.clearInterval(aprs);}			// 5/28/08
+	if (!isNull(newwindow_cb)) {					// call board window?
+		newwindow_cb.close();
+		}
+	if (!isNull(newwindow_c)) {						// chat window?
+		newwindow_c.close();	
+		}
+	}			// end function shut_down()			// cards window allowed
 
 var which = "";	// id of last-invoked li
 function go_there (where, id) {
@@ -77,7 +122,7 @@ function syncAjax(strURL) {							// synchronous ajax function
 		return AJAX.responseText;																				 
 		} 
 	else {
-		alert ("57: failed")
+		alert ("118: ajax failed")
 		return false;
 		}																						 
 	}		// end function sync Ajax(strURL)
@@ -95,7 +140,6 @@ function AsyncAjax(strURL) {						// asynch ajax() function
 	self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	self.xmlHttpReq.onreadystatechange = function() {
 		if (self.xmlHttpReq.readyState == 4) {
-//			document.getElementById("whatever").innerHTML = self.xmlHttpReq.responseText;		// display
 			var temp = self.xmlHttpReq.responseText
 			return temp;		// for test purpose only
 			}
@@ -104,98 +148,102 @@ function AsyncAjax(strURL) {						// asynch ajax() function
 	}
 
 // ex useage:	<input value="Go" type="button" onclick='JavaScript:AsyncAjax("whatever.php")'>
-// cross-frame function call:  parent.frames["upper"].start_poll();
-//	alert (syncAjax(strURL))
+// cross-frame function call:  parent.frames["upper"].s tart_poll();
 var aprs_poll;
-var aprs = new Boolean(false);									// boolean
+var aprs = new Boolean(false);									// 
 var temp;
 function get_aprs_time() {		// 
-	var temp = syncAjax("get_aprs_poll.php");
+	var temp = syncAjax("get_aprs_poll.php");					// gets poll cycle period via server-side get_variable('aprs_poll');
 	return temp;
 	}
 
-function get_aprs() {		// 
+function get_aprs() {		//
 	temp = AsyncAjax ("get_php_aprs.php");						// runs do_aprs() server-side to update the db
 	}
 
 function start_poll() {											// start the process
-	if (aprs) {window.clearInterval(aprs);}
-
-	var aprs_poll = get_aprs_time();
-	if ((!isNaN(aprs_poll)) && (aprs_poll>0)) {					// 0 -> no poll
+	var aprs_poll = get_aprs_time();							// cycle period
+	if ((parseInt(aprs_poll)==0) || (aprs_poll==new Boolean (NaN)))	{
+		window.clearInterval(aprs)
+		document.getElementById("poll_id").innerHTML = "none";
+		return;} 
+	else {
 		get_aprs();												// kick off
 		aprs = window.setInterval("get_aprs()", aprs_poll*60*1000);	// aprs => Boolean(true);	
-		document.getElementById("aprs").innerHTML = aprs_poll + " min.";
+		document.getElementById("poll_id").innerHTML = aprs_poll + " min.";
 		}
-	else {
-		document.getElementById("aprs").innerHTML = "none";
-		}
-	}				// end function start_poll()
+	}				// end function start poll()
 
 function stop_poll() {
 	if (aprs) {window.clearInterval(aprs);}
 	aprs =  Boolean(false);	
-	document.getElementById("aprs").innerHTML = "none";
+	document.getElementById("poll_id").innerHTML = "none";
 	}
 	
 function toggle_aprs() {
-	if (aprs) 	{stop_poll();}
-	else 		{start_poll();}
-	}
+	if (!((document.getElementById('level').innerHTML==ADM_STR) || (document.getElementById('level').innerHTML==SUPR_STR))){		// 5/28/08 allow admin or super only
+		return;
+		}
+	else {
+		if (aprs) 	{stop_poll();}
+		else 		{start_poll();}
+		}
+	}				// end function toggle_aprs()
 
 var newwindow_cb = null;
 
 function do_callBoard() {
 	if (logged_in()) {
+		if(starting) {return;}						// 6/6/08
+		starting=true;	
 		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_cb)) {
 			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
 			return;
 			}
 		newwindow_cb.focus();
+		starting = false;
 		}
 	}		// end function do callBoard()
 
 var newwindow_c = null;
 	
 function do_chat() {
-	if (logged_in()) {	
+	if (logged_in()) {
+		if(starting) {return;}					// 6/6/08
+		starting=true;	
+	
 		newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_c)) {
 			alert ("Chat operation requires popups to be enabled. Please adjust your browser options - or else turn off the Chat option setting.");
 			return;
 			}
 		newwindow_c.focus();
+		starting = false;
 		}
 	}
 
 var newwindow_em = null;
 
 function do_emd_card(filename) {
+	if(starting) {return;}					// 6/6/08
+	starting=true;	
+
 	newwindow_em=window.open(filename, "emdCard",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
 	if (isNull(do_emd_card)) {
 		alert ("EMD Card operation requires popups to be enabled. Please adjust your browser options.");
 		return;
 		}
 	newwindow_em.focus();
+	starting = false;
 	}
-
-function shut_down(){
-	if (!isNull(newwindow_cb)) {
-		newwindow_cb.close();
-		}
-	if (!isNull(newwindow_c)) {
-		newwindow_c.close();	
-		}
-	}			// end function shut_down()
 	
 </SCRIPT>
 <NOSCRIPT>
 	Tickets requires a JavaScript-capable browser.
 </NOSCRIPT>	
 </HEAD>
-<!-- <BODY onLoad = "if(self.location.href==parent.location.href) {self.location.href = 'index.php';}; start_poll();" onunload=stop_poll();> -->
-<BODY onLoad = "ck_frames()" onunload="shut_down()">
+<BODY onLoad = "ck_frames(); start_poll()" onunload="shut_down()">
 <table border=0 cellpadding=0>
 <tr valign='top'>
 	<td><img src="t.gif" border=0></td>
@@ -203,13 +251,15 @@ function shut_down(){
 		Logged in as: 
 		<span ID="whom"><?php print $whom ; ?></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 		Permissions: <SPAN ID="level"><?php print $level; ?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		APRS Poll: <SPAN ID="aprs" onClick="toggle_aprs()">none</SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<?php
+	$temp = get_variable('aprs_poll');
+	$poll_val = ($temp==0)? "none" : $temp ;
+?>
+		<SPAN onClick = "toggle_aprs()">APRS Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Module: <SPAN ID="script"></SPAN>
-<!--	<a href="#" onClick = "alert(parent.frames[0].name);">test</a> -->
 <nobr><span class="hovermenu">
 <ul>
-<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Active Calls</A></li>
-<li id = "main2"><A HREF="main.php?status=<?php print $GLOBALS['STATUS_CLOSED'];?>" target="main">Closed Calls</A></li>
+<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Active Calls</A></li> <!-- 6/9/08  -->
 <li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New Call</A></li>
 <li id = "resp"><A HREF="units.php" target="main">Units</A></li>
 <li id = "search"><A HREF="search.php" target="main">Search</A></li>
@@ -222,7 +272,7 @@ $dir = "./emd_cards";
 if (file_exists ($dir)) {
 	$dh  = opendir($dir);
 	while (false !== ($filename = readdir($dh))) {
-		if ((!is_dir($filename)) && (get_ext($filename)=="pdf"))  {
+		if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
 		    $card_file = $filename;						// at least one pdf, use first encountered
 		    break;
 		    }
@@ -248,16 +298,10 @@ if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' 
 		}
 ?>
 
-<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "document.getElementById('whom').innerHTML=gout_str; stop_poll()">Logout</A></li>
+<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "document.getElementById('whom').innerHTML=NOT_STR; stop_poll()">Logout</A></li>
 </ul>
 </SPAN>
 </NOBR>
 </TD></TR></TABLE>
 <FORM NAME="go" action="#" TARGET = "main"></FORM>
 </BODY></HTML>
-<?php
-/*
-11/3/07 added frame jump prevention
-3/25/08 added module identification
-*/
-?>
