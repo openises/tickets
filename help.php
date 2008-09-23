@@ -1,5 +1,8 @@
 <?php
-	require_once('functions.inc.php');
+/*
+9/18/08 filename changes to XXX.txt
+*/
+	require_once('./incs/functions.inc.php');
 ?>
 <HTML>
 <HEAD>
@@ -151,13 +154,13 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		print '<PRE>'; readfile('ChangeLog'); print '</PRE>';
 		}
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'readme')) {
-		print '<PRE>'; readfile('README'); print '</PRE>';
+		print '<PRE>'; readfile('README.txt'); print '</PRE>';
 		}
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'todo')) {
-		print '<PRE>'; readfile('TODO'); print '</PRE>';
+		print '<PRE>'; readfile('TODO.txt'); print '</PRE>';
 		}
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'licensing')) {
-		print '<PRE>'; readfile('COPYING'); print '</PRE>';
+		print '<PRE>'; readfile('COPYING.txt'); print '</PRE>';
 		}
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'credits')) {
 ?>

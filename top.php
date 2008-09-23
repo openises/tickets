@@ -8,33 +8,25 @@
 6/9/08  removed 'Closed Calls' button
 6/16/08 added start_poll() to body onload();
 6/26/08 added conditional to KML_files insert
-*/
-require_once('functions.inc.php');
+8/6/08	version number change
+9/8/08	added settings value to allow for varied lat/lng display formats
+9/18/08 version no. change - revised tables.php
+*/ 
+require_once('./incs/functions.inc.php');
 
 $version = get_variable('_version');
-/*
 
-$this_version = "2.7.c beta";								// 5/28/08
-if (!($version == $this_version)) {		// current?
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]log` CHANGE `info` `info` VARCHAR( 40 ) NULL DEFAULT NULL ";						// 5/28/08
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+//$this_version = "2.8.? beta";								// 
+//if (!($version == $this_version)) {		// current?
+//	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($this_version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
+//	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+//
+//	$temp = explode ("/", $_SERVER['REQUEST_URI']);			// set redirect target
+//	$temp[count($temp)-1] = "index.php";					// startup script
+//	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp);
+//	header("Location:" .$server_str ); 						// Redirect browser 
+//	}			// end (!($version ==...)
 
-	$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]settings` WHERE `name` = 'kml_files' LIMIT 1";									// 6/26/08
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	if (mysql_affected_rows()==0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]settings` (`id`, `name`, `value`) VALUES (NULL, 'kml_files', '1');";			// 5/28/08	 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		}
-	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($this_version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-
-	$temp = explode ("/", $_SERVER['REQUEST_URI']);			// set redirect target
-	$temp[count($temp)-1] = "index.php";					// startup script
-	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp);
-//	dump($server_str);
-	header("Location:" .$server_str ); 						// Redirect browser 
-	}
-*/
 $sess_key = get_sess_key();
 $the_time_limit = 2*60*60;
 
@@ -54,8 +46,9 @@ $level =(empty($row))? NA_STR: get_level_text($row['level']);
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<meta name="description" content="A free, Open Source Computer-Aided-Dispatch (CAD) application, especially suited to Volunteer Groups">	
-	<meta name="keywords" content="'Computer-aided dispatch', Volunteers, CAD, Search and Rescue, Emergency Medicine, Open Source, PHP, MySQL, Mash-ups, Google Maps">
+	<META HTTP-EQUIV="Script-date" CONTENT="9/16/08">
+	<META NAME="description" content="A free, Open Source Computer-Aided-Dispatch (CAD) application, especially suited to Volunteer Groups">	
+	<META NAME="keywords" content="'Computer-aided-dispatch', '9-1-1', Volunteers, CAD, Search and Rescue, Emergency Medicine, Open Source, PHP, MySQL, Mash-ups, Google Maps">
 <style type="text/css">
 BODY { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
@@ -158,6 +151,7 @@ function get_aprs_time() {		//
 	}
 
 function get_aprs() {		//
+//	alert(154);
 	temp = AsyncAjax ("get_php_aprs.php");						// runs do_aprs() server-side to update the db
 	}
 
@@ -196,7 +190,7 @@ function do_callBoard() {
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_cb)) {
 			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
 			return;
@@ -243,7 +237,9 @@ function do_emd_card(filename) {
 	Tickets requires a JavaScript-capable browser.
 </NOSCRIPT>	
 </HEAD>
-<BODY onLoad = "ck_frames(); start_poll()" onunload="shut_down()">
+<!--<BODY onLoad = "ck_frames(); start_poll()" onunload="shut_down()"> -->
+<BODY onLoad = "ck_frames();" onunload="shut_down()">
+
 <table border=0 cellpadding=0>
 <tr valign='top'>
 	<td><img src="t.gif" border=0></td>

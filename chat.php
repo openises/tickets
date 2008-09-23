@@ -1,5 +1,5 @@
 <?php 
-	require_once('functions.inc.php'); 
+	require_once('./incs/functions.inc.php'); 
 	do_login(basename(__FILE__));
 	extract ($_GET);
 	if (!isset($my_session)) {session_start();}
@@ -24,6 +24,7 @@
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
 

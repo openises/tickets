@@ -1,14 +1,20 @@
 <?php
-// 5/28/08 - revised map center to allow icon drag			
-// 6/4/08 - added do_log($GLOBALS['LOG_INCIDENT_DELETE']				
-// 6/4/08 - added submit()			
-// 6/4/08 - corrected table names
-// 6/9/08 - added user type 'super'
-
+/*
+5/28/08 - revised map center to allow icon drag			
+6/4/08 - added do_log($GLOBALS['LOG_INCIDENT_DELETE']				
+6/4/08 - added submit()			
+6/4/08 - corrected table names
+6/9/08 - added user type 'super'
+9/13/08 - refresh upper frame
+9/16/08 remove 'responder.php'
+9/16/08 draggable false, pending getting it to work
+9/21/08 revised 'top load' via body tag
+*/
 	error_reporting(E_ALL);
-	require_once('functions.inc.php');
-	require_once('config.inc.php');
-	require_once('responders.php');
+	require_once('./incs/functions.inc.php');
+	require_once('./incs/config.inc.php');
+	require_once('./incs/usng.inc.php');				// 9/16/08
+//	require_once('responders.php');
 	if ($istest) {
 		foreach ($_POST as $VarName=>$VarValue) 	{echo "POST:$VarName => $VarValue, <BR />";};
 		foreach ($_GET as $VarName=>$VarValue) 		{echo "GET:$VarName => $VarValue, <BR />";};
@@ -28,13 +34,21 @@
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Script-date" CONTENT="6/9/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 	<SCRIPT>
+	
 		function ck_frames() {
 			if(self.location.href==parent.location.href) {
 //				alert(self.location.href + " " +parent.location.href );
 				self.location.href = 'index.php';
 				}
+
+		function isNull(val) {								// checks var stuff = null;
+			return val === null;
+			}
+
+				
 <?php
 //	dump ($reload_top);
 //	if ($reload_top) {
@@ -49,6 +63,17 @@
 		}
 	catch(e) {
 		}
+
+	function do_test() {				// 08/8/2
+		newwindow_t=window.open("opena.php", "Test Callsign",  "titlebar, resizable=1, scrollbars, height=680,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=500,screenX=50,screenY=50");
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
+
+
 
 	function do_Post(the_table) {
 		document.tables.tablename.value=the_table;
@@ -93,8 +118,8 @@
 			return false;
 			}
 		else {										// good to go!
-			theForm.frm_lat.disabled = false;
-			theForm.frm_lng.disabled = false;
+//			theForm.frm_lat.disabled = false;
+//			theForm.frm_lng.disabled = false;
 			theForm.frm_zoom.disabled = false;
 			return true;
 			}
@@ -117,9 +142,9 @@
 		if (theForm.frm_un_status_id.value==0)		{errmsg+="\tUnit STATUS is required.\n";}
 		if (!got_type)								{errmsg+="\tUnit TYPE is required.\n";}
 		if (!theForm.frm_mobile.checked) {		// fixed
-			theForm.frm_lat.disabled=false;
+//			theForm.frm_lat.disabled=false;
 			if (theForm.frm_lat.value == "") 		{errmsg+= "\tMAP LOCATION is required\n";}
-			theForm.frm_lat.disabled=true;
+//			theForm.frm_lat.disabled=true;
 			}
 		else {										// mobile
 			if (theForm.frm_callsign.value=="")		{errmsg+="\tCALLSIGN is required.\n";}
@@ -137,8 +162,8 @@
 			return false;
 			}
 		else {										// good to go!
-			theForm.frm_lat.disabled = false;
-			theForm.frm_lng.disabled = false;
+//			theForm.frm_lat.disabled = false;
+//			theForm.frm_lng.disabled = false;
 			return true;
 			}
 		}				// end function validate(theForm)
@@ -194,15 +219,26 @@
 		}				// end function hideicons() 
 
 	function do_lat (lat) {
-		document.forms[0].frm_lat.disabled=false;
-		document.forms[0].frm_lat.value=lat;
-		document.forms[0].frm_lat.disabled=true;
+		var num = new Number(lat)
+		document.cen_Form.frm_lat.value=num.toFixed(6);			// 9/9/08
+		document.cen_Form.show_lat.disabled=false;				// permit read/write
+		document.cen_Form.show_lat.value=do_lat_fmt(document.cen_Form.frm_lat.value);
+		document.cen_Form.show_lat.disabled=true;
 		}
 	function do_lng (lng) {
-		document.forms[0].frm_lng.disabled=false;
-		document.forms[0].frm_lng.value=lng;
-		document.forms[0].frm_lng.disabled=true;
+		var num = new Number(lng)
+		document.cen_Form.frm_lng.value=num.toFixed(6);
+		document.cen_Form.show_lng.disabled=false;
+		document.cen_Form.show_lng.value=do_lng_fmt(document.cen_Form.frm_lng.value);
+		document.cen_Form.show_lng.disabled=true;
 		}
+
+	function do_ngs(theForm) {								// 8/23/08
+		theForm.frm_ngs.disabled=false;						// 9/9/08
+		theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);
+		theForm.frm_ngs.disabled=true;
+		}
+		
 	function do_zoom (zoom) {
 		document.cen_Form.frm_zoom.disabled=false;
 		document.cen_Form.frm_zoom.value=zoom;
@@ -229,6 +265,10 @@
 			}			// end for (...)
 		}				// end function all_ticks()
 		
+<?php
+print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))) . "\n";;
+?>
+
 	</SCRIPT>
 	
 
@@ -274,9 +314,13 @@
 						print "<FONT CLASS='warn'>Error: email validation failed for '$email_address', $email[msg]. Go back and check this email address.</FONT>";
 						exit();
 						}
+					$on_ticket_val  = empty($_POST['frm_on_ticket'][$i])? "":  "1";
+					$on_action_val  = empty($_POST['frm_on_action'][$i])? "":  "1";
+					$on_patient_val = empty($_POST['frm_on_patient'][$i])? "": "1";;
 					
-					$query = "UPDATE $GLOBALS[mysql_prefix]notify SET execute_path='".$_POST['frm_execute'][$i]."', email_address='".$_POST['frm_email'][$i]."',on_action='".$_POST['frm_on_action'][$i]."',on_ticket='".$_POST['frm_on_ticket'][$i]."' WHERE id='".$_POST['frm_id'][$i]."'";
+					$query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET `execute_path`='".$_POST['frm_execute'][$i]."', `email_address`='".$_POST['frm_email'][$i]."', `on_action`='".$on_action_val."', `on_patient`='".$on_patient_val ."', `on_ticket`='".$on_ticket_val ."' WHERE `id`='".$_POST['frm_id'][$i]."'";
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+//					dump ($query);
 					}
 				}
 			
@@ -310,17 +354,18 @@
 				print "<FONT CLASS='header'>Update Notifies<BR /><BR />";
 				if (!get_variable('allow_notify')) print "<FONT CLASS=\"warn\">Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 				print '<TABLE BORDER="0"><FORM METHOD="POST" ACTION="config.php?func=notify&save=true">';
-				print "<TR CLASS='even'><TD CLASS='td_label'>Ticket</TD><TD CLASS=\"td_label\">Email</TD>";
-				print '<TD CLASS="td_label">Execute</B></TD><TD CLASS="td_label">On Action</TD><TD CLASS="td_label">On Ticket Change</TD><TD CLASS="td_label">Delete</TD></TR>';
+				print "<TR CLASS='even'><TD CLASS='td_label'>Ticket</TD><TD CLASS=\"td_label\">&nbsp;Email</TD>";
+				print '<TD CLASS="td_label">&nbsp;Execute</B></TD><TD CLASS="td_label">&nbsp;On Action&nbsp;</TD><TD CLASS="td_label">&nbsp;On Patient&nbsp;</TD><TD CLASS="td_label">&nbsp;On Ticket Change&nbsp;</TD><TD CLASS="td_label">Delete</TD></TR>';
 			
 				$i = 0;
 				while($row = stripslashes_deep(mysql_fetch_array($result))) {
 					print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><A HREF='main.php?id=" .  $row['ticket_id'] . "'>#" . $row['ticket_id'] . "</A></FONT></TD>\n";
 					print "<TD><INPUT MAXLENGTH=\"70\" SIZE=\"32\" VALUE=\"" . $row['email_address'] . "\" TYPE=\"text\" NAME=\"frm_email[$i]\"></TD>\n";
 					print "<TD><INPUT MAXLENGTH=\"150\" SIZE=\"40\" TYPE=\"text\" VALUE=\"" . $row['execute_path'] . "\" NAME=\"frm_execute[$i]\"></TD>\n";
-					print "<TD ALIGN='right'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_action[$i]'"; print $row['on_action'] ? " checked></TD>\n" : "></TD>\n";
-					print "<TD ALIGN='right'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_ticket[$i]'"; print $row['on_ticket'] ? " checked></TD>\n" : "></TD>\n";
-					print "<TD ALIGN='right'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_delete[$i]'></TD>\n";
+					print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_action[$i]'"; print $row['on_action'] ? " checked></TD>\n" : "></TD>\n";
+					print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_patient[$i]'"; print $row['on_patient'] ? " checked></TD>\n" : "></TD>\n";
+					print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_ticket[$i]'"; print $row['on_ticket'] ? " checked></TD>\n" : "></TD>\n";
+					print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_delete[$i]'></TD>\n";
 					print "<INPUT TYPE='hidden' NAME='frm_id[$i]' VALUE='" . $row['id'] . "'></TR>\n";
 					$i++;
 					}
@@ -431,39 +476,51 @@ case 'reset' :
     break;
 
 case 'settings' :
-		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
-			if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
-				foreach ($_POST as $VarName=>$VarValue) {
-					$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`=". quote_smart($VarValue)." WHERE `name`='".$VarName."'";
-					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-					}
-				$reload_top = TRUE;			// reload top frame for possible new settings value
-				print '<FONT CLASS="header">Settings saved.</FONT><BR /><BR />';
-				}
-			else {
-				$evenodd = array ("even", "odd");
-				print '<FONT CLASS="header">Edit Settings</FONT>  (mouseover caption for help information)<BR /><BR /><TABLE BORDER="0"><FORM METHOD="POST" NAME= "set_Form"  onSubmit="return validate_set(document.set_Form);" ACTION="config.php?func=settings&go=true">';
-				$counter = 0;
-				$result = mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]settings ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				while($row = stripslashes_deep(mysql_fetch_array($result))) {
-					if ($row['name']{0} <> "_" ) {								// hide these
-						$capt = str_replace ( "_", " ", $row['name']);
-						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_setting_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
-						print "<TD><INPUT MAXLENGTH='90' SIZE='90' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
+	if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
+		print "</HEAD>\n<BODY onLoad = 'alert(479);ck_frames(); parent.frames[\"upper\"].location.reload();'>\n";		// 9/21/08
+		foreach ($_POST as $VarName=>$VarValue) {
+			$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`=". quote_smart($VarValue)." WHERE `name`='".$VarName."'";
+			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			}
+		$reload_top = TRUE;			// reload top frame for possible new settings value
+		print '<FONT CLASS="header">Settings saved.</FONT><BR /><BR />';
+		}
+	else {
+		print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";		// 9/21/08
+		$evenodd = array ("even", "odd");
+		print '<FONT CLASS="header">Edit Settings</FONT>  (mouseover caption for help information)<BR /><BR /><TABLE BORDER="0"><FORM METHOD="POST" NAME= "set_Form"  onSubmit="return validate_set(document.set_Form);" ACTION="config.php?func=settings&go=true">';
+		$counter = 0;
+		$result = mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]settings ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		while($row = stripslashes_deep(mysql_fetch_array($result))) {
+			if ($row['name']{0} <> "_" ) {								// hide these
+				$capt = str_replace ( "_", " ", $row['name']);
+				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_setting_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
+				print "<TD><INPUT MAXLENGTH='90' SIZE='90' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
 
-						$counter++;
-						}
-					}		// str_replace ( search, replace, subject)
-				
-				print "<TR><TD></TD><TD ALIGN='center'>
-					<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR></FORM></TABLE>";
-?>
-				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
-				</BODY>
-				</HTML>
-<?php
-				exit();
+				$counter++;
 				}
+			}		// str_replace ( search, replace, subject)
+		
+		print "<TR><TD></TD><TD ALIGN='center'>
+			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<INPUT TYPE='submit' VALUE='Apply'></TD></TR></FORM></TABLE>";
+?>
+		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
+		</BODY>
+		<SCRIPT>
+			try {
+				parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+				parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+				parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+				}
+			catch(e) {
+				}
+		</SCRIPT>
+		</HTML>
+<?php
+		exit();
+		}				// end else
     break;
 
 case 'user' :
@@ -649,6 +706,7 @@ case 'user' :
 case 'center' :
 ?>
 	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
+	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 	</HEAD>
 	<BODY onLoad = "ck_frames()" onunload="GUnload()">
 <?php
@@ -657,17 +715,19 @@ case 'center' :
 
 //	if($_GET['update'] == 'true') {
 	if($get_update == 'true') {
-		$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`='$_POST[frm_lat]' WHERE `name`='def_lat';";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_lat]' WHERE `name`='def_lat';";
 		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-		$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`='$_POST[frm_lng]' WHERE `name`='def_lng';";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_lng]' WHERE `name`='def_lng';";
 		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-		$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`='$_POST[frm_zoom]' WHERE `name`='def_zoom';";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_zoom]' WHERE `name`='def_zoom';";
 		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-		$query = "UPDATE $GLOBALS[mysql_prefix]settings SET `value`='$_POST[frm_map_caption]' WHERE `name`='map_caption';";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_map_caption]' WHERE `name`='map_caption';";
 		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
 		print '<FONT CLASS="header">Settings saved to database.</FONT><BR /><BR />';
 		}
 	else {
+		$lat = get_variable('def_lat');
+		$lng = get_variable('def_lng');
 ?>	
 		<TABLE BORDER=0 ID='outer'>
 		<TR><TD COLSPAN=2 ALIGN='center'><FONT CLASS="header">Select Map Center/Zoom and Caption</FONT><BR /><BR /></TD></TR>
@@ -678,20 +738,22 @@ case 'center' :
 		&nbsp;&nbsp;&nbsp;&nbsp;State:&nbsp;<INPUT MAXLENGTH="2" SIZE="2" TYPE="text" NAME="frm_st" VALUE="" /></TD></TR>
 		<TR CLASS = "odd"><TD COLSPAN=4 ALIGN="center"><INPUT TYPE="BUTTON" VALUE="Locate it" onClick="addrlkup()" /></TD></TR>
 		<TR><TD><BR /><BR /><BR /><BR /><BR /></TD></TR>
-
 		<TR CLASS = "even"><TD CLASS="td_label">Caption:</TD><TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD></TR>
 		<TR CLASS = "odd">
-			<TD CLASS="td_label">Map:</TD>
-			<TD >&nbsp;&nbsp;Lat:&nbsp;</TD>
-			<TD><INPUT TYPE="text" NAME="frm_lat" VALUE="<?php print get_variable('def_lat');?>" SIZE=12 disabled /></TD>
-			<TD >Long:&nbsp;<INPUT TYPE="text" NAME="frm_lng" VALUE="<?php print get_variable('def_lng');?>" SIZE=12 disabled /></TD></TR>
+			<TD CLASS="td_label" ROWSPAN=2>Map:</TD>
+			<TD ALIGN='right'>&nbsp;&nbsp;Lat:&nbsp;</TD>
+			<TD ><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12  /></TD>
+			<TD ALIGN='right'>Long:&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
+			<TD ALIGN='right'>NGS:&nbsp;</TD><TD COLSPAN=2><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20 DISABLED /></TD></TR>
 		<TR CLASS = "odd">
 			<TD></TD>
-			<TD>&nbsp;&nbsp;Zoom:&nbsp;</TD>
+			<TD ALIGN='right'>&nbsp;&nbsp;Zoom:&nbsp;</TD>
 			<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS = "even"><TD COLSPAN=5 ALIGN='center'>
 			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
+			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">				<!-- // 9/16/08 -->
+			<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
 		</FORM></TABLE>
 		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Drag/Zoom to new default position</SPAN></FONT></CENTER>
@@ -901,9 +963,15 @@ case 'delete' :
 			<LI><A HREF="config.php?func=delete">Delete Closed Tickets</A>
 			<LI><A HREF="config.php?func=dump">Dump DB to screen</A>
 			<LI><A HREF="#" onClick = "do_Post('session');">Session</A>
-	<?php
+			<LI><A HREF="#" onClick = "do_Post('unit_types');">Unit types</A>
+			
+<?php
 			}								// end if(is_super()
 		}								// end if (is_administrator()|| is_super() )
+?>
+		<LI><A HREF="#" onClick = "do_test()">Test Callsign</A>
+
+<?php 
 	if (!is_guest()) {				// USER OR ADMIN
 ?>
 		<LI><A HREF="config.php?func=profile">Edit My Profile</A>
@@ -919,6 +987,8 @@ case 'delete' :
 			<LI><A HREF="#" onClick = "do_Post('settings');">Settings</A>
 			<LI><A HREF="#" onClick = "do_Post('ticket');">Tickets</A>
 			<LI><A HREF="#" onClick = "do_Post('responder');">Units</A>
+			<LI><A HREF="#" onClick = "do_Post('action');">Actions</A>
+			<LI><A HREF="#" onClick = "do_Post('patient');">Patients</A>	
 <?php
 			}
 ?>			
@@ -926,7 +996,7 @@ case 'delete' :
 <?php
 		list_users();
 		}
-
+	print "<BR /><BR />";
 	print logged_on();
 	print "<BR /><BR />";
 	show_stats();
@@ -943,8 +1013,75 @@ print "</BODY>\n";
 function map_cen () {				// specific to map center
 	$lat = get_variable('def_lat'); $lng = get_variable('def_lng');
 ?>
-
 <SCRIPT>
+	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08		
+	
+	function do_coords(inlat, inlng) { 										 //9/14/08
+		if((inlat.length==0)||(inlng.length==0)) {return;}
+		var str = inlat + ", " + inlng + "\n";
+		str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
+		str += lat2ddm(inlat) + ", " +lng2ddm(inlng);		
+		alert(str);
+		}
+
+	function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
+		var d = new Number(Math.abs(inval));
+		d  = Math.floor(d);
+		var mi = (Math.abs(inval)-d)*60;	// fraction * 60
+		var m = Math.floor(mi)				// min's as fraction
+		var si = (mi-m)*60;					// to sec's
+		var s = si.toFixed(1);
+		return d + '\260 ' + Math.abs(m) +"' " + Math.abs(s) + '"';
+		}
+
+	function lat2ddm(inlat) {				//  lat to degr, dec.min's - 9/9/089/7/08
+		var x = new Number(Math.abs(inlat));
+		var degs  = Math.floor(x);				// degrees
+		var mins = ((Math.abs(x-degs)*60).toFixed(1));
+		var nors = (inlat>0.0)? " N":" S";
+		return degs + '\260'  + mins +"'" + nors;
+		}
+	
+	function lng2ddm(inlng) {				//  lng to degr, dec.min's - 9/9/089/7/08
+		var x = new Number(Math.abs(inlng));
+		var degs  = Math.floor(x);				// degrees
+		var mins = ((Math.abs(x-degs)*60).toFixed(1));
+		var eorw = (inlng>0.0)? " E":" W";
+		return degs + '\260' + mins +"'" + eorw;
+		}
+
+	function do_lat_fmt(inlat) {				// 9/9/08
+		switch(lat_lng_frmt) {
+			case 0:
+				return inlat;
+			  	break;
+			case 1:
+				return ll2dms(inlat);
+			  	break;
+			case 2:
+				return lat2ddm(inlat);
+			 	break;
+			default:
+				alert (220);
+			}	
+		}
+
+	function do_lng_fmt(inlng) {
+		switch(lat_lng_frmt) {
+			case 0:
+				return inlng;
+			  	break;
+			case 1:
+				return ll2dms(inlng);
+			  	break;
+			case 2:
+				return lng2ddm(inlng);
+			 	break;
+			default:
+				alert (236);
+			}	
+		}
+
 	function addrlkup() {		   // added 8/3 by AS -- getLocations(address,  callback) -- not currently used
 		var address = document.forms[0].frm_city.value + " "  +document.forms[0].frm_st.value;
 		if (geocoder) {
@@ -959,6 +1096,7 @@ function map_cen () {				// specific to map center
 						var marker = new GMarker(point);
 						do_lat (point.lat());
 						do_lng (point.lng());
+						do_ngs(document.cen_Form);		// 9/16/08						
 						}
 					}
 				);
@@ -979,6 +1117,7 @@ function map_cen () {				// specific to map center
 		}
 	
 	var map;								// note globals
+//	var map = new GMap2(document.getElementById("div"), {draggableCursor: 'crosshair', draggingCursor: 'pointer'});	
 	var myZoom;
 	var geocoder = new GClientGeocoder();
 	
@@ -987,29 +1126,49 @@ function map_cen () {				// specific to map center
 	map.addControl(new GMapTypeControl());
 	map.addControl(new GOverviewMapControl());
 
+	var baseIcon = new GIcon();				// 9/16/08
+	baseIcon.iconSize=new GSize(32,32);
+	baseIcon.iconAnchor=new GPoint(16,16);
+	var cross = new GIcon(baseIcon, "./markers/crosshair.png", null);
+
 //	map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
 
 	var center = new GLatLng(<?php print get_variable('def_lat') ?>, <?php print get_variable('def_lng'); ?>);
 	map.setCenter(center, <?php print get_variable('def_zoom');?>);
-	marker = new GMarker(center, {draggable:false});
-	map.addOverlay(marker);
+	var thisMarker  = new GMarker(center, {icon: cross, draggable:false} );				// 9/16/08
+
+//	map.addOverlay(marker);
+	map.addOverlay(thisMarker);
 	map.enableScrollWheelZoom(); 	
 
 	GEvent.addListener(map, "click", function(overlay, latlng) {
 		if (latlng) {
+//			alert(latlng.lat().toFixed(6));
 			map.clearOverlays();
-			marker = new GMarker(latlng, {draggable:true});
-			map.setCenter(marker.getPoint());
-			do_lat (latlng.lat().toFixed(6));
-			do_lng (latlng.lng().toFixed(6));
-			GEvent.addListener(marker, "dragend", function() {
-//				alert(997);
+			
+			thisMarker  = new GMarker(latlng, {icon: cross, draggable:false}  );		// 9/16/08
+			map.setCenter(thisMarker.getPoint());
+			map.addOverlay(thisMarker);
+//			GEvent.addListener(thisMarker, "dragstart", function() {
+//				alert("start");
+//				});
+			var lat = new Number(latlng.lat());
+			var lng = new Number(latlng.lng());
+			
+			do_lat (lat.toFixed(6));
+			do_lng (lng.toFixed(6));
+			do_ngs(document.cen_Form);			// 9/16/08
+			GEvent.addListener(thisMarker, "dragend", function() {
+				alert(1145);
 				map.setCenter(marker.getPoint());
-				do_lat (marker.getPoint().lat().toFixed(6));
-				do_lng (marker.getPoint().lng().toFixed(6));
-				
+				var gp_lat = new Number(marker.getPoint().lat());
+				var gp_lng = new Number(marker.getPoint().lng());
+				do_lat (gp_lat.toFixed(6));
+				do_lng (gp_lng.toFixed(6));
+				do_ngs(document.cen_Form);			// 9/16/08
 				});
-			map.addOverlay(marker);
+				
+			map.addOverlay(thisMarker);
 			}		// end if (latlng)
 		});		// end GEvent.addListener()
 		

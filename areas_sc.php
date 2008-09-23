@@ -1,6 +1,6 @@
 <?php
 //	areas server-side create script
-require_once('functions.inc.php');		// some irv_functions
+require_once('./incs/functions.inc.php');		// some irv_functions
 
 $istest=FALSE;
 extract($_POST);

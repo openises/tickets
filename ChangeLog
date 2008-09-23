@@ -1,4 +1,13 @@
-2.5
+2.8
+=====
++ Call Board function added as 'situation summary' capability
++ User setting for coordinates display format added
++ USNG position data addes to each position function
++ Directory structure revised - for inc's and js scripts
++ Track display corrected to add a sanity check in case of malfunctioning APRS equipment
++ Track display now includes an altitude graph.
++ Report module includes pie charts for incident information.
+2.6 and 2.7
 =====
 + Assigns function added, relating units to incidents - see assigns.php
 + Routes function added, provideing driving directions - see routes.php

@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL);
 //	file as_up_un_status.php
-require_once('functions.inc.php'); 
+require_once('./incs/functions.inc.php'); 
 extract($_GET);
 $now = time() - (get_variable('delta_mins')*60);
 

@@ -1,14 +1,16 @@
 <?php
-//	5/23/08 - added do_kml() - generate KML JS - 
-//	5/25/08 - revised removed deleting non-located units
-//	5/26/08 - revised to avoid adding fixed unit location to bounds computation
-//	5/26/08 - revised to refer to units.php vice config.php
-//	6/15/08 - revised to show mobile units only
-//	6/16/08 - UTC time format conversion corrected
-//	6/17/08 - added tracks array information
-//	6/25/08	- added APRS window handling
-
-require_once('functions.inc.php');
+/*
+5/23/08 - added do_kml() - generate KML JS - 
+5/25/08 - revised removed deleting non-located units
+5/26/08 - revised to avoid adding fixed unit location to bounds computation
+5/26/08 - revised to refer to units.php vice config.php
+6/15/08 - revised to show mobile units only
+6/16/08 - UTC time format conversion corrected
+6/17/08 - added tracks array information
+6/25/08	- added APRS window handling
+8/27/08 - mysql_fetch_assoc replaces fetch_array
+*/
+require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
 
@@ -247,7 +249,7 @@ global $my_session;
 	
 	$query = "SELECT * , UNIX_TIMESTAMP(packet_date) AS `packet_date` FROM `$GLOBALS[mysql_prefix]tracks` ORDER BY `packet_date` ASC";		// 6/17/08
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	while ($row = mysql_fetch_array($result)) {
+	while ($row = mysql_fetch_assoc($result)) {
 		if (isset($calls[$row['source']])) {		// array_key_exists ( mixed key, array search )
 			$calls_nr[$row['source']]++;
 			}
@@ -269,7 +271,7 @@ global $my_session;
 	$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]un_status`";		// build unit status values array
 	$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	$status_vals[0]="TBD";
-	while ($temp_row = mysql_fetch_array($temp_result)) {					// build array of values
+	while ($temp_row = mysql_fetch_assoc($temp_result)) {					// build array of values
 		$status_vals[$temp_row['id']]=$temp_row['status_val'];
 		}	
 
@@ -282,7 +284,7 @@ global $my_session;
 		// major while ... for mobile RESPONDER data starts here
 
 	$aprs = FALSE;													// legend show/not boolean
-	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 		$totrack  = (empty($row['callsign']))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><U>Tracks</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 		
@@ -302,7 +304,7 @@ global $my_session;
 				var ender = <?php print mysql_affected_rows(); ?> ;
 <?php
 				$last = "";
-				while ($row_tr = stripslashes_deep(mysql_fetch_array($result_tr))) {
+				while ($row_tr = stripslashes_deep(mysql_fetch_assoc($result_tr))) {
 					if (!empty($last)) {
 ?>			
 						var polyline = new GPolyline([
@@ -455,7 +457,13 @@ global $my_session;
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<HEAD><TITLE>Tickets - Configuration Module</TITLE>
+	<HEAD><TITLE>Tickets - Tracks Module</TITLE>
+<?php
+	$temp = get_variable('aprs_poll');
+	if (intval($temp)>0) {
+		print "\t<META HTTP-EQUIV='refresh' CONTENT='" . 60*$temp . "'>\n";
+		}
+?>	
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 

@@ -1,7 +1,14 @@
 <?php 
+/*
+8/28/08 mysql_fetch_array to  mysql_fetch_assoc
+*/
 error_reporting(E_ALL);
-require_once('functions.inc.php');
+require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
+if ($istest) {
+	dump ($_POST);
+	dump ($_GET);
+	}
 $evenodd = array ("even", "odd");
 
 ?> 
@@ -53,7 +60,7 @@ function validate(theForm) {
 			$search_fields = "$_POST[frm_search_in] REGEXP '$_POST[frm_query]'";
 		else {
 			//list fields and form the query to search all of them
-			$result = mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket");
+			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`");
 			$search_fields = "";
 			for ($i = 0; $i < mysql_num_fields($result); $i++)
     			$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
@@ -68,11 +75,12 @@ function validate(theForm) {
 		
 		//tickets
 
-		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date FROM $GLOBALS[mysql_prefix]ticket WHERE status LIKE '" . $_POST['frm_querytype'] . "' AND " . $search_fields . " " . $restrict_ticket . " ORDER BY " . $_POST['frm_ordertype'] . " " . $_POST['frm_order_desc'];
-		$result = mysql_query($query) or do_error($query,'search query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "SELECT *,UNIX_TIMESTAMP(`problemstart`) AS `problemstart`,UNIX_TIMESTAMP(`problemend`) AS `problemend`,UNIX_TIMESTAMP(`date`) AS `date` ,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` LIKE '" . $_POST['frm_querytype'] . "' AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $_POST['frm_order_desc'];
+		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+//		dump ($query);
 		if(mysql_num_rows($result) == 1) {
 			// display ticket in whole if just one returned
-			$row = stripslashes_deep(mysql_fetch_array($result));
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
 //			add_header($_GET['id']);
 			add_header($row['id']);
 			show_ticket($row['id'], FALSE, $_POST['frm_query']);				// include search term for highlighting
@@ -80,8 +88,8 @@ function validate(theForm) {
 			}
 		else if (mysql_num_rows($result)) {
 			$ticket_found = $counter = 1;
-			print "<TABLE BORDER='0'><TR><TD CLASS='td_header'>Ticket</TD><TD CLASS='td_header'>Date</TD><TD CLASS='td_header'>Description</TD></TR>";
-			while($row = stripslashes_deep(mysql_fetch_array($result))){
+			print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_header'>Ticket</TD><TD CLASS='td_header'>Date</TD><TD CLASS='td_header'>Description</TD></TR>";
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
 				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='main.php?id=$row[id]'>#$row[id]</A>&nbsp;&nbsp;</TD><TD>".format_date($row['updated'])."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='main.php?id=$row[id]'>" . highlight($_POST['frm_query'], $row['description']) . "</A></TD></TR>\n";
 				$counter++;
 				}
@@ -91,20 +99,20 @@ function validate(theForm) {
 		else
 			print 'No matching tickets found.  <BR /><BR />';
 														//patient data
-		$query = "SELECT *,UNIX_TIMESTAMP(date) AS date FROM $GLOBALS[mysql_prefix]patient WHERE description REGEXP '$_POST[frm_query]' OR name REGEXP '$_POST[frm_query]'";
+		$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]patient` WHERE `description` REGEXP '$_POST[frm_query]' OR `name` REGEXP '$_POST[frm_query]'";
 		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
 		if(mysql_num_rows($result) && !$ticket_found) {
 			// display ticket in whole if just one returned
 			add_header($_GET['id']);
 
-			$row = stripslashes_deep(mysql_fetch_array($result));
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
 			show_ticket($row[ticket_id],FALSE,$_POST['frm_query']);
 			exit();
 			}
 		else if (mysql_num_rows($result) == 1) 	{
 			$counter = 0;
 			print '<TABLE BORDER="0"><TR><TD CLASS="td_header">Ticket</TD><TD CLASS="td_header">Date</TD><TD CLASS="td_header">Patient</TD></TR>';
-			while($row = stripslashes_deep(mysql_fetch_array($result))) {
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 8/28/08
 				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD VALIGN='top'><A HREF='main.php?id=$row[ticket_id]'>#$row[ticket_id]</A>&nbsp;&nbsp;</TD><TD NOWRAP VALIGN='top'>".format_date($row[updated])."&nbsp;&nbsp;&nbsp;</FONT></TD><TD><A HREF='main.php?id=$row[ticket_id]'>" . highlight($_POST['frm_query'], $row[description]) . "</A></TD></TR>\n";
 				$counter++;
 				}
@@ -114,11 +122,11 @@ function validate(theForm) {
 			print 'No matching patient data found.  ';
 			}
 														//actions
-		$query = "SELECT *,UNIX_TIMESTAMP(date) AS date FROM $GLOBALS[mysql_prefix]action WHERE description REGEXP '$_POST[frm_query]'";
-		$result = mysql_query($query) or do_error('search.php','search query failed, possibly illegal syntax', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]action` WHERE `description` REGEXP '$_POST[frm_query]'";
+		$result = mysql_query($query) or do_error('','', mysql_error(),basename( __FILE__), __LINE__);
 		if(mysql_num_rows($result) && !$ticket_found) {
 			// display ticket in whole if just one returned
-			$row = stripslashes_deep(mysql_fetch_array($result));
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
 			add_header($_GET['id']);
 			show_ticket($row[ticket_id], FALSE, $_POST['frm_query']);
 			exit();
@@ -126,7 +134,7 @@ function validate(theForm) {
 		else if (mysql_num_rows($result) == 1) 	{
 			print '<TABLE BORDER="0"><TR><TD CLASS="td_header">Ticket</TD><TD CLASS="td_header">Date</TD><TD CLASS="td_header">Action</TD></TR>';
 			$counter = 0;
-			while($row = stripslashes_deep(mysql_fetch_array($result))) {
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 8/28/08
 				print "<TR CLASS='" . $evenodd[$counter%2] . "' ><TD VALIGN='top'><A HREF='main.php?id=$row[ticket_id]'>#$row[ticket_id]</A>&nbsp;&nbsp;</TD><TD NOWRAP VALIGN='top'>".format_date($row[updated])."&nbsp;&nbsp;&nbsp;</FONT></TD><TD><A HREF='main.php?id=$row[ticket_id]'>" . highlight($_POST['frm_query'], $row[description]) . "</A></TD></TR>\n";
 				$counter++;
 				}

@@ -1,14 +1,14 @@
 <?php  
-require_once('functions.inc.php'); 
+require_once('./incs/functions.inc.php'); 
 extract($_GET);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`  ORDER BY `group` ASC,`sort` ASC", `type` ASC";		// array of incident types text
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types`  ORDER BY `group` ASC,`sort` ASC, `type` ASC";		// array of incident types text
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 while($row = stripslashes_deep(mysql_fetch_array($result))) {
 	$inc_types_text[$row['id']] = $row['type'];
 	}				// end while($row...)
 
-//$where = " WHERE `when` > '2007-12-01 11:50:59' AND `when` < '2008-03-15 11:50:59' ";
+//$where = " WHERE `when` > '2007-12-01 11:50:59' AND `when` < '2009-03-15 11:50:59' ";
 $where = " WHERE `when` > '" . $p1 . "' AND `when` < '" . $p2 . "' ";
 //																	//	now get log entries and associated incident type, per current value
 $query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`,t.scope AS `tick_name`, t.severity AS `tick_severity` FROM `$GLOBALS[mysql_prefix]log`
@@ -29,7 +29,8 @@ while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// b
 	}		// end while($row =...)
 
 include('baaChart.php');
-$mygraph = new baaChart(350);
+$width = isset($img_width)? $img_width: 300;
+$mygraph = new baaChart($width);
 //$mygraph->setTitle($from,$to);
 $mygraph->setTitle('Incidents by Type','');
 //dump ($inc_types);

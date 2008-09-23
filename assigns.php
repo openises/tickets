@@ -1,10 +1,13 @@
 <?php
-// 5/23/08	fix to status_val field name
-// 6/4/08	Deletion logic revised to remove  timed-based inactive and add explicit deletions
-// 06/26/08	added $doTick to assign view/edit ticket functions by priv level			
-
+/*
+5/23/08	fix to status_val field name
+6/4/08	Deletion logic revised to remove  timed-based inactive and add explicit deletions
+6/26/08	added $doTick to assign view/edit ticket functions by priv level	
+8/24/08 added htmlentities function to TITLE strings
+9/17/08 disallow guest edit to unit status
+*/
 error_reporting(E_ALL);
-require_once('functions.inc.php'); 
+require_once('./incs/functions.inc.php'); 
 
 if($istest) {
 	print "GET<br />\n";
@@ -24,11 +27,12 @@ $delta = 48*60*60;									// 48 hours
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Tickets - Assignments Module</TITLE>
-	<META HTTP-EQUIV="Content-Type" 		CONTENT="text/html; charset=UTF-8">
-	<META HTTP-EQUIV="Expires" 				CONTENT="0">
-	<META HTTP-EQUIV="Cache-Control" 		CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Type" 		CONTENT="text/html; charset=UTF-8"/>
+	<META HTTP-EQUIV="Expires" 				CONTENT="0"/>
+	<META HTTP-EQUIV="Cache-Control" 		CONTENT="NO-CACHE"/>
+	<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE"/>
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
+	<META HTTP-EQUIV="Script-date" 			CONTENT="8/24/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
 //alert (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML);
@@ -336,6 +340,7 @@ switch ($func) {					// ========================================================
 	
 		function hide_but(id) {
 			var theid = "TD"+id;
+			if(!document.getElementById(theid)) {return false;}		// 9/17/08
 			elem = document.getElementById(theid);
 			elem.style.display = "none";
 			button_live = false;
@@ -375,13 +380,15 @@ switch ($func) {					// ========================================================
 	</SCRIPT>	
 	</HEAD>
 <BODY onLoad = "reSizeScr()";>
+<CENTER>
 <?php
 		function get_un_stat_sel($s_id, $b_id) {					// status id
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
 			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+ 			$dis = (is_guest())? " DISABLED": "";								// 9/17/08
 			$the_grp = strval(rand());			//  force initial OPTGROUP value
 			$i = 0;
-			$outstr = "\n\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)'>\n";
+			$outstr = "\n\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)' $dis >\n";
 			while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
 				if ($the_grp != $row['group']) {
 					$outstr .= ($i == 0)? "": "\t</OPTGROUP>\n";
@@ -400,7 +407,7 @@ switch ($func) {					// ========================================================
 		$priorities = array("text_black","text_blue","text_red" );
 
 		print "<TABLE BORDER=0 ALIGN='center' WIDTH='100%'  cellspacing = 1 CELLPADDING = 2 ID='call_board' STYLE='display:block'>";
-		print "<TR CLASS='even'><TD COLSPAN=12 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD></TR>\n";
+		print "<TR CLASS='even'><TD COLSPAN=11 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD></TR>\n";
 
 		$status_vals_ar = array();
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
@@ -415,7 +422,7 @@ switch ($func) {					// ========================================================
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
-			ORDER BY `as_of` ASC ";
+			ORDER BY `ticket_id` ASC, `as_of` ASC ";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$i = 1;	
 		if (mysql_affected_rows()>0) {
@@ -423,19 +430,25 @@ switch ($func) {					// ========================================================
 			$doTick = (is_guest())? "viewT" : "editT";				// 06/26/08
 			$now = time() - (get_variable('delta_mins')*60);
 			$items = mysql_affected_rows();
-			$header = "<TR CLASS='even'><TD COLSPAN=5 ALIGN='center' CLASS='aprs'>Dispatch</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=2 ALIGN='center' CLASS='aprs'>Incident</TD><TD>&nbsp;&nbsp;</TD><TD COLSPAN=3 ALIGN='center' CLASS='aprs'>Unit</TD></TR>\n";
-			$header .= "<TR CLASS='odd'><TD>id</TD><TD ALIGN='center'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Descr</TD><TD ALIGN='center'>Cleared</TD><TD></TD>";
-			$header .= "<TD ALIGN='center'>Comment</TD><TD ALIGN='center'>Addr</TD><TD>&nbsp;&nbsp;</TD><TD ALIGN='center'>Unit</TD><TD ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD></TR>\n";
+			$header = "<TR CLASS='even'>";
+			
+			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>Unit</TD><TD>&nbsp;</TD>";
+			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>to Incident</TD><TD>&nbsp;</TD>";
+			$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emph'>Dispatch</TD>";
+
+			$header .= "</TR>\n";
+			$header .= "<TR CLASS='odd'>";
+
+			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD><TD>&nbsp;</TD>";
+			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='center'>Addr</TD><TD>&nbsp;</TD>";
+			$header .= "<TD ALIGN='center' CLASS='emph'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Comment</TD><TD ALIGN='center'>Cleared</TD>";
+
+			$header .= "</TR>\n";
 			while($row = stripslashes_deep(mysql_fetch_array($result))) {
 				if  ((!(is_date($row['clear']))) || ((is_date($row['clear'])) && ((totime($row['clear']) > ($now-$delta))))) {
 					if ($i == 1) {print $header;}
-					if (!array_key_exists($row['severity'], $priorities)) {
-//						dump($row['severity']);
-						}
-//					$theClass = $priorities[$row['severity']];
 					$theClass = ($row['severity']=='')? "":$priorities[$row['severity']];
 					print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>\n";
-					print "<TD> {$row['assign_id']} </TD>";
 					print "<FORM NAME='F$i' METHOD='get' ACTION=''>\n";
 
 					if (is_date($row['clear'])) {							// 6/26/08
@@ -444,33 +457,34 @@ switch ($func) {					// ========================================================
 					else {
 						$strike = $strikend = "";
 						}			
-
-//					dump($clear);	
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ UNITS
+					if (!($row['responder_id']==0)) {
+						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . htmlentities ($row['theunit'], ENT_QUOTES) . "'  >" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</TD>\n";						// unit 8/24/08
+						$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
+						print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
+						print "\t<TD ID=TD$i STYLE='display:none'>\n\t<INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i)\">\n";
+						print "\t<INPUT TYPE='button' VALUE='Cancel'  style = 'height: 1.5em;' onClick=\"document.F$i.reset();hide_but($i)\"></TD><TD></TD>\n";
+						}
+					else {
+						print "\t<TD COLSPAN=3  CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='center'><B>NA</b></TD>\n";	
+						}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 INCIDENTS
+					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . htmlentities ($row['theticket'], ENT_QUOTES) . "'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call 8/24/08
 					$address = (empty($row['street']))? "" : $row['street'] . ", ";
 					$address .= $row['city'];
+					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". htmlentities($address, ENT_QUOTES) ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD><TD></TD>\n";		// address 8/24/08
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ASSIGNS
 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";				// comment
 					$ago = (is_date($row['clear']))? ezDate($row['clear']): "";
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ><NOBR>$ago</NOBR></TD><TD></TD>"; 
-					
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . $row['theticket'] . "'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". $address ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD><TD></TD>\n";		// address
-					if (!($row['responder_id']==0)) {
-						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . $row['theunit'] . "'  >" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</TD>\n";						// unit
-						$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
-	//					print "\t<TD TITLE= '$unit_st_val'>" .  $strike . shorten ($unit_st_val, 12) .  $strikend . "</TD>\n";						// status
-						print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
-						print "\t<TD ID=TD$i STYLE='display:none'>\n\t<INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i)\">\n";
-						print "\t<INPUT TYPE='button' VALUE='Cancel'  style = 'height: 1.5em;' onClick=\"document.F$i.reset();hide_but($i)\"></TD>\n";
-						}
-					else {
-						print "\t<TD COLSPAN=3  CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='center'><B>NA</b></TD>\n";	
-					
-//						print "\t<TD COLSPAN=3 ALIGN='center'><B>na</B></TD>";
-						}
-					
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ><NOBR>$ago</NOBR></TD>"; 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~					
 					print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['responder_id'] . "'>\n";
 					print "\t<INPUT TYPE='hidden' NAME='frm_ticket_id' VALUE='" . $row['ticket_id'] . "'>\n";
 					print "</FORM>\n</TR>\n";
@@ -483,7 +497,7 @@ switch ($func) {					// ========================================================
 
 		if ($i>1) {
 			print "<TR CLASS='" . $evenodd[($i+1)%2] . "'><TD COLSPAN=99 ALIGN='center'>";
-			print "<FONT SIZE='-1'><I>Call severity:&nbsp;&nbsp;&nbsp;&nbsp;<span CLASS='text_black'>Normal</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_blue'>Medium</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_red'>High</span></I></FONT>";
+			print "<FONT SIZE='-1'><I>Incident severity:&nbsp;&nbsp;&nbsp;&nbsp;<span CLASS='text_black'>Normal</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_blue'>Medium</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='text_red'>High</span></I></FONT>";
 			print "</TD></TR>";				
 			}				
 		else {
@@ -491,7 +505,9 @@ switch ($func) {					// ========================================================
 			print "<TR><TH COLSPAN=99><BR />No Current Call Assignments<BR /></TH></TR>";
 			}
 		print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>&nbsp;<TD COLSPAN=99 ALIGN='center'>";
-		print "<INPUT TYPE='button' VALUE = 'Add' onClick = \"document.nav_form.func.value='add'; document.nav_form.submit()\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		if (!is_guest()) {																		// 9/17/08
+			print "<INPUT TYPE='button' VALUE = 'Add' onClick = \"document.nav_form.func.value='add'; document.nav_form.submit()\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+			}
 		print "<INPUT TYPE='button' VALUE = 'Close' onClick = 'self.close()'>";
 
 		print "</TD></TR>";
@@ -588,6 +604,10 @@ switch ($func) {					// ========================================================
 <SCRIPT>
 	var incident_st = unit_st = assign_st = true;		// changes to false on activation
 
+	function do_del(the_Form) {
+		if (confirm("Delete this dispatch record?")) {the_Form.submit();}
+		}
+		
 	function do_reset(the_Form) {
 //		incident_st = unit_st = assign_st = true;
 		the_Form.func.value='edit';
@@ -720,10 +740,9 @@ switch ($func) {					// ========================================================
 				print "\t<OPTION VALUE=" . $row2['id'] . ">" . $row2['status_val'] . "</OPTION>\n";
 				$i++;
 				}		// end while()
-			print "\t</OPTGROUP>\n";
+			print "\t</OPTGROUP>\n</SELECT>\n";
 			unset($result);
 ?>
-				</SELECT>	
 			</TD></TR>
 		<TR CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Comments:</TD>
@@ -742,7 +761,7 @@ switch ($func) {					// ========================================================
 			$the_vis = "hidden";
 			$the_dis = TRUE;
 			}
-		print "\n<TR CLASS='odd'><TD CLASS='td_label'>Dispatched:</TD>";
+		print "\n<TR CLASS='odd'><TD CLASS='td_label' ALIGN='right'>Dispatched:</TD>";
 		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('dispatched')\" ><SPAN ID = 'dispatched' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("dispatched",totime($the_date), $the_dis);	// ($date_suffix,$default_date=0, $disabled=FALSE)
 		print "</SPAN></TD></TR>\n";
@@ -759,7 +778,7 @@ switch ($func) {					// ========================================================
 			$the_dis = TRUE;
 			}
 		$the_date = (is_date($asgn_row['responding']))? $asgn_row['responding']	: $now ;
-		print "\n<TR CLASS='even'><TD CLASS='td_label'>Responding:</TD>";
+		print "\n<TR CLASS='even'><TD CLASS='td_label' ALIGN='right'>Responding:</TD>";
 		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('responding')\" ><SPAN ID = 'responding' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("responding",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
@@ -776,7 +795,7 @@ switch ($func) {					// ========================================================
 			$the_dis = TRUE;
 			}
 		$the_date = (is_date($asgn_row['in-quarters']))? $asgn_row['in-quarters']	: $now ;
-		print "\n<TR CLASS='odd'><TD CLASS='td_label'>On-scene:</TD>";
+		print "\n<TR CLASS='odd'><TD CLASS='td_label' ALIGN='right'>On-scene:</TD>";
 		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('quarters')\" ><SPAN ID = 'quarters' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("quarters",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
@@ -793,7 +812,7 @@ switch ($func) {					// ========================================================
 			$the_dis = TRUE;
 			}
 		$the_date = (is_date($asgn_row['clear']))? $asgn_row['clear']	: $now ;
-		print "\n<TR CLASS='even'><TD CLASS='td_label'>Clear:</TD>";
+		print "\n<TR CLASS='even'><TD CLASS='td_label' ALIGN='right'>Clear:</TD>";
 		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"document.edit_Form.frm_complete.value=1; enable('clear')\" ><SPAN ID = 'clear' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("clear",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
@@ -816,14 +835,15 @@ switch ($func) {					// ========================================================
 			<TR CLASS='odd'><TD>&nbsp;</TD></TR>
 			<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'>
 <?php
-			if(!(is_date($clear))){				// 6/4/08	// 6/26/08
+//			if(!(is_date($clear))){				// 6/4/08	// 6/26/08
+			if(!(is_date($asgn_row['clear']))){				// 6/4/08	// 6/26/08
 ?>		
 <!--			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;"/> -->
 <?php
 				}
 			else {
 ?>		
-				<INPUT TYPE="BUTTON" VALUE="Delete" onClick="document.del_Form.submit()" style="height: 1.5em;"/>
+				<INPUT TYPE="BUTTON" VALUE="Delete" onClick="do_del(document.del_Form);" style="height: 1.5em;"/>
 <?php
 				}
 			}
@@ -924,7 +944,7 @@ switch ($func) {					// ========================================================
 		break;			// end case 'delete_db':
 
 	default:				// =======================================================================================
-		print "	error: " . __LINE__;
+		print $func . "	< error: " . __LINE__;
 	}				// end switch ($func)
 ?>
 

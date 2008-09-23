@@ -1,5 +1,5 @@
 <?php
-	require_once('functions.inc.php');
+	require_once('./incs/functions.inc.php');
 	$api_key = get_variable('gmaps_api_key');		// empty($_GET)
 	
 	if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
@@ -43,7 +43,7 @@
 	
 		
 	</SCRIPT>
-<script src="graticule.js" type="text/javascript"></script>
+<script src="./js/graticule.js" type="text/javascript"></script>
 	
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>

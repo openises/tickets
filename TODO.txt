@@ -1,0 +1,13 @@
+ Tickets TODO
+-------------------
+Note: some of these are discussion starters, no guarantee for implementation. Email developer re any thoughts on the following.                
+
+1. Provide for user-defined unit types, including icon color.
+2. Provide for live icon creation.
+3. Use White pages search for reverse phone and name lookup.
+4. Allow Unit status update from its initial display page.
+5. Allow user-to-user chat invitation.
+6. Allow photo upload and display.
+7. File attachment support.
+8. Restrict settings to string/bool values etc for bugfree preferences.
+9. Reverse Geocode: Click on map location will return city/couny/state.

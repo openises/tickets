@@ -1,5 +1,5 @@
 <?php
-	require_once('functions.inc.php');
+	require_once('./incs/functions.inc.php');
 	$api_key = get_variable('gmaps_api_key');
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -12,7 +12,7 @@
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 		<script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;key=<?php print $api_key; ?>"
 			type="text/javascript"></script>
-		<script src="./incs/extmaptypecontrol.js" type="text/javascript"></script>
+		<script src="./js/extmaptypecontrol.js" type="text/javascript"></script>
 		<script type="text/javascript">
 
 		try{

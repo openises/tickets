@@ -1,11 +1,24 @@
 <?php
-// 6/6/08 revised to accommodate deleted incident and unit records, these identified by a # at its index value
-require_once('functions.inc.php'); 
-do_login(basename(__FILE__));
+/*
+6/6/08 revised to accommodate deleted incident and unit records, these identified by a # at its index value
+8/7/08 added ACTION & PATIENT delete types
+8/9/08 calculate graphics width
+8/15/08	 mysql_fetch_array to mysql_fetch_assoc - performance
+8/15/08-1	handle dropped tickets
+*/
+$asof = "8/9/08";
+require_once('./incs/functions.inc.php'); 
+require_once('./incs/istest.inc.php'); 
+$my_session = do_login(basename(__FILE__));
+//dump($my_session);
+$img_width  = round(.8*$my_session['scr_width']/3);		//8/9/08
+//dump($img_width);
+if($istest) {
+	if (!empty($_POST)) {dump ($_POST);}
+	if (!empty($_GET)) {dump ($_GET);}
+	}
 
-//dump ($_POST);
-//dump ($_GET);
-//dump ($my_session);
+//$ionload =  ((isset($_POST) && isset($_POST['frm_group']) && $_POST['frm_group']=='i'))? " inc_onload();": "";
 
 extract($_GET);
 extract($_POST);
@@ -41,7 +54,9 @@ else {
 </style>
 
 <SCRIPT>
-
+<?php 
+	print "//  {$asof}  \n";
+?>	
 	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
@@ -192,7 +207,7 @@ else {
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$incidents[0]="";
 
-		while ($temp_row = mysql_fetch_array($temp_result)) {
+		while ($temp_row = mysql_fetch_assoc($temp_result)) {
 			$incidents[$temp_row['id']]=$temp_row['scope'];
 			$severity[$temp_row['id']]=$temp_row['severity'];
 			}
@@ -202,7 +217,7 @@ else {
 		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$unit_names[0]="TBD";
-		while ($temp_row = mysql_fetch_array($temp_result)) {
+		while ($temp_row = mysql_fetch_assoc($temp_result)) {
 			$unit_names[$temp_row['id']]=$temp_row['name'];
 			$unit_status_ids[$temp_row['id']]=$temp_row['un_status_id'];
 			}
@@ -210,14 +225,14 @@ else {
 		$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]un_status`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$status_vals[0]="TBD";
-		while ($temp_row = mysql_fetch_array($temp_result)) {
+		while ($temp_row = mysql_fetch_assoc($temp_result)) {
 			$status_vals[$temp_row['id']]=$temp_row['status_val'];
 			}
 		
 		$query = "SELECT `id`, `user` FROM `$GLOBALS[mysql_prefix]user`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$users[0]="TBD";
-		while ($temp_row = mysql_fetch_array($temp_result)) {
+		while ($temp_row = mysql_fetch_assoc($temp_result)) {
 			$users[$temp_row['id']]=$temp_row['user'];
 			}
 		$priorities = array("text_black","text_blue","text_red" );
@@ -243,12 +258,12 @@ else {
 		$caption =  "<TR CLASS = 'odd'><TD></TD><TD ALIGN='center'><U>Unit</U></TD>";
 		$curr_unit = "";
 		$statuses = array();
-		while($row = stripslashes_deep(mysql_fetch_array($result))) {			// build header row
+		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// build header row
 			if (!empty($row['info'])){
 				$statuses[$row['info']] = "";										// define the entry
 				$query = "SELECT `status_val` FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $row['info'] . " LIMIT 1" ;// status type
 				$result_val= mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				$row_val = stripslashes_deep(mysql_fetch_array($result_val));
+				$row_val = stripslashes_deep(mysql_fetch_assoc($result_val));
 				$caption .= "\t<TD ALIGN='CENTER'>&nbsp;&nbsp;" . shorten($row_val['status_val'], 12) . "&nbsp;&nbsp;</TD>\n";
 				}
 			}
@@ -259,12 +274,12 @@ else {
 		
 //		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]log`" .  $where . " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `when` ASC,`unit` ASC, `incident` ASC, `status` ASC" ;
 		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]log`" .  $where . " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `unit` ASC, `incident` ASC, `status` ASC, `when` ASC" ;
-
+//		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$i = 0;
 		if (mysql_affected_rows()>0) {				// main loop - top
 			print $caption;
-			while($row = stripslashes_deep(mysql_fetch_array($result))) {
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 				if (empty($curr_unit)) {
 					$curr_unit = $row['unit'];
 					$curr_inc = $row['incident'];
@@ -291,7 +306,7 @@ else {
 					$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
 //					dump($theUnitName);
 
-					print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>#" . $curr_unit . " ??? </TD>";
+					print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>[#" . $curr_unit . "]</TD>";
 
 //					print "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>";		// flush
 					foreach($statuses as $key => $val) {
@@ -362,7 +377,7 @@ else {
 // =============================================== STATION LOG  ===========================================		
 		
 	function do_sta_report($date_in, $func_in) {				// $frm_date, $mode as params
-		global $evenodd;
+		global $evenodd, $istest;
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 //		dump ($from_to);
 	
@@ -375,6 +390,8 @@ else {
 		$types[$GLOBALS['LOG_INCIDENT_CHANGE']]		="Incident change";
 		$types[$GLOBALS['LOG_ACTION_ADD']]			="Action added";
 		$types[$GLOBALS['LOG_PATIENT_ADD']]			="Patient added";
+		$types[$GLOBALS['LOG_ACTION_DELETE']]		="Action deleted";			// 8/7/08
+		$types[$GLOBALS['LOG_PATIENT_DELETE']]		="Patient deleted";
 		$types[$GLOBALS['LOG_INCIDENT_DELETE']]		="Incident delete";			// 6/26/08
 		$types[$GLOBALS['LOG_UNIT_STATUS']]			="Unit status change";
 		$types[$GLOBALS['LOG_UNIT_COMPLETE']]		="Unit complete";
@@ -382,13 +399,14 @@ else {
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
 
 		$query = "
-			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log` 
+			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, `log`.`id` AS `logid`, t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (log.responder_id = r.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON (log.info = s.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (log.who = u.id)
 	 		$where ORDER BY `when` ASC		
 			";
+//		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		
 		$titles = array ();
@@ -417,9 +435,10 @@ else {
 				print "<TH>Info</TH>";
 				print "<TH>User</TH>";
 				print "<TH>From</TH>";
+				if ($istest) {print "<TH>ID</TH>";}
 				print "</TR>\n";
 			
-			while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// main loop - top
+			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			// main loop - top
 				if ($row['code']<20) {
 					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
 					
@@ -428,13 +447,26 @@ else {
 						$curr_date = date("z", $row['when']);
 						}
 					else {print "<TD></TD>";}
+//					$the_ticket = (empty($row['tickname']))? "[#" . $row['ticket_id']. "]" : $row['tickname'] ;
+
+					if (empty($row['tickname'])) {
+						$the_ticket = ($row['ticket_id']>0 )? "[#" . $row['ticket_id']. "]" :"";
+						}
+					else {
+						$the_ticket =$row['tickname'] ;
+						}
+//			$action = (empty($_POST['action'])) ? ( isset( $defaultString ) ? $defaultString : 'default' ) : $_POST['action'];
+//			$the_ticket = (empty($row['tickname']))? (($row['ticket_id']>0 )? "[#" . $row['ticket_id']. "]" :"";) : $row['tickname'] ;
+
 					print "<TD>" . date('H:i',$row['when']) . "</TD>";
 					print "<TD>" . $types[$row['code']] . "</TD>";
-					print "<TD>" . $row['tickname'] . "</TD>";
+//					print "<TD>" . $row['tickname'] . "</TD>";
+					print "<TD>" . $the_ticket . "</TD>";
 					print "<TD>" . $row['name'] . "</TD>";
 					print "<TD>" . $row['info'] . "</TD>";
 					print "<TD>" . $row['user'] . "</TD>";
 					print "<TD>" . $row['from'] . "</TD>";
+					if ($istest) {print "<TD>" . $row['logid'] . "</TD>";}				
 					print "</TR>\n";
 					$i++;
 					}				
@@ -451,7 +483,7 @@ else {
 // ================================================== INCIDENT SUMMARY =========================================		
 		
 	function do_inc_report($date_in, $func_in) {				// Incidents summary report - $frm_date, $mode as params
-		global $evenodd;
+		global $evenodd, $img_width;
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 //		dump ($from_to);
 		$priorities = array("text_black","text_blue","text_red" );
@@ -482,9 +514,9 @@ else {
 		$titles['lw'] = "<B>Incidents</B> Report - Last Week - ";
 		
 		$i = 0;
-		print "\n<TABLE ALIGN='left' BORDER = 0 width='800px'>\n<TR CLASS='even'>";	
+		print "\n<TABLE ALIGN='left' BORDER = 0 width=800>\n";	
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
-		print "<TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
+		print "<TR CLASS='even'><TH COLSPAN=6 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
 		$curr_date="";
 		if (mysql_affected_rows()>0) {	
 
@@ -498,7 +530,8 @@ else {
 			print "</TR>\n";
 			$inc_types = array();
 			
-			while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// main loop - top
+			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			// 8/15/08 main loop - top
+//				dump ($row);
 				if ($row['code']<20) {
 					if (array_key_exists($row['in_types_id'], $inc_types)) {
 						$inc_types[$row['in_types_id']]++;
@@ -515,13 +548,14 @@ else {
 					print "<TD>" . date('H:i',$row['when']) . "</TD>";
 					print "<TD>" . $types[$row['code']] . "</TD>";
 					if ($row['ticket_id']>0) {
-						$severity_class = empty($row['tick_severity'])? $priorities[0]: $priorities[$row['tick_severity']]  ;	// accommodate null
+						$the_ticket = (empty($row['tick_name']))? "[#" . $row['ticket_id'] . "]" : shorten($row['tick_name'],20);	// 8/15/08 -1
+						$severity_class = empty($row['tick_severity'])? $priorities[0]: $priorities[$row['tick_severity']];			// accommodate null
 						print "<TD TITLE = '" . 
 						$row['ticket_id'] . "' CLASS='" . 
 						$severity_class . "' onClick = 'viewT(" . 
 //						$row['tick_severity'] . "' onClick = 'viewT(" . 
 						$row['ticket_id'] . ")'>" . 
-						shorten($row['tick_name'],20) . "</TD>";
+						$the_ticket . "</TD>";
 						}
 					print "<TD>" . $row['user_name'] . "</TD>";
 					print "<TD>" . $row['from'] . "</TD>";
@@ -534,29 +568,37 @@ else {
 		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id IN (" . $query . ")";
 //		dump ($query2);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			//
+			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			//
 //				dump ($row['id']);
 				}																// end while($row ...		
-			}
-		else {
-			print "\n<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'><br /><I>No data for this period</I><BR /></TD></TR>\n";
-			}
-//				 		graphics
-$s_urlstr =  "sever_graph.php?p1=" . urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1]);		// date range in db format
-$t_urlstr =  "inc_types_graph.php?p1=" . urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1]);
-$c_urlstr =  "city_graph.php?p1=" . urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1]);
+//				 		graphics date range in db format and calculated img width
+$s_urlstr =  "sever_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1] . "&p3=" . $img_width);	//8/9/08
+$t_urlstr =  "inc_types_graph.php?p1=" . 	urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1] . "&p3=" . $img_width);
+$c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1] . "&p3=" . $img_width);
 
 ?>
-<TR><TD COLSPAN=99 ALIGN='center'><br><HR SIZE=1 COLOR='blue' WIDTH='75%'></TD></TR>
-<TR><TD COLSPAN=99 ALIGN='LEFT'><NOBR>
-<img src="<?php print $s_urlstr;?>" border=0>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<img src="<?php print $t_urlstr;?>" border=0>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<img src="<?php print $c_urlstr;?>" border=0>
-</NOBR>
-</TD></TR>
-<TR><TD COLSPAN=99 ALIGN='center'><HR COLOR='red' size = 1 width='50%'></TD></TR>
 </TABLE>
+<BR CLEAR='left' />
+<TABLE>
+<TR><TD COLSPAN=3 ALIGN='center'><br><HR SIZE=1 COLOR='blue' WIDTH='75%'></TD></TR>
+<TR VALIGN='bottom'><TD ALIGN='center'>
+	<img src="<?php print $s_urlstr;?>" border=0 ID = "sev_img">
+	</TD>
+
+	<TD ALIGN='center'>	
+	<img src="<?php print $t_urlstr;?>" border=0 ID = "typ_img">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	</TD>
+	
+	<TD ALIGN='center'>
+	<img src="<?php print $c_urlstr;?>" border=0 ID = "cit_img">
+	</TD>
+	</TR>
 <?php
+			}
+		else {
+			print "\n<TR CLASS='odd'><TH COLSPAN='99' ALIGN='center'><br /><I>No data for this period!</I><BR /><BR /></TH></TR>\n";
+			}
+		print "</TABLE>\n";
 			
 		}		// end function do_inc_report()
 

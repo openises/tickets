@@ -1,5 +1,5 @@
 <?php  
-require_once('functions.inc.php'); 
+require_once('./incs/functions.inc.php'); 
 extract($_GET);
 
 $where = " WHERE `when` > '" . $p1 . "' AND `when` < '" . $p2 . "' ";
@@ -23,7 +23,8 @@ while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// b
 //dump ($cities);
 
 include('baaChart.php');
-$mygraph = new baaChart(350);
+$width = isset($img_width)? $img_width: 300;
+$mygraph = new baaChart($width);
 $mygraph->setTitle("Incidents by Location", "");
 
 foreach($cities as $key => $val) {

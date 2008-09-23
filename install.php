@@ -1,11 +1,28 @@
 <?php
-// 6/7/08 - added kml files setting
-// 6/9/08 - revised default 'admin' account level to 'super'
-// 6/12/08 - revised version number only
-// 6/27/08 - revised version number only
-// 6/28/08 - revised version number only
+/*
+10/8/07 added domain detection for GMaps API key association
+1/8/08 added settings email_reply_to' and call_board;
+3/20/08 added settings map height and width;
+6/7/08  added kml files setting
+6/9/08  revised default 'admin' account level to 'super'
+6/12/08 revised version number only
+6/27/08 revised version number only
+6/28/08 revised version number only
+7/16/08 revised default military time
+9/13/08 added error_reporting, lat/lng setting entry
+9/13/08 added table `unit_types`
+9/13/08 added white pages key
+9/13/08 GSearch API key
+9/15/08 added tables 'login'
+9/16/08 corr's to undefined's
+9/17/08 dropped field 'hash', rearranged field 'user' in table 'user'
+9/17/08 added table 'photos'
+9/18/08 added table `cities`
+9/22/08 version # only
+*/
+error_reporting(E_ALL);			// 9/13/08
 
-$version = "2.7.d beta";		// see usage below
+$version = "2.8.b beta";		// see usage below 9/22/08
 
 function dump($variable) {
 	echo "\n<PRE>";				// pretty it a bit
@@ -93,16 +110,20 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		table_exists($db_prefix."assigns",$drop_tables);
 		table_exists($db_prefix."chat_messages",$drop_tables);
 		table_exists($db_prefix."chat_rooms",$drop_tables);
+		table_exists($db_prefix."cities",$drop_tables);		// 9/17/08
 		table_exists($db_prefix."clones",$drop_tables);
 		table_exists($db_prefix."contacts",$drop_tables);
 		table_exists($db_prefix."in_types",$drop_tables);
 		table_exists($db_prefix."log",$drop_tables);
+		table_exists($db_prefix."logins",$drop_tables);		// 9/17/08
 		table_exists($db_prefix."notify",$drop_tables);
-		table_exists($db_prefix."patient",$drop_tables);
+		table_exists($db_prefix."patient",$drop_tables);	
+		table_exists($db_prefix."photos",$drop_tables);		// 9/17/08
 		table_exists($db_prefix."responder",$drop_tables);
 		table_exists($db_prefix."settings",$drop_tables);
 		table_exists($db_prefix."ticket",$drop_tables);
 		table_exists($db_prefix."tracks",$drop_tables);
+		table_exists($db_prefix."unit_types",$drop_tables);
 		table_exists($db_prefix."un_status",$drop_tables);
 		table_exists($db_prefix."user",$drop_tables);
 		table_exists($db_prefix."session",$drop_tables);
@@ -130,7 +151,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 
 		$table_name = prefix("assigns");
 		$query = 	"CREATE TABLE `$table_name` (
-		  `id` bigint(4) NOT NULL auto_increment,
+		  `id` bigint(8) NOT NULL auto_increment,
 		  `as_of` datetime default NULL,
 		  `status_id` int(4) default '1',
 		  `ticket_id` int(4) default NULL,
@@ -182,6 +203,27 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
 		$tables .= $table_name . ", ";
 
+
+	// -- 
+	// -- Table structure for table `cities`
+	// -- 
+	
+		$table_name = prefix("cities");
+		$query = "CREATE TABLE `$table_name` (
+		`id` int(11) NOT NULL auto_increment,
+		`city_zip` int(5) unsigned zerofill NOT NULL,
+		`city_name` varchar(50) NOT NULL,
+		`city_state` char(2) NOT NULL,
+		`city_lat` double NOT NULL,
+		`city_lng` double NOT NULL,
+		`city_county` varchar(50) NOT NULL,
+		PRIMARY KEY  (`id`)
+		) ENGINE=MyISAM;";
+	
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+
 	// --
 	// -- Table structure for table `contacts`
 	// --
@@ -216,7 +258,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		  `sort` INT NOT NULL DEFAULT '0',
 		  PRIMARY KEY  (`id`),
 		  UNIQUE KEY `ID` (`id`)
-		) ENGINE=InnoDB COMMENT='Incident types';";
+		) ENGINE=MyISAM COMMENT='Incident types';";
 
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
 		$tables .= $table_name . ", ";
@@ -232,7 +274,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 
 		$table_name = prefix("log");
 		$query = 	"CREATE TABLE `$table_name` (
-		  `id` bigint(7) NOT NULL auto_increment,
+		  `id` bigint(8) NOT NULL auto_increment,
 		  `who` tinyint(7) default NULL,
 		  `from` varchar(20) default NULL,
 		  `when` datetime default NULL,
@@ -244,6 +286,22 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		  UNIQUE KEY `ID` (`id`)
 		) ENGINE=InnoDB COMMENT='Log of station actions';";
 
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+
+	// -- 
+	// -- Table structure for table `logins`	// 9/15/08
+	// -- 
+		$table_name = prefix("logins");
+		$query = 	"CREATE TABLE `$table_name` (
+		  `id` bigint(8) NOT NULL auto_increment,
+		  `ip` varchar(15) NOT NULL,
+		  `salt` varchar(36) NOT NULL,
+		  `intime` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+		  PRIMARY KEY  (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=armscii8 COMMENT='login authentication';";
+		
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
 		$tables .= $table_name . ", ";
 
@@ -284,6 +342,28 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		  `updated` datetime default NULL,
 		  PRIMARY KEY  (`id`),
 		  UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+
+
+// -- 
+// -- Table structure for table `photos`
+// -- 
+		$table_name = prefix("photos");
+
+		$query = "CREATE TABLE `$table_name` (
+		`id` bigint(8) NOT NULL auto_increment,
+		`description` varchar(256) NOT NULL,
+		`ticket_id` int(7) NOT NULL COMMENT 'associated ticket id',
+		`taken_by` varchar(48) default NULL,
+		`taken_on` varchar(24) default NULL,
+		`by` int(7) NOT NULL COMMENT 'user id',
+		`on` datetime NOT NULL,
+		`from` varchar(16) NOT NULL COMMENT 'ip address',
+		PRIMARY KEY  (`id`)
 		) ENGINE=MyISAM;";
 
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
@@ -394,9 +474,41 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
 		$tables .= $table_name . ", ";
 
-	// --
-	// -- Table structure for table `un_status`
-	// --
+//		-- 
+//		-- Table structure for table `unit_types`		8/13/08
+//		-- 
+		
+		$table_name = prefix("unit_types");
+		$query = 	"CREATE TABLE `$table_name` (
+		  `id` int(11) NOT NULL auto_increment,
+		  `name` varchar(16) NOT NULL,
+		  `description` varchar(48) NOT NULL,
+		  `color` varchar(7) NOT NULL,
+		  `updated` datetime NOT NULL,
+		  `from` varchar(16) NOT NULL COMMENT 'ip',
+		  `user_id` int(11) NOT NULL COMMENT 'by',
+		  PRIMARY KEY  (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Allows for variable unit types' AUTO_INCREMENT=5 ;";
+		
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+//		-- 
+//		--  data for table `unit_types`
+//		-- 
+		
+		$query = "INSERT INTO `$table_name` (`id`, `name`, `description`, `color`, `updated`, `from`, `user_id`) VALUES 
+			(1, 'EMS', 'Emergency medicine services', 'ffff00', '0000-00-00 00:00:00', '', 1),
+			(2, 'Fire', 'Fire Services', 'ff0000', '0000-00-00 00:00:00', '', 1),
+			(3, 'Police', 'Police services', '0000ff', '0000-00-00 00:00:00', '', 1),
+			(4, 'Mutual', 'Mutual assistance', 'ffffff', '0000-00-00 00:00:00', '', 1);
+			";
+		
+		mysql_query($query) or die("INSERT INTO TABLE failed, execution halted at line ". __LINE__);
+		
+//		--
+// 		-- Table structure for table `un_status`
+// 		--
 
 		$table_name = prefix("un_status");
 		$query = 	"CREATE TABLE `$table_name` (
@@ -410,23 +522,23 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		) ENGINE=MyISAM;";
 
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
 		$query = "INSERT INTO `$table_name` ( `id` , `status_val` , `description` , `group` , `sort` ) VALUES
 			(NULL , 'examp1', 'Example one', 'first', '1'),
 			(NULL , 'examp2', 'Example two', 'second', '2');
 			";
 		mysql_query($query) or die("INSERT INTO TABLE failed, execution halted at line ". __LINE__);
-		$tables .= $table_name . ", ";
 
 	// --
-	// -- Table structure for table `user`
+	// -- Table structure for table `user` - revisions 9/17/08
 	// --
 		$table_name = prefix("user");
 		$query = 	"CREATE TABLE `$table_name` (
 		  `id` bigint(8) NOT NULL auto_increment,
-		  `passwd` tinytext COMMENT 'cleared in production version',
-		  `hash` varchar(32) default NULL COMMENT 'md5 hash',
+		  `user` text COMMENT 'userid',
+		  `passwd` tinytext COMMENT 'md5 hash',
 		  `info` text NOT NULL,
-		  `user` text,
 		  `level` tinyint(1) default NULL,
 		  `email` text,
 		  `ticket_per_page` tinyint(1) default NULL,
@@ -518,28 +630,32 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		do_insert_settings('frameborder','1');
 		do_insert_settings('framesize','50');
 		do_insert_settings('gmaps_api_key',$_POST['frm_api_key']);		//
+		do_insert_settings('gsearch_api_key','');		// 9/13/08 
 		do_insert_settings('guest_add_ticket','0');
 		do_insert_settings('host','www.yourdomain.com');	
 		do_insert_settings('kml_files','1');		//	 'new 6/7/08
+		do_insert_settings('lat_lng','0');			// 9/13/08
 		do_insert_settings('link_capt','');
 		do_insert_settings('link_url','');
 		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
 		do_insert_settings('map_caption','Your area');
 		do_insert_settings('map_height','512');
 		do_insert_settings('map_width','512');
-		do_insert_settings('military_time','0');
+		do_insert_settings('military_time','1');				// 7/16/08
 		do_insert_settings('restrict_user_add','0');
 		do_insert_settings('restrict_user_tickets','0');
 		do_insert_settings('ticket_per_page','0');
 		do_insert_settings('ticket_table_width','640');
 		do_insert_settings('UTM','0');
 		do_insert_settings('validate_email','1');
+		do_insert_settings('wp_key','729c1a751fd3d2428cfe2a7b43442c64');		// 9/13/08 
+		
 		print "<LI> Inserted default settings";
 		}
 
 	//output mysql settings to mysql.inc.php
 	function write_conf($host,$db,$user,$password,$prefix) {
-		if (!$fp = fopen('mysql.inc.php', 'a'))
+		if (!$fp = fopen('./incs/mysql.inc.php', 'a'))
         	print '<LI> <FONT CLASS="warn">Cannot open mysql.inc.php for writing</FONT>';
 		else {
 			ftruncate($fp,0);
@@ -555,7 +671,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 			}
 
 		fclose($fp);
-		print '<LI> Wrote configuration to \'<B>mysql.inc.php</B>\'';
+		print '<LI> Wrote configuration to \'<B>./incs/mysql.inc.php</B>\'';
 		}
 
 	//upgrade db from 0.65 to 0.7
@@ -581,7 +697,9 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		insert_settings();
 		}
 
-	if($_GET['go']) {				/* connect to mysql database if option isn't writeconf' */
+//	if($_GET['go']) {				/* connect to mysql database if option isn't writeconf' */
+	if (array_key_exists('go', $_GET)) {		// 9/16/08
+
 
 		$db_prefix=$_POST['frm_db_prefix'];
 
@@ -649,7 +767,8 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		print '<BR /><BR /><FONT CLASS="warn">It is strongly recommended that you move/delete/change rights on install.php after this</FONT>';
 		print '<BR /><BR /><A HREF="index.php"><< Start Tickets</A>';
 		}
-	else if ($_GET['help']) {
+//	else if ($_GET['help']) {		// 
+	else if (array_key_exists('help', $_GET)) {		// 9/16/08
 ?>
 		<BLOCKQUOTE>
 		Fill in the install form with your mysql server settings. The 'table prefix' option enables you to prefix the tables with
@@ -723,10 +842,5 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 			<?php
 			}
 		}
-/*
-10/8/07 - added domain detection for GMaps API key association
-1/8/08 - added settings email_reply_to' and call_board;
-3/20/08 - added settings map height and width;
-*/
 ?>
 </BODY></HTML>

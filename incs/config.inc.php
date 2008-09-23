@@ -1,5 +1,13 @@
 <?php
-// 6/9/08 - revised to add 'super' priv's level
+/*
+6/9/08 revised to add 'super' priv's level
+7/16/08 revised default military time
+8/8/08	added server identification
+8/26/08 added server times
+9/13/08 added lat_lng setting
+9/13/08 added wp_key
+9/13/08 added GSearch key
+*/
 $colors = array ('odd', 'even');
 
 /* run the OPTIMIZE sql query on all tables */
@@ -61,23 +69,26 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		do_insert_settings('email_reply_to','');		// new 1/10/08
 		do_insert_settings('frameborder','1');
 		do_insert_settings('framesize','50');
-		do_insert_settings('gmaps_api_key','0');		// frm_api_key
+		do_insert_settings('gmaps_api_key','');			// API key
+		do_insert_settings('gsearch_api_key','');		// 9/13/08 GSearch API key
 		do_insert_settings('guest_add_ticket','0');
 		do_insert_settings('host','www.yourdomain.com');
-		do_insert_settings('kml_files','1');			//	 'new 6/7/08
+		do_insert_settings('kml_files','1');			// new 6/7/08
+		do_insert_settings('lat_lng','0');				// 9/13/08 
 		do_insert_settings('link_capt','');
 		do_insert_settings('link_url','');
 		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
 		do_insert_settings('map_caption','Your area');
 		do_insert_settings('map_height','512');
 		do_insert_settings('map_width','512');
-		do_insert_settings('military_time','0');
+		do_insert_settings('military_time','1');		// 7/16/08
 		do_insert_settings('restrict_user_add','0');
 		do_insert_settings('restrict_user_tickets','0');
 		do_insert_settings('ticket_per_page','0');
 		do_insert_settings('ticket_table_width','640');
 		do_insert_settings('UTM','0');
-		do_insert_settings('validate_email','1');
+		do_insert_settings('validate_email','1');	
+		do_insert_settings('wp_key','729c1a751fd3d2428cfe2a7b43442c64');		// 9/13/08 wp_key
 		}	//
 
 
@@ -158,10 +169,15 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	$pluralU = ($mutus_in_db==1)? "": "s";
 	$pluralO = ($othrs_in_db==1)? "": "s";
 	
-	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>Summary</TD></TR><TR>";	
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . get_variable('_version') . "</B></TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'><B>" . phpversion() . "</B></TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'><B>$GLOBALS[mysql_db]</B> on <B>$GLOBALS[mysql_host]</B> running mysql <B>".mysql_get_server_info()."</B></TD></TR>";
+	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>System Summary</TD></TR><TR>";	
+
+	$now = format_date(strval(date("U")));									// 8/26/08
+	$adj = format_date(strval(date("U") - (get_variable('delta_mins')*60)));
+
+	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . get_variable('_version') . "</B></TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
+	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Server time:</TD><TD ALIGN='left'>" . $now . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Adjusted:</B> $adj  </TD></TR>";
 	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db)." closed, $ticket_in_db total</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>$meds_in_db Med'l unit$pluralM, $fire_in_db Fire unit$pluralF, $cops_in_db Police unit$pluralC, $mutus_in_db Mutual$pluralU, $othrs_in_db Other$pluralO, ".($meds_in_db+$fire_in_db+ $cops_in_db + $mutus_in_db +$othrs_in_db)." total</TD></TR>";
 	
@@ -169,14 +185,14 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
 	print $my_session['user_name'] . ": " .	get_level_text ($my_session['level']);
 
-	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
+	print "</TD></TR><TR CLASS='odd'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
 	$my_session['ticket_per_page'] == 0 ? print "unlimited" : print $my_session['ticket_per_page'];
-	print " tickets/page, order by '<B>".str_replace('DESC','descending',$my_session['sortorder'])."</B>'</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
+	print " tickets/page, order by '".str_replace('DESC','descending',$my_session['sortorder'])."'</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
 	print $_SERVER["HTTP_USER_AGENT"];
 	print  "</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $my_session['scr_width'] . " x " . $my_session['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $my_session['scr_width'] . " x " . $my_session['scr_height'] . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 
@@ -279,24 +295,26 @@ function get_setting_help($setting){/* get help for settings */
 		case 'email_reply_to':			return 'The default reply-to address for emailing incident information'; break;
 		case 'frameborder': 			return 'Size of frameborder'; break;
 		case 'framesize': 				return 'Size of the top frame in pixels'; break;
-		case 'gmaps_api_key':			return 'Google maps API key - see HELP/README re how to obtain'; break;
+		case 'gmaps_api_key':			return 'Google maps API key - see HELP/README re how to obtain'; break;	
+		case 'gsearch_api_key':			return 'Google Search API key - see HELP/README re how to obtain'; break;	//9/13/08
 		case 'guest_add_ticket': 		return 'Allow guest users to add tickets - NOT RECOMMENDED'; break;
 		case 'host': 					return 'Hostname where Tickets is run'; break;
+		case 'kml_files':  				return "Dont/Do display KML files - 0/1"; break;
+		case 'lat_lng':					return 'Lat/lng display: (0) for DDD.ddddd, (1) for DDD MMM SS.ss, (2) for DDD MM.mm'; break;		// 9/13/08
 		case 'link_capt':				return 'Caption to be used for external link button'; break;
 		case 'link_url':				return 'URL of external page link'; break;
 		case 'login_banner': 			return 'Message to be shown at login screen'; break;
-		case 'kml_files':  				return 'Don\'t/Do display KML files - 0/1'; break;
 		case 'map_caption':				return 'Map caption - cosmetic'; break;
 		case 'map_height':				return 'Map height - pixels'; break;
 		case 'map_width':				return 'Map width - pixels'; break;
 		case 'military_time': 			return 'Enter dates as military time (no am/pm)'; break;
-		case 'reporting': 				return 'Enable/disable automatic ticket reporting (see help for more info)'; break;
 		case 'restrict_user_add': 		return 'Restrict user to only post tickets as himself'; break;
 		case 'restrict_user_tickets': 	return 'Restrict to showing only tickets to current user'; break;
 		case 'ticket_per_page': 		return 'Number of tickets per page to show'; break;
 		case 'ticket_table_width': 		return 'Width of table when showing ticket'; break;
 		case 'UTM':						return 'Shows UTM values in addition to Lat/Long'; break;
 		case 'validate_email': 			return 'Simple email validation check for notifies. Enter 1 for yes'; break;
+		case 'wp_key': 					return 'Not used in this version'; break;												// 9/13/08
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}

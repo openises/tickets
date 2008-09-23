@@ -1,5 +1,5 @@
 <?php
-	require_once('functions.inc.php'); 
+	require_once('./incs/functions.inc.php'); 
 	extract ($_GET);	
 /*
 	chat_messages : // id message  when chat_room_id user_id from

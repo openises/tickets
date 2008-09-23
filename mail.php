@@ -1,5 +1,8 @@
 <?php
-require_once('functions.inc.php');
+/*
+9/17/08 notify user if no contact addresses
+*/
+require_once('./incs/functions.inc.php');
 if($istest) {
 	dump ($_GET);
 	dump ($_POST);
@@ -113,7 +116,7 @@ if (!empty ($_POST)) {
 //			$reply_to = "<INPUT TYPE='text' NAME='frm_reply_to' SIZE=36 VALUE=''>";
 //			}
 ?>
-	<SCRIPT src="./incs/multiSelect.js"></SCRIPT>
+	<SCRIPT src="./js/multiSelect.js"></SCRIPT>
 
 	<SCRIPT>
 	String.prototype.trim = function () {
@@ -162,17 +165,23 @@ if (!empty ($_POST)) {
 	<TR CLASS='odd'><TD>Ticket:</TD><TD><B><?php print shorten($t_row['scope'], 48); ?></B></TD></TR>
 	<TR CLASS='even'><TD><NOBR>Replies to:&nbsp;</NOBR></TD>				<TD><INPUT TYPE='text' NAME= 'frm_reply_to' SIZE = 32 VALUE = '<?php print get_variable("email_reply_to");?>'></TD></TR>
 	<TR CLASS='odd'><TD>Add'l text:</TD>		<TD><TEXTAREA ROWS = 2 COLS=36 NAME='frm_text'></TEXTAREA></TD></TR>
-	<TR CLASS='even'><TD>To:</TD>	
 <?php
 //						generate dropdown menu of contacts
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$height = (mysql_affected_rows() + 1) * 16;
-		print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple >\n";
-    	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-			print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "</OPTION>\n";
+		if (mysql_affected_rows()>0) {				// 9/17/08
+			$height = (mysql_affected_rows() + 1) * 16;
+			print "<TR CLASS='even'><TD>To:</TD>";
+			print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple >\n";
+	    	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+				print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "</OPTION>\n";
+				}
+			print "\t</SELECT>\n</TD></TR>";
+			}				// end (mysql_affected_rows()>0)
+		else {
+			print "<TR CLASS='even'><TD COLSPAN=2 align='CENTER'><B>No addresses.  Populate 'Contacts' table via Configuration link.</TD></TR>";
 			}
-		print "\t</SELECT>\n</TD></TR>";
+		
 ?>
 	
 	<TR CLASS='odd'><TD COLSPAN=2 ALIGN="center"><BR />

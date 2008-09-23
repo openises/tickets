@@ -1,7 +1,9 @@
 <?php
-//	original, converted from tracks.php
-//do_login(basename(__FILE__));
-require_once('functions.inc.php');
+/*
+original, converted from tracks.php
+*/
+require_once('./incs/functions.inc.php');
+//do_login(basename(__FILE__));		// in a window
 extract($_GET);
 
 $api_key = get_variable('gmaps_api_key');
@@ -272,10 +274,8 @@ global $source, $my_session, $evenodd;
 	document.getElementById("side_bar").innerHTML += side_bar_html;	// append the assembled side_bar_html contents to the side_bar div
 	
 <?php
-		do_kml() 		// generate KML JS - added 5/23/08
-?>
-</SCRIPT>
-<?php
+	do_kml();		// generate KML JS - added 5/23/08
+	print "\n</SCRIPT>\n";
 	}				// end function list_responders() ===========================================================
 ?>
 
@@ -307,13 +307,14 @@ global $source, $my_session, $evenodd;
 </SCRIPT>
 	</HEAD>
 	<BODY onLoad = "ck_frames()" onunload="GUnload()">
+	<A NAME='top'>
 		<TABLE ID='outer'><TR CLASS='even'><TD ALIGN='center' colspan=2><B><FONT SIZE='+1'>Mobile Unit <?php print $source;?> Tracks</FONT></B></TD></TR><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>
 			<DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 			<BR><BR>
 			<CENTER><SPAN onClick = 'self.close()'><B><U>Close</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<SPAN onClick = 'javascript:history.go(0)'><B><U>Refresh</U></SPAN>
+			<a href="javascript:location.reload(true)"><B><U>Refresh</U>
 			</TD></TR>
 			</TABLE><!-- end outer -->
 			
@@ -332,6 +333,15 @@ global $source, $my_session, $evenodd;
 						<!-- END RESPONDER LIST and ADD -->
 <?php
 		print list_responders("", 0);
+		$alt_urlstr =  "./incs/alt_graph.php?p1=" . urlencode($source) ;		// 7/18/08  Call sign for altitude graph
+?>
+
+<BR /><HR ALIGN='center' SIZE=1 COLOR='blue' WIDTH='75%'><BR />
+<CENTER><img src="<?php print $alt_urlstr;?>" border=0 />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br><br>
+<CENTER><A HREF='#top'><U>to top</U></A>
+<?php
+
 		print "\n</BODY></HTML>\n";
 
 ?>

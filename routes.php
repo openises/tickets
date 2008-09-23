@@ -1,10 +1,14 @@
 <?php
-//revised 5/23/08 per AD7PE - line 432 
+/*
+5/23/08 per AD7PE - line 432
+8/25/08 handling sgl quotes in unit names
+8/25/08 TITLE to td's
+*/
 error_reporting(E_ALL);
-require_once('functions.inc.php');
+require_once('./incs/functions.inc.php');
 $my_session = do_login(basename(__FILE__));		// returns session array
 if($istest) {
-	dump(basename(__FILE__));
+//	dump(basename(__FILE__));
 	print "GET<br />\n";
 	dump($_GET);
 	print "POST<br />\n";
@@ -22,6 +26,7 @@ $_GET = stripslashes_deep($_GET);
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Script-date" CONTENT="8/25/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
     <style type="text/css">
       body 					{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
@@ -54,8 +59,7 @@ if (!empty($_POST)) {
 		}
 ?>	
 <SCRIPT>
-
-try {
+try {	
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
@@ -210,12 +214,12 @@ function doReset() {
 
 <?php
 	$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
-	print list_responders("", $unit_id);
+	print do_list($unit_id);
 	print "</HTML> \n";
 
 	}			// end if/else !empty($_POST)
 
-function list_responders($addon = "", $unit_id ="") {
+function do_list($unit_id ="") {
 	global $row_ticket, $my_session;
 	
 ?>
@@ -230,7 +234,9 @@ function list_responders($addon = "", $unit_id ="") {
 	    function setDirections(fromAddress, toAddress, locale) {
 	    	last_from = fromAddress;
 	    	last_to = toAddress;
+//	    	alert("from: " + fromAddress + " to: " + toAddress, { "locale": locale });
 	    	gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale });
+//	    	alert (235);
 	    	}		// end function set Directions()
 	
 		function createMarker(point,sidebar,tabs, color, id) {		// Creates marker and sets up click event infowindow
@@ -263,34 +269,42 @@ function list_responders($addon = "", $unit_id ="") {
 			}				// end function create Marker()
 	
 		function myclick(id) {								// Responds to sidebar click
-			which = id;
-			document.getElementById(last).style.visibility = "hidden";		// hide last check
-			var element= "R"+id;
-			document.getElementById(element).style.visibility = "visible";
-			last = element;													// new 'last' = current selection
-//			GEvent.trigger(gmarkers[id], "click");
-			var thelat = <?php print $row_ticket['lat'];?>; var thelng = <?php print $row_ticket['lng'];?>;
-			setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, "en_US");
+			if (!(lats[id])) {
+				alert("Cannot route -  no position data currently available");
+				return false;
+				}
+			else {
+				which = id;
+				document.getElementById(last).style.visibility = "hidden";		// hide last check
+				var element= "R"+id;
+				document.getElementById(element).style.visibility = "visible";
+				last = element;													// new 'last' = current selection
+//				GEvent.trigger(gmarkers[id], "click");
+				var thelat = <?php print $row_ticket['lat'];?>; var thelng = <?php print $row_ticket['lng'];?>;
+				setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, "en_US");
+				}
 			}
 	
 		function doGrid() {
 			map.addOverlay(new LatLonGraticule());
 			}
 	
-		function handleErrors(){
-			if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
-			alert("No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
+		function handleErrors(){		//G_GEO_UNKNOWN_DIRECTIONS 
+			if (gdir.getStatus().code == G_GEO_UNKNOWN_DIRECTIONS )
+				alert("290: No driving directions are available to/from this location.\nError code: " + gdir.getStatus().code);
+			else if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
+				alert("292: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_SERVER_ERROR)
-				alert("A geocoding or directions request could not be successfully processed, yet the exact reason for the failure is not known.\n Error code: " + gdir.getStatus().code);
+				alert("294: A geocoding or directions request could not be successfully processed, yet the exact reason for the failure is not known.\n Error code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_MISSING_QUERY)
-				alert("The HTTP q parameter was either missing or had no value. For geocoder requests, this means that an empty address was specified as input. For directions requests, this means that no query was specified in the input.\n Error code: " + gdir.getStatus().code);
+				alert("296: The HTTP q parameter was either missing or had no value. For geocoder requests, this means that an empty address was specified as input. For directions requests, this means that no query was specified in the input.\n Error code: " + gdir.getStatus().code);
 	//		else if (gdir.getStatus().code == G_UNAVAILABLE_ADDRESS)  <--- Doc bug... this is either not defined, or Doc is wrong
-	//			alert("The geocode for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code);
+	//			alert("296: The geocode for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_BAD_KEY)
-				alert("The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
+				alert("300: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_BAD_REQUEST)
-				alert("A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
-			else alert("An unknown error occurred.");
+				alert("302: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
+			else alert("303: An unknown error occurred.");
 			}		// end function handleErrors()
 	
 		function onGDirectionsLoad(){ 
@@ -446,30 +460,32 @@ function list_responders($addon = "", $unit_id ="") {
 ?>
 				nr_units++;
 				var i = <?php print $i;?>;						// top of loop
-				unit_names[i] = '<?php print $unit_row['name'];?>';	// unit name
+				unit_names[i] = '<?php print htmlentities ($unit_row['name'], ENT_QUOTES);?>';	// unit name 8/25/08
 				unit_sets[i] = false;								// pre-set checkbox settings				
-				unit_ids[i] = <?php print $unit_row['unit_id'];?>;			
+				unit_ids[i] = <?php print $unit_row['unit_id'];?>;
+				distances[i]=9999.9;
 <?php
-//				dump ($unit_row);
-				if ($unit_row['lat'] !=0) {
-					$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
-					$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($unit_row['name'], 48) . "</TD></TR>";
-					$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $unit_row['description']), 32) . "</TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Status:</TD><TD>" . $unit_row['unitstatus'] . " </TD></TR>";
-					$tab_1 .= "<TR CLASS='even'><TD>Contact:</TD><TD>" . $unit_row['contact_name']. " Via: " . $unit_row['contact_via'] . "</TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($unit_row['updated']) . "</TD></TR>";
-					$tab_1 .= "</TABLE>";
+				$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
+				$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($unit_row['name'], 48) . "</TD></TR>";
+				$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $unit_row['description']), 32) . "</TD></TR>";
+				$tab_1 .= "<TR CLASS='odd'><TD>Status:</TD><TD>" . $unit_row['unitstatus'] . " </TD></TR>";
+				$tab_1 .= "<TR CLASS='even'><TD>Contact:</TD><TD>" . $unit_row['contact_name']. " Via: " . $unit_row['contact_via'] . "</TD></TR>";
+				$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($unit_row['updated']) . "</TD></TR>";
+				$tab_1 .= "</TABLE>";
 ?>
-					new_element = document.createElement("input");								// please don't ask!
-					new_element.setAttribute("type", 	"checkbox");
-					new_element.setAttribute("name", 	"unit_<?php print $unit_row['unit_id'];?>");
-					new_element.setAttribute("id", 		"element_id");
-					new_element.setAttribute("style", 	"visibility:hidden");
-					document.forms['routes_Form'].appendChild(new_element);
-<?php						
-					$thespeed = "";
+				new_element = document.createElement("input");								// please don't ask!
+				new_element.setAttribute("type", 	"checkbox");
+				new_element.setAttribute("name", 	"unit_<?php print $unit_row['unit_id'];?>");
+				new_element.setAttribute("id", 		"element_id");
+				new_element.setAttribute("style", 	"visibility:hidden");
+				document.forms['routes_Form'].appendChild(new_element);
+				var dist_mi = "na";
+<?php
+				if (intval($unit_row['mobile'])==1) {
+					$thespeed = "na";
 					$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
 						WHERE `source`= '$unit_row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";
+//					dump ($query);
 					$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 					if (mysql_affected_rows()>0) {		// got a track?
 						$track_row = stripslashes_deep(mysql_fetch_array($result_tr));			// most recent track report
@@ -499,18 +515,25 @@ function list_responders($addon = "", $unit_id ="") {
 ?>
 						var point = new GLatLng(<?php print $track_row['latitude'];?>, <?php print $track_row['longitude'];?>);	// mobile position
 						bounds.extend(point);															// point into BB
-		
-						sidebar_line = "<TD><?php print shorten($unit_row['name'], 32);?></TD><TD>"+ dist_mi+"</TD>";
-						sidebar_line += "<TD CLASS='td_data'><?php print shorten($unit_row['unitstatus'], 12);?></TD>";
-						sidebar_line += "<TD CLASS='td_data'><?php print $thespeed;?></TD>";
-						sidebar_line += "<TD CLASS='td_data'><?php print format_sb_date($unit_row['updated']);?></TD>";
-						var is_checked = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " CHECKED ": "";
-						var is_disabled = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " DISABLED ": "";
-						sidebar_line += "<TD ALIGN='center'><INPUT TYPE='checkbox' " + is_checked + is_disabled + " NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
-						var marker = createMarker(point, sidebar_line, myinfoTabs,<?php print $unit_row['type'];?>, i);	// (point,sidebar,tabs, color, id)
-						map.addOverlay(marker);
 <?php
-						}				// end if (mysql_affected_rows()>0;) for track data
+						}			// end if (mysql_affected_rows()>0;) for track data
+					else {				// no track data
+?>
+						var dist_mi = "na";
+<?php						
+						}				// end  no track data
+?>						
+					sidebar_line = "<TD TITLE = '<?php print htmlentities ($unit_row['name'], ENT_QUOTES);?>'><?php print shorten($unit_row['name'], 32);?></TD><TD>"+ dist_mi+"</TD>"; // 8/25/08
+					sidebar_line += "<TD TITLE = '<?php print htmlentities ($unit_row['unitstatus'], ENT_QUOTES);?>' CLASS='td_data'><?php print shorten($unit_row['unitstatus'], 12);?></TD>";
+					sidebar_line += "<TD CLASS='td_data'><?php print $thespeed;?></TD>";
+					sidebar_line += "<TD CLASS='td_data'><?php print format_sb_date($unit_row['updated']);?></TD>";
+					var is_checked = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " CHECKED ": "";
+					var is_disabled = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " DISABLED ": "";
+					sidebar_line += "<TD ALIGN='center'><INPUT TYPE='checkbox' " + is_checked + is_disabled + " NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
+					var marker = createMarker(point, sidebar_line, myinfoTabs,<?php print $unit_row['type'];?>, i);	// (point,sidebar,tabs, color, id)
+					map.addOverlay(marker);
+<?php
+					}		// if mobile
 			
 					else {				// fixed position with location info.
 ?>
@@ -525,8 +548,8 @@ function list_responders($addon = "", $unit_id ="") {
 					    var km2mi = 0.6214;				// 
 						var dist_mi = ((distances[i] * km2mi).toFixed(1)).toString();				// to feet
 			
-						sidebar_line = "<TD><?php print shorten($unit_row['name'], 16);?></TD><TD>"+ dist_mi+"</TD>";
-						sidebar_line += "<TD CLASS='td_data'><?php print shorten($unit_row['unitstatus'],12);?></TD>";
+						sidebar_line = "<TD TITLE = '<?php print htmlentities ($unit_row['name'], ENT_QUOTES);?>'><?php print shorten($unit_row['name'], 16);?></TD><TD>"+ dist_mi+"</TD>";	// 8/25/08
+						sidebar_line += "<TD TITLE = '<?php print htmlentities ($unit_row['unitstatus'], ENT_QUOTES);?>' CLASS='td_data'><?php print shorten($unit_row['unitstatus'],12);?></TD>";
 						sidebar_line += "<TD CLASS='td_data'></TD><TD CLASS='td_data'><?php print format_sb_date($unit_row['updated']);?></TD>"; 
 						var is_checked = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " CHECKED ": "";
 						var is_disabled = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " DISABLED ": "";
@@ -539,7 +562,6 @@ function list_responders($addon = "", $unit_id ="") {
 						map.addOverlay(marker);						
 <?php
 						}				// end if/else (mysql_affected_rows()>0;) - no track data
-					}				// end if (valid position)
 
 				$i++;
 				}				// end major while ($unit_row = ...) for each responder
@@ -585,6 +607,6 @@ function list_responders($addon = "", $unit_id ="") {
 	</SCRIPT>
 	
 <?php
-	}				// end function list_responders() ===========================================================
+	}				// end function do_list() ===========================================================
 	
 ?>
