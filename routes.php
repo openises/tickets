@@ -3,6 +3,16 @@
 5/23/08 per AD7PE - line 432
 8/25/08 handling sgl quotes in unit names
 8/25/08 TITLE to td's
+9/23/08 small map control
+10/7/08	added auto-mail feature
+10/13/08 added onClick() directions
+10/13/08 accommodate no location data
+10/14/08 added graticule
+10/16/08 changed ticket_id to frm_ticket_id - tbd
+10/16/08 added traffic functions
+10/17/08 allow map click for directions if error
+10/25/08 pointer housekeeping when can't route
+10/26/08 always accept click
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -17,6 +27,7 @@ if($istest) {
 	
 $api_key = get_variable('gmaps_api_key');
 $_GET = stripslashes_deep($_GET);
+$eol = "< br />\n";
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">	
@@ -34,10 +45,12 @@ $_GET = stripslashes_deep($_GET);
       img 					{color: #000000;}
     </style>
 <?php
+
 if (!empty($_POST)) {
 	extract($_POST);
+	$addrs = array();													// 10/7/08
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
-	$assigns = explode (",", $_POST['frm_id_str']);		// comma sep'd
+	$assigns = explode ("|", $_POST['frm_id_str']);		// pipe sep'd
 	for ($i=0;$i<count($assigns); $i++) {
 		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`)
 						VALUES (%s,%s,%s,%s,%s,%s,%s)",
@@ -53,23 +66,91 @@ if (!empty($_POST)) {
 		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 							// apply status update to unit status
-		$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($assigns[$i])  ." LIMIT 1";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+
+		$query = "SELECT `id`, `contact_via` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";		// 10/7/08
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$row_addr = stripslashes_deep(mysql_fetch_assoc($result));
+		if (is_email($row_addr['contact_via'])) {array_push($addrs, $row_addr['contact_via']); }		// save for emailing to unit
+
 		do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $assigns[$i], $frm_status_id);
 		}
+//	if (!empty($addrs)) {									// 10/7/08
+//		print __LINE__;
+//		dump($addrs);
+//		$text = "ATTENTION: New Ticket\n";
+//		mail_it ($addrs, $text, $frm_ticket_id);
+//		}
 ?>	
 <SCRIPT>
-try {	
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
-	}
-catch(e) {
-	}
+	try {	
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+		}
+	catch(e) {
+		}
+	
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+//				alert('HTTP error ' + req.status);
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+	
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+	
+	
+	function handleResult(req) {				// the 'called-back' function
+												// onto floor!
+		}
 
+	function domail() {
+		var theAddresses = '<?php print implode("|", $addrs);?>';
+		var theText= "NEW TICKET: ";
+		var theId = '<?php print $_POST['frm_ticket_id'];?>';
+		
+		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
+		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
+	
+		}
+	
 </SCRIPT>
 </HEAD>
-<BODY>
+<BODY onLoad = "domail()">
 	<CENTER><BR><BR><BR><BR><H3>Call Assignments made to:<BR /><?php print $_POST['frm_name_str'];?><BR><BR>
 	See call Board</H3>
 	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php">
@@ -79,7 +160,9 @@ catch(e) {
 	}		// end if (!empty($_POST))
 else {	
 ?>
-	<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
+<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>
 	
 
 <SCRIPT>
@@ -134,19 +217,19 @@ else {
 		}
     var km2feet = 3280.83;
 
-	function extr_num (instr) {						// extracts the ho number
-		outstr="";
-		var OKchars = '0123456789,.';
-		for (i=0;i< instr.length; i++) {
-			if (OKchars.indexOf(instr.charAt(i)) ==-1) {
-				break;
-				}
-			else {
-				outstr+=instr.charAt(i);
-				}
-			}				// end for ()
-		return outstr;
-		}				// end function extr_num ()
+//	function extr_num (instr) {						// extracts the ho number
+//		outstr="";
+//		var OKchars = '0123456789,.';
+//		for (i=0;i< instr.length; i++) {
+//			if (OKchars.indexOf(instr.charAt(i)) ==-1) {
+//				break;
+//				}
+//			else {
+//				outstr+=instr.charAt(i);
+//				}
+//			}				// end for ()
+//		return outstr;
+//		}				// end function extr_num ()
 	
 	function min(inArray) {				// returns index of least float value in inArray
 		var minsofar =  40076.0;		// initialize to earth circumference (km)
@@ -169,31 +252,45 @@ function doReset() {
 	document.reLoad_Form.submit();
 	}	// end function doReset()
 	
-</SCRIPT>
 <?php
-	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated  FROM $GLOBALS[mysql_prefix]ticket WHERE ID=" . $_GET['ticket_id'] . " LIMIT 1";			// get Incident location
+	$addrs = FALSE;										// notifies address array doesn't exist
+	if (array_key_exists ( "email", $_GET)) {				// 10/23/08
+		$addrs = notify_user(0,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
+		}				// end if (array_key_exists())
+
+	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated  FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`=" . $_GET['ticket_id'] . " LIMIT 1";			// 10/16/08 Incident location
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
 	unset ($result);
+	print "var thelat = " . $row_ticket['lat'] . ";\nvar thelng = " . $row_ticket['lng'] . ";\n";		// set js-accessible location data
 ?>
-<!--	<BODY onLoad = "ck_frames()" onunload='GUnload()'> -->
-	<BODY onunload='GUnload()'>
-	<TABLE ID='outer' BORDER = 0>
+</SCRIPT>
+<BODY onLoad = "do_notify(); ck_frames()" onunload="GUnload()">
+
+	<TABLE ID='outer' BORDER = 0 ID= 'main' STYLE='display:block' >
 	<TR><TD VALIGN='top'><DIV ID='side_bar' STYLE='width: 400px'></DIV>
 		<BR>
 			<DIV ID='the_ticket' style='width: 500px;'><?php print do_ticket($row_ticket, 500, FALSE, FALSE); ?></DIV>
 		</TD>
 		<TD VALIGN="top" ALIGN='center'>
 			<DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
+			<BR /><A HREF='#' onClick='doGrid()'><U>Grid</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick='doTraffic()'><U>Traffic</U>
 			<BR />
-			<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
-				EMS: 	<IMG SRC = './markers/sm_yellow.png' 	BORDER=0>&nbsp;&nbsp;&nbsp;
+			<BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
+				EMS: 		<IMG SRC = './markers/sm_yellow.png' 	BORDER=0>&nbsp;&nbsp;&nbsp;
 				Fire: 		<IMG SRC = './markers/sm_red.png' 		BORDER=0>&nbsp;&nbsp;&nbsp;
 				Police: 	<IMG SRC = './markers/sm_blue.png' 		BORDER=0>&nbsp;&nbsp;&nbsp;
 				Mutual: 	<IMG SRC = './markers/sm_white.png' 	BORDER=0>&nbsp;&nbsp;&nbsp;
 				Other: 		<IMG SRC = './markers/sm_green.png' 	BORDER=0><BR />
 			<DIV ID="directions" STYLE="width: <?php print get_variable('map_width');?>"></DIV>
 		</TD></TR></TABLE><!-- end outer -->
+	<DIV ID='bottom' STYLE='display:none'>
+	<CENTER>
+	<H3>Dispatching ... please wait ...</H3><BR /><BR /><BR />
+<!-- 	<IMG SRC="./markers/spinner.gif" BORDER=0> -->
+	</DIV>
+		
+
 	<FORM NAME='can_Form' ACTION="main.php">
 	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
 	</FORM>	
@@ -207,12 +304,82 @@ function doReset() {
 	<INPUT TYPE='hidden' NAME='frm_comments' 	VALUE= "New">
 	</FORM>
 	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
-	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>
+	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>	<!-- 10/25/08 -->
 	</FORM>	
 	
 	</BODY>
 
 <?php
+			if ($addrs) {				// 10/21/08
+?>			
+<SCRIPT>
+	function do_notify() {
+		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
+		var theText= "ATTENTION - New Ticket: ";
+		var theId = '<?php print $_GET['ticket_id'];?>';
+		
+//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
+		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
+		}			// end function do notify()
+	
+	function handleResult(req) {				// the 'called-back' function  - ignore returned data
+		}
+
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+//				alert('HTTP error ' + req.status);
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+	
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+	
+</SCRIPT>
+<?php
+
+			}		// end if($addrs) 
+		else {
+?>		
+<SCRIPT>
+	function do_notify() {
+		return;
+		}			// end function do notify()
+</SCRIPT>
+<?php		
+			}
 	$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
 	print do_list($unit_id);
 	print "</HTML> \n";
@@ -220,24 +387,27 @@ function doReset() {
 	}			// end if/else !empty($_POST)
 
 function do_list($unit_id ="") {
-	global $row_ticket, $my_session;
-	
+	global $row_ticket, $my_session, $eol;
 ?>
 <SCRIPT>
 	var color=0;
-	var last;				// id of last/current responder sidebar element
 	var last_from;
 	var last_to;
+	var current_id;			// 10/25/08
 	
 	if (GBrowserIsCompatible()) {
 		var colors = new Array ('odd', 'even');
 	    function setDirections(fromAddress, toAddress, locale) {
 	    	last_from = fromAddress;
 	    	last_to = toAddress;
-//	    	alert("from: " + fromAddress + " to: " + toAddress, { "locale": locale });
-	    	gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale });
-//	    	alert (235);
+	    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale, preserveViewport : true  });
+
+			GEvent.addListener(Direcs, "addoverlay", GEvent.callback(Direcs, cb())); 
 	    	}		// end function set Directions()
+
+	    function cb() {
+	    							// onto floor
+	    	}
 	
 		function createMarker(point,sidebar,tabs, color, id) {		// Creates marker and sets up click event infowindow
 			var icon = new GIcon(listIcon);
@@ -269,44 +439,94 @@ function do_list($unit_id ="") {
 			}				// end function create Marker()
 	
 		function myclick(id) {								// Responds to sidebar click
+			which = id;
+			document.getElementById(current_id).style.visibility = "hidden";		// hide last check
+			current_id= "R"+id;
+			document.getElementById(current_id).style.visibility = "visible";		// show newest
 			if (!(lats[id])) {
-				alert("Cannot route -  no position data currently available");
-				return false;
+				alert("456 Cannot route -  no position data currently available\n\nClick map point for directions.");
 				}
 			else {
-				which = id;
-				document.getElementById(last).style.visibility = "hidden";		// hide last check
-				var element= "R"+id;
-				document.getElementById(element).style.visibility = "visible";
-				last = element;													// new 'last' = current selection
-//				GEvent.trigger(gmarkers[id], "click");
-				var thelat = <?php print $row_ticket['lat'];?>; var thelng = <?php print $row_ticket['lng'];?>;
-				setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, "en_US");
+				var thelat = <?php print $row_ticket['lat'];?>; var thelng = <?php print $row_ticket['lng'];?>;		// coords of click point
+				setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, "en_US");							// get directions
 				}
-			}
+			}					// end function my click(id)
 	
+		var the_grid;
+		var grid = false;
 		function doGrid() {
-			map.addOverlay(new LatLonGraticule());
-			}
+			if (grid) {
+				map.removeOverlay(the_grid);
+				}
+			else {
+				the_grid = new LatLonGraticule();
+				map.addOverlay(the_grid);
+				}
+			grid = !grid;
+			}			// end function doGrid
+			
+	    var trafficInfo = new GTrafficOverlay();
+	    var toggleState = true;
 	
+		function doTraffic() {				// 10/16/08
+			if (toggleState) {
+		        map.removeOverlay(trafficInfo);
+		     	} 
+			else {
+		        map.addOverlay(trafficInfo);
+		    	}
+	        toggleState = !toggleState;			// swap
+		    }				// end function doTraffic()
+	
+		
 		function handleErrors(){		//G_GEO_UNKNOWN_DIRECTIONS 
-			if (gdir.getStatus().code == G_GEO_UNKNOWN_DIRECTIONS )
-				alert("290: No driving directions are available to/from this location.\nError code: " + gdir.getStatus().code);
+			if (gdir.getStatus().code == G_GEO_UNKNOWN_DIRECTIONS ) {
+				alert("501: directions unavailable\n\nClick map point for directions.");
+				}
 			else if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
-				alert("292: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
+				alert("440: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_SERVER_ERROR)
-				alert("294: A geocoding or directions request could not be successfully processed, yet the exact reason for the failure is not known.\n Error code: " + gdir.getStatus().code);
+				alert("442: A map request could not be processed, reason unknown.\n Error code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_MISSING_QUERY)
-				alert("296: The HTTP q parameter was either missing or had no value. For geocoder requests, this means that an empty address was specified as input. For directions requests, this means that no query was specified in the input.\n Error code: " + gdir.getStatus().code);
+				alert("444: Technical error.\n Error code: " + gdir.getStatus().code);
 	//		else if (gdir.getStatus().code == G_UNAVAILABLE_ADDRESS)  <--- Doc bug... this is either not defined, or Doc is wrong
-	//			alert("296: The geocode for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code);
+	//			alert("446: The geocode for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_BAD_KEY)
-				alert("300: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
+				alert("448: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
 			else if (gdir.getStatus().code == G_GEO_BAD_REQUEST)
-				alert("302: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
-			else alert("303: An unknown error occurred.");
+				alert("450: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
+			else alert("451: An unknown error occurred.");
 			}		// end function handleErrors()
-	
+
+//		function handleErrors(){		// 10/16/08
+//			switch (gdir.getStatus().code) {
+//				case G_GEO_UNKNOWN_DIRECTIONS:
+//					msg="290: No driving directions are available to/from this location.\nError code: " + gdir.getStatus().code;
+//					break;
+//				case G_GEO_UNKNOWN_ADDRESS:
+//					msg="292: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code;
+//					break;
+//				case G_GEO_SERVER_ERROR:
+//					msg="294: A geocoding or directions request could not be successfully processed; exact reason is not known.\n Error code: " + gdir.getStatus().code;
+//					break;
+//				case G_GEO_MISSING_QUERY:
+//					msg="296: Please notify developer.\n Error code: " + gdir.getStatus().code;
+//					break;
+//				case G_UNAVAILABLE_ADDRESS:
+//					msg="298: The position for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code;
+//					break;
+//				case G_GEO_BAD_KEY:
+//					msg="300: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code;
+//					break;
+//				case G_GEO_BAD_REQUEST:
+////					msg="302: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code;
+//					break;
+//				default:
+//					msg="303: Please notify developer - an internal error has occurred.");
+//				}
+//			alert (msg + "\n\nClick map point for directions and to DISPATCH.")
+//			}		// function handleErrors()
+//	
 		function onGDirectionsLoad(){ 
 			var temp = gdir.getSummaryHtml();
 //			alert(extr_num(temp));
@@ -325,7 +545,7 @@ function do_list($unit_id ="") {
 			for (var i =0;i<unit_sets.length;i++) {
 				if (unit_sets[i]) {
 					msgstr+=unit_names[i]+"\n";
-					document.routes_Form.frm_id_str.value += unit_ids[i] + ",";
+					document.routes_Form.frm_id_str.value += unit_ids[i] + "|";
 					}
 				}
 			if (msgstr.length==0) {
@@ -338,6 +558,8 @@ function do_list($unit_id ="") {
 					document.routes_Form.frm_id_str.value = document.routes_Form.frm_id_str.value.substring(0, document.routes_Form.frm_id_str.value.length - 1);	// drop trailing separator
 					document.routes_Form.frm_name_str.value = msgstr;	// for re-use
 					document.routes_Form.submit();
+					document.getElementById("outer").style.display = "none";
+					document.getElementById("bottom").style.display = "block";					
 					}
 				else {
 					document.routes_Form.frm_id_str.value="";	
@@ -369,7 +591,7 @@ function do_list($unit_id ="") {
 		
 		var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders'>";
 		side_bar_html += "<TR class='even'>	<TD colspan=99 ALIGN='center'><B>Routes to Incident <I><?php print shorten($row_ticket['scope'], 20); ?></I></B></TD></TR>";
-		side_bar_html += "<TR class='odd'>	<TD colspan=99 ALIGN='center'>Click line or icon for route</TD></TR>";
+		side_bar_html += "<TR class='odd'>	<TD colspan=99 ALIGN='center'>Click line, icon or map for route</TD></TR>";
 		side_bar_html += "<TR class='even'>	<TD COLSPAN=2></TD><TD ALIGN='center'>Unit</TD><TD ALIGN='center'>SLD</TD><TD ALIGN='center'>Status</TD><TD>M</TD><TD ALIGN='center'>As of</TD><TD>Assign</TD></TR>";
 		var gmarkers = [];
 		var infoTabs = [];
@@ -380,14 +602,13 @@ function do_list($unit_id ="") {
 		var i = 0;			// sidebar/icon index
 	
 		map = new GMap2(document.getElementById("map_canvas"));		// create the map
-		map.addControl(new GLargeMapControl());
+		map.addControl(new GSmallMapControl());						// 9/23/08
 		map.addControl(new GMapTypeControl());
 		map.addMapType(G_PHYSICAL_MAP);		
 		gdir = new GDirections(map, document.getElementById("directions"));
 		
 		GEvent.addListener(gdir, "load", onGDirectionsLoad);
 		GEvent.addListener(gdir, "error", handleErrors);
-		
 		map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
 	
 		var bounds = new GLatLngBounds();						// create empty bounding box
@@ -415,24 +636,21 @@ function do_list($unit_id ="") {
 	
 		GEvent.addListener(map, "infowindowclose", function() {		// re-center after  move/zoom
 			setDirections(last_from, last_to, "en_US") ;
-//			map.setCenter(center,zoom);
-//			alert ("289 " + which);
-//			map.addOverlay(gmarkers[which])
-//			alert ("290 " + zoom);
 			});
-	
-//		GEvent.addListener(map, "click", function(marker, point) {
-//			if (marker) {
-//				document.forms[0].frm_lat.disabled=document.forms[0].frm_lat.disabled=false;
-//				document.forms[0].frm_lat.value=document.forms[0].frm_lng.value="";
-//				document.forms[0].frm_lat.disabled=document.forms[0].frm_lat.disabled=true;
-//				}
-//			});				// end GEvent.addListener() "click"
+		var accept_click = false;					// 10/15/08
+		GEvent.addListener(map, "click", function(marker, point) {		// point.lat()
+			var the_start = point.lat().toString() + "," + point.lng().toString();
+			var the_end = thelat.toString() + "," + thelng.toString();			
+			setDirections(the_start, the_end, "en_US");			
+			});				// end GEvent.addListener()
+
 		unit_names = 	new Array();				// names 
 		unit_sets = 	new Array();				// settings
 		unit_ids = 		new Array();				// id's
 		unit_assigns = 	new Array();				// unit id's assigned this incident
 		var nr_units = 	0;
+		var email= false;
+		
 <?php
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 		
@@ -446,7 +664,7 @@ function do_list($unit_id ="") {
 		print "\n";
 
 		$where = (empty($unit_id))? "" : " WHERE `$GLOBALS[mysql_prefix]responder`.`id` = $unit_id ";		// revised 5/23/08 per AD7PE 
-		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM $GLOBALS[mysql_prefix]responder
+		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus`, `contact_via` FROM $GLOBALS[mysql_prefix]responder
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
 			$where
 			ORDER BY `name` ASC, `unit_id` ASC";	
@@ -455,11 +673,15 @@ function do_list($unit_id ="") {
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		if(mysql_affected_rows()>0) {
 													// major while ... for RESPONDER data starts here
-			$i = 1;				// sidebar/icon index
+			$i = $k = 1;				// sidebar/icon index
 			while ($unit_row = stripslashes_deep(mysql_fetch_array($result))) {
+				if(is_email($unit_row['contact_via'])) {
+					print "\t\temail= true\n";				
+					}
 ?>
 				nr_units++;
 				var i = <?php print $i;?>;						// top of loop
+				
 				unit_names[i] = '<?php print htmlentities ($unit_row['name'], ENT_QUOTES);?>';	// unit name 8/25/08
 				unit_sets[i] = false;								// pre-set checkbox settings				
 				unit_ids[i] = <?php print $unit_row['unit_id'];?>;
@@ -518,8 +740,10 @@ function do_list($unit_id ="") {
 <?php
 						}			// end if (mysql_affected_rows()>0;) for track data
 					else {				// no track data
+						$k--;			// not a clickable unit for dispatch
 ?>
-						var dist_mi = "na";
+						var myinfoTabs ="";
+						var no_dir = true;
 <?php						
 						}				// end  no track data
 ?>						
@@ -527,9 +751,16 @@ function do_list($unit_id ="") {
 					sidebar_line += "<TD TITLE = '<?php print htmlentities ($unit_row['unitstatus'], ENT_QUOTES);?>' CLASS='td_data'><?php print shorten($unit_row['unitstatus'], 12);?></TD>";
 					sidebar_line += "<TD CLASS='td_data'><?php print $thespeed;?></TD>";
 					sidebar_line += "<TD CLASS='td_data'><?php print format_sb_date($unit_row['updated']);?></TD>";
-					var is_checked = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " CHECKED ": "";
-					var is_disabled = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " DISABLED ": "";
-					sidebar_line += "<TD ALIGN='center'><INPUT TYPE='checkbox' " + is_checked + is_disabled + " NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
+					if (no_dir) {				// 10/13/08
+						var is_checked = "";
+						var is_disabled = "";					
+						}
+					else {
+						var is_checked = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " CHECKED ": "";
+						var is_disabled = (ifexists(unit_assigns,'<?php print $unit_row['unit_id'];?>'))? " DISABLED ": "";
+						}
+					sidebar_line += "<TD ALIGN='center'><INPUT TYPE='checkbox' " + is_checked + is_disabled + " NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[i]=this.checked;'></TD>";
+
 					var marker = createMarker(point, sidebar_line, myinfoTabs,<?php print $unit_row['type'];?>, i);	// (point,sidebar,tabs, color, id)
 					map.addOverlay(marker);
 <?php
@@ -562,16 +793,23 @@ function do_list($unit_id ="") {
 						map.addOverlay(marker);						
 <?php
 						}				// end if/else (mysql_affected_rows()>0;) - no track data
-
 				$i++;
+				$k++;
 				}				// end major while ($unit_row = ...) for each responder
 			}				// end if(mysql_affected_rows()>0)
 			
 //					responders complete
 ?>
+ 		var point = new GLatLng(<?php echo $row_ticket['lat']; ?>, <?php echo $row_ticket['lng']; ?>);	
+
+		var baseIcon = new GIcon();
+		var inc_icon = new GIcon(baseIcon, "./markers/sm_black.png", null);		// 10/26/08
+		var thisMarker = new GMarker(point, inc_icon);
+//		map.addOverlay(thisMarker);
+
 		if (nr_units==0) {
 			side_bar_html +="<TR CLASS='odd'><TD ALIGN='center' COLSPAN=99><BR /><B>No Units!</B></TD></TR>";;		
-			map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);
+			map.setCenter(new GLatLng(<?php echo $row_ticket['lat']; ?>, <?php echo $row_ticket['lng']; ?>), <?php echo get_variable('def_zoom'); ?>);
 			}
 		else {
 			center = bounds.getCenter();
@@ -580,14 +818,17 @@ function do_list($unit_id ="") {
 			side_bar_html+= "<TR CLASS='" + colors[i%2] +"'><TD COLSPAN=99>&nbsp;</TD></TR>";
 			side_bar_html+= "<TR CLASS='" + colors[(i+1)%2] +"'><TD COLSPAN=99 ALIGN='center'><B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'><B>&bull;</B></FONT></TD></TR>";
 			side_bar_html+= "<TR><TD>&nbsp;</TD></TR>";
+			}
+			
 <?php
 			$thefunc = (is_guest())? "guest()" : "validate()";		// reject guest attempts
 ?>
 			side_bar_html+= "<TR><TD COLSPAN=99 ALIGN='center'><INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'>";
-			side_bar_html+= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value='DISPATCH SELECTED UNITS' onClick = '<?php print $thefunc;?>' />";
+			if (nr_units>0) {			
+				side_bar_html+= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value='DISPATCH SELECTED UNITS' onClick = '<?php print $thefunc;?>' />";
+				}
 			side_bar_html+= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='RESET' VALUE='Reset' onClick = 'doReset()'>";
 			side_bar_html+= "</TD></TR>";
-			}
 	
 		side_bar_html +="</TABLE>\n";
 		document.getElementById("side_bar").innerHTML = side_bar_html;	// put the assembled side_bar_html contents into the side_bar div
@@ -595,9 +836,11 @@ function do_list($unit_id ="") {
 		var thelat = <?php print $row_ticket['lat'];?>; var thelng = <?php print $row_ticket['lng'];?>;
 		var start = min(distances);		// min straight-line distance to Incident
 		if (start>0) {
-			var last= "R"+start;			//
-			document.getElementById(last).style.visibility = "visible";		// show link check image at the selected sidebar element
-			setDirections(lats[start] + " " + lngs[start], thelat + " " + thelng, "en_US");
+			var current_id= "R"+start;			//
+			document.getElementById(current_id).style.visibility = "visible";		// show link check image at the selected sidebar el ement
+			if (lats[start]) {
+				setDirections(lats[start] + " " + lngs[start], thelat + " " + thelng, "en_US");
+				}
 			}	
 		}		// end if (GBrowserIsCompatible())
 

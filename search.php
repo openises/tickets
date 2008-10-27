@@ -1,6 +1,7 @@
 <?php 
 /*
 8/28/08 mysql_fetch_array to  mysql_fetch_assoc
+9/19/08 add injection protection to query parameters
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -74,8 +75,10 @@ function validate(theForm) {
 			}
 		
 		//tickets
+		
+		$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";		// 9/19/08
 
-		$query = "SELECT *,UNIX_TIMESTAMP(`problemstart`) AS `problemstart`,UNIX_TIMESTAMP(`problemend`) AS `problemend`,UNIX_TIMESTAMP(`date`) AS `date` ,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` LIKE '" . $_POST['frm_querytype'] . "' AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $_POST['frm_order_desc'];
+		$query = "SELECT *,UNIX_TIMESTAMP(`problemstart`) AS `problemstart`,UNIX_TIMESTAMP(`problemend`) AS `problemend`,UNIX_TIMESTAMP(`date`) AS `date` ,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` LIKE " . quote_smart($_POST['frm_querytype']) . " AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;		// 9/19/08
 		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
 //		dump ($query);
 		if(mysql_num_rows($result) == 1) {
@@ -99,7 +102,7 @@ function validate(theForm) {
 		else
 			print 'No matching tickets found.  <BR /><BR />';
 														//patient data
-		$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]patient` WHERE `description` REGEXP '$_POST[frm_query]' OR `name` REGEXP '$_POST[frm_query]'";
+		$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]patient` WHERE `description` REGEXP " . quote_smart($_POST['frm_query']) . " OR `name` REGEXP " . quote_smart($_POST['frm_query']) ;		// 9/19/08
 		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
 		if(mysql_num_rows($result) && !$ticket_found) {
 			// display ticket in whole if just one returned
@@ -122,7 +125,7 @@ function validate(theForm) {
 			print 'No matching patient data found.  ';
 			}
 														//actions
-		$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]action` WHERE `description` REGEXP '$_POST[frm_query]'";
+		$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]action` WHERE `description` REGEXP " . quote_smart($_POST['frm_query']);		// 9/19/08
 		$result = mysql_query($query) or do_error('','', mysql_error(),basename( __FILE__), __LINE__);
 		if(mysql_num_rows($result) && !$ticket_found) {
 			// display ticket in whole if just one returned

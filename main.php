@@ -1,14 +1,18 @@
 <?php
-	require_once('./incs/functions.inc.php');
-	$api_key = get_variable('gmaps_api_key');		// empty($_GET)
-	
-	if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
-		do_logout();
-		exit();
-		}
-	else {
-		do_login(basename(__FILE__));
-		}
+/*
+10/14/08 moved js includes here fm function_major
+*/
+error_reporting(E_ALL);			// 9/13/08
+require_once('./incs/functions.inc.php');
+$api_key = get_variable('gmaps_api_key');		// empty($_GET)
+
+if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
+	do_logout();
+	exit();
+	}
+else {
+	do_login(basename(__FILE__));
+	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
@@ -43,7 +47,8 @@
 	
 		
 	</SCRIPT>
-<script src="./js/graticule.js" type="text/javascript"></script>
+	<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
+	<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>
 	
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>

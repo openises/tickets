@@ -13,8 +13,6 @@
 10/8/08	'User' revised to 'Operator'
 10/8/08	hide 'Unit types'
 10/19/08 added trim()
-10/23/08 revised notify validation and for severity handling
-10/23/08 profile validation added
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -241,55 +239,51 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 	switch ($func){
 
 		case 'notify': 
-			print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
-		if (array_key_exists('id', ($_GET))) {
-			print "<FONT CLASS='header'>Add Notify Event</FONT><BR /><BR />";
-			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />"; 
-			$the_id = ($_GET['id']==0)? "All tickets": "#" . $_GET['id'];
+		
 ?>
-			<TABLE BORDER="0">
-			<FORM METHOD="POST" NAME="notify_form" ACTION="config.php?func=notify&add=true">
-			<TR CLASS='even'><TD CLASS="td_label">Ticket:</TD><TD ALIGN="right"><A HREF="main.php?id=<?php print $_GET['id'];?>"><?php print $the_id;?></A></TD></TR>
-			<TR CLASS='odd'><TD CLASS="td_label">Email Address:</TD><TD><INPUT MAXLENGTH="70" SIZE="40" TYPE="text" NAME="frm_email" VALUE=""></TD></TR>
-			<TR CLASS='even'><TD CLASS="td_label">Execute:</TD><TD><INPUT MAXLENGTH="150" SIZE="40" TYPE="text" NAME="frm_execute" VALUE=""></TD></TR>
-			<TR CLASS='odd'></TR><TD CLASS="td_label">On Patient/Action Change:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_action"></TD></TR>
-			<TR CLASS='even'><TD CLASS="td_label">On Ticket Change: &nbsp;&nbsp;</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_ticket"></TD></TR>
-			<TR CLASS='odd'><TD CLASS="td_label">Severity filter:</TD><TD ALIGN='center'>
-				All &raquo;		<input type='radio' name='frm_severity' value=1 >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-				Highest &raquo;	<input type='radio' name='frm_severity' value=3 checked></TD></TR>
-			
-				<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_GET['id'];?>">
-			<TR CLASS='even'><TD></TD><TD ALIGN="center"><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<INPUT TYPE="button" VALUE="Submit" onClick = "validate(this.form)"></TD></TR>
-			</FORM></TABLE>
-			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
-			</BODY>
-
 <SCRIPT>
-	function validate(theForm) {			// notify record validate 10/23/08
+	function validate_notify(theForm) {			//  notify form validation	
 		var errmsg="";
-		if (!validate_email(theForm.frm_email.value.trim()))	{errmsg+="\tValid email address is required.\n";}
-		if ((!(theForm.frm_on_action.checked)) && (!(theForm.frm_on_action.checked)))
-																{errmsg+="\tOne or both checkboxes is required.\n";}
+		if ((theForm.frm_email.value.trim()=="") && (theForm.frm_pager.value.trim()=="")) 		{errmsg+="\tE-mail or pager no. is required.\n";}
+
+		if ((theForm.frm_pager.value.trim()!="") && (theForm.frm_callback.value.trim()==""))	{errmsg+="\tPager requires Callback no.\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
 			}
 		else {										// good to go!
-			theForm.frm_severity[0].disabled = !(theForm.frm_severity[0].checked);
-			theForm.frm_severity[1].disabled = !(theForm.frm_severity[1].checked);
 			theForm.submit();
 			}
 		}				// end function validate(theForm)
 
-	function validate_email(field) {
-		apos=field.indexOf("@");
-		dotpos=field.lastIndexOf(".");
-		return (!(apos<1||dotpos-apos<2));
-		}				// end function validate_email()
 
 </SCRIPT>
-							
+</HEAD>
+<BODY onLoad = 'ck_frames()'>
+<?php
+		$query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='" . $_GET['id'] . "' LIMIT 1";	//
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+
+		if (array_key_exists('id', ($_GET))) {
+			print "<FONT CLASS='header'>Add Notify Event</FONT><BR /><BR />";
+			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is currently disabled. (Administrator can enable.)</FONT><BR /><BR />"; 
+?>
+			<TABLE BORDER="0">
+			<FORM METHOD="POST" ACTION="config.php?func=notify&add=true">
+			<TR CLASS='even'><TD CLASS="td_label">Ticket:</TD><TD ALIGN="left"> <A HREF="main.php?id=<?php print $_GET['id'];?>"> <U><?php print $row['scope'];?></U></A></TD></TR>
+			<TR CLASS='odd'><TD CLASS="td_label">Email Address:</TD><TD><INPUT MAXLENGTH="255" SIZE="64" TYPE="text" NAME="frm_email"> * </TD></TR>
+			<TR CLASS='even'><TD CLASS="td_label">Pager:</TD><TD><INPUT MAXLENGTH="255" SIZE="64" TYPE="text" NAME="frm_pager"> * </TD></TR>
+			<TR CLASS='odd'><TD CLASS="td_label">Pager Callback:</TD><TD><INPUT MAXLENGTH="70" SIZE="40" TYPE="text" NAME="frm_callback"></TD></TR>
+			<TR CLASS='even'><TD CLASS="td_label">Execute:</TD><TD><INPUT MAXLENGTH="150" SIZE="40" TYPE="text" NAME="frm_execute"></TD></TR>
+			<TR CLASS='odd'></TR><TD CLASS="td_label">On Action/Patient Change:</TD><TD ALIGN="left">&nbsp;&nbsp;<INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_action"></TD></TR>
+			<TR CLASS='even'><TD CLASS="td_label">On Ticket Change: &nbsp;&nbsp;</TD><TD ALIGN="left">&nbsp;&nbsp;<INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_ticket"></TD></TR>
+				<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_GET['id'];?>">
+			<TR><TD></TD><TD ALIGN='center'><FONT SIZE='small'>* semi-colon sep'd if multiples</FONT></TD></TR>
+			<TR CLASS='odd'><TD></TD><TD ALIGN="center"><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="button" VALUE="Submit" onClick = validate_notify(this.form)></TD></TR>
+			</FORM></TABLE>
+			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
+			</BODY>
 			</HTML>
 <?php
 			exit();
@@ -298,8 +292,8 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 			for ($i = 0; $i<count($_POST["frm_id"]); $i++) {
 
 				if (isset($_POST['frm_delete'][$i])) {
-					$msg = "Notify deletion complete!";					// pre-set
-					$query = "DELETE from $GLOBALS[mysql_prefix]notify WHERE id='".$_POST['frm_id'][$i]."'";
+					$msg = "Notify deleted!";					// pre-set
+					$query = "DELETE from `$GLOBALS[mysql_prefix]notify` WHERE id='".$_POST['frm_id'][$i]."'";
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					}
 				else {					//email validation check
@@ -334,16 +328,40 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 		
 			$on_ticket = (isset($_POST['frm_on_ticket']))? $_POST['frm_on_ticket']:0 ;
 			$on_action = (isset($_POST['frm_on_action']))? $_POST['frm_on_action']:0 ;
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]notify` SET ticket_id='$_POST[frm_id]',user='$my_session[user_id]',email_address='$_POST[frm_email]',execute_path='$_POST[frm_execute]',on_action='$on_action',on_ticket='$on_ticket',severities='$_POST[frm_severity]'";
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+
+//			$query = "INSERT INTO `$GLOBALS[mysql_prefix]notify` SET ticket_id='$_POST[frm_id]',user='$my_session[user_id]',
+//				email_address='$_POST[frm_email]',execute_path='$_POST[frm_execute]',on_action='$on_action',on_ticket='$on_ticket'";
+//			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+
+		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]notify` (`ticket_id`,`user`,`execute_path`,`on_action`,
+								`on_ticket`,`on_patient`,`email_address`,`pager`, `pager_cb`,`by`,`from`,`on`)
+							VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",							
+								quote_smart($_POST['frm_id']),
+								quote_smart($my_session[user_id]),
+								quote_smart($_POST[frm_execute]),
+								quote_smart($on_action),
+								quote_smart($on_ticket),
+								quote_smart($on_action),
+								quote_smart($_POST['frm_email']),
+								quote_smart($_POST['frm_pager']),
+								quote_smart($_POST['frm_callback']),
+								quote_smart($my_session['user_id']),
+								$_SERVER['REMOTE_ADDR'],
+								quote_smart($now));				// 9/13/08
+								
+		$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
+						
+
+
 			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 			print "<FONT SIZE='3'><B>Notify added.</B></FONT><BR /><BR />";
 			}
 		else {
 			if ($my_session['user_id'])
-				$query = "SELECT * FROM $GLOBALS[mysql_prefix]notify WHERE user='$my_session[user_id]'";
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify` WHERE user='$my_session[user_id]'";
 			else
-				$query = "SELECT * FROM $GLOBALS[mysql_prefix]notify";
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify`";
 				
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 
@@ -356,12 +374,7 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 			
 				$i = 0;
 				while($row = stripslashes_deep(mysql_fetch_array($result))) {
-					if ($row['ticket_id']==0) {
-						print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><B>All</B></TD>\n";
-						}
-					else {
-						print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><A HREF='main.php?id=" .  $row['ticket_id'] . "'>#" . $row['ticket_id'] . "</A></TD>\n";	
-						}
+					print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><A HREF='main.php?id=" .  $row['ticket_id'] . "'>#" . $row['ticket_id'] . "</A></FONT></TD>\n";
 					print "<TD><INPUT MAXLENGTH=\"70\" SIZE=\"32\" VALUE=\"" . $row['email_address'] . "\" TYPE=\"text\" NAME=\"frm_email[$i]\"></TD>\n";
 					print "<TD><INPUT MAXLENGTH=\"150\" SIZE=\"40\" TYPE=\"text\" VALUE=\"" . $row['execute_path'] . "\" NAME=\"frm_execute[$i]\"></TD>\n";
 					print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_action[$i]'"; print $row['on_action'] ? " checked></TD>\n" : "></TD>\n";
@@ -387,7 +400,6 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 				}
 			}
     break;
-
 
 case 'profile' :					//update profile
 		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
@@ -442,32 +454,10 @@ case 'profile' :					//update profile
 			<OPTION value="affected" <?php if($row['sortorder']=='affected') print " selected";?>>Affected</OPTION>
 			</SELECT>&nbsp; Descending <INPUT TYPE="checkbox" value="1" name="frm_sort_desc" <?php if ($row['sort_desc']) print "checked";?>></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $my_session['user_id'];?>">
-			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="button" VALUE="Apply" onClick = validate(this.form)></TD></TR>
+			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
-<SCRIPT>
-
-
-	function validate(theForm) {						//profile validation	- 10/23/08
-		var errmsg="";
-		if (theForm.frm_passwd.value.trim().length<6)									{errmsg+="\tPasswd length 6 or more is required.\n";}
-		if (theForm.frm_passwd.value.trim() != theForm.frm_passwd_confirm.value.trim())	{errmsg+="\tPasswd and confirmation must match.\n";}
-		if (theForm.frm_email.value.trim().length>0) {
-			if (!validate_email(theForm.frm_email.value.trim())) 						{errmsg+="\tValid email format is required.\n";	}
-			}
-			
-		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
-			return false;
-			}
-		else {										// good to go!
-			theForm.submit();
-			return true;
-			}
-		}				// end function validate(theForm)
-
-</SCRIPT>
 			</HTML>
 <?php
 			exit();
@@ -999,8 +989,7 @@ case 'delete' :
 	if (is_administrator() || is_super()) {				// super or admin - 9/24/08
 ?>
 		<LI><A HREF="config.php?func=profile">Edit My Profile</A>
-		<LI><A HREF="config.php?func=notify">Edit Notifies</A>
-		<LI><A HREF="config.php?func=notify&id=0">All-Tickets Notify</A>
+		<LI><A HREF="config.php?func=notify">Edit My Notifies</A>
 		<LI></LI>
 		<LI><A HREF="#" onClick = "do_Post('contacts');">Contacts</A>
 		<LI><A HREF="#" onClick = "do_Post('in_types');">Incident types</A>

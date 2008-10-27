@@ -1,4 +1,12 @@
 <?php
+/*
+9/15/08	 initial release
+10/1/08	 added error reporting call
+10/1/08	 relocated variable extract
+*/
+error_reporting(E_ALL);				//10/1/08
+$call = (empty($_GET))? "": $_GET['call'];				// 10/1/08
+
 function dump($variable) {
 	echo "\n<PRE>";				// pretty it a bit
 	var_dump($variable) ;

@@ -411,7 +411,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 						if (!ck_time(myform.elements[i].value))		{JSfnAddError();}
 						break;	
 				
-					default :alert (types[myform.elements[i].name] + " ??");
+					default :alert ("414 " + types[myform.elements[i].name] + " ??");
 					}
 				}									// end if (types ...) 
 			}									// end for (i=0 ...

@@ -2,6 +2,10 @@
 /*
 8/16/08	lots of changes; lock icon for date entry control, date validation, 'fetch_assoc' vs 'fetch_array', 'delete' process, 'LIMIT 1' added
 8/24/08 removed LIMIT from INSERT sql
+10/7/08	set  WRAP="virtual"
+10/19/08 set end tags
+10/22/08 added priorities as notify selection criteria
+
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
@@ -13,7 +17,7 @@ if($istest) {
 	print "POST<br />\n";
 	dump($_POST);
 	}
-$get_action = (empty($_GET['action']))? "" : $_GET['action'];
+$get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -33,7 +37,7 @@ if ($get_action == 'add') {
 	<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 	<SCRIPT src="./js/graticule.js" type="text/javascript"></SCRIPT>
 <?php
-	}	
+	}					// end if ($get_action == 'add')
 ?>
 <SCRIPT>
 	function ck_frames() {		//  onLoad = "ck_frames()"
@@ -121,7 +125,7 @@ if ($get_action == 'add') {
 	</SCRIPT>
 	</HEAD>
 <?php 
-	print ($get_action == "add")? "<BODY onload = 'ck_frames();' onunload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
+	print (($get_action == "add")||($get_action == "update"))? "<BODY onload = 'do_notify(); ck_frames();' onunload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
 
 	$do_yr_asof = false;		// js year housekeeping
 
@@ -132,7 +136,7 @@ if ($get_action == 'add') {
 	$optstyles[$GLOBALS['TYPE_MUTU']]= "mutu";
 	$optstyles[$GLOBALS['TYPE_OTHR']]= "othr";		
 
-	if ($get_action == 'add') {		/* update ticket */
+	if ($get_action == 'add') {
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
 		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]'"))
@@ -165,10 +169,90 @@ if ($get_action == 'add') {
 			print '<br /><FONT CLASS="header">Action record has been added.</FONT><BR /><BR />';
 
 			show_ticket($_GET['ticket_id']);
-			notify_user($_GET['ticket_id'],$NOTIFY_ACTION);
-			exit();
-			}
+//________________________________________________________________
+			print "</BODY>";				// 10/19/08
+			
+			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+
+			if ($addrs) {
+?>			
+<SCRIPT>
+
+	function do_notify() {
+		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
+		var theText= "TICKET Update - ACTION: ";
+		var theId = '<?php print $_POST['frm_ticket_id'];?>';
+		
+//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
+		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
+		}			// end function do notify()
+	
+	function handleResult(req) {				// the 'called-back' function
 		}
+
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+//				alert('HTTP error ' + req.status);
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+	
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+	
+</SCRIPT>
+<?php
+
+			}		// end if($addrs) 
+		else {
+?>		
+<SCRIPT>
+	function do_notify() {
+		return;
+		}			// end function do notify()
+</SCRIPT>
+<?php		
+			}
+			
+		print "</HTML>";				// 10/19/08
+		}		// end else ...
+// ____________________________________________________
+		exit();
+
+		}		// 	end if($get_action == 'add')
+
 	else if ($get_action == 'delete') {
 		if (array_key_exists('confirm', ($_GET))) {
 			$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") or do_error('','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
@@ -219,7 +303,7 @@ if ($get_action == 'add') {
 ?>
 		<FONT CLASS="header">Edit Action</FONT><BR /><BR />
 		<FORM METHOD="post" NAME='ed_frm' ACTION="action.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
-		<TR CLASS='even' VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description"><?php print $row['description'];?></TEXTAREA></TD></TR>
+		<TR CLASS='even' VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD></TR>
 		<TR CLASS='odd'VALIGN='top'><TD><B>Responder:</B></TD>
 <?php
 //						generate dropdown menu of responders -- if(in_array($rowtemp[id], $row[responder]))
@@ -253,9 +337,12 @@ if ($get_action == 'add') {
 			</TD></TR>
 		</TABLE></FORM><BR />
 <?php
-		}		// end if ($_GET['action'] == 'edit')
+		}		// end if ($get_action == 'edit')
 		
-	else {											// do form
+//	else {											// do form
+	else if ($get_action == 'form') {
+		print __LINE__; 
+		dump($get_action);
 		$do_yr_asof = true;
 //		add_header($_GET['ticket_id']);
 //		print __LINE__ . "<BR>";
@@ -286,16 +373,20 @@ if ($get_action == 'add') {
 		<INPUT SIZE=2 NAME="frm_day_asof" VALUE="" MAXLENGTH=2>
 		<INPUT SIZE=2 NAME="frm_hour_asof" VALUE="" MAXLENGTH=2>:
 		<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="" MAXLENGTH=2>
+		<INPUT TYPE="hidden" NAME = "frm_ticket_id" VALUE = "<?php print $_GET['ticket_id'];?>">
 		&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.add_frm);'>
 		</TD></TR>
 		<TR CLASS='odd'><TD></TD><TD>
 		<INPUT TYPE="button" VALUE="Cancel"	onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="button" VALUE="Reset"	onClick="this.form.reset();init();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="button" VALUE="Submit"	onClick="return validate(this.form)"></TD></TR>
+
 		</TABLE><BR />
 		</FORM>
 <?php
-		}
+		}				// end if ($get_action == 'form')
+
+//				 common to all
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
 <INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
@@ -332,6 +423,31 @@ function init () {
 	}
 </SCRIPT>
 <?php
-	}		// end 	if ($do_yr_asof)
+		}		// end 	if ($do_yr_asof)
+	
 ?>
 </HTML>
+<?php
+//function new_notify_user($ticket_id,$action) {								// 10/20/08
+//	if (get_variable('allow_notify') != '1') return FALSE;					//should we notify?
+//	
+//	$addrs = array();													// 
+//	
+//	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify` WHERE (`ticket_id`='$ticket_id' OR `ticket_id`=0)  AND `on_action` = '1'";	// all notifies for given ticket - or any ticket 10/22/08
+//	print __LINE__;
+//	dump ($query);
+//	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+//	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+//		dump ($row['email_address']);
+////		if (($action == $GLOBALS['NOTIFY_ACTION'] AND $row['on_action']) OR ($action == $GLOBALS['NOTIFY_TICKET'] AND $row['on_ticket'])){
+//			if (is_email($row['email_address'])) {
+//				print __LINE__;
+//				array_push($addrs, $row['email_address']); 
+//				}		// save for emailing
+////			}
+//		}
+//	dump($addrs);
+//	return (empty($addrs))? FALSE: $addrs;
+//	}
+//
+?>

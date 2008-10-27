@@ -259,7 +259,6 @@ function do_emd_card(filename) {
 <li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New Call</A></li>
 <li id = "resp"><A HREF="units.php" target="main">Units</A></li>
 <li id = "search"><A HREF="search.php" target="main">Search</A></li>
-<li id = "traffic"><A HREF="traffic.php" target="main">Traffic</A></li>
 <li id = "reps"><A HREF="reports.php" target="main">Reports</A></li>
 <li id = "config"><A HREF="config.php" target="main">Configuration</A></li>
 <?php
@@ -280,7 +279,7 @@ if (file_exists ($dir)) {
 
 if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' onClick = 'do_chat()'>Chat</A></li>\n";}
 ?>	
-
+<IMG SRC='./markers/led.gif' BORDER=0 STYLE="display:none;">
 <li id = "help"><A HREF="help.php" target="main">Help</A></li>
 <?php
 	$caption = get_variable('link_capt');

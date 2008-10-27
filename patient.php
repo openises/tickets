@@ -1,7 +1,12 @@
 <?php 
 /*
 8/16/08	lots of changes; date_dropdown used, lock icon for date entry control, date validation, 'mysql_fetch_assoc' vs 'fetch_array', 'delete' process, 'LIMIT 1' added
+10/1/08	added error reporting
+10/7/08	set  WRAP="virtual"
+10/19/08 added 'required' flag
+10/22/08 added 'priorities' as notify selection criteria
 */
+error_reporting(E_ALL);			// 10/1/08
 require_once('./incs/functions.inc.php'); 
 do_login(basename(__FILE__));
 
@@ -118,7 +123,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	</SCRIPT>
 	</HEAD>
 <?php 
-	print ($get_action == "add")? "<BODY onload = 'ck_frames();' onunload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
+	print (($get_action == "add")||($get_action == "update"))? "<BODY onload = 'do_notify(); ck_frames();' onunload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
@@ -141,10 +146,89 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			print '<br><br><FONT CLASS="header">Patient record has been added</FONT><BR /><BR />';
 			add_header($_GET['ticket_id']);
 			show_ticket($_GET['ticket_id']);
-			notify_user($_GET['ticket_id'],$NOTIFY_ACTION);
-			exit();
-			}
+//			notify_user($_GET['ticket_id'],$NOTIFY_ACTION);
+			print "</BODY>";				// 10/19/08
+			
+			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_PERSON_CHG']);		// returns array or FALSE
+			if ($addrs) {
+?>			
+<SCRIPT>
+
+	function do_notify() {
+		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
+		var theText= "TICKET Update - PATIENT: ";
+		var theId = '<?php print $_GET['ticket_id'];?>';
+		
+//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
+		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
+		}			// end function do notify()
+	
+	function handleResult(req) {				// the 'called-back' function
 		}
+
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+//				alert('HTTP error ' + req.status);
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+	
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+	
+</SCRIPT>
+<?php
+
+			}		// end if($addrs) 
+		else {
+?>		
+<SCRIPT>
+	function do_notify() {
+		return;
+		}			// end function do notify()
+</SCRIPT>
+<?php		
+			}
+			
+		print "</HTML>";				// 10/19/08
+		}		// end else ...
+// ________________________________________________________		
+			exit();
+			
+		}			// end if ($get_action == 'add')
+		
 	else if ($get_action == 'delete') {
 		if (array_key_exists('confirm', ($_GET))) {
 			do_log($GLOBALS['LOG_PATIENT_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 8/7/08
@@ -189,7 +273,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		<FONT CLASS="header">Edit Patient Record</FONT><BR /><BR />
 		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
 		<TR CLASS='even' ><TD><B>Name: <font color='red' size='-1'>*</font></B></TD><TD><INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32"></TD></TR>
-		<TR CLASS='odd'  VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description"><?php print $row['description'];?></TEXTAREA></TD></TR>
+		<TR CLASS='odd'  VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD></TR>
 <?php
 			print "\n<TR CLASS='even'><TD CLASS='td_label'>As of:</TD><TD>";
 			print  generate_date_dropdown("asof",$row['date'], TRUE);
@@ -208,7 +292,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		<BR /><BR /><FONT CLASS="header">Add Patient Record</FONT><BR /><BR />
 		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="patient.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add"><TABLE BORDER="0">
 		<TR CLASS='even' ><TD><B>Name:</B> <font color='red' size='-1'>*</font></TD><TD><INPUT TYPE="text" NAME="frm_name" value="" size="32"></TD></TR>
-		<TR CLASS='odd' ><TD><B>Description:</B></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description"></TEXTAREA></TD></TR>
+		<TR CLASS='odd' ><TD><B>Description: </B><font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"></TEXTAREA></TD></TR> <!-- 10/19/08 -->
 
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label">As of: &nbsp;&nbsp;</TD><TD><?php print generate_date_dropdown('asof',0,TRUE);?>&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.patientAdd);'></TD></TR>
 
@@ -222,7 +306,5 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
 <INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
-</FORM>	
-
-</BODY>
+</FORM>
 </HTML>

@@ -5,7 +5,9 @@
 8/9/08 calculate graphics width
 8/15/08	 mysql_fetch_array to mysql_fetch_assoc - performance
 8/15/08-1	handle dropped tickets
+10/1/08		added error reporting
 */
+error_reporting(E_ALL);				// 10/1/08
 $asof = "8/9/08";
 require_once('./incs/functions.inc.php'); 
 require_once('./incs/istest.inc.php'); 
@@ -399,11 +401,11 @@ else {
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
 
 		$query = "
-			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, `log`.`id` AS `logid`, t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
-			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (log.responder_id = r.id)
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON (log.info = s.id)
-			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (log.who = u.id)
+			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, `$GLOBALS[mysql_prefix]log`.`id` AS `logid`, t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log` 
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (`$GLOBALS[mysql_prefix]log`.ticket_id = t.id)
+			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id)
+			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON (`$GLOBALS[mysql_prefix]log`.info = s.id)
+			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (`$GLOBALS[mysql_prefix]log`.who = u.id)
 	 		$where ORDER BY `when` ASC		
 			";
 //		dump($query);
@@ -496,8 +498,8 @@ else {
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
 		$query = "
 			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`,t.scope AS `tick_name`, t.severity AS `tick_severity`, `u`.`user` AS `user_name` FROM `$GLOBALS[mysql_prefix]log`
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
-			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (log.who = u.id)
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (`$GLOBALS[mysql_prefix]log`.ticket_id = t.id)
+			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (`$GLOBALS[mysql_prefix]log`.who = u.id)
 			". $where . " AND `code` >= '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'  AND `code` <= '" . $GLOBALS['LOG_INCIDENT_CLOSE'] . "'
 	 		ORDER BY `when` ASC		
 			";

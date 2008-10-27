@@ -1,5 +1,6 @@
 <?php
 /*
+11/3/07 added frame jump prevention
 5/29/08 - added do_kml() call
 8/23/08	added usng functions
 8/23/08	corrections to problem-end handling
@@ -7,6 +8,11 @@
 9/13/08	revised to use LL2USNG function
 9/14/08 added position display in three lat/lng formats
 9/20/08 corrected still-active frm_ngs attempted write
+10/8/08 synopsis made mandatory on closed tickets
+10/15/08 changed 'Comments' to 'Disposition'
+10/21/08 relocated Disposition for consistency with Add
+10/21/08 'Synopsis' made non-mandatory
+10/21/08 handle revised notifies
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -19,12 +25,15 @@
 		dump($_POST);
 		}	
 
+	$addrs = FALSE;										// notifies address array doesn't exist
 	function edit_ticket($id) {							/* post changes */
+		global $addrs, $NOTIFY_TICKET;
+
 		$post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
 		$post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
 
 		$_POST['frm_description'] 	= strip_html($_POST['frm_description']);		//clean up HTML tags
-		$post_frm_affected 	 	= strip_html($post_frm_affected);
+		$post_frm_affected 	 		= strip_html($post_frm_affected);
 		$_POST['frm_scope']			= strip_html($_POST['frm_scope']);
 
 		/*if (get_variable('reporting')) {		// if any change do automatic action reporting
@@ -91,10 +100,13 @@
 			}
 
 		print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
-		notify_user($id, $GLOBALS['NOTIFY_TICKET']);
-		add_header($_GET['id']);
+//		notify_user($id, $GLOBALS['NOTIFY_TICKET']);
+
+		add_header($id);
 		show_ticket($id);
-		}				// end function edit_ticket() 
+		$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
+
+		}				// end function edit ticket() 
 
 	$api_key = get_variable('gmaps_api_key');
 ?> 
@@ -125,6 +137,7 @@
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08
 
 	function do_coords(inlat, inlng) { 										 //9/14/08
+		if(inlat.toString().length==0) return;								// 10/15/08
 		var str = inlat + ", " + inlng + "\n";
 		str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
 		str += lat2ddm(inlat) + ", " +lng2ddm(inlng);		
@@ -215,9 +228,11 @@
 		var errmsg="";
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_year_problemend.disabled))
 														{errmsg+= "\tClosed ticket requires run end date\n";}
-		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
-		if (theForm.frm_scope.value == "")		{errmsg+= "\tIncident name is required\n";}
-		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
+		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_comments==""))
+														{errmsg+= "\tClosed ticket requires Disposition data\n";}
+		if (theForm.frm_contact.value == "")			{errmsg+= "\tReported-by is required\n";}
+		if (theForm.frm_scope.value == "")				{errmsg+= "\tIncident name is required\n";}		// 10/21/08
+//		if (theForm.frm_description.value == "")		{errmsg+= "\tSynopsis is required\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -280,7 +295,7 @@
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad = "ck_frames()" onunload="GUnload()">
+<BODY onLoad = "do_notify(); ck_frames()" onunload="GUnload()">
 <?php 
 	$id = $_GET['id'];
 
@@ -289,7 +304,7 @@
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
 			}
 		else {
-			edit_ticket($id);
+			edit_ticket($id);									// post updated data
 			}
 		}
 
@@ -326,7 +341,7 @@
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
 			print "<TABLE BORDER='0' ID='data'>\n";
 			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='header'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Synopsis:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
+			print "<TR CLASS='even'><TD CLASS='td_label'>Incident name:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
 			print "<TR CLASS='odd'><TD CLASS='td_label'>Priority:</TD><TD><SELECT NAME='frm_severity'>";
 			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
 			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
@@ -370,10 +385,7 @@
 //			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
 	
 			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
-			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='35' ROWS='4'>" . $row['description'] . "</TEXTAREA></TD></TR>\n";
-			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Comments:</TD>";
-			
-			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='35' ROWS='4'>" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
+			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='35' ROWS='4'>" . $row['description'] . "</TEXTAREA></TD></TR>\n";		// 10/8/08
 			print "\n<TR CLASS='even'><TD CLASS='td_label'>Run Start:</TD><TD>";
 			print  generate_date_dropdown("problemstart",$row['problemstart'],0, TRUE);
 			print "&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'st_unlk(document.edit);'></TD></TR>\n";
@@ -392,14 +404,17 @@
 				print "</SPAN></TD></TR>\n";
 				}
 
-			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";
+			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08
+			
+			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='35' ROWS='4'>" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
 			print "<TR CLASS='odd'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
 			print 	"<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
 			print "<B>USNG:&nbsp;</B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08
 			print "</TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
 			$lat = $row['lat']; $lng = $row['lng'];	
-			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			print "<TR CLASS='odd'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='reset' VALUE='Reset' onclick= 'st_unlk_res(this.form); reset_end(this.form); resetmap($lat, $lng);' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>";
 ?>	
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $row['lat'];?>">				<!-- // 8/9/08 -->
@@ -450,6 +465,7 @@
 		map = new GMap2(document.getElementById("map"));		// create the map
 		map.addControl(new GLargeMapControl());
 		map.addControl(new GMapTypeControl());
+		map.addMapType(G_PHYSICAL_MAP);					// 10/6/08
 //		map.addControl(new GOverviewMapControl());		
 		map.setCenter(new GLatLng(<?php print $lat;?>, <?php print $lng;?>), 12);
 		map.enableScrollWheelZoom(); 	
@@ -548,9 +564,78 @@
 <INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
 </FORM>	
 
-</BODY></HTML>
+</BODY>
 <?php
-/*
-11/3 added frame jump prevention
-*/
+			if ($addrs) {				// 10/21/08
+?>			
+<SCRIPT>
+	function do_notify() {
+		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
+		var theText= "TICKET Update: ";
+		var theId = '<?php print $_GET['id'];?>';
+		
+//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
+		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
+		}			// end function do notify()
+	
+	function handleResult(req) {				// the 'called-back' function
+		}
+
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+//				alert('HTTP error ' + req.status);
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+	
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+	
+</SCRIPT>
+<?php
+
+			}		// end if($addrs) 
+		else {
+?>		
+<SCRIPT>
+	function do_notify() {
+		return;
+		}			// end function do notify()
+</SCRIPT>
+<?php		
+			}
+
 ?>
+</HTML>

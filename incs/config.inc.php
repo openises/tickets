@@ -7,6 +7,9 @@
 9/13/08 added lat_lng setting
 9/13/08 added wp_key
 9/13/08 added GSearch key
+8/10/08 revised level text per globals
+10/8/08	user edit revised per permission levels
+10/17/08 added '__sleep' setting
 */
 $colors = array ('odd', 'even');
 
@@ -51,6 +54,7 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 
 		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]settings") or do_error('reset_db()::mysql_query(delete settings)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		do_insert_settings('_aprs_time','0');
+		do_insert_settings('_sleep','5');				// 10/17/08
 		do_insert_settings('_version','2.5 beta');
 		do_insert_settings('abbreviate_affected','30');
 		do_insert_settings('abbreviate_description','65');
@@ -146,20 +150,21 @@ function logged_on() {
 function show_stats(){			/* 6/9/08 show database/user stats */
 	global $my_session;
 	//get variables from db
-	$user_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_USER]"));
-	$admin_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_ADMINISTRATOR]"));
-	$guest_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_GUEST]"));
-	$super_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user WHERE level=$GLOBALS[LEVEL_SUPER]"));
-	$ticket_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket"));
-	$ticket_open_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE status='$GLOBALS[STATUS_OPEN]'"));
-	$meds_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_EMS]"));
-	$fire_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_FIRE]"));
-	$cops_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_COPS]"));
-	$mutus_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_MUTU]"));
-	$othrs_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]responder WHERE type=$GLOBALS[TYPE_OTHR]"));
+	$oper_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_USER]"));
+	$admin_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_ADMINISTRATOR]"));
+	$guest_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_GUEST]"));
+	$super_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_SUPER]"));
+	$ticket_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`"));
+	$ticket_open_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE status='$GLOBALS[STATUS_OPEN]'"));
+	$ticket_rsvd_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE status='$GLOBALS[STATUS_RESERVED]'"));
+	$meds_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE type=$GLOBALS[TYPE_EMS]"));
+	$fire_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE type=$GLOBALS[TYPE_FIRE]"));
+	$cops_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE type=$GLOBALS[TYPE_COPS]"));
+	$mutus_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE type=$GLOBALS[TYPE_MUTU]"));
+	$othrs_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE type=$GLOBALS[TYPE_OTHR]"));
 
 	$pluralG = ($guest_in_db==1)? "": "s";
-	$pluralU = ($user_in_db==1)? "": "s";
+	$pluralOp = ($oper_in_db==1)? "": "s";
 	$pluralA = ($admin_in_db==1)? "": "s";
 	$pluralS = ($super_in_db==1)? "": "s";
 	
@@ -168,7 +173,7 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	$pluralC = ($cops_in_db==1)? "": "s";
 	$pluralU = ($mutus_in_db==1)? "": "s";
 	$pluralO = ($othrs_in_db==1)? "": "s";
-	
+	$rsvd_str = ($ticket_rsvd_in_db==0)? "": $ticket_rsvd_in_db . " reserved, ";
 	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>System Summary</TD></TR><TR>";	
 
 	$now = format_date(strval(date("U")));									// 8/26/08
@@ -178,10 +183,10 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
 	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Server time:</TD><TD ALIGN='left'>" . $now . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Adjusted:</B> $adj  </TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db)." closed, $ticket_in_db total</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$rsvd_str $ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db - $ticket_rsvd_in_db)." closed, $ticket_in_db total</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>$meds_in_db Med'l unit$pluralM, $fire_in_db Fire unit$pluralF, $cops_in_db Police unit$pluralC, $mutus_in_db Mutual$pluralU, $othrs_in_db Other$pluralO, ".($meds_in_db+$fire_in_db+ $cops_in_db + $mutus_in_db +$othrs_in_db)." total</TD></TR>";
 	
-	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $user_in_db User$pluralU, $guest_in_db Guest$pluralG, ".($super_in_db+$user_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db)." total</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
 	print $my_session['user_name'] . ": " .	get_level_text ($my_session['level']);
 
@@ -198,20 +203,26 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 
 function list_users(){/* list users */
 	global $my_session, $colors;
-	$result = mysql_query("SELECT * FROM $GLOBALS[mysql_prefix]user") or do_error('list_users()::mysql_query()', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	if (!check_for_rows("SELECT id FROM $GLOBALS[mysql_prefix]user")) { print '<B>[no users found]</B><BR />'; return; 	}
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user`") or do_error('list_users()::mysql_query()', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	if (!check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]user`")) { print '<B>[no users found]</B><BR />'; return; 	}
 	print "<TABLE BORDER='0'>";
-	print "<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><B>Users - click to edit</B></TD></TR>";
+	$caption = (is_guest() || is_user())? "": "- click to edit";
+	print "<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><B>Users" . $caption . " </B></TD></TR>";
 	print "<TR CLASS='odd'><TD><B>ID&nbsp;&nbsp;&nbsp;</B></TD><TD><B>User&nbsp;&nbsp;&nbsp;</B></TD><TD><B>Call&nbsp;&nbsp;&nbsp;</B></TD><TD><B>Description&nbsp;&nbsp;&nbsp;</B></TD><TD><B>Level&nbsp;&nbsp;&nbsp;</B></TD></TR>";
 	$i=1;
-	while($row = stripslashes_deep(mysql_fetch_array($result))) {
-		print "<TR CLASS='" . $colors[$i%2] . "'><TD><A HREF=\"config.php?func=user&id=" . $row['id'] . "\">#" . $row['id'] . "</A></TD><TD>" . $row['user'] . "</TD><TD>" . $row['callsign'] . "</TD><TD>" . $row['info'] . "</TD><TD>";
+	while($row = stripslashes_deep(mysql_fetch_array($result))) {				// 10/8/08
+		if (is_guest() || is_user()) {
+			print "<TR CLASS='" . $colors[$i%2] . "'><TD>" . $row['id'] . "</TD><TD>" . $row['user'] . "</TD><TD>" . $row['callsign'] . "</TD><TD>" . $row['info'] . "</TD><TD>";
+			}
+		else {
+			print "<TR CLASS='" . $colors[$i%2] . "'><TD><A HREF=\"config.php?func=user&id=" . $row['id'] . "\">#" . $row['id'] . "</A></TD><TD>" . $row['user'] . "</TD><TD>" . $row['callsign'] . "</TD><TD>" . $row['info'] . "</TD><TD>";
+			}
 
 		switch($row['level'])	{
-			case $GLOBALS['LEVEL_SUPER']:			print "super";			break;		// 6/9/08
-			case $GLOBALS['LEVEL_ADMINISTRATOR']:	print "administrator";	break;
-			case $GLOBALS['LEVEL_USER']:			print "user";			break;
-			case $GLOBALS['LEVEL_GUEST']:			print "guest";			break;
+			case $GLOBALS['LEVEL_SUPER']:			print get_level_text($GLOBALS['LEVEL_SUPER']);			break;		// 6/9/08, 8/10/08
+			case $GLOBALS['LEVEL_ADMINISTRATOR']:	print get_level_text($GLOBALS['LEVEL_ADMINISTRATOR']);	break;
+			case $GLOBALS['LEVEL_USER']:			print get_level_text($GLOBALS['LEVEL_USER']);			break;
+			case $GLOBALS['LEVEL_GUEST']:			print get_level_text($GLOBALS['LEVEL_GUEST']);			break;
 			}
 
 		print "</TD></TR>\n";
@@ -223,7 +234,7 @@ function list_users(){/* list users */
 function reload_session(){/* reload session variables from db after profile update */
 	global $my_session;
 
-	$query 	= "SELECT * FROM $GLOBALS[mysql_prefix]user WHERE user='$my_session[user_name]'";
+	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`='$my_session[user_name]'";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	$my_session 	= mysql_fetch_array($result);
 /*	
@@ -248,7 +259,7 @@ function validate_email($email){ 	//really validate?/* validate email, code cour
 		}
 	$return = array();
 
-//	if (!eregi("^[0-9a-z_]([-_.]?[0-9a-z])*@[0-9a-z][-.0-9a-z]*\\.[a-z]{2,4	}[.]?$",$email, $check)) {
+//	if (!eregi("^[0-9a-z_]([-_.]?[0-9a-z])*@[0-9a-z][-.0-9a-z]*\\.[a-z]{2,4	}[.]?$",$email, $check)) --
 
 	if(!eregi( "^" .
             "[a-z0-9]+([_\\.-][a-z0-9]+)*" .    //user

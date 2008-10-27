@@ -5,6 +5,9 @@
 6/26/08	added $doTick to assign view/edit ticket functions by priv level	
 8/24/08 added htmlentities function to TITLE strings
 9/17/08 disallow guest edit to unit status
+9/27/08 removed dead code relating to $unit_scr
+9/28/08	converted TD hide/show to SPAN, to improve col alignment
+10/9/08	show unit status dropdown only one time
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
@@ -226,10 +229,10 @@ switch ($func) {					// ========================================================
 	
 	case 'list' :			// ==============================================================================
 	
- 		$unit_scr = "http://" . $_SERVER["SERVER_ADDR"] . ":". $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
-		$temparr = explode ("/", $unit_scr);
-		$temparr[count($temparr)-1] = "units.php";
-		$unit_scr=implode ("/", $temparr);
+// 		$unit_scr = "http://" . $_SERVER["SERVER_ADDR"] . ":". $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
+//		$temparr = explode ("/", $unit_scr);
+//		$temparr[count($temparr)-1] = "units.php";
+//		$unit_scr=implode ("/", $temparr);
 ?>
 <SCRIPT>
 
@@ -318,7 +321,7 @@ switch ($func) {					// ========================================================
 			return AJAX.responseText;																				 
 			} 
 		else {
-			alert ("57: failed")
+			alert ("324: failed")
 			return false;
 			}																						 
 		}		// end function sync Ajax(strURL)
@@ -356,7 +359,7 @@ switch ($func) {					// ========================================================
 			var url = "as_up_un_status.php" + querystr;			// 
 			var payload = syncAjax(url);						// 
 			if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
-				alert ("352: msg failed ");
+				alert ("362: msg failed ");
 				return false;
 				}
 			else {
@@ -371,8 +374,6 @@ switch ($func) {					// ========================================================
 					}
 				var elem = "myDate" + form_no;
 				document.getElementById(elem).innerHTML = bull_str + payload;
-//				window.opener.parent.frames['main'].location.href = "<?php print $unit_scr;?>";	// force
-//				window.opener.parent.frames['main'].window.location.href = "<?php print $unit_scr;?>";	// force
 				last_form_no = form_no;
 				}				// end if/else (payload.substring(... )
 			}		// end function to_server()
@@ -382,24 +383,24 @@ switch ($func) {					// ========================================================
 <BODY onLoad = "reSizeScr()";>
 <CENTER>
 <?php
-		function get_un_stat_sel($s_id, $b_id) {					// status id
+		function get_un_stat_sel($s_id, $b_id) {					// returns select list as string
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
 			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
  			$dis = (is_guest())? " DISABLED": "";								// 9/17/08
 			$the_grp = strval(rand());			//  force initial OPTGROUP value
 			$i = 0;
-			$outstr = "\n\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)' $dis >\n";
+			$outstr = "\n\t\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)' $dis >\n";
 			while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
 				if ($the_grp != $row['group']) {
 					$outstr .= ($i == 0)? "": "\t</OPTGROUP>\n";
 					$the_grp = $row['group'];
-					$outstr .= "\t<OPTGROUP LABEL='$the_grp'>\n";
+					$outstr .= "\t\t<OPTGROUP LABEL='$the_grp'>\n";
 					}
 				$sel = ($row['id']==$s_id)? " SELECTED": "";
-				$outstr .= "\t\t<OPTION VALUE=" . $row['id'] . $sel .">" . $row['status_val'] . "</OPTION>\n";
+				$outstr .= "\t\t\t<OPTION VALUE=" . $row['id'] . $sel .">" . $row['status_val'] . "</OPTION>\n";
 				$i++;
 				}		// end while()
-			$outstr .= "\n\t</OPTGROUP></SELECT>\n";
+			$outstr .= "\t\t</OPTGROUP>\n\t\t</SELECT>\n";
 			return $outstr;
 			unset($result_st);
 			}
@@ -432,18 +433,22 @@ switch ($func) {					// ========================================================
 			$items = mysql_affected_rows();
 			$header = "<TR CLASS='even'>";
 			
-			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>Unit</TD><TD>&nbsp;</TD>";
-			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>to Incident</TD><TD>&nbsp;</TD>";
+			$header .= "<TD COLSPAN=3 ALIGN='center' CLASS='emph'>Unit</TD>";		// 9/27/08
+			$header .= "<TD>&nbsp;</TD>";
+			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>Incident</TD>";
+			$header .= "<TD>&nbsp;</TD>";
 			$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emph'>Dispatch</TD>";
-
 			$header .= "</TR>\n";
+
 			$header .= "<TR CLASS='odd'>";
-
-			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='left'>&nbsp;&nbsp;&nbsp;Status</TD><TD>&nbsp;</TD>";
-			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='center'>Addr</TD><TD>&nbsp;</TD>";
+			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='left' COLSPAN=2>&nbsp;&nbsp;&nbsp;Status</TD>";		// 9/27/08
+			$header .= "<TD>&nbsp;</TD>";
+			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='center'>Addr</TD>";
+			$header .= "<TD>&nbsp;</TD>";
 			$header .= "<TD ALIGN='center' CLASS='emph'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Comment</TD><TD ALIGN='center'>Cleared</TD>";
-
 			$header .= "</TR>\n";
+			
+			$unit_ids = array();
 			while($row = stripslashes_deep(mysql_fetch_array($result))) {
 				if  ((!(is_date($row['clear']))) || ((is_date($row['clear'])) && ((totime($row['clear']) > ($now-$delta))))) {
 					if ($i == 1) {print $header;}
@@ -458,31 +463,40 @@ switch ($func) {					// ========================================================
 						$strike = $strikend = "";
 						}			
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ UNITS
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ UNITS			3 col's
 					if (!($row['responder_id']==0)) {
 						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . htmlentities ($row['theunit'], ENT_QUOTES) . "'  >" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</TD>\n";						// unit 8/24/08
-						$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
-						print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
-						print "\t<TD ID=TD$i STYLE='display:none'>\n\t<INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i)\">\n";
-						print "\t<INPUT TYPE='button' VALUE='Cancel'  style = 'height: 1.5em;' onClick=\"document.F$i.reset();hide_but($i)\"></TD><TD></TD>\n";
+						if (!in_array ($row['responder_id'], $unit_ids)) {				// 10/9/08
+							$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
+							print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
+//							print "\t<TD ID=TD$i STYLE='display:none'>\n\t<SPAN ID='tbd' STYLE='display:none'><INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i);\">\n";
+							print "\t<TD>\n\t<SPAN ID=TD$i STYLE='display:none'><INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i); window.opener.parent.frames['main'].location.reload();\">\n"; 		// 9/28/08
+							print "\t<INPUT TYPE='button' VALUE='Cancel'  style = 'height: 1.5em;' onClick=\"document.F$i.reset();hide_but($i)\"></SPAN></TD>\n";
+							array_push($unit_ids, $row['responder_id']);
+							}
+						else {
+							print "<TD COLSPAN=2></TD>";
+							}
 						}
 					else {
-						print "\t<TD COLSPAN=3  CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='center'><B>NA</b></TD>\n";	
+						print "\t<TD COLSPAN=3  CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='left'><B>&nbsp;&nbsp;&nbsp;&nbsp;NA</b></TD>\n";	
 						}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 INCIDENTS
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . htmlentities ($row['theticket'], ENT_QUOTES) . "'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call 8/24/08
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					print "<TD></TD>\n";				// 9/28/08
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 INCIDENTS	2 cols
+					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . htmlentities ($row['theticket'], ENT_QUOTES) . "' ALIGN='left'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call 8/24/08
 					$address = (empty($row['street']))? "" : $row['street'] . ", ";
 					$address .= $row['city'];
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". htmlentities($address, ENT_QUOTES) ."'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD><TD></TD>\n";		// address 8/24/08
+					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". htmlentities($address, ENT_QUOTES) ."' ALIGN='left'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD>\n";		// address 8/24/08
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ASSIGNS
+					print "<TD></TD>\n";				// 9/28/08
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ASSIGNS	4 cols
 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";				// comment
-					$ago = (is_date($row['clear']))? ezDate($row['clear']): "";
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ><NOBR>$ago</NOBR></TD>"; 
+					$ago = (is_date($row['clear']))? "<NOBR>". ezDate($row['clear']) . "</NOBR>": "";
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") >$ago</TD>"; 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~					
 					print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['responder_id'] . "'>\n";

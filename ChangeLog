@@ -1,3 +1,13 @@
+2.9
+=====
++ APRS data handling significantly corrected and improved. Repeated zero-speed posreps are not retained.
++ Dispatch to a unit that has its 'contact via' setting an email address - including one for cellphone texting - generates mail to that address.
++ Cellphones/texting messages will be automatically 'chunked' to reflect the size limit per message.
++ Operator-level users may now perform all needed ticket, unit and dispatch data updates.
++ The database schema was expanded to accommodate expected growth in Tickets capabilities.  Teams and members - with attributes of titles, 
+      skills, courses taken, certificates gained, plus document management and photos - are now schema elements, although without any code 
+      in this version.
+
 2.8
 =====
 + Call Board function added as 'situation summary' capability

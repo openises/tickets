@@ -1,14 +1,15 @@
 <?php
 /*
-5/23/08 - added do_kml() - generate KML JS - 
-5/25/08 - revised removed deleting non-located units
-5/26/08 - revised to avoid adding fixed unit location to bounds computation
-5/26/08 - revised to refer to units.php vice config.php
-6/15/08 - revised to show mobile units only
-6/16/08 - UTC time format conversion corrected
-6/17/08 - added tracks array information
-6/25/08	- added APRS window handling
-8/27/08 - mysql_fetch_assoc replaces fetch_array
+5/23/08 added do_kml() - generate KML JS - 
+5/25/08 revised removed deleting non-located units
+5/26/08 revised to avoid adding fixed unit location to bounds computation
+5/26/08 revised to refer to units.php vice config.php
+6/15/08 revised to show mobile units only
+6/16/08 UTC time format conversion corrected
+6/17/08 added tracks array information
+6/25/08 added APRS window handling
+8/27/08 mysql_fetch_assoc replaces fetch_array
+10/4/08	added auto-refresh
 */
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
@@ -92,25 +93,33 @@ global $my_session;
 
 		}			// end function
 
-	function create_track_Marker(point,html, mytype, ender) {
+	function create_track_Marker(point,html, mytype, ender, heading) {
 		switch (mytype){
 			case 1:
+//				alert(99);
 				var marker = new GMarker(point, starticon);	
 				GEvent.addListener(marker, "click", function() {
 					marker.openInfoWindowHtml(html);
 					});
 				break;
 			case ender:
+//				alert(106);
 				var marker = new GMarker(point, endicon);	
-					GEvent.addListener(marker, "click", function() {
-						marker.openInfoWindowHtml(html);
-						});
+				GEvent.addListener(marker, "click", function() {
+					marker.openInfoWindowHtml(html);
+					});
 				break;
 			default : 
+				var infoicon = new GIcon();
+				infoicon.image = "./markers/" + direcs[heading];
+				
+				infoicon.iconSize = new GSize(15, 15);
+				infoicon.iconAnchor = new GPoint(4, 4);
+			
 				var marker = new GMarker(point, infoicon);	
-					GEvent.addListener(marker, "click", function() {
-						marker.openInfoWindowHtml(html);
-						});
+				GEvent.addListener(marker, "click", function() {
+					marker.openInfoWindowHtml(html);
+					});
 				}
 		return marker;
 		}
@@ -173,16 +182,13 @@ global $my_session;
 		document.forms[0].frm_lng.disabled=true;
 		}
 
+	var direcs=new Array("north.png","northeast.png","east.png","southeast.png","south.png","southwest.png","west.png","northwest.png", "north.png");	// 10/4/08
+
 	var icons=[];						// note globals
 	icons[1] = "./markers/YellowIcons/marker";		//e.g.,marker9.png
 	icons[2] = "./markers/RedIcons/marker";
 	icons[3] = "./markers/BlueIcons/marker";
 	icons[4] = "./markers/GreenIcons/marker";		//	BlueIcons/GreenIcons/YellowIcons/RedIcons
-
-	var infoicon = new GIcon();
-	infoicon.image = "./markers/dot.png";
-	infoicon.iconSize = new GSize(8, 8);
-	infoicon.iconAnchor = new GPoint(4, 4);
 
 	var starticon = new GIcon();
 	starticon.image = "./markers/start.png";	
@@ -193,7 +199,6 @@ global $my_session;
 	endicon.image = "./markers/end.png";
 	endicon.iconSize = new GSize(16, 16);
 	endicon.iconAnchor = new GPoint(8, 8);
-
 
 	var map;
 	var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders'>";
@@ -305,6 +310,16 @@ global $my_session;
 <?php
 				$last = "";
 				while ($row_tr = stripslashes_deep(mysql_fetch_assoc($result_tr))) {
+?>
+					bounds.extend(new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>));	// all points to bounding box
+					var point = new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>);
+					var html = "<b><?php print $row_tr['source'];?></b><br /><br /><?php print format_date($row['updated']);?>";
+					var heading = Math.round(<?php print intval($row_tr['course']);?>/45);		// 10/4/08
+		
+					var marker = create_track_Marker(point, html, j, ender, heading);
+					map.addOverlay(marker);	
+
+<?php
 					if (!empty($last)) {
 ?>			
 						var polyline = new GPolyline([
@@ -312,13 +327,6 @@ global $my_session;
 						    new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>)	// current point
 							], "#FF0000", 2);
 						map.addOverlay(polyline);
-						bounds.extend(new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>));	// all points to bounding box
-						var point = new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>);
-						var html = "<b><?php print $row_tr['source'];?></b><br /><br /><?php print format_date($row['updated']);?>";
-		
-					    var marker = create_track_Marker(point, html, j, ender);
-					    map.addOverlay(marker);
-	
 						points++;
 						j++;k++;
 <?php
@@ -452,12 +460,18 @@ global $my_session;
 </SCRIPT>
 <?php
 	}				// end function list_responders() ===========================================================
+
+$interval = intval(get_variable('aprs_poll'));
+$refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";	//10/4/08
+
 ?>
 
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Tickets - Tracks Module</TITLE>
+	<?php print $refresh; ?>	<!-- 10/4/08 -->
+
 <?php
 	$temp = get_variable('aprs_poll');
 	if (intval($temp)>0) {

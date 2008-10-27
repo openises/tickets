@@ -8,14 +8,21 @@
 8/23/08	 added usng handling 
 8/23/08  corrected problem-end hskpng
 9/9/08	 added lat/lng-to-CG format functions
+10/4/08	 added function do_inc_name() 
+10/7/08	 set WRAP="virtual"
+10/8/08 synopsis made non-mandatory
+10/15/08 changed 'Comments' to 'Disposition'
+10/16/08 changed ticket_id to frm_ticket_id
+10/17/08 removed 10/16/08 change
+10/19/08 added insert_id to description
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
 if ($istest) {
-	dump($_POST);
-	dump ($_GET);
+//	dump($_POST);
+//	dump ($_GET);
 	}
 
 $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? "" : $_GET['add'] ;
@@ -75,10 +82,15 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 								quote_smart($frm_problemstart),
 								$frm_problemend,
 								quote_smart($now));				// 9/13/08
-//		dump($query);								
 		$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
-
 		$ticket_id = mysql_insert_id();								// just inserted id
+
+		if (substr(trim($_POST['frm_scope']), -1) =="/") {									// 10/19/08
+			$desc_rev = trim($_POST['frm_scope']) . "#" . $ticket_id ;
+			$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `scope`= " .	quote_smart($desc_rev) ." WHERE ID='" . $ticket_id . "'"; 
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			}
+
 		do_log($GLOBALS['LOG_INCIDENT_OPEN'], $ticket_id);
 		
 		$frm_unit_id = 0; $frm_status_id=1;$frm_comments = "New";				// into assignments
@@ -96,7 +108,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder` LIMIT 1";	//  any at all?
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 //		if (mysql_affected_rows()>0) {
-			header("Location: routes.php?ticket_id=$ticket_id");				// show routes from units to incident
+			header("Location: routes.php?ticket_id=$ticket_id&email=y");				// show routes from units to incident - 10/16/08 10/17/08
 //			}
 //		else {
 ?>
@@ -212,7 +224,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 				return lat2ddm(inlat);
 			 	break;
 			default:
-				alert (220);
+				alert ( "error 219");
 			}	
 		}
 
@@ -228,7 +240,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 				return lng2ddm(inlng);
 			 	break;
 			default:
-				alert (236);
+				alert ("error 235");
 			}	
 		}
 
@@ -287,6 +299,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		document.getElementById("map").style.backgroundImage = "url(./markers/loading.jpg)";
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
+		map.addMapType(G_PHYSICAL_MAP);						// 10/6/08
 		map.setCenter(new GLatLng(document.add.frm_lat.value, document.add.frm_lng.value), 13);			// larger # => tighter zoom
 		map.addControl(new GOverviewMapControl());
 		map.enableScrollWheelZoom(); 	
@@ -354,6 +367,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		map = new GMap2(document.getElementById('map'));
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
+		map.addMapType(G_PHYSICAL_MAP);					// 10/6/08
 
 		var baseIcon = new GIcon();				// 9/16/08
 		baseIcon.iconSize=new GSize(32,32);
@@ -509,7 +523,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 			return AJAX.responseText;																				 
 			} 
 		else {
-			alert ("57: failed")
+			alert ("519: failed")
 			return false;
 			}																						 
 		}		// end function sync Ajax(strURL)
@@ -543,13 +557,13 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 			}
 		else {
 			var temp1=payload.split(";");					// good return - now parse results
-			alert(temp1[0]);
+//			alert(temp1[0]);
 			document.add.frm_contact.value=temp1[0].trim();
 			document.add.frm_phone.value=temp1[1].trim();
 			var temp2=temp1[2].split(",");					// 	address portion
 			if (temp2.length>3) {
 				for (var i=0;i<temp2.length;i++) {
-					alert (temp2[i]);
+//					alert (temp2[i]);
 					}
 				}
 			document.add.frm_street.value=temp2[0].trim();				// street
@@ -560,9 +574,14 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		}		// end function do_lkup()
 	
 	
-// *********************************************************************		
-
-
+// *********************************************************************
+	var name_is_set = false;
+	function do_inc_name(str) {								// 10/4/08
+		if(document.add.frm_scope.value.trim().length==0) {
+			document.add.frm_scope.value = str+"/";
+			name_is_set= true;
+			}
+		}			// end function
 	function datechk_s(theForm) {		// pblm start vs now
 		var start = new Date();
 		start.setFullYear(theForm.frm_year_problemstart.value, theForm.frm_month_problemstart.value-1, theForm.frm_day_problemstart.value);
@@ -597,7 +616,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 		if (theForm.frm_in_types_id.value == 0)		{errmsg+= "\tNature of Incident is required\n";}
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
-		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
+//		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
 //			theForm.frm_lat.disabled=false;														// 9/9/08
 		if (theForm.frm_lat.value == "")			{errmsg+= "\tMap position is required\n";}
 //			theForm.frm_lat.disabled=true;
@@ -724,7 +743,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 	</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	
 	<SPAN CLASS="td_label">Nature: <FONT COLOR='RED' SIZE='-1'>*</FONT>
-		<SELECT NAME="frm_in_types_id">
+		<SELECT NAME="frm_in_types_id" onChange="do_inc_name(this.options[selectedIndex].text.trim());">	<!--  10/4/08 -->
 		<OPTION VALUE=0 CLASS='main' SELECTED>Select</OPTION>
 <?php
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
@@ -750,7 +769,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <TR CLASS='even'><TD CLASS="td_label">Location:</TD><TD></TD>		<TD><INPUT SIZE="61" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="61"></TD></TR>
 <TR CLASS='odd'><TD CLASS="td_label" onClick="Javascript:do_addr_lkup();">City:</TD><TD ALIGN='center' onClick="Javascript:do_addr_lkup();"><IMG SRC="glasses.png" BORDER="0"/></TD> <TD><INPUT SIZE="32" TYPE="text" 		NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;St:&nbsp;&nbsp;<INPUT SIZE="2" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="2"></TD></TR>
-<TR CLASS='even' VALIGN="top"><TD CLASS="td_label">Synopsis: <font color='red' size='-1'>*</font></TD><TD></TD><TD><TEXTAREA NAME="frm_description" COLS="45" ROWS="2"></TEXTAREA></TD></TR>
+<TR CLASS='even' VALIGN="top"><TD CLASS="td_label">Synopsis: </TD><TD></TD><TD><TEXTAREA NAME="frm_description" COLS="45" ROWS="2" WRAP="virtual"></TEXTAREA></TD></TR>
 <!--
 <TR CLASS='even'><TD CLASS="td_label">Affected:</TD><TD></TD><TD><INPUT SIZE="48" TYPE="text" 	NAME="frm_affected" VALUE="" MAXLENGTH="48"></TD></TR>
 -->
@@ -758,7 +777,7 @@ $post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty
 <TR CLASS='even' valign="middle"><TD CLASS="td_label">Run End: &nbsp;&nbsp;<input type="radio" name="re_but" onClick ="do_end(this.form);" /></TD><TD></TD><TD>
 	<SPAN style = "visibility:hidden" ID = "runend1"><?php print generate_date_dropdown('problemend',0, TRUE);?></SPAN>
 	</TD></TR>
-<TR CLASS='odd' VALIGN="top"><TD CLASS="td_label">Comments:</TD><TD></TD><TD><TEXTAREA NAME="frm_comments" COLS="45" ROWS="2"></TEXTAREA></TD></TR>
+<TR CLASS='odd' VALIGN="top"><TD CLASS="td_label">Disposition:</TD><TD></TD><TD><TEXTAREA NAME="frm_comments" COLS="45" ROWS="2" WRAP="virtual"></TEXTAREA></TD></TR>
 <TR CLASS='even'><TD CLASS="td_label" onClick = 'javascript: do_coords(document.add.frm_lat.value ,document.add.frm_lng.value  )'><U>Position</U>: <font color='red' size='-1'>*</font></TD><TD></TD>
 	<TD><INPUT SIZE="13" TYPE="text" NAME="show_lat" VALUE="" >
 			<INPUT SIZE="13" TYPE="text" NAME="show_lng" VALUE="" >&nbsp;&nbsp;

@@ -73,11 +73,18 @@ Changes for CAD V2.8
 
 Changes for CAD V2.8 b
 51. Tables module was corrected to address reported problems in POST variable handling.
-52. Minor corrections  to filename includes in the help module.
+52. Minor corrections to filename includes in the help module.
 53. Corrections to ticket EDIT and to APRS functions; 
 
+Changes for CAD V2.9
+54. APRS data handling significantly corrected and improved. Repeated zero-speed posreps are not retained.
+55. Dispatch to a unit that has its 'contact via' setting an email address - including one for cellphone texting - generates mail to that address.
+56. Cellphones/texting messages will be automatically 'chunked' to reflect the size limit per message.
+57. Operator-level users may now perform all needed ticket, unit and dispatch data updates.
+59. The database schema was expanded to accommodate expected growth in Tickets capabilities.  Teams and members - with attributes of titles, skills, courses taken, certificates gained, plus document management and photos - are now schema elements, although without any code in this version.
+60. 'Notifies' was expanded to accommodate automatic notification via emai//texting whenever ANY ticket is edited (next, written), with a filter for severity.
 
 The above may well be too terse.  Let me know where further expansion wd be useful.
 
-Sept 22, '08
+Oct 23, '08
 Arnie Shore

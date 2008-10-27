@@ -12,9 +12,13 @@ Read Me File
 
 The EMD Card Set is designed to integrate with the Tickets CAD Program. The EMD Card Set is an Adobe Acrobat file that consists of a series of hyperlinks to the various cards in the set. To use the EMD Cards with Tickets, simply copy the "Tickets EMD Cards Version 2.6.pdf" file to the "/tickets/cards/" directory.
 
+Note: We have withdrawn the basic document from availability in order to comply with a legal request that we do so, that request citing a claimed proprietary interest in its contents.
+
+Nonetheless, you are encouraged to place here your agency's own version of that Card set.
+
 
 ----------
-Important
+Important (although obsolete, per above)
 ----------
 
 This is the first draft set of the Emergency Medical Dispatch section of the Cards project. As with any medical product or device, these protocols are only offered as a suggestion. You should consult with your local medical director, state regulatory office or other regulating body before using any of these protocols. They come with no
@@ -37,6 +41,7 @@ Change Log
 Version 0.26.2
 License change from Creative Commons to the Gnu Free Documentation License to Comply with SourceForge requirements
 
+Withdrawn from availability in August 2008, per above.
     
 
 ==============================================================    

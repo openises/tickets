@@ -1,4 +1,8 @@
 <?php 
+/*
+10/1/08		added error reporting
+*/
+	error_reporting(E_ALL);		// 10/1/08
 	require_once('./incs/functions.inc.php'); 
 	do_login(basename(__FILE__));
 	extract ($_GET);
@@ -122,7 +126,7 @@ catch(e) {
 			return AJAX.responseText;																				 
 			} 
 		else {
-			alert ("57: failed")
+			alert ("129: failed")
 			return false;
 			}																						 
 		}		// end function sync Ajax(strURL)
@@ -134,7 +138,7 @@ catch(e) {
 		var url = "chat_rd.php" + querystr;	
 		var payload = syncAjax(url);		
 		if (payload.substring(0,1)=="-") {
-			alert ("wr_chat msg failed - 120");
+			alert ("wr_chat msg failed - 141");
 			return false;
 			}
 		else {
@@ -171,7 +175,7 @@ catch(e) {
 		var url = "chat_wr.php" + querystr;					// phone no. or addr string
 		var payload = syncAjax(url);						// send lookup url
 		if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
-			alert ("wr_chat msg failed - 157");
+			alert ("wr_chat msg failed - 178");
 			set_to();										// set timeout again
 			return false;
 			}

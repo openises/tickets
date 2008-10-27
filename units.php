@@ -22,12 +22,23 @@
 9/3/08  NULL to mobile units center
 9/9/08	added selectable lat/lng formats
 9/13/08	LLtoUSNG implemented, replacing 8/23/08 rev's above
+10/4/08 bypass position check if mode = edit
+10/4/08 set auto-refresh if APRS active
+10/6/08	renamed validate_res
+10/6/08	bypass map check if in edit.
+10/8/08	operator-level may now create/edit Units
+10/14/08 added grid function
+10/15/08 added check for empty arguments
+10/15/08 $frm_ngs removed fm update/insert
+10/16/08 changed ticket_id to frm_ticket_id
+10/25/08 unchanged 10/16/08 entry
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
 
 do_aprs();
+
 if ($istest) {
 	dump ($_GET);
 	dump ($_POST);
@@ -38,6 +49,8 @@ extract($_POST);
 $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FIRE']] = "Fire";
 					$types[$GLOBALS['TYPE_COPS']] = "Police";	$types[$GLOBALS['TYPE_MUTU']] = "Mutual";	$types[$GLOBALS['TYPE_OTHR']] = "Other";
 
+$interval = intval(get_variable('aprs_poll'));
+$refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";	//10/4/08
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -48,9 +61,14 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+
+<?php print $refresh; ?>	<!-- 10/4/08 -->
+
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
+	<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT> <!-- 66 -->
+	
 	<SCRIPT>
 	
 	String.prototype.trim = function () {						// added 6/10/08
@@ -73,7 +91,8 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;	// 9/9/08
 
-	function do_coords(inlat, inlng) { 										 //9/14/08
+	function do_coords(inlat, inlng) { 										// 9/14/08
+		if(inlat.toString().length==0) return;								// 10/15/08
 		var str = inlat + ", " + inlng + "\n";
 		str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
 		str += lat2ddm(inlat) + ", " +lng2ddm(inlng);		
@@ -138,6 +157,21 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 			}	
 		}
 
+	var grid_obj;				// 10/14/08
+	var grid_bln = false;
+	function doGrid() {			// 157
+//		alert(158);
+		if (grid_bln) {
+			map.removeOverlay(grid_obj);
+			grid_bln = false;
+			}
+		else {
+			grid_obj = new LatLonGraticule();
+			map.addOverlay(grid_obj);
+			grid_bln = true;
+			}
+		}				// end function doGrid()
+
 	function isNull(val) {								// checks var stuff = null;
 		return val === null;
 		}
@@ -186,7 +220,7 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 		}				// end function
 
 	function to_routes(id) {
-		document.routes_Form.ticket_id.value=id;
+		document.routes_Form.ticket_id.value=id;				// 10/16/08, 10/25/08
 		document.routes_Form.submit();
 		}
 	
@@ -208,11 +242,10 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 		ShowLayer(elid, "block");
 		}
 
-	function validate_res(theForm) {					// Responder form contents validation	
+	function validate(theForm) {						// Responder form contents validation	10/6/08
 		if (theForm.frm_remove) {
 			if (theForm.frm_remove.checked) {
 				var str = "Please confirm removing '" + theForm.frm_name.value + "'";
-//				if(confirm("Please confirm removing this.")) 	{return true;}
 				if(confirm(str)) 	{return true;}
 				else 				{return false;}
 				}
@@ -226,30 +259,36 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 		if (theForm.frm_descr.value.trim()=="")				{errmsg+="\tUnit DESCRIPTION is required.\n";}
 		if (theForm.frm_un_status_id.value.trim()==0)		{errmsg+="\tUnit STATUS is required.\n";}
 		if (!got_type)										{errmsg+="\tUnit TYPE is required.\n";}
-		var gotmap = false;
-		if (theForm.frm_lat) {
-			theForm.frm_lat.disabled=false;					// set map boolean
-			gotmap = (!theForm.frm_lat.value == "");
-			theForm.frm_lat.disabled=true;
-			}
 
-		if (theForm.frm_mobile.value==1) {
-			if  (gotmap)									{errmsg+= "\tMAP LOCATION not allowed for mobile units\n";}
-			if (theForm.frm_callsign.value.trim()=="") 		{errmsg+= "\tCALL SIGN is required for mobile units\n";}
-			else {
-				for (i=0; i< calls.length;i++) {	// duplicate?
-					if (calls[i] == theForm.frm_callsign.value.trim()) {
-						errmsg+="\tDuplicate CALLSIGN - not permitted.\n";
-						break;
-						}			
-					}		// end dupl check
-				}		// end else ...
-			}		// end theForm.frm_mobile.value==1
-			
-		else {				// fixed-location unit
-			if (!gotmap) 								{errmsg+= "\tMAP LOCATION is required for Stations\n";}
-//			if (!theForm.frm_callsign.value.trim()=="") {errmsg+= "\tCALL SIGN not used for fixed-location units\n";}
+		if (document.res_edit_Form) {							// 10/6/08
+			theForm.frm_lat.disabled = true;					// prevent posting
+			theForm.frm_lng.disabled = true;
 			}
+		else {													// add form
+			var gotmap = false;
+			if (theForm.frm_lat) {
+				theForm.frm_lat.disabled=false;					// set map boolean
+				gotmap = (!theForm.frm_lat.value == "");
+				theForm.frm_lat.disabled=true;
+				}
+			if (theForm.frm_mobile.value==1) {	
+				if (gotmap) 							 		{errmsg+= "\tMAP LOCATION not allowed for mobile units\n";}
+				if (theForm.frm_callsign.value.trim()=="") 		{errmsg+= "\tCALL SIGN is required for mobile units\n";}
+				else {
+					for (i=0; i< calls.length;i++) {	// duplicate?
+						if (calls[i] == theForm.frm_callsign.value.trim()) {
+							errmsg+="\tDuplicate CALLSIGN - not permitted.\n";
+							break;
+							}			
+						}		// end dupl check
+					}		// end else ...
+				}		// end theForm.frm_mobile.value==1
+				
+			else {				// fixed-location unit
+				if (!gotmap) 								{errmsg+= "\tMAP LOCATION is required for Stations\n";}
+				}
+				
+			}			
 			
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
@@ -259,13 +298,13 @@ $types = array();	$types[$GLOBALS['TYPE_EMS']] = "EMS";	$types[$GLOBALS['TYPE_FI
 			if (theForm.frm_mobile.value==0) {		// mobile, no coords
 				theForm.frm_lat.disabled = false;
 				theForm.frm_lng.disabled = false;
-				theForm.frm_ngs.disabled = false;						// 8/23/08
+//				theForm.frm_ngs.disabled = false;						// 8/23/08, 10/15/08
 				theForm.frm_callsign.disabled = false;
 				}
 			if (theForm.frm_m_or_f) {theForm.frm_m_or_f.disabled = true;}		// 8/23/08
 			return true;
 			}
-		}				// end function validate(theForm)
+		}				// end function validate res(theForm)
 
 	function add_res () {		// turns on add responder form
 //		alert(270);
@@ -351,7 +390,7 @@ function list_responders($addon = '', $start) {
 
 	$assigns = array();					// 08/8/3
 	$tickets = array();					// ticket id's
-	$query = "SELECT `assigns`.`ticket_id`, `$GLOBALS[mysql_prefix]assigns`.`responder_id`, `ticket`.`scope` AS `ticket` FROM `$GLOBALS[mysql_prefix]assigns` LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`ticket`.`id`";
+	$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, `$GLOBALS[mysql_prefix]assigns`.`responder_id`, `$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` FROM `$GLOBALS[mysql_prefix]assigns` LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
 
 	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
@@ -465,11 +504,21 @@ var color=0;
 		GEvent.trigger(gmarkers[id], "click");
 		}
 
-	function doGrid() {
-		map.addOverlay(new LatLonGraticule());
-		}
+	var the_grid;
+	var grid_bln = false;
+	function doGrid() {		// 502
+		if (grid_bln) {
+			map.removeOverlay(the_grid);
+			grid_bln = false;
+			}
+		else {
+			the_grid = new LatLonGraticule();
+			map.addOverlay(the_grid);
+			grid_bln = true;
+			}
+		}		// end function doGrid()
 
-	function do_lat (lat) {								// 419
+	function do_lat (lat) {
 		document.forms[0].frm_lat.disabled=false;
 		document.forms[0].frm_lat.value=lat.toFixed(6);
 		document.forms[0].frm_lat.disabled=true;
@@ -508,7 +557,7 @@ var color=0;
 	var points = false;								// none
 
 	map = new GMap2(document.getElementById("map"));		// create the map
-	map.addControl(new GLargeMapControl());
+	map.addControl(new GSmallMapControl());					// 10/6/08
 	map.addControl(new GMapTypeControl());
 	map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
 
@@ -561,7 +610,8 @@ var color=0;
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  major while() for RESPONDER ==========
 	
 		$todisp = (is_guest())? "": "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";	// 08/8/02
-		$toedit = ((is_administrator() || is_super()))?  "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;":"" ;
+//		$toedit = ((is_administrator() || is_super()))?  "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;":"" ;
+		$toedit = (is_guest())? "" :"&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;	// 10/8/08
 		$totrack  = ((intval($row['mobile'])==0)||(empty($row['callsign'])))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><B><U>Tracks</B></U></SPAN>" ;
 
 		if (intval($row['mobile'])==0) {
@@ -599,7 +649,7 @@ var color=0;
 //			print __LINE__;
 			$the_time = $calls_time[$row['callsign']];
 			$the_class = "emph";
-			$aprs = TRUE;				// show legend
+			$aprs = TRUE;				// show footer legend
 			}
 		else {
 			$the_time = $row['updated'];
@@ -743,10 +793,12 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
 //		map.addControl(new GOverviewMapControl());
+		map.addMapType(G_PHYSICAL_MAP);					// 10/6/08
+		map.enableScrollWheelZoom(); 	
+
 		var tab1contents;				// info window contents - first/only tab
 										// default point - possible dummy
 		map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
-		map.enableScrollWheelZoom(); 	
 
 <?php
 		if ($icon)	{							// icon display?
@@ -780,6 +832,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		the_marker = new GMarker(map.getCenter(), {draggable: true	});
 	
 		GEvent.addListener(map, "click", function(overlay, latlng) {
+//			alert(795);
 			if(document.forms[0].frm_mobile.value==1) {
 				alert("Map position not allowed for mobile units!");
 				return;
@@ -823,7 +876,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		print "</FORM></BODY></HTML>";	
 		}
 
-	function do_calls($id = 0) {
+	function do_calls($id = 0) {				// generates js callsigns array
 		$print = "\n<SCRIPT>\n";
 		$print .="\t\tvar calls = new Array();\n";
 		$query	= "SELECT `id`, `callsign` FROM `$GLOBALS[mysql_prefix]responder` where `id` != $id";
@@ -890,7 +943,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 //		$frm_lng = ($is_mobile)? get_variable('def_lng'): quote_smart(trim($_POST['frm_lng']));
 		$frm_lat = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_lat']));						// 9/3/08
 		$frm_lng = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_lng']));						// 9/3/08
-//		$frm_ngs = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_ngs']));
+//		$frm_ngs = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_ngs']));						// 10/15/08
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
 			`name`, `description`, `capab`, `un_status_id`, `callsign`, `mobile`, `contact_name`, `contact_via`, `lat`, `lng`, `type`, `user_id`, `updated` ) 
@@ -934,7 +987,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		<FONT CLASS="header">Add Unit</FONT><BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='addform'>
-		<FORM NAME= "res_add_Form" METHOD="POST" onSubmit="return validate_res(document.res_add_Form);" ACTION="units.php?func=responder&goadd=true">
+		<FORM NAME= "res_add_Form" METHOD="POST" onSubmit="return validate(document.res_add_Form);" ACTION="units.php?func=responder&goadd=true">
 		<TR CLASS = "even" VALIGN='top'><TD CLASS="td_label">Unit category:</TD>		
 			<TD ALIGN='center'>	<!-- // 6/11/08, 6/15/08 -->
 				Station &raquo;<INPUT TYPE="radio" VALUE="" NAME="frm_m_or_f" <?php print "" ;?> onClick = 'set_f(this.form)' CHECKED/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -991,6 +1044,8 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		</TD><TD ALIGN='center'>
 		<DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 		<BR /><BR /><B>Drag/Click to fixed station location</B>
+		<BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A>
+		
 		<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
 			EMS: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;
 			Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;
@@ -1034,12 +1089,14 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		$dis = empty($row['mobile'])? " DISABLED": "";
 ?>
 		<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
+		<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
+		<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>  <!-- 1088 -->
 		</HEAD>
 		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<FONT CLASS="header">&nbsp;Edit <?php print $m_or_f . " '" . $row['name'];?>' Data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)<BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER="0" ID='editform'>
-		<FORM METHOD="POST" NAME= "res_edit_Form" onSubmit="return validate_res(document.res_edit_Form);" ACTION="units.php?func=responder&goedit=true">
+		<FORM METHOD="POST" NAME= "res_edit_Form" onSubmit="return validate(document.res_edit_Form);" ACTION="units.php?func=responder&goedit=true">
 
 <!--	<TR VALIGN = 'baseline' CLASS = "even" VALIGN='bottom'><TD CLASS="td_label">Unit category:</TD>
 			<TD ALIGN='center'>
@@ -1116,7 +1173,9 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>
 		<INPUT TYPE="hidden" NAME = "frm_mobile" VALUE=<?php print $row['mobile'] ;?> />
 		</FORM></TABLE>
-		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset'></DIV>
+		</TD><TD ALIGN='center'><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset'></DIV>
+		<BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A><BR />
+
 		<?php print $map_capt; ?></TD></TR></TABLE>
 <?php
 		print do_calls($id);					// generate JS calls array
@@ -1175,6 +1234,8 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 				}
 ?>			
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
+		<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
+		<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>  <!-- 1234 -->
 		</HEAD>
 <?php
 		if ($_dodisp == 'true') {				// dispatch 
@@ -1285,11 +1346,14 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 				<INPUT TYPE="button" VALUE="Cancel" onClick = "document.getElementById('incidents').style.display='none'; document.getElementById('view_unit').style.display='block';">
 			</TD></TR>
 			</TABLE><BR><BR>
-			</TD><TD><DIV ID='map' style="width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset"></DIV></TD></TR></TABLE>
+			</TD><TD ALIGN='center'><DIV ID='map' style="width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: inset"></DIV>
+			<BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A><BR /><BR />
+			
+			</TD></TR></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename( __FILE__);?>"></FORM>		
 			<FORM NAME="to_edit_Form" METHOD="post" ACTION = "units.php?func=responder&edit=true&id=<?php print $id; ?>"></FORM>		
 			<FORM NAME="routes_Form" METHOD="get" ACTION = "routes.php">
-			<INPUT TYPE="hidden" NAME="ticket_id" 	VALUE="">
+			<INPUT TYPE="hidden" NAME="ticket_id" 	VALUE="">						<!-- 10/16/08 -->
 			<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
 			</FORM>		
 			</BODY>					<!-- END RESPONDER VIEW -->
@@ -1319,13 +1383,17 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 			print $caption;
 ?>
 		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
+		<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
+		<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>  <!-- 1379 -->
 		</HEAD><!-- 797 -->
 		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<TABLE ID='outer'><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>
 			<DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
-			<BR /><BR />Units:&nbsp;&nbsp;&nbsp;&nbsp;
+			<BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A><BR /><BR />
+
+			Units:&nbsp;&nbsp;&nbsp;&nbsp;
 				EMS: 	<IMG SRC = './markers/sm_yellow.png' BORDER=0>&nbsp;&nbsp;&nbsp;
 				Fire: 		<IMG SRC = './markers/sm_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;
 				Police: 	<IMG SRC = './markers/sm_blue.png' BORDER=0>&nbsp;&nbsp;&nbsp;
@@ -1351,11 +1419,11 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		print do_calls();		// generate JS calls array
 
 		$buttons = "<TR><TD COLSPAN=99 ALIGN='center'><BR /><INPUT TYPE = 'button' onClick = 'document.tracks_Form.submit();' VALUE='Unit Tracks'>";
-		$buttons .= (is_administrator() || is_super())? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>":"";
+		$buttons .= (is_guest())? "" :"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>";	// 10/8/08
 //		$buttons .= (intval(get_variable('aprs_poll'))>0)? "<BR><BR><INPUT TYPE='button' value= 'APRS'  onClick ='do_aprs_window();'>": "";
 		$buttons .= "</TD></TR>";
 
-		print list_responders($buttons, 0);
+		print list_responders($buttons, 0);				// ($addon = '', $start)
 		print "\n</HTML> \n";
 		exit();
 		}				// end if($do_list_and_map)
