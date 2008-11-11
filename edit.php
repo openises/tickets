@@ -13,6 +13,7 @@
 10/21/08 relocated Disposition for consistency with Add
 10/21/08 'Synopsis' made non-mandatory
 10/21/08 handle revised notifies
+11/7/08 add strikethrough
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -485,9 +486,11 @@
 		thePoint = point;
 
 <?php
+		$in_strike = 	($row['status']== $GLOBALS['STATUS_CLOSED'])? "<strike>": "";							// 11/7/08
+		$in_strikend = 	($row['status']== $GLOBALS['STATUS_CLOSED'])? "</strike>": "";
 		$street = empty($row['street'])? "" : "<BR/>" . $row['street'] . "<BR/>" . $row['city'] . " " . $row['state'] ;
 		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
-		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['scope'], 120)  . "</B></TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>". $in_strike . shorten($row['scope'], 120) . $in_strikend . "</B></TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Reported by:</TD><TD>" . shorten($row['contact'], 32) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Phone:</TD><TD>" . format_phone ($row['phone']) . "</TD></TR>";

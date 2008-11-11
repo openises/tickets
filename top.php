@@ -11,21 +11,21 @@
 8/6/08	version number change
 9/8/08	added settings value to allow for varied lat/lng display formats
 9/18/08 version no. change - revised tables.php
+10/27/08 button bar visibility
 */ 
 require_once('./incs/functions.inc.php');
+$old_version = get_variable('_version');
+$version = "2.9 A beta";			// see usage below 11/7/08
 
-$version = get_variable('_version');
+if (!($version == $old_version)) {		// current?
+	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 
-//$this_version = "2.8.? beta";								// 
-//if (!($version == $this_version)) {		// current?
-//	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($this_version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
-//	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-//
-//	$temp = explode ("/", $_SERVER['REQUEST_URI']);			// set redirect target
-//	$temp[count($temp)-1] = "index.php";					// startup script
-//	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp);
-//	header("Location:" .$server_str ); 						// Redirect browser 
-//	}			// end (!($version ==...)
+	$temp = explode ("/", $_SERVER['REQUEST_URI']);			// set redirect target
+	$temp[count($temp)-1] = "index.php";					// startup script
+	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp);
+	header("Location:" .$server_str ); 						// Redirect browser 
+	}			// end (!($version ==...)
 
 $sess_key = get_sess_key();
 $the_time_limit = 2*60*60;
@@ -190,7 +190,7 @@ function do_callBoard() {
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=900,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_cb)) {
 			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
 			return;
@@ -232,6 +232,19 @@ function do_emd_card(filename) {
 	starting = false;
 	}
 	
+function do_logout() {						// 10/27/08
+//	hide_butts();
+	document.getElementById('whom').innerHTML=NOT_STR; 
+	stop_poll();
+	}
+
+function hide_butts() {						// 10/27/08
+	document.getElementById("buttons").style.visibility = "hidden";;
+	}
+function show_butts() {						// 10/27/08
+	document.getElementById("buttons").style.visibility = "visible";;
+	}
+
 </SCRIPT>
 <NOSCRIPT>
 	Tickets requires a JavaScript-capable browser.
@@ -253,7 +266,7 @@ function do_emd_card(filename) {
 ?>
 		<SPAN onClick = "toggle_aprs()">APRS Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Module: <SPAN ID="script"></SPAN>
-<nobr><span class="hovermenu">
+<nobr><span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
 <ul>
 <li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Active Calls</A></li> <!-- 6/9/08  -->
 <li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New Call</A></li>
@@ -293,10 +306,11 @@ if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' 
 		}
 ?>
 
-<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "document.getElementById('whom').innerHTML=NOT_STR; stop_poll()">Logout</A></li>
+<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "do_logout()">Logout</A></li>
 </ul>
 </SPAN>
 </NOBR>
 </TD></TR></TABLE>
 <FORM NAME="go" action="#" TARGET = "main"></FORM>
 </BODY></HTML>
+

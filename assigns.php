@@ -8,6 +8,8 @@
 9/27/08 removed dead code relating to $unit_scr
 9/28/08	converted TD hide/show to SPAN, to improve col alignment
 10/9/08	show unit status dropdown only one time
+11/7/08 incident strikethrough corrections
+11/8/08 added checkboxes; correction to unit status update
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
@@ -108,7 +110,7 @@ switch ($func) {					// ========================================================
 		if (theForm.frm_ticket_id.value == "")	{errmsg+= "\tSelect Incident\n";}
 		if (theForm.frm_unit_id.value == "")	{errmsg+= "\tSelect Unit\n";}
 		if (theForm.frm_status_id.value == "")	{errmsg+= "\tSelect Status\n";}
-		if (theForm.frm_comments.value == "")	{errmsg+= "\Comments required\n";}
+		if (theForm.frm_comments.value == "")	{errmsg+= "\tComments required\n";}
 		if (assigns[theForm.frm_ticket_id.value + ":" +theForm.frm_unit_id.value]) {
 									errmsg+= "\tDuplicates existing assignment\n";}
 		if (errmsg!="") {
@@ -213,8 +215,9 @@ switch ($func) {					// ========================================================
 
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 								// apply status update to unit status
-			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status_id']) . " WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";
+			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 11/8/08
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+
 			do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $frm_unit_id, $frm_status_id);
 ?>
 	</HEAD>
@@ -408,7 +411,7 @@ switch ($func) {					// ========================================================
 		$priorities = array("text_black","text_blue","text_red" );
 
 		print "<TABLE BORDER=0 ALIGN='center' WIDTH='100%'  cellspacing = 1 CELLPADDING = 2 ID='call_board' STYLE='display:block'>";
-		print "<TR CLASS='even'><TD COLSPAN=11 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD></TR>\n";
+		print "<TR CLASS='even'><TD COLSPAN=14 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD></TR>\n";
 
 		$status_vals_ar = array();
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
@@ -418,12 +421,13 @@ switch ($func) {					// ========================================================
 			$status_vals_ar[$row['id']] = $row['status_val'] . $sep . $row['description'] ;
 			}
 
-		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , `$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , `$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`, `t`.`status` AS `thestatus`,
 			`r`.`id` AS `theunitid`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
-			ORDER BY `ticket_id` ASC, `as_of` ASC ";
+			ORDER BY `ticket_id` ASC, `as_of` ASC ";																		// 11/7/08
+//		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$i = 1;	
 		if (mysql_affected_rows()>0) {
@@ -437,7 +441,7 @@ switch ($func) {					// ========================================================
 			$header .= "<TD>&nbsp;</TD>";
 			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>Incident</TD>";
 			$header .= "<TD>&nbsp;</TD>";
-			$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emph'>Dispatch</TD>";
+			$header .= "<TD COLSPAN=7 ALIGN='center' CLASS='emph'>Dispatch</TD>";
 			$header .= "</TR>\n";
 
 			$header .= "<TR CLASS='odd'>";
@@ -445,7 +449,8 @@ switch ($func) {					// ========================================================
 			$header .= "<TD>&nbsp;</TD>";
 			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='center'>Addr</TD>";
 			$header .= "<TD>&nbsp;</TD>";
-			$header .= "<TD ALIGN='center' CLASS='emph'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Comment</TD><TD ALIGN='center'>Cleared</TD>";
+			$header .= "<TD ALIGN='center' CLASS='emph'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Comment</TD><TD TITLE= 'Dispatched'>D</TD>
+				<TD TITLE= 'Responding'>R</TD><TD TITLE= 'On-scene'>O</TD><TD ALIGN='center'>Cleared</TD>";		// 11/8/08
 			$header .= "</TR>\n";
 			
 			$unit_ids = array();
@@ -468,6 +473,7 @@ switch ($func) {					// ========================================================
 						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . htmlentities ($row['theunit'], ENT_QUOTES) . "'  >" .  $strike . shorten($row['theunit'], 14)  . $strikend . "</TD>\n";						// unit 8/24/08
 						if (!in_array ($row['responder_id'], $unit_ids)) {				// 10/9/08
 							$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
+
 							print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
 //							print "\t<TD ID=TD$i STYLE='display:none'>\n\t<SPAN ID='tbd' STYLE='display:none'><INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i);\">\n";
 							print "\t<TD>\n\t<SPAN ID=TD$i STYLE='display:none'><INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i); window.opener.parent.frames['main'].location.reload();\">\n"; 		// 9/28/08
@@ -484,19 +490,31 @@ switch ($func) {					// ========================================================
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 					print "<TD></TD>\n";				// 9/28/08
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 INCIDENTS	2 cols
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . htmlentities ($row['theticket'], ENT_QUOTES) . "' ALIGN='left'>" . $strike . shorten($row['theticket'], 16) . $strikend . "</TD>\n";		// call 8/24/08
+					$in_strike = 	($row['thestatus']== $GLOBALS['STATUS_CLOSED'])? "<STRIKE>": "";					// 11/7/08
+					$in_strikend = 	($row['thestatus']== $GLOBALS['STATUS_CLOSED'])? "</STRIKE>": "";
+
+					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . htmlentities ($row['theticket'], ENT_QUOTES) . "' ALIGN='left'>" . $in_strike . shorten($row['theticket'], 16) . $in_strikend . "</TD>\n";		// call 8/24/08
 					$address = (empty($row['street']))? "" : $row['street'] . ", ";
 					$address .= $row['city'];
 					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". htmlentities($address, ENT_QUOTES) ."' ALIGN='left'>" .  $strike . shorten($address, 16) .  $strikend .	"</TD>\n";		// address 8/24/08
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 					print "<TD></TD>\n";				// 9/28/08
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ASSIGNS	4 cols
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ASSIGNS	7 cols	- 11/8/08
+					$temp = (is_date($row['dispatched']))? "<IMG SRC='./markers/checked.png' BORDER=0>": "";
+					$is_disp = "<TD CLASS='$theClass' TITLE= 'Dispatched'>" . $temp . "</TD>"; 
+					$temp = (is_date($row['responding']))? "<IMG SRC='./markers/checked.png' BORDER=0>": "";
+					$is_resp = "<TD CLASS='$theClass' TITLE= 'Responding'>" . $temp . "</TD>"; 
+					$temp = (is_date($row['in-quarters']))? "<IMG SRC='./markers/checked.png' BORDER=0>": "";
+					$is_onsc = "<TD CLASS='$theClass' TITLE= 'On-scene'>" . $temp . "</TD>"; 
 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";				// comment
+					print $is_disp;
+					print $is_resp;
+					print $is_onsc;
 					$ago = (is_date($row['clear']))? "<NOBR>". ezDate($row['clear']) . "</NOBR>": "";
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") >$ago</TD>"; 
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ")>$ago</TD>";
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~					
 					print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['responder_id'] . "'>\n";
@@ -637,7 +655,7 @@ switch ($func) {					// ========================================================
 		if (theForm.frm_unit_status_id) {
 			if (theForm.frm_unit_status_id.value == 0)	{errmsg+= "\tSelect Unit Status\n";}
 			}
-		if (theForm.frm_comments.value == "")			{errmsg+= "\Comments required\n";}
+		if (theForm.frm_comments.value == "")			{errmsg+= "\tComments required\n";}
 
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
@@ -775,8 +793,9 @@ switch ($func) {					// ========================================================
 			$the_vis = "hidden";
 			$the_dis = TRUE;
 			}
+		$chekd = (is_date($asgn_row['dispatched']))? " CHECKED ": "";
 		print "\n<TR CLASS='odd'><TD CLASS='td_label' ALIGN='right'>Dispatched:</TD>";
-		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('dispatched')\" ><SPAN ID = 'dispatched' STYLE = 'visibility:" . $the_vis ."'>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_db' TYPE='radio' onClick =  \"enable('dispatched')\" $chekd ><SPAN ID = 'dispatched' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("dispatched",totime($the_date), $the_dis);	// ($date_suffix,$default_date=0, $disabled=FALSE)
 		print "</SPAN></TD></TR>\n";
 
@@ -791,9 +810,10 @@ switch ($func) {					// ========================================================
 			$the_vis = "hidden";
 			$the_dis = TRUE;
 			}
+		$chekd = (is_date($asgn_row['responding']))? " CHECKED ": "";
 		$the_date = (is_date($asgn_row['responding']))? $asgn_row['responding']	: $now ;
 		print "\n<TR CLASS='even'><TD CLASS='td_label' ALIGN='right'>Responding:</TD>";
-		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('responding')\" ><SPAN ID = 'responding' STYLE = 'visibility:" . $the_vis ."'>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_rb' TYPE='radio' onClick =  \"enable('responding')\" $chekd><SPAN ID = 'responding' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("responding",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
 			
@@ -808,9 +828,10 @@ switch ($func) {					// ========================================================
 			$the_vis = "hidden";
 			$the_dis = TRUE;
 			}
+		$chekd = (is_date($asgn_row['in-quarters']))? " CHECKED ": "";
 		$the_date = (is_date($asgn_row['in-quarters']))? $asgn_row['in-quarters']	: $now ;
 		print "\n<TR CLASS='odd'><TD CLASS='td_label' ALIGN='right'>On-scene:</TD>";
-		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"enable('quarters')\" ><SPAN ID = 'quarters' STYLE = 'visibility:" . $the_vis ."'>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_ob' TYPE='radio' onClick =  \"enable('quarters')\" $chekd><SPAN ID = 'quarters' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("quarters",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
 
@@ -825,9 +846,10 @@ switch ($func) {					// ========================================================
 			$the_vis = "hidden";
 			$the_dis = TRUE;
 			}
+		$chekd = (is_date($asgn_row['clear']))? " CHECKED ": "";
 		$the_date = (is_date($asgn_row['clear']))? $asgn_row['clear']	: $now ;
 		print "\n<TR CLASS='even'><TD CLASS='td_label' ALIGN='right'>Clear:</TD>";
-		print "<TD COLSPAN=3><INPUT NAME='frm_qq' TYPE='radio' onClick =  \"document.edit_Form.frm_complete.value=1; enable('clear')\" ><SPAN ID = 'clear' STYLE = 'visibility:" . $the_vis ."'>";
+		print "<TD COLSPAN=3><INPUT NAME='frm_cb' TYPE='radio' onClick =  \"document.edit_Form.frm_complete.value=1; enable('clear')\" $chekd ><SPAN ID = 'clear' STYLE = 'visibility:" . $the_vis ."'>";
 		generate_date_dropdown("clear",totime($the_date), $the_dis);
 		print "</SPAN></TD></TR>\n";
 			
@@ -905,29 +927,24 @@ switch ($func) {					// ========================================================
 			do_log($GLOBALS['LOG_UNIT_COMPLETE'], $frm_ticket_id, $frm_unit_id);		// set clear times
 			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `clear`= " . quote_smart($now) . " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-
-			$message = "Run completion recorded";
 			}
-
-		else {	
 		
-			$frm_dispatched =	(array_key_exists('frm_year_dispatched', $_POST))? 	quote_smart($_POST['frm_year_dispatched'] . "-" . $_POST['frm_month_dispatched'] . "-" . $_POST['frm_day_dispatched']." " . $_POST['frm_hour_dispatched'] . ":". $_POST['frm_minute_dispatched'] .":00") : "";
-			$frm_responding = 	(array_key_exists('frm_year_responding', $_POST))? 	quote_smart($_POST['frm_year_responding'] . "-" . $_POST['frm_month_responding'] . "-" . $_POST['frm_day_responding']." " . $_POST['frm_hour_responding'] . ":". $_POST['frm_minute_responding'] .":00") : "";
-			$frm_quarters = 	(array_key_exists('frm_year_quarters', $_POST))?  	quote_smart($_POST['frm_year_quarters'] . "-" . $_POST['frm_month_quarters'] . "-" . $_POST['frm_day_quarters']." " . $_POST['frm_hour_quarters'] . ":". $_POST['frm_minute_quarters'] .":00") : "";
-			$frm_clear = 		(array_key_exists('frm_year_clear', $_POST))?  		quote_smart($_POST['frm_year_clear'] . "-" . $_POST['frm_month_clear'] . "-" . $_POST['frm_day_clear']." " . $_POST['frm_hour_clear'] . ":". $_POST['frm_minute_clear'] .":00") : "";
-			
-			$date_part = (empty($frm_dispatched))? 	"": ", `dispatched`= " . 	$frm_dispatched ;
-			$date_part .= (empty($frm_responding))? "": ", `responding`= " . 	$frm_responding;
-			$date_part .= (empty($frm_quarters))? 	"": ", `in-quarters`= " . 	$frm_quarters;
-			$date_part .= (empty($frm_clear))? 		"": ", `clear`= " . 		$frm_clear;
+		$frm_dispatched =	(array_key_exists('frm_db', $_POST))? 	quote_smart($_POST['frm_year_dispatched'] . "-" . $_POST['frm_month_dispatched'] . "-" . $_POST['frm_day_dispatched']." " . $_POST['frm_hour_dispatched'] . ":". $_POST['frm_minute_dispatched'] .":00") : "";
+		$frm_responding = 	(array_key_exists('frm_rb', $_POST))? 	quote_smart($_POST['frm_year_responding'] . "-" . $_POST['frm_month_responding'] . "-" . $_POST['frm_day_responding']." " . $_POST['frm_hour_responding'] . ":". $_POST['frm_minute_responding'] .":00") : "";
+		$frm_quarters = 	(array_key_exists('frm_ob', $_POST))?  	quote_smart($_POST['frm_year_quarters'] . "-" .   $_POST['frm_month_quarters'] . "-" . $_POST['frm_day_quarters']." " . $_POST['frm_hour_quarters'] . ":". $_POST['frm_minute_quarters'] .":00") : "";
+		$frm_clear = 		(array_key_exists('frm_cb', $_POST))?  	quote_smart($_POST['frm_year_clear'] . "-" . 	  $_POST['frm_month_clear'] . "-" . $_POST['frm_day_clear']." " . $_POST['frm_hour_clear'] . ":". $_POST['frm_minute_clear'] .":00") : "";
+		
+		$date_part = (empty($frm_dispatched))? 	"": ", `dispatched`= " . 	$frm_dispatched ;
+		$date_part .= (empty($frm_responding))? "": ", `responding`= " . 	$frm_responding;
+		$date_part .= (empty($frm_quarters))? 	"": ", `in-quarters`= " . 	$frm_quarters;
+		$date_part .= (empty($frm_clear))? 		"": ", `clear`= " . 		$frm_clear;
 
-			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) ;
-			$query .= $date_part;
-			$query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-			$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
+		$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) ;
+		$query .= $date_part;
+		$query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
+		$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
 
-			$message = "Update Applied";
-			}
+		$message = "Update Applied";
 ?>
 		</HEAD>
 <BODY>

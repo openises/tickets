@@ -32,6 +32,7 @@
 10/15/08 $frm_ngs removed fm update/insert
 10/16/08 changed ticket_id to frm_ticket_id
 10/25/08 unchanged 10/16/08 entry
+11/3/08 single call for graticule.js, relocated gmaps call
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -40,8 +41,8 @@ do_login(basename(__FILE__));
 do_aprs();
 
 if ($istest) {
-	dump ($_GET);
-	dump ($_POST);
+	if (!empty($_GET)) {dump ($_GET);}
+	if (!empty($_POST)) {dump ($_POST);}
 	}
 extract($_GET);
 extract($_POST);
@@ -66,10 +67,12 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
-	<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT> <!-- 66 -->
+	<SCRIPT DEFER SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT> <!-- 11/3/08 -->
+	<SCRIPT DEFER SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
+	<SCRIPT DEFER SRC='./js/graticule.js' type='text/javascript'></SCRIPT> <!-- 70 -->
 	
-	<SCRIPT>
+	<SCRIPT DEFER>
+//	 S C R I P T DEFER SRC="./incs/mapiconmaker.js" 
 	
 	String.prototype.trim = function () {						// added 6/10/08
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
@@ -88,6 +91,8 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 		}
 	catch(e) {
 		}
+
+	parent.upper.show_butts();										// 11/2/08
 
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;	// 9/9/08
 
@@ -157,20 +162,17 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 			}	
 		}
 
-	var grid_obj;				// 10/14/08
+	var grid_obj = new LatLonGraticule();;				// 11/2/08
 	var grid_bln = false;
-	function doGrid() {			// 157
-//		alert(158);
+	function doGrid() {
 		if (grid_bln) {
 			map.removeOverlay(grid_obj);
-			grid_bln = false;
 			}
 		else {
-			grid_obj = new LatLonGraticule();
 			map.addOverlay(grid_obj);
-			grid_bln = true;
 			}
-		}				// end function doGrid()
+		grid_bln = !grid_bln;				// flip
+		}				// end function do Grid()
 
 	function isNull(val) {								// checks var stuff = null;
 		return val === null;
@@ -307,7 +309,6 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 		}				// end function validate res(theForm)
 
 	function add_res () {		// turns on add responder form
-//		alert(270);
 		showit('res_add_form'); 
 		hideit('tbl_responders');
 		hideIcons();			// hides responder icons
@@ -354,7 +355,7 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 				document.del_Form.elements[i].checked = bool_val;		
 				}
 			}			// end for (...)
-		}				// end function all_ticks()
+		}				// end function all ticks()
 		
 	function do_disp(){												// show incidents for dispatch - added 6/7/08
 		document.getElementById('incidents').style.display='block';
@@ -421,9 +422,8 @@ function list_responders($addon = '', $start) {
 //	dump($calls_time);
 
 ?>
-<SCRIPT SRC="./incs/mapiconmaker.js" type="text/javascript"></SCRIPT>
 
-<SCRIPT>
+<SCRIPT DEFER>
 
 var color=0;
 	var colors = new Array ('odd', 'even');
@@ -503,20 +503,6 @@ var color=0;
 	function myclick(id) {					// Responds to sidebar click, then triggers listener above -  note [id]
 		GEvent.trigger(gmarkers[id], "click");
 		}
-
-	var the_grid;
-	var grid_bln = false;
-	function doGrid() {		// 502
-		if (grid_bln) {
-			map.removeOverlay(the_grid);
-			grid_bln = false;
-			}
-		else {
-			the_grid = new LatLonGraticule();
-			map.addOverlay(the_grid);
-			grid_bln = true;
-			}
-		}		// end function doGrid()
 
 	function do_lat (lat) {
 		document.forms[0].frm_lat.disabled=false;
@@ -756,7 +742,7 @@ var color=0;
 function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 ?>
 
-<SCRIPT>
+<SCRIPT DEFER>
 		var mode = "<?php print $mode; ?>";
 		function writeConsole(content) {
 			top.consoleRef=window.open('','myconsole',
@@ -877,7 +863,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 		}
 
 	function do_calls($id = 0) {				// generates js callsigns array
-		$print = "\n<SCRIPT>\n";
+		$print = "\n<SCRIPT DEFER>\n";
 		$print .="\t\tvar calls = new Array();\n";
 		$query	= "SELECT `id`, `callsign` FROM `$GLOBALS[mysql_prefix]responder` where `id` != $id";
 		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -981,7 +967,6 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 	if ($_getadd == 'true') {
 		print do_calls();		// call signs to JS array for validation
 ?>		
-		<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 		</HEAD>
 		<BODY  onLoad = "ck_frames()" onunload="GUnload()">
 		<FONT CLASS="header">Add Unit</FONT><BR /><BR />
@@ -1088,9 +1073,6 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 	
 		$dis = empty($row['mobile'])? " DISABLED": "";
 ?>
-		<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
-		<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>  <!-- 1088 -->
 		</HEAD>
 		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<FONT CLASS="header">&nbsp;Edit <?php print $m_or_f . " '" . $row['name'];?>' Data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)<BR /><BR />
@@ -1233,9 +1215,6 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 				$lng = $rowtr['longitude'];				
 				}
 ?>			
-		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
-		<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>  <!-- 1234 -->
 		</HEAD>
 <?php
 		if ($_dodisp == 'true') {				// dispatch 
@@ -1382,10 +1361,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view
 			if (!isset($mapmode)) {$mapmode="a";}
 			print $caption;
 ?>
-		<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
-		<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
-		<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>  <!-- 1379 -->
-		</HEAD><!-- 797 -->
+		</HEAD><!-- 1387 -->
 		<BODY onLoad = "ck_frames()" onunload="GUnload()">
 		<TABLE ID='outer'><TR><TD>
 			<DIV ID='side_bar'></DIV>

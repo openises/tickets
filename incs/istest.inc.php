@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL);
-//$istest = TRUE;
-$istest = FALSE;
+$istest = TRUE;
+//$istest = FALSE;
 //session_start();
 //if ($istest) {  
 //	show_variables();

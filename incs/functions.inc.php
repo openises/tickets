@@ -222,7 +222,7 @@ function show_assigns($which, $id) {				// 08/8/5
 
 
 function show_actions ($the_id, $theSort="date", $links, $display) {			/* list actions and patient data belonging to ticket */
-//	global $evenodd;
+	global $my_session;
 	if ($display) {
 		$evenodd = array ("even", "odd");		// class names for display table row colors
 		}
@@ -236,7 +236,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$responderlist[$act_row['id']] = $act_row['name'];
 		}
-	$print = "<TABLE BORDER='0' ID='patients' width='800px'>";
+	$print = "<TABLE BORDER='0' ID='patients' width=" . max(320, intval($my_session['scr_width']* 0.4)) . ">";
 																	/* list patients */
 	$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date`,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id`='$the_id' ORDER BY `date`";
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);

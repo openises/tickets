@@ -13,6 +13,7 @@
 10/17/08 allow map click for directions if error
 10/25/08 pointer housekeeping when can't route
 10/26/08 always accept click
+11/8/08 commas as separator
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -151,7 +152,7 @@ if (!empty($_POST)) {
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "domail()">
-	<CENTER><BR><BR><BR><BR><H3>Call Assignments made to:<BR /><?php print $_POST['frm_name_str'];?><BR><BR>
+	<CENTER><BR><BR><BR><BR><H3>Call Assignments made to:<BR /><?php print str_replace ( "\n", ", ", $_POST['frm_name_str']);?><BR><BR> <!-- 11/8/08 -->
 	See call Board</H3>
 	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php">
 	<INPUT TYPE='button' VALUE='Continue' onClick = "document.cont_form.submit()">
@@ -160,9 +161,9 @@ if (!empty($_POST)) {
 	}		// end if (!empty($_POST))
 else {	
 ?>
-<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
-<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>
+<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT SRC="./js/usng.js"></SCRIPT>		<!-- 10/14/08 -->
+<SCRIPT SRC="./js/graticule.js"></SCRIPT>
 	
 
 <SCRIPT>
@@ -400,9 +401,17 @@ function do_list($unit_id ="") {
 	    function setDirections(fromAddress, toAddress, locale) {
 	    	last_from = fromAddress;
 	    	last_to = toAddress;
-	    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale, preserveViewport : true  });
 
-			GEvent.addListener(Direcs, "addoverlay", GEvent.callback(Direcs, cb())); 
+//	      	var directionsPanel_var = document.getElementById("directions");			// resulting computed di ections
+//	      	var directions_var = new GDirections(map_canvas, directionsPanel_var);
+//	      	directions_var.load("from: 500 Memorial Drive, Cambridge, MA to: 4 Yawkey Way, Boston, MA 02215 (Fenway Park)", { "locale": "en_US", preserveViewport : true  });
+
+//			var directionsPanel_var = document.getElementById("directions");			// resulting computed di ections
+//			var directions_var = new GDirections(map_canvas, directionsPanel_var);
+//			directions_var.load("from: " + fromAddress + " to: " + toAddress, { "locale": "en_US", preserveViewport : true  });			
+
+	    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale, preserveViewport : true  });
+//			GEvent.addListener(Direcs, "addoverlay", GEvent.callback(Direcs, cb())); 
 	    	}		// end function set Directions()
 
 	    function cb() {
@@ -498,35 +507,6 @@ function do_list($unit_id ="") {
 			else alert("451: An unknown error occurred.");
 			}		// end function handleErrors()
 
-//		function handleErrors(){		// 10/16/08
-//			switch (gdir.getStatus().code) {
-//				case G_GEO_UNKNOWN_DIRECTIONS:
-//					msg="290: No driving directions are available to/from this location.\nError code: " + gdir.getStatus().code;
-//					break;
-//				case G_GEO_UNKNOWN_ADDRESS:
-//					msg="292: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code;
-//					break;
-//				case G_GEO_SERVER_ERROR:
-//					msg="294: A geocoding or directions request could not be successfully processed; exact reason is not known.\n Error code: " + gdir.getStatus().code;
-//					break;
-//				case G_GEO_MISSING_QUERY:
-//					msg="296: Please notify developer.\n Error code: " + gdir.getStatus().code;
-//					break;
-//				case G_UNAVAILABLE_ADDRESS:
-//					msg="298: The position for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code;
-//					break;
-//				case G_GEO_BAD_KEY:
-//					msg="300: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code;
-//					break;
-//				case G_GEO_BAD_REQUEST:
-////					msg="302: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code;
-//					break;
-//				default:
-//					msg="303: Please notify developer - an internal error has occurred.");
-//				}
-//			alert (msg + "\n\nClick map point for directions and to DISPATCH.")
-//			}		// function handleErrors()
-//	
 		function onGDirectionsLoad(){ 
 			var temp = gdir.getSummaryHtml();
 //			alert(extr_num(temp));

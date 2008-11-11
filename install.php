@@ -24,6 +24,7 @@
 10/17/08 added '__sleep' setting
 10/19/08 added pager nos. to responder
 10/22/08 expanded table notify schema
+11/6/08 table user default corrections, sql_mode
 */
 error_reporting(E_ALL);			// 9/13/08
 
@@ -907,42 +908,42 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 // -- --------------------------------------------------------
 		
 // -- 
-// -- Table structure for table `user`
+// -- Table structure for table `user`				 11/6/08
 // -- 
 		$DB = $db_prefix . $_POST['frm_db_dbname'];
 		$table_name = prefix("user");
 		$query = "CREATE TABLE `$table_name` (
 		 `id` bigint(8) NOT NULL auto_increment,
-		 `user` text COMMENT 'userid',
-		 `passwd` tinytext COMMENT 'md5 hash',
-		 `name_l` text COMMENT 'last',
-		 `name_f` text COMMENT 'first',
-		 `name_mi` text COMMENT 'middle',
+		 `user` text NOT NULL COMMENT 'userid',
+		 `passwd` tinytext NOT NULL COMMENT 'md5 hash',
+		 `name_l` text default NULL  COMMENT 'last',
+		 `name_f` text default NULL  COMMENT 'first',
+		 `name_mi` text default NULL  COMMENT 'middle',
 		 `dob` date default NULL,
 		 `title_id` tinyint(2) default NULL COMMENT 'title',
-		 `addr_street` text,
-		 `addr_city` text,
-		 `addr_st` text,
-		 `disp` tinyint(1) default '1' NULL COMMENT 'dispatch access',
-		 `files` tinyint(1) default NULL COMMENT 'docs data access',
-		 `pers` tinyint(1) default NULL COMMENT 'personnel data access',
-		 `teams` tinyint(1) default NULL COMMENT 'teams data access',
+		 `addr_street` text default NULL,
+		 `addr_city` text default NULL,
+		 `addr_st` text default NULL,
+		 `disp` tinyint(1) default 1 NULL COMMENT 'dispatch access',
+		 `files` tinyint(1) default 0 COMMENT 'docs data access',
+		 `pers` tinyint(1) default 0 COMMENT 'personnel data access',
+		 `teams` tinyint(1) default 0 COMMENT 'teams data access',
 		 `status` enum('approved','pending','na') NOT NULL default 'approved',
 		 `open_at` enum('d','f','p','t') NOT NULL default 'd' COMMENT 'after logon',
-		 `ident` text COMMENT 'identification',
-		 `info` text COMMENT 'account information',
-		 `phone_p` text NOT NULL COMMENT 'phone primary',
-		 `phone_s` text NOT NULL COMMENT 'phone secondary',
-		 `phone_m` text NOT NULL COMMENT 'phone mobile',
-		 `level` tinyint(1) NOT NULL COMMENT 'privileges',
-		 `email` text COMMENT 'email addr - primary',
-		 `email_s` text COMMENT 'email addr - secondary',
+		 `ident` text default NULL COMMENT 'identification',
+		 `info` text default NULL COMMENT 'account information',
+		 `phone_p` text default NULL COMMENT 'phone primary',
+		 `phone_s` text default NULL COMMENT 'phone secondary',
+		 `phone_m` text default NULL COMMENT 'phone mobile',
+		 `level` tinyint(1) NOT NULL  default 0 COMMENT 'privileges',
+		 `email` text  default NULL COMMENT 'email addr - primary',
+		 `email_s` text default NULL COMMENT 'email addr - secondary',
 		 `ticket_per_page` tinyint(1) default NULL,
-		 `sort_desc` tinyint(1) default '0',
-		 `sortorder` tinytext,
-		 `reporting` tinyint(1) default '1',
+		 `sort_desc` tinyint(1) default 0,
+		 `sortorder` tinytext default NULL,
+		 `reporting` tinyint(1) default 1,
 		 `callsign` varchar(12) default NULL COMMENT 'added 9/23/07',
-		 `db_prefix` text NOT NULL COMMENT 'db clone to use',
+		 `db_prefix` text  default NULL COMMENT 'db clone to use',
 		 PRIMARY KEY (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);$tables .= $table_name . ", ";	
@@ -1084,6 +1085,10 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 
 //			mysql_connect($_POST['frm_db_host'], $_POST['frm_db_user'], $_POST['frm_db_password']) or die("<FONT CLASS=\"warn\">Couldn't connect to database on '$_POST[frm_db_host]', make sure it is running and user has permissions. Click back in your browser.</FONT>");
 			mysql_select_db($_POST['frm_db_dbname']) or die("<FONT CLASS=\"warn\">Couldn't select database '$_POST[frm_db_dbname]', make sure it exists and user has permissions. Click back in your browser.</FONT>");
+
+//			$query = "SET GLOBAL sql_mode='STRICT_ALL_TABLES'";					// 11/6/08
+//			mysql_query($query) or die("<FONT CLASS=\"warn\">SQL error at line " . __LINE__ . " </FONT>");
+			
 			}
 
 		//run the functions
