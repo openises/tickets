@@ -1,6 +1,6 @@
 =========================================================================
 
- Tickets 2.8 BETA Release README  - Installation Instructions (Sept 20, 08)                           
+ Tickets Installation Instructions (March 3, '09)                           
 
 =========================================================================
 
@@ -30,9 +30,13 @@
       'localhost' or ' 127.0.0.1 ' .  Otherwise, using the provided URL, link to
       the Google site for that key.  (The key is free; read their Terms of Use.)
     * Later, when you're ready for remote access - including by yourself -
-      you'll need a 'real' GMaps key, not one the one the installer
-      provided for localhost use.  Obtain it at the Google URL provided,
+      you'll need a 'real' GMaps key, not the one inserted by the installer
+      for localhost use.  Obtain it at the Google URL provided,
       using your domain name.  Read their Terms of Use.
+    * If you encounter a complaint  'ERROR! File 'whatever' is not writable ... "
+      it means exactly that.  It's in the incs/ subdirectory, and you shd 
+      change the permissions on that file or directory to enable writing,
+      and try again.
 
 5.  After a successful install process, log in as administrator using the 
     automatically generated userid and 	password. (This is mandatory for the 
@@ -43,32 +47,37 @@
 
 7.  Next, you may want to set up your response units, via the 'UNITS',
     'Add a Unit' button.
-    * Tickets will poll APRS for position reports if you've defined the unit
-      as 'remote', provided a call sign, and set a non-zero APRS poll time.
-      See next step below for how to set that up.
+    * You may want to change the built-in 'status types', depending on your
+      operation. See 'CONFIGURATION/Unit status types' to do so.
+    * Hams note:  Tickets will poll APRS for position reports if you've defined
+      the unit as 'remote' and as 'APRS', provided a call sign, and set a 
+      non-zero APRS poll time.  See next step 9. below for how to do so.
+      
+8.  You'll probably want to set up your own incident types next.  To do so,
+    See 'CONFIGURATION/Incident types' to do so.
 
-8.  Hit 'CONFIGURATION/Edit Settings for a collection of settings that you
-    may want to revise in order to tailor its operations to your own  needs. 
+9.  Hit 'CONFIGURATION/Edit Settings for a collection of settings that you
+    may want to revise in order to tailor its operations to your local needs. 
     (Like the APRS poll time value, in minutes.)  Mouseover the captions for 
     hints on setting values.
 
-9.  Please remember that Tickets is in BETA testing. Be kind to us.  ;-)
+10.  Please remember that Tickets is in BETA testing. Be kind to us.  ;-)
     * But let us know what needs to be changed/improved/ etc.    
     * Stay tuned for new versions - Tickets is young and growing.
 
-10. Please - no, make that PLEASE! - review the security recommendations     
+11. Please - no, make that PLEASE! - review the security recommendations     
     reference to the install script and its automatically-created accounts.
 
-11. Remember the default logins:
+12. Remember the default logins:
     * Guest Account: (User Name: guest)  (Password:  guest)
     * Administrator Account:( User Name: Admin)  (Password:  admin)
     * For security, delete the latter as soon as you have a set up a new 
         account - with Super privileges! - that works.
  
-12.	On SourceForge - although not current as of this writing - Tickets is at 
+13.	On SourceForge - although not current as of this writing - Tickets is at 
 	  http://sourceforge.net/project/showfiles.php?group_id=145201&package_id=170510&release_id=551221
 	  
-13.	Noteworthy URL's.
+14.	Noteworthy URL's.
 	* WAMP - http://www.wampserver.com/en/
 	* XAMPP - http://www.apachefriends.org/en/xampp.html
 	* LAMP - http://en.wikipedia.org/wiki/LAMP_(software_bundle)
