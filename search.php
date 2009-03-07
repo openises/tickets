@@ -2,6 +2,8 @@
 /*
 8/28/08 mysql_fetch_array to  mysql_fetch_assoc
 9/19/08 add injection protection to query parameters
+1/21/09 added show butts - re button menu
+2/24/09 added dollar function
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -28,6 +30,9 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
 		}
+	else {
+		parent.upper.show_butts();										// 1/21/09
+		}
 	}
 
 try {
@@ -36,6 +41,19 @@ try {
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 	}
 catch(e) {
+	}
+
+function $() {									// 2/11/09
+	var elements = new Array();
+	for (var i = 0; i < arguments.length; i++) {
+		var element = arguments[i];
+		if (typeof element == 'string')
+			element = document.getElementById(element);
+		if (arguments.length == 1)
+			return element;
+		elements.push(element);
+		}
+	return elements;
 	}
 
 function validate(theForm) {
@@ -87,13 +105,14 @@ function validate(theForm) {
 //			add_header($_GET['id']);
 			add_header($row['id']);
 			show_ticket($row['id'], FALSE, $_POST['frm_query']);				// include search term for highlighting
+
 			exit();
 			}
-		else if (mysql_num_rows($result)) {
+		else if (mysql_num_rows($result)) {		// 
 			$ticket_found = $counter = 1;
-			print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_header'>Ticket</TD><TD CLASS='td_header'>Date</TD><TD CLASS='td_header'>Description</TD></TR>";
+			print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_header'>Ticket</TD><TD CLASS='td_header'>Date</TD><TD CLASS='td_header'>Description</TD><TD CLASS='td_header'>Status</TD></TR>";
 			while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
-				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='main.php?id=$row[id]'>#$row[id]</A>&nbsp;&nbsp;</TD><TD>".format_date($row['updated'])."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='main.php?id=$row[id]'>" . highlight($_POST['frm_query'], $row['description']) . "</A></TD></TR>\n";
+				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='main.php?id={$row['id']}'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD>".format_date($row['updated'])."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='main.php?id={$row['id']}'>" . highlight($_POST['frm_query'], $row['scope']) . "</A></TD><TD>" . get_status($row['status'])  . "</TD></TR>\n";				// 2/25/09
 				$counter++;
 				}
 			

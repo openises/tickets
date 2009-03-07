@@ -65,7 +65,7 @@ function dump($variable) {
 		for ($i=0; $i< count($aryk); $i++) {
 			$ret .= $aryv[$i].$arys[$i];						// value + separator
 			}			// end for ()
-		dump($ret);
+//		dump($ret);
 		}					// end wp return good
 		
 

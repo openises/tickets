@@ -12,24 +12,14 @@
 9/8/08	added settings value to allow for varied lat/lng display formats
 9/18/08 version no. change - revised tables.php
 10/27/08 button bar visibility
+1/12/09 don't show callboard if frame used, add call start/end functions
+1/17/09 "Situation" replaces 'Active Calls'
+1/19/09 Log button added
+1/21/09 dollar function added
 */ 
 require_once('./incs/functions.inc.php');
-$old_version = get_variable('_version');
-$version = "2.9 A beta";			// see usage below 11/7/08
-
-if (!($version == $old_version)) {		// current?
-	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-
-	$temp = explode ("/", $_SERVER['REQUEST_URI']);			// set redirect target
-	$temp[count($temp)-1] = "index.php";					// startup script
-	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp);
-	header("Location:" .$server_str ); 						// Redirect browser 
-	}			// end (!($version ==...)
-
 $sess_key = get_sess_key();
 $the_time_limit = 2*60*60;
-
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $row = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result)) : "";
@@ -66,17 +56,51 @@ html>body .hovermenu ul li a:active{ border-style: inset;} */
 var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
 var ADM_STR = '<?php echo ADM_STR;?>';			// Admin priv level, defined in functions.inc.php 
 var SUPR_STR = '<?php echo SUPR_STR;?>';		// super priv level, defined in functions.inc.php 6/16/08
+var call_frame = <?php print (intval(get_variable('call_board')) > 1)? "true": "false"; ?>	// call board frame allowed? 1/12/09
+
 var starting = false;							// 6/6/08
 
+function $() {									// 1/21/09
+	var elements = new Array();
+	for (var i = 0; i < arguments.length; i++) {
+		var element = arguments[i];
+		if (typeof element == 'string')
+			element = document.getElementById(element);
+		if (arguments.length == 1)
+			return element;
+		elements.push(element);
+		}
+	return elements;
+	}
+
+/* function $() Sample Usage:
+var obj1 = document.getElementById('element1');
+var obj2 = document.getElementById('element2');
+function alertElements() {
+  var i;
+  var elements = $('a','b','c',obj1,obj2,'d','e');
+  for ( i=0;i
+*/  
 function isNull(val) {								// checks var stuff = null;
 	return val === null;
 	}
 
 function logged_in() {								// returns boolean
-	var temp = document.getElementById("whom").innerHTML==NOT_STR;
+	var temp = $("whom").innerHTML==NOT_STR;
 	return !temp;
 	}
 	
+function calls_start () {						// called from main.php 1/12/09
+	if (call_frame) {	
+		parent.calls.location.href = 'assigns.php'
+		}
+	}
+function calls_end () {
+	if (call_frame) {
+		parent.calls.location.href = 'assigns.php';
+		}
+	}	
+
 function ck_frames() {		// onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
@@ -159,23 +183,23 @@ function start_poll() {											// start the process
 	var aprs_poll = get_aprs_time();							// cycle period
 	if ((parseInt(aprs_poll)==0) || (aprs_poll==new Boolean (NaN)))	{
 		window.clearInterval(aprs)
-		document.getElementById("poll_id").innerHTML = "none";
+		$("poll_id").innerHTML = "none";
 		return;} 
 	else {
 		get_aprs();												// kick off
 		aprs = window.setInterval("get_aprs()", aprs_poll*60*1000);	// aprs => Boolean(true);	
-		document.getElementById("poll_id").innerHTML = aprs_poll + " min.";
+		$("poll_id").innerHTML = aprs_poll + " min.";
 		}
 	}				// end function start poll()
 
 function stop_poll() {
 	if (aprs) {window.clearInterval(aprs);}
 	aprs =  Boolean(false);	
-	document.getElementById("poll_id").innerHTML = "none";
+	$("poll_id").innerHTML = "none";
 	}
 	
 function toggle_aprs() {
-	if (!((document.getElementById('level').innerHTML==ADM_STR) || (document.getElementById('level').innerHTML==SUPR_STR))){		// 5/28/08 allow admin or super only
+	if (!(($('level').innerHTML==ADM_STR) || ($('level').innerHTML==SUPR_STR))){		// 5/28/08 allow admin or super only
 		return;
 		}
 	else {
@@ -183,6 +207,23 @@ function toggle_aprs() {
 		else 		{start_poll();}
 		}
 	}				// end function toggle_aprs()
+
+var newwindow_sl = null;
+
+function do_sta_log() {				// 1/19/09
+	if (logged_in()) {
+		if(starting) {return;}						// 6/6/08
+		starting=true;	
+		newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (isNull(newwindow_sl)) {
+			alert ("Station log operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+			return;
+			}
+		newwindow_sl.focus();
+		starting = false;
+		}
+	}		// end function do sta_log()
+
 
 var newwindow_cb = null;
 
@@ -233,16 +274,17 @@ function do_emd_card(filename) {
 	}
 	
 function do_logout() {						// 10/27/08
-//	hide_butts();
-	document.getElementById('whom').innerHTML=NOT_STR; 
+	hide_butts();
+	$('whom').innerHTML=NOT_STR; 
 	stop_poll();
+	calls_end ();							// 1/12/09
 	}
 
 function hide_butts() {						// 10/27/08
-	document.getElementById("buttons").style.visibility = "hidden";;
+	$("buttons").style.visibility = "hidden";
 	}
 function show_butts() {						// 10/27/08
-	document.getElementById("buttons").style.visibility = "visible";;
+	$("buttons").style.visibility = "visible";
 	}
 
 </SCRIPT>
@@ -256,7 +298,7 @@ function show_butts() {						// 10/27/08
 <table border=0 cellpadding=0>
 <tr valign='top'>
 	<td><img src="t.gif" border=0></td>
-	<td><FONT SIZE="3">ickets <?php print $version ." on <B>".get_variable('host')."</B></FONT>"; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><FONT SIZE="3">ickets <?php print get_variable('_version') ." on <B>".get_variable('host')."</B></FONT>"; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Logged in as: 
 		<span ID="whom"><?php print $whom ; ?></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 		Permissions: <SPAN ID="level"><?php print $level; ?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -268,7 +310,7 @@ function show_butts() {						// 10/27/08
 		Module: <SPAN ID="script"></SPAN>
 <nobr><span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
 <ul>
-<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Active Calls</A></li> <!-- 6/9/08  -->
+<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Situation</A></li> <!-- 6/9/08, 1/17/09  -->
 <li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New Call</A></li>
 <li id = "resp"><A HREF="units.php" target="main">Units</A></li>
 <li id = "search"><A HREF="search.php" target="main">Search</A></li>
@@ -301,11 +343,12 @@ if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' 
 		}
 
 	$call_board = get_variable('call_board');
-	if (!(intval($call_board)==0)) {
+	if ((intval($call_board)==1)) {				// 1/12/09
 		print"<li id = 'callboard'><A HREF='#' onClick = 'do_callBoard()'>Call Board</A></li>\n";
 		}
 ?>
 
+<li id = 'sta_log'><A HREF='#' onClick = 'do_sta_log()'>Log</A></li>
 <li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "do_logout()">Logout</A></li>
 </ul>
 </SPAN>

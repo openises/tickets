@@ -15,6 +15,14 @@
 10/19/08 added trim()
 10/23/08 revised notify validation and for severity handling
 10/23/08 profile validation added
+11/30/08 table user - added md5 password conversion, skip passwd edit if blank
+12/1/08 revised profile edit passwd handling
+12/2/08 check for dupl userid's added
+12/15/08 added member level
+1/17/09  added `auto_route` setting to config.inc.php
+1/21/09 show_butts, addr lookup button
+1/27/09 added super-only notify execute, quote_smart added
+3/3/09 correction for MEMBER user type
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -30,6 +38,13 @@
 	extract($_GET);
 	if (!isset($func)) {$func = "summ";}
 	$reload_top = FALSE;		
+
+ 	$query	= "SELECT `user` FROM`$GLOBALS[mysql_prefix]user` WHERE `id` <> '${my_session['user_id']}'";		// 12/2/08
+ 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	$users = "";
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$users .= trim($row['user']) . "\t";			
+		}			
 	
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -42,26 +57,10 @@
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="6/9/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<SCRIPT SRC='./js/md5.js'></SCRIPT>		<!-- 11/30/08 -->
+
 	<SCRIPT>
 	
-		function ck_frames() {
-			if(self.location.href==parent.location.href) {
-//				alert(self.location.href + " " +parent.location.href );
-				self.location.href = 'index.php';
-				}
-
-		function isNull(val) {								// checks var stuff = null;
-			return val === null;
-			}
-
-				
-<?php
-//	dump ($reload_top);
-//	if ($reload_top) {
-//		print "\n\talert(32);\n";
-//		}
-?>
-			}		// end function ck_frames()
 	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
@@ -70,9 +69,32 @@
 	catch(e) {
 		}
 
+	function ck_frames() {
+		if(self.location.href==parent.location.href) {
+//			alert(self.location.href + " " +parent.location.href );
+			self.location.href = 'index.php';
+			}
+		else {
+			parent.upper.show_butts();										// 1/21/09
+			}
+		}		// end function ck_frames()
+	
+	function isNull(val) {								// checks var stuff = null;
+		return val === null;
+		}
+
 	String.prototype.trim = function () {				// 10/19/08
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
+     
+	function in_array (ary, val) {						// 12/2/08
+		for (var i = 0; i<ary.length; i++) {
+			if(ary[i] == val) {
+				return true;
+				}
+			}
+		return false;
+		}				// end function in array
 
 	function do_test() {				// 8/2/08
 		var newwindow_t=window.open("opena.php", "Test Callsign",  "titlebar, resizable=1, scrollbars, height=680,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=500,screenX=50,screenY=50"); newwindow_t.focus();
@@ -131,9 +153,12 @@
 			theForm.frm_zoom.disabled = false;
 			return true;
 			}
-		}				// end function validate(theForm)
+		}				// end function validate cen(theForm)
 
-	function validate_user(theForm) {			// Responder form contents validation
+	var str_users = "<?php print $users;?>";				// 12/2/08
+	var ary_users = str_users.split("\t");				// see usage in function validate_user()
+
+	function validate_user(theForm) {			// user form contents validation
 		if (theForm.frm_remove) {
 			if (theForm.frm_remove.checked) {
 				if(confirm("Please confirm this removal.")) {return true;}
@@ -142,23 +167,31 @@
 			}
 
 		var errmsg="";
+		if (theForm.frm_user.value=="")											{errmsg+="\tUserID is required.\n";}
 		var got_level = false;
 		for (i=0; i<theForm.frm_level.length; i++){
 			if (theForm.frm_level[i].checked) {	got_level = true;	}
 			}
-		if (theForm.frm_user.value=="")				{errmsg+="\tUserID is required.\n";}
-		if (theForm.frm_passwd.value=="")			{errmsg+="\tPASSWORD is required.\n";}
-		if (theForm.frm_passwd_confirm.value=="")	{errmsg+="\tCONFIRM PASSWORD is required.\n";}
-		if (theForm.frm_passwd.value!=theForm.frm_passwd_confirm.value) {errmsg+="\tPASSWORD and CONFIRM PASSWORD fail to match.\n";}
-		if (!got_level)								{errmsg+="\tUser LEVEL is required.\n";}
+		if (!got_level)															{errmsg+="\tUser LEVEL is required.\n";}
+		if ((theForm.frm_func.value=="a") && (in_array(ary_users, theForm.frm_user.value.trim())))
+																				{errmsg+="\tUserID duplicates existing one.\n";}	
+		if (theForm.frm_passwd.value!=theForm.frm_passwd_confirm.value) 		{errmsg+="\tPASSWORD and CONFIRM fail to match.\n";}
+
+		if ((theForm.frm_func.value=="a") && (theForm.frm_passwd.value==""))	{errmsg+="\tPASSWORD is required.\n";}		// only for ADD
+		if ((theForm.frm_passwd.value.trim().length>0) && (theForm.frm_passwd.value.trim().length<5))	
+																				{errmsg+="\tPasswd length 5 or more is required.\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
 			}
 		else {										// good to go!
+		
+			theForm.frm_hash.value = (theForm.frm_passwd.value.trim()=="")? "": hex_md5(theForm.frm_passwd.value.trim().toLowerCase());			
+			theForm.frm_passwd.value="";			// hide them
+			theForm.frm_passwd_confirm.value="";
 			return true;
 			}
-		}				// end function validate(theForm)
+		}				// end function validate user(theForm)
 
 	function validate_set(theForm) {			// limited form contents validation  
 		var errmsg="";
@@ -170,7 +203,7 @@
 		else {										// good to go!
 			return true;
 			}
-		}				// end function validate(theForm)
+		}				// end function validate set(theForm)
 
 	function add_res () {		// turns on add responder form
 		showit('res_add_form'); 
@@ -229,7 +262,7 @@
 				}
 			}			// end for (...)
 		}				// end function all_ticks()
-		
+
 <?php
 print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))) . "\n";;
 ?>
@@ -242,18 +275,30 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 
 		case 'notify': 
 			print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
-		if (array_key_exists('id', ($_GET))) {
-			print "<FONT CLASS='header'>Add Notify Event</FONT><BR /><BR />";
+		if (array_key_exists('id', ($_GET))) {			// 0 -> all tickets notify
+			print "<FONT CLASS='header'>Add Notify</FONT><BR /><BR />";
 			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />"; 
-			$the_id = ($_GET['id']==0)? "All tickets": "#" . $_GET['id'];
+			if ($_GET['id']!=0) {
+				$query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = ${_GET['id']} LIMIT 1";
+			 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				$the_ticket_name = $row['scope'];
+				unset($result);
+				}
+			else {
+				$the_ticket_name = "<I>All tickets</I>";			
+				}
 ?>
 			<TABLE BORDER="0">
 			<FORM METHOD="POST" NAME="notify_form" ACTION="config.php?func=notify&add=true">
-			<TR CLASS='even'><TD CLASS="td_label">Ticket:</TD><TD ALIGN="right"><A HREF="main.php?id=<?php print $_GET['id'];?>"><?php print $the_id;?></A></TD></TR>
+			<TR CLASS='even'><TD CLASS="td_label">Ticket:</TD><TD ALIGN="left"><A HREF="main.php?id=<?php print $_GET['id'];?>"><?php print $the_ticket_name;?></A></TD></TR>
 			<TR CLASS='odd'><TD CLASS="td_label">Email Address:</TD><TD><INPUT MAXLENGTH="70" SIZE="40" TYPE="text" NAME="frm_email" VALUE=""></TD></TR>
-			<TR CLASS='even'><TD CLASS="td_label">Execute:</TD><TD><INPUT MAXLENGTH="150" SIZE="40" TYPE="text" NAME="frm_execute" VALUE=""></TD></TR>
-			<TR CLASS='odd'></TR><TD CLASS="td_label">On Patient/Action Change:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_action"></TD></TR>
-			<TR CLASS='even'><TD CLASS="td_label">On Ticket Change: &nbsp;&nbsp;</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_ticket"></TD></TR>
+<?php
+	$dis = (is_super())? "" : " DISABLED "; // 1/27/09
+?>
+			<TR CLASS='even'><TD CLASS="td_label">Execute:</TD><TD><INPUT MAXLENGTH="150" SIZE="40" TYPE="text" NAME="frm_execute" VALUE="" <?php print $dis; ?>></TD></TR>
+			<TR CLASS='odd'></TR><TD CLASS="td_label">On Patient/Action Change:</TD><TD ALIGN="left"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_action"></TD></TR>
+			<TR CLASS='even'><TD CLASS="td_label">On Ticket Change: &nbsp;&nbsp;</TD><TD ALIGN="left"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_on_ticket"></TD></TR>
 			<TR CLASS='odd'><TD CLASS="td_label">Severity filter:</TD><TD ALIGN='center'>
 				All &raquo;		<input type='radio' name='frm_severity' value=1 >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 				Highest &raquo;	<input type='radio' name='frm_severity' value=3 checked></TD></TR>
@@ -269,7 +314,7 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 	function validate(theForm) {			// notify record validate 10/23/08
 		var errmsg="";
 		if (!validate_email(theForm.frm_email.value.trim()))	{errmsg+="\tValid email address is required.\n";}
-		if ((!(theForm.frm_on_action.checked)) && (!(theForm.frm_on_action.checked)))
+		if ((!(theForm.frm_on_ticket.checked)) && (!(theForm.frm_on_action.checked)))
 																{errmsg+="\tOne or both checkboxes is required.\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
@@ -287,19 +332,19 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 		dotpos=field.lastIndexOf(".");
 		return (!(apos<1||dotpos-apos<2));
 		}				// end function validate_email()
-
 </SCRIPT>
 							
 			</HTML>
 <?php
 			exit();
-			}
+			}				// end (array_key_exists('id', ($_GET)))
+			
 		else if ((array_key_exists('save', ($_GET))) && ($_GET['save']== 'true')) {
 			for ($i = 0; $i<count($_POST["frm_id"]); $i++) {
 
 				if (isset($_POST['frm_delete'][$i])) {
 					$msg = "Notify deletion complete!";					// pre-set
-					$query = "DELETE from $GLOBALS[mysql_prefix]notify WHERE id='".$_POST['frm_id'][$i]."'";
+					$query = "DELETE from $GLOBALS[mysql_prefix]notify WHERE id='".$_POST['frm_id'][$i]."' LIMIT 1";
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					}
 				else {					//email validation check
@@ -314,8 +359,25 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 					$on_ticket_val  = empty($_POST['frm_on_ticket'][$i])? "":  "1";
 					$on_action_val  = empty($_POST['frm_on_action'][$i])? "":  "1";
 					$on_patient_val = empty($_POST['frm_on_patient'][$i])? "": "1";;
+
 					
-					$query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET `execute_path`='".$_POST['frm_execute'][$i]."', `email_address`='".$_POST['frm_email'][$i]."', `on_action`='".$on_action_val."', `on_patient`='".$on_patient_val ."', `on_ticket`='".$on_ticket_val ."' WHERE `id`='".$_POST['frm_id'][$i]."'";
+//					$query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET `execute_path`='".$_POST['frm_execute'][$i]."', `email_address`='".$_POST['frm_email'][$i]."', `on_action`='".$on_action_val."', `on_patient`='".$on_patient_val ."', `on_ticket`='".$on_ticket_val ."' WHERE `id`='".$_POST['frm_id'][$i]."'";
+
+					$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+																				// 1/27/09
+					$query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET
+						`execute_path`=".	quote_smart($_POST['frm_execute'][$i]) .",
+						`email_address`=".	quote_smart($_POST['frm_email'][$i]) .",
+						`on_action`='".		$on_action_val ."', 
+						`on_patient`='".	$on_patient_val ."', 
+						`on_ticket`='".		$on_ticket_val ."',
+						`by`=".				$my_session['user_id'] .",
+						`from`=".			quote_smart($_SERVER['REMOTE_ADDR']) .",
+						`on`=".				quote_smart($now) ."
+					
+						WHERE `id`='".		$_POST['frm_id'][$i]."'";
+
+
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 //					dump ($query);
 					}
@@ -323,7 +385,7 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 			
 			if (!get_variable('allow_notify')) print "<FONT CLASS=\"warn\">Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 			print "<FONT CLASS='header'>$msg</FONT><BR /><BR />";
-			}
+			}				// end array_key_exists('save')
 
 		else if ((array_key_exists('add', ($_GET))) && ($_GET['add']== 'true')) {	//email validation check
 			$email = validate_email($_POST['frm_email']);
@@ -337,8 +399,9 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 			$query = "INSERT INTO `$GLOBALS[mysql_prefix]notify` SET ticket_id='$_POST[frm_id]',user='$my_session[user_id]',email_address='$_POST[frm_email]',execute_path='$_POST[frm_execute]',on_action='$on_action',on_ticket='$on_ticket',severities='$_POST[frm_severity]'";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
-			print "<FONT SIZE='3'><B>Notify added.</B></FONT><BR /><BR />";
-			}
+			print "<FONT SIZE='3'><B>Notify update complete.</B></FONT><BR /><BR />";
+			}			// end array_key_exists('add')
+
 		else {
 			if ($my_session['user_id'])
 				$query = "SELECT * FROM $GLOBALS[mysql_prefix]notify WHERE user='$my_session[user_id]'";
@@ -372,7 +435,7 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 					$i++;
 					}
 				print "<TR CLASS='" .$colors[$i%2]  ."'><TD COLSPAN=99 ALIGN='center'><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Continue'></TD></TR></FORM>";
+					<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR></FORM>";
 				print "</TABLE><BR />";
 ?>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
@@ -385,7 +448,7 @@ print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))
 			else {
 				print '<B>No notifies to update.</B><BR /><BR />';
 				}
-			}
+			}			// end not array_key_exists('add')
     break;
 
 
@@ -393,28 +456,11 @@ case 'profile' :					//update profile
 		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 		$get_go = (array_key_exists('go', ($_GET)))? $_GET['go']  : "" ;
 		if ($get_go == 'true') {			//check passwords
-			$set_passwd = FALSE;
 			$frm_sort_desc = array_key_exists('frm_sort_desc', ($_POST))? 1: 0 ;	// checkbox handling
-			if($_POST['frm_passwd'] != '') {
-				if($_POST['frm_passwd'] != $_POST['frm_passwd_confirm']) {
-					print "<FONT CLASS='warn'>Passwords don't match. Click 'back' and try again.</font>";
-					exit();
-					}
-				else {
-					$set_passwd = TRUE;
-					}
-				}
-			else if($_POST['frm_passwd_confirm'] != '') {	
-				print '<FONT CLASS="warn">BOTH password fields are required. Password is not updated.</FONT><BR />';
-				}
-			if(!$set_passwd) {		// skip password update
-				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET info='$_POST[frm_info]',email='$_POST[frm_email]',sortorder='$_POST[frm_sortorder]',sort_desc='$frm_sort_desc',ticket_per_page='$_POST[frm_ticket_per_page]' WHERE id='$my_session[user_id]'";
-				}
-			else {
-				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET passwd=PASSWORD('$_POST[frm_passwd]'),info='$_POST[frm_info]',email='$_POST[frm_email]',sortorder='$_POST[frm_sortorder]',sort_desc='$frm_sort_desc',ticket_per_page='$_POST[frm_ticket_per_page]' WHERE id='$my_session[user_id]'";
-				}
+			extract($_POST);
+			$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET passwd='$frm_hash',info='$frm_info',email='$frm_email',sortorder='$frm_sortorder',sort_desc='$frm_sort_desc',ticket_per_page='$frm_ticket_per_page' WHERE id='$my_session[user_id]'";
+//			dump($query);
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			reload_session();
 			print '<B>Your profile has been updated.</B><BR /><BR />';
 			}
 		else {
@@ -427,11 +473,10 @@ case 'profile' :					//update profile
 			$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE id='$my_session[user_id]'";
 			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			$row	= mysql_fetch_array($result);
-
-			?>
+?>
 			<FONT CLASS="header">Edit My Profile</FONT><BR /><BR /><TABLE BORDER="0">
 			<FORM METHOD="POST" ACTION="config.php?func=profile&go=true"><INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'];?>">
-			<TR CLASS="even"><TD CLASS="td_label">New Password:</TD><TD><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd"> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
+			<TR CLASS="even"><TD CLASS="td_label">New Password:</TD><TD><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd" VALUE=''> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"  VALUE=''></TD></TR>
 			<TR CLASS="odd"><TD CLASS="td_label">Email:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['email'];?>" NAME="frm_email"></TD></TR>
 			<TR CLASS="even"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['info'];?>" NAME="frm_info"></TD></TR>
 			<!-- <TR><TD CLASS="td_label">Show reporting actions:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_reporting" <?php if($row['reporting']) print " checked";?>></TD></TR> -->
@@ -442,11 +487,37 @@ case 'profile' :					//update profile
 			<OPTION value="affected" <?php if($row['sortorder']=='affected') print " selected";?>>Affected</OPTION>
 			</SELECT>&nbsp; Descending <INPUT TYPE="checkbox" value="1" name="frm_sort_desc" <?php if ($row['sort_desc']) print "checked";?>></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $my_session['user_id'];?>">
-			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="button" VALUE="Apply" onClick = validate(this.form)></TD></TR>
+			<INPUT TYPE='hidden' NAME='frm_hash' VALUE='<?php print $row['passwd'];?>'>	<!-- 11/30/08 -->
+			<TR CLASS="odd"><TD></TD>
+				<TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;
+				<INPUT TYPE="button" VALUE="Submit" onClick = validate_prof(this.form)></TD></TR>
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
 <SCRIPT>
+
+	function validate_prof(theForm) {			// profile form contents validation
+		var errmsg="";
+		if (theForm.frm_passwd.value!=theForm.frm_passwd_confirm.value)  {
+			errmsg+="\tPASSWORD and CONFIRM fail to match.\n";
+			}
+		else {
+			if ((theForm.frm_passwd.value!="") && (theForm.frm_passwd.value.trim().length<6))  {errmsg+="\tPasswd length 6 or more is required.\n";}
+			}
+
+		if (errmsg!="") {
+			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			return false;
+			}
+		else {										// good to go!
+			if(theForm.frm_passwd.value!="") {
+				theForm.frm_hash.value = hex_md5(theForm.frm_passwd.value.trim().toLowerCase());
+				theForm.frm_passwd.value = theForm.frm_passwd_confirm.value="";					// hide them
+				}
+			theForm.submit();
+			}
+		}				// end function validate prof(theForm)
 
 
 	function validate(theForm) {						//profile validation	- 10/23/08
@@ -561,31 +632,72 @@ case 'user' :
 			$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE id='$id' LIMIT 1";
 			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			$row	= mysql_fetch_array($result);
+			$caption = (is_administrator() || is_super())? "Edit": "View";
+			$disabled = (is_administrator() || is_super())? "": " DISABLED";
 
 ?>
-			<FONT CLASS="header">Edit User</FONT><BR /><BR /><TABLE BORDER="0">
+			<FONT CLASS="header"><?php print $caption; ?> User Data</FONT><BR /><BR />
+			<TABLE BORDER="0" CELLSPACING=1>
 			<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&edit=true"><INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $id;?>">
-			<TR CLASS="even"><TD CLASS="td_label">User ID:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $row['user'];?>" NAME="frm_user"></TD></TR>
-			<TR CLASS="odd"><TD CLASS="td_label">Password:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd"> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
-			<TR CLASS="even"><TD CLASS="td_label">Callsign:</TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" VALUE="<?php print $row['callsign'];?>" NAME="frm_callsign"></TD></TR>
-			<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['info'];?>" NAME="frm_info"></TD></TR>
-			<TR CLASS="even"><TD CLASS="td_label">Email:</TD><TD><INPUT SIZE="47" MAXLENGTH="47" TYPE="text" VALUE="<?php print $row['email'];?>" NAME="frm_email"></TD></TR>
-			<TR CLASS="odd"><TD CLASS="td_label">Level:</TD><TD>
+			<TR CLASS="even"><TD ALIGN="right" CLASS="td_label">User ID:</TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $row['user'];?>" NAME="frm_user"<?php print $disabled;?> ></TD></TR>
+			<TR CLASS="odd"><TD ALIGN="right" CLASS="td_label">Password:</TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd"<?php print $disabled;?>> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"<?php print $disabled;?>></TD></TR>
+			<TR CLASS="even" VALIGN='middle'><TD ALIGN="right" CLASS="td_label">Level:</TD><TD COLSPAN=3>&nbsp;&nbsp;&nbsp;
 <?php
 			$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_USER']))?			"checked":"" ;
-			print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_USER'] . 		"' $checked> Operator<BR />\n";
+			print "Operator &raquo<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_USER'] . 		"' $checked $disabled>&nbsp;&nbsp;&nbsp;\n";
 			$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_GUEST']))? 			"checked":"" ;
-			print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_GUEST'] . 		"' $checked> Guest<BR />\n";
+			print " Guest &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_GUEST'] . 		"' $checked $disabled>&nbsp;&nbsp;&nbsp;\n";
 			$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_ADMINISTRATOR']))? 	"checked":"" ;
-			print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' $checked> Administrator<BR />\n";
+			print " Administrator &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' $checked $disabled>&nbsp;&nbsp;&nbsp;\n";
 			if (is_super()) {				// 6/9/08
 				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SUPER']))? 	"checked":"" ;
-				print "<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' $checked> Super<BR />\n";
+				print " Super &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' $checked $disabled>&nbsp;&nbsp;&nbsp;\n";
 				}
+			$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_MEMBER']))? 	"checked":"" ;						// 12/15/08
+			print " Member &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_MEMBER'] ."' $checked $disabled>\n";
 ?>			
 			</TD></TR>
-			<TR CLASS="even"><TD CLASS="td_label">Remove User:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove"></TD></TR>
-			<TR CLASS="odd"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Apply"></TD></TR>
+			<TR><TD COLSPAN=4 ALIGN='center'>&nbsp;</TD></TR.
+			<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Last name: </TD>
+				<TD><INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="<?php print $row['name_l'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>></TD>
+				<TD CLASS="td_label" ALIGN="right">First: </TD>
+				<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="<?php print $row['name_f'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+			<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">MI: </TD>
+				<TD><INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="<?php print $row['name_mi'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>></TD>
+				<TD CLASS="td_label" ALIGN="right">DOB: </TD><TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="<?php print $row['dob'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?> /></TD></TR>
+			<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>"<?php print $disabled;?>/></TD>
+				<TD CLASS="td_label" ALIGN="right">Ident: </TD>
+				<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="<?php print $row['ident'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+			<TR CLASS="even"><TD CLASS="td_label" ALIGN="right">Info: </TD><TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE="<?php print $row['info'];?>"<?php print $disabled;?>></TD></TR>
+			<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="32" TYPE="text" NAME="frm_email" VALUE="<?php print $row['email'];?>"<?php print $disabled;?>></TD>
+				<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;&nbsp;&nbsp;Alternate: </TD>
+				<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_email_s" VALUE="<?php print $row['email_s'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+			<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"> Street addr: </TD>
+				<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="<?php print $row['addr_street'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+			<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">City: </TD>
+				<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_city" VALUE="<?php print $row['addr_city'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>></TD>
+				<TD CLASS="td_label" ALIGN="right">St: </TD>
+				<TD><INPUT ID="ID10" MAXLENGTH="2" SIZE=2 type="text" NAME="frm_addr_st" VALUE="<?php print $row['addr_st'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+			<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Phone: </TD>
+				<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_p" VALUE="<?php print $row['phone_p'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>></TD>
+				<TD CLASS="td_label" ALIGN="right">Alternate: </TD><TD>
+					<INPUT ID="ID20" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_s" VALUE="<?php print $row['phone_s'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+			<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Mobile: </TD>
+				<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_m" VALUE="<?php print $row['phone_m'];?>" onChange = "this.value=JSfnTrim(this.value)"<?php print $disabled;?>> </TD></TR>
+<?php if ((is_administrator() || is_super())) { ?>					
+			<TR CLASS="even" VALIGN='top'><TD CLASS="td_label">Remove User: </TD><TD COLSPAN=3> &raquo; <INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove"></TD></TR>
+<?php } ?>			
+			<TR CLASS="odd"><TD></TD>
+				<TD COLSPAN=3 ALIGN="center">
+					<INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<?php if ((is_administrator() || is_super())) { ?>					
+					<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<INPUT TYPE="submit" VALUE="Submit">
+<?php } ?>					
+				</TD></TR>
+				<INPUT TYPE='hidden' NAME='frm_hash' VALUE='<?php print $row['passwd'];?>'>	<!-- 11/30/08 -->
+				<INPUT TYPE='hidden' NAME='frm_func' VALUE='e'>
+
 			</FORM></TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 			</BODY>
@@ -597,10 +709,9 @@ case 'user' :
 			print '<FONT CLASS="warn">Not authorized.</FONT><BR /><BR />';
 		}		// end if ($_GET['id']
 	else if ((array_key_exists('edit', ($_GET))) && ($_GET['edit'] == 'true') && 
-			(array_key_exists('func', ($_GET))) && ($_GET['func'] == 'user')) {
+				(array_key_exists('func', ($_GET))) && ($_GET['func'] == 'user')) {
 
 		if ((array_key_exists('frm_remove', $_POST)) && ($_POST['frm_remove'] == 'yes')) {
-//		if ($_POST['frm_remove'] == 'yes') {
 			$ctr = 0;
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE owner='$_POST[frm_id]' LIMIT 1";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -626,15 +737,29 @@ case 'user' :
 				}			
 			}
 		else {
-			if ($_POST['frm_passwd'] == '')
-				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `user`='$_POST[frm_user]', `callsign` = '$_POST[frm_callsign]',`info`='$_POST[frm_info]',`level`='$_POST[frm_level]',`email`='$_POST[frm_email]' WHERE `id`='$_POST[frm_id]'";
-			else {
-				if($_POST['frm_passwd'] != $_POST['frm_passwd_confirm']) {
-					print "Passwords don't match. Try again.<BR />";
-					exit();
-					}
-				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `user`='$_POST[frm_user]', `callsign`='$_POST[frm_callsign]',`passwd`=PASSWORD('$_POST[frm_passwd]'),`info`='$_POST[frm_info]',`level`='$_POST[frm_level]' WHERE `id`='$_POST[frm_id]'";
-				}
+			$pass = empty($_POST['frm_hash'])? "" : "`passwd`='$_POST[frm_hash]',";		// note trailing comma
+			$fields = " `addr_city` = " . quote_smart(trim($_POST['frm_addr_city'])) . ",	
+						`addr_st` = " . quote_smart(trim($_POST['frm_addr_st'])) . ",	
+						`addr_street` = " . quote_smart(trim($_POST['frm_addr_street'])) . ",
+						`callsign` = " . quote_smart(trim($_POST['frm_callsign'])) . ",	
+						`dob` = " . quote_smart(trim($_POST['frm_dob'])) . ",		
+						`email` = " . quote_smart(trim($_POST['frm_email'])) . ",			
+						`email_s` = " . quote_smart(trim($_POST['frm_email_s'])) . ",	
+						`ident` = " . quote_smart(trim($_POST['frm_ident'])) . ",			
+						`info` = " . quote_smart(trim($_POST['frm_info'])) . ",		
+						`level` = " . quote_smart(trim($_POST['frm_level'])) . ",			
+						`name_f` = " . quote_smart(trim($_POST['frm_name_f'])) . ",		
+						`name_l` = " . quote_smart(trim($_POST['frm_name_l'])) . ",		
+						`name_mi` = " . quote_smart(trim($_POST['frm_name_mi'])) . ",	
+						`phone_m` = " . quote_smart(trim($_POST['frm_phone_m'])) . ",	
+						`phone_p` = " . quote_smart(trim($_POST['frm_phone_p'])) . ",	
+						`phone_s` = " . quote_smart(trim($_POST['frm_phone_s'])) . ",	
+						`user` = " . quote_smart(trim($_POST['frm_user']));
+				
+			$where = " WHERE `id`=" . $_POST['frm_id'];
+
+			$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET " . $pass . $fields . $where;
+//			$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `user`='$_POST[frm_user]', `callsign`='$_POST[frm_callsign]'," . $pass . " `info`='$_POST[frm_info]',`level`='$_POST[frm_level]' WHERE `id`='$_POST[frm_id]'";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			print "<B>User <I>" .$_POST['frm_user'] . "</I> data has been updated.</B><BR /><BR />";
 			}
@@ -644,19 +769,30 @@ case 'user' :
 		if (is_administrator()) {
 //			if($_GET['go'] == 'true') {
 			if ((array_key_exists('go', ($_GET))) && ($_GET['go']== 'true')) {
-				if (check_for_rows("SELECT user FROM `$GLOBALS[mysql_prefix]user` WHERE user='$_POST[frm_user]'")) {
-					print "<FONT CLASS=\"warn\">User '$_POST[frm_user]' already exists in database. Go back and try again.</FONT><BR />";
-					exit();
-					}
+				if($_POST['frm_passwd'] == $_POST['frm_passwd_confirm']) {						// 11/30/08
+					$query = sprintf("INSERT INTO`$GLOBALS[mysql_prefix]user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`user`)
+						 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
 
-				if($_POST['frm_passwd'] == $_POST['frm_passwd_confirm']) {
-					$passwd = "PASSWORD(" . quote_smart(trim($_POST['frm_passwd'])) . ")";
-					$query = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]user` (`user`,`callsign`,`passwd`,`info`,`level`,`email`,`sortorder`)  VALUES(%s,%s,$passwd,%s,%s,%s,'date')",
-								quote_smart(trim($_POST['frm_user'])),
-								quote_smart(trim($_POST['frm_callsign'])),
-								quote_smart(trim($_POST['frm_info'])),
-								quote_smart(trim($_POST['frm_level'])),
-								quote_smart(trim($_POST['frm_email'])));
+								quote_smart(trim($_POST['frm_addr_city'])),	
+								quote_smart(trim($_POST['frm_addr_st'])),	
+								quote_smart(trim($_POST['frm_addr_street'])),
+								quote_smart(trim($_POST['frm_callsign'])),	
+								quote_smart(trim($_POST['frm_dob'])),		
+								quote_smart(trim($_POST['frm_email'])),			
+								quote_smart(trim($_POST['frm_email_s'])),	
+								quote_smart(trim($_POST['frm_hash'])),		
+								quote_smart(trim($_POST['frm_ident'])),			
+								quote_smart(trim($_POST['frm_info'])),		
+								quote_smart(trim($_POST['frm_level'])),			
+								quote_smart(trim($_POST['frm_name_f'])),		
+								quote_smart(trim($_POST['frm_name_l'])),		
+								quote_smart(trim($_POST['frm_name_mi'])),	
+								quote_smart(trim($_POST['frm_phone_m'])),	
+								quote_smart(trim($_POST['frm_phone_p'])),	
+								quote_smart(trim($_POST['frm_phone_s'])),	
+								quote_smart(trim($_POST['frm_user'])));		
+
+//					dump($query);
 
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					print "<B>User <i>'$_POST[frm_user]'</i> has been added.</B><BR /><BR />";
@@ -664,7 +800,7 @@ case 'user' :
 				else {
 					print "Passwords don't match. Please try again.<BR />";
 					?>
-					<BR /><TABLE BORDER="0">
+					<BR />701 <TABLE BORDER="0">
 					<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&add=true&go=true">
 					<TR CLASS="even"><TD CLASS="td_label">User ID:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_user'];?>" NAME="frm_user"></TD></TR>
 					<TR CLASS="odd"><TD CLASS="td_label">Password</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd"></TD></TR>
@@ -677,14 +813,13 @@ case 'user' :
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level" <?php print is_super()?"checked":"";?>> Super<BR />
 <?php
 					}
-?>				
-						
+?>						
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level" <?php print is_administrator()?"checked":"";?>> Administrator<BR />
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level" <?php print is_user()?"checked":"";?>> Operator<BR />
 						<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" <?php print is_guest()?"checked":"";?>> Guest<BR />
 						</TD></TR>
 					<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="40" MAXLENGTH="80" TYPE="text" VALUE="<?php print $_POST['frm_info'];?>" NAME="frm_info"></TD></TR>
-					<TR CLASS="even"><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Add User"></TD></TR>
+					<TR CLASS="even"><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
 					</FORM></TABLE>
 					<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 					</BODY>
@@ -693,28 +828,60 @@ case 'user' :
 					exit();
 					}
 				}
-			else {	
+			else {
+
 ?>
-				<FONT CLASS="header">Add User</FONT><BR /><BR /><TABLE BORDER="0">
+				<FONT CLASS="header">Add User</FONT><BR /><BR />
+
 				<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);"  ACTION="config.php?func=user&add=true&go=true">
-				<TR CLASS="even"><TD CLASS="td_label">User ID:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" NAME="frm_user"></TD></TR>
-				<TR CLASS="odd"><TD CLASS="td_label">Password:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd">&nbsp;&nbsp; <B>Confirm:</B> <INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
-				<TR CLASS="even"><TD CLASS="td_label">Callsign:</TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign"></TD></TR>
-				<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="47" MAXLENGTH="80" TYPE="text" NAME="frm_info"></TD></TR>
-				<TR CLASS="even"><TD CLASS="td_label">Email:</TD><TD><INPUT SIZE="47" MAXLENGTH="47" TYPE="text" NAME="frm_email"></TD></TR>
-				<TR CLASS="odd"><TD CLASS="td_label">Level:</TD><TD>
-<?php
-				if (is_super()) {			// 6/9/08
-?>				
-				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level"> Super<BR />
-<?php
-					}
-?>				
-				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level"> Administrator<BR />
-				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level"> Operator<BR />
-				<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level"> Guest<BR />
-				</TD></TR>
-				<TR CLASS="even"><TD></TD><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Add this user"></TD></TR>
+				<TABLE BORDER=0 CELLSPACING=1>
+				<TR><TD COLSPAN=4 ALIGN='center'><FONT COLOR='red'>*</FONT> Required</TD></TR>
+				<TR CLASS="even"><TD CLASS="td_label" ALIGN="right"> User ID: <FONT COLOR='red'>*</FONT></TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" NAME="frm_user" VALUE=""></TD></TR>
+				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right"> Password: <FONT COLOR='red'>*</FONT></TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" VALUE="">&nbsp;&nbsp; <B>Confirm: </B> <INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
+				<TR CLASS="even" VALIGN='baseline'><TD CLASS="td_label" ALIGN="right"> Level: <FONT COLOR='red'>*</FONT></TD><TD COLSPAN=3>&nbsp;&nbsp;&nbsp;&nbsp;
+<?php if (is_super()) { ?>	<!-- / 6/9/08 -->				
+					 Super  &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
+<?php 					}  ?>
+					Administrator  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
+					Operator  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
+					Guest  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level"> &nbsp;&nbsp;&nbsp;
+					Member  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level"> 	<!-- 3/3/09 -->
+					</TD></TR>
+				<TR><TD COLSPAN=4 ALIGN='center'>&nbsp;</TD></TR.
+				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Last name: </TD>
+					<TD><INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="" onChange = "this.value=JSfnTrim(this.value)"></TD>
+					<TD CLASS="td_label" ALIGN="right">First: </TD>
+					<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">MI: </TD>
+					<TD><INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="" onChange = "this.value=JSfnTrim(this.value)"></TD>
+					<TD CLASS="td_label" ALIGN="right">DOB: </TD><TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="" onChange = "this.value=JSfnTrim(this.value)"/></TD></TR>
+				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE=""></TD>
+					<TD CLASS="td_label" ALIGN="right">Ident: </TD>
+					<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+				<TR CLASS="even"><TD CLASS="td_label" ALIGN="right">Info: </TD><TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE=""></TD></TR>
+				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="32" TYPE="text" NAME="frm_email" VALUE=""></TD>
+					<TD CLASS="td_label" ALIGN="right">Alternate: </TD>
+					<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_email_s" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"> Street addr: </TD>
+					<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">City: </TD>
+					<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_city" VALUE="" onChange = "this.value=JSfnTrim(this.value)"></TD>
+					<TD CLASS="td_label" ALIGN="right">St: </TD>
+					<TD><INPUT ID="ID10" MAXLENGTH="2" SIZE=2 type="text" NAME="frm_addr_st" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Phone: </TD>
+					<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_p" VALUE="" onChange = "this.value=JSfnTrim(this.value)"></TD>
+					<TD CLASS="td_label" ALIGN="right">Alternate: </TD><TD>
+						<INPUT ID="ID20" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_s" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Mobile: </TD>
+					<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_m" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+						<INPUT TYPE='hidden' NAME='frm_func' VALUE='a'>
+						<INPUT TYPE='hidden' NAME='frm_hash' VALUE=''>	<!-- 11/30/08 -->
+						</TD></TR>
+				<TR CLASS="even">
+					<TD COLSPAN=4 ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<INPUT TYPE="submit" VALUE="Submit"></TD>
+					</TR>
 				</FORM></TABLE>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 				</BODY>
@@ -730,7 +897,7 @@ case 'user' :
 
 case 'center' :
 ?>
-	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
+	<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 	</HEAD>
 	<BODY onLoad = "ck_frames()" onunload="GUnload()">
@@ -761,7 +928,7 @@ case 'center' :
 		<FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
 		<TR CLASS = "even"><TD CLASS="td_label">Lookup:</TD><TD COLSPAN=3>&nbsp;&nbsp;City:&nbsp;<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_city" VALUE="" />
 		&nbsp;&nbsp;&nbsp;&nbsp;State:&nbsp;<INPUT MAXLENGTH="2" SIZE="2" TYPE="text" NAME="frm_st" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD COLSPAN=4 ALIGN="center"><INPUT TYPE="BUTTON" VALUE="Locate it" onClick="addrlkup()" /></TD></TR>
+		<TR CLASS = "odd"><TD COLSPAN=4 ALIGN="center"><button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></TD></TR> <!-- 1/21/09 -->
 		<TR><TD><BR /><BR /><BR /><BR /><BR /></TD></TR>
 		<TR CLASS = "even"><TD CLASS="td_label">Caption:</TD><TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD></TR>
 		<TR CLASS = "odd">
@@ -776,7 +943,7 @@ case 'center' :
 			<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS = "even"><TD COLSPAN=5 ALIGN='center'>
-			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
+			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">				<!-- // 9/16/08 -->
 			<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
 		</FORM></TABLE>
@@ -813,7 +980,7 @@ case 'api_key' :
 		<TR CLASS = "even"><TD CLASS="td_label">Copy/paste key:</TD></TR>
 		<TR CLASS = "odd"><TD><INPUT MAXLENGTH="88" SIZE="120" TYPE="text" NAME="frm_value" VALUE="<?php print $curr_key; ?>" /></TD></TR>
 		<TR CLASS = "even"><TD ALIGN='center'>
-			<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Apply'></TD></TR>
+			<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>
 		</FORM></TABLE>
 		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 		</BODY>
@@ -905,7 +1072,7 @@ case 'delete' :
 				<INPUT TYPE='button' VALUE='Cancel' 	onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='button' VALUE='Select All' onClick = 'document.del_Form.delcount.value=1; all_ticks(true)';>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='button' VALUE='Reset' 		onClick = 'document.del_Form.reset();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<INPUT TYPE='button' VALUE='Continue' 	onClick = 'collect();'></TD></TR>
+				<INPUT TYPE='button' VALUE='Submit' 	onClick = 'collect();'></TD></TR>
 				<INPUT TYPE='hidden' NAME = 'idstr' VALUE=''>
 				<INPUT TYPE='hidden' NAME = 'delcount' VALUE=0>
 				</FORM></TABLE>
@@ -957,7 +1124,7 @@ case 'delete' :
 ?>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "config.php">	
 			<BR /><BR /><BR /><BR /><B><?php print count($temp); ?> Ticket<?php print $plu;?> and associated Assigns, Action and Patient record<?php print $plu;?> deleted</B><BR /><BR />
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' VALUE='Continue'  onClick='document.can_Form.submit();'>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' VALUE='Submit'  onClick='document.can_Form.submit();'>
 			</FORM>
 			</BODY>
 <?php
@@ -994,18 +1161,21 @@ case 'delete' :
 		}								// end if (is_administrator()|| is_super() )
 ?>
 		<LI><A HREF="#" onClick = "do_test()">Test Callsign</A>
-
-<?php 
-	if (is_administrator() || is_super()) {				// super or admin - 9/24/08
+<?php
+		if (!is_guest()) {
+?>		
+		<LI><A HREF="config.php?func=profile">Edit My Profile</A>			<!-- 12/1/08 -->
+<?php
+		}																	// end if (!is_guest())
+	if (is_administrator() || is_super()) {									// super or admin - 9/24/08
 ?>
-		<LI><A HREF="config.php?func=profile">Edit My Profile</A>
-		<LI><A HREF="config.php?func=notify">Edit Notifies</A>
+		<LI><A HREF="config.php?func=notify">Add/Edit Notifies</A>
 		<LI><A HREF="config.php?func=notify&id=0">All-Tickets Notify</A>
 		<LI></LI>
 		<LI><A HREF="#" onClick = "do_Post('contacts');">Contacts</A>
 		<LI><A HREF="#" onClick = "do_Post('in_types');">Incident types</A>
+		<LI><A HREF="#" onClick = "do_Post('unit_types');">Unit types</A><!-- 10/8/08 -->
 		<LI><A HREF="#" onClick = "do_Post('un_status');">Unit status types</A>
-		<LI><A HREF="#" onClick = "do_Post('associations');">Associations</A>
 <?php
 		if ($istest) {
 ?>
@@ -1015,7 +1185,8 @@ case 'delete' :
 			<LI><A HREF="#" onClick = "do_Post('responder');">Units</A>
 			<LI><A HREF="#" onClick = "do_Post('action');">Actions</A>
 			<LI><A HREF="#" onClick = "do_Post('patient');">Patients</A>	
-			<LI><A HREF="#" onClick = "do_Post('unit_types');">Unit types</A><!-- 10/8/08 -->
+			<LI><A HREF="tables.php">Tables</A>
+
 <?php
 			}
 		}
@@ -1032,6 +1203,7 @@ case 'delete' :
 	<INPUT TYPE='hidden' NAME='func' VALUE='r'>
 	<INPUT TYPE='hidden' NAME='tablename' VALUE=''>
 	</FORM>
+<!-- <INPUT TYPE='button' VALUE='Tables' onclick="document.tables.submit();"> -->
 
 <?php
 print "</BODY>\n";
@@ -1150,7 +1322,9 @@ function map_cen () {				// specific to map center
 	map = new GMap2(document.getElementById('map'));
 	map.addControl(new GSmallMapControl());
 	map.addControl(new GMapTypeControl());
-	map.addMapType(G_PHYSICAL_MAP);					// 10/6/08
+<?php if (get_variable('terrain') == 1) { ?>
+	map.addMapType(G_PHYSICAL_MAP);
+<?php } ?>	
 	map.addControl(new GOverviewMapControl());
 
 	var baseIcon = new GIcon();						// 9/16/08

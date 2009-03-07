@@ -4,6 +4,9 @@
 */
 error_reporting(E_ALL);
 require_once('./functions.inc.php');
+
+
+//snap (__FILE__, __LINE__);
 include ("./jpgraph.php");
 include ("./jpgraph_line.php");
 include ("./jpgraph_error.php");
@@ -63,6 +66,7 @@ $p1 = $_GET['p1'];;				//
 $query = "SELECT MIN(packet_date) AS 'min', MAX(packet_date) AS 'max' FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '$p1'";
 $result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $row_tr = mysql_fetch_assoc($result_tr);
+//snap (basename( __FILE__), __LINE__);
 
 $modulus = 60*60;
 $low = ((strtotime(get_low($row_tr['min'])))/($modulus));	// relative hour in this time range	
@@ -77,6 +81,8 @@ for ($i = 0;$i<$nr_hrs; $i++) {								// an entry each hour
 //$query = "SELECT DISTINCT `source`, `latitude`, `longitude` ,`course` ,`speed` ,`altitude` ,`closest_city` ,`status` , `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '" .$p1 . "' ORDER BY `packet_date`";	//	6/16/08 
 $query = "SELECT  `source`, `altitude` , `packet_date`  FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '" .$p1 . "' ORDER BY `packet_date`";	//	10/5/08 
 $result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+//snap (basename( __FILE__) . __LINE__, mysql_affected_rows());
+
 while ($row_tr = stripslashes_deep(mysql_fetch_assoc($result_tr))) {
 	$the_hr = intval(floor(strtotime($row_tr['packet_date'])/$modulus) - $low);
 	$mins[$the_hr]= is_my_null($mins[$the_hr]) ?  $row_tr['altitude'] : min($mins[$the_hr],$row_tr['altitude']);

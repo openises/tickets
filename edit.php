@@ -14,6 +14,12 @@
 10/21/08 'Synopsis' made non-mandatory
 10/21/08 handle revised notifies
 11/7/08 add strikethrough
+1/17/09 added refresh callboard frame
+1/19/09 added phone, geocode lookups
+1/21/09 added show butts - re button menu
+2/11/09 added streetview
+2/11/09 added dollar function
+2/21/09 color code by severity
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -135,7 +141,41 @@
 	catch(e) {
 		}
 
+	function $() {									// 2/11/09
+		var elements = new Array();
+		for (var i = 0; i < arguments.length; i++) {
+			var element = arguments[i];
+			if (typeof element == 'string')
+				element = document.getElementById(element);
+			if (arguments.length == 1)
+				return element;
+			elements.push(element);
+			}
+		return elements;
+		}
+
+	String.prototype.trim = function () {									// 1/19/09
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08
+
+	var starting = false;
+	function sv_win(theForm) {				// 2/11/09
+		if(starting) {return;}				// dbl-click proof
+		starting = true;					
+
+		var thelat = theForm.frm_lat.value;
+		var thelng = theForm.frm_lng.value;
+		var url = "street_view.php?thelat=" + thelat + "&thelng=" + thelng;
+		newwindow_sl=window.open(url, "sta_log",  "titlebar=no, location=0, resizable=1, scrollbars, height=450,width=640,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (!(newwindow_sl)) {
+			alert ("Street view operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+			return;
+			}
+		newwindow_sl.focus();
+		starting = false;
+		}		// end function sv win()
 
 	function do_coords(inlat, inlng) { 										 //9/14/08
 		if(inlat.toString().length==0) return;								// 10/15/08
@@ -211,6 +251,9 @@
 		if(self.location.href==parent.location.href) {
 			self.location.href = 'index.php';
 			}
+		else {
+			parent.upper.show_butts();										// 1/21/09
+			}
 		}		// end function ck_frames()
 
 	function capWords(str){ 
@@ -242,6 +285,7 @@
 			st_unlk(theForm);
 //			theForm.frm_ngs.disabled=false;													// 9/13/08
 			theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
+			top.upper.calls_start();											 // 1/17/09
 			return true;
 			}
 		}				// end function validate(theForm)
@@ -257,7 +301,7 @@
 		
 <?php
 	if (!get_variable('military_time')){
-		print "\tdocument.add.frm_meridiem_problemend.disabled = false;\n";
+		print "\tdocument.edit.frm_meridiem_problemend.disabled = false;\n";
 		}
 ?>
 		}
@@ -336,14 +380,18 @@
 				</SCRIPT>
 <?php			
 				}
+			$priorities = array("","severity_medium","severity_high" );			// 2/21/09
+			$theClass = $priorities[$row['severity']];
+
+				
 			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' >\n";
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left'>";
 	
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
 			print "<TABLE BORDER='0' ID='data'>\n";
-			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='header'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
+			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='$theClass'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
 			print "<TR CLASS='even'><TD CLASS='td_label'>Incident name:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Priority:</TD><TD><SELECT NAME='frm_severity'>";
+			print "<TR CLASS='odd'><TD CLASS='$theClass'>Priority:</TD><TD><SELECT NAME='frm_severity'>";		// 2/21/09
 			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
 			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
 			$hsel = ($row['severity']==$GLOBALS['SEVERITY_HIGH'])? "SELECTED" : "" ;
@@ -374,19 +422,23 @@
 			print "</TD></TR>\n";
 			
 			print "<TR CLASS='even'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Phone:</TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_phone' VALUE='" . $row['phone'] . "' MAXLENGTH='16'></TD></TR>\n";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Phone:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print 		"<button type=\"button\" onClick=\"Javascript:phone_lkup(document.edit.frm_phone.value);\"><img src=\"./markers/glasses.png\" alt=\"Lookup phone no.\" /></button>";	// 1/19/09
+			print 		"</TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_phone' VALUE='" . $row['phone'] . "' MAXLENGTH='16'></TD></TR>\n";
 			$selO = ($row['status']==$GLOBALS['STATUS_OPEN'])?   "SELECTED" :"";
 			$selC = ($row['status']==$GLOBALS['STATUS_CLOSED'])? "SELECTED" :"" ;
 			print "<TR CLASS='even'><TD CLASS='td_label'>Status:</TD><TD>
 				<SELECT NAME='frm_status'><OPTION VALUE='" . $GLOBALS['STATUS_OPEN'] . "' $selO>Open</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_CLOSED'] . "'$selC>Closed</OPTION></SELECT></TD></TR>";
 			print "<TR CLASS='odd'><TD COLSPAN='2'>&nbsp;</TD></TR>";
 			print "<TR CLASS='odd'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>City:</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>City:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print 		"<button type=\"button\" onClick=\"Javascript:loc_lkup(document.edit);\"><img src=\"./markers/glasses.png\" alt=\"Lookup location.\" /></button>";
+			print 		"</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
 			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; St:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
 //			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
 	
 			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
-			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='35' ROWS='4'>" . $row['description'] . "</TEXTAREA></TD></TR>\n";		// 10/8/08
+			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='2' >" . $row['description'] . "</TEXTAREA></TD></TR>\n";		// 10/8/08
 			print "\n<TR CLASS='even'><TD CLASS='td_label'>Run Start:</TD><TD>";
 			print  generate_date_dropdown("problemstart",$row['problemstart'],0, TRUE);
 			print "&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'st_unlk(document.edit);'></TD></TR>\n";
@@ -407,7 +459,7 @@
 
 			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08
 			
-			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='35' ROWS='4'>" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
+			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
 			print "<TR CLASS='odd'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
 			print 	"<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
@@ -427,9 +479,11 @@
 			<INPUT TYPE="hidden" NAME="frm_severity_default" VALUE="<?php print $row['severity'];?>">
 <?php
 			print "</TABLE>";		// end data
-			print "</td><td>";
+			print "</TD><TD>";
 			print "<TABLE ID='mymap' border = 0><TR><TD ALIGN='center'><DIV ID='map' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX'></DIV>
-				<BR /><A HREF='#' onClick='toglGrid()'><u>Grid</U></A></TD></TR></TABLE ID='mymap'>\n";
+				<BR /><SPAN ID='do_grid' onClick='toglGrid()'><U>Grid</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
+				<SPAN ID='do_sv' onClick = 'sv_win(document.edit)'><U>Street view</U></SPAN> <!-- 2/11/09 -->
+				</TD></TR></TABLE ID='mymap'>\n";
 			
 			print "</TD></TR>";
 			print "<TR><TD CLASS='print_TD' COLSPAN='2'>";
@@ -446,27 +500,28 @@
 				map.clearOverlays();
 				}
 			else {
-				map.closeInfoWindow();
 				map.addOverlay(new LatLonGraticule());
 				}
 			if (thePoint) {										// show it
 				icon.image = icons[<?php print $row['severity'];?>];		
 				map.addOverlay(new GMarker(thePoint, icon));
-	//			map.addOverlay(new GMarker(thePoint));
 				}
 			}		// end function toglGrid()
 	
 	
 		var map;
 		var icons=[];						// note globals
-		icons[<?php print $GLOBALS['SEVERITY_NORMAL']; ?>] = "./markers/BlueIcons/blank.png";	
-		icons[<?php print $GLOBALS['SEVERITY_MEDIUM']; ?>] = "./markers/GreenIcons/blank.png";
-		icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>] =   "./markers/RedIcons/blank.png";
+		icons[<?php print $GLOBALS['SEVERITY_NORMAL'];?>] = "./icons/blue.png";		// normal
+		icons[<?php print $GLOBALS['SEVERITY_MEDIUM'];?>] = "./icons/green.png";	// green
+		icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>] =  "./icons/red.png";		// red	
+		icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =  "./icons/white.png";	// white - not in use
 	
 		map = new GMap2(document.getElementById("map"));		// create the map
-		map.addControl(new GLargeMapControl());
+		map.addControl(new GSmallMapControl());					// 1/19/09
 		map.addControl(new GMapTypeControl());
-		map.addMapType(G_PHYSICAL_MAP);					// 10/6/08
+<?php if (get_variable('terrain') == 1) { ?>
+		map.addMapType(G_PHYSICAL_MAP);
+<?php } ?>	
 //		map.addControl(new GOverviewMapControl());		
 		map.setCenter(new GLatLng(<?php print $lat;?>, <?php print $lng;?>), 12);
 		map.enableScrollWheelZoom(); 	
@@ -476,8 +531,8 @@
 		baseIcon.iconSize = new GSize(20, 34);
 		baseIcon.shadowSize = new GSize(37, 34);
 		baseIcon.iconAnchor = new GPoint(9, 34);
-		baseIcon.infoWindowAnchor = new GPoint(9, 2);
-		baseIcon.infoShadowAnchor = new GPoint(18, 25);
+//		baseIcon.infoWindowAnchor = new GPoint(9, 2);
+//		baseIcon.infoShadowAnchor = new GPoint(18, 25);
 
 		var icon = new GIcon(baseIcon);
 		icon.image = icons[<?php print $row['severity'];?>];		
@@ -489,18 +544,9 @@
 		$in_strike = 	($row['status']== $GLOBALS['STATUS_CLOSED'])? "<strike>": "";							// 11/7/08
 		$in_strikend = 	($row['status']== $GLOBALS['STATUS_CLOSED'])? "</strike>": "";
 		$street = empty($row['street'])? "" : "<BR/>" . $row['street'] . "<BR/>" . $row['city'] . " " . $row['state'] ;
-		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
-		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>". $in_strike . shorten($row['scope'], 120) . $in_strikend . "</B></TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='even'><TD>Reported by:</TD><TD>" . shorten($row['contact'], 32) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD>Phone:</TD><TD>" . format_phone ($row['phone']) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='even'><TD>Addr:</TD><TD>" . $street . "</TD></TR>";
-		$tab_1 .= "<TABLE>";
-
 		do_kml();			// kml functions
 
 ?>
-		map.openInfoWindowHtml(point, "<?php print $tab_1;?>");		
 
 	GEvent.addListener(map, "click", function(marker, point) {
 		if (marker) {
@@ -516,7 +562,6 @@
 			do_lng (point.lng())
 			do_ngs(document.edit);								// 8/23/08
 			map.addOverlay(new GMarker(point, icon));			// GLatLng.
-//			map.openInfoWindowHtml(point, tab1contents);		// fix
 			map.setCenter(point, 12);
 			thePoint = point;
 			}
@@ -546,7 +591,6 @@
 	function resetmap(lat, lng) {						// restore original marker and center
 		map.clearOverlays();
 		var point = new GLatLng(lat, lng);	
-//		map.addOverlay(new GMarker(point));
 		icon.image = icons[<?php print $row['severity'];?>];		
 		map.addOverlay(new GMarker(point, icon));
 		map.setCenter(new GLatLng(lat, lng), 8);
@@ -555,6 +599,163 @@
 		do_ngs(document.edit);								// 8/23/08
 		if (grid) {map.addOverlay(new LatLonGraticule());}	// restore grid
 		}
+
+// *********************************************************************
+	function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
+														// NOT correspond with what browsers actually do...
+		var SAFECHARS = "0123456789" +					// Numeric
+						"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +	// Alphabetic
+						"abcdefghijklmnopqrstuvwxyz" +	// guess
+						"-_.!~*'()";					// RFC2396 Mark characters
+		var HEX = "0123456789ABCDEF";
+	
+		var encoded = "";
+		for (var i = 0; i < plaintext.length; i++ ) {
+			var ch = plaintext.charAt(i);
+		    if (ch == " ") {
+			    encoded += "+";				// x-www-urlencoded, rather than %20
+			} else if (SAFECHARS.indexOf(ch) != -1) {
+			    encoded += ch;
+			} else {
+			    var charCode = ch.charCodeAt(0);
+				if (charCode > 255) {
+				    alert( "Unicode Character '"
+	                        + ch
+	                        + "' cannot be encoded using standard URL encoding.\n" +
+					          "(URL encoding only supports 8-bit characters.)\n" +
+							  "A space (+) will be substituted." );
+					encoded += "+";
+				} else {
+					encoded += "%";
+					encoded += HEX.charAt((charCode >> 4) & 0xF);
+					encoded += HEX.charAt(charCode & 0xF);
+					}
+				}
+			} 			// end for(...)
+		return encoded;
+		};			// end function
+
+	var the_form;
+	function sendRequest(my_form, url,callback,postData) {		// ajax function set - 1/17/09
+		the_form = my_form;
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				alert('HTTP error ' + req.status);
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+	
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+
+	function handleResult(req) {			// the called-back function
+		if (req.responseText.substring(0,1)=="-") {
+			alert("lookup failed");
+			}
+		else {
+			var result=req.responseText.split(";");					// good return - now parse the puppy
+// "Juan Wzzzzz;(123) 456-9876;1689 Abcd St;Abcdefghi;MD;16701;99.013297;-88.544775;"
+//  0           1              2            3         4  5     6         7
+			the_form.frm_contact.value=result[0].trim();
+			the_form.frm_phone.value=result[1].trim();		// phone
+			the_form.frm_street.value=result[2].trim();		// street
+			the_form.frm_city.value=result[3].trim();		// city
+			the_form.frm_state.value=result[4].trim();		// state 
+//			the_form.frm_zip.value=result[5].trim();		// frm_zip - unused
+
+			pt_to_map (the_form, result[6].trim(), result[7].trim());				// 1/19/09
+			
+			}		// end else ...			
+		}		// end function handleResult()
+	
+	function phone_lkup(){	
+		var goodno = document.edit.frm_phone.value.replace(/\D/g, "" );		// strip all non-digits - 1/18/09
+		if (goodno.length<10) {
+			alert("10-digit phone no. required - any format");
+			return;}
+		var params = "phone=" + URLEncode(goodno)
+		sendRequest (document.edit, 'wp_lkup.php',handleResult, params);		//1/17/09
+		}
+		
+// *********************************************************************
+		function pt_to_map (my_form, lat, lng) {				// 1/19/09
+			my_form.frm_lat.value=lat;	
+			my_form.frm_lng.value=lng;		
+			
+			my_form.show_lat.value=do_lat_fmt(my_form.frm_lat.value);
+			my_form.show_lng.value=do_lng_fmt(my_form.frm_lng.value);
+			
+			my_form.frm_ngs.value=LLtoUSNG(my_form.frm_lat.value, my_form.frm_lng.value, 5);
+			
+			map.clearOverlays();
+		
+			map.setCenter(new GLatLng(my_form.frm_lat.value, my_form.frm_lng.value), <?php print get_variable('def_zoom');?>);
+			var marker = new GMarker(map.getCenter());		// marker to map center
+			var myIcon = new GIcon();
+			myIcon.image = "./markers/sm_red.png";
+			
+			map.addOverlay(marker, myIcon);
+			thePoint = new GLatLng(lat, lng);				// for grid toggle
+
+			}				// end function pt_to_map ()
+		
+
+// *********************************************************************
+	function loc_lkup(my_form) {		   // added 1/19/09 -- getLocations(address,  callback -- not currently used )
+		if ((my_form.frm_city.value.trim()==""  || my_form.frm_state.value.trim()=="")) {
+			alert ("City and State are required for location lookup.");
+			return false;
+			}
+		var geocoder = new GClientGeocoder();
+//				"1521 1st Ave, Seattle, WA"		
+		var address = my_form.frm_street.value.trim() + ", " +my_form.frm_city.value.trim() + " "  +my_form.frm_state.value.trim();
+		
+		if (geocoder) {
+			geocoder.getLatLng(
+				address,
+				function(point) {
+					if (!point) {
+						alert(address + " not found");
+						} 
+					else {
+						pt_to_map (my_form, point.lat(), point.lng())
+						}
+					}
+				);
+			}
+		}				// end function addrlkup()
+
+// *****************************************************************************
 
 	</SCRIPT>
 

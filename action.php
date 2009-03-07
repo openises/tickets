@@ -5,7 +5,9 @@
 10/7/08	set  WRAP="virtual"
 10/19/08 set end tags
 10/22/08 added priorities as notify selection criteria
-
+1/21/09 added show butts - re button menu
+1/27/09 options list style revision - per variable unit types
+2/12/09 changed order per AF request
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
@@ -43,6 +45,9 @@ if ($get_action == 'add') {
 	function ck_frames() {		//  onLoad = "ck_frames()"
 		if(self.location.href==parent.location.href) {
 			self.location.href = 'index.php';
+			}
+		else {
+			parent.upper.show_butts();										// 1/21/09
 			}
 		}		// end function ck_frames()
 
@@ -130,11 +135,13 @@ if ($get_action == 'add') {
 	$do_yr_asof = false;		// js year housekeeping
 
 	$optstyles = array ();		// see css
-	$optstyles[$GLOBALS['TYPE_EMS']]= "ems";
-	$optstyles[$GLOBALS['TYPE_FIRE']]= "fire";
-	$optstyles[$GLOBALS['TYPE_COPS']]= "cops";
-	$optstyles[$GLOBALS['TYPE_MUTU']]= "mutu";
-	$optstyles[$GLOBALS['TYPE_OTHR']]= "othr";		
+
+	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";				// 1/27/09
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$optstyles[$row['name']] = $row['name'];	
+		}
+	unset($result);
 
 	if ($get_action == 'add') {
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
@@ -142,7 +149,7 @@ if ($get_action == 'add') {
 		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]'"))
 			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
 		elseif ($_POST['frm_description'] == '')
-			print '<FONT CLASS="warn">Description field is empty. Please try again.</FONT><BR />';
+			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
 		else {
 			$responder = $sep = "";
 			if (array_key_exists('frm_responder', ($_POST))) {
@@ -308,7 +315,7 @@ if ($get_action == 'add') {
 <?php
 //						generate dropdown menu of responders -- if(in_array($rowtemp[id], $row[responder]))
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `type` ASC";
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 2/12/09
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 		$height = (mysql_affected_rows() + 1) * 16;
 		$selected = (in_array("0", $responders))? "SELECTED" : "";	// NA is special case
@@ -341,8 +348,8 @@ if ($get_action == 'add') {
 		
 //	else {											// do form
 	else if ($get_action == 'form') {
-		print __LINE__; 
-		dump($get_action);
+//		print __LINE__; 
+//		dump($get_action);
 		$do_yr_asof = true;
 //		add_header($_GET['ticket_id']);
 //		print __LINE__ . "<BR>";
@@ -355,7 +362,7 @@ if ($get_action == 'add') {
 			</TD></TR>
 <?php
 //						generate dropdown menu of responders
-		$query = "SELECT `id`,`name`,`type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `type` ASC";
+		$query = "SELECT `id`,`name`,`type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";	// 2/12/09
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
 		$height = (mysql_affected_rows() + 1) * 16;
 		print "<TR CLASS='odd' ><TD CLASS='td_label'>Units:</TD>";

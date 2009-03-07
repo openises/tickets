@@ -5,6 +5,7 @@
 // *  Copyright  2007  Larry Moore
 // *  larmoor@gmail.com
 // ****************************************************************************/
+// 3/3/09 - fix to type conversion for IE
 //
 //   This program is free software; you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -323,7 +324,11 @@ function LLtoUSNG(lat, lon, precision) {
   // added... truncate digits to achieve specified precision
   USNGNorthing = Math.floor(USNGNorthing / Math.pow(10,(5-precision)))
   USNGEasting = Math.floor(USNGEasting / Math.pow(10,(5-precision)))
-  USNG = UTMZone + USNGLetters + " ";
+//  alert(327);		// .toString()
+//  alert(UTMZone);		// .toString()
+//  alert(327);		// .toString()
+  
+  var USNG = UTMZone + USNGLetters + " "; 		// 3/3/09
 
   // REVISIT: Modify to incorporate dynamic precision ?
   for (i = String(USNGEasting).length; i < precision; i++) {

@@ -7,6 +7,11 @@ Dynarch JS Calendar functions added
 improvements to datatype 'time' handling
 9/5/08 corrections to max length
 9/18/08 changes to $_POST handling, frame jump prevention and login check
+12/20/08 named fields as hiddens
+12/26/08 set tables directory as repository for custom processors
+12/29/08 icon revised to img filename - superceded 1/4/09
+1/5/09 aprs added to unit_types schema
+1/29/09 corrected if(...)
 */
 error_reporting(E_ALL);
 $gmap=TRUE;
@@ -26,13 +31,13 @@ $rowsPerPage		= 20;				// determines number of rows displayed per page in listin
 $showblobastext		= TRUE;				// change to FALSE if blobs are not to be displayed
 $date_out_format	= 'Y-m-d H:i';		// well, date format - per php date syntax
 //$date_out_format	= 'n/j/y H:i';		// ex: 5/25/06
-$date_in_format		= 0;					// yyyy-mm-dd, per mMySQL standard
+$date_in_format		= 0;					// yyyy-mm-dd, per MySQL standard
 $links_col			= 0;				// in the listing display, this column sees the View/Edit/Delete function links
-$text_type_max		= 90;				// text input fields exceeding this size limit will be treated as <textarea>
+$text_type_max		= 255;				// text input fields exceeding this size limit will be treated as <textarea>
 $text_list_max		= 32;				// text input fields exceeding this size limit will be treated as <textarea>
 $fill_from_last		= FALSE;			// if set to TRUE, new recrods are populated from last created
 $doUTM				= FALSE;			// if set, coord displays UTM
-$istest 			= FALSE;			// TRUE displays form variables for trouble-shooting atop each loaded page
+$istest 			= TRUE;				// TRUE displays form variables for trouble-shooting atop each loaded page
 
 /* maps irv_settings for use IF you are implementing maps */
 
@@ -44,20 +49,27 @@ $def_county			= "58";				// Sarasota
 $def_lat			= NULL;				// default center lattitude - if present, overrides county centroid 
 $def_lon			= NULL;				// guess!
 $radius				= 10;				// radius of circle on default center (miles)
-$do_hints			= FALSE;			// if true, print data hints at input fields
-
+$do_hints			= TRUE;				// if true, print data hints at input fields
 if (($mysql_db=="")||($mysql_user=="")) {print "<br><br><br><br>" ; die(" - - - - - - - - - -  - - - - - - - - - - Please set values for both \$mysql_db and \$mysql_user in settings.inc.php! - - - - - - - - - - ");}
 
-$FK_id = strtolower($key_str);				// set for case independence
-$id_lg = strlen($FK_id);					// lgth of foreign key id string
+$FK_id = strtolower($key_str);			// set for case independence
+$id_lg = strlen($FK_id);				// lgth of foreign key id string
+$custom	= FALSE;						// custom processor in use
 
-$func = "r";								// global_var's defaults 9/18/08
-$sortdir = "0";
-$sortby = "id";
-$tablename = "ticket"; 
 
+if (!array_key_exists('func', $_POST)) {
+	$func = "s";					// Select table, of C R U D or Select
+	$tablename = "";				// set per user selection
+	$indexname = "";				// set per schema 
+//	$sortby="id";						// controls direction of sort
+	}
+// dump (empty($sortby));
 //if (!empty($_GET)) extract($_GET);				// 9/18/08 get disabled
+
 if (!empty($_POST)) extract($_POST);
+$sortby = (!(isset($sortby)) || empty($sortby))?		 "id" : $sortby; 
+$sortdir = (!(isset($sortdir)) || empty($sortdir))?		 0 : $sortdir; 
+$sortby = (!(isset($index)) || empty($index))?			 "id" : $index; 
 
 //if (!array_key_exists('func', $_POST)) {
 //	$func = "s";					// Select table, of C R U D or Select
@@ -191,13 +203,103 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 	}
 ?>
 
-<SCRIPT type="text/javascript">
-	function ck_frames() {						// frame jump preventer 9/19/08
-		if(self.location.href==parent.location.href) {
-//			alert(self.location.href + " " +parent.location.href );
-			self.location.href = 'index.php';
+<SCRIPT>
+	Array.prototype.inArray = function (value) {	// Returns true if argument value exists in array, else false - 12/31/08
+		for (i=0; i < this.length; i++) {
+			if (this[i] == value) {	return true;}
 			}
-		}	// end function ck_frames() 
+		return false;
+		};
+	
+<?php
+	switch ($tablename) {
+		case "unit_types":
+?>
+
+	var sm_icons = new Array();
+	var icons = new Array();
+	var type_names = new Array();
+	var icons_dir = "./icons/";
+
+<?php
+	$icons = $GLOBALS['icons'];
+	for ($i=0; $i<count($icons); $i++) {										// onto JS array
+		print "\ticons.push('" .$icons[$i] . "');\n";
+		}
+	
+	$sm_icons = $GLOBALS['sm_icons'];
+	for ($i=0; $i<count($sm_icons); $i++) {
+		print "\tsm_icons.push('" .$sm_icons[$i] . "');\n";
+		}
+	if (($func =="c") || ($func =="r")) {										// build array of existing names
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row_un = stripslashes_deep(mysql_fetch_assoc($result))) {
+			print "\n\ttype_names.push('" . $row_un['name'] . "');\n";		// onto JS array
+			}				// end while ()
+		}				// end if()
+?>	
+	function validate_u_t(theForm) {			// unit type entry validation - c and u
+		var errmsg="";
+		if (theForm.frm_name.value == "")				{errmsg+= "\tType name is required\n";}
+		if (theForm.frm_description.value == "")		{errmsg+= "\tType description is required\n" ;}
+		if (theForm.frm_icon.value == "")				{errmsg+= "\tIcon selection is required\n" ;}
+<?php
+	if ($func =="c")  {										//check existence
+?>
+		if (type_names.inArray(theForm.frm_name.value))	{errmsg+= "\tDuplicated Type name\n";}
+<?php
+		}			// end if ($func =="c") 
+?>		
+		if (errmsg!="") {
+			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			return false;
+			}
+		else {
+			theForm.submit();
+			}
+		}				// end function validate_u_t(theForm)
+														// 12/29/08 'which' is now a string, e.g, 'red.png'
+	function icon_to_form(the_index) {						// 12/31/08
+		var the_img = $('ID3');
+		the_img.src = icons_dir+sm_icons[the_index];		// display small icon
+		document.forms[1].frm_icon.value=the_index;			// icon index to form variable
+		$('ID3').style.visibility = "visible";				// initially hidden for 'create'
+		return;
+		}			
+
+	function gen_img_str(the_index) {						// returns image string for nth icon
+		var the_sm_image = icons_dir + sm_icons[the_index];
+//		alert(the_sm_image);
+		var the_title = icons[the_index].substr (0, icons[the_index].length-4).toUpperCase();	// extract color name
+		return "<IMG SRC='" + the_sm_image + "' onClick  = 'icon_to_form(" + the_index + ")' TITLE='" + the_title +"' />";
+		}
+		
+
+<?php
+		if ($row) {
+?>		
+			var which = "<?php print $row['icon'];?>";	// full size icon
+			icon_to_form(which);						// must be update or view
+<?php
+			}				// end if (isset($row))
+
+	    break;			// end case "unit_types"
+	    }				// end switch ($tablename)
+?>
+
+function $() {									// 12/20/08
+	var elements = new Array();
+	for (var i = 0; i < arguments.length; i++) {
+		var element = arguments[i];
+		if (typeof element == 'string')
+			element = document.getElementById(element);
+		if (arguments.length == 1)
+			return element;
+		elements.push(element);
+		}
+	return elements;
+	}
 
 function getElement(aID){ 
 	return (document.getElementById) ? document.getElementById(aID) : document.all[aID];
@@ -430,7 +532,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 
-<BODY onLoad = 'ck_frames()'>	<!-- 9/19/08 -->
+<BODY>	<!-- 9/19/08 -->
 <?php $the_table = (strlen($tablename)>0)? $tablename : "tbd"; ?>
 <CENTER><BR /><H3>Table: <SPAN STYLE="background: white">&nbsp;<?php print $the_table; ?>&nbsp;</SPAN> <BR /></H3></CENTER>
 <FORM NAME="detail" METHOD="post" 	ACTION="<?php print $_SERVER['PHP_SELF'] ?>">
@@ -460,151 +562,178 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 
 switch ($func) {
 	case "c":																	// Create record -- add Enums	enum('a','b','c')
-	if ($fill_from_last) {
-		$the_id = $indexname;													// for form pre-filling
-		$query = "SELECT * FROM `$mysql_prefix$tablename` WHERE `$the_id` = (SELECT MAX(`$the_id`) FROM `$mysql_prefix$tablename`)";
-		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-		if (mysql_affected_rows()==0) 	{$row = NULL ;}
-		else							{$row = mysql_fetch_array($result);}
-		unset ($result);
+//	print "// ____________________________________________________________";
+	$the_custom = "./tables/c_" . $tablename . ".php";				// 12/26/08
+	if (file_exists ( $the_custom)){
+//		print __LINE__ . "<BR />";
+		require_once($the_custom) ;
+		$custom	= TRUE;
 		}
-	else {$row = NULL;}
+	else {
+		if ($fill_from_last) {
+			$the_id = $indexname;													// for form pre-filling
+			$query = "SELECT * FROM `$mysql_prefix$tablename` WHERE `$the_id` = (SELECT MAX(`$the_id`) FROM `$mysql_prefix$tablename`)";
+			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+			if (mysql_affected_rows()==0) 	{$row = NULL ;}
+			else							{$row = mysql_fetch_array($result);}
+			unset ($result);
+			}
+		else {$row = NULL;}
 ?>
-
-	<FORM NAME="c" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>">
-	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ;?>"/>
-	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
-	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
-	<INPUT TYPE="hidden" NAME="func" 		VALUE="pc"/>
-
-	<TABLE BORDER="0" ALIGN="center">
-	<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Add New Entry</FONT></TD></TR>
-	<TR><TD>&nbsp;</TD></TR>
-<?php
-
-	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	$lineno = 0;
-
-	for ($i = 0; $i < mysql_num_fields($result); $i++) {
-		if ((!is_null($row)) && ($fill_from_last)) 	{$last_data = $row[$i]; $class="clean";}
-		else 										{$last_data = ""; 		$class="dirty";}
-		
-		if ($arrayattr[$i][5]!= "auto_increment") {
-			$lineno++;
-			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";						// identifies mandatory vs. optional input
-			$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array
-			print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
-			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
-			switch (mysql_field_type($result, $i)) {
-				case "datetime":
-				case "timestamp":
-				case "date":
-				case "timestamp":
-					fnDoCal($i);				// generates JS Calendar stuff
-					$max = 16;
-					$value = date($date_out_format);
-					print "<TD><INPUT MAXLENGTH=$max ID=\"fd$i\" SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
-					fnCalButt ($i);
-					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					print "</TD></TR>\n\t"; 
-					break;
-					
-				case "time":
-					$value = date ("H:i");
-					$max = 5;
-					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					print "</TD></TR>\n\t"; 
-					break;
-		
-				case "int":
-					$gotit = FALSE;
-					if (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id) {			// maybe dropdown
-						$lgth = strlen(mysql_field_name($result, $i));
-						$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
-						if (mysql_table_exists($thetable)) {											// does non-empty table exist?
-							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
-							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-							$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name		
-							
-							$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";
-							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-							print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
-							while ($temp_row = mysql_fetch_array($temp_result))  {							// each row
-								$temp = (isset($temp_row[2]))? " - " . substr(trim($temp_row[2]), 0, 6) : ""; 
-								print "\t\t<OPTION VALUE='" . trim($temp_row[0]) . "'>" . trim($temp_row[1]) . $temp . "</OPTION>\n";	
-								}
-							print "\t\t</SELECT>";
-							print ($do_hints)? "<SPAN class='$mand_opt' >(" . mysql_affected_rows() . ")</SPAN>": "";
-							print "</TD></TR>\n\t";
-							unset ($temp_result);
-							$gotit = TRUE;
-							}											// end if (mysql_table_exists($thetable)) ...
-						}										// end maybe dropdown
-					if (!$gotit) {
-						print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-						print "</TD></TR>\n\t"; 
-						}				// end if (!$gotit)
-					break;
-		
-				case "blob":
-				case "string":
-					if (substr($arrayattr[$i][1], 0, 4) == "enum") {				// yes, parse enums
-						$temp = substr($arrayattr[$i][1], 4);
-						$temparray = explode( ",", $temp);
-						print "<TD VALIGN='baseline'>&nbsp;<B>";
-						$drops = array("'","(",")");
-						$default = (isset($arrayattr[$i][4]))? $arrayattr[$i][4] : "";
-						for ($j = 0; $j < count($temparray); $j++) {
-							$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
-							$checked=($temparray[$j]==$default)? " CHECKED ": "";		
-							print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;";
-							}				// end for ($j = 0;
-						print "</TD></TR>\n\t"; 	
-						}				// end if ("enum")
-					else	{					
-						if (($max> $text_type_max) || (mysql_field_type($result, $i)=="blob")){
-							print "\n\t\t<TD><TEXTAREA ID=\"ID$i\" CLASS=\"$class\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" COLS=\"90\" ROWS = \"3\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" >$last_data</TEXTAREA> ";
-							}
-						else {
-							print "\n\t\t<TD><INPUT  ID=\"ID$i\" CLASS=\"$class\" MAXLENGTH=\"$max\" SIZE=\"$max\" type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"> ";
-							}
-						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-						print "</TD></TR>\n\t"; 
-	 					}				// end else
-					break;
-		
-				case "real":
-					$max = 12;
-					print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					print "</TD></TR>\n\t"; 
-					break;
-		
-			
-				default:
-					print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
-				}					// end switch 
-			}		// end if ... != "auto_increment") 
-		}		// end for ($i = ...
-	unset ($result);
-
-?>
-	<TR><TD COLSPAN="99" ALIGN="center">
-	<BR />
-	<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="reset"		VALUE="Reset"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this);"/> 
 	
-	</TD></TR>
-	</FORM>
-	</td></tr></table>
-<?php
-	break;														// end 'Create record'
+		<FORM NAME="c" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>">
+		<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ;?>"/>
+		<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
+		<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
+		<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
+		<INPUT TYPE="hidden" NAME="func" 		VALUE="pc"/>
+	
+		<TABLE BORDER="0" ALIGN="center">
+		<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Add New Entry</FONT></TD></TR>
+		<TR><TD>&nbsp;</TD></TR>
+	<?php
+	
+		$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
+		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+		$lineno = 0;
+	
+		for ($i = 0; $i < mysql_num_fields($result); $i++) {
+			if ((!is_null($row)) && ($fill_from_last)) 	{$last_data = $row[$i]; $class="clean";}
+			else 										{$last_data = ""; 		$class="dirty";}
 
+			if (substr(mysql_field_name($result, $i), 0, 1 ) =="_") {				// 12/20/08
+				switch (mysql_field_name($result, $i)) {
+					case "_by":
+						$value = $my_session['user_id'];
+						print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__by\" VALUE=\"$value\" />\n";
+						break;
+					case "_from":
+						$value = $_SERVER['REMOTE_ADDR'];
+						print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__from\" VALUE=\"$value\" />\n";
+						break;
+					case "_on":
+						$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
+						print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$value\" />\n";
+						break;
+					}				// end switch ()
+				}				// end if (substr())
+			else {
+				if ($arrayattr[$i][5]!= "auto_increment") {
+					$lineno++;
+					$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";						// identifies mandatory vs. optional input
+					$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array
+					print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
+					print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
+					switch (mysql_field_type($result, $i)) {
+						case "datetime":
+						case "date":
+						case "timestamp":
+							fnDoCal($i);				// generates JS Calendar stuff
+							$max = 16;
+							$value = date($date_out_format);
+							print "<TD><INPUT MAXLENGTH=$max ID=\"fd$i\" SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
+							fnCalButt ($i);
+							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+							print "</TD></TR>\n\t"; 
+							break;
+							
+						case "time":
+							$value = date ("H:i");
+							$max = 5;
+							print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+							print "</TD></TR>\n\t"; 
+							break;
+				
+						case "int":
+							$gotit = FALSE;
+							if (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id) {			// maybe dropdown
+								$lgth = strlen(mysql_field_name($result, $i));
+								$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
+								if (mysql_table_exists($thetable)) {											// does non-empty table exist?
+									$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
+									$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+									$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name		
+									
+									$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";
+									$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+									print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
+									while ($temp_row = mysql_fetch_array($temp_result))  {							// each row
+										$temp = (isset($temp_row[2]))? " - " . substr(trim($temp_row[2]), 0, 6) : ""; 
+										print "\t\t<OPTION VALUE='" . trim($temp_row[0]) . "'>" . trim($temp_row[1]) . $temp . "</OPTION>\n";	
+										}
+									print "\t\t</SELECT>";
+									print ($do_hints)? "<SPAN class='$mand_opt' >(" . mysql_affected_rows() . ")</SPAN>": "";
+									print "</TD></TR>\n\t";
+									unset ($temp_result);
+									$gotit = TRUE;
+									}											// end if (mysql_table_exists($thetable)) ...
+								}										// end maybe dropdown
+							if (!$gotit) {
+								print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+								print "</TD></TR>\n\t"; 
+								}				// end if (!$gotit)
+							break;
+				
+						case "blob":
+						case "string":
+							if (substr($arrayattr[$i][1], 0, 4) == "enum") {				// yes, parse enums
+								$temp = substr($arrayattr[$i][1], 4);
+								$temparray = explode( ",", $temp);
+								print "<TD VALIGN='baseline'>&nbsp;<B>";
+								$drops = array("'","(",")");
+								$default = (isset($arrayattr[$i][4]))? $arrayattr[$i][4] : "";
+								for ($j = 0; $j < count($temparray); $j++) {
+									$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
+									$checked=($temparray[$j]==$default)? " CHECKED ": "";		
+									print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;";
+									}				// end for ($j = 0;
+								print "</TD></TR>\n\t"; 	
+								}				// end if ("enum")
+							else	{					
+								if (($max> $text_type_max) || (mysql_field_type($result, $i)=="blob")){
+									print "\n\t\t<TD><TEXTAREA ID=\"ID$i\" CLASS=\"$class\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" COLS=\"90\" ROWS = \"3\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" >$last_data</TEXTAREA> ";
+									}
+								else {
+									print "\n\t\t<TD><INPUT  ID=\"ID$i\" CLASS=\"$class\" MAXLENGTH=\"$max\" SIZE=\"$max\" type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"> ";
+									}
+								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+								print "</TD></TR>\n\t"; 
+			 					}				// end else
+							break;
+				
+						case "real":
+							$max = 12;
+							print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+							print "</TD></TR>\n\t"; 
+							break;
+				
+					
+						default:
+							print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
+						}					// end switch 
+					}		// end if ... != "auto_increment") 
+				}		// end else ...
+			}		// end for ($i = ...
+		unset ($result);
+	
+	?>
+		<TR><TD COLSPAN="99" ALIGN="center">
+		<BR />
+		<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
+		<INPUT TYPE="reset"		VALUE="Reset"/>&nbsp;&nbsp;&nbsp;&nbsp;
+		<INPUT TYPE="button" NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this);"/> 
+		
+		</TD></TR>
+		</FORM>
+		</td></tr></table>
+	<?php
+		}
+
+	break;														// end 'Create record'
+	
 	case "r":																			// Retrieve/List =================
 	function fnLinkTDm ( $theclass, $theid, $thestring) {		// returns <td ... /td>
 		$breakat = 24;
@@ -660,13 +789,13 @@ switch ($func) {
 
 	if (mysql_affected_rows() == 0) {
 		$page="";
-		print "<TR><TD ALIGN='center' CLASS='header'><BR /><BR /><BR /><BR />Table '" . str_replace( "_", " ", ucfirst($tablename))  . "' is empty!<BR /><BR /><BR /><BR /></TD></TR>";
+		print "<TR VALIGN='top'><TD ALIGN='center' CLASS='header'><BR /><BR /><BR /><BR />Table '" . str_replace( "_", " ", ucfirst($tablename))  . "' is empty!<BR /><BR /><BR /><BR /></TD></TR>";
 		}
 	else {				// we got rows
 		$maxPage = ceil($numrows/$rowsPerPage);						// # pages => $maxPage
 		$prev = $next = $nav = '';									// initially empty
-		$head1 = "<TR CLASS = 'odd'><TH COLSPAN=99 ALIGN='center'>" . $numrows ." records "." <FONT SIZE=\"-2\">&nbsp;&nbsp;(mouseover ";
-		$head2 = "<TR CLASS = 'even'>";
+		$head1 = "<TR CLASS = 'odd' valign='TOP'><TH COLSPAN=99 ALIGN='center'>" . $numrows ." records "." <FONT SIZE=\"-2\">&nbsp;&nbsp;(mouseover ";
+		$head2 = "<TR CLASS = 'even' VALIGN='top'>";
 		$cols = mysql_num_fields($result);
 		$subst = array();											// will hold substitution values for colnames like 'what_id'
 
@@ -685,22 +814,20 @@ switch ($func) {
 			$thecolumn = mysql_field_name($result, $links_col);		// column name
 			$arrow = (mysql_field_name($result, $i) == $sortby) ? $arrowdir[$sortdir] : "";
 			$theclass=($i==$links_col)? " CLASS='ul'": "";
-			$head2 .= "<TH$theclass onClick =\"JSfnToSort('" . mysql_field_name($result, $i) . "')\" >" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . " $arrow</TH>\n";
+			$head2 .= "<TH VALIGN='top'$theclass onClick =\"JSfnToSort('" . mysql_field_name($result, $i) . "')\" >" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . " $arrow</TH>\n";
 			}
 		$head2 .= "</TR>\n";										// end table heading
 		print $head1 . "<U>" . str_replace( "_", " ", ucfirst($thecolumn)) . "</U> data for functions)</FONT></TH></TR>\n" . $head2;
 		$lineno = 0;
 		while ($row = mysql_fetch_array($result))  {										// write each data row
 			$lineno++;
-			print "<TR valign=\"bottom\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";			// alternate line bg colors
+			print "<TR valign=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";			// alternate line bg colors
 			for($i = 0; $i < $cols; $i++){													// each column
 				$lgth = strlen(mysql_field_name($result, $i));								// shortened column name
 				if (isset($row[$i])) {														// not empty
-					if (mysql_field_type($result, $i)=="datetime") {						// if type is "datetime" do date format
-						print "<TD CLASS=\"mylink\" >" . format_date(strtotime($row[$i])) . "</TD>";
-						} 																	// end "datetime"
-					elseif (mysql_field_type($result, $i)=="time") { 
-						print "<TD CLASS=\"mylink\" >" . substr($row[$i],0,5) . "</TD>";
+
+					if (mysql_field_type($result, $i)=="time") { 
+						print "<TD CLASS=\"mylink\" >" . substr($row[$i],0,5) . "</TD>\n";
 						}
 					else {
 						if ($i == $links_col) {												// 'name' or 'descr' or default
@@ -719,12 +846,18 @@ switch ($func) {
 							else { 									// not substitution or date
 								$thedata = (strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
-							print "<TD CLASS=\"mylink\" >" . $thedata . "</TD>";			// type not "datetime" and name not "descript"
+//							if(($tablename="unit_types") && (mysql_field_name($result, $i)=="icon")) {					// 12/29/08
+							if(($tablename=="unit_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
+								$thedata = "<IMG SRC='./icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
+								}
+							
+					
+							print "<TD CLASS=\"mylink\" >" . $thedata . "</TD>\n";			// type not "datetime" and name not "descript"
 							}		// end else ...
 						}	// end not "datetime"
 					}	// end if (isset() ...
 				else {							// not set
-					print "<TD CLASS=\"mylink\" >" . $i . "</TD>";							// empty
+					print "<TD CLASS=\"mylink\" >" . $i . "</TD>\n";							// empty
 					}			//  not set
 				}			// end for($i = 1 ...
 			unset ($row);
@@ -759,8 +892,9 @@ switch ($func) {
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE="<?php print $sortdir; ?>"/>
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r">
-	<CENTER><BR><INPUT TYPE="button" 	VALUE=" <?php print ucfirst($tablename); ?> Properties" onClick = "Javascript: document.retform.func.value='p'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
+	<CENTER><BR><INPUT TYPE="button" 	VALUE="<?php print ucfirst($tablename); ?> Properties" onClick = "Javascript: document.retform.func.value='p'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
 	<INPUT TYPE="button" VALUE="Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry" onclick= "this.form.func.value='c'; this.form.submit();" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<!--	<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/> 1/28/09 -->
 	</FORM>
 	</TD></TR></TABLE>
 <?php
@@ -768,6 +902,19 @@ switch ($func) {
 
 
 	case "u":										// Update 	=======================================
+	
+	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";					// target row
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
+	$row = mysql_fetch_array($result);																		// $row has data
+	$lineno = 0;															// for alternating row colors
+
+	$the_custom = "./tables/u_" . $tablename . ".php";				// 12/20/08
+	if (file_exists ( $the_custom)){
+//		print __LINE__ . "<BR />";
+		$custom	= TRUE;
+		require_once($the_custom) ;
+		}
+	else {
 ?>
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename ?>"/>
@@ -781,106 +928,120 @@ switch ($func) {
 	<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Update/Delete Entry</FONT></TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
 <?php
-	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";					// target row
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
-	$row = mysql_fetch_array($result);																		// $row has data
-	$lineno = 0;															// for alternating row colors
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
-		$disabled = ($arrayattr[$i][5] == "auto_increment")? " disabled" : "";
-		$lineno++;
-		$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
-		$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array
-		print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
-		print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
-		
-		switch (mysql_field_type($result, $i)) {
-			case "datetime":
-			case "timestamp":
-			case "date":
-			case "timestamp":
-				$max = 16;
-				$value=date($date_out_format);
-//				echo __LINE__ . $value . "<BR />";
-				print "<TD><INPUT MAXLENGTH=$max SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
-				print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-				print "</TD></TR>\n\t"; 
-				break;
-	
-			case "time":
-				$max = 5;
-				print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-				print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-				print "</TD></TR>\n\t"; 
-				break;
+		if (substr(mysql_field_name($result, $i), 0, 1 ) =="_") {				// 12/20/08
+			switch (mysql_field_name($result, $i)) {
+				case "_by":
+					$value = $my_session['user_id'];
+					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__by\" VALUE=\"$value\" />\n";
+					break;
+				case "_from":
+					$value = $_SERVER['REMOTE_ADDR'];
+					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__from\" VALUE=\"$value\" />\n";
+					break;
+				case "_on":
+					$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
+					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$value\" />\n";
+					break;
+				}				// end switch ()
+			}				// end if (substr())
 
-			case "int":
-				$gotit = FALSE;
-				if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {			// maybe dropdown
-					$lgth = strlen(mysql_field_name($result, $i));
-					$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
-					if (mysql_table_exists($thetable)) {											// does table exist?
-						$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
-						$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-						$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column 
+		else {			
+			$disabled = ($arrayattr[$i][5] == "auto_increment")? " disabled" : "";
+			$lineno++;
+			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
+			$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array
+			print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
+			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
+			
+			switch (mysql_field_type($result, $i)) {
+				case "datetime":
+				case "date":
+				case "timestamp":
+					$max = 16;
+					$value=date($date_out_format);
+//					echo __LINE__ . $value . "<BR />";
+					print "<TD><INPUT MAXLENGTH=$max SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
+					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+					print "</TD></TR>\n\t"; 
+					break;
+			
+				case "time":
+					$max = 5;
+					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+					print "</TD></TR>\n\t"; 
+					break;
+		
+				case "int":
+					$gotit = FALSE;
+					if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {			// maybe dropdown
+						$lgth = strlen(mysql_field_name($result, $i));
+						$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
+						if (mysql_table_exists($thetable)) {											// does table exist?
+							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
+							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column 
+							
+							$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";	// get option values
+							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
+							if ($row[mysql_field_name($result, $i)]=='0') {print "\t\t<OPTION VALUE='0' selected>Select</OPTION>\n" ;}				// no selection made
+							while ($sel_row = mysql_fetch_array($temp_result))  {								// each row - assume 2nd column has values
+								$selected = ($sel_row['id'] == $row[mysql_field_name($result, $i)])? " selected" : "";
+								print "\t\t<OPTION VALUE='" . $sel_row[0] . "'" . $selected  . " >" . $sel_row[1] . "</OPTION>\n";		// *************
+								}
+							print "\t\t</SELECT></TD></TR>\n\t";
+							unset ($temp_result);
+							$gotit = TRUE;
+							}											// end if (mysql_table_exists($thetable)) ...
+						}										// end maybe dropdown
+					if (!$gotit) {
+						print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
+						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+						print "</TD></TR>\n\t"; 
+						}
+					break;
+			
+				case "blob":
+				case "string":
+					if (substr($arrayattr[$i][1], 0, 4) == "enum") {				// yes, parse enums
+						$temp = substr($arrayattr[$i][1], 4);
+						$temparray = explode( ",", $temp);
+						print "<TD VALIGN='baseline'><B>&nbsp;";
+						$drops = array("'","(",")");
 						
-						$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";	// get option values
-						$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-						print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
-						if ($row[mysql_field_name($result, $i)]=='0') {print "\t\t<OPTION VALUE='0' selected>Select</OPTION>\n" ;}				// no selection made
-						while ($sel_row = mysql_fetch_array($temp_result))  {								// each row - assume 2nd column has values
-							$selected = ($sel_row['id'] == $row[mysql_field_name($result, $i)])? " selected" : "";
-							print "\t\t<OPTION VALUE='" . $sel_row[0] . "'" . $selected  . " >" . $sel_row[1] . "</OPTION>\n";		// *************
+						for ($j = 0; $j < count($temparray); $j++) {
+							$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
+							$checked=($row[$i]==$temparray[$j])? " CHECKED": "";		
+							print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+							}				// end for ($j = 0;
+						print "</TD></TR>\n\t"; 	
+						}				// end if ("enum")
+					else {							
+						if ($max> $text_type_max) {
+							print "\n\t\t<TD><TEXTAREA NAME=\"frm_" . mysql_field_name($result, $i) . "\" COLS=\"90\" ROWS = \"1\">$row[$i]</TEXTAREA> ";
 							}
-						print "\t\t</SELECT></TD></TR>\n\t";
-						unset ($temp_result);
-						$gotit = TRUE;
-						}											// end if (mysql_table_exists($thetable)) ...
-					}										// end maybe dropdown
-				if (!$gotit) {
-					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
+						else {
+							$max = max($max, strlen($row[$i]));				// 9/5/08
+							print "\n\t\t<TD><INPUT MAXLENGTH=\"$max\" SIZE=\"$max\" type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
+							}
+						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
+						print "</TD></TR>\n\t"; 
+			 			}
+					break;
+			
+				case "real":
+					$max = 12;
+					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 					print "</TD></TR>\n\t"; 
-					}
-				break;
-		
-			case "blob":
-			case "string":
-				if (substr($arrayattr[$i][1], 0, 4) == "enum") {				// yes, parse enums
-					$temp = substr($arrayattr[$i][1], 4);
-					$temparray = explode( ",", $temp);
-					print "<TD VALIGN='baseline'><B>&nbsp;";
-					$drops = array("'","(",")");
-					
-					for ($j = 0; $j < count($temparray); $j++) {
-						$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
-						$checked=($row[$i]==$temparray[$j])? " CHECKED": "";		
-						print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-						}				// end for ($j = 0;
-					print "</TD></TR>\n\t"; 	
-					}				// end if ("enum")
-				else {							
-					if ($max> $text_type_max) {
-						print "\n\t\t<TD><TEXTAREA NAME=\"frm_" . mysql_field_name($result, $i) . "\" COLS=\"90\" ROWS = \"1\">$row[$i]</TEXTAREA> ";
-						}
-					else {
-						$max = max($max, strlen($row[$i]));				// 9/5/08
-						print "\n\t\t<TD><INPUT MAXLENGTH=\"$max\" SIZE=\"$max\" type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
-						}
-					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					print "</TD></TR>\n\t"; 
-		 			}
-				break;
-		
-			case "real":
-				$max = 12;
-				print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-				print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-				print "</TD></TR>\n\t"; 
-				break;
-		
-			default:
-				print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
-			}					// end switch 
+					break;
+			
+				default:
+					print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
+				}					// end switch 
+			}				// end else
 		}		// end for ($i = ...
 
 	unset ($result);
@@ -894,6 +1055,8 @@ switch ($func) {
 	</FORM>
 	</TD></TR></TABLE>
 <?php
+	}				// end else 
+
 	break;		// end Update ==========================
 	case "pc":													// Process 'Create record' data =================
 	function fnQuote_Smart($value) {    // Stripslashes
@@ -937,6 +1100,20 @@ switch ($func) {
 //	break;
 
 	case "v":		// View detail	========================
+
+	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";
+	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$row = mysql_fetch_array($result);
+	$lineno = 0;
+
+	$the_custom = "./tables/v_" . $tablename . ".php";				// 12/26/08
+	if (file_exists ( $the_custom)){
+//		print __LINE__ . "<BR />";
+		require_once($the_custom) ;
+		$custom	= TRUE;
+		}
+	else {
+	
 ?>
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>
@@ -950,10 +1127,6 @@ switch ($func) {
 	if ($func == "pc") 	{print "<TR CLASS=\"even\" VALIGN=\"top\"><TD COLSPAN=\"2\"  ALIGN=\"CENTER\"><FONT SIZE=\"+1\">New '$tablename' entry accepted.</FONT></TD></TR>";}
 	else				{print "<TR CLASS=\"even\" VALIGN=\"top\"><TD COLSPAN=\"2\" ALIGN=\"CENTER\"><FONT SIZE=\"+1\">Table '$tablename' - View Entry</FONT></TD></TR>";}
 	print "<TR><TD>&nbsp;</TD></TR>";
-	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	$row = mysql_fetch_array($result);
-	$lineno = 0;
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
 		$lineno++;
 		print "\n\t<TR CLASS=" . $evenodd [$lineno % 2] . " VALIGN=\"top\"><TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD><TD>";
@@ -998,6 +1171,7 @@ switch ($func) {
 	if ($func == "pc") 	{
 		print "<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\"><BR /><INPUT TYPE=\"button\" VALUE=\"Another\" onclick=\"document.pc.func.value='c';document.pc.submit()\";/></TD></TR>";
 		}
+	}			// end else ... 
 ?>
 
 	<TR><TD COLSPAN="2" ALIGN="center">
@@ -1185,11 +1359,11 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 
 	print "<TR VALIGN=\"top\"><TD><B><nobr>Primary Tables:</nobr></B></TD><TD ALIGN='center'>";
 	for($i = 0; $i < $ctrp; $i++) {
-		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$primaries[$i]'; document.s.indexname.value='99'; document.s.submit();\"> $primaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
+		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$primaries[$i]'; document.s.indexname.value='id'; document.s.submit();\"> $primaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
 		}
-	print "</TD></TR><TR><TD>&nbsp;</TD></TR><TR VALIGN=\"top\"><TD><A HREF='#'onclick = \"Javascript:JSfnShowit('support')\"> <B>Support:</A>&nbsp;&nbsp;</B></TD><TD ALIGN='center'><SPAN ID='support' STYLE = 'visibility: hidden'>";
+	print "</TD></TR>\n\n<TR>\n<TD>&nbsp;</TD></TR>\n\n<TR VALIGN=\"top\">\n<TD><A HREF='#'onclick = \"Javascript:JSfnShowit('support')\"> <B>Support:</A>&nbsp;&nbsp;</B></TD>\n<TD ALIGN='center'><SPAN ID='support' STYLE = 'visibility: hidden'>";
 	for($i = 0; $i < $ctrs; $i++) {
-		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$secondaries[$i]'; document.s.indexname.value='99'; document.s.submit();\"> $secondaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
+		print "<A HREF=\"#\" ONCLICK=\"Javascript: document.s.tablename.value='$secondaries[$i]'; document.s.indexname.value='id'; document.s.submit();\"> $secondaries[$i] </A>&nbsp;&nbsp;&nbsp;\n";
 		}
 	print "<A HREF='#'onclick = \"Javascript:JSfnHideit('support')\"> <B>:Hide</A></SPAN></TD></TR></TABLE>";
 	}
@@ -1197,8 +1371,8 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 <!-- ----------Common--------------- -->
 <FORM NAME="s" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>">
 <INPUT TYPE = "hidden" NAME="tablename" VALUE=""/>
-<INPUT TYPE = "hidden" NAME="indexname" VALUE="99"/>
-<INPUT TYPE = "hidden" NAME="sortby"	VALUE=""/>
+<INPUT TYPE = "hidden" NAME="indexname" VALUE="id"/>
+<INPUT TYPE = "hidden" NAME="sortby"	VALUE="id"/>
 <INPUT TYPE = "hidden" NAME="sortdir"	VALUE="0"/>
 <INPUT TYPE = "hidden" NAME="func" VALUE="r"/>
 </FORM>
@@ -1211,7 +1385,7 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 <INPUT TYPE = "hidden" NAME="sortdir"	VALUE=0 />
 <INPUT TYPE = "hidden" NAME="func" VALUE="r"/>
 </FORM>
-</CENTER></BODY>
+</CENTER>
 
 <?php
 if ($calstuff!="") {
@@ -1226,4 +1400,5 @@ if ($calstuff!="") {
 	print "\n</SCRIPT>\n";
 	}
 ?>
+</BODY>
 </HTML>

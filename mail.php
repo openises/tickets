@@ -94,11 +94,11 @@ if (empty ($_POST)) {
 	<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><BR /><B>Enter e-mail Information<BR /><BR /></TD></TR>
 	<TR CLASS='odd'><TD>Ticket:</TD><TD><B><?php print shorten($t_row['scope'], 48); ?></B></TD></TR>
 	<TR CLASS='even'><TD>Add'l text:</TD>		<TD><TEXTAREA ROWS = 2 COLS=36 NAME='frm_text' WRAP="virtual"></TEXTAREA></TD></TR>
-<?php
-//						generate dropdown menu of contacts
+<?php														//			generate dropdown menu of contacts
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		if (mysql_affected_rows()>0) {				// 9/17/08
+			$got_addr = TRUE;
 			$height = (mysql_affected_rows() + 1) * 16;
 			print "<TR CLASS='odd'><TD>To:</TD>";
 			print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple >\n";
@@ -108,17 +108,22 @@ if (empty ($_POST)) {
 			print "\t</SELECT>\n</TD></TR>";
 			}				// end (mysql_affected_rows()>0)
 		else {
-			print "<TR CLASS='even'><TD COLSPAN=2 align='CENTER'><B>No addresses.  Populate 'Contacts' table via Configuration link.</TD></TR>";
+			print "<TR CLASS='even'><TD COLSPAN=2 align='CENTER'><B>No addresses.<BR /> Populate 'Contacts' table via Configuration link.</TD></TR>";
+			$got_addr = FALSE;
 			}
 		
 ?>
 	</FORM>
 	<FORM NAME='dummy' METHOD='get'>
 	<TR CLASS='even'><TD COLSPAN=2 ALIGN="center"><BR />
+<?php if ($got_addr) { ?>
+
 		<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_Form.reset();">
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="button" VALUE="Send" onClick="validate(document.mail_Form);">
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<?php	} ?>
+
 		<INPUT TYPE="button" VALUE="Cancel"  onClick="self.close();" >
 		</FORM>
 		</TD></TR>

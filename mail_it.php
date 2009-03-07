@@ -10,5 +10,5 @@ require_once('./incs/functions.inc.php');
 //dump($_POST);
 
 $caption =  mail_it ($_POST['frm_to'], $_POST['frm_text'], $_POST['frm_ticket_id'] );	//  ($to_str, $text, $ticket_id) - 10/15/08
-
+//snap(basename( __FILE__) . __LINE__, $_POST['frm_ticket_id']);
 ?>	

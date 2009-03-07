@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html><head>
+
+<title>Tickets Email Edit</title><meta name="description" content=""><meta name="" http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="" http-equiv="Expires" content="0"><meta name="" http-equiv="Cache-Control" content="NO-CACHE"><meta name="" http-equiv="Pragma" content="NO-CACHE"><meta name="" http-equiv="Content-Script-Type" content="text/javascript"></head><body><pre>array(3) {
+  ["ticket_id"]=&gt;
+  string(3) "121"
+  ["addrs"]=&gt;
+  string(59) "ashore3@verizon.net|ashore4@verizon.net|ashore5@verizon.net"
+  ["text"]=&gt;
+  string(0) ""
+}
+</pre>
+
+<pre>array(0) {
+}
+</pre>
+
+
+
+
+
+
+
+
+
+
+<link rel="StyleSheet" href="mail_edit.php_files/default.css" type="text/css">
+
+<pre>string(59) "ashore3@verizon.net|ashore4@verizon.net|ashore5@verizon.net"
+</pre>
+
+<center>
+<h3>Revise message to suit</h3>
+<form name="mail_frm" method="post" action="mail_edit.php">
+<textarea name="" cols="60" rows="17">Ticket: 121/TBD
+By Tickets CAD:
+Incident: 121/TBD (#121)
+Priority: normal, Nature: TBD
+Updated: 2/13/09 16:21
+Reported by: TBD, Phone: (323) -
+Status: Open
+
+Addr:  90036 CA
+Run Start: 2/13/09 04:21
+Map: 34.071076 -118.347387
+Tickets host: www.afriedman.com
+</textarea> <!-- allow four add'l lines -->
+<p>
+<input value="OK - mail this" onclick="what(); document.mail_frm.submit();" type="button">&nbsp;&nbsp;&nbsp;&nbsp;
+<input value="Reset" onclick="document.mail_frm.reset();" type="button">&nbsp;&nbsp;&nbsp;&nbsp;
+<input value="Dont send" onclick="javascript: if(confirm('Confirm do not send?')) {window.close()};" type="button">
+
+
+<script>
+function what(){
+	for (i=0;i<document.forms[0].length;i++) {
+		alert(document.forms[0].elements[i].type)
+		}
+	}
+</script>
+</p></form></center></body></html>

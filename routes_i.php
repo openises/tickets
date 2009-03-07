@@ -1,7 +1,8 @@
 <?php
 /*
 routes to incident from selected unit
-cloned from routes.php 08/7/31
+08/7/31 cloned from routes.php 
+1/21/09 added show butts - re button menu
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -162,6 +163,9 @@ else {
 	function ck_frames() {		// onLoad = "ck_frames()"
 		if(self.location.href==parent.location.href) {
 			self.location.href = 'index.php';
+			}
+		else {
+			parent.upper.show_butts();										// 1/21/09
 			}
 		}		// end function ck_frames()
 function doReset() {
@@ -381,7 +385,10 @@ function do_list($unit_id ="") {
 		map = new GMap2(document.getElementById("map_canvas"));		// create the map
 		map.addControl(new GLargeMapControl());
 		map.addControl(new GMapTypeControl());
-		map.addMapType(G_PHYSICAL_MAP);		
+<?php if (get_variable('terrain') == 1) { ?>
+		map.addMapType(G_PHYSICAL_MAP);
+<?php } ?>	
+
 		gdir = new GDirections(map, document.getElementById("directions"));
 		
 		GEvent.addListener(gdir, "load", onGDirectionsLoad);

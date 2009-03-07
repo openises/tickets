@@ -5,6 +5,8 @@
 10/7/08	set  WRAP="virtual"
 10/19/08 added 'required' flag
 10/22/08 added 'priorities' as notify selection criteria
+1/21/09 added show butts - re button menu
+2/12/09 corrections for am/pm handling, added dollar function
 */
 error_reporting(E_ALL);			// 10/1/08
 require_once('./incs/functions.inc.php'); 
@@ -45,6 +47,9 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
 		}
+	else {
+		parent.upper.show_butts();										// 1/21/09
+		}
 	}		// end function ck_frames()
 	
 	if(document.all && !document.getElementById) {		// accomodate IE							
@@ -59,6 +64,19 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 		}
 	catch(e) {
+		}
+
+	function $() {									// 2/11/09
+		var elements = new Array();
+		for (var i = 0; i < arguments.length; i++) {
+			var element = arguments[i];
+			if (typeof element == 'string')
+				element = document.getElementById(element);
+			if (arguments.length == 1)
+				return element;
+			elements.push(element);
+			}
+		return elements;
 		}
 
 	String.prototype.trim = function () {
@@ -108,6 +126,15 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		theForm.frm_day_asof.disabled = theBool;
 		theForm.frm_hour_asof.disabled = theBool;
 		theForm.frm_minute_asof.disabled = theBool;
+<?php
+	if (get_variable('gmaps_api_key')==0) {					// 2/12/09
+?>	
+		theForm.frm_meridiem_asof.disabled = theBool;		// 
+<?php
+		}
+?>		
+
+
 		}
 
 	function do_unlock(theForm) {									// 8/10/08
@@ -130,7 +157,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]' LIMIT 1"))
 			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
 		elseif ($_POST['frm_description'] == '')
-			print '<FONT CLASS="warn">Description field is empty. Please try again.</FONT><BR />';
+			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
 		else {
 			$_POST['frm_description'] = strip_html($_POST['frm_description']); 				//fix formatting, custom tags etc.
 

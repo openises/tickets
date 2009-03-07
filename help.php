@@ -1,6 +1,7 @@
 <?php
 /*
 9/18/08 filename changes to XXX.txt
+1/21/09 added show butts - re button menu
 */
 	require_once('./incs/functions.inc.php');
 ?>
@@ -11,6 +12,9 @@
 function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
+		}
+	else {
+		parent.upper.show_butts();										// 1/21/09
 		}
 	}		// end function ck_frames()
 
