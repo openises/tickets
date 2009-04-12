@@ -3,6 +3,7 @@
 routes to incident from selected unit
 08/7/31 cloned from routes.php 
 1/21/09 added show butts - re button menu
+3/11/09 scroll wheel operation added
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -388,6 +389,7 @@ function do_list($unit_id ="") {
 <?php if (get_variable('terrain') == 1) { ?>
 		map.addMapType(G_PHYSICAL_MAP);
 <?php } ?>	
+		map.enableScrollWheelZoom(); 	
 
 		gdir = new GDirections(map, document.getElementById("directions"));
 		

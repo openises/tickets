@@ -17,16 +17,9 @@
 */
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
-if((($istest)) && (!empty($_GET))) {dump ($_GET);}
-if((($istest)) && (!empty($_POST))) {dump ($_POST);}
-
 $api_key = get_variable('gmaps_api_key');
 
 extract($_GET);
-
-function is_a_float($n){									// 3/25/09
-    return ( $n == strval(floatval($n)) )? true : false;
-	}
 
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
@@ -227,6 +220,7 @@ global $u_types, $my_session;
 		}
 
 	function do_sidebar_nm (sidebar, line_no, rcd_id) {							// no map - view responder // view_Form
+		alert(223);
 		var letter = String.fromCharCode("A".charCodeAt(0) + line_no);							// start with A - 1/5/09
 //		side_bar_html += "<TR CLASS='" + colors[(line_no)%2] +"' onClick = myclick_nm(" + id + ");>";
 		side_bar_html += "<TR CLASS='" + colors[(line_no)%2] +"' onClick = myclick_nm(" + rcd_id + ");>";
@@ -350,7 +344,6 @@ unset($result);
 		}	
 
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `aprs` = 1 AND `callsign` <> '' ORDER BY `name`";	// 1/24/09 
-//	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";	// 1/24/09 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 //	dump(mysql_affected_rows());
 
@@ -367,7 +360,7 @@ unset($result);
 		$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
 		
 		if (!$row['mobile']==1) {							// for fixed units
-			$mode = ((is_a_float($row['lat'])) && (!($row['lat']==0)))? 0 :  4;				//  toss invalid lat's - 4/8/09
+			$mode = ($row['lat']==0)? 4 :  0;				//  toss invalid lat's
 ?>
 		var point = new GLatLng(<?php print $row['lat'];?>, <?php print $row['lng'];?>);	// mobile position
 

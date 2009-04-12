@@ -4,8 +4,11 @@
 1/11/09  handle callboard frame
 1/19/09 dollar function added
 1/21/09 added show butts - re button menu
-1/24/09 auto-refresh iff situation display
+1/24/09 auto-refresh iff situation display and setting value
 1/28/09 poll time added to top frame
+3/16/09 added updates and auto-refresh if any mobile units
+3/18/09 'aprs_poll' to 'auto_poll'
+4/10/09 frames check for call board
 */
 error_reporting(E_ALL);			// 9/13/08
 require_once('./incs/functions.inc.php');
@@ -20,17 +23,21 @@ else {
 	do_login(basename(__FILE__));
 	}
 if ($istest) {
-	print "GET</BR>\n";
+	print "GET<BR/>\n";
 	if (!empty($_GET)) {
 		dump ($_GET);
 		}
-	print "POST</BR>\n";
+	print "POST<BR/>\n";
 	if (!empty($_POST)) {
 		dump ($_POST);
 		}
 	}
-$refresh = ((empty($_POST)) && (empty($_GET))) ? "\t<META HTTP-EQUIV='REFRESH' CONTENT='60')>\n": "";	// 1/24/09
-$temp = get_variable('aprs_poll');				// 1/28/09
+
+$remotes = get_current();								// returns array - 3/16/09
+														// set auto-refresh if any mobile units														
+$interval = intval(get_variable('auto_poll'));
+$refresh = ((($remotes['aprs']) || ($remotes['instam'])) && ($interval>0))? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>\n": "";	//10/4/08
+$temp = get_variable('auto_poll');				// 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
 	
 ?>
@@ -38,7 +45,6 @@ $poll_val = ($temp==0)? "none" : $temp ;
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
 
 	<HEAD><TITLE>Tickets - Main Module</TITLE>
-<!-- <META HTTP-EQUIV="REFRESH" CONTENT="18000">	-->
 <?php print $refresh;?>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 	<META HTTP-EQUIV="Expires" CONTENT="0">
@@ -61,6 +67,10 @@ $poll_val = ($temp==0)? "none" : $temp ;
 	catch(e) {
 		}
 		
+	if (parent.frames.length == 3) {										// 1/20/09, 4/10/09
+		parent.calls.location.href = 'assigns.php';							// 1/11/09
+		}
+
 	function ck_frames() {		//  onLoad = "ck_frames()"
 		if(self.location.href==parent.location.href) {
 			self.location.href = 'index.php';
@@ -69,12 +79,6 @@ $poll_val = ($temp==0)? "none" : $temp ;
 			parent.upper.show_butts();										// 1/21/09
 			}
 		}		// end function ck_frames()
-	
-	try {												// 1/20/09
-		parent.calls.location.href = 'assigns.php';		// 1/11/09
-		}
-	catch(e) {										// ignore
-		}
 
 	function $() {									// 1/19/09
 		var elements = new Array();

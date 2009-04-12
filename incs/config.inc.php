@@ -15,6 +15,10 @@
 1/28/09 copied settings fm install
 2/3/09 	revised per session lack of time-delta adjustment
 2/24/09 added 'terrain' setting
+3/11/09 added 'quick' hint
+3/17/09 changed aprs to 'auto_poll'
+8/26/08 added NIST time - turned off
+4/5/09 added log record count, add'l settings values
 */
 $colors = array ('odd', 'even');
 
@@ -59,13 +63,12 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 
 		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]settings") or do_error('reset_db()::mysql_query(delete settings)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		do_insert_settings('_aprs_time','0');
-		do_insert_settings('_sleep','5');				// 10/17/08 -- 
 		do_insert_settings('_version',$version);
 		do_insert_settings('abbreviate_affected','30');
 		do_insert_settings('abbreviate_description','65');
 		do_insert_settings('allow_custom_tags','0');
 		do_insert_settings('allow_notify','1');
-		do_insert_settings('aprs_poll','0');			// new 10/15/07
+		do_insert_settings('auto_poll','0');			// new 10/15/07, 3/17/09
 		do_insert_settings('def_area_code','');			// new 1/27/09
 		do_insert_settings('call_board','1');			// new 1/10/08
 		do_insert_settings('chat_time','4');			// new 1/16/08
@@ -101,7 +104,6 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		do_insert_settings('wp_key','729c1a751fd3d2428cfe2a7b43442c64');		// 9/13/08 
 		do_insert_settings('auto_route','1');					// 1/17/09
 		do_insert_settings('serial_no_ap','1');					// 1/17/09
-		do_insert_settings('def_area_code','');					// 1/17/09
 		}	//
 
 
@@ -160,6 +162,42 @@ function logged_on() {
 function show_stats(){			/* 6/9/08 show database/user stats */
 	global $my_session;
 	
+	function ntp_time() {
+	// ntp time servers to contact
+	// we try them one at a time if the previous failed (failover)
+	// if all fail then wait till tomorrow
+	//	$time_servers = array("time.nist.gov",
+	//	$time_servers = array("nist1.datum.com",
+	//							"time-a.timefreq.bldrdoc.gov",
+	//							"utcnist.colorado.edu");
+	//
+		$time_server = "nist1.datum.com";							// I'm in California and the clock will be set to -0800 UTC [8 hours] for PST
+		$fp = fsockopen($time_server, 37, $errno, $errstr, 30);		// you will need to change this value for your region (seconds)
+		if (!$fp) {
+			return FALSE;
+			} 
+		else {
+			$data = NULL;
+			while (!feof($fp)) {
+				$data .= fgets($fp, 128);
+				}
+			fclose($fp);
+	
+			if (strlen($data) != 4) {								// we have a response...is it valid? (4 char string -> 32 bits)
+				echo "NTP Server {$time_server	} returned an invalid response.\n";
+				return FALSE;
+				}
+			else {
+				$NTPtime = ord($data{0	})*pow(256, 3) + ord($data{1	})*pow(256, 2) + ord($data{2	})*256 + ord($data{3	});
+				$TimeFrom1990 = $NTPtime - 2840140800;			// convert the seconds to the present date & time
+				$TimeNow = $TimeFrom1990 + 631152000;			// 2840140800 = Thu, 1 Jan 2060 00:00:00 UTC
+				return 	$TimeNow;
+				}
+			}
+		}		// end function ntp_time() 
+	
+	
+	
 	
 	//get variables from db
 	$memb_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_MEMBER]"));		// 3/3/09
@@ -181,13 +219,20 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	$rsvd_str = ($ticket_rsvd_in_db==0)? "": $ticket_rsvd_in_db . " reserved, ";
 	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>System Summary</TD></TR><TR>";	
 
-	$now = format_date(strval(date("U")));									// 8/26/08
-	$adj = format_date(strval(date("U") - (get_variable('delta_mins')*60)));
 
 	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . get_variable('_version') . "</B></TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
 	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Server time:</TD><TD ALIGN='left'>" . $now . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Adjusted:</B> $adj  </TD></TR>";
+
+	$fmt = "m/d/Y H:i:s";
+	$now =  date($fmt,time());											// 8/26/08
+	$adj =  date($fmt, (time() - (get_variable('delta_mins')*60)));
+//	$nist = date($fmt, ntp_time());
+	$nist = "NA";
+
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Server time:</TD>
+		<TD ALIGN='left'>" . $now . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Adjusted:</B> $adj  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>NIST:</B> $nist</TD></TR>";
+
 	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$rsvd_str $ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db - $ticket_rsvd_in_db)." closed, $ticket_in_db total</TD></TR>";
 
 	$type_color=array();												// 1/28/09
@@ -213,17 +258,25 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>" . $show_str . "</TD></TR>";
 	
 	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db)." total</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
+
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$nr_logs = mysql_affected_rows();
+	unset($result);	
+
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Log records in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>{$nr_logs}</TD></TR>";		// 4/5/09
+		
+	print "<TR CLASS='even'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
 	print $my_session['user_name'] . ", " .	get_level_text ($my_session['level']);
 
-//	print "</TD></TR><TR CLASS='odd'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
+//	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
 	$my_session['ticket_per_page'] == 0 ? print ", unlimited " : print $my_session['ticket_per_page'];
 	print " tickets/page, order by '".str_replace('DESC','descending', $my_session['sortorder'])."'</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
 	print $_SERVER["HTTP_USER_AGENT"];
 	print  "</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $my_session['scr_width'] . " x " . $my_session['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $my_session['scr_width'] . " x " . $my_session['scr_height'] . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 
@@ -320,7 +373,8 @@ function get_setting_help($setting){/* get help for settings */
 		case "abbreviate_description": 	return "Abbreviates descriptions at this length when listing tickets, 0 to turn off"; break;
 		case "allow_custom_tags": 		return "Enable/disable use of custom tags for rowbreak, italics etc."; break;
 		case "allow_notify": 			return "Allow/deny notification of ticket updates"; break;
-		case "aprs_poll":				return "APRS will be polled every n minutes.  Use 0 for no poll"; break;
+		case "auto_poll":				return "APRS/Instamapper will be polled every n minutes.  Use 0 for no poll"; break;
+		case "auto_route": 				return "Do/don&#39;t (1/0) use routing for new tickets"; break;												// 9/13/08
 		case "call_board":				return "Call Board - 0, 1, n - for none, window, fixed frame size"; break;
 		case "chat_time":				return "Keep n hours of Chat"; break;
 		case "date_format": 			return "Format dates according to php function date() variables"; break;	
@@ -346,19 +400,28 @@ function get_setting_help($setting){/* get help for settings */
 		case "map_height":				return "Map height - pixels"; break;
 		case "map_width":				return "Map width - pixels"; break;
 		case "military_time": 			return "Enter dates as military time (no am/pm)"; break;
+		case "quick":					return "Do/don&#39;t (1/0) bypass user notification steps for quicker operation"; break;			// 3/11/09
 		case "restrict_user_add": 		return "Restrict user to only post tickets as himself"; break;
 		case "restrict_user_tickets": 	return "Restrict to showing only tickets to current user"; break;
+		case "serial_no_ap": 			return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
+		case "situ_refr":				return "Situation map auto refresh - in seconds"; break;											// 3/11/09
 		case "terrain": 				return "Do/don&#39;t (1/0) include terrain map view option"; break;
 		case "ticket_per_page": 		return "Number of tickets per page to show"; break;
 		case "ticket_table_width": 		return "Width of table when showing ticket"; break;
 		case "UTM":						return "Shows UTM values in addition to Lat/Long"; break;
 		case "validate_email": 			return "Do/don&#39;t (1/0) use simple email validation check for notifies"; break;
 		case "wp_key": 					return "White pages lookup key - obtain your own for high volume use"; break;												// 9/13/08
-		case "auto_route": 				return "Do/don&#39;t (1/0) use routing for new tickets"; break;												// 9/13/08
-		case "serial_no_ap": 			return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
+		case "closed_interval": 		return "Closed tickets and cleared dispatches are visible for this many hours"; break;												// 9/13/08
+		case "def_zoom_fixed": 			return "Dynamic or fixed map/zoom; 0 dynamic, 1 fixed situ, 2 fixed units, 3 both"; break;												// 9/13/08
+		case "instam_key": 				return "Instamapper master account key"; break;												// 9/13/08
+		case "msg_text_1": 				return "Default message string for incident new/edit notifies; see instructions"; break;		// 4/5/09										// 9/13/08
+		case "msg_text_2": 				return "Default message string for incident mini-menu email; see instructions"; break;												// 9/13/08
+		case "msg_text_3": 				return "Default message string for for dispatch notifies; see instructions"; break;												// 9/13/08
+
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}
 //		case 'kml files':  				return 'Dont/Do display KML files - 0/1'; break;
+//def_zoom_fixed
 
 ?>

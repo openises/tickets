@@ -28,15 +28,14 @@
 2/10/09 added function sv_win() 
 2/11/09 added dollar function, streetview functions
 3/3/09 cleaned trash as page bottom
+3/10/09 intrusive space in ticket_id
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
+if($istest) {dump($_GET);}
+if($istest) {dump($_POST);}
 $api_key = get_variable('gmaps_api_key');
-if ($istest) {
-	dump($_POST);
-	dump ($_GET);
-	}
 
 function get_add_id() {				// 2/4/09
 	$query  = "SELECT `id`, `contact` FROM `$GLOBALS[mysql_prefix]ticket` 
@@ -153,8 +152,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			}				// end function edit ticket() 
 			
 		$ticket_name = updt_ticket(trim($_POST['ticket_id']));				// 1/25/09
-
-		
 ?>
 			<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 			<html xmlns="http://www.w3.org/1999/xhtml">
@@ -174,19 +171,23 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>	
 	function do_notify() {
 
-//		alert(154);
+//		alert(178);
 		
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET Update: ";
+		var theText= "TICKET - New: ";
 		var theId = '<?php print $_POST['ticket_id'];?>';
 		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
-		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+//		mail_it ($to_str, $text, $theId, $text_sel=1;, $txt_only = FALSE)
+
+		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
+		
 		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 		}			// end function do notify()
 	
 	function handleResult(req) {				// the 'called-back' function
-		alert("162 " + req.responseText.length);
+<?php
+	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+?>
 		}
 
 	function sendRequest(url,callback,postData) {
@@ -201,7 +202,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		req.onreadystatechange = function () {
 			if (req.readyState != 4) return;
 			if (req.status != 200 && req.status != 304) {
-//				alert('HTTP error ' + req.status);
+<?php
+	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+?>
 				return;
 				}
 			callback(req);
@@ -1042,7 +1045,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	
 		<INPUT TYPE="hidden" NAME="frm_lat" VALUE="">				<!-- // 9/9/08 -->
 		<INPUT TYPE="hidden" NAME="frm_lng" VALUE="">
-		<INPUT TYPE="hidden" NAME="ticket_id" VALUE="<?php print $ticket_id;?> ">	<!-- 1/25/09 -->
+		<INPUT TYPE="hidden" NAME="ticket_id" VALUE="<?php print $ticket_id;?>">	<!-- 1/25/09, 3/10/09 -->
 	
 	</FORM></TABLE>
 	</TD><TD>

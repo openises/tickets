@@ -6,20 +6,22 @@
 2/1/09 version  no.
 2/2/09 un_status schemae changes, version no.
 2/24 comment re terrain setting
+3/25/09 schema update
+4/1/09 new settings added
 */
 error_reporting(E_ALL);		// 10/1/08
 require_once('./incs/functions.inc.php');
 
 //	$old_version = get_variable('_version');
 //
-//	$version = "2.10 D beta";			// see usage below 11/7/08
+//	$version = "2.10 E beta";			// see usage below 1/30/09
 //	
 //	if (!($version == $old_version)) {		// current?
 //		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
 //		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 //		unset ($result);
 //		}			// end (!($version ==...)
-// INSERT INTO `settings` (`id`, `name`, `value`) VALUES (NULL, 'terrain', '1'); - 2/24/09
+	
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

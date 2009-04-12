@@ -29,7 +29,6 @@ define("TIME_LIMIT", 8);				// time in hours for closed assigns to be visible
 3/1/09 restrict guest updates
 3/9/09 bypass email if no addr, set 'dispatched' time
 3/25/09 'mailed', 'fetch_assoc' for performance, 'mailed' removed
-4/11/09 apply guest checkbox restrictions
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
@@ -727,32 +726,17 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 // 
 //					print "\t<TD></TD>\n";				// 9/28/08
 //   ASSIGNS	8 cols	- 1/12/09
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";				// as of 
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";															// user  
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";	// comment
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";						// as of 
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";						// user  
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";				// comment
 
-					if (is_guest()) {				// 4/11/09
-						$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": " DISABLED ";
-						}
-					else {
-						$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
-						}
+					$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
 					print "\t<TD CLASS='$theClass' TITLE= 'Dispatched'><INPUT TYPE='checkbox' NAME='frm_dispatched' $is_cd ></TD>\n"; 
 					
-					if (is_guest()) {
-						$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": " DISABLED ";
-						}
-					else {
-						$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
-						}
+					$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
 					print "\t<TD CLASS='$theClass' TITLE= 'Responding'><INPUT TYPE='checkbox' NAME='frm_responding' $is_cd ></TD>\n"; 
 					
-					if (is_guest()) {
-						$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " DISABLED ";
-						}
-					else {
-						$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
-						}
+					$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
 					print "\t<TD CLASS='$theClass' TITLE= 'On scene'><INPUT TYPE='checkbox' NAME='frm_on_scene' $is_cd ></TD>\n"; // note names!
 
 					print "\t<TD CLASS='$theClass' TITLE= 'Clear'>";
@@ -761,8 +745,7 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 						print "<NOBR>". ezDate($row['clear']) . "</NOBR></TD>\n";		//
 						}
 					else {
-						$dis = (is_guest())? " DISABLED ": "";
-						print "<INPUT TYPE='checkbox' NAME='frm_clear' $dis onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"></TD>\n";
+						print "<INPUT TYPE='checkbox' NAME='frm_clear' onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"></TD>\n";
 						}
 					
 					print "\t<TD ID='B$i' STYLE='display:none'>";

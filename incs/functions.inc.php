@@ -53,6 +53,18 @@
 2/18/09 function mail_it() broken into msg() and send() functions
 2/19/09 added get_mysession ()
 3/3/09 MEMBER text addition, disallow MEMBER login
+3/5/09 renamed table _test to z_snapper
+3/7/09 removed function do_mail()
+3/8/09 test user/pword
+3/12/09 unset() added
+3/16/09 added function get_current()
+3/18/09 'aprs_poll' to 'auto_poll', dist chk rev'd for testing
+3/19/09 tracks_hh update added, single track record only
+3/22/09 fixed 'action' entries, instam/aprs hskpg
+3/25/09 added$GLOBALS['TOLERANCE']  for remote time validity determination, function my_is_float(), my_is_int()
+3/26/09 dropped use of last position
+{									// 3/25/09
+
 */
 
 error_reporting(E_ALL);
@@ -129,6 +141,7 @@ $GLOBALS['icons'] 		= array("black.png", "blue.png", "green.png", "red.png", "wh
 $GLOBALS['sm_icons']	= array("sm_black.png", "sm_blue.png", "sm_green.png", "sm_red.png", "sm_white.png", "sm_yellow.png", "sm_gray.png", "sm_lt_blue.png", "sm_orange.png");
 
 $GLOBALS['SESSION_TIME_LIMIT']		= ($istest)? 1200 : 120;		// minutes of inactivity 10/19/08
+$GLOBALS['TOLERANCE']				= 5*60;		// seconds of deviation from UTC before remotes sources considered 	erroneous - 3/25/09
 
 $evenodd = array ("even", "odd");	// class names for alternating table row css colors
 
@@ -386,7 +399,7 @@ function format_date($date){							/* format date to defined type */
 	else {return "TBD";}
 	}				// end function format_date($date)
 	
-function good_date($date) {
+function good_date($date) {		// 
 	return (is_string ($date) && ((strlen($date)==10)));
 	}
 
@@ -459,101 +472,6 @@ function strip_html($html_string) {						/* strip HTML tags/special characters a
 	return $html_string;
 	}
 
-function do_mail($ticket_id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$ticket_id' LIMIT 1";
-	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$t_row = stripslashes_deep(mysql_fetch_assoc($ticket_result));
-	$message  = "PHP Ticket on ".get_variable('host')."\n";
-	$message .= "This message has been sent to you because you are subscribed to be notified of updates to this ticket.\n\n";
-	$message .= "Notify Action: $action\n";
-	$message .= "Ticket ID: " . $t_row['id'] . "\n";
-	$message .= "Ticket Name: " . $t_row['scope'] . "\n";
-//	$message .= "Ticket Owner: ".get_owner($t_row['owner'])."\n";
-	$message .= "Ticket Status: ".get_status($t_row['status'])."\n";
-//	$message .= "Ticket Affected: $t_row['affected']\n";
-	$message .= "Ticket Run Start: " . $t_row['problemstart'] . "\n";
-	$message .= "Ticket Run End: " . $t_row['problemend'] . "\n";
-	$message .= "Ticket Description: ".wordwrap($t_row['description'])."\n";
-	$message .= "Ticket Disposition: ".wordwrap($t_row['comments'])."\n";
-	
-	//add patient record to message
-	if(check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id' ORDER BY DATE")){
-		$message .= "\nPatient:\n";
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
-		$ticket_result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-
-		while($t_row = stripslashes_deep(mysql_fetch_assoc($ticket_result)))
-			$message .= $t_row['name'] . ", " . $t_row['updated']  . "- ". wordwrap($t_row['description'])."\n";
-			}
-	//add actions to message
-	if(check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE ticket_id='$ticket_id' ORDER BY DATE")){
-		$message .= "\nActions:\n";
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE ticket_id='$ticket_id'";
-		$ticket_result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-		while($t_row = stripslashes_deep(mysql_fetch_assoc($ticket_result)))
-			$message .= $t_row['updated'] . " - ".wordwrap($t_row['description'])."\n";
-			}
-	
-	$message .= "\nThis is an automated message, please do not reply.";
-	mail($row['email_address'],'Ticket Notification', $message);
-	}		// end function do_mail()
-
-//function ZZnotify_user($ticket_id,$action){	/* notify user check, $action is the action that triggered the notify, edit, close etc */
-//	if (get_variable('allow_notify') != '1') return;	//should we notify?
-//	
-//	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify` WHERE ticket_id='$ticket_id'";	// all notifies for given ticket
-//	$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-//	while($row = stripslashes_deep(mysql_fetch_assoc($result))){		//is it the right action?
-//		if (($action == $GLOBALS['NOTIFY_ACTION'] AND $row['on_action']) OR ($action == $GLOBALS['NOTIFY_TICKET'] AND $row['on_ticket'])){
-//
-//			if (strlen($row['email_address'])){			// notify by email?
-//				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$ticket_id'";
-//				$ticket_result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$ticket_id'") or do_error("notify_user(i:$ticket_id,$action)::mysql_query(SELECT FROM $GLOBALS[mysql_prefix]ticket)", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//				$t_row = stripslashes_deep(mysql_fetch_assoc($ticket_result));
-//				$message  = "PHP Ticket on ".get_variable('host')."\n";
-//				$message .= "This message has been sent to you because you are subscribed to be notified of updates to this ticket.\n\n";
-//				$message .= "Notify Action: $action\n";
-//				$message .= "Ticket ID: " . $t_row['id'] . "\n";
-//				$message .= "Ticket Name: " . $t_row['scope'] . "\n";
-////				$message .= "Ticket Owner: ".get_owner($t_row['owner'])."\n";
-//				$message .= "Ticket Status: ".get_status($t_row['status'])."\n";
-////				$message .= "Ticket Affected: $t_row['affected']\n";
-//				$message .= "Ticket Run Start: " . $t_row['problemstart'] . "\n";
-//				$message .= "Ticket Run End: " . $t_row['problemend'] . "\n";
-//				$message .= "Ticket Description: ".wordwrap($t_row['description'])."\n";
-//				$message .= "Ticket Disposition: ".wordwrap($t_row['comments'])."\n";
-//			
-//				// add patient record to message
-//				if(check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id' ORDER BY DATE")){
-//					$message .= "\nPatient:\n";
-//					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
-//					$ticket_result = mysql_query($query) or do_error("notify_user(i:$ticket_id,$action)::mysql_query(SELECT FROM `$GLOBALS[mysql_prefix]action`)", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//					while($t_row = stripslashes_deep(mysql_fetch_assoc($ticket_result)))
-//						$message .= $t_row['name'] . ", " . $t_row['updated']  . "- ". wordwrap($t_row['description'])."\n";
-//						}
-//				// add actions to message
-//				if(check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE ticket_id='$ticket_id' ORDER BY DATE")){
-//					$message .= "\nActions:\n";
-//					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE ticket_id='$ticket_id'";
-//					$ticket_result = mysql_query($query) or do_error("notify_user(i:$ticket_id,$action)::mysql_query(SELECT FROM `$GLOBALS[mysql_prefix]action`)", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//					while($t_row = stripslashes_deep(mysql_fetch_assoc($ticket_result)))
-//						$message .= $t_row['updated'] . " - ".wordwrap($t_row['description'])."\n";
-//						}
-//			
-//				$message .= "\nThis is an automated message, please do not reply.";
-////				mail($row['email_address'],'Ticket Notification', $message);
-//				}
-//	
-//			// notify by running program
-//			if (strlen($row['execute_path'])){	/* not done yet */
-//				}
-//			}
-//		else {			/* no matching action */
-//			return;
-//			}
-//		}
-//	}
-
 $variables = array();
 function get_variable($which){								/* get variable from db settings table, returns FALSE if absent  */
 	global $variables;
@@ -602,7 +520,7 @@ function add_header($ticket_id)		{/* add header with links */
 		print "<A HREF='config.php?func=notify&id=$ticket_id'>Notify</A> | ";
 		}
 	print "<A HREF='main.php?print=true&id=$ticket_id'>Print </A> | ";
-	print "<A HREF='#' onClick = \"var mailWindow = window.open('mail.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=400, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\">E-mail </A>"; // 10/8/08
+	print "<A HREF='#' onClick = \"var mailWindow = window.open('mail.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\">E-mail </A>"; // 10/8/08
 	if (!is_guest()) {				// 7/18/07
 		print " | <A HREF='routes.php?ticket_id=$ticket_id'>Dispatch Unit</A>";		// new 9/22
 		}
@@ -834,24 +752,28 @@ function mysql2timestamp($m) {				// 1/26/09
 	return mktime(substr($m,11,2),substr($m,14,2),substr($m,17,2),substr($m,5,2),substr($m,8,2),substr($m,0,4));
 	}
 
-function do_aprs() {			// populates the APRS tracks table 
-								// major surgery by Randy Hammock, August 07
-								// Note:	This function assumes the structure/format of APRS data as of Aug 30,2007.
-								//			Contact developer with solid information regarding any change in that format.
-								// rev 8/17/08 to toss data further than 500 mi fm defult center - to prevent data pollution
-								//
-	$delay = 1;			// minimum time in minutes between APRS queries
-
-	function date_OK ($indate) {	// checks for date/time within 48 hours
+function aprs_date_ok ($indate) {	// checks for date/time within 48 hours
 		return (abs(time() - mysql2timestamp($indate)) < 2*24*60*60); 
 		}
+
+function do_aprs() {				// populates the APRS tracks table 
+									// major surgery by Randy Hammock, August 07
+									// Note:	This function assumes the structure/format of APRS data as of Aug 30,2007.
+									//			Contact developer with solid information regarding any change in that format.
+									// rev 8/17/08 to toss data further than 500 mi fm defult center - to prevent data pollution
+									//
+	global $istest;
+	$dist_chk = ($istest)? 2500000.0 : 250000.0 ;		// 3/18/09
+	$delay = 1;			// minimum time in minutes between APRS queries
 
 	$when = get_variable('_aprs_time');
 
 	if(time() < $when) { 
 		return;
 		} 
+		
 	else {
+//		snap(__FUNCTION__ . __LINE__, "");
 		$next = time() + $delay*60;
 		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$next' WHERE `name`='_aprs_time'";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -872,6 +794,8 @@ function do_aprs() {			// populates the APRS tracks table
 				}
 			}
 
+//	snap(__FUNCTION__ . __LINE__, "");
+
 		$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `packet_date`< (NOW() - INTERVAL 7 DAY)"; // remove ALL expired track records 
 		$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		unset($resultd);
@@ -880,6 +804,7 @@ function do_aprs() {			// populates the APRS tracks table
 		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 
 		if (mysql_affected_rows() > 0) {			// 1/23/09
+//			snap(__FUNCTION__ . __LINE__, "");
 	
 			while ($row = @mysql_fetch_assoc($result)) {	
 				$lat= (empty($row['lat'])) ? $row['lat']: get_variable('def_lat');
@@ -895,21 +820,29 @@ function do_aprs() {			// populates the APRS tracks table
 				$data = explode ("\n",  $raw , 50 );							// Break each line
 	//			dump($data);
 				if (count($data) > 1) {
+//					snap(__FUNCTION__ . __LINE__, count($data) );
 	
 					$data[1] = str_replace("\",\"", '|', $data[1]); 			// Convert to pipe delimited
 					$data[1] = str_replace("\"", '', $data[1]);	  				// Strip remaining quotes
 					$fields = explode ("|",  $data[1]);				 			// Break out the fields
-					$fields = mysql_real_escape_string_deep($fields);
-					if ((count($fields) == 14) && (date_OK ($fields[13])))  {	// APRS data sanity check
-	//					print __LINE__ . "<br />";
-	
+
+					$fields = mysql_real_escape_string_deep($fields);			// 
+
+					if ((count($fields) == 14) && (aprs_date_ok ($fields[13])))  {	// APRS data sanity check
+//						snap(__FUNCTION__ . __LINE__, $fields[13] );
+		
 						$packet_id = trim($fields[1]) . trim($fields[13]); 		// source, date - unique
-						if(!(isset($pkt_ids[$packet_id]))) {				// 6/17/08 - avoid duplicate reports						
+//						snap(__FUNCTION__ . __LINE__ , $packet_id );
+						$temp = (isset($pkt_ids[$packet_id]))? "true" : "false";
+//						snap(__FUNCTION__ . __LINE__ , $temp );
+
+						if(!(isset($pkt_ids[$packet_id]))) {					// 6/17/08 - avoid duplicate reports						
 							$dist = pow($lat-$fields[2],2) + pow($lng-$fields[3],2);		// 8/17/08
 	//						print $dist . " " .  __LINE__ . "<br />";
-							if ($dist < 250000.0) {				// 8/26/08	- 10/2/08  planar distance from center < 500 mi?
-	//							print __LINE__ . "<br />";
-	
+
+//							snap(__FUNCTION__ . __LINE__, $dist );
+							if ($dist < $dist_chk) {							// 3/18/09, 8/26/08	- 10/2/08  planar distance from center < 500 mi?
+							
 								$query  = "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '$fields[1]' AND  `packet_date`< (NOW() - INTERVAL 7 DAY)"; // remove expired track records this source
 								$temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	
@@ -928,13 +861,13 @@ function do_aprs() {			// populates the APRS tracks table
 	//								print __LINE__ . "<br />";
 	//								}
 								$error = FALSE;
+//								snap(__FUNCTION__ . __LINE__, "" );
 																						// don't store if duplicate packet_id or invalid floats
 								if ((!array_key_exists($packet_id, $pkt_ids)) && 		// 1/23/09
 									(intval($fields[5])>0) || 
 									(isFloat($fields[2])) &&
 									(isFloat($fields[3])) && 
 									(intval($speeds[$fields[1]])>0)) {					// 10/2/08
-	
 									$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]tracks` (`packet_id`,
 																			`source`,`latitude`,`longitude`,`course`,
 																			`speed`,`altitude`,`symbol_table`,`symbol_code`,
@@ -958,16 +891,13 @@ function do_aprs() {			// populates the APRS tracks table
 															quote_smart($fields[13]));
 				
 									$result_tr = mysql_query($query) or $error = TRUE ;
+//									dump($query);
 									}
 									
 								else {													// 1/23/09
 									$a = (array_key_exists($packet_id, $pkt_ids));
 									$b = (intval($fields[5])>0);
 									$c = (intval($speeds[$fields[1]])>0);
-//									snap(__FUNCTION__ . __LINE__, $a);
-//									snap(__FUNCTION__ . __LINE__, $b);
-//									snap(__FUNCTION__ . __LINE__, $c);
-//									snap(__FUNCTION__ . __LINE__, $packet_id . " : " . $fields[5]);
 									}
 									
 								$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
@@ -977,7 +907,10 @@ function do_aprs() {			// populates the APRS tracks table
 									`updated`=	'$now'
 									WHERE `callsign`= " . quote_smart(trim($fields[1])) . " LIMIT 1";				// 10/2/08, 8/26/08  -- needs USNG computation
 								
+//								snap(__FUNCTION__ . __LINE__, $query );
+
 								$result_tr = mysql_query($query);
+								unset($result_tr);
 								$lat = $fields[2];										// 8/26/08
 								$lng = $fields[3];
 								}	
@@ -986,7 +919,7 @@ function do_aprs() {			// populates the APRS tracks table
 	//							}
 							}			// end if(!(isset(...)
 						
-						}				// end if (count()== 15)		
+						}				// end count($fields) == 14) && ...		
 					}		// end for ($i...)		
 			
 				}		// end while ($row =...)
@@ -1013,6 +946,7 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="") {		// generic lo
 				quote_smart(trim($info)));
 
 	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	unset($result);		// 3/12/09
 	}
 
 /*
@@ -1030,7 +964,7 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="") {		// generic lo
 function sig_check ($in_array) {						// returns user record or FALSE, given $_POST -- 11/22/08
 	$temp = $GLOBALS['LEVEL_MEMBER'];					// 2/13/09
 	$query  = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user` = '${in_array['frm_user']}' AND `level` <> " . $temp . " LIMIT 1";
-	snap(_FUNCTION__, $query);
+//	snap(_FUNCTION__, $query);
 	$result_u = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$the_sess = get_sess_key();
 	if (mysql_affected_rows() == 1) {																		// 'user' is defined
@@ -1057,8 +991,8 @@ function sig_check ($in_array) {						// returns user record or FALSE, given $_P
 		}
 	}		// end function sig _check ()
 			
-function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do login/session code - returns array - 2/12/09
-	global $my_session;
+function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do login/session code - returns array - 2/12/09, 3/8/09
+	global $my_session, $istest;
 
 	$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 	$sess_key = get_sess_key();
@@ -1226,10 +1160,12 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		if(array_key_exists('frm_passwd', $_POST)) { print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>Login failed.Pls enter correct values and try again.</FONT><BR /><BR /></TH></TR>";}
 		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";;
 
+		$t_user = ($istest)? "admin": "";		// 3/8/09
+		$t_pword = $t_user;
 ?>
 		<TR CLASS='even'><TD ROWSPAN=6 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png'><BR /><BR />
-		&nbsp;&nbsp;<a href="http://www.openaprs.net/"><img src="openaprs.png"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label">User:</TD><TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();"></TD></TR>
-		<TR CLASS='odd'><TD CLASS="td_label">Password: &nbsp;&nbsp;</TD><TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"></TD></TR>
+		&nbsp;&nbsp;<a href="http://www.openaprs.net/"><img src="openaprs.png"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label">User:</TD><TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE="<?php print $t_user; ?>"></TD></TR>
+		<TR CLASS='odd'><TD CLASS="td_label">Password: &nbsp;&nbsp;</TD><TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"  VALUE="<?php print $t_pword; ?>"></TD></TR>
 		<TR CLASS='even'><TD></TD><TD><INPUT TYPE="submit" VALUE="Log In"></TD></TR>
 		<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD></TR>
 		<TR CLASS='odd'><TD COLSPAN=2>&nbsp;</TD></TR>
@@ -1251,9 +1187,6 @@ function ip_address_to_number($IPaddress) {
 	}
 
 function get_sess_key() {
-//	snap(__FUNCTION__ . __LINE__, ip_address_to_number($_SERVER['REMOTE_ADDR']));
-//	snap(__FUNCTION__ . __LINE__, trim ($_SERVER["HTTP_USER_AGENT"]));
-//	snap(__FUNCTION__ . __LINE__, sha1(ip_address_to_number($_SERVER['REMOTE_ADDR']) . trim ($_SERVER["HTTP_USER_AGENT"])));
 	return sha1(ip_address_to_number($_SERVER['REMOTE_ADDR']) . trim ($_SERVER["HTTP_USER_AGENT"]));		// 11/21/08
 	}
 
@@ -1424,10 +1357,42 @@ function get_lng($in_lng) {					// 9/7/08
 		}
 	}				// end function get_lng()
 	
-function mail_it ($to_str, $text, $ticket_id, $txt_only = FALSE) {				// 10/6/08, 10/15/08		returns caption --  2/18/09
-//	snap(__FUNCTION__ . __LINE__, $to_str);
+function mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {				// 10/6/08, 10/15/08,  2/18/09, 3/7/09
 	global $istest;
+/*
+Subject		A
+Inciden		B  Title
+Priorit		C  Priorit
+Nature		D  Nature
+Written		E  Written
+Updated		F  As of
+Reporte		G  By
+Phone: 		H  Phone: 
+Status:		I  Status:
+Address		J  Location
+Descrip		K  Descrip
+Disposi		L  Disposi
+Start/end	M
+Map: " 		N  Map: " 
+Actions		O
+Patients	P
+Host		Q
+*/
 
+	switch ($text_sel) {
+		case 1:
+		   	$match_str = strtoupper(get_variable("msg_text_1"));				// note case
+		   	break;
+		case 2:
+		   	$match_str = strtoupper(get_variable("msg_text_2"));
+		   	break;
+		case 3:
+		   	$match_str = strtoupper(get_variable("msg_text_3"));
+		   	break;
+		}
+	if (empty($match_str)) {$match_str = implode ("", range("A", "Q"));}		// empty get all
+
+//	snap(__FUNCTION__ . __LINE__, $match_str);
 	require_once("cell_addrs.inc.php");			// 10/22/08
 	$cell_addrs = array( "gmail.com", "vtext.com", "messaging.sprintpcs.com", "txt.att.net", "vmobl.com", "myboostmobile.com");		// 10/5/08
 	if ($istest) {array_push($cell_addrs, "gmail.com");};
@@ -1438,47 +1403,97 @@ function mail_it ($to_str, $text, $ticket_id, $txt_only = FALSE) {				// 10/6/08
 	
 	$eol = "\n";
 
-	$message = "Priority: " . get_severity($t_row['severity']);
-	$message .= ", Nature: " . get_type($t_row['in_types_id']) . $eol;
-	$message .= "Addr: " . $t_row['street'] . " "  . $t_row['city'] . " " . $t_row['state'] . $eol;
-	if (!empty($t_row['description'])) {
-		$message .= "Descr: ".wordwrap($t_row['description']).$eol;
-		}
-	$message .= "Reported by: " . $t_row['contact'] .", Phone: " . format_phone ($t_row['phone']) . $eol;
-	if (!empty($t_row['date'])) {
-		$message .= "Written: " . format_date_time($t_row['date']) . $eol;
-		}
-	$message .= "Updated: " . format_date_time($t_row['updated']) . $eol;
-	$message .= "Status: ".get_status($t_row['status']).$eol.$eol;
-	if (!empty($t_row['comments'])) {
-		$message .= "Disp: ".wordwrap($t_row['comments']).$eol;
-		}
-	$_end = empty($t_row['problemend'])? "" : " End: " . $t_row['problemend']  ; 
-	$message .= "Run Start: " . format_date_time($t_row['problemstart']). $_end .$eol;
-	$message .= "Map: " . $t_row['lat'] . " " . $t_row['lng'] . "\n";
-	$message = wordwrap($message, 70);
-															// add patient record to message
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
-	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_affected_rows()>0) {
-		$message .= "\nPatient:\n";
-		while($pat_row = stripslashes_deep(mysql_fetch_array($ticket_result))){
-			$message .= $pat_row['name'] . ", " . $pat_row['updated']  . "- ". wordwrap($pat_row['description'], 70)."\n";
-			}
-		}
-															// add actions to message
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
-	if (mysql_affected_rows()>0) {
-		$message .= "\nActions:\n";
-		$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while($act_row = stripslashes_deep(mysql_fetch_array($ticket_result))) {
-			$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
-			}
-		}
-	$message .= "Tickets host: ".get_variable('host').$eol;				// 10/15/08
+	$message="";
+	$_end = (good_date_time($t_row['problemend']))?  "  End:" . $t_row['problemend'] : "" ;		// 
+	
+	for ($i = 0;$i< strlen($match_str); $i++) {
+		if(!($match_str[$i]==" ")) {
+			switch ($match_str[$i]) {
+				case "A":
+				    break;
+				case "B":
+					$message .= "Incident: " . $t_row['scope'] . $eol;
+				    break;
+				case "C":
+					$message .= "Priority: " . get_severity($t_row['severity']) . $eol;
+				    break;
+				case "D":
+					$message .= "Nature: " . get_type($t_row['in_types_id']) . $eol;
+				    break;
+				case "J":
+					$str = "";
+					$str .= (empty($t_row['street']))? 	""  : $t_row['street'] . " " ;
+					$str .= (empty($t_row['city']))? 	""  : $t_row['city'] . " " ;
+					$str .= (empty($t_row['state']))? 	""  : $t_row['state'];
+					$message .= empty($str) ? "" : "Addr: " . $str . $eol;
+				    break;
+				case "K":
+					$message .= (empty($t_row['description']))?  "": "Descr: ". wordwrap($t_row['description']).$eol;
+				    break;
+				case "G":
+					$message .= "Reported by: " . $t_row['contact'] . $eol;
+				    break;
+				case "H":
+					$message .= (empty($t_row['phone']))?  "": "Phone: " . format_phone ($t_row['phone']) . $eol;
+					break;
+				case "E":
+					$message .= (empty($t_row['date']))? "":  "Written: " . format_date_time($t_row['date']) . $eol;
+				    break;
+				case "F":
+					$message .= "Updated: " . format_date_time($t_row['updated']) . $eol;
+				    break;
+				case "I":
+					$message .= "Status: ".get_status($t_row['status']).$eol;
+				    break;
+				case "L":
+					$message .= (empty($t_row['comments']))? "": "Disp: ".wordwrap($t_row['comments']).$eol;
+				    break;
+				case "M":
+					$message .= "Run Start: " . format_date_time($t_row['problemstart']). $_end .$eol;
+				    break;
+				case "N":
+					$usng = LLtoUSNG($t_row['lat'], $t_row['lng']);
+					$message .= "Map: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $usng . "\n";
+				    break;
+			
+				case "P":															
+					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
+					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					if (mysql_affected_rows()>0) {
+						$message .= "\nPatient:\n";
+						while($pat_row = stripslashes_deep(mysql_fetch_array($result))){
+							$message .= $pat_row['name'] . ", " . $pat_row['updated']  . "- ". wordwrap($pat_row['description'], 70)."\n";
+							}
+						}
+					unset ($result);
+				    break;
+			
+				case "O":
+					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
+					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
+					if (mysql_affected_rows()>0) {
+						$message .= "\nActions:\n";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						while($act_row = stripslashes_deep(mysql_fetch_array($result))) {
+							$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
+							}
+						}	
+					unset ($result);
+				    break;
+			
+				case "Q":
+					$message .= "Tickets host: ".get_variable('host').$eol;
+				    break;
+				default:
+				    $message = "Match string error:" . $match_str[$i]. " " . $match_str . $eol ;
+
+				}		// end switch ()
+			}		// end if(!($match_...))
+		}		// end for ($i...)
+
 	$message = str_replace("\n.", "\n..", $message);					// see manual re mail win platform peculiarities
 	
-	$subject = "Ticket: " . $t_row['scope'] . " (#" .$t_row['id'] . ")";
+	$subject = (strpos ($match_str, "A" ))? $subject = $text . $t_row['scope'] . " (#" .$t_row['id'] . ")": "";
 
 	if ($txt_only) {
 		return $subject . "\n" . $message;		// 2/16/09
@@ -1492,7 +1507,6 @@ function mail_it ($to_str, $text, $ticket_id, $txt_only = FALSE) {				// 10/6/08
 function do_send ($to_str, $subject_str, $text_str ) {
 	global $istest;
 	$sleep = 4;																// seconds delay between text messages
-//	snap(__FUNCTION__ . __LINE__, $to_str);
 
 	$to_array = explode ("|",$to_str );										// pipe-delimited string  - 10/17/08
 	require_once("cell_addrs.inc.php");										// 10/22/08
@@ -1521,8 +1535,7 @@ function do_send ($to_str, $subject_str, $text_str ) {
 			$to_sep = ",";														// comma separated addr string
 			}
 		}				// end for ($i = ...)
-//	snap(__FUNCTION__ . __LINE__, $tocellstr);	
-//	snap(__FUNCTION__ . __LINE__, $tostr);
+
 	$caption="";
 	if (strlen($tostr)>0) {	
 		@mail($tostr, $subject_str, $text_str, $headers);
@@ -1584,20 +1597,21 @@ function notify_user($ticket_id,$action_id) {								// 10/20/08
 	}
 
 
-function snap($source, $stuff) {																// 10/18/08 - debug tool
-	if (mysql_table_exists("$GLOBALS[mysql_prefix]_test")) {
-		$query	= "DELETE FROM `$GLOBALS[mysql_prefix]_test` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
+function snap($source, $stuff) {																// 10/18/08 , 3/5/09 - debug tool
+	if (mysql_table_exists("$GLOBALS[mysql_prefix]_snap_data")) {
+		$query	= "DELETE FROM `$GLOBALS[mysql_prefix]_snap_data` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	
 //		$query = "INSERT INTO `$GLOBALS[mysql_prefix]_test` (`source`,`stuff`) VALUES('$source', '$stuff')";
-		$query = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]_test` (`source`,`stuff`)  
+		$query = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]_snap_data` (`source`,`stuff`)  
 			VALUES(%s,%s)",
 				quote_smart_deep(trim($source)),
 				quote_smart_deep(trim($stuff)));
 	
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+		unset($result);
 		}
-	}		// end function
+	}		// end function snap()
 	
 function isFloat($n){														// 1/23/09
     return ( $n == strval(floatval($n)) )? true : false;
@@ -1634,4 +1648,125 @@ function get_mysession() {							// returns session array 2/19/09
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	return mysql_fetch_assoc($result);
 	}
+
+function do_instam($key_val) {				// 3/17/09
+//	snap(basename(__FILE__) . __LINE__, $key_val);
+	// http://www.instamapper.com/api?action=getPositions&key=4899336036773934943
+	// housekeep 
+
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `instam`= 1 AND `callsign` <> ''";  // work each call/license
+	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+	
+	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
+		$query	= "SELECT `id`,`utc_stamp` FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` = '{$row['callsign']}' ORDER BY `utc_stamp` DESC LIMIT 1";		// work each call/license
+		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+		$row_tr = (mysql_affected_rows()>0)? mysql_fetch_assoc($result): FALSE;
+		
+//		$from_utc = ($row_tr)?  "&from_ts=" . $row_tr['utc_stamp']: "";		// 3/26/09
+		$from_utc = "";											// reconsider for tracking
+		
+		$url = "http://www.instamapper.com/api?action=getPositions&key={$key_val}{$from_utc}";
+//		snap(basename(__FILE__) . __LINE__, $url);
+		$data="";
+		if (function_exists("curl_init")) {
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+			$data = curl_exec ($ch);
+			curl_close ($ch);
+//			print __LINE__ ;
+			}
+		else {				// not CURL
+//			print __LINE__ ;
+			if ($fp = @fopen($url, "r")) {
+				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				fclose($fp);
+				}		
+			else {
+				print "-error 1";		// @fopen fails
+				}
+			}
+				
+	/*
+	InstaMapper API v1.00
+	1263013328977,bold,1236239763,34.07413,-118.34940,25.0,0.0,335
+	1088203381874,CABOLD,1236255869,34.07701,-118.35262,27.0,0.4,72
+	*/
+	
+	$ary_data = explode ("\n", $data);
+	if (count($ary_data) > 1) {
+		for ($i=0; $i<count($ary_data); $i++) {
+			$str_pos = explode (",", $ary_data[$i]);
+			if (count($str_pos)==8) {
+
+//				$the_time = ($str_pos[2] - date("Z") - (get_variable('delta_mins')*60));		// map UTC to local time equiv
+//				$now = mysql_format_date($the_time);
+																								// 
+				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
+					`lat`=		" . quote_smart(trim($str_pos[3])) . ",
+					`lng`=		" . quote_smart(trim($str_pos[4])) . ",
+					`updated` = " .	quote_smart(mysql_format_date(trim($str_pos[2]))) . "
+					WHERE `callsign` LIKE " . quote_smart(trim($str_pos[1]) . '%');				// 3/17/09, 8/26/08, 3/24  --
+
+				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+//				snap (basename(__FILE__) . __LINE__, $query);
+																									// 3/19/09
+				$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source`= " . quote_smart(trim($str_pos[1]));		// remove prior track this device  3/20/09
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+											// 
+				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]tracks_hh`(`source`,`utc_stamp`,`latitude`,`longitude`,`course`,`speed`,`altitude`,`updated`,`from`)
+									VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+										quote_smart($str_pos[1]),
+										quote_smart($str_pos[2]),
+										quote_smart($str_pos[3]),
+										quote_smart($str_pos[4]),
+										quote_smart($str_pos[7]),
+										quote_smart($str_pos[6]),
+										quote_smart($str_pos[5]),
+										quote_smart(mysql_format_date($str_pos[2])),
+										quote_smart($str_pos[6])) ;
+		//		dump($query);
+				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);					
+				unset($result);
+					
+				}		// end if (count())
+
+
+			}		// end for ()
+		}		// end if (count())
+	
+		}		// end while
+	}		// end function do_instam()
+
+
+function get_current() {		// 3/16/09
+//	snap(basename(__FILE__), __LINE__);
+
+	$aprs = $instam = FALSE;	// 3/22/09
+	
+	$query = "SELECT `id`, `aprs`, `instam` FROM `$GLOBALS[mysql_prefix]responder`WHERE ((`aprs` = 1) OR (`instam` = 1))";	
+	$result = mysql_query($query) or do_error($query, ' mysql error=', mysql_error(), basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		if ($row['aprs'] = 1) 	{ $aprs = TRUE;}
+		if ($row['instam'] = 1) { $instam = TRUE;}
+		}		// end while ()
+	unset($result);
+	if ($aprs) 		{do_aprs();}
+	if ($instam) {	
+		$temp = get_variable("instam_key");
+		$instam = ($temp=="")? FALSE: $temp;
+		if ($instam )	{do_instam($temp);}
+		}
+	return array("aprs" => $aprs, "instam" => $instam);
+	
+	}		// end function
+
+function my_is_float($n){									// 3/25/09
+    return ( $n == strval(floatval($n)) )? true : false;
+	}
+
+function my_is_int($n){										// 3/25/09
+    return ( $n == strval(intval($n)) )? true : false;
+	}
+
 ?>

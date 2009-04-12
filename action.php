@@ -13,12 +13,9 @@ error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
 do_login(basename(__FILE__));
 
-if($istest) {
-	print "GET<br />\n";
-	dump($_GET);
-	print "POST<br />\n";
-	dump($_POST);
-	}
+if((($istest)) && (!empty($_GET))) {dump ($_GET);}
+if((($istest)) && (!empty($_POST))) {dump ($_POST);}
+
 $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -63,6 +60,19 @@ if ($get_action == 'add') {
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 		}
 	catch(e) {
+		}
+
+	function $() {									// 2/11/09
+		var elements = new Array();
+		for (var i = 0; i < arguments.length; i++) {
+			var element = arguments[i];
+			if (typeof element == 'string')
+				element = document.getElementById(element);
+			if (arguments.length == 1)
+				return element;
+			elements.push(element);
+			}
+		return elements;
 		}
 
 		
@@ -187,11 +197,12 @@ if ($get_action == 'add') {
 
 	function do_notify() {
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET Update - ACTION: ";
+		var theText= "TICKET - ACTION: ";
 		var theId = '<?php print $_POST['frm_ticket_id'];?>';
 		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
-		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+//		mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE)
+
+		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId +"&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
 		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 		}			// end function do notify()
 	
@@ -209,7 +220,9 @@ if ($get_action == 'add') {
 		req.onreadystatechange = function () {
 			if (req.readyState != 4) return;
 			if (req.status != 200 && req.status != 304) {
-//				alert('HTTP error ' + req.status);
+<?php
+	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+?>
 				return;
 				}
 			callback(req);

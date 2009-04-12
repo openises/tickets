@@ -23,6 +23,7 @@
 1/21/09 show_butts, addr lookup button
 1/27/09 added super-only notify execute, quote_smart added
 3/3/09 correction for MEMBER user type
+4/5/09 default map zoom added
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -899,6 +900,9 @@ case 'center' :
 ?>
 	<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT>
 	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
+	<STYLE>
+	label, input[type="radio"]{font-size:10px; vertical-align:bottom;}
+	</STYLE>
 	</HEAD>
 	<BODY onLoad = "ck_frames()" onunload="GUnload()">
 <?php
@@ -915,11 +919,16 @@ case 'center' :
 		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
 		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_map_caption]' WHERE `name`='map_caption';";
 		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_dfz]' WHERE `name`='def_zoom_fixed';";
+		$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
 		print '<FONT CLASS="header">Settings saved to database.</FONT><BR /><BR />';
 		}
 	else {
 		$lat = get_variable('def_lat');
 		$lng = get_variable('def_lng');
+		$checks_ar = array("","","","");
+		$which = get_variable('def_zoom_fixed');
+		$checks_ar[$which] = " CHECKED ";
 ?>	
 		<TABLE BORDER=0 ID='outer'>
 		<TR><TD COLSPAN=2 ALIGN='center'><FONT CLASS="header">Select Map Center/Zoom and Caption</FONT><BR /><BR /></TD></TR>
@@ -932,20 +941,26 @@ case 'center' :
 		<TR><TD><BR /><BR /><BR /><BR /><BR /></TD></TR>
 		<TR CLASS = "even"><TD CLASS="td_label">Caption:</TD><TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD></TR>
 		<TR CLASS = "odd">
-			<TD CLASS="td_label" ROWSPAN=2>Map:</TD>
+			<TD CLASS="td_label" ROWSPAN=4>Map:</TD>
 			<TD ALIGN='right'>&nbsp;&nbsp;Lat:&nbsp;</TD>
-			<TD ><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12  /></TD>
-			<TD ALIGN='right'>Long:&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
+			<TD colspan=2><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12  />
+			&nbsp;&nbsp;&nbsp;&nbsp;Long:&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
 			<TD ALIGN='right'>NGS:&nbsp;</TD><TD COLSPAN=2><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20 DISABLED /></TD></TR>
 		<TR CLASS = "odd">
-			<TD></TD>
 			<TD ALIGN='right'>&nbsp;&nbsp;Zoom:&nbsp;</TD>
-			<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>
+			<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>	<!-- 4/5/09 -->
+		<TR VALIGN='baseline'><TD CLASS="td_label" ALIGN='right'>Dynamic zoom:</TD><TD ALIGN='center' COLSPAN=2>&nbsp;&nbsp;
+		 		Yes &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0";> &nbsp;&nbsp;
+				<B>Situation</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1";>&nbsp;&nbsp;
+				<B>Units</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2";>&nbsp;&nbsp;
+				<B>Both</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3";></TD></TR>
+					
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS = "even"><TD COLSPAN=5 ALIGN='center'>
 			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">				<!-- // 9/16/08 -->
 			<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
+			<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
 		</FORM></TABLE>
 		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Drag/Zoom to new default position</SPAN></FONT></CENTER>

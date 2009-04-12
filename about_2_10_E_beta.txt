@@ -107,10 +107,47 @@ Changes for Tickets V 2.10 C
 78. Some persistence functions added, notably situation page 'hide units' and also the Call Board's cleared dispatches.
 79. Dispatched units may receive email or text msg notification;  message text may be edited prior to release.
 80. Terrain map display is now a settings option.
-81. Blackberry's are supported for GPS position reporting and with a tracking display.
+
+Changes for Tickets V 2.10 D and E
+81.  Instamapper interface has been added to support GPS position data from a number of handhelds, notably the blackberry.
+		(Which means there no Tickets 'page' for the bb;  We take position data from the Instamapper server as required.)
+82.  Support for this interface appears in unit information display.
+83.  Units for which driving directions to an incident wd be inappropriate may now be identified, and directions will not be generated.
+84.  Editing of generated email is now supported, for both email selected off the incident mini-menu and also upon dispatch.
+85.  A 'quick' option setting has been added, which bypasses certain user notification in the interest of rapid operation.
+86.  Settings are available to allow default email contents, applicable to noted email and also for 'notify' on new and edited incidents.
+    (These are 'msg_text_1' for notify, 'msg_text_2' for incident mini-menu email, and 'msg_text_3' for dispatch notification.) 
+    The defaults are set as character strings using the following.  (I cdn't find a more mnemonic scheme.)
+
+			Subject		A
+			Incident	B
+			Priority	C
+			Nature		D
+			Written		E
+			Updated		F
+			Reporter	G
+			Phone: 		H
+			Status:		I
+			Address		J
+			Description	K
+			Disposition	L
+			Start/end	M
+			Map coords	N
+			Actions		O
+			Patients	P
+			Host		Q
+			
+	So, a setting of 'C J D H' wd generate Priority, Address, Nature and Phone no, - in that order - in the to-be-edited message. 
+	NB: An empty value is the default; it will generate all of the above, and in that order.
+	
+87.  A new settings entry - def zoom fixed - allows you to maintain a fixed map and zoom.  Value 0 applies dynamic zoom (original), 
+    value 1 fixes only the situation screen, value 2 fixes only the units screen, and value 3 fixes both these screens.
+
+88.  A new settings entry allows you to set the time interval - in hours - during which closed incidents are visible in the 
+    Situation screen and cleared dispatches are visible on the Call Board.
 
 
 The above may be too terse.  Let me know where further expansion wd be useful.
 
-Feb 7, '09
+April 11, '09
 Arnie Shore

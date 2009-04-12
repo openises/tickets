@@ -18,6 +18,7 @@ $vals_ary = explode("%", $_POST['frm_vals']);		// example: "frm_id=17&frm_vals=f
 $frm_id = $_POST['frm_id'];
 $frm_tick = $_POST['frm_tick'];
 $frm_unit = $_POST['frm_unit'];
+//snap(basename( __FILE__) . __LINE__, $frm_unit);
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $date_part="";

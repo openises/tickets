@@ -16,7 +16,11 @@
 1/17/09 "Situation" replaces 'Active Calls'
 1/19/09 Log button added
 1/21/09 dollar function added
+3/15/09 added error reporting
+3/18/09 'aprs_poll' to 'auto_poll'
 */ 
+error_reporting(E_ALL);		// 3/15/09
+
 require_once('./incs/functions.inc.php');
 $sess_key = get_sess_key();
 $the_time_limit = 2*60*60;
@@ -162,6 +166,7 @@ function AsyncAjax(strURL) {						// asynch ajax() function
 			}
 		}
 	self.xmlHttpReq.send("");
+	window.setInterval("self.xmlHttpReq.abort();", 1000);		// wait a second and kill
 	}
 
 // ex useage:	<input value="Go" type="button" onclick='JavaScript:AsyncAjax("whatever.php")'>
@@ -170,7 +175,7 @@ var aprs_poll;
 var aprs = new Boolean(false);									// 
 var temp;
 function get_aprs_time() {		// 
-	var temp = syncAjax("get_aprs_poll.php");					// gets poll cycle period via server-side get_variable('aprs_poll');
+	var temp = syncAjax("get_aprs_poll.php");					// gets poll cycle period via server-side get_variable('auto_poll');
 	return temp;
 	}
 
@@ -303,10 +308,10 @@ function show_butts() {						// 10/27/08
 		<span ID="whom"><?php print $whom ; ?></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 		Permissions: <SPAN ID="level"><?php print $level; ?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <?php
-	$temp = get_variable('aprs_poll');
+	$temp = get_variable('auto_poll');
 	$poll_val = ($temp==0)? "none" : $temp ;
 ?>
-		<SPAN onClick = "toggle_aprs()">APRS Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<SPAN onClick = "toggle_aprs()">Auto Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Module: <SPAN ID="script"></SPAN>
 <nobr><span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
 <ul>

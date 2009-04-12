@@ -4,6 +4,8 @@ original, converted from tracks.php
 10/4/08	added auto-refresh
 10/4/08	corrected to include all point into bounding box
 10/4/08	added direction icons
+3/18/09 'aprs_poll' to 'auto_poll'
+4/8/09 correction to icon names, 'small text' added
  */
 require_once('./incs/functions.inc.php');
 //do_login(basename(__FILE__));		// in a window
@@ -15,7 +17,7 @@ function list_tracks($addon = '', $start) {
 global $source, $my_session, $evenodd;
 ?>
 <SCRIPT>
-	var direcs=new Array("north.png","northeast.png","east.png","southeast.png","south.png","southwest.png","west.png","northwest.png", "north.png");	// 10/4/08
+	var direcs=new Array("north.png","north_east.png","east.png","south_east.png","south.png","south_west.png","west.png","north_west.png", "north.png");	// 4/8/09
 	var colors = new Array ('odd', 'even');
 
 	function hideGroup(color) {
@@ -217,11 +219,11 @@ global $source, $my_session, $evenodd;
 				$i++;
 				}
 			
-			$sidebar_line .="<TR CLASS='" . $evenodd[$i%2] . "'>";
-			$sidebar_line .= "<TD TITLE='" . $row_tr['packet_date'] . "'>" .  	substr ($row_tr['packet_date'] , 11, 5) ."</TD>\n";
-			$sidebar_line .= "<TD TITLE='" . $row_tr['latitude']. ", ". $row_tr['longitude'] . "'>" . shorten($row_tr['latitude'], 8) ."</TD>\n";
-			$sidebar_line .= "<TD>" . $row_tr['speed']."@" . $row_tr['course'] . "</TD>\n";
-			$sidebar_line .= "<TD TITLE='" . $row_tr['closest_city'] . "'>" .  	shorten($row_tr['closest_city'], 16) ."</TD>\n";
+			$sidebar_line .="<TR CLASS='" . $evenodd[$i%2] . "'>";		// 4/8/09
+			$sidebar_line .= "<TD CLASS = 'text_small' TITLE='" . $row_tr['packet_date'] . "'>" .  	substr ($row_tr['packet_date'] , 11, 5) ." </TD>\n";
+			$sidebar_line .= "<TD CLASS = 'text_small' TITLE='" . $row_tr['latitude']. ", ". $row_tr['longitude'] . "'> " . shorten($row_tr['latitude'], 8) ."</TD>\n";
+			$sidebar_line .= "<TD CLASS = 'text_small'>" . $row_tr['speed']."@" . $row_tr['course'] . "</TD>\n";
+			$sidebar_line .= "<TD CLASS = 'text_small' TITLE='" . $row_tr['closest_city'] . "'>" .  	shorten($row_tr['closest_city'], 16) ."</TD>\n";
 			$sidebar_line .="</TR>\n";
 ?>
 			j++;
@@ -293,7 +295,7 @@ global $source, $my_session, $evenodd;
 	print "\n</SCRIPT>\n";
 	}				// end function list_tracks() ===========================================================
 
-$interval = intval(get_variable('aprs_poll'));
+$interval = intval(get_variable('auto_poll'));
 $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";	//10/4/08
 
 ?>

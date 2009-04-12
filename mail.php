@@ -6,10 +6,13 @@
 10/7/08	set WRAP="virtual"
 10/7/08	ajax-ify for inter-message delay
 10/17/08 changed addr string to pipe-delim'd
+3/22/09 added mobile as email addr
 */
 require_once('./incs/functions.inc.php');
 if($istest) {
+	print "GET";
 	dump ($_GET);
+	print "POST";
 	dump ($_POST);
 	}
 extract ($_GET);
@@ -36,6 +39,9 @@ if (empty ($_POST)) {
 //		if (!$reply_to = get_variable("email_reply_to"))  {
 //			$reply_to = "<INPUT TYPE='text' NAME='frm_reply_to' SIZE=36 VALUE=''>";
 //			}
+		$text = mail_it ("", "", $ticket_id, 2, TRUE) ;		// returns msg text **ONLY**
+		$temp = explode("\n", $text);
+		$nr_lines = intval(count($temp) + 2);
 ?>
 	<SCRIPT src="./js/multiSelect.js"></SCRIPT>
 
@@ -60,18 +66,21 @@ if (empty ($_POST)) {
 			}
 		}		// end function do_more ()
 		
-	function validate(theForm) {
-//		alert("64 " + theForm.frm_text.value);
+	function do_val(theForm) {
+//		for (i=0;i<document.forms[0].elements.length; i++) {
+//			alert("72 " + document.forms[0].elements[i].name + " " +document.forms[0].elements[i].type);
+//			}
+
 		var j = 0;
-		var to_str = sep="";
+		var sep="";
 		for (var i=0; i<theForm.elements.length;i++) {
 			if ((theForm.elements[i].type == "checkbox") && (theForm.elements[i].checked)) {
-				to_str += (sep + theForm.elements[i].value);
-				sep=",";
+				theForm.frm_to_str.value += (sep + theForm.elements[i].value);
+				sep="|";
 				j++;
 				}
 			}
-
+//		alert("84 " + theForm.frm_to_str.value);
 		var errmsg="";
 		if (j==0) 				{errmsg+= "\tAt least one address is required\n";}
 		if (errmsg!="") {
@@ -79,10 +88,10 @@ if (empty ($_POST)) {
 			return false;
 			}
 		else {
+//			theForm.frm_text.value = escape(theForm.frm_text.value);
 			theForm.submit();
 			}
 		}				// end function val idate()
-
 
 	</SCRIPT>
 	</HEAD>
@@ -91,10 +100,11 @@ if (empty ($_POST)) {
 	<FORM METHOD="post" ACTION="<?php print basename( __FILE__); ?>" NAME="mail_Form" >
 	<INPUT TYPE='hidden' NAME = 'frm_ticket_id' VALUE='<?php print $ticket_id; ?>'>
 	<TABLE>
-	<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><BR /><B>Enter e-mail Information<BR /><BR /></TD></TR>
+	<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><BR /><B>Edit Message<BR /><BR /></TD></TR>
 	<TR CLASS='odd'><TD>Ticket:</TD><TD><B><?php print shorten($t_row['scope'], 48); ?></B></TD></TR>
-	<TR CLASS='even'><TD>Add'l text:</TD>		<TD><TEXTAREA ROWS = 2 COLS=36 NAME='frm_text' WRAP="virtual"></TEXTAREA></TD></TR>
+	<TR CLASS='even'><TD>Message:</TD>		<TD><TEXTAREA ROWS = <?php print $nr_lines; ?> COLS=60 NAME='frm_text' WRAP="virtual"><?php print $text; ?></TEXTAREA></TD></TR>
 <?php														//			generate dropdown menu of contacts
+
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		if (mysql_affected_rows()>0) {				// 9/17/08
@@ -103,7 +113,15 @@ if (empty ($_POST)) {
 			print "<TR CLASS='odd'><TD>To:</TD>";
 			print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple >\n";
 	    	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-				print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "</OPTION>\n";
+	    		if ((!((trim($row['email']))) == "") && (is_email(trim($row['email'])))) {
+					print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(email)</I></OPTION>\n";
+					}
+	    		if ((!((trim($row['mobile']))) == "") && (is_email(trim($row['mobile'])))) {
+					print "\t<OPTION VALUE='" . $row['mobile'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(mobile)</I></OPTION>\n";
+					}
+	    		if ((!((trim($row['other']))) == "") && (is_email(trim($row['other'])))) {
+					print "\t<OPTION VALUE='" . $row['other'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(other)</I></OPTION>\n";
+					}
 				}
 			print "\t</SELECT>\n</TD></TR>";
 			}				// end (mysql_affected_rows()>0)
@@ -113,14 +131,16 @@ if (empty ($_POST)) {
 			}
 		
 ?>
-	</FORM>
+		<INPUT TYPE = "hidden" NAME="frm_to_str" VALUE="">
+		<INPUT TYPE = "hidden" NAME="frm_subj" VALUE= "<?php print shorten($t_row['scope'], 48); ?>">
+		</FORM>
 	<FORM NAME='dummy' METHOD='get'>
 	<TR CLASS='even'><TD COLSPAN=2 ALIGN="center"><BR />
 <?php if ($got_addr) { ?>
 
 		<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_Form.reset();">
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button" VALUE="Send" onClick="validate(document.mail_Form);">
+		<INPUT TYPE="button" VALUE="Send" onClick="do_val(document.mail_Form);">
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <?php	} ?>
 
@@ -138,11 +158,18 @@ if (empty ($_POST)) {
 	
 	</BODY></HTML>
 <?php
-	}
+	}		// end if (empty ($_POST))
 else {
+	print __LINE__;
+//	snap(basename(__FILE__) . __LINE__, $_POST['frm_to_str'] );
+//	snap(basename(__FILE__) . __LINE__, $_POST['frm_subj'] );
+//	snap(basename(__FILE__) . __LINE__, $_POST['frm_text']);
+
+	do_send ($_POST['frm_to_str'], $_POST['frm_subj'], $_POST['frm_text']) ;		// ($to, $subject, $text) ;
 ?>
 <SCRIPT>
-	function sendRequest(url,callback,postData) {		// 10/15/08
+/*
+function sendRequest(url,callback,postData) {		// 10/15/08
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
@@ -153,7 +180,9 @@ else {
 		req.onreadystatechange = function () {
 			if (req.readyState != 4) return;
 			if (req.status != 200 && req.status != 304) {
-	//			alert('HTTP error ' + req.status);
+<?php
+	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+?>
 				return;
 				}
 			callback(req);
@@ -207,18 +236,19 @@ else {
 //		alert ("202 " + theText);
 		var theId = "<?php print $_POST['frm_ticket_id'];?>";
 		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) ;		// ($to_str, $text, $ticket_id)   10/15/08
+//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
+//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
+
 		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
 		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 //		alert ("208 " + params);
-	
+*/	
 		}
 
 </SCRIPT>
 
 	</HEAD>
-	<BODY onLoad = "domail()">
-
+	<BODY>
 	<CENTER><BR /><BR /><BR /><BR /><BR /><h3>Sent!</h3><BR /><BR />
 	<FORM NAME='can_Form' METHOD="get" ACTION = "<?php print basename( __FILE__); ?>" >
 	<INPUT TYPE="button" VALUE = "Close" onClick = "self.close()"></CENTER>

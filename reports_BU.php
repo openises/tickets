@@ -11,7 +11,7 @@
 1/21/09 added show butts - re button menu
 1/31/09 dispatch function added
 2/2/09 accommodate trashed unit status values
-2/6/09 added dispatch statistics
+2/6/09 added dispatch statistics 
 2/8/09 added selected unit/incident
 2/24/09 added dollar function
 3/23/09 fixes per freitas email
@@ -24,8 +24,8 @@ $my_session = do_login(basename(__FILE__));
 //dump($my_session);
 $img_width  = round(.8*$my_session['scr_width']/3);		//8/9/08
 //dump($img_width);
-if((($istest)) && (!empty($_GET))) {dump ($_GET);}
-if((($istest)) && (!empty($_POST))) {dump ($_POST);}
+	if((if($istest)) && (!empty($_GET))) {dump ($_GET);}
+	if((if($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 //$ionload =  ((isset($_POST) && isset($_POST['frm_group']) && $_POST['frm_group']=='i'))? " inc_onload();": "";
 
@@ -40,8 +40,8 @@ if (empty($_POST)) {				// default to today
 else {
 	$group = $_POST['frm_group'];
 	}
-
-?>
+	
+?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Tickets - Reports Module</TITLE>
@@ -67,9 +67,9 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 </style>
 
 <SCRIPT>
-<?php
+<?php 
 	print "//  {$asof}  \n";
-?>
+?>	
 	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
@@ -92,7 +92,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			}
 		return elements;
 		}
-
+	
 	/* function $() Sample Usage:
 	var obj1 = document.getElementById('element1');
 	var obj2 = document.getElementById('element2');
@@ -100,10 +100,10 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 	  var i;
 	  var elements = $('a','b','c',obj1,obj2,'d','e');
 	  for ( i=0;i
-	*/
-
-
-
+	*/  
+		
+	
+	
 	function viewT(id) {			// view ticket
 		return;
 //		document.T_nav_form.id.value=id;
@@ -124,7 +124,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		document.udr_form.frm_resp_sel.value=document.sel_form.frm_unit_id.options[document.sel_form.frm_unit_id.selectedIndex].value;	// 2/8/09
 		document.udr_form.frm_tick_sel.value=document.sel_form.frm_ticket_id.options[document.sel_form.frm_ticket_id.selectedIndex].value;
 
-		document.udr_form.submit();
+		document.udr_form.submit();	
 		}
 
 	function do_ugr(instr) {						// select for generic
@@ -146,7 +146,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			parent.upper.show_butts();										// 1/21/09
 			}
 		}		// end function ck_frames()
-
+		
 	</SCRIPT>
 
 	</HEAD>
@@ -155,12 +155,12 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 
 	function date_range($dr_date_in, $dr_func_in) {			// returns array of MySQL-formatted dates
 		$temp = explode(",", $dr_date_in);					// into m, d, y
-		$range = array();				// mktime ($hour, $minute, $second, $month, $day, $year)$temp[0] $temp[1] $temp[2]
+		$range = array();				// mktime ($hour, $minute, $second, $month, $day, $year)$temp[0] $temp[1] $temp[2] 
 		switch ($dr_func_in) {
 			case "dr":
 				$range[0] = mysql_format_date(mktime(0,0,0,$temp[0],$temp[1],$temp[2]));		// m, d, y -- date ('D, M j',
 				$range[1] = mysql_format_date(mktime(0,0,0,$temp[0],$temp[1]+1,$temp[2]));
-				$range[2] = date ('D, M j',mktime(0,0,0,$temp[0],$temp[1],$temp[2]));
+				$range[2] = date ('D, M j',mktime(0,0,0,$temp[0],$temp[1],$temp[2]));		
 				$range[3] = date ('D, M j',mktime(0,0,0,$temp[0],$temp[1]+1,$temp[2]));
 				return $range;
 				break;
@@ -172,7 +172,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 				$range[3] = date ('D, M j', mktime(23,59,59,$temp[0],$temp[1],$temp[2]));	// from day 1 of this month m
 				return $range;
 				break;
-
+		
 			case "cw" :		// current week
 				for ($i=0;$i<7;$i++) {												// find last Monday
 					$monday = mktime(0, 0, 0, date("m"), date("d")-$i, date("Y"));
@@ -186,7 +186,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 				$range[3] = date ('D, M j', mktime(23,59,59,date('m'),date('d'),date('Y')));								// today
 				return $range;
 				break;
-
+					
 			case "lw" :		// last week
 				for ($i=0;$i<7;$i++) {												// find last Monday
 					$monday = mktime(0, 0, 0, date("m"), date("d")-$i, date("Y"));
@@ -201,11 +201,11 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 				$range[3] = date ('D, M j', mktime(0,0,0,date('m', $monday), date('d', $monday), date('Y', $monday))-1);						// midnight sun/mon
 				return $range;
 				break;
-
+					
 			case "lm" :		// last month
 				$prior1st = mktime(0, 0, 0, date("m")-1, 1, date("Y"));
 				$this1st = mktime(0, 0, 0, date("m"), 1, date("Y"));
-
+				
 				$range[0] = mysql_format_date(mktime(0,0,0,date('m', $prior1st), date('d', $prior1st), date('Y', $prior1st)));	// midnight on prior 1st
 				$range[1] = mysql_format_date(mktime(0,0,0,date('m', $this1st), date('d', $this1st), date('Y', $this1st)));		// midnight on this month's 1st
 				$range[2] = date ('D, M j', mktime(0,0,0,date('m', $prior1st), date('d', $prior1st), date('Y', $prior1st)));	// midnight on prior 1st
@@ -217,30 +217,30 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 				$range[0] = mysql_format_date(mktime(0,0,0,1,1,date("Y")));							// from Jan 1 of this year
 				$range[1] = mysql_format_date(mktime(23,59,59, date('m'),date('d'),date("Y")));		// to today
 				$range[2] = date ('D, M j', mktime(0,0,0,1,1,date("Y")));
-				$range[3] = date ('D, M j', mktime(23,59,59,date('m'),date('d'),date("Y")));
+				$range[3] = date ('D, M j', mktime(23,59,59,date('m'),date('d'),date("Y")));	
 				return $range;
 				break;
 
 			case "ly" :		// last year
 				$range[0] = mysql_format_date(mktime(0,0,0,1,1,date("Y")-1));				// from Jan 1 of last year
 				$range[1] = mysql_format_date(mktime(23,59,59,12,31,date("Y")-1));			// to Dec 31 of that year
-				$range[2] = date ('D, M j', mktime(0,0,0,1,1,date("Y")-1));					//
+				$range[2] = date ('D, M j', mktime(0,0,0,1,1,date("Y")-1));					// 
 				$range[3] = date ('D, M j', mktime(23,59,59,12,31,date("Y")-1));			//
 				return $range;
 				break;
 
-
+			
 			default:
 			    echo " error - error - error " . $dr_func_in;
 			}		// end switch ()
 		}				// end function date_range()
-
+		
 	function date_part($in_date) {						// return date part of date/time string
 		$temp = explode (" ", $in_date);
 		return $temp[0];
 		}		// end function date_part()
-
-	function time_part($in_date) {						// "2007-12-02 21:07:30"
+	
+	function time_part($in_date) {						// "2007-12-02 21:07:30" 
 		$temp = explode (" ", $in_date);
 		return substr($temp[1], 0, 5);
 		}		// end function time_part()
@@ -253,7 +253,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 
 		$incidents = $severity = $unit_names = $status_vals = $users = $unit_status_ids = array();
-
+		
 		$query = "SELECT `id`, `scope`, `severity` FROM `$GLOBALS[mysql_prefix]ticket`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$incidents[0]="";
@@ -262,7 +262,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			$incidents[$temp_row['id']]=$temp_row['scope'];
 			$severity[$temp_row['id']]=$temp_row['severity'];
 			}
-
+			
 		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$unit_names[0]="TBD";
@@ -270,7 +270,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			$unit_names[$temp_row['id']]=$temp_row['name'];
 			$unit_status_ids[$temp_row['id']]=$temp_row['un_status_id'];
 			}
-
+		
 		$priorities = array("typical","high","highest" );
 		$titles = array ();
 		$titles['dr'] = "Dispatch - Daily Report - ";
@@ -289,7 +289,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		$which_unit = ($_POST['frm_resp_sel']==0)? "" : " AND `responder_id` = " .$_POST['frm_resp_sel'];
 //		dump($which_inc);
 //		dump($which_unit);
-
+		
 		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]log`" .  $where . $which_inc . $which_unit . " AND `code` BETWEEN '" . $GLOBALS['LOG_CALL_DISP'] . "' AND '" . $GLOBALS['LOG_CALL_CLR']. "' ORDER BY `incident` ASC, `unit` ASC, `code` ASC" ;
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 //		dump($query);
@@ -298,7 +298,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 
 		$times = $empty = array("", "", "", "", "", "");	// incident, unit, dispatch time, responding time, on-scene time, clear time
 		$counts = $minutes = $stats = array(0, 0, 0);				// elapsed minutes and counts to responding, on-scene, cleared - 2/6/09
-
+		
 		if (mysql_affected_rows()>0) {				// main loop - top
 			print "<TR><TH>Incident</TH><TH>Unit</TH><TH>Dispatched</TH><TH>Responding</TH><TH>On-scene</TH><TH>Cleared</TH></TR>\n";
 			$i = 0;
@@ -308,14 +308,14 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 					}														// dispatch start time
 				$disp_event = $row['code'] - $GLOBALS['LOG_CALL_DISP']; 	// normalize
 				if ((($row['incident'])!=$times[0]) || (!$row['unit']==$times[1]) || (!($times[2+$disp_event]==""))) {
-
+				
 					if ($i>0){
 
 						$theUnitName = (array_key_exists($times[1], $unit_names))? shorten($unit_names[$times[1]], 16): "#" . $times[1] ;
 						$theTickName = (array_key_exists($times[0], $incidents))? shorten($incidents[$times[0]], 16): "#" . $times[0] ;
 						$theSeverity = (empty($severity[$times[0]]))? 0: $severity[$times[0]];
 
-						$diff = array("","","","");
+						$diff = array("","","",""); 
 						if (!empty($disp_start)) {
 
 							if ((!empty($times[3])) && ($disp_start < mysql2timestamp($times[3])))  {
@@ -324,14 +324,14 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 								$minutes[0] += ((mysql2timestamp($times[3]) - $disp_start)/60);
 								}
 							else {$diff[1] = "";}
-
+							
 							if ((!empty($times[4])) && ($disp_start < mysql2timestamp($times[4])))  {
 								$diff[2] = " /<i>" . round((mysql2timestamp($times[4]) - $disp_start)/60);
 								$counts[1]++;
 								$minutes[1] += ((mysql2timestamp($times[4]) - $disp_start)/60);
 								}
 							else {$diff[2] = "";}
-
+							
 							if ((!empty($times[5])) && ($disp_start < mysql2timestamp($times[5])))  {
 								$diff[3] = " /<i>" . round((mysql2timestamp($times[5]) - $disp_start)/60);
 								$counts[2]++;
@@ -340,7 +340,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 //								dump(mysql2timestamp($times[5]));
 //								dump($disp_start);
 								}
-							else {$diff[3] = "";}
+							else {$diff[3] = "";}							
 
 							}
 						print "<TR CLASS='" . $evenodd[$i%2] . "'><TD class='" . $priorities[$theSeverity] . "'>" . $theTickName . "</TD>
@@ -371,7 +371,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			$theTickName = (array_key_exists($times[0], $incidents))? shorten($incidents[$times[0]], 16): "#" . $times[0] ;
 			$theSeverity = (empty($severity[$times[0]]))? 0: $severity[$times[0]];
 
-			$diff = array("","","","");
+			$diff = array("","","",""); 
 			if (!empty($disp_start)) {				// show elapsed times in min's from dispatch
 
 				if ((!empty($times[3])) && ($disp_start < mysql2timestamp($times[3])))  {
@@ -380,14 +380,14 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 					$minutes[0] += ((mysql2timestamp($times[3]) - $disp_start)/60);
 					}
 				else {$diff[1] = "";}
-
+				
 				if ((!empty($times[4])) && ($disp_start < mysql2timestamp($times[4])))  {
 					$diff[2] = " /<i>" . round((mysql2timestamp($times[4]) - $disp_start)/60);
 					$counts[1]++;
 					$minutes[1] += ((mysql2timestamp($times[4]) - $disp_start)/60);
 					}
 				else {$diff[2] = "";}
-
+				
 				if ((!empty($times[5])) && ($disp_start < mysql2timestamp($times[5])))  {
 					$diff[3] = " /<i>" . round((mysql2timestamp($times[5]) - $disp_start)/60);
 					$counts[2]++;
@@ -395,7 +395,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 					}
 				else {$diff[3] = "";}
 				}
-
+				
 			print "<TR CLASS='" . $evenodd[$i%2] . "'><TD class='" . $priorities[$theSeverity] . "'>" . $theTickName . "</TD>
 				<TD>". $theUnitName . "</TD><TD>".  substr($times[2], 8, 8) . "</TD>
 				<TD>". substr($times[3], 8, 8) . $diff[1] . "</TD>
@@ -414,20 +414,20 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		$stats[0] = ($counts[0]==0)? "" : round(($minutes[0]/$counts[0]), 1);
 		$stats[1] = ($counts[1]==0)? "" : round(($minutes[1]/$counts[1]), 1);
 		$stats[2] = ($counts[2]==0)? "" : round(($minutes[2]/$counts[2]), 1);
-
+		
 		print "<TR CLASS='" . $evenodd[$i%2] . "'><TD COLSPAN=3 ALIGN='right'><b>average elapsed minutes from dispatch: </b></TD><TD ALIGN='right'>" . $stats[0] . 	"</TD><TD ALIGN='right'>" .  $stats[1]. "</TD><TD ALIGN='right'>" . $stats[2] . "</TD></TR>";
 
 		print "</TABLE>\n";
 		}		// end function do_dispreport()
 
-// =================================================== UNIT LOG =========================================
-
+// =================================================== UNIT LOG =========================================		
+	
 	function do_unitreport($date_in, $func_in) {				// $frm_date, $mode as params
 		global $evenodd;
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 
 		$incidents = $severity = $unit_names = $status_vals = $users = $unit_status_ids = array();
-
+		
 		$query = "SELECT `id`, `scope`, `severity` FROM `$GLOBALS[mysql_prefix]ticket`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$incidents[0]="";
@@ -436,7 +436,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			$incidents[$temp_row['id']]=$temp_row['scope'];
 			$severity[$temp_row['id']]=$temp_row['severity'];
 			}
-
+			
 //		dump($severity);
 
 		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
@@ -446,14 +446,14 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			$unit_names[$temp_row['id']]=$temp_row['name'];
 			$unit_status_ids[$temp_row['id']]=$temp_row['un_status_id'];
 			}
-
+		
 		$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]un_status`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$status_vals[0]="??";										// 2/2/09
 		while ($temp_row = mysql_fetch_assoc($temp_result)) {
 			$status_vals[$temp_row['id']]=$temp_row['status_val'];
 			}
-
+		
 		$query = "SELECT `id`, `user` FROM `$GLOBALS[mysql_prefix]user`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$users[0]="TBD";
@@ -473,7 +473,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		print "\n<TABLE ALIGN='left' BORDER = 0 WIDTH='800px'>\n<TR CLASS='even' style='height: 24px'>\n";
 		print "<TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
 
-		$i = 1;
+		$i = 1;	
 
 //		collect status values in use
 		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `info` ASC";
@@ -501,8 +501,8 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 //		$which_unit = ($_POST['frm_resp_sel']==0)? "" : " AND `responder_id` = " .$_POST['frm_resp_sel'];
 		$which_unit = ((!isset($_POST['frm_resp_sel']) || ($_POST['frm_resp_sel']==0)))? "" : " AND `responder_id` = " .$_POST['frm_resp_sel'];
 																																			// 3/23/09
-		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident`
-			FROM `$GLOBALS[mysql_prefix]log`
+		$query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when_num`, `responder_id` AS `unit`, `info` AS `status`, `ticket_id` AS `incident` 
+			FROM `$GLOBALS[mysql_prefix]log` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
 			$where . $which_unit. " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;
 //		dump($query);
@@ -532,7 +532,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 					else {
 						print "<TD></TD>";
 						}
-					if(((date ('z', $row['when_num'])) != $curr_date_test)) {		// date change?
+					if(((date ('z', $row['when_num'])) != $curr_date_test)) {		// date change?	
 						$do_date=$row['when_num'];
 						$curr_date_test = date ('z', $row['when_num']);
 						}
@@ -551,19 +551,19 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 						}
 					print "</TR>\n";
 					$statuses = $blank;															// initalize
-					$statuses[$row['status']] = date('H:i', $row['when_num']);					// MySQL format
+					$statuses[$row['status']] = date('H:i', $row['when_num']);					// MySQL format		
 					$curr_unit = $row['unit'];
 					$curr_inc = $row['incident'];
 					$i++;
 					$theIncident_id = $row['incident'];
-
+			
 					}
 				}		// end while($row...)		 main loop - bottom
 
 			print "\n<TR CLASS='" . $evenodd[$i%2] . "'>";
 			$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16):  "#" . $curr_unit ;
 			print "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>";		// flush tail-end Charlie
-
+			
 			if (!empty($do_date)) {
 				print "<TD>" . date ('D, M j', $do_date) . "</TD>";
 //				$do_date = "";
@@ -574,13 +574,13 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			if ($theIncident_id>0) {
 				$theIncidentName = (array_key_exists($theIncident_id, $incidents))? $incidents[$theIncident_id]: "#" . $theIncident_id ;
 				$theSeverity = (array_key_exists($theIncident_id, $severity))? $severity[$theIncident_id]: 0;
-
+				
 //				print "<TD CLASS='" . $priorities[$severity[$theIncident_id]] . "' onClick = 'viewT(" . $theIncident_id . ")'><B>" . shorten($incidents[$theIncident_id],20) . "</B></TD>";
 				print "<TD CLASS='" . $priorities[$theSeverity] . "' onClick = 'viewT(" . $theIncident_id . ")'>" . shorten($theIncidentName,20) . "</TD>";
 				}
 			else {
 				print "<TD></TD>";
-				}
+				}				
 			print "</TR>\n";
 			print "<TR><TD COLSPAN=99 ALIGN='center'><HR COLOR='red' size = 1 width='50%'></TD></TR>";
 			}		// end if (mysql_affected_rows()>0)
@@ -595,13 +595,13 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		print "</TABLE>\n";
 		}		// end function do_unitreport()
 
-// =============================================== STATION LOG  ===========================================
-
+// =============================================== STATION LOG  ===========================================		
+		
 	function do_sta_report($date_in, $func_in) {				// $frm_date, $mode as params
 		global $evenodd, $istest;
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 //		dump ($from_to);
-
+	
 		$types = array();
 		$types[$GLOBALS['LOG_SIGN_IN']]				="Login";				// 6/26/08
 		$types[$GLOBALS['LOG_SIGN_OUT']]			="Logout";
@@ -620,16 +620,16 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
 																				// 1/21/09
 		$query = "
-			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, `$GLOBALS[mysql_prefix]log`.`id` AS `logid`,`$GLOBALS[mysql_prefix]log`.`info` AS `loginfo`,  t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log`
+			SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, `$GLOBALS[mysql_prefix]log`.`id` AS `logid`,`$GLOBALS[mysql_prefix]log`.`info` AS `loginfo`,  t.scope AS `tickname`, `r`.`name` AS `unitname`, `s`.`status_val` AS `theinfo`, `u`.`user` AS `thename` FROM `$GLOBALS[mysql_prefix]log` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (`$GLOBALS[mysql_prefix]log`.ticket_id = t.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON (`$GLOBALS[mysql_prefix]log`.info = s.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (`$GLOBALS[mysql_prefix]log`.who = u.id)
-	 		$where ORDER BY `when` ASC
+	 		$where ORDER BY `when` ASC		
 			";
 //		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-
+		
 		$titles = array ();
 		$titles['dr'] = "Station Daily Report - ";
 		$titles['cm'] = "Station Report - Current Month-to-date - ";
@@ -644,9 +644,9 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		print "\n<TABLE ALIGN='left' WIDTH='800px' BORDER = 0><TR CLASS='even'>\n";
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		print "<TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
-
+		
 //		print "<TR CLASS='even'><TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . " to " . $from_to[3] . "</TH></TR>\n";
-		if (mysql_affected_rows()>0) {
+		if (mysql_affected_rows()>0) {	
 				print "<TR CLASS='odd'>";
 				print "<TH>Date</TH>";
 				print "<TH>Time</TH>";
@@ -658,11 +658,11 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 				print "<TH>From</TH>";
 				if ($istest) {print "<TH>ID</TH>";}
 				print "</TR>\n";
-
+			
 			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			// main loop - top
 				if ($row['code']<20) {
 					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
-
+					
 					if(!(date("z", $row['when']) == $curr_date))  {								// date change?
 						print "<TD>" . date ('D, M j', $row['when']) ."</TD>";
 						$curr_date = date("z", $row['when']);
@@ -688,10 +688,10 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 					print "<TD>" . $row['loginfo'] . "</TD>";			// 1/21/09
 					print "<TD>" . $row['user'] . "</TD>";
 					print "<TD>" . $row['from'] . "</TD>";
-					if ($istest) {print "<TD>" . $row['logid'] . "</TD>";}
+					if ($istest) {print "<TD>" . $row['logid'] . "</TD>";}				
 					print "</TR>\n";
 					$i++;
-					}
+					}				
 				}		// end while($row = ...)
 			print "<TR><TD COLSPAN=99 ALIGN='center'><HR COLOR='red' size = 1 width='50%'></TD></TR>";
 			}		// end if (mysql_affected_rows() ...
@@ -699,17 +699,17 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			print "<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'><br /><I>No data for this period</I><BR /></TD></TR>\n";
 			}
 		print "</TABLE>\n";
-
+	
 		}		// end function do_sta_report()
 
-// ================================================== INCIDENT SUMMARY =========================================
-
+// ================================================== INCIDENT SUMMARY =========================================		
+		
 	function do_inc_report($date_in, $func_in) {				// Incidents summary report - $frm_date, $mode as params
 		global $evenodd, $img_width;
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 //		dump ($from_to);
 		$priorities = array("text_black","text_blue","text_red" );
-
+	
 		$types = array();
 		$types[$GLOBALS['LOG_INCIDENT_OPEN']]		="Incident open";
 		$types[$GLOBALS['LOG_INCIDENT_CLOSE']]		="Incident close";
@@ -723,11 +723,11 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (`$GLOBALS[mysql_prefix]log`.ticket_id = t.id)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (`$GLOBALS[mysql_prefix]log`.who = u.id)
 			". $where . $which_inc . " AND `code` >= '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'  AND `code` <= '" . $GLOBALS['LOG_INCIDENT_CLOSE'] . "'
-	 		ORDER BY `when` ASC
+	 		ORDER BY `when` ASC		
 			";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 //		dump ($query);
-
+		
 		$titles = array ();
 		$titles['dr'] = "<B>Incidents</B> Daily Report - ";
 		$titles['cm'] = "<B>Incidents</B> Report - Current Month-to-date - ";
@@ -736,13 +736,13 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 		$titles['ly'] = "<B>Incidents</B> Report - Last Year - ";
 		$titles['cw'] = "<B>Incidents</B> Report - Current Week-to-date - ";
 		$titles['lw'] = "<B>Incidents</B> Report - Last Week - ";
-
+		
 		$i = 0;
-		print "\n<TABLE ALIGN='left' BORDER = 0 width=800>\n";
+		print "\n<TABLE ALIGN='left' BORDER = 0 width=800>\n";	
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		print "<TR CLASS='even'><TH COLSPAN=6 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
 		$curr_date="";
-		if (mysql_affected_rows()>0) {
+		if (mysql_affected_rows()>0) {	
 
 			print "<TR CLASS='odd'>";
 			print "<TH>Date</TH>";
@@ -753,7 +753,7 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 			print "<TH>From</TH>";
 			print "</TR>\n";
 			$inc_types = array();
-
+			
 			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			// 8/15/08 main loop - top
 //				dump ($row);
 				if ($row['code']<20) {
@@ -774,27 +774,27 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 					if ($row['ticket_id']>0) {
 						$the_ticket = (empty($row['tick_name']))? "[#" . $row['ticket_id'] . "]" : shorten($row['tick_name'],20);	// 8/15/08 -1
 						$severity_class = empty($row['tick_severity'])? $priorities[0]: $priorities[$row['tick_severity']];			// accommodate null
-						print "<TD TITLE = '" .
-						$row['ticket_id'] . "' CLASS='" .
-						$severity_class . "' onClick = 'viewT(" .
-//						$row['tick_severity'] . "' onClick = 'viewT(" .
-						$row['ticket_id'] . ")'>" .
+						print "<TD TITLE = '" . 
+						$row['ticket_id'] . "' CLASS='" . 
+						$severity_class . "' onClick = 'viewT(" . 
+//						$row['tick_severity'] . "' onClick = 'viewT(" . 
+						$row['ticket_id'] . ")'>" . 
 						$the_ticket . "</TD>";
 						}
 					print "<TD>" . $row['user_name'] . "</TD>";
 					print "<TD>" . $row['from'] . "</TD>";
 					print "</TR>\n";
 					$i++;
-					}
+					}				
 				}		// end while($row = ...)
 //			dump ($inc_types);
-
+			
 		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id IN (" . $query . ")";
 //		dump ($query2);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			//
 //				dump ($row['id']);
-				}																// end while($row ...
+				}																// end while($row ...		
 //				 		graphics date range in db format and calculated img width
 $s_urlstr =  "sever_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1] . "&p3=" . $img_width);	//8/9/08
 $t_urlstr =  "inc_types_graph.php?p1=" . 	urlencode($from_to[0]) . "&p2=" . urlencode($from_to[1] . "&p3=" . $img_width);
@@ -809,10 +809,10 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 	<img src="<?php print $s_urlstr;?>" border=0 ID = "sev_img">
 	</TD>
 
-	<TD ALIGN='center'>
+	<TD ALIGN='center'>	
 	<img src="<?php print $t_urlstr;?>" border=0 ID = "typ_img">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	</TD>
-
+	
 	<TD ALIGN='center'>
 	<img src="<?php print $c_urlstr;?>" border=0 ID = "cit_img">
 	</TD>
@@ -823,11 +823,11 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 			print "\n<TR CLASS='odd'><TH COLSPAN='99' ALIGN='center'><br /><I>No data for this period!</I><BR /><BR /></TH></TR>\n";
 			}
 		print "</TABLE>\n";
-
+			
 		}		// end function do_inc_report()
 
-// ==================================  end function do_inc_report() =====================================
-
+// ==================================  end function do_inc_report() =====================================		
+	
 	$theDate = 	isset($frm_date)? $frm_date :  		date('m,d,Y');		// set defaults
 	$theFunc= 	isset($frm_func)? $frm_func :  		"dr";				// daily
 	$frm_group = isset($frm_group)? $frm_group: 	"u";				// unit reports
@@ -849,16 +849,16 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 		    echo "error error error " . __LINE__ . "<BR />";
 		    break;
 		}
-
+	
 	$i=1;
 	$checked = array("u" => "", "s" => "", "i" => "");
 	$temp = (empty($_POST))? "u":  $_POST['frm_group']; 		// set selector fm last, default is unit
 	$checked [$temp] = " CHECKED ";								// copy fm last
 
-?>
+?>	
 	<BR CLEAR='left' /><BR />
 	<TABLE ALIGN='left' CELLSPACING = 2 CELLPADDING = 2  BORDER=0 width='800px'>
-	<TR CLASS='even'><TH COLSPAN=99>Other Reports</TH></TR>
+	<TR CLASS='even'><TH COLSPAN=99>Other Reports</TH></TR>	
 	<TR CLASS='odd'><TD COLSPAN=8 ALIGN='center'><B>
 		Unit Log <INPUT TYPE='radio' <?php print $checked['u']; ?> NAME= 'frm_which' onClick ="Javascript: which='u';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Dispatch Log <INPUT TYPE='radio' <?php print $checked['u']; ?> NAME= 'frm_which' onClick ="Javascript: which='d';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <!-- 1/29/09 -->
@@ -868,45 +868,52 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 	<TR><TD COLSPAN=99 ALIGN='center'><B><BR />
 	<FORM NAME='sel_form' METHOD='post' ACTION = ''><!-- dummy  -->
 <?php																	// 3/23/09, 4/11/09
+		$query = "SELECT *, COUNT(`name`) FROM `$GLOBALS[mysql_prefix]responder` GROUP BY `name` HAVING COUNT(`name`)>=1 ";  // build assoc array of all units
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$units[$row['id']] = $row['name'];
+			}
 		print "Select Unit: <SELECT NAME='frm_unit_id'>\n\t<OPTION VALUE=0 SELECTED>All</OPTION>\n";
 		$query = "SELECT * , COUNT( `responder_id` ) FROM `$GLOBALS[mysql_prefix]log` LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `$GLOBALS[mysql_prefix]log`.responder_id = r.id ) GROUP BY `responder_id` HAVING COUNT( `responder_id` ) >=1 ORDER BY `r`.`name`";
 
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-				if (!(empty($row['name']))) {print "<OPTION VALUE=" .  $row['responder_id'] . ">" . $row['name'] . "</OPTION>\n";}
+			if (array_key_exists($row['responder_id'], $units)) {		
+				print "<OPTION VALUE=" .  $row['responder_id'] . ">" . $units[$row['responder_id']] . "</OPTION>\n";
+				}
 			}
 		print "</SELECT>\n";
 
-		$query = "SELECT *, COUNT(`scope`) FROM `$GLOBALS[mysql_prefix]ticket` GROUP BY `scope` HAVING COUNT(`scope`)>=1  AND status > 0";  // build assoc array of all tickets
+		$query = "SELECT *, COUNT(`scope`) FROM `ticket` GROUP BY `scope` HAVING COUNT(`scope`)>=1  AND status > 0";  // build assoc array of all tickets
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			$tickets[$row['id']] = $row['scope'];
 			}
 
 		print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Select Incident: <SELECT NAME='frm_ticket_id'>\n\t<OPTION VALUE=0 SELECTED>All</OPTION>\n";
-		$query = "SELECT *, COUNT(`ticket_id`) FROM `$GLOBALS[mysql_prefix]log` GROUP BY `ticket_id` HAVING COUNT(`ticket_id`)>=1";  // build select/option list
+		$query = "SELECT *, COUNT(`ticket_id`) FROM `log` GROUP BY `ticket_id` HAVING COUNT(`ticket_id`)>=1";  // build select/option list
 //		dump ($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			if (array_key_exists($row['ticket_id'], $tickets)) {
+			if (array_key_exists($row['ticket_id'], $tickets)) {		
 				print "<OPTION VALUE=" .  $row['ticket_id'] . ">" . $tickets[$row['ticket_id']] . "</OPTION>\n";
 				}
 			}
 		print "</SELECT>\n";
 
 
-?>
+?>	
 	</FORM>
 	</B></TD></TR>
 
 
 	<TR CLASS='even'><TD COLSPAN=99 ALIGN='center'><FONT SIZE="-1"><I>Mouseover for buttons</I></FONT><BR />
-
-<?php
+		
+<?php		
 
 	print "\n<span class='hovermenu' style='background-color:#DEE3E7'><ul>\n";
 	print "<nobr><li onClick= \"do_ugr('lw')\">Last Week</li>";
-	for ($j = -13; $j < 1; $j++)  {
+	for ($j = -13; $j < 1; $j++)  {	
 		$temp = mktime(0,0,0,date('m'), date('d')+$j, date('Y'));
 		print "<LI onClick = \"toUDRnav('" . date ('m,d,Y', $temp) . "')\">";
 
@@ -950,13 +957,13 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 	<FORM NAME='T_nav_form' METHOD='get' TARGET = 'main' ACTION = "main.php">
 	<INPUT TYPE='hidden' NAME='id' VALUE=''>
 	</FORM>
-
+	
 	<FORM NAME='U_nav_form' METHOD='get' TARGET = 'main' ACTION = "units.php">
 	<INPUT TYPE='hidden' 	NAME='id' VALUE=''>
 	<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'>
 	<INPUT TYPE='hidden' 	NAME='view' VALUE='true'>
 	</FORM>
-
+	
 	<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>
 </BODY></HTML>
 
@@ -969,7 +976,7 @@ $GLOBALS['LOG_INCIDENT_CLOSE']		=11;
 $GLOBALS['LOG_INCIDENT_CHANGE']		=12;
 $GLOBALS['LOG_ACTION_ADD']			=13;
 $GLOBALS['LOG_PATIENT_ADD']			=14;
-$GLOBALS['LOG_INCIDENT_DELETE']		=15;		// added 6/4/08
+$GLOBALS['LOG_INCIDENT_DELETE']		=15;		// added 6/4/08 
 $GLOBALS['LOG_UNIT_STATUS']			=20;
 $GLOBALS['LOG_UNIT_COMPLETE']		=21;		// 	run complete
 $GLOBALS['LOG_UNIT_CHANGE']			=22;

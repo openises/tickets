@@ -20,6 +20,7 @@ if($istest) {
 	}
 	
 $get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) ) ? "new" : $_GET['action'] ;
+dump($get_action);
 	
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -183,11 +184,11 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 
 	function do_notify() {
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET Update - PATIENT: ";
+		var theText= "TICKET - PATIENT: ";
 		var theId = '<?php print $_GET['ticket_id'];?>';
+//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
 		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
-		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
+		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
 		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 		}			// end function do notify()
 	
@@ -205,7 +206,9 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		req.onreadystatechange = function () {
 			if (req.readyState != 4) return;
 			if (req.status != 200 && req.status != 304) {
-//				alert('HTTP error ' + req.status);
+<?php
+	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+?>
 				return;
 				}
 			callback(req);

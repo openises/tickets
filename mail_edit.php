@@ -33,7 +33,7 @@ String.prototype.trim = function () {
 	};
 
 function reSizeScr(lines) {
-	window.resizeTo(640,((lines * 18)+200));		// derived via trial/error (more of the latter, mostly)
+	window.resizeTo(640,((lines * 18)+250));		// derived via trial/error (more of the latter, mostly)
 	}
 
 function addrcheck(str) {
@@ -60,7 +60,7 @@ function do_val(theForm) {										// 2/28/09
 		return false;
 		}
 		
-	temp = theForm.frm_addrs.value.trim().split("|");		// explode to array
+	temp = theForm.frm_addrs.value.trim().split("|");			// explode to array
 	var emerr = false;
 	for (i=0; i<temp.length; i++) {								// check each addr
 		if (!(addrcheck(temp[i].trim()))) {
@@ -83,7 +83,10 @@ function do_val(theForm) {										// 2/28/09
 <?php
 	if (empty($_POST)) {
 		$to_str = "ashore3@verizon.net";
-		$text = mail_it ($_GET['addrs'], $_GET['text'], $_GET['ticket_id'], TRUE) ;		// returns msg text **ONLY**
+//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
+		
+		$text = mail_it ($_GET['addrs'], $_GET['text'], $_GET['ticket_id'], 3, TRUE) ;		// returns msg text **ONLY**
+		dump($text);
 		$temp = explode("\n", $text);
 ?>
 
@@ -91,7 +94,7 @@ function do_val(theForm) {										// 2/28/09
 </HEAD>
 
 <BODY onLoad = "reSizeScr(<?php print count($temp);?>)";><CENTER>
-<H3>Revise message to suit</H3>
+<H3>Edit message to suit</H3>
 <FORM NAME="mail_frm" METHOD="post" ACTION = "<?php print basename( __FILE__); ?>">
 <TABLE ALIGN='center' BORDER=0>
 <TR CLASS='even'><TD COLSPAN=2>
@@ -99,7 +102,8 @@ function do_val(theForm) {										// 2/28/09
 	</TD></TR>
 <TR CLASS='even'><TD>Addressed to: </TD><TD><INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'>
 	</TD></TR>
-<TR CLASS='odd'><TD COLSPAN=2 ALIGN = 'center'>
+<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><EM> note '</EM><B>|</B><EM>' separator</EM></TD></TR>
+<TR CLASS='even'><TD COLSPAN=2 ALIGN = 'center'>
 <INPUT TYPE="button" VALUE="OK - mail this" onClick = "do_val(document.mail_frm);">&nbsp;&nbsp;&nbsp;&nbsp;
 <INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_frm.reset();">&nbsp;&nbsp;&nbsp;&nbsp;
 <INPUT TYPE="button" VALUE="Dont send" onClick = "javascript: if(confirm('Confirm do not send?')) {window.close()};">
@@ -115,7 +119,7 @@ else {
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad = "setTimeout('window.close()',3000);"><CENTER>
+<BODY onLoad = "setTimeout('window.close()',1000);"><CENTER>
 <BR /><BR /><H3>Emailing dispatch notifications</H3><P>
 <?php
 	}				// end else
