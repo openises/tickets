@@ -20,6 +20,7 @@
 2/11/09 added streetview
 2/11/09 added dollar function
 2/21/09 color code by severity
+5/2/09 USNG edit added, parsefloat
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -136,6 +137,25 @@
 	catch(e) {
 		}
 
+	function dump (obj) {
+		var r = '';
+		var dep = 10;
+		var ind = '';
+		 
+		for (var i = 0; i < dep; i++) { ind += '\t'; }
+		for (var i in obj) {
+			var is_obj = (typeof(obj[i]) == 'object');
+			 
+			r += ind + '[' + i + '] : ';
+			r += !is_obj ? obj[i] : '';
+			r += '\n';
+			r += is_obj ? arguments.callee(obj[i], dep) : '';
+			}
+		 
+		alert("dump: " + r);
+		}	
+	
+
 	function $() {									// 2/11/09
 		var elements = new Array();
 		for (var i = 0; i < arguments.length; i++) {
@@ -171,6 +191,27 @@
 		newwindow_sl.focus();
 		starting = false;
 		}		// end function sv win()
+
+	function do_usng() {														// 5/2/09
+//		alert(177);
+		if (document.edit.frm_ngs.value.trim().length>6) {do_usng_conv();}
+		}
+
+	function do_usng_conv(){			// usng to LL array			- 12/4/08
+		tolatlng = new Array();
+		USNGtoLL(document.edit.frm_ngs.value, tolatlng);
+//		dump(tolatlng);
+		var point = new GLatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
+		map.setCenter(point, 13);
+		var marker = new GMarker(point);
+		document.edit.frm_lat.value = point.lat(); document.edit.frm_lng.value = point.lng(); 	
+		do_lat (point.lat());
+		do_lng (point.lng());
+		do_ngs(document.edit);
+		pt_to_map (document.edit, point.lat(), point.lng())
+
+		}				// end function
+		
 
 	function do_coords(inlat, inlng) { 										 //9/14/08
 		if(inlat.toString().length==0) return;								// 10/15/08
@@ -458,7 +499,7 @@
 			print "<TR CLASS='odd'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
 			print 	"<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
-			print "<B>USNG:&nbsp;</B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08
+			print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
 			print "</TD></TR>\n";
 			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
 			$lat = $row['lat']; $lng = $row['lng'];	
@@ -565,13 +606,13 @@
 		});				// end GEvent.addListener()
 
 	function do_lat (lat) {
-		document.edit.frm_lat.value=lat.toFixed(6);			// 9/9/08
-		document.edit.show_lat.disabled=false;				// permit read/write
+		document.edit.frm_lat.value=parseFloat(lat).toFixed(6);			// 9/9/08, 5/2/09
+		document.edit.show_lat.disabled=false;							// permit read/write
 		document.edit.show_lat.value=do_lat_fmt(document.edit.frm_lat.value);
 		document.edit.show_lat.disabled=true;
 		}
 	function do_lng (lng) {
-		document.edit.frm_lng.value=lng.toFixed(6);
+		document.edit.frm_lng.value=parseFloat(lng).toFixed(6);			// 5/2/09
 		document.edit.show_lng.disabled=false;
 		document.edit.show_lng.value=do_lng_fmt(document.edit.frm_lng.value);
 		document.edit.show_lng.disabled=true;
@@ -580,7 +621,7 @@
 	function do_ngs(theForm) {								// 8/23/08
 		theForm.frm_ngs.disabled=false;						// 9/9/08
 		theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);
-		theForm.frm_ngs.disabled=true;
+//		theForm.frm_ngs.disabled=true;
 		}
 
 	function resetmap(lat, lng) {						// restore original marker and center
@@ -590,7 +631,7 @@
 		map.addOverlay(new GMarker(point, icon));
 		map.setCenter(new GLatLng(lat, lng), 8);
 		do_lat (lat);
-		do_lng (lng)
+		do_lng (lng);
 		do_ngs(document.edit);								// 8/23/08
 		if (grid) {map.addOverlay(new LatLonGraticule());}	// restore grid
 		}

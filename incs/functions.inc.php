@@ -63,6 +63,7 @@
 3/22/09 fixed 'action' entries, instam/aprs hskpg
 3/25/09 added$GLOBALS['TOLERANCE']  for remote time validity determination, function my_is_float(), my_is_int()
 3/26/09 dropped use of last position
+5/4/09 revised My_is_float for 0 handling
 {									// 3/25/09
 
 */
@@ -1761,8 +1762,8 @@ function get_current() {		// 3/16/09
 	
 	}		// end function
 
-function my_is_float($n){									// 3/25/09
-    return ( $n == strval(floatval($n)) )? true : false;
+function my_is_float($n){									// 5/4/09
+    return ( $n == strval(floatval($n)) && (!($n==0)) )? true : false;
 	}
 
 function my_is_int($n){										// 3/25/09

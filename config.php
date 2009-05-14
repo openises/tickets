@@ -24,6 +24,7 @@
 1/27/09 added super-only notify execute, quote_smart added
 3/3/09 correction for MEMBER user type
 4/5/09 default map zoom added
+5/4/09 handle usng as input
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -233,9 +234,9 @@
 		}
 
 	function do_ngs(theForm) {								// 8/23/08
-		theForm.frm_ngs.disabled=false;						// 9/9/08
+//		theForm.frm_ngs.disabled=false;						// 9/9/08
 		theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);
-		theForm.frm_ngs.disabled=true;
+//		theForm.frm_ngs.disabled=true;
 		}
 		
 	function do_zoom (zoom) {
@@ -945,7 +946,7 @@ case 'center' :
 			<TD ALIGN='right'>&nbsp;&nbsp;Lat:&nbsp;</TD>
 			<TD colspan=2><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12  />
 			&nbsp;&nbsp;&nbsp;&nbsp;Long:&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
-			<TD ALIGN='right'>NGS:&nbsp;</TD><TD COLSPAN=2><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20 DISABLED /></TD></TR>
+			<TD ALIGN='right' onClick = "usng_to_map()"><U>USNG</U>:&nbsp;</TD><TD COLSPAN=2><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20  /></TD></TR>
 		<TR CLASS = "odd">
 			<TD ALIGN='right'>&nbsp;&nbsp;Zoom:&nbsp;</TD>
 			<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>	<!-- 4/5/09 -->
@@ -963,7 +964,7 @@ case 'center' :
 			<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
 		</FORM></TABLE>
 		</TD><TD><DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
-		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Drag/Zoom to new default position</SPAN></FONT></CENTER>
+		<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT></CENTER>
 		</TD></TR>
 		</TABLE>
 		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
@@ -1295,6 +1296,20 @@ function map_cen () {				// specific to map center
 			}	
 		}
 
+	function usng_to_map(){			// usng to LL array			- 5/4/09
+		tolatlng = new Array();
+		USNGtoLL(document.cen_Form.frm_ngs.value, tolatlng);
+		var point = new GLatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
+
+		map.setCenter(point, 9);
+		var marker = new GMarker(point);
+		map.addOverlay(new GMarker(point, cross));
+		
+		do_lat (point.lat());
+		do_lng (point.lng());
+//		do_ngs(document.cen_Form);		// 9/16/08						
+		}				// end function
+
 	function addrlkup() {		   // added 8/3 by AS -- getLocations(address,  callback) -- not currently used
 		var address = document.forms[0].frm_city.value + " "  +document.forms[0].frm_st.value;
 		if (geocoder) {
@@ -1333,6 +1348,7 @@ function map_cen () {				// specific to map center
 //	var map = new GMap2(document.getElementById("div"), {draggableCursor: 'crosshair', draggingCursor: 'pointer'});	
 	var myZoom;
 	var geocoder = new GClientGeocoder();
+	var cross;
 	
 	map = new GMap2(document.getElementById('map'));
 	map.addControl(new GSmallMapControl());
@@ -1345,7 +1361,7 @@ function map_cen () {				// specific to map center
 	var baseIcon = new GIcon();						// 9/16/08
 	baseIcon.iconSize=new GSize(32,32);
 	baseIcon.iconAnchor=new GPoint(16,16);
-	var cross = new GIcon(baseIcon, "./markers/crosshair.png", null);
+	cross = new GIcon(baseIcon, "./markers/crosshair.png", null);
 
 //	map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
 

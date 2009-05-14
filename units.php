@@ -56,7 +56,9 @@
 4/2/09 added fixed default map bounds
 4/9/09 restored directions
 4/10/09 street view added
+5/4/09 my_is_float() repl is_float
 */
+
 
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -720,7 +722,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$row_instam = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
-			if (($row_instam) && (is_float($row_instam['latitude']))) {
+			if (($row_instam) && (my_is_float($row_instam['latitude']))) {
 				echo "\t\tvar point = new GLatLng(" . $row_instam['latitude'] . ", " . $row_instam['longitude'] ."); // 687\n";
 				$got_point = TRUE;
 				}
@@ -810,7 +812,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 		$sidebar_line .= "<TD CLASS='$the_class'> $strike" . format_sb_date($the_time) . "$strike_end</TD>";				// 6/17/08
 // tab 1
-		if (((is_float($row['lat']))) || ($row_aprs) || ($row_instam)) {						// position data?
+		if (((my_is_float($row['lat']))) || ($row_aprs) || ($row_instam)) {						// position data?
 			$temptype = $u_types[$row['type']];
 			$the_type = $temptype[0];																	// 1/1/09
 

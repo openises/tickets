@@ -29,6 +29,7 @@
 2/11/09 added dollar function, streetview functions
 3/3/09 cleaned trash as page bottom
 3/10/09 intrusive space in ticket_id
+4/30/09 $ replaces document.getElementById, USNG text underline
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -302,9 +303,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 //			}
 		}		// end function ck_frames()
 
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+	parent.frames["upper"].$("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
+	parent.frames["upper"].$("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].$("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08		
 
@@ -431,6 +432,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	var tab1contents				// info window contents - first/only tab
 	var grid = false;				// toggle
 	var thePoint;
+	var baseIcon;
+	var cross;
 	
 	function writeConsole(content) {
 		top.consoleRef=window.open('','myconsole',
@@ -459,36 +462,29 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 	function clearmap(){
 		map.clearOverlays();
-		load();
+		load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>);
 		if (grid) {map.addOverlay(new LatLonGraticule());}
 		}
 	
 	function do_marker(lat, lng, zoom) {		// 9/16/08 - 12/6/08
-		var baseIcon = new GIcon();				// 
-		baseIcon.iconSize=new GSize(32,32);
-		baseIcon.iconAnchor=new GPoint(16,16);
-		var cross = new GIcon(baseIcon, "./markers/crosshair.png", null);
-		var center = isNullOrEmpty(lat)? new GLatLng(map.getCenter()) : new GLatLng(lat, lng);
+		map.clearOverlays();
+		var center = isNullOrEmpty(lat)?  GLatLng(map.getCenter()) : new GLatLng(lat, lng);
 		var myzoom = isNullOrEmpty(zoom)? map.getZoom(): zoom;
-
 		map.setCenter(center, myzoom);
-		var thisMarker  = new GMarker(center, {icon: cross, draggable:false} );				// 9/16/08
+		thisMarker  = new GMarker(center, {icon: cross});				// 9/16/08
 		map.addOverlay(thisMarker);
 		}
 		
 
 	function domap() {										// called from phone, addr lookups
-		map = new GMap2(document.getElementById('map'));
-		document.getElementById("map").style.backgroundImage = "url(./markers/loading.jpg)";
+		map = new GMap2($('map'));
+		$("map").style.backgroundImage = "url(./markers/loading.jpg)";
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
-<?php if (get_variable('terrain') == 1) { ?>
-		map.addMapType(G_PHYSICAL_MAP);
-<?php } ?>	
+<?php print (get_variable('terrain') == 1)? "\t\tmap.addMapType(G_PHYSICAL_MAP);\n" : "";?>
 		map.setCenter(new GLatLng(document.add.frm_lat.value, document.add.frm_lng.value), 13);			// larger # => tighter zoom
 		map.addControl(new GOverviewMapControl());
 		map.enableScrollWheelZoom();
-		
 		do_marker(null, null, null)	;		// 12/6/08
 		
 		var sep = (document.add.frm_street.value=="")? "": ", ";
@@ -520,12 +516,12 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				
 			});				// end GEvent.addListener()
 		if (grid) {map.addOverlay(new LatLonGraticule());}
-		document.getElementById("lock_p").style.visibility = "visible";		
+		$("lock_p").style.visibility = "visible";		
 		}				// end function do map()
 	
-	function load() {									// onLoad function
+	function load(the_lat, the_lng, the_zoom) {				// onLoad function - 4/28/09
 		if (GBrowserIsCompatible()) {
-			function drawCircle(lng,lat,radius) { 		// drawCircle(-87.628092,41.881906,2);
+			function drawCircle(lng,lat,radius) { 			// drawCircle(-87.628092,41.881906,2);
 				var cColor = "#3366ff";
 				var cWidth = 2;
 				var Cradius = radius;
@@ -543,37 +539,39 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 					};
 				map.addOverlay(new GPolyline(Cpoints,cColor,cWidth));
 				}
-		map = new GMap2(document.getElementById('map'));
-		map.addControl(new GSmallMapControl());
-		map.addControl(new GMapTypeControl());
-<?php if (get_variable('terrain') == 1) { ?>
-		map.addMapType(G_PHYSICAL_MAP);
-<?php } ?>	
+			map = new GMap2($('map'));
+			map.addControl(new GSmallMapControl());
+			map.addControl(new GMapTypeControl());
+<?php print (get_variable('terrain') == 1)? "\t\tmap.addMapType(G_PHYSICAL_MAP);\n" : "";?>
+			baseIcon = new GIcon();				// 
+			baseIcon.iconSize=new GSize(32,32);
+			baseIcon.iconAnchor=new GPoint(16,16);
+			cross = new GIcon(baseIcon, "./markers/crosshair.png", null);	
 
-		do_marker(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>);		// 12/6/08
+			do_marker(the_lat, the_lng, the_zoom);		// 12/6/08
+		
+			GEvent.addListener(map, "click", function(marker, point) {
+				if (marker) {									// undo it
+					map.removeOverlay(marker);
+					thePoint = "";
+					document.add.frm_lat.value=document.add.frm_lng.value="";
+					if (grid) {map.addOverlay(new LatLonGraticule());}
+					}
+				if (point) {
+					$("do_sv").style.display = "block";
+					map.clearOverlays();
+					do_lat (point.lat().toFixed(6))				// display
+					do_lng (point.lng().toFixed(6))
+					do_ngs(document.add);
+					do_marker(point.lat(), point.lng(), null);		// 12/6/08
 	
-		GEvent.addListener(map, "click", function(marker, point) {
-			if (marker) {									// undo it
-				map.removeOverlay(marker);
-				thePoint = "";
-				document.add.frm_lat.value=document.add.frm_lng.value="";
-				if (grid) {map.addOverlay(new LatLonGraticule());}
-				}
-			if (point) {
-				$("do_sv").style.display = "block";
-				map.clearOverlays();
-				do_lat (point.lat().toFixed(6))				// display
-				do_lng (point.lng().toFixed(6))
-				do_ngs(document.add);
-				do_marker(point.lat(), point.lng(), null);		// 12/6/08
-
-				thePoint = point;
-				if (grid) {map.addOverlay(new LatLonGraticule());}
-				}
-			});
- 			document.add.show_lat.disabled=document.add.show_lng.disabled=true;
+					thePoint = point;
+					if (grid) {map.addOverlay(new LatLonGraticule());}
+					}
+				});
+	 			document.add.show_lat.disabled=document.add.show_lng.disabled=true;
 <?php
-		do_kml();
+			do_kml();
 ?>		
 			}			// end if (GBrowserIsCompatible())
 		}			// end function load()
@@ -858,7 +856,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		} 
 	
 	function do_end(theForm) {			// enable run-end date/time inputs
-		elem = document.getElementById("runend1");
+		elem = $("runend1");
 		elem.style.visibility = "visible";
 <?php
 		$show_ampm = (!get_variable('military_time')==1);
@@ -874,10 +872,13 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		clearmap();
 		do_lock_ps(theForm);				// hskp problem start date
 		do_lock_pe(theForm);				// hskp problem end date
-		document.getElementById("runend1").visibility = "hidden";
-		document.getElementById("lock_p").style.visibility = "visible";	
-		document.getElementById("runend1").style.visibility = "hidden";	
+		$("runend1").visibility = "hidden";
+		$("lock_p").style.visibility = "visible";	
+		$("runend1").style.visibility = "hidden";	
 		theForm.frm_lat.value=theForm.frm_lng.value="";
+		document.add.frm_ngs.disabled=true;									// 4/30/09	
+		$("USNG").style.textDecoration = "none";
+
 		}		// end function reset()
 
 	function do_problemstart(theForm, theBool) {							// 8/10/08
@@ -900,27 +901,28 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 	function do_unlock_ps(theForm) {											// 8/10/08
 		do_problemstart(theForm, false)
-		document.getElementById("lock_s").style.visibility = "hidden";		
+		$("lock_s").style.visibility = "hidden";		
 		}
 		
 	function do_lock_ps(theForm) {												// 8/10/08
 		do_problemstart(theForm, true)
-		document.getElementById("lock_s").style.visibility = "visible";
+		$("lock_s").style.visibility = "visible";
 		}
 
 	function do_unlock_pe(theForm) {											// 8/10/08 
 		do_problemend(theForm, false)
-//		document.getElementById("lock_e").style.visibility = "hidden";		
+//		$("lock_e").style.visibility = "hidden";		
 		}
 		
 	function do_lock_pe(theForm) {												// 8/10/08
 		do_problemend(theForm, true)
-//		document.getElementById("lock_e").style.visibility = "visible";
+//		$("lock_e").style.visibility = "visible";
 		}
 
 	function do_unlock_pos(theForm) {											// 12/5/08
 		document.add.frm_ngs.disabled=false;
-		document.getElementById("lock_p").style.visibility = "hidden";		
+		$("lock_p").style.visibility = "hidden";		
+		$("USNG").style.textDecoration = "underline";							// 4/30/09		
 		}
 		
 	function do_usng() {														// 12/5/08
@@ -930,22 +932,22 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	function do_usng_conv(){			// usng to LL array			- 12/4/08
 		tolatlng = new Array();
 		USNGtoLL(document.add.frm_ngs.value, tolatlng);
-
 		var point = new GLatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
 		map.setCenter(point, 13);
+
 		var marker = new GMarker(point);
 		document.add.frm_lat.value = point.lat(); document.add.frm_lng.value = point.lng(); 	
 		do_lat (point.lat());
 		do_lng (point.lng());
 		do_ngs(document.add);
-		domap();			// show it
+		load(point.lat(), point.lng(), <?php echo get_variable('def_zoom'); ?>);			// show it
 
 		}				// end function
 		
 </SCRIPT>
 </HEAD>
 
-<BODY onload="ck_frames();do_lock_pe(document.add); load()" onunload="GUnload()">  <!-- 558 -->		<!-- // 8/23/08 -->
+<BODY onload="ck_frames();do_lock_pe(document.add); load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>)" onunload="GUnload()">  <!-- 558 -->		<!-- // 8/23/08 -->
 
 <TABLE BORDER="0" ID = "outer" >
 <TR><TD COLSPAN='2' ALIGN='center'><FONT CLASS='header'>New Call</FONT><BR /><BR /></TD></TR>
@@ -1035,7 +1037,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		</TD>
 		<TD><INPUT SIZE="11" TYPE="text" NAME="show_lat" VALUE="" >
 			<INPUT SIZE="11" TYPE="text" NAME="show_lng" VALUE="" >&nbsp;&nbsp;
-			<B><SPAN ID = 'USNG' onClick = "do_usng()">USNG:&nbsp;</SPAN></B><INPUT SIZE="19" TYPE="text" NAME="frm_ngs" VALUE="" DISABLED ></TD>
+			<B><SPAN ID = 'USNG' onClick = "do_usng()">USNG</SPAN></B>:&nbsp;<INPUT SIZE="19" TYPE="text" NAME="frm_ngs" VALUE="" DISABLED ></TD>
 			</TR> <!-- 9/13/08, 12/3/08 -->
 	<TR CLASS='even'><TD COLSPAN="3" ALIGN="center"><BR />
 		<INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

@@ -48,7 +48,9 @@
 3/23/09 is_float() replaces settype(), the latter not detecting 0, fix quotes
 3/25/09 added time validation for remote sources, my_is_float()
 4/2/09 correction for sidebar letters, added default zoom handling, closed ticket display interval
+5/4/09 my_is_float() repl is_float
 */
+
 //	{ -- dummy
 
 
@@ -547,7 +549,7 @@ function do_track(callsign) {					// added 8/6/08
 		$tab_1 .= 	$todisp . "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='main.php?id=" . $the_id . "'><U>Details</U></A>";		// 08/8/02
 		if (!(is_guest() && get_variable('guest_add_ticket')==0)) {
 			$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='edit.php?id=" . $the_id . $rand . "'><U>Edit</U></A><BR /><BR />";					// 10/21/08
-			$tab_1 .= 	"<A HREF='patient.php?ticket_id=" . $the_id . $rand ."'><U>Add Patient</U></A>&nbsp;&nbsp;&nbsp;&nbsp;";
+			$tab_1 .= 	"<A HREF='patient.php?ticket_id=" . $the_id . $rand ."'><U>Add Person</U></A>&nbsp;&nbsp;&nbsp;&nbsp;";
 			$tab_1 .= 	"<A HREF='action.php?ticket_id=" . $the_id . $rand ."'><U>Add Action</U></A>";
 			}
 		$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08
@@ -673,7 +675,7 @@ function do_track(callsign) {					// added 8/6/08
 				WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
 			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$row_aprs = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
-			if (($row_aprs) && (is_float($row_aprs['latitude']))) {
+			if (($row_aprs) && (my_is_float($row_aprs['latitude']))) {											// 5/4/09
 				echo "\t\tvar point = new GLatLng(" . $row_aprs['latitude'] . ", " . $row_aprs['longitude'] ."); // 662\n";
 				$got_point = TRUE;
 
@@ -691,7 +693,7 @@ function do_track(callsign) {					// added 8/6/08
 			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
 			$row_instam = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
-			if (($row_instam) && (my_is_float($row_instam['latitude']))) {
+			if (($row_instam) && (my_is_float($row_instam['latitude']))) {											// 5/4/09
 				echo "\t\tvar point = new GLatLng(" . $row_instam['latitude'] . ", " . $row_instam['longitude'] ."); // 694\n";
 				$got_point = TRUE;
 				}
@@ -700,7 +702,7 @@ function do_track(callsign) {					// added 8/6/08
 		else { $row_instam = FALSE; }
 
 //		if (!($got_point) && ((settype($row['lat'], "float")))) {
-		if (!($got_point) && (is_float($row['lat']))) {
+		if (!($got_point) && (my_is_float($row['lat']))) {								// 5/4/09
 			echo "\t\tvar point = new GLatLng(" . $row['lat'] . ", " . $row['lng'] .");	// 703\n";
 			$got_point= TRUE;
 			}
@@ -783,7 +785,7 @@ function do_track(callsign) {					// added 8/6/08
 // tab 1
 
 //		if (((settype($row['lat'], "float"))) || ($row_aprs) || ($row_instam)) {						// position data?
-		if (((is_float($row['lat']))) || ($row_aprs) || ($row_instam)) {						// position data?
+		if (((my_is_float($row['lat']))) || ($row_aprs) || ($row_instam)) {						// 5/4/09
 //			dump(__LINE__);
 
 			$temptype = $u_types[$row['type']];
