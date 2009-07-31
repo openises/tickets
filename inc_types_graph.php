@@ -14,9 +14,10 @@ $where = " WHERE `when` > '" . $p1 . "' AND `when` < '" . $p2 . "' ";
 $query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`,t.scope AS `tick_name`, t.severity AS `tick_severity` FROM `$GLOBALS[mysql_prefix]log`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
 	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'
+	AND `in_types_id` IS NOT NULL
 	ORDER BY `when` ASC		
 	";
-
+//snap(__LINE__, $query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 $inc_types = array();
 while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// build assoc arrays of types and counts
@@ -35,6 +36,7 @@ $mygraph = new baaChart($width);
 $mygraph->setTitle('Incidents by Type','');
 //dump ($inc_types);
 foreach($inc_types as $key => $val) {
+//	snap($key , $val);
 	if ((strlen($key)>0)) {
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE,$val, $inc_types_text[$key]);
 		}

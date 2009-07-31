@@ -20,7 +20,7 @@ if($istest) {
 	}
 	
 $get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) ) ? "new" : $_GET['action'] ;
-dump($get_action);
+//dump($get_action);
 	
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

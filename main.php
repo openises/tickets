@@ -9,6 +9,7 @@
 3/16/09 added updates and auto-refresh if any mobile units
 3/18/09 'aprs_poll' to 'auto_poll'
 4/10/09 frames check for call board
+7/16/09	protocol handling added
 */
 error_reporting(E_ALL);			// 9/13/08
 require_once('./incs/functions.inc.php');
@@ -34,6 +35,7 @@ if ($istest) {
 	}
 
 $remotes = get_current();								// returns array - 3/16/09
+//snap(basename(__FILE__), __LINE__);
 														// set auto-refresh if any mobile units														
 $interval = intval(get_variable('auto_poll'));
 $refresh = ((($remotes['aprs']) || ($remotes['instam'])) && ($interval>0))? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>\n": "";	//10/4/08

@@ -56,14 +56,24 @@
 4/2/09 added fixed default map bounds
 4/9/09 restored directions
 4/10/09 street view added
-5/4/09 my_is_float() repl is_float
+4/29/09 my_is_float replaces is_float
+4/27/09 multi added to schema, addslashes repl htmlentities
+6/13/09 added mail function
+6/18/09 addslashes added in function list_responders()
+7/9/09	rearrange form fields
+7/10/09	tracking to <select>
+7/21/09	changed to onClick from onSubmit, other corrections
+7/24/09	Changed function do_tracking to explicitly select all of the states for all choices (turn one on and others off or all off if none selected. 
 */
-
 
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
-//snap(basename(__FILE__), __LINE__);
+// for AF  only
+	$QUERY = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `multi` TINYINT( 1 ) NOT NULL DEFAULT '0' COMMENT 'allow multiple assigns' AFTER `instam` TABLE `responder` ADD `multi` TINYINT( 1 ) NOT NULL DEFAULT '0' COMMENT 'allow multiple assigns' AFTER `instam` ;";
+	$result = @mysql_query($query) ;
+	unset ($result);
+$key_field_size = 30;						// 7/23/09
 
 //$tolerance = 5 * 60;		// nr. seconds report time may differ from UTC
 extract($_GET);
@@ -109,10 +119,9 @@ $refresh = ((!(array_key_exists ('func', $_GET ))) && ($interval>0))? "\t<META H
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <?php print $refresh; ?>	<!-- 10/4/08 -->
 
-	<META HTTP-EQUIV="Script-date" CONTENT="1/1/09">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 	<SCRIPT  SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo get_variable('gmaps_api_key'); ?>"></SCRIPT> <!-- 11/3/08 -->
 	<SCRIPT  SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
@@ -327,6 +336,19 @@ $refresh = ((!(array_key_exists ('func', $_GET ))) && ($interval>0))? "\t<META H
 			}
 		}				// end function
 
+	function do_mail_win() {			// 6/13/09
+		if(starting) {return;}					
+		starting=true;	
+	
+		newwindow_um=window.open("do_unit_mail.php", "E-mail Window",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+		if (isNull(newwindow_um)) {
+			alert ("This requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_um.focus();
+		starting = false;
+		}
+
 	function to_routes(id) {
 		document.routes_Form.ticket_id.value=id;			// 10/16/08, 10/25/08
 		document.routes_Form.submit();
@@ -360,8 +382,10 @@ $refresh = ((!(array_key_exists ('func', $_GET ))) && ($interval>0))? "\t<META H
 			}
 
 		theForm.frm_mobile.value = (theForm.frm_mob_disp.checked)? 1:0;
-		theForm.frm_aprs.value =   (theForm.frm_aprs_disp.checked)? 1:0;
-		theForm.frm_instam.value = (theForm.frm_instam_disp.checked)? 1:0;
+		theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;		// 4/27/09
+
+//		theForm.frm_aprs.value =   (theForm.frm_aprs_disp.checked)? 1:0;		7/21/09
+//		theForm.frm_instam.value = (theForm.frm_instam_disp.checked)? 1:0;
 		theForm.frm_direcs.value = (theForm.frm_direcs_disp.checked)? 1:0;
 		var errmsg="";
 								// 2/24/09
@@ -369,6 +393,9 @@ $refresh = ((!(array_key_exists ('func', $_GET ))) && ($interval>0))? "\t<META H
 		if (theForm.frm_un_status_id.options[theForm.frm_un_status_id.selectedIndex].value==0)	{errmsg+="Unit STATUS is required.\n";}
 		if (theForm.frm_name.value.trim()=="")													{errmsg+="Unit NAME is required.\n";}
 		if (theForm.frm_descr.value.trim()=="")													{errmsg+="Unit DESCRIPTION is required.\n";}
+		
+		if (((theForm.frm_aprs.value==1)||(theForm.frm_instam.value==1))&&(theForm.frm_callsign.value.trim()=="")) {
+																								 errmsg+="Tracking license/callsign value is required.\n";}
 		var is_mobile = (theForm.frm_mobile.value==1)
 		if ((is_mobile) && (!((theForm.frm_mob_disp.checked) || (theForm.frm_instam_disp.checked)))) {errmsg+="Mobile unit error.\n"}
 		if ((is_mobile) && (theForm.frm_callsign.value=="")) 									{errmsg+="CALLSIGN is required for mobile units\n";}
@@ -379,7 +406,8 @@ $refresh = ((!(array_key_exists ('func', $_GET ))) && ($interval>0))? "\t<META H
 			}
 		else {																	// good to go!
 			top.upper.calls_start();											// 1/21/09
-			return true;
+			theForm.submit();													// 7/21/09
+//			return true;
 			}
 		}				// end function va lidate(theForm)
 
@@ -445,6 +473,27 @@ $refresh = ((!(array_key_exists ('func', $_GET ))) && ($interval>0))? "\t<META H
 		do_ngs();
 		}
 
+
+	function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific code to switch off unselected
+		theForm.frm_aprs.value=theForm.frm_instam.value=0;	
+		switch(parseInt(theVal)) {
+			case 0:										// none, hskpg already done
+			  theForm.frm_aprs.value=0;
+			  theForm.frm_instam.value=0;
+				break;
+			case <?php print $GLOBALS['TRACK_APRS'];?>:
+			  theForm.frm_aprs.value=1;
+			  theForm.frm_instam.value=0;
+			  break;
+			case <?php print $GLOBALS['TRACK_INSTAM'];?>:
+			  theForm.frm_aprs.value=0;
+			  theForm.frm_instam.value=1;
+			  break;
+			default:
+			  alert("error");
+			}		// end switch()
+		}				// end function do_tracking()
+		
 	</SCRIPT>
 
 
@@ -520,10 +569,12 @@ var color=0;
 		elem.style.visibility = "hidden";
 
 		}			// end function
-//																		// Creates marker and sets up click event infowindow
+
+
+
+
 	function createMarker(point,tabs, color, id) {						// (point, myinfoTabs,<?php print $row['type'];?>, i)
 		points = true;													// at least one
-//		var letter = String.fromCharCode("A".charCodeAt(0) + id);		// start with A - 1/5/09
 		var letter = to_str(id);										// 2/13/09
 
 		var icon = new GIcon(listIcon);
@@ -658,7 +709,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	listIcon.infoShadowAnchor = new GPoint(18, 25);
 
 	GEvent.addListener(map, "infowindowclose", function() {		// re-center after  move/zoom
-		map.setCenter(center,zoom);
+//		map.setCenter(center,zoom);								// 7/21/09
 		map.addOverlay(gmarkers[which])
 		});
 
@@ -722,8 +773,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$row_instam = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
-			if (($row_instam) && (my_is_float($row_instam['latitude']))) {
-				echo "\t\tvar point = new GLatLng(" . $row_instam['latitude'] . ", " . $row_instam['longitude'] ."); // 687\n";
+			if (($row_instam) && (my_is_float($row_instam['latitude']))) {											// 4/29/09
+				echo "\t\tvar point = new GLatLng(" . $row_instam['latitude'] . ", " . $row_instam['longitude'] ."); // 724\n";
 				$got_point = TRUE;
 				}
 			unset($result_tr);
@@ -731,7 +782,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		else { $row_instam = FALSE; }
 
 		if (!($got_point) && ((my_is_float($row['lat'])))) {
-			echo "\t\tvar point = new GLatLng(" . $row['lat'] . ", " . $row['lng'] .");	// 718\n";
+			echo "\t\tvar point = new GLatLng(" . $row['lat'] . ", " . $row['lng'] .");	// 753\n";
 			$got_point= TRUE;
 			}
 
@@ -757,7 +808,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 						// end bullet stuff
 // name
 
-		$sidebar_line = "<TD TITLE = '" . htmlentities ($row['name'], ENT_QUOTES) . "'><U>" . shorten($row['name'], 24) ."</U></TD>";
+		$sidebar_line = "<TD TITLE = '" . addslashes($row['name']) . "'><U>" . addslashes(shorten($row['name'], 24)) ."</U></TD>";				// 4/27/09
 
 // assignments 3/16/09
 
@@ -780,9 +831,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 		$sidebar_line .= ($row_assign)? $ass_td : "<TD>na</TD>";
 
-// status, mobility
-		$sidebar_line .= "<TD CLASS='td_data' TITLE = '" . htmlentities ($the_status, ENT_QUOTES) . "'> " . shorten($the_status, 10) .
-				"</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";
+// status, mobility  - 4/27/09
+		$sidebar_line .= "<TD CLASS='td_data' TITLE = '" . addslashes ($the_status) . "'> " . shorten($the_status, 10) .
+				"</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";				// 4/27/09
 //		$sidebar_line .= "<TD CLASS='td_data' TITLE = \"{$the_status}\"> " . shorten($the_status, 10) . "</TD><TD CLASS='td_data'> " . $the_bull . "</TD>";	// 4/5/09
 
 // as of
@@ -810,20 +861,20 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 //	    snap(basename( __FILE__) . __LINE__, $the_class );
 
-		$sidebar_line .= "<TD CLASS='$the_class'> $strike" . format_sb_date($the_time) . "$strike_end</TD>";				// 6/17/08
+		$sidebar_line .= "<TD CLASS='$the_class'> $strike" . format_sb_date($the_time) . "$strike_end</TD>";	// 6/17/08
 // tab 1
-		if (((my_is_float($row['lat']))) || ($row_aprs) || ($row_instam)) {						// position data?
+		if (((my_is_float($row['lat']))) || ($row_aprs) || ($row_instam)) {										// position data? 4/29/09
 			$temptype = $u_types[$row['type']];
-			$the_type = $temptype[0];																	// 1/1/09
+			$the_type = $temptype[0];																			// 1/1/09
 
 			$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
-			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $the_type . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row['name'], 48)) . "</B> - " . $the_type . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . addslashes(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . $row['contact_name']. " Via: " . $row['contact_via'] . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row['contact_name']). " Via: " . addslashes($row['contact_via']) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
 			if (array_key_exists($row['id'], $assigns)) {
-				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['id']] . "'>" . shorten($assigns[$row['id']], 20) . "</A></TD></TR>";
+				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['id']] . "'>" . addslashes(shorten($assigns[$row['id']], 20)) . "</A></TD></TR>";
 				}
 			$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . $todisp . $totrack . $toedit . "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";	// 08/8/02
 			$tab_1 .= "</TABLE>";
@@ -840,9 +891,10 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$tab_2 .= "<TR CLASS='odd'><TD>Status: </TD><TD>" . $row_aprs['status'] . "</TD></TR>";
 			$tab_2 .= "<TR CLASS='even'><TD>As of: </TD><TD> $strike" . format_date($row_aprs['packet_date']) . "$strike_end (UTC)</TD></TR></TABLE>";
 ?>
+// 863
 			var myinfoTabs = [
-				new GInfoWindowTab("<?php print nl2brr(shorten($row['name'], 10));?>", "<?php print $tab_1;?>"),
-				new GInfoWindowTab("<?php print $row_aprs['source']; ?>", "<?php print $tab_2;?>"),
+				new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row['name'], 10)));?>", "<?php print $tab_1;?>"),
+				new GInfoWindowTab("APRS <?php print addslashes(substr($row_aprs['source'], -3)); ?>", "<?php print $tab_2;?>"),
 				new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
 				];
 <?php
@@ -857,8 +909,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$tabs_done=TRUE;
 ?>
 			var myinfoTabs = [
-				new GInfoWindowTab("<?php print nl2brr(shorten($row['name'], 10));?>", "<?php print $tab_1;?>"),
-				new GInfoWindowTab("<?php print $row_instam['source']; ?>", "<?php print $tab_2;?>"),
+				new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row['name'], 10)));?>", "<?php print $tab_1;?>"),
+				new GInfoWindowTab("Instam <?php print addslashes(substr($row_instam['source'], -3)); ?>", "<?php print $tab_2;?>"),
 				new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
 				];
 <?php
@@ -868,7 +920,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		if (!($tabs_done)) {	// else two tabs
 ?>
 			var myinfoTabs = [
-				new GInfoWindowTab("<?php print nl2brr(shorten($row['name'], 10));?>", "<?php print $tab_1;?>"),
+				new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row['name'], 10)));?>", "<?php print $tab_1;?>"),
 				new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
 				];
 <?php
@@ -889,8 +941,6 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	$i++;				// zero-based
 	}				// end  ==========  while() for RESPONDER ==========
 
-// =======================================
-//dump (__LINE__);
 
 	$source_legend = (($aprs)||($instam))? "<TD CLASS='emph' ALIGN='center'>Source time</TD>": "<TD></TD>";		// if any remote data/time 3/24/09
 ?>
@@ -1163,6 +1213,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 				`un_status_id`= " . quote_smart(trim($_POST['frm_un_status_id'])) . ",
 				`callsign`= " . 	quote_smart(trim($_POST['frm_callsign'])) . ",
 				`mobile`= " . 		quote_smart(trim($_POST['frm_mobile'])) . ",
+				`multi`= " . 		quote_smart(trim($_POST['frm_multi'])) . ",
 				`aprs`= " . 		quote_smart(trim($_POST['frm_aprs'])) . ",
 				`instam`= " . 		quote_smart(trim($_POST['frm_instam'])) . ",
 				`direcs`= " . 		quote_smart(trim($_POST['frm_direcs'])) . ",
@@ -1191,7 +1242,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 //		$frm_lng = ($is_mobile)? 'NULL': quote_smart(trim($_POST['frm_lng']));						// 9/3/08
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
-			`name`, `description`, `capab`, `un_status_id`, `callsign`, `mobile`, `aprs`, `instam`, `direcs`, `contact_name`, `contact_via`, `lat`, `lng`, `type`, `user_id`, `updated` )
+			`name`, `description`, `capab`, `un_status_id`, `callsign`, `mobile`, `multi`, `aprs`, `instam`, `direcs`, `contact_name`, `contact_via`, `lat`, `lng`, `type`, `user_id`, `updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_name'])) . "," .
 				quote_smart(trim($_POST['frm_descr'])) . "," .
@@ -1199,6 +1250,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 				quote_smart(trim($_POST['frm_un_status_id'])) . "," .
 				quote_smart(trim($_POST['frm_callsign'])) . "," .
 				quote_smart(trim($_POST['frm_mobile'])) . "," .
+				quote_smart(trim($_POST['frm_multi'])) . "," .
 				quote_smart(trim($_POST['frm_aprs'])) . "," .
 				quote_smart(trim($_POST['frm_instam'])) . "," .
 				quote_smart(trim($_POST['frm_direcs'])) . "," .
@@ -1231,28 +1283,39 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		<FONT CLASS="header">Add Unit</FONT><BR /><BR />
 		<TABLE BORDER=0 ID='outer' BORDER=><TR><TD>
 		<TABLE BORDER="0" ID='addform'>
-		<FORM NAME= "res_add_Form" METHOD="POST" onSubmit="return validate(document.res_add_Form);" ACTION="units.php?func=responder&goadd=true">
+		<FORM NAME= "res_add_Form" METHOD="POST" ACTION="units.php?func=responder&goadd=true"> <!-- 7/9/09 -->
+		<TR CLASS = "even"><TD CLASS="td_label">Name/handle:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
+			<TD COLSPAN=3 ><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
 
-		<TR CLASS = "even" VALIGN='middle'><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD>
-				<SELECT NAME='frm_type'><OPTION VALUE=0>Select one</OPTION>		<!-- 1/8/09 -->
+		<TR CLASS = "odd" VALIGN='middle'><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD>
+			<TD ALIGN='left'><SELECT NAME='frm_type'><OPTION VALUE=0>Select one</OPTION>		<!-- 1/8/09 -->
 <?php
 	foreach ($u_types as $key => $value) {								// 12/27/08
 		$temp = $value; 												// 2-element array
 		print "\t\t\t\t<OPTION VALUE='" . $key . "'>" .$temp[0] . "</OPTION>\n";
 		}
 ?>
-				</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" />
-			</TD></TR>
+			</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" />&nbsp;&nbsp;&nbsp;
+			Multiple  &raquo;<INPUT TYPE="checkbox" NAME="frm_multi_disp" />&nbsp;&nbsp;&nbsp;
+			Directions &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked /></TD>
+			</TR>
 
-		<TR CLASS = "odd" VALIGN='top'  TITLE = 'Check if YES'><TD CLASS="td_label" >Operation:</TD>
-			<TD>&nbsp;&nbsp;<!-- 1/21/09 -->
-				APRS  &raquo;<INPUT TYPE="checkbox" NAME="frm_aprs_disp" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				Instamap &raquo;<INPUT TYPE="checkbox" NAME="frm_instam_disp" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				Directions &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked />
-			</TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Status: <font color='red' size='-1'>*</font></TD>
-			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
+		<TR CLASS = "even" VALIGN='top'  TITLE = 'Select one'><TD CLASS="td_label" >Tracking:</TD>
+			<TD ALIGN='left'> <!-- 7/10/09 -->
+				<SELECT NAME='frm_track_disp' onChange = "do_tracking(this.form, this.options[this.selectedIndex].value);">	<!-- 7/10/09 -->
+					<OPTION VALUE='0' SELECTED>None</OPTION>
+					<OPTION VALUE='<?php print $GLOBALS['TRACK_APRS'];?>'>APRS</OPTION>
+					<OPTION VALUE='<?php print $GLOBALS['TRACK_INSTAM'];?>'>Instamapper</OPTION>
+					</SELECT>&nbsp;&nbsp;
+			Callsign/License-key &raquo;&nbsp;&nbsp;<INPUT SIZE="<?php print $key_field_size;?>" MAXLENGTH="<?php print $key_field_size;?>" TYPE="text" NAME="frm_callsign" VALUE="" 
+				onmouseover = "$('instam_label').style.visibility = 'visible';" 
+				onmouseout= "$('instam_label').style.visibility = 'hidden';";/>&nbsp;
+				<SPAN ID = 'instam_label' STYLE = 'visibility: hidden; display:inline'></SPAN>							
+			</TD>
+			</TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Status: <font color='red' size='-1'>*</font></TD>
+			<TD ALIGN ='left'><SELECT NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
 				<OPTION VALUE=0 SELECTED>Select one</OPTION>
 <?php
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
@@ -1271,31 +1334,30 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 	print "\n</OPTGROUP>\n";
 	unset($result_st);
 ?>
-		</SELECT>
-		&nbsp;Callsign: <INPUT SIZE="12" MAXLENGTH="12" TYPE="text" NAME="frm_callsign" VALUE="" onmouseover = "$('instam_label').style.visibility = 'visible';" onmouseout= "$('instam_label').style.visibility = 'hidden';";/>
-			&nbsp;<SPAN ID = 'instam_label' STYLE = 'visibility: hidden'><I>(Label/API key)</I></SPAN></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2></TEXTAREA></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Capability: </TD>	<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2></TEXTAREA></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" /></TD></TR>
+			</SELECT>
+			</TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD COLSPAN=3 ><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2></TEXTAREA></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Capability: </TD>	<TD COLSPAN=3 ><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2></TEXTAREA></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD COLSPAN=3 ><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" /></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD COLSPAN=3 ><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" /></TD></TR>
 		<TR CLASS = "even"><TD CLASS="td_label">
 			<SPAN onClick = 'javascript: do_coords(document.res_add_Form.frm_lat.value ,document.res_add_Form.frm_lng.value)'>
 				<U>Lat/Lng</U></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle'
-					onClick = 'do_unlock_pos(document.res_add_Form);'><TD>
+					onClick = 'do_unlock_pos(document.res_add_Form);'><TD COLSPAN=3>
 			<INPUT TYPE="text" NAME="show_lat" SIZE=11 VALUE="" disabled />
 			<INPUT TYPE="text" NAME="show_lng" SIZE=11 VALUE="" disabled />&nbsp;&nbsp;<SPAN ID = 'usng_link' onClick = "do_usng_conv(res_add_Form)">USNG:</SPAN>
 			<INPUT TYPE="text" SIZE=19 NAME="frm_ngs" VALUE="" disabled /></TD></TR>
-		<TR><TD COLSPAN=2 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD></TR>
-		<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'>
+		<TR><TD COLSPAN=4 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD></TR>
+		<TR CLASS = "odd"><TD COLSPAN=4 ALIGN='center'>
 			<INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			<INPUT TYPE="reset" VALUE="Reset" onClick = "do_add_reset(this.form);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <!-- 1/22/09 -->
-			<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
+			<INPUT TYPE="button" VALUE="Submit for Update"  onClick="validate(document.res_add_Form);" ></TD></TR>	<!-- 7/21/09 -->
 		<INPUT TYPE='hidden' NAME = 'frm_lat' VALUE=''/>
 		<INPUT TYPE='hidden' NAME = 'frm_lng' VALUE=''/>
 		<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
 		<INPUT TYPE='hidden' NAME = 'frm_mobile' VALUE=0 />
+		<INPUT TYPE='hidden' NAME = 'frm_multi' VALUE=0 />
 		<INPUT TYPE='hidden' NAME = 'frm_aprs' VALUE=0 />
 		<INPUT TYPE='hidden' NAME = 'frm_instam' VALUE=0 />
 		<INPUT TYPE='hidden' NAME = 'frm_direcs' VALUE=1 />  <!-- note default -->
@@ -1346,43 +1408,57 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		$type_checks = array ("", "", "", "", "");
 		$type_checks[$row['type']] = " checked";
 		$mob_checked = (($row['mobile']==1))? " CHECKED" : "" ;				// 1/24/09
+		$multi_checked = (($row['multi']==1))? " CHECKED" : "" ;				// 1/24/09
 		$aprs_checked = (($row['aprs']==1))? " CHECKED" : "" ;
 		$instam_checked = (($row['instam']==1))? " CHECKED" : "" ;			// 3/11/09
 		$direcs_checked = (($row['direcs']==1))? " CHECKED" : "" ;			// 3/19/09
+		$im_hint = ($instam_checked)? "&nbsp;&nbsp;<SPAN ID = 'instam_label' STYLE = 'visibility: visible'><I>(API key)</I></SPAN>": "";
 
+		$none_sel = (!(($row['aprs'] == 1) || ($row['instam'] == 1)))? 	" SELECTED" : "";		// 7/10/09
+		$aprs_sel = ($row['aprs'] == 1)? 								" SELECTED" : "";
+		$instam_sel = ($row['instam'] ==1)?								" SELECTED" : "";
+		
 		print do_calls($id);								// generate JS calls array
-
 ?>
 		</HEAD>
 		<BODY onLoad = "ck_frames(); " onunload="GUnload()">
 		<FONT CLASS="header">&nbsp;Edit unit '<?php print $row['name'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)<BR /><BR />
 		<TABLE BORDER=0 ID='outer'><TR><TD>
 		<TABLE BORDER=0 ID='editform'>
-		<FORM METHOD="POST" NAME= "res_edit_Form" onSubmit="return validate(document.res_edit_Form);" ACTION="units.php?func=responder&goedit=true">
+		<FORM METHOD="POST" NAME= "res_edit_Form" ACTION="units.php?func=responder&goedit=true"> <!-- 7/9/09 -->
 
-
-		<TR CLASS = "even" VALIGN='middle'><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD><TD><FONT SIZE='-2'>
-				<SELECT NAME='frm_type'>
+		<TR CLASS = "odd"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" /></TD></TR>
+		<TR CLASS = "even" VALIGN='middle'><TD CLASS="td_label">Type: <font color='red' size='-1'>*</font></TD>
+		<TD ALIGN='left'><FONT SIZE='-2'>
+			<SELECT NAME='frm_type'>
 <?php
 	foreach ($u_types as $key => $value) {								// 1/9/09
 		$temp = $value; 												// 2-element array
 		$sel = ($row['type']==$temp[0])? " SELECTED ": "";
 		print "\t\t\t\t<OPTION VALUE='" . $key .$sel. "'>" .$temp[0] . "</OPTION>\n";
 		}
-
 ?>
-				</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" <?php print $mob_checked; ?> />
-		</TD></TR>
-		<TR CLASS = "odd" VALIGN='top'  TITLE = 'Check if YES'><TD CLASS="td_label">Operation:</TD>
-			<TD>&nbsp;&nbsp;&nbsp;&nbsp;<!-- 1/21/09 -->
-				APRS &raquo;<INPUT TYPE="checkbox" NAME="frm_aprs_disp" <?php print $aprs_checked; ?> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				InstaMapper &raquo;<INPUT TYPE="checkbox" NAME="frm_instam_disp" <?php print $instam_checked; ?> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				Directions &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" <?php print $direcs_checked; ?> />
-			</TD></TR>
+				</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" <?php print $mob_checked; ?> />&nbsp;&nbsp;&nbsp;
+				Multiple  &raquo;<INPUT TYPE="checkbox" NAME="frm_multi_disp" <?php print $multi_checked; ?> />&nbsp;&nbsp;&nbsp;
+				Directions &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" <?php print $direcs_checked; ?> /></TD>
+		</TR>
+		<TR CLASS = "odd" VALIGN='top'  TITLE = 'Select source'><TD CLASS="td_label">Tracking:</TD>
+			<TD ALIGN='left'>
+
+				<SELECT NAME='frm_track_disp' onChange = "do_tracking(this.form, this.options[this.selectedIndex].value);"> <!-- 7/10/09 -->
+					<OPTION VALUE=0 <?php print $none_sel; ?>>None</OPTION>
+					<OPTION VALUE=<?php print $GLOBALS['TRACK_APRS'] . $aprs_sel;?>>APRS</OPTION>
+					<OPTION VALUE=<?php print $GLOBALS['TRACK_INSTAM'] . $instam_sel;?>>Instamapper</OPTION>
+					</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;
+				Callsign/License-key: <INPUT SIZE="<?php print $key_field_size;?>" MAXLENGTH="<?php print $key_field_size;?>" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>" /><?php print $im_hint;?> <!== 7/23/09 -->
+								
+			
+			</TD>
+			</TR>
 
 		<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>
-			<TD><SELECT NAME="frm_un_status_id" onChange = "document.res_edit_Form.frm_log_it.value='1'">
+			<TD ALIGN='left'><SELECT NAME="frm_un_status_id" onChange = "document.res_edit_Form.frm_log_it.value='1'">
 <?php
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
 	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -1409,17 +1485,14 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 	$cbcount = mysql_affected_rows();				// count of incomplete assigns
 	$dis_rmv = ($cbcount==0)? "": " DISABLED";		// allow/disallow removal
 	$cbtext = ($cbcount==0)? "": "&nbsp;&nbsp;<FONT size=-2>(NA - calls in progress: " .$cbcount . " )</FONT>";
-	$im_hint = ($instam_checked)? "&nbsp;&nbsp;<SPAN ID = 'instam_label' STYLE = 'visibility: visible'><I>(Label/API key)</I></SPAN>": "";
 ?>
-	&nbsp;&nbsp;&nbsp;&nbsp;Callsign: <INPUT SIZE="12" MAXLENGTH="12" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>" /><?php print $im_hint;?>
 			</TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Name: <font color='red' size='-1'>*</font></TD>			<TD><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" /></TD></TR>
-		<TR CLASS = "even"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Capability: </TD>										<TD><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2><?php print $row['capab'];?></TEXTAREA></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Description: <font color='red' size='-1'>*</font></TD>	<TD COLSPAN=3><TEXTAREA NAME="frm_descr" COLS=40 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Capability: </TD>										<TD COLSPAN=3><TEXTAREA NAME="frm_capab" COLS=40 ROWS=2><?php print $row['capab'];?></TEXTAREA></TD></TR>
 
 
-		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
-		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD COLSPAN=3><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" /></TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD COLSPAN=3><INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" /></TD></TR>
 <?php
 		$map_capt = (!$is_mobile)? 	"<BR /><BR /><CENTER><B>Click to revise unit location</B>" : "";
 		$lock_butt = (!$is_mobile)? "<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_edit_Form);'>" : "" ;
@@ -1428,24 +1501,27 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		<TR CLASS = "even">
 			<TD CLASS="td_label">
 				<SPAN onClick = 'javascript: do_coords(document.res_edit_Form.frm_lat.value ,document.res_edit_Form.frm_lng.value  )' ><U>Lat/Lng</U></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;<?php print $lock_butt;?>
-				</TD><TD>
-			<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;
-			<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=11 disabled />&nbsp;
+				</TD>
+			<TD COLSPAN=3>
+				<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;
+				<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=11 disabled />&nbsp;
 			<?php print $usng_link;?> <INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($row['lat'], $row['lng']) ;?>" SIZE=19 disabled />
-			</TD></TR>	<!-- 9/13/08 -->
+			</TD>
+			</TR>	<!-- 9/13/08 -->
 
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS="odd" VALIGN='baseline'><TD CLASS="td_label">Remove Unit:</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
 		<?php print $cbtext; ?></TD></TR>
 		<TR CLASS = "even">
-			<TD COLSPAN=2 ALIGN='center'><BR><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<TD COLSPAN=4 ALIGN='center'><BR><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<INPUT TYPE="submit" VALUE="Submit for Update"></TD></TR>
+				<INPUT TYPE="button" VALUE="Submit for Update" onClick="validate(document.res_edit_Form);"></TD></TR>
 		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
 		<INPUT TYPE="hidden" NAME = "frm_lat" VALUE="<?php print $row['lat'] ;?>"/>
 		<INPUT TYPE="hidden" NAME = "frm_lng" VALUE="<?php print $row['lng'] ;?>"/>
 		<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>
 		<INPUT TYPE="hidden" NAME = "frm_mobile" VALUE=<?php print $row['mobile'] ;?> />
+		<INPUT TYPE="hidden" NAME = "frm_multi" VALUE=<?php print $row['multi'] ;?> />
 		<INPUT TYPE="hidden" NAME = "frm_aprs" VALUE=<?php print $row['aprs'] ;?> />
 		<INPUT TYPE="hidden" NAME = "frm_instam" VALUE=<?php print $row['instam'] ;?> />
 		<INPUT TYPE="hidden" NAME = "frm_direcs" VALUE=<?php print $row['direcs'] ;?> />
@@ -1507,6 +1583,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 				}
 
 		$mob_checked = (!empty($row['mobile']))? " checked" : "" ;				// 1/24/09
+		$multi_checked = (!empty($row['multi']))? " checked" : "" ;				// 1/24/09
 		$aprs_checked = (!empty($row['aprs']))? " checked" : "" ;				// 3/11/09
 		$instam_checked = (!empty($row['instam']))? " checked" : "" ;			// 3/11/09
 		$direcs_checked = (!empty($row['direcs']))? " checked" : "" ;			// 3/19/09
@@ -1545,50 +1622,64 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		$temp = $u_types[$row['type']];
 		$the_type = $temp[0];			// name of type
 
+		$none_sel = (!(($row['aprs'] == 1) || ($row['instam'] == 1)))? 	" SELECTED" : "";		// 7/10/09
+		$aprs_sel = ($row['aprs'] == 1)? 								" SELECTED" : "";
+		$instam_sel = ($row['instam'] ==1)?								" SELECTED" : "";
+
 ?>
 			<FONT CLASS="header">&nbsp;'<?php print $row['name'] ;?>' Data</FONT> (#<?php print$row['id'];?>) <BR /><BR />
 			<TABLE BORDER=0 ID='outer'><TR><TD>
 			<TABLE BORDER=0 ID='view_unit' STYLE='display: block'>
 			<FORM METHOD="POST" NAME= "res_view_Form" ACTION="units.php?func=responder">
-			<TR CLASS = "even"><TD CLASS="td_label">Type: </TD>
-				<TD><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" <?php print $mob_checked; ?> DISABLED />
-
-				</TD></TR> <!-- // 1/8/09 -->
-			<TR CLASS = "odd" VALIGN='top'><TD CLASS="td_label">Operation:</TD>
-				<TD>&nbsp;&nbsp;&nbsp;&nbsp;<!-- 1/21/09 -->
-					APRS &raquo;<INPUT TYPE="checkbox" NAME="frm_aprs_disp"<?php print $aprs_checked; ?> DISABLED />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					Instamapper &raquo;<INPUT TYPE="checkbox" NAME="frm_instam_disp"<?php print $instam_checked; ?> DISABLED />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<TR CLASS = "even"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'];?></TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Type: </TD>
+				<TD><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<SPAN CLASS="td_label">
+					Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" <?php print $mob_checked; ?> DISABLED />&nbsp;&nbsp;
+					Multiple  &raquo;<INPUT TYPE="checkbox" NAME="frm_multi_disp" <?php print $multi_checked; ?> DISABLED />&nbsp;&nbsp;
 					Directions &raquo;<INPUT TYPE="checkbox" NAME="frm_instam_disp"<?php print $instam_checked; ?> DISABLED />
-				</TD></TR>
-
-
-			<TR CLASS = "even"><TD CLASS="td_label">Status:</TD>		<TD><?php print $un_st_val;?>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Call: <?php print $row['callsign'];?>
+					</SPAN>
+				</TD></TR> <!-- // 1/8/09 -->
+			<TR CLASS = "even" VALIGN='top'><TD CLASS="td_label" >Tracking:</TD>	<!-- 7/10/09 -->
+				<TD ALIGN='left'>
+	
+					<SELECT NAME='frm_track_disp' DISABLED> <!-- 7/10/09 -->
+						<OPTION VALUE=0 <?php print $none_sel; ?>>None</OPTION>
+						<OPTION VALUE=<?php print $GLOBALS['TRACK_APRS'] . $aprs_sel;?>>APRS</OPTION>
+						<OPTION VALUE=<?php print $GLOBALS['TRACK_INSTAM'] . $instam_sel;?>>Instamapper</OPTION>
+						</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;
+					<SPAN CLASS="td_label">Callsign/License-key</SPAN> &raquo; <?php print $row['callsign'];?>
+				
+					</TD>
+				</TR>
+			<TR CLASS = "odd"><TD CLASS="td_label">Status:</TD>		<TD><?php print $un_st_val;?>
 			</TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label">Name: </TD>			<TD><?php print $row['name'];?></TD></TR>
 			<TR CLASS = "even"><TD CLASS="td_label">Description: </TD>	<TD><?php print $row['description'];?></TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label">Capability: </TD>	<TD><?php print $row['capab'];?></TD></TR>
 			<TR CLASS = "even"><TD CLASS="td_label">Contact name:</TD>	<TD><?php print $row['contact_name'] ;?></TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label">Contact via:</TD>	<TD><?php print $row['contact_via'] ;?></TD></TR>
 
 			<TR CLASS = 'even'><TD CLASS="td_label">As of:</TD>	<TD><?php print format_date($row['updated']); ?></TD></TR>
+<?php
+		if (my_is_float($lat)) {				// 7/10/09
+?>		
 			<TR CLASS = "odd"><TD CLASS="td_label"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD><TD>
 				<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;
 				<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=11 disabled />&nbsp;&nbsp;USNG:
 				<INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($row['lat'], $row['lng']) ;?>" SIZE=19 disabled /></TD></TR>	<!-- 9/13/08 -->
 <?php
-		if ((get_variable('UTM')==1)&& (!empty($lat))) {
-			$coords =  $lat . "," . $lng;
-			print "<TR CLASS='odd'><TD CLASS='td_label'>UTM Grid:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
-			}
+			if ((get_variable('UTM')==1)&& (!empty($lat))) {
+				$coords =  $lat . "," . $lng;
+				print "<TR CLASS='even'><TD CLASS='td_label'>UTM Grid:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
+				}
+			}		// end if (my_is_float($lat))
 
 		if (isset($rowtr)) {																	// got tracks?
-			print "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>APRS</B></TD></TR>";
-			print "<TR CLASS='odd'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
-			print "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
-			print "<TR CLASS='odd'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
-			print "<TR CLASS='even'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
+			print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>APRS</B></TD></TR>";
+			print "<TR CLASS='even'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
+			print "<TR CLASS='odd'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
+			print "<TR CLASS='even'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
+			print "<TR CLASS='odd'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
 			$lat = $rowtr['latitude'];
 			$lng = $rowtr['longitude'];
 			}
@@ -1599,7 +1690,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 <?php
 		if (is_administrator() || is_super()) {
 ?>
-			<TR CLASS = "even"><TD COLSPAN=2 ALIGN='center'>
+			<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'>
 			<INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			<INPUT TYPE="button" VALUE="to Edit" 	onClick= "to_edit_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <?php
@@ -1621,7 +1712,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 ?>
 			<BR /><BR /><BR />
 			<TABLE BORDER=0 ID = 'incidents' STYLE = 'display:none' >
-			<TR CLASS='even'><TH COLSPAN=99 CLASS='header'> Click incident to dispatch '<?php print $row['name'] ;?>'</TH></TR>
+			<TR CLASS='odd'><TH COLSPAN=99 CLASS='header'> Click incident to dispatch '<?php print $row['name'] ;?>'</TH></TR>
 			<TR><TD></TD></TR>
 
 <?php																								// 6/1/08 - added
@@ -1729,7 +1820,10 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		print do_calls();		// generate JS calls array
 
 		$buttons = "<TR><TD COLSPAN=99 ALIGN='center'><BR /><INPUT TYPE = 'button' onClick = 'document.tracks_Form.submit();' VALUE='Unit Tracks'>";
-		$buttons .= (is_guest())? "" :"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>";	// 10/8/08
+		if (!(is_guest())) {
+			$buttons .="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='button' value= 'Add a Unit'  onClick ='document.add_Form.submit();'>";	// 10/8/08
+			$buttons .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE = 'button' onClick = 'do_mail_win()' VALUE='Email Units'>";	// 6/13/09
+			}
 		$buttons .= "</TD></TR>";
 
 		print list_responders($buttons, 0);				// ($addon = '', $start)
@@ -1738,3 +1832,4 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		}				// end if($do_list_and_map)
     break;
 ?>
+

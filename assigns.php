@@ -1,7 +1,7 @@
 <?php
 
 //	CONSTANT settings specific to this script
-define("TIME_LIMIT", 8);				// time in hours for closed assigns to be visible
+// define("TIME_LIMIT", 8);				// time in hours for closed assigns to be visible
 // define("REPORT_COMPLETE", TRUE);		// Do (or if FALSE, don't) report update completion
 // end of file-specific constants
 
@@ -30,9 +30,23 @@ define("TIME_LIMIT", 8);				// time in hours for closed assigns to be visible
 3/9/09 bypass email if no addr, set 'dispatched' time
 3/25/09 'mailed', 'fetch_assoc' for performance, 'mailed' removed
 4/11/09 apply guest checkbox restrictions
+4/26/09 changes to list layout per AF, addslashes replaces htmlentities
+5/11/09 added $theClass to unit name display, 'available' SELECTED if exists
+5/17/09 moved buttons to floating div, with user location adjustment
+5/20/09	simplified Reset button handling, hide/show cleared dispatches
+5/23/09	fix to table alignment, edit 'select status' handling, bold units, relocate and visible 'times reset'
+5/24/09 width fix per AH email
+5/28/09 dispatch deletion added, per AF request.
+5/25/09 change to sort order
+6/6/09 	page refresh link added
+6/16/09	show_top() added, mail win added
+6/19/09 d/r case-independence added
+7/27/09	synchronous AJAX call to avoid collisions
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
+
+$from_top = 0;		// position of 'floating' div, pixels from  top of frame
 
 if($istest) {
 	print "GET<br />\n";
@@ -40,6 +54,82 @@ if($istest) {
 	print "POST<br />\n";
 	dump($_POST);
 	}
+
+function show_top() {				// generates the document introduction
+?>
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml">
+		<HEAD><TITLE>Tickets - Assignments Module</TITLE>
+		<META HTTP-EQUIV="Content-Type" 		CONTENT="text/html; charset=UTF-8"/>
+		<META HTTP-EQUIV="Expires" 				CONTENT="0"/>
+		<META HTTP-EQUIV="Cache-Control" 		CONTENT="NO-CACHE"/>
+		<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE"/>
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
+		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
+		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+		<STYLE>
+		span.even 	{ background-color: #DEE3E7;}
+		.odd 	{ background-color: #EFEFEF;}
+		.plain 	{ background-color: #FFFFFF;}
+		TD { background-color: inherit; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none; VERTICAL-ALIGN: top;  }
+		input.btn {  color:#050;  font: bold 84% 'trebuchet ms',helvetica,sans-serif; background-color:#DEE3E7;  border:1px solid;  border-color: #696 #363 #363 #696;  } 
+
+		BODY { BACKGROUND-COLOR: #EFEFEF; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		TABLE {border-collapse: collapse; }
+		#BGCOLOR {BACKGROUND-COLOR: #EFEFEF;}
+		INPUT { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		SELECT { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: underline }
+		A { FONT-WEIGHT: bold; FONT-SIZE: 10px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
+		li.mylink { FONT-WEIGHT: bold; FONT-SIZE: 24px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
+		TD { background-color: inherit; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none; VERTICAL-ALIGN: top;  }
+		.print_TD { BACKGROUND-COLOR: #FFFFFF; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.td_label { background-color: inherit;FONT-WEIGHT: bold; FONT-SIZE: 10px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.td_mand { FONT-WEIGHT: bold; FONT-SIZE: 10px; COLOR: #CC0000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.td_data { white-space:nowrap; background-color: inherit;FONT-SIZE: 10px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.emph { background-color: #99b2cc;FONT-SIZE: 10px; COLOR: #ffffff; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.nodir { background-color: #99b2cc;FONT-SIZE: 10px; COLOR: #ffffff; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		#td_header { FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.td_link { FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; }
+		.header { FONT-WEIGHT: bold; FONT-SIZE: 12pt; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none } 
+		.text { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.warn { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #CC0000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.severity_high { FONT-WEIGHT: bold; FONT-SIZE: 10px; COLOR: #C00000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.severity_medium { FONT-WEIGHT: bold; FONT-SIZE: 10px; COLOR: #008000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_green { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #009000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_orange { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #EBA500; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_blue { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #0000E0; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_red { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #C00000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_black { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_small { FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_medium { FONT-WEIGHT: normal; FONT-SIZE: 16px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.text_big { FONT-WEIGHT: normal; FONT-SIZE: 18px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+		.found  { BACKGROUND-COLOR: #000000; COLOR: #ffffff;}
+		#detailmap, #mapDiv { font: normal 10px verdana; }
+		#detailmap 	{width: 300px; height: 120px; border:1px solid gray; }
+		#infowin 	{width:	300px; overflow:auto; } 
+		tr.even 	{ background-color: #DEE3E7;}
+		tr.odd 	{ background-color: #EFEFEF;}
+		tr.plain 	{ background-color: #FFFFFF;}
+		td {cursor: pointer; cursor: hand;} 
+		.hovermenu ul{font: bold 13px arial;padding-left: 0;margin-left: 0;height: 20px;}
+		.hovermenu ul li{list-style: none;display: inline;}
+		.hovermenu ul li a{padding: 2px 0.5em;text-decoration: none;float: left;color: black;background-color: #FFF2BF;border: 2px solid #FFF2BF;}
+		.hovermenu ul li a:hover{background-color: #FFE271;border-style: outset;}
+		/* Apply mousedown effect only to NON IE browsers */
+		html>body .hovermenu ul li a:active{ border-style: inset;}
+		option.main {COLOR: #FFFFFF;background-color: #000000;}
+		option.Critical {background-color: #FF0066;}
+		option.Hazardous {background-color: #66FFFF;}
+		option.Medical {background-color: #CCFF99;}
+		option.Trauma {background-color: #FF9900;}
+		
+		checkbox {border-width: 0px;}
+				
+		</STYLE>
+				
+<?php
+	}
+
 sleep(1);		// wait for possible logout to complete	
 $the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
 $sess_key = get_sess_key();
@@ -47,21 +137,12 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
 if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
+show_top() ;
 ?>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-<HEAD>
-<TITLE>Assigns Wait for login</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-<META HTTP-EQUIV="Expires" CONTENT="0">
-<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>
 <BODY>
-<CENTER><BR><SPAN ID='start' onClick = "Javascript: self.location.href = 'assigns.php';"><H3>Call board waiting for login</H3></span>
+<CENTER><BR><SPAN ID='start' onClick = "Javascript: self.location.href = '<?php print basename(__FILE__); ?>';"><H3>Call board waiting for login</H3></span>
 </BODY>
 </HTML>
 
@@ -75,18 +156,10 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 	extract($_POST);
 	$evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 	$func = (empty($_POST))? "list" : $_POST['func'];
-	
-?> 
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-	<html xmlns="http://www.w3.org/1999/xhtml">
-		<HEAD><TITLE>Tickets - Assignments Module</TITLE>
-		<META HTTP-EQUIV="Content-Type" 		CONTENT="text/html; charset=UTF-8"/>
-		<META HTTP-EQUIV="Expires" 				CONTENT="0"/>
-		<META HTTP-EQUIV="Cache-Control" 		CONTENT="NO-CACHE"/>
-		<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE"/>
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
-		<META HTTP-EQUIV="Script-date" 			CONTENT="8/24/08">
-		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+
+	show_top();
+?>	
+				
 	<SCRIPT>
 	//alert (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML);
 	//if ((!window.opener) || (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML == "not"))
@@ -138,7 +211,8 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
+//		req.open(method,url,true);
+		req.open(method,url,false);		// synchronous, 7/27/09
 		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
@@ -146,7 +220,7 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			if (req.readyState != 4) return;
 			if (req.status != 200 && req.status != 304) {
 <?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+	if($istest) {print "\t\t\talert('HTTP error ' + req.status + ' " . __LINE__ . "');\n";}
 ?>
 				return;
 				}
@@ -185,6 +259,20 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 ?>	
 			document.nav_form.submit();
 			}
+
+		function do_mail_all_win() {			// 6/16/09
+			if(starting) {return;}					
+			starting=true;	
+		
+			newwindow_um=window.open("do_unit_mail.php", "E-mail Window",  "titlebar, resizable=1, scrollbars, height=640,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+			if (isNull(newwindow_um)) {
+				alert ("This requires popups to be enabled. Please adjust your browser options.");
+				return;
+				}
+			newwindow_um.focus();
+			starting = false;
+			}
+	
 	
 		function viewT(id) {			// view ticket
 			document.T_nav_form.id.value=id;
@@ -212,6 +300,118 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			if (!(window.opener==null)){window.opener.focus();}		
 			}
 	
+		function do_assgn_reset(id, the_form) {						// 4/26/09
+
+			function our_reset(id, the_form) {									// reset dispatch checks 
+				var dis = <?php print is_guest()? "true": "false"; ?>;			// disallow guest actions
+	
+				the_form.res_times.checked = false;
+				the_form.frm_dispatched.disabled = false;
+				the_form.frm_dispatched.checked = false;
+				the_form.frm_dispatched.disabled = dis;
+				
+				the_form.frm_responding.disabled = false;
+				the_form.frm_responding.checked = false;
+				the_form.frm_responding.disabled = dis;
+				
+				the_form.frm_on_scene.disabled = false;
+				the_form.frm_on_scene.checked = false;
+				the_form.frm_on_scene.disabled = dis;				
+	
+				the_form.frm_clear.disabled = false;
+				the_form.frm_clear.checked = false;
+				the_form.frm_clear.disabled = dis;
+				
+				btn_element = the_form.name+"cb";
+				$(btn_element).style.display='inline';
+				txt_element = the_form.name+"ct";
+				$(txt_element).style.display='none';
+	
+				var url = "assign_res.php";
+				var postData = "frm_id=" + id;				// the post string
+				sendRequest(url,handleResult,postData) ;
+	
+				}		// end function our_reset()
+	
+	
+			function our_delete(id, the_form) {				// delete this dispatch record
+				$('del_id').style.display='block';
+				var url = "assign_del.php";
+				var postData = "frm_id=" + id;				// the post string
+				sendRequest(url,our_wrapup,postData) ;
+	
+				}		// end function our_delete()
+
+			function our_wrapup() {
+				setTimeout('$(\'del_id\').style.display=\'none\';', 2000);			// show for 2 seconds
+//				window.location.reload();
+				document.can_Form.submit();			//  screen refresh/re-size 
+				}
+	
+			var resp = "";														// 5/28/09
+			while ((resp.toLowerCase() !="r") && (resp !="d")) {				// 6/19/09
+				resp = prompt("Enter 'r' to Reset dispatch times\nEnter 'd' to Delete this dispatch, or press Cancel.\n", "");
+
+				switch(resp.toLowerCase()){			// process the input
+				
+					case null:			// user cancelled
+						the_form.res_times.checked = false;
+						return;
+
+					case "r":
+						our_reset(id, the_form);
+						break;
+
+					case "d":
+						our_delete(id, the_form)
+						break;
+					}	// end switch(resp)
+				}		// end while ( ... )
+
+			alert("369 " + the_form.res_times.checked );
+			the_form.res_times.checked = false;
+				
+			}  	// end function do_assgn_reset()
+
+	
+
+//		function do_assgn_reset(id, the_form) {						// 4/26/09
+//			if (confirm("Reset '" + the_form.frm_the_unit.value + "' D R O C checks?\nClick OK to confirm ")) {
+//
+//				var dis = <?php print is_guest()? "true": "false"; ?>;			// disallow guest actions
+//
+//				the_form.res_times.checked = false;
+//				the_form.frm_dispatched.disabled = false;
+//				the_form.frm_dispatched.checked = false;
+//				the_form.frm_dispatched.disabled = dis;
+//				
+//				the_form.frm_responding.disabled = false;
+//				the_form.frm_responding.checked = false;
+//				the_form.frm_responding.disabled = dis;
+//				
+//				the_form.frm_on_scene.disabled = false;
+//				the_form.frm_on_scene.checked = false;
+//				the_form.frm_on_scene.disabled = dis;				
+//
+//				the_form.frm_clear.disabled = false;
+//				the_form.frm_clear.checked = false;
+//				the_form.frm_clear.disabled = dis;
+//				
+//				btn_element = the_form.name+"cb";
+//				$(btn_element).style.display='inline';
+//				txt_element = the_form.name+"ct";
+//				$(txt_element).style.display='none';
+//
+//				var url = "assign_res.php";
+//				var postData = "frm_id=" + id;				// the post string
+//				sendRequest(url,handleResult,postData) ;
+//				}	
+//			else {
+//				the_form.res_times.checked = false;
+//				return;
+//				}
+//			}		// end function do_assgn_reset()
+		
 	</SCRIPT>
 	
 <?php 								// id, as_of, status_id, ticket_id, unit_id, comment, user_id
@@ -245,18 +445,29 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			}				// end function vali date(theForm)
 	
 		function reSizeScr() {
-			window.resizeTo(800,300);		
+<?php
+			if (get_variable('call_board')==1) {print "window.resizeTo(800,300);\n";}
+?>				
 			}
 	
 		</SCRIPT>
 		</HEAD>
 		<BODY onLoad = "reSizeScr()"><CENTER>		<!-- 1/12/09 -->
+
+			<DIV ID = 'add_btns' STYLE="display:block; position:fixed; width:120px; height:auto; top:<?php print $from_top + 20;?>px; right: 150px; background-color:transparent; text-align:left;">	<!-- 5/17/09 -->
+				
+				<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" CLASS = 'btn' />	
+				<INPUT TYPE="button" VALUE="Reset" onclick="Javascript: document.add_Form.reset();"  CLASS = 'btn' />	
+				<INPUT TYPE="button" VALUE="           Submit           " name="sub_but" onClick="validate_ad(document.add_Form)" CLASS = 'btn' >  
+				</LEFT>
+			</DIV>
+				
 			<TABLE BORDER=0 ALIGN='center'>
-			<FORM NAME="add_Form" onSubmit="return validate_ad(document.add_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">
-			<TR CLASS="even"><th colspan=2 ALIGN="center">Assign Unit to Incident</th></TR>
+			<FORM NAME="add_Form"  ACTION = "<?php print basename(__FILE__); ?>" METHOD = "post">
+			<TR CLASS="even"><TH colspan=2 ALIGN="center">Assign Unit to Incident</TH></TR>
 			<TR CLASS="odd" VALIGN="baseline">
-				<TD CLASS="td_label" ALIGN="right">Incident:</TD>
-				<TD><SELECT NAME="frm_ticket_id">
+				<TD CLASS="td_label" ALIGN="right">Incident:&nbsp;</TD>
+				<TD ALIGN='left'><SELECT NAME="frm_ticket_id">
 					<OPTION VALUE= '' selected>Select</OPTION>
 <?php
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = " . $GLOBALS['STATUS_OPEN']. " ORDER BY `scope`"; 
@@ -268,8 +479,8 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 					</SELECT>	
 				</TD></TR>
 			<TR CLASS="even" VALIGN="baseline">
-				<TD CLASS="td_label" ALIGN="right">Unit:</TD>
-				<TD><SELECT name="frm_unit_id" onChange = "document.add_Form.frm_log_it.value='1'" >
+				<TD CLASS="td_label" ALIGN="right">Unit:&nbsp;</TD>
+				<TD ALIGN='left'><SELECT name="frm_unit_id" onChange = "document.add_Form.frm_log_it.value='1'" >
 					<OPTION value= '' selected>Select</OPTION>
 <?php
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 2/12/09   
@@ -280,52 +491,115 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 ?>
 			</SELECT></TD></TR>
 			<TR CLASS="odd" VALIGN="baseline">
-				<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;Unit Status:</TD>
-				<TD><SELECT name="frm_status_id"  onChange = "document.add_Form.frm_log_it.value='1'"> 
-					<OPTION VALUE= '' SELECTED>Select</OPTION>
+				<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;Unit Status:&nbsp;</TD>
+				<TD ALIGN='left'><SELECT name="frm_status_id"  onChange = "document.add_Form.frm_log_it.value='1'"> 
 	
 <?php
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
 			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$the_grp = strval(rand());			//  force initial OPTGROUP value
-			$i = 0;
+			$i = 0;								// 5/11/09
+			$got_one = FALSE;
+
 			while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
 				if ($the_grp != $row['group']) {
-					print ($i == 0)? "": "\t</OPTGROUP>\n";
+					print ($i == 0)? "": "\t\t\t\t\t</OPTGROUP>\n";
 					$the_grp = $row['group'];
-					print "\t<OPTGROUP LABEL='$the_grp'>\n";
+					print "\t\t\t\t\t<OPTGROUP LABEL='$the_grp'>\n";
 					}
-				print "\t<OPTION VALUE=' {$row['id']}'  CLASS='{$row['group']}' title='{$row['description']}'> {$row['status_val']} </OPTION>\n";		// 6/23/08
+				$sel = "";															// 5/11/09
+				if (strtolower (substr($row['status_val'], 0, 5)) == "avail"){
+					$sel = " SELECTED ";
+					$got_one = TRUE;
+					}
+					
+				print "\t\t\t\t\t<OPTION VALUE=' {$row['id']}'  CLASS='{$row['group']}' title='{$row['description']}' $sel> {$row['status_val']} </OPTION>\n";		// 6/23/08
 	//			print "\t<OPTION VALUE=" . $row['id'] . ">" . $row['status_val'] . "</OPTION>\n";
 				$i++;
 				}		// end while()
-			print "\n</OPTGROUP>\n";
+			print "\t\t\t\t\t</OPTGROUP>\n";
 			unset($result_st);
+			if (!($got_one)){
+				print "\t<OPTION VALUE=0 SELECTED >Select</OPTION>\n";
+				}
 ?>
 					</SELECT>	
 				</TD></TR>
 			<TR CLASS="even">
-				<TD CLASS="td_label" ALIGN="right">Comments:</TD>
-				<TD><INPUT MAXLENGTH="64" SIZE="64" NAME="frm_comments" VALUE="TBD" TYPE="text" onFocus="Javascript:if (this.value=='TBD') {this.value='';};"></TD></TR> <!-- 1/29/09 -->
-			
-			<TR CLASS="odd" VALIGN="baseline"><TD colspan="99" ALIGN="center">
-				<BR>
-				<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;	
-				<INPUT TYPE="button" VALUE="Reset" onclick="Javascript: this.form.reset();">&nbsp;&nbsp;&nbsp;&nbsp;	
-				<INPUT TYPE="submit" VALUE="           Submit           " name="sub_but" >  
-				</TD></TR>
-			 </tbody></table>
-			<INPUT TYPE='hidden' NAME='frm_by_id'	VALUE= "<?php print $my_session['user_id'];?>">
-			<INPUT TYPE='hidden' NAME='func' 		VALUE= 'add_db'>
-			<INPUT TYPE='hidden' NAME='frm_log_it' 	VALUE=''/>
+				<TD CLASS="td_label" ALIGN="right">Comments:&nbsp;</TD>
+				<TD ALIGN='left'><INPUT MAXLENGTH="64" SIZE="64" NAME="frm_comments" VALUE="TBD" TYPE="text" onFocus="Javascript:if (this.value=='TBD') {this.value='';};">
+					</TD></TR> <!-- 1/29/09 -->
+			 </TBODY></TABLE>
+			<INPUT TYPE='hidden' NAME='frm_by_id'	VALUE= "<?php print $my_session['user_id'];?>" />
+			<INPUT TYPE='hidden' NAME='func' 		VALUE= 'add_db' />
+			<INPUT TYPE='hidden' NAME='frm_log_it' 	VALUE='' />
 			</FORM>
 <?php	
 			break;				// end case 'add' === } ===
 			
 
 				//	id, as_of, status_id, ticket_id, unit_id, comment, user_id
-		case 'add_db' : 		// === {  ==========================================================================================
-			 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		// 3/9/09
+		case 'add_db' : 		// === ==========================================================================================
+		
+			function handle_mail($to_str, $unit_id, $unit_name, $ticket_id) {				// 6/16/09 
+//				snap(basename(__FILE__), __LINE__);
+				
+				$text = "";
+				$the_msg = mail_it ($to_str, $text, $ticket_id, 3, TRUE);		// get default msg text
+				$temp = (explode("\n", $text));
+				$lines = count($temp);
+											
+?>
+					<SCRIPT>
+//					alert(492);
+					function handleResult(req) {				// the called-back function
+						alert(494);
+						}
+			
+					function send_it() {
+						var url = "do_send.php";		// ($to_str, $subject_str, $text_str )
+			
+						var the_to = escape("<?php print $to_str; ?>");
+						var the_subj = escape("New Dispatch");
+						var the_msg = escape(document.add_cont_form.frm_text.value);		// the variables
+			
+						var postData = "to_str=" + the_to +"&subject_str=" + the_subj + "&text_str=" + the_msg; // the post string
+						sendRequest(url,handleResult,postData) ;
+						}		// end function send_it()			
+			
+					function dummy() {		
+						}
+			
+			
+					</SCRIPT>
+					</HEAD>
+				<BODY>		<!-- 1/12/09 -->
+
+					<TABLE ALIGN='center' BORDER=0><TR VALIGN='top'>
+					<TD ALIGN='right'>
+						<B>Notification to: <?php print $unit_name; ?></B><BR/><BR/>
+						<I>edit message to suit</I>
+					</TD>
+					<TD>&nbsp;</TD>
+					<TD ALIGN='center'>
+						<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
+						<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+2; ?>><?php print mail_it ($to_str, "New", $ticket_id, 3, TRUE);?></TEXTAREA> 
+					</TD>
+					<TD>&nbsp;</TD>
+					<TD ALIGN='left'>
+						<INPUT TYPE='button' VALUE='Send message' onClick = "send_it(); setTimeout('dummy()',1000); document.can_Form.submit()"  CLASS = 'btn'><BR />
+						<INPUT TYPE='button' VALUE='Do NOT send' onClick = "document.can_Form.submit()"  CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
+						<INPUT TYPE='hidden' NAME='func' VALUE='list'>
+						</FORM>
+					</TD>
+					</TR></TABLE>
+<?php  			
+				}				// end function handle mail()
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = $frm_ticket_id AND `responder_id` = $frm_unit_id LIMIT 1";				
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			if (mysql_affected_rows()==0){		// prevent duplicates
+						
+				$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		// 3/9/09
 				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `dispatched`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`)
 								VALUES (%s,%s,%s,%s,%s,%s,%s)",
 									quote_smart($now),
@@ -335,67 +609,36 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 									quote_smart($frm_unit_id),
 									quote_smart($frm_comments),
 									quote_smart($frm_by_id));
-	
+		
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 									// apply status update to unit status
 				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 11/8/08
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	
+		
 				do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $frm_unit_id, $frm_status_id);
+				}					// end if (mysql_affected_rows()==0)
 				
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 1/29/09
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 1/29/09
 
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_array($result));
-				$to_str = $row['contact_via'];
-				
-				if (is_email($to_str)) {		// 3/9/09
-	
-					$text = "";
-					$the_msg =(is_email($to_str))? mail_it ($to_str, $text, $frm_ticket_id, $text_sel=3, TRUE): "";
-					$temp = (explode("\n", $text));
-					$lines = count($temp);
-	
-					$the_unit = $row['name'];
-					unset($row);
-				
-?>
-		<SCRIPT>
-		function handleResult(req) {				// the called-back function
-<?php print	($istest)? "\n\t\talert(360)\n" : "" ?>
-			}
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+			$row = stripslashes_deep(mysql_fetch_array($result));
+//			snap(basename(__FILE__), __LINE__);
+			$to_str = $row['contact_via'];
+			
+			if (is_email($to_str)) {		// 3/9/09
+				handle_mail($to_str, $frm_unit_id, $row['name'], $frm_ticket_id);
+				}
 
-		function send_it() {
-			var url = "do_send.php";		// ($to_str, $subject_str, $text_str )
+//			$host  = $_SERVER['HTTP_HOST'];						// 6/26/09
+//			$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+//			$extra = basename(__FILE__);
+//			header("Location: http://$host$uri/$extra");		// finished - reload
+//			exit;				
+//
 
-			var the_to = escape("<?php print $to_str; ?>");
-			var the_subj = escape("Subject");
-			var the_msg = escape(document.add_cont_form.frm_text.value);		// the variables
-
-			var postData = "to_str=" + the_to +"&subject_str=" + the_subj + "&text_str=" + the_msg; // the post string
-			sendRequest(url,handleResult,postData) ;
-			}		// end function send_it()			
-
-		function dummy() {		
-			}
-		
-		</SCRIPT>
-		</HEAD>
-	<BODY><CENTER>		<!-- 1/12/09 -->
-		<CENTER><BR><BR><H3>New Dispatch: <?php print $the_unit; ?></H3>
-		<I>edit message to suit</I><BR><BR>
-		<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
-		<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+2; ?>><?php print mail_it ($to_str, "New", $frm_ticket_id, 3, TRUE);?></TEXTAREA> 
-		<P>		
-		<INPUT TYPE='button' VALUE='Send message' onClick = "send_it(); setTimeout('dummy()',1000); document.add_cont_form.submit()">&nbsp;&nbsp;
-		<INPUT TYPE='button' VALUE='Do NOT send' onClick = "document.add_cont_form.submit()">
-		<INPUT TYPE='hidden' NAME='func' VALUE='list'>
-		</FORM></BODY></HTML>
-<?php	
 			break;				// end case 'add_db' 
-			}		// end case 'add_db'  === } ===
 		
-		case 'list' :			// 394 - 880  { ========================================================
+		case 'list' :			// 450 - 1018  { ========================================================
 		
 	// 		$unit_scr = "http://" . $_SERVER["SERVER_ADDR"] . ":". $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
 	//		$temparr = explode ("/", $unit_scr);
@@ -412,10 +655,19 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 ?>
 	<SCRIPT>
 	
-		function reSizeScr() {
-			var lines = document.can_Form.lines.value;
-			window.resizeTo(900,((lines * 23)+240));		// derived via trial/error (more of the latter, mostly)
+		function reSizeScr() {				// 473			-- 5/23/09
+<?php
+		if (get_variable('call_board')==1) {
+?>	
+			var the_width = (lines >0) ? 1180: 600;
+			var the_height = ((lines * 23)+160);
+//			alert("558 " +  the_height);
+			if (the_height <260) {the_height = 260;}
+			window.resizeTo(the_width,the_height);				// derived via trial/error (more of the latter, mostly)
+<?php
 			}
+?>		
+			}		// end function reSizeScr()
 		  
 		function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
 															// NOT correspond with what browsers actually do...
@@ -493,7 +745,7 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 				return AJAX.responseText;																				 
 				} 
 			else {
-				alert ("457: failed");
+				alert ("577: failed");
 				return false;
 				}																						 
 			}		// end function sync Ajax(strURL)
@@ -535,6 +787,7 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 	
 		function hide_but(id) {
 			var theid = "TD"+id;
+//			alert("576 " + !$(theid));
 			if(!$(theid)) {return false;}		// 9/17/08
 			elem = $(theid);
 			elem.style.display = "none";
@@ -571,13 +824,21 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			}		// end function to_server()
 	
 		
-	function do_res(the_form_no) {
-		document.forms[the_form_no].reset();
+	function do_res() {									//  reset all forms
+		for (i = 0; i< document.forms.length; i++) {
+			if (document.forms[i].name.substr(0,1) == "F") {	
+				document.forms[i].reset();
+				}
+			}
 		}
 		
 	</SCRIPT>	
 	</HEAD>
-	<BODY onLoad = "reSizeScr()";><!-- 516 -->
+<?php
+	$onload_str = (1==1)? " onLoad = 'reSizeScr()'": "";
+?>
+	<BODY  <?php print $onload_str;?> ><!-- 622 -->
+	
 	<CENTER>
 <?php
 		function get_un_stat_sel($s_id, $b_id) {					// returns select list as string
@@ -603,18 +864,61 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			}
 
 		$priorities = array("","severity_medium","severity_high" );
-
-		print "<TABLE BORDER=1 ALIGN='center' WIDTH='100%'  cellspacing = 1 CELLPADDING = 2 ID='call_board' STYLE='display:block'>";
-		print "<TR CLASS='even'><TD COLSPAN=15 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD></TR>\n";
-
 		$status_vals_ar = array();
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+		$result_s = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_array($result_s))) {
 			$sep = (empty($row['description']))? "": ":";
 			$status_vals_ar[$row['id']] = $row['status_val'] . $sep . $row['description'] ;
 			}
-		$temp = TIME_LIMIT;				// note CONSTANT use 1/16/08
+?>
+	<DIV STYLE="position:fixed; width:120px; height:auto; top:<?php print$from_top;?>px; right: 0px; background-color:#EFEFEF;">	<!-- 5/17/09 -->
+	<P ALIGN='LEFT'>
+<?php
+			$dis = $guest? " DISABLED ": "";		//
+	
+			print "\n\t<SPAN ID='span_do_all' STYLE='display:none'>\n";
+	
+			print "\n\t<SPAN ID = 'done_id' CLASS = 'emph' STYLE='display:none'><B>&nbsp;Done!&nbsp;</B></SPAN>\n";
+			print "\n\t<SPAN ID = 'del_id' CLASS = 'emph' STYLE='display:none'><B>&nbsp;Deleted!&nbsp;</B></SPAN>\n";
+	
+			print "\t<INPUT TYPE='button' $dis VALUE='Apply all' ID = 'btn_do_all' onClick=\"do_all();
+				$('span_do_add').style.display='block'; 
+				$('done_id').style.display='block';  
+				setTimeout('$(\'done_id\').style.display=\'none\';', 2000);\" CLASS='btn'><BR />\n\t";
+	
+			print "\n\t<INPUT TYPE='button' VALUE='Cancel' ID = 'btn_res_all' onClick = \"do_res();
+				$('span_do_add').style.display='block'; 
+				$('span_do_all').style.display='none';\"  CLASS='btn'><BR />\n\t";
+			print "\t</SPAN>\n";
+
+			if (!is_guest()) {																		// 9/17/08
+				print "\n\t<SPAN ID='span_do_add' STYLE='display:block' CLASS ='btn'>\n";
+	
+				print "\n\t<INPUT TYPE='button' VALUE = 'Add' onClick = \"document.nav_form.func.value='add'; document.nav_form.submit()\" CLASS = 'btn'>
+					<INPUT TYPE='button' VALUE = 'All Units Mail' onClick = \"do_mail_all_win()\" CLASS = 'btn'>";  // 6/16/09
+				print "\n\t</SPAN>\n";
+				
+				}
+			if (get_variable('call_board')==1) {
+				print "<INPUT TYPE='button' VALUE = 'Close' onClick = 'self.close()'  CLASS = 'btn'/>\n"; // 2/18/09
+				}
+			
+			if (get_variable('call_board')==2) {
+				print "<A HREF='index.php' TARGET = '_top'><INPUT TYPE='button' VALUE='Refresh'  CLASS = 'btn'></A>";		// 6/6/09	window.location.reload( false );
+				}
+	
+			if ($my_session['f2'] == "h") { 
+				print "\t<BR />Show Cleared:  <INPUT NAME='frm_sorh' TYPE='radio' value='s'  onChange = 'document.nav_form.chg_hide.value=1;do_hors(\"s\")'/>";
+				}
+			else {
+				print "\t<BR />Hide Cleared:  <INPUT NAME='frm_sorh' TYPE='radio' value='h'  onChange = 'document.nav_form.chg_hide.value=1;do_hors(\"h\")'/>";
+				}
+//			print "<A HREF=\"javascript:void(0)\" onclick=\"parent.document.getElementById('the_frames').rows='300,300,*'\">frames</A>\n";
+
+			print "\n</DIV>\n";
+	
+
 
 		switch ($my_session['f2']) {		// persistence flags 2/18/09
 			case "":						// default, show
@@ -644,32 +948,60 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
 				WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'    $hide_sql 
-			ORDER BY `theticket` ASC";																		// 1/16/08
+			ORDER BY `severity` DESC, `theticket` ASC, `theunit` ASC ";																// 5/25/09, 1/16/08
 
 //		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$i = 1;	
-		if (mysql_affected_rows()>0) {
+
+		$lines = mysql_affected_rows();
+		print "\n<SCRIPT>\n\tvar lines = {$lines};\n</SCRIPT>\n";		// hand to JS - 5/23/09
+		if ($lines == 0) {												// empty?
+			
+			print "<TABLE BORDER=0 ALIGN='left' WIDTH = '90%' cellspacing = 1 CELLPADDING = 1  ID='call_board' STYLE='display:block'>";
+			print "<TR CLASS='even'><TD  ALIGN = 'center' WIDTH='80%'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD><TD WIDTH=150px></TD></TR>\n";
+			print "<TR><TH ><BR /><BR /><BR />No Current Dispatches<BR /></TH><TH></TH></TR>\n";
+			if (get_variable('call_board')==1) {
+				print "<TR><TH><BR /><INPUT TYPE='button' VALUE = 'Close' onClick = 'self.close()'  CLASS = 'btn'/></TH><TH></TH></TR>\n"; // 2/18/09
+				}
+			print "</TABLE>";
+			}
+		else {															// not empty
+
+			$i = 1;	
+	
+			print "<TABLE BORDER=0 ALIGN='left' WIDTH='88%'  cellspacing = 1 CELLPADDING = 1 ID='call_board' STYLE='display:block'>\n";	// 5/24/09
+ 			print "<TR CLASS='even'><TD COLSPAN=14 ALIGN = 'center'><B>Call Board</B>&nbsp;&nbsp;&nbsp;&nbsp;<FONT SIZE='-3'><I> (mouseover/click for details)</I></FONT></TD><TD WIDTH=150px></TD></TR>\n";	// 5/24/09
+		
 			$doUnit = (is_guest())? "viewU" : "editU";
 			$doTick = (is_guest())? "viewT" : "editT";				// 06/26/08
 			$now = time() - (get_variable('delta_mins')*60);
 			$items = mysql_affected_rows();
 			$header = "<TR CLASS='even'>";
 			
-			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph'>Incident</TD>";		// 9/27/08
+			$header .= "<TD COLSPAN=2 ALIGN='center' CLASS='emph' WIDTH='40%'>Incident</TD>";		// 9/27/08
 			$header .= "<TD>&nbsp;</TD>";
-			$header .= "<TD COLSPAN=3 ALIGN='center' CLASS='emph'>Unit</TD>";			// 3/27/09
+			$header .= "<TD COLSPAN=7 ALIGN='center' CLASS='emph'WIDTH='35%'>Unit</TD>";			// 3/27/09
 			$header .= "<TD>&nbsp;</TD>";
-			$header .= "<TD COLSPAN=8 ALIGN='center' CLASS='emph'>Dispatch</TD>";
+			$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emph'WIDTH='25%'>Dispatch</TD>";
 			$header .= "</TR>\n";
 
-			$header .= "<TR CLASS='odd'>";
-			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='center'>Addr</TD>";
-			$header .= "<TD>&nbsp;</TD>";
-			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD><TD ALIGN='center'>&nbsp;<IMG SRC='mail.png'></TD><TD COLSPAN=2  ALIGN='left' >&nbsp;&nbsp;&nbsp;Status</TD>";		// 9/27/08
-//			$header .= "<TD>&nbsp;</TD>";
-			$header .= "<TD ALIGN='center' CLASS='emph'>As of</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>Comment</TD><TD TITLE= 'Dispatched' ALIGN='center'>D</TD>
-				<TD TITLE= 'Responding' ALIGN='center'>R</TD><TD TITLE= 'On scene' ALIGN='center'>O</TD><TD ALIGN='center'>Clear</TD><TD></TD>";		// 1/12/09
+			$header .= "<TR CLASS='odd'>";												// 4/26/09
+			$header .= "<TD ALIGN='center' CLASS='emph'>Name</TD>
+						<TD ALIGN='center'>Addr</TD>
+						<TD ALIGN='center'>&nbsp;</TD>
+						<TD ALIGN='center' CLASS='emph'>Name</TD>
+						<TD ALIGN='center' TITLE='E-mail'><IMG SRC='mail.png'></TD>
+						<TD ALIGN='center' TITLE= 'Dispatched'>D</TD>
+						<TD ALIGN='center' TITLE= 'Responding'>R</TD>
+						<TD ALIGN='center' TITLE= 'On scene'  >O</TD>
+						<TD ALIGN='left' TITLE= 'Dispatch cleared'>Clear</TD>
+						
+						<TD COLSPAN=2  ALIGN='left' >&nbsp;&nbsp;&nbsp;Status</TD>
+						<TD ALIGN='center' CLASS='emph'>As of</TD>
+						<TD ALIGN='center'>&nbsp;By&nbsp;</TD>
+						<TD ALIGN='center'>&nbsp;Comment </TD>
+						<TD ALIGN='center' TITLE='Reset unit dispatch times or Delete dispatch' width='5%'>&nbsp;R/D </TD>	<!-- 5/28/09 -->
+						<TD>&nbsp;</TD>";		// 1/12/09
 			$header .= "</TR>\n";
 
 			$dis = $guest? " DISABLED ": "";				// 3/1/09
@@ -681,18 +1013,23 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 					print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>\n";
 					print "<FORM NAME='F$i' METHOD='get' ACTION='' $dis >\n";
 
-// 	 INCIDENTS	2 cols
-					$in_strike = 	($row['thestatus']== $GLOBALS['STATUS_CLOSED'])? "<STRIKE>": "";					// 11/7/08
-					$in_strikend = 	($row['thestatus']== $GLOBALS['STATUS_CLOSED'])? "</STRIKE>": "";
-
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . htmlentities ($row['theticket'], ENT_QUOTES) . "' ALIGN='left'>" . $in_strike . shorten($row['theticket'], 16) . $in_strikend . "</TD>\n";		// call 8/24/08
-					$address = (empty($row['street']))? "" : $row['street'] . ", ";
-					$address .= $row['city'];
-					print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". htmlentities($address, ENT_QUOTES) ."' ALIGN='left'>" .  $in_strike . shorten($address, 16) .  $in_strikend .	"</TD>\n";		// address 8/24/08, 1/17/09
-// 
-					print "\t<TD></TD>\n";				// 9/28/08
+// 	 INCIDENTS	2 cols + sep
+					if (!(empty($row['scope']))) {
+						$in_strike = 	($row['thestatus']== $GLOBALS['STATUS_CLOSED'])? "<STRIKE>": "";					// 11/7/08
+						$in_strikend = 	($row['thestatus']== $GLOBALS['STATUS_CLOSED'])? "</STRIKE>": "";
+	
+						print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE= '" . $row['ticket_id'] .":" . addslashes ($row['theticket']) . "' ALIGN='left'>" . $in_strike . shorten($row['theticket'], 24) . $in_strikend . "</TD>\n";		// call 8/24/08, 4/26/09
+						$address = (empty($row['street']))? "" : $row['street'] . ", ";
+						$address .= $row['city'];
+						print "\t<TD onClick = $doTick('" . $row['ticket_id'] . "') CLASS='$theClass' TITLE='". addslashes($address) ."' ALIGN='left'>" .  $in_strike . shorten($address, 32) .  $in_strikend .	"</TD>\n";		// address 8/24/08, 1/17/09
+						}
+					else {
+						print "<TD COLSPAN=2>[#{$row['ticket_id']}]</TD>";				// id only if absent
+						}
+					print "\t<TD></TD>\n";				// 9/28/08, 4/26/09
 
 //  UNITS			3 col's
+
 					if (is_date($row['clear'])) {							// 6/26/08
 						$strike = "<STRIKE>"; $strikend = "</STRIKE>";		// strikethrough on closed assigns
 						}
@@ -700,129 +1037,104 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 						$strike = $strikend = "";
 						}			
  
-					if (!($row['responder_id']==0)) {
-						print "\t<TD onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . htmlentities ($row['theunit'], ENT_QUOTES) . "' ALIGN='left'>" .  shorten($row['theunit'], 14) . "</TD>\n";							// unit 8/24/08, 1/17/09
-						print "<TD  CLASS='mylink' onmouseover =\"$('c{$i}').style.visibility='visible';\" onmouseout = \"$('c{$i}').style.visibility='hidden'; \" ALIGN='center'>
-							<SPAN id=\"c{$i}\" style=\"visibility: hidden\">
-							&nbsp;<IMG SRC='mail.png' BORDER=0 TITLE = 'click to email unit ". htmlentities ($row['theunit'], ENT_QUOTES) . 
-							"' onclick = \"do_mail_win(F{$i}.frm_contact_via.value, {$row['ticket_id']}); \"> 
-							</SPAN></TD>";
+
+					if (!($row['responder_id']==0)) {																	// 5/11/09
+						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : $row['theunit'] ;			// id only if absent
+							print "\t<TD CLASS='$theClass' onClick = $doUnit('" . $row['responder_id'] . "') TITLE = '" . addslashes($unit_name) . "' ALIGN='left'><B>" .  shorten($unit_name, 14) . "</B></TD>\n";							// unit 8/24/08, 1/17/09
+							print "\t<TD  CLASS='mylink' onmouseover =\"$('c{$i}').style.visibility='visible';\" onmouseout = \"$('c{$i}').style.visibility='hidden'; \" ALIGN='center'>
+								\n\t<SPAN id=\"c{$i}\" style=\"visibility: hidden\">
+								&nbsp;<IMG SRC='mail.png' BORDER=0 TITLE = 'click to email unit ". addslashes($row['theunit']) . 
+								"' onclick = \"do_mail_win(F{$i}.frm_contact_via.value, {$row['ticket_id']}); \"> 
+								</SPAN></TD>\n";		// 4/26/09
+	
+	
+						if (is_guest()) {				// 4/11/09
+							$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": " DISABLED ";
+							}
+						else {
+							$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": "  onClick = \"\$('span_do_add').style.display='none';\$('span_do_all').style.display=''\"";		// 5/20/09
+							}
+						print "\t<TD CLASS='$theClass' TITLE= 'Dispatched'><INPUT TYPE='checkbox' NAME='frm_dispatched' $is_cd ></TD>\n"; 
+						
+						if (is_guest()) {
+							$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": " DISABLED ";
+							}
+						else {
+							$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": "  onClick = \"\$('span_do_add').style.display='none';\$('span_do_all').style.display=''\"";		// 5/20/09
+							}
+						print "\t<TD CLASS='$theClass' TITLE= 'Responding'><INPUT TYPE='checkbox' NAME='frm_responding' $is_cd ></TD>\n"; 
+						
+						if (is_guest()) {
+							$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " DISABLED ";
+							}
+						else {
+							$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " onClick = \"\$('span_do_add').style.display='none';\$('span_do_all').style.display=''\"";		// 5/20/09
+							}
+						print "\t<TD CLASS='$theClass' TITLE= 'On scene'><INPUT TYPE='checkbox' NAME='frm_on_scene' $is_cd ></TD>\n"; // note names!
+	
+						print "\t<TD CLASS='$theClass' TITLE= 'Clear' ALIGN='left'>";
+
+						if (is_date($row['clear'])) {						// 5/20/09
+							$cb_display = "none";
+							$ct_display = "inline";
+							$ct_value   = ezDate($row['clear']);
+							$is_disabled = "";
+							}
+						else {
+							$cb_display  = "inline";
+							$ct_display  = "none";
+							$ct_value    = "";							
+							$is_disabled = "";
+							}
+						$is_disabled = (is_guest())? " DISABLED ": "";
+						
+						print "<SPAN ID = 'F{$i}cb' STYLE='white-space: nowrap; display: $cb_display'>". "<INPUT TYPE='checkbox' NAME='frm_clear' $is_disabled  onClick = \"\$('span_do_add').style.display='none';\$('span_do_all').style.display=''\""  . "</SPAN>";;		
+						print "<SPAN ID = 'F{$i}ct' STYLE='white-space: nowrap; display: $ct_display'>". $ct_value . "</SPAN>";		//
+
+						print "</TD>\n";		// end clear
+						
 						if (!in_array ($row['responder_id'], $unit_ids)) {				// 10/9/08
 							$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
-
+	
 							print "\t<TD TITLE= '$unit_st_val'>" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
-//							print "\t<TD ID=TD$i STYLE='display:none'>\n\t<SPAN ID='tbd' STYLE='display:none'><INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i);\">\n";
 							
-						print "\t<TD>\n\t<SPAN ID=TD$i STYLE='display:none'><INPUT TYPE='button' VALUE='Go' style = 'height: 1.5em' onClick=\"to_server(F$i); window.opener.parent.frames['main'].location.reload();\">\n"; 		// 9/28/08
-							print "\t<INPUT TYPE='button' VALUE='Cancel'  style = 'height: 1.5em;' onClick=\"document.F$i.reset();hide_but($i)\"></SPAN></TD>\n";
+							print "\t<TD>\n\t<SPAN ID=TD$i STYLE='display:none'><INPUT TYPE='button' VALUE='Go'  CLASS = 'btn' onClick=\"to_server(F$i); window.opener.parent.frames['main'].location.reload();\">\n"; 		// 9/28/08
+							print "\t<INPUT TYPE='button' VALUE='Cancel'   CLASS = 'btn' onClick=\"document.F$i.reset();hide_but($i)\"></SPAN></TD>\n";
 							array_push($unit_ids, $row['responder_id']);
 							}
 						else {
 							print "<TD COLSPAN=2></TD>";
 							}
-						}
-					else {
+						}			// end 'got a responder'
+					else {	
 						print "\t<TD COLSPAN=3  CLASS='$theClass' onClick = editA(" . $row['assign_id'] . ") ID='myDate$i' ALIGN='left'><B>&nbsp;&nbsp;&nbsp;&nbsp;NA</b></TD>\n";	
-						}
-// 
-//					print "\t<TD></TD>\n";				// 9/28/08
+						}		// end 'no responder'
+
 //   ASSIGNS	8 cols	- 1/12/09
+
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); ID='myDate$i' ALIGN='right' TITLE='" . date("n/j `y H:i", $row['as_of']) ." '>" .  $strike . date("H:i", $row['as_of'])  .  $strikend . "</TD>\n";				// as of 
 					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE = '" . $row['theuser'] . "'>" .  $strike . shorten ($row['theuser'], 8) .  $strikend . "</TD>\n";															// user  
-					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE='" . $row['assign_id'] . ": " . shorten ($row['assign_comments'], 72) . "'>" . $strike .  shorten ($row['assign_comments'], 14) . $strikend .  "</TD>\n";	// comment
+					print "\t<TD CLASS='$theClass' onClick = editA(" . $row['assign_id'] . "); TITLE='" . $row['assign_comments'] . ": " . shorten ($row['assign_comments'], 28) . "'>" . $strike .  shorten ($row['assign_comments'], 8) . $strikend . "</TD>\n";	// comment
+					
+					print "\t<TD TITLE = 'Click to RESET D R O C times' CLASS='mylink' ALIGN='center'>
+						<INPUT TYPE='radio' NAME = 'res_times' {$dis} onClick = \"do_assgn_reset({$row['assign_id']}, this.form)\" /></TD>\n";
 
-					if (is_guest()) {				// 4/11/09
-						$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": " DISABLED ";
-						}
-					else {
-						$is_cd = (is_date($row['dispatched']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
-						}
-					print "\t<TD CLASS='$theClass' TITLE= 'Dispatched'><INPUT TYPE='checkbox' NAME='frm_dispatched' $is_cd ></TD>\n"; 
-					
-					if (is_guest()) {
-						$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": " DISABLED ";
-						}
-					else {
-						$is_cd = (is_date($row['responding']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
-						}
-					print "\t<TD CLASS='$theClass' TITLE= 'Responding'><INPUT TYPE='checkbox' NAME='frm_responding' $is_cd ></TD>\n"; 
-					
-					if (is_guest()) {
-						$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " DISABLED ";
-						}
-					else {
-						$is_cd = (is_date($row['on_scene']))? " CHECKED DISABLED": " onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"";
-						}
-					print "\t<TD CLASS='$theClass' TITLE= 'On scene'><INPUT TYPE='checkbox' NAME='frm_on_scene' $is_cd ></TD>\n"; // note names!
-
-					print "\t<TD CLASS='$theClass' TITLE= 'Clear'>";
-					if (is_date($row['clear'])) {
-//						dump($row['clear']);
-						print "<NOBR>". ezDate($row['clear']) . "</NOBR></TD>\n";		//
-						}
-					else {
-						$dis = (is_guest())? " DISABLED ": "";
-						print "<INPUT TYPE='checkbox' NAME='frm_clear' $dis onClick = \"$('B$i').style.display = ''; $('btn_do_all').style.display='';\"></TD>\n";
-						}
-					
-					print "\t<TD ID='B$i' STYLE='display:none'>";
-//					print "<INPUT TYPE='button' VALUE='Go'  onClick = \"do_sub($i-1, 'B$i');\"><INPUT TYPE='reset' VALUE='Cancel' onClick = '$(\"B$i\").style.display = \"none\"; do_res( $i-1);'></TD>\n";
-					print "<INPUT TYPE='reset' VALUE='Reset' onClick = '$(\"B$i\").style.display = \"none\"; do_res( $i-1);'></TD>\n";
-//	
+					print "\t<INPUT TYPE='hidden' NAME='frm_the_unit' VALUE='" . addslashes($row['theunit']) . "'>\n";  
 					print "\t<INPUT TYPE='hidden' NAME='frm_contact_via' VALUE='" . $row['contact_via'] . "'>\n";
 					print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['responder_id'] . "'>\n";
 					print "\t<INPUT TYPE='hidden' NAME='frm_ticket_id' VALUE='" . $row['ticket_id'] . "'>\n";
-					print "\t<INPUT TYPE='hidden' NAME='frm_assign_id' VALUE='" . $row['assign_id'] . "'>\n";		// 1/12/09
+					print "\t<INPUT TYPE='hidden' NAME='frm_assign_id' VALUE='" . $row['assign_id'] . "'>\n";		// 1/12/09 
 //					print "\t<INPUT TYPE='hidden' NAME='frm_mailed' VALUE='" . $row['mailed'] . "'>\n";				// 3/25/09
 					print "</FORM>\n</TR>\n";
 					$i++;			 
 				}		// end while($row ...)
 				$lines = $i;
+//				snap(basename(__FILE__), __LINE__);
 			}		// end if (mysql_affected_rows()>0) 
-		$lines = $i;
 
-		if ($i>1) {
-			print "<TR CLASS='" . $evenodd[($i+1)%2] . "'><TD COLSPAN=99 ALIGN='center'>";
-			print "<FONT SIZE='-2'><I>Incident severity:&nbsp;&nbsp;&nbsp;&nbsp;<span CLASS='text_black'><FONT SIZE='-2'>Normal</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='severity_medium'><FONT SIZE='-2'>Medium</span>&nbsp;&nbsp;&nbsp;&nbsp; <span CLASS='severity_high'><FONT SIZE='-2'>High</span></I></FONT>\n";
-			print "</TD></TR>\n";				
-			}				
-		else {
-			print "<TR><TH COLSPAN=99>&nbsp;</TH></TR>\n";
-			print "<TR><TH COLSPAN=99><BR />No Current Call Assignments<BR /></TH></TR>\n";
-			}
-		print "<TR CLASS='" . $evenodd[($i+1)%2] . "'>&nbsp;<TD COLSPAN=99 ALIGN='center'>";
-		if (!is_guest()) {																		// 9/17/08
-			print "<INPUT TYPE='button' VALUE = 'Add' onClick = \"document.nav_form.func.value='add'; document.nav_form.submit()\">";
-			print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n";
-			}
-		$dis = $guest? " DISABLED ": "";
-		print "<INPUT TYPE='button' VALUE = 'Close' onClick = 'self.close()'/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n"; // 2/18/09
-		print "<INPUT TYPE='button' $dis VALUE='Apply all' ID = 'btn_do_all' onClick=\"do_all();
-			$('done_id').style.visibility='visible';  
-			setTimeout('$(\'done_id\').style.visibility=\'hidden\';', 2000);\"
-			style='display: none;'/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-		print "<SPAN ID = 'done_id' CLASS = 'emph' STYLE='visibility:hidden'><B>&nbsp;Done!&nbsp;</B></SPAN>";
-		switch ($my_session['f2']) {
-			case "":
-			case " ":
-			case "s":
-				$checkeds = " CHECKED ";
-				$checkedh = "";
-			    break;
-			case "h":
-				$checkeds = "";
-				$checkedh = " CHECKED ";
-				break;
-			default:
-			    echo "error" . __LINE__ . "<BR />";;
-				}
-		
-		print "<BR />Cleared:&nbsp;&nbsp;&nbsp;&nbsp;Show&raquo;
-			<INPUT NAME='frm_sorh' TYPE='radio' value='s' $checkeds onChange = 'document.nav_form.chg_hide.value=1;do_hors(\"s\")'/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hide&raquo;
-			<INPUT NAME='frm_sorh' TYPE='radio' value='h' $checkedh onChange = 'document.nav_form.chg_hide.value=1;do_hors(\"h\")'/>";
-		print "</TD></TR>\n";
-		print "</TABLE>";		
 ?>
+
+
 <SCRIPT>
 
 	function do_hors (str) {		// set hide/show cleared via reload - 2/20/09
@@ -838,8 +1150,7 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			if (announce) {alert('Update complete (no e-mail sent)');}
 			}			// end function handleResult(
 	
-	function do_sub(the_form, the_button) {				// form submitted	1/20/09, 2/28/09
-		$(the_button).style.display = "none";			// hide the button
+	function do_sub(the_form) {				// form submitted	1/20/09, 2/28/09, 5/20/09
 
 		var vals = sep = "";
 		for (j=0; j<document.forms[the_form].elements.length; j++) {
@@ -865,8 +1176,8 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 
 	function do_this_form(the_index) {				// call ajax function for each clicked button 
 		the_val = parseInt(the_index)+1;
-		the_button = "B"+the_val;
-		do_sub(the_index, the_button);				// 
+//		var t=setTimeout("var dummy = false",10000);
+		do_sub(the_index);				// 
 		if (!(document.forms[the_index].frm_contact_via.value == "")) {
 			the_ticket_id = document.forms[the_index].frm_ticket_id.value;
 			if (the_ticket_id in ary_addrs) {
@@ -879,14 +1190,34 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 		}				// end function do_this_form()
 
 	function do_all() {										// 2/19/09
+		var do_refresh = false;								// 6/16/09
 		for (i=0; i< document.forms.length; i++) {			// look at each form
+//			alert(document.forms[i].name);
 			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_dispatched.disabled ) && (document.forms[i].frm_dispatched.checked)) {do_this_form(i);}
 			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_responding.disabled ) && (document.forms[i].frm_responding.checked)) {do_this_form(i);}
-			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_on_scene.disabled ) && (document.forms[i].frm_on_scene.checked)) {do_this_form(i);}
-			if ((document.forms[i].name.substring(0,1)=="F") && (document.forms[i].frm_clear) && (!document.forms[i].frm_clear.disabled ) && (document.forms[i].frm_clear.checked)) {do_this_form(i);}
-			}			
+			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_on_scene.disabled )   && (document.forms[i].frm_on_scene.checked))   {do_this_form(i);}
+			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_clear.disabled )      && (document.forms[i].frm_clear.checked))      {do_this_form(i); do_refresh = true;}		// 6/16/09
+
+//			if ((document.forms[i].name.substring(0,1)=="F") && (document.forms[i].frm_clear) && (!document.forms[i].frm_clear.disabled ) && (document.forms[i].frm_clear.checked)) {do_this_form(i); do_refresh = true;}		// 6/16/09
+			}
+		if (do_refresh) {document.can_Form.submit();}		//  at least one cleared item so do screen refresh  - 6/16/09
 		}		// end function do all()
 
+	function clr_all_btn(){
+//		alert(986);
+		var a_check = false;
+
+		for (i=0; i< document.forms.length; i++) {			// look at each form
+			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_dispatched.disabled ) && (document.forms[i].frm_dispatched.checked)) 		{a_check = true; }
+			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_responding.disabled ) && (document.forms[i].frm_responding.checked)) 		{a_check = true; }
+			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_on_scene.disabled ) && (document.forms[i].frm_on_scene.checked)) 			{a_check = true; }
+			if ((document.forms[i].name.substring(0,1)=="F") && (document.forms[i].frm_clear) && (!document.forms[i].frm_clear.disabled ) && (document.forms[i].frm_clear.checked)) {a_check = true;  }
+			}				// end for ( ... )
+//		alert("995 " + a_check);
+		if (!a_check){
+			$('btn_do_all').style.visibility='hidden'; 
+			}
+		}		// end function clr_all_btn()
 
 </SCRIPT>
 <?php
@@ -896,7 +1227,9 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 ?>
 		<SCRIPT>
 		function reSizeScr() {
-			window.resizeTo(800,300);		
+<?php
+			if (get_variable('call_board')==1) {print "window.resizeTo(800,300);\n";}
+?>				
 			}
 		</SCRIPT>
 		</HEAD>
@@ -960,10 +1293,10 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			
 			<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
 				<br>
-				<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();" style="height: 1.5em;">&nbsp;&nbsp;&nbsp;&nbsp;	
+				<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();"  CLASS = 'btn' />&nbsp;&nbsp;&nbsp;&nbsp;	
 <?php
 			if(!is_guest()){
-				print "<INPUT TYPE='BUTTON' VALUE='Edit' onClick='document.nav_form.func.value=\"edit\";document.nav_form.submit();' style='height: 1.5em;'>\n";
+				print "<INPUT TYPE='BUTTON' VALUE='Edit' onClick='document.nav_form.func.value=\"edit\";document.nav_form.submit();'  CLASS = 'btn'>\n";
 				}
 ?>			
 				</TD></TR>
@@ -1022,7 +1355,9 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 				}
 			}		// end function confirmation()
 		function reSizeScr() {
-			window.resizeTo(800,300);		
+<?php
+			if (get_variable('call_board')==1) {print "window.resizeTo(800,300);\n";}
+?>				
 			}
 		function enable(instr) {
 			var element= instr
@@ -1039,6 +1374,13 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 		</SCRIPT>
 		</HEAD>
 		<BODY onLoad = "reSizeScr()"><CENTER>		<!-- 1/12/09 -->
+			<DIV ID = 'edit_btns' STYLE="display:block; position:fixed; width:120px; height:auto; top:<?php print $from_top + 20;?>px; right: 150px; background-color:transparent; text-align:left;">	<!-- 5/17/09 -->				
+				<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" CLASS = 'btn' />	
+				<INPUT TYPE="button" VALUE="Reset" onclick="document.edit_Form.reset();"  CLASS = 'btn' />	
+				<INPUT TYPE="button" VALUE="           Submit           " name="sub_but" onClick="document.edit_Form.submit();"  CLASS = 'btn' >  
+				</LEFT>
+			</DIV>
+		
 <?php	
 			$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , `$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
 				`s`.`status_val` AS `thestatus`, `r`.`name` AS `theunit` FROM `$GLOBALS[mysql_prefix]assigns` 
@@ -1099,23 +1441,32 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 				<TD CLASS="td_label">Unit Status:</TD><TD>
 				<SELECT name="frm_unit_status_id"  onChange = "Javascript: unit_st=false; document.edit_Form.frm_log_it.value='1'" <?php print $disabled;?> > 
 <?php																// UNIT STATUS
-				if (intval($asgn_row['responder_id'])==0) {
-					print "\t<OPTION VALUE=0 SELECTED>Select</OPTION>\n";
-					}
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 				$the_grp = strval(rand());			//  force initial optgroup value
-				$i = 0;
+				$i = 0; 
+				$got_one = FALSE;
 				while ($row2 = stripslashes_deep(mysql_fetch_array($result))) {
 					if ($the_grp != $row2['group']) {
-						print ($i == 0)? "": "\t</OPTGROUP>\n";
+						print ($i == 0)? "": "\t\t\t</OPTGROUP>\n";
 						$the_grp = $row2['group'];
-						print "\t<OPTGROUP LABEL='$the_grp'>\n";
+						print "\t\t\t<OPTGROUP LABEL='$the_grp'>\n";
 						}
-					print "\t<OPTION VALUE=" . $row2['id'] . ">" . $row2['status_val'] . "</OPTION>\n";
+					$sel = "";															// 5/11/09
+					if (strtolower (substr($row2['status_val'], 0, 5)) == "avail"){
+						$sel = " SELECTED ";
+						$got_one = TRUE;
+						}
+						
+					print "\t\t\t<OPTION VALUE=" . $row2['id'] . " $sel >" . $row2['status_val'] . "</OPTION>\n";
 					$i++;
 					}		// end while()
-				print "\t</OPTGROUP>\n</SELECT>\n";
+				print "\t\t\t</OPTGROUP>\n";
+				
+				$the_option = (!($got_one))? "\t<OPTION VALUE=0 SELECTED>Select</OPTION>\n": "\n";				// 5/23/09
+				print $the_option;
+
+				print "</SELECT>\n";
 				unset($result);
 ?>
 				</TD></TR>
@@ -1201,28 +1552,28 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 				<TD colspan=2><?php print format_date($asgn_row['as_of']);?>&nbsp;&nbsp;&nbsp;&nbsp;By: <?php print $asgn_row['user'];?></TD>
 				</TR>		
 	
-			<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
+<!--		<TR CLASS="even" VALIGN="baseline"><TD colspan="99" ALIGN="center">
 				<br>
-				<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();" style="height: 1.5em;">
+				<INPUT TYPE="BUTTON" VALUE="Cancel"  onClick="history.back();"  CLASS = 'btn'>
 <?php
 				if (!$disabled) {
 ?>			
 				&nbsp;&nbsp;&nbsp;&nbsp;	
-				<INPUT TYPE="BUTTON" VALUE="Reset"  onclick="Javascript: do_reset(document.edit_Form)" style="height: 1.5em;"/>&nbsp;&nbsp;&nbsp;&nbsp;	
-				<INPUT TYPE="BUTTON" VALUE=" Submit " name="sub_but" onClick = "validate_ed(document.edit_Form)" style="width: 12em;height: 1.5em;" />
+				<INPUT TYPE="BUTTON" VALUE="Reset"  onclick="Javascript: do_reset(document.edit_Form)"  CLASS = 'btn'/>&nbsp;&nbsp;&nbsp;&nbsp;	
+				<INPUT TYPE="BUTTON" VALUE=" Submit " name="sub_but" onClick = "validate_ed(document.edit_Form)"  CLASS = 'btn' />
 				</TD></TR>
+-->				
 				<TR CLASS='odd'><TD>&nbsp;</TD></TR>
 				<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'>
 <?php
-	//			if(!(is_date($clear))){				// 6/4/08	// 6/26/08
 				if(!(is_date($asgn_row['clear']))){				// 6/4/08	// 6/26/08
 ?>		
-	<!--			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()" style="height: 1.5em;"/> -->
+	<!--			<INPUT TYPE="BUTTON" VALUE="Run Complete" onClick="confirmation()"  CLASS = 'btn'/> -->
 <?php
 					}
 				else {
 ?>		
-					<INPUT TYPE="BUTTON" VALUE="Delete" onClick="do_del(document.del_Form);" style="height: 1.5em;"/>
+					<INPUT TYPE="BUTTON" VALUE="Delete" onClick="do_del(document.del_Form);"  CLASS = 'btn'/>
 <?php
 					}
 				}
@@ -1251,30 +1602,6 @@ if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
 			break;			// end 	case 'edit': == } == 
 			
 		case 'edit_db':		// ==== {  ================================================ 
-/*
-array(10) {
-  ["frm_unit_id"]=>
-  string(1) "2"
-  ["frm_unit_status_id"]=>
-  string(1) "1"
-  ["frm_comments"]=>
-  string(3) "New"
-  ["frm_by_id"]=>
-  string(1) "1"
-  ["func"]=>
-  string(7) "edit_db"
-  ["frm_complete"]=>
-  string(0) ""
-  ["frm_id"]=>
-  string(1) "5"
-  ["frm_ticket_id"]=>
-  string(1) "1"
-  ["frm_log_it"]=>
-  string(1) "1"
-  ["lines"]=>
-  string(1) "5"
-}
-*/
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 			
 			if (isset($frm_inc_status_id)) {
@@ -1318,10 +1645,10 @@ array(10) {
 	<BODY>
 		<BR><BR><CENTER><H3><?php print $message; ?></H3><BR><BR>
 		<FORM NAME='ed_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
-		<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()"/>
+		<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()"  CLASS = 'btn'/>
 		<INPUT TYPE='hidden' NAME='func' VALUE='list'/>
 		<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
-		</FORM></BODY></HTML>
+		</FORM></BODY></HTML> <!-- 1616 -->
 <?php	
 			break;				// end 	case 'edit_db' == } ==
 			
@@ -1336,9 +1663,9 @@ array(10) {
 	<BODY><CENTER>		<!-- 1/12/09 -->
 		<BR><BR><CENTER><H3><?php print $message; ?></H3><BR><BR><BR>
 		<FORM NAME='ed_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
-		<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()"/>
+		<INPUT TYPE='button' VALUE='Continue' onClick = "document.ed_cont_form.submit()" CLASS = 'btn'/>
 		<INPUT TYPE='hidden' NAME='func' VALUE='list'/>
-		</FORM></BODY></HTML>
+		</FORM></BODY></HTML> <!-- 1406 -->
 <?php	
 			break;			// end case 'delete_db': === } ===
 	
@@ -1354,7 +1681,7 @@ array(10) {
 	<FORM NAME='nav_form' METHOD='post' ACTION = "<?php print basename(__FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='frm_id' VALUE=''/>
 	<INPUT TYPE='hidden' NAME='func' VALUE=''/>
-	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
+	<INPUT TYPE='hidden' NAME='lines' value=''/>
 	<INPUT TYPE='hidden' NAME='hide_cl' value='<?php print $hide_cl; ?>'/>		<!-- 1/20/09 -->
 	<INPUT TYPE='hidden' NAME='chg_hide' value='0'/>							<!-- 2/18/09 -->
 	</FORM>
@@ -1374,13 +1701,15 @@ array(10) {
 	<INPUT TYPE='hidden' 	NAME='func' VALUE='responder'/>
 	<INPUT TYPE='hidden' 	NAME='edit' VALUE='true'/>
 	</FORM>
-	
-	<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"/>
+
+<?php
+	$where = (get_variable('call_board')==2)? "index.php" :  basename(__FILE__);
+?>
+	<FORM NAME='can_Form' METHOD="post" TARGET = '_top' ACTION = "<?php print $where; ?>"/>
 	<INPUT TYPE='hidden' NAME='func' VALUE='list'/>
-	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines; ?>'/>
+	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines;?>'/>
 	</FORM>
-	</BODY></HTML>
+	</BODY></HTML><!-- 1447 -->
 <?php
 	}		// end else ...		1/13/09
 ?>	
-

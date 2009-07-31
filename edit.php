@@ -20,7 +20,9 @@
 2/11/09 added streetview
 2/11/09 added dollar function
 2/21/09 color code by severity
-5/2/09 USNG edit added, parsefloat
+5/2/09	USNG edit added, parsefloat
+7/7/09	protocol handling added
+7/16/09	protocol corrections
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -121,7 +123,7 @@
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<META HTTP-EQUIV="Script-date" CONTENT="8/23/08">
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 	<SCRIPT type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 	<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
@@ -370,9 +372,20 @@
 		theForm.frm_day_problemstart.disabled = true;
 		theForm.frm_hour_problemstart.disabled = true;
 		theForm.frm_minute_problemstart.disabled = true;
-//		document.getElementById("lock").style.visibility = "visible";	//8/23/08
+//		document.getElementById("lock").style.visibility = "visible";	// 8/23/08
 		}
 	
+	function do_inc_nature(indx) {										// 7/16/09
+		if (protocols[indx]) {
+			$('proto_cell').innerHTML = protocols[indx];
+			}
+		else {
+			$('proto_cell').innerHTML = "";		
+			}
+			
+		}			// end function
+		
+	var protocols = new Array();		// 7/7/09
 </SCRIPT>
 </HEAD>
 
@@ -406,8 +419,15 @@
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT><BR />";
 			} 
 
-		else {				// OK, do form
-			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' LIMIT 1") or do_error('', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		else {				// OK, do form - 7/7/09
+//			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' LIMIT 1") or do_error('', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,
+				UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` 
+				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
+				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
+	
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	
 			$row = stripslashes_deep(mysql_fetch_array($result));
 			if (good_date($row['problemend'])) {
 ?>
@@ -420,14 +440,14 @@
 			$theClass = $priorities[$row['severity']];
 
 				
-			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' >\n";
+			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' CLASS = 'BGCOLOR'>\n";
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left'>";
 	
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
 			print "<TABLE BORDER='0' ID='data'>\n";
 			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='$theClass'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
 			print "<TR CLASS='even'><TD CLASS='td_label'>Incident name:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
-			print "<TR CLASS='odd'><TD CLASS='$theClass'>Priority:</TD><TD><SELECT NAME='frm_severity'>";		// 2/21/09
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Priority:</TD><TD CLASS='$theClass'><SELECT NAME='frm_severity'>";		// 2/21/09
 			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
 			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
 			$hsel = ($row['severity']==$GLOBALS['SEVERITY_HIGH'])? "SELECTED" : "" ;
@@ -435,75 +455,86 @@
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_NORMAL'] . "' $nsel>normal</OPTION>";
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_MEDIUM'] . "' $msel>medium</OPTION>";
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>high</OPTION>";
-			print "</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nature:\n";
+			print "</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS='td_label'>Nature:</SPAN>\n";
 
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			print "<SELECT NAME='frm_in_types_id'>";
+			print "<SELECT NAME='frm_in_types_id' onChange='do_inc_nature(this.options[selectedIndex].value.trim());'>";
 			$the_grp = strval(rand());						// force initial optgroup value
 			$i = 0;
+			$proto = "";
 			while ($row2 = stripslashes_deep(mysql_fetch_array($result))) {
 				if ($the_grp != $row2['group']) {
 					print ($i == 0)? "": "</OPTGROUP>\n";
 					$the_grp = $row2['group'];
 					print "<OPTGROUP LABEL='$the_grp'>\n";
 					}
-			
-				$sel = ($row['in_types_id'] == $row2['id'])? " SELECTED" : "" ;
+				if ($row['in_types_id'] == $row2['id']) {		// 7/16/09
+					$sel = " SELECTED";
+					$proto = addslashes($row2['protocol']);
+					}
+				else {
+					$sel = "";
+					}			
 				print "<OPTION VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
+				if (!(empty($row2['protocol']))) {				// 7/7/09 - note string key
+					print "\n<SCRIPT>protocols[{$row2['id']}] = \"{$row2['protocol']}\";</SCRIPT>\n";
+					}
 				$i++;
 				}
 			unset ($result);
 			print "</OPTGROUP></SELECT>";
-			print "</TD></TR>\n";
+			print "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS='td_label'>Protocol:</SPAN></TD></TR>\n";
+
+			print "<TR CLASS='even'><TD CLASS='td_label'></TD><TD ID='proto_cell'>{$row['protocol']}</TD></TR>\n";
 			
-			print "<TR CLASS='even'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Phone:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>Phone:&nbsp;&nbsp;&nbsp;&nbsp;";
 			print 		"<button type=\"button\" onClick=\"Javascript:phone_lkup(document.edit.frm_phone.value);\"><img src=\"./markers/glasses.png\" alt=\"Lookup phone no.\" /></button>";	// 1/19/09
 			print 		"</TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_phone' VALUE='" . $row['phone'] . "' MAXLENGTH='16'></TD></TR>\n";
 			$selO = ($row['status']==$GLOBALS['STATUS_OPEN'])?   "SELECTED" :"";
 			$selC = ($row['status']==$GLOBALS['STATUS_CLOSED'])? "SELECTED" :"" ;
-			print "<TR CLASS='even'><TD CLASS='td_label'>Status:</TD><TD>
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Status:</TD><TD>
 				<SELECT NAME='frm_status'><OPTION VALUE='" . $GLOBALS['STATUS_OPEN'] . "' $selO>Open</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_CLOSED'] . "'$selC>Closed</OPTION></SELECT></TD></TR>";
-			print "<TR CLASS='odd'><TD COLSPAN='2'>&nbsp;</TD></TR>";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>City:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print "<TR CLASS='even'><TD COLSPAN='2'>&nbsp;</TD></TR>";
+			print "<TR CLASS='even'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>City:&nbsp;&nbsp;&nbsp;&nbsp;";
 			print 		"<button type=\"button\" onClick=\"Javascript:loc_lkup(document.edit);\"><img src=\"./markers/glasses.png\" alt=\"Lookup location.\" /></button>";
 			print 		"</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
 			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; St:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
-//			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
+//			print "<TR CLASS='odd'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
 	
-			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
+			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
 			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='2' >" . $row['description'] . "</TEXTAREA></TD></TR>\n";		// 10/8/08
-			print "\n<TR CLASS='even'><TD CLASS='td_label'>Run Start:</TD><TD>";
+			print "\n<TR CLASS='odd'><TD CLASS='td_label'>Run Start:</TD><TD>";
 			print  generate_date_dropdown("problemstart",$row['problemstart'],0, TRUE);
 			print "&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'st_unlk(document.edit);'></TD></TR>\n";
 			if (good_date($row['problemend'])) {
 //				dump(__LINE__);
 //				dump($row['problemend']);
-				print "\n<TR CLASS='odd'><TD CLASS='td_label'>Run End:</TD><TD>";
+				print "\n<TR CLASS='even'><TD CLASS='td_label'>Run End:</TD><TD>";
 				generate_date_dropdown("problemend",$row['problemend']);
 				print "</TD></TR>\n";
 				}
 			else {
-				print "\n<TR CLASS='odd' valign='middle'><TD CLASS='td_label'>Run End: &nbsp;&nbsp;<input type='radio' name='re_but' onClick ='do_end(this.form);' /></TD><TD>";
+				print "\n<TR CLASS='even' valign='middle'><TD CLASS='td_label'>Run End: &nbsp;&nbsp;<input type='radio' name='re_but' onClick ='do_end(this.form);' /></TD><TD>";
 				print "<SPAN style = 'visibility:hidden' ID = 'runend1'>";
 				generate_date_dropdown('problemend',0, TRUE);
 				print "</TD></TR>\n";
 				print "</SPAN></TD></TR>\n";
 				}
 
-			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08
+			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08
 			
 			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
+			print "<TR CLASS='even'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
 			print 	"<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
 			print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
 			print "</TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
 			$lat = $row['lat']; $lng = $row['lng'];	
-			print "<TR CLASS='odd'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='reset' VALUE='Reset' onclick= 'st_unlk_res(this.form); reset_end(this.form); resetmap($lat, $lng);' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>";
 ?>	
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $row['lat'];?>">				<!-- // 8/9/08 -->

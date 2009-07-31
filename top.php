@@ -40,7 +40,7 @@ $level =(empty($row))? NA_STR: get_level_text($row['level']);
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<META HTTP-EQUIV="Script-date" CONTENT="9/16/08">
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 	<META NAME="description" content="A free, Open Source Computer-Aided-Dispatch (CAD) application, especially suited to Volunteer Groups">	
 	<META NAME="keywords" content="'Computer-aided-dispatch', '9-1-1', Volunteers, CAD, Search and Rescue, Emergency Medicine, Open Source, PHP, MySQL, Mash-ups, Google Maps">
 <style type="text/css">
@@ -236,7 +236,7 @@ function do_callBoard() {
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=900,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=1100,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_cb)) {
 			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
 			return;

@@ -7,7 +7,9 @@
 //
 // Copyright (c) Aditus Consulting. All rights reserved.
 //========================================================================
-
+/*
+7/21/09	split() -> explode()
+*/
 require_once('jpg-config.inc.php');
 require_once('jpgraph_gradient.php');
 require_once('jpgraph_errhandler.inc.php');
@@ -189,8 +191,8 @@ require_once('gd_image.inc.php');
 
 function CheckPHPVersion($aMinVersion)
 {
-    list($majorC, $minorC, $editC) = split('[/.-]', PHP_VERSION);
-    list($majorR, $minorR, $editR) = split('[/.-]', $aMinVersion);
+    list($majorC, $minorC, $editC) = explode('.', PHP_VERSION);		// 7/21/09
+    list($majorR, $minorR, $editR) = explode('.', $aMinVersion);
   
     if ($majorC != $majorR) return false;
     if ($majorC < $majorR) return false;

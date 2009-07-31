@@ -1,15 +1,20 @@
 <?php  
+/*
+7/14/09	'IS NOT NULL' added to query
+*/
 require_once('./incs/functions.inc.php'); 
 extract($_GET);
 
 $where = " WHERE `when` > '" . $p1 . "' AND `when` < '" . $p2 . "' ";
+//				7/14/09
 $query = "
 	SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`,t.scope AS `tick_name`, t.severity AS `tick_severity` FROM `$GLOBALS[mysql_prefix]log`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
-	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'
+	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."' AND t.severity IS NOT NULL
 	ORDER BY `tick_severity` ASC		
 	";
 //dump ($query);
+//snap(__LINE__, $query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 $severities = array();
 
@@ -31,6 +36,7 @@ $mygraph = new baaChart($width);
 $mygraph->setTitle("Incidents by Severity", "");
 
 foreach($severities as $key => $val) {
+//	snap($key, $val);
 	if ((strlen($key)>0)) {
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE,$val, $legends[$key]);
 		}

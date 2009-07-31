@@ -2,7 +2,9 @@
 /*
 2/18/09 initial release
 2/28/09 added email addr validation
+7/12/09	general cleanup, added subject handling
 */
+$pre_pend = "";					// 7/12/09, prepend to message subject line, user values here
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 //dump($_GET);
@@ -10,21 +12,22 @@ require_once('./incs/functions.inc.php');
 if (empty($_POST)) {
 	$query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_GET['ticket_id']} LIMIT 1";	
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = mysql_fetch_array($result);
-	$title = substr(stripslashes($row['scope']), 0, 60);
+	$row = mysql_fetch_assoc($result);
 	unset($result);
 	}
+
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<TITLE>Email re:  <?php print $title; ?></TITLE>
+<TITLE>Message Edit</TITLE>
 <META NAME="Description" CONTENT="">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <SCRIPT>
 
@@ -82,31 +85,29 @@ function do_val(theForm) {										// 2/28/09
 
 <?php
 	if (empty($_POST)) {
-		$to_str = "ashore3@verizon.net";
-//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
-		
 		$text = mail_it ($_GET['addrs'], $_GET['text'], $_GET['ticket_id'], 3, TRUE) ;		// returns msg text **ONLY**
 		dump($text);
-		$temp = explode("\n", $text);
+		$lines = count(explode("\n", $text));		// 7/12/09
 ?>
 
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad = "reSizeScr(<?php print count($temp);?>)";><CENTER>
+<BODY onLoad = "reSizeScr(<?php print $lines;?>)";><CENTER>
 <H3>Edit message to suit</H3>
 <FORM NAME="mail_frm" METHOD="post" ACTION = "<?php print basename( __FILE__); ?>">
 <TABLE ALIGN='center' BORDER=0>
 <TR CLASS='even'><TD COLSPAN=2>
-		<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print count($temp); ?>><?php print $text ;?></TEXTAREA> <!-- allow four add'l lines -->
+		<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines; ?>><?php print $text ;?></TEXTAREA> <!-- allow four add'l lines -->
 	</TD></TR>
+<TR><TD CLASS='odd'>Subject:</TD><TD><INPUT TYPE='text' NAME= 'frm_subj' size = 60 MAXLENGTH=60 VALUE='<?php print $row['scope'];?>' /></TD></TR>
 <TR CLASS='even'><TD>Addressed to: </TD><TD><INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'>
 	</TD></TR>
 <TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><EM> note '</EM><B>|</B><EM>' separator</EM></TD></TR>
 <TR CLASS='even'><TD COLSPAN=2 ALIGN = 'center'>
-<INPUT TYPE="button" VALUE="OK - mail this" onClick = "do_val(document.mail_frm);">&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_frm.reset();">&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE="button" VALUE="Dont send" onClick = "javascript: if(confirm('Confirm do not send?')) {window.close()};">
+<INPUT TYPE="button" VALUE="OK - mail this" onClick = "do_val(document.mail_frm);" />&nbsp;&nbsp;&nbsp;&nbsp;
+<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_frm.reset(); /">&nbsp;&nbsp;&nbsp;&nbsp;
+<INPUT TYPE="button" VALUE="Dont send" onClick = "javascript: if(confirm('Confirm do not send?')) {window.close()};" />
 	</TD></TR></TABLE>
 </FORM>
 
@@ -114,7 +115,7 @@ function do_val(theForm) {										// 2/28/09
 	}		// end if (empty($_POST))
 
 else {
-	do_send ($_POST['frm_addrs'],"Tickets CAD",  $_POST['frm_text'] );		// - ($to_str, $subject_str, $text_str ) 
+	do_send ($_POST['frm_addrs'], $_POST['frm_subj'],  $_POST['frm_text'] );		// ($to_str, $subject_str, $text_str ) 7/13/09
 ?>
 </SCRIPT>
 </HEAD>
@@ -124,5 +125,5 @@ else {
 <?php
 	}				// end else
 ?>
-</BODY>
+</CENTER></BODY>
 </HTML>

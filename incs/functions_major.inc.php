@@ -49,6 +49,8 @@
 3/25/09 added time validation for remote sources, my_is_float()
 4/2/09 correction for sidebar letters, added default zoom handling, closed ticket display interval
 5/4/09 my_is_float() repl is_float
+7/9/09 popups, per AH, COLOR='blue' correction
+7/16/09	protocol display
 */
 
 //	{ -- dummy
@@ -60,10 +62,6 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 	$cwi = get_variable('closed_interval');			// closed window interval in hours
 
 //	snap(basename(__FILE__), __LINE__);
-
-//	$remotes = get_current();		// returns array - 3/16/09
-//	dump ($my_session);
-//	SELECT ticket.*, notify.id AS nid FROM ticket LEFT JOIN notify ON ticket.id=notify.ticket_id		WORKS
 
 	$get_status = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['status'])))) ) ? "" : $_GET['status'] ;
 	$get_sortby = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['sortby'])))) ) ? "" : $_GET['sortby'] ;
@@ -416,7 +414,7 @@ while (false !== ($filename = readdir($dh))) {
 //	dump ($kml_olays);
 ?>
 
-function do_track(callsign) {					// added 8/6/08
+function do_track(callsign) {		
 	if (parent.frames["upper"].logged_in()) {
 //		if(starting) {return;}					// 6/6/08
 //		starting=true;
@@ -433,7 +431,24 @@ function do_track(callsign) {					// added 8/6/08
 //		starting = false;
 		newwindow.focus();
 		}
-	}				// end function
+	}				// end function do track()
+
+function do_popup(id) {					// added 7/9/09
+	if (parent.frames["upper"].logged_in()) {
+		map.closeInfoWindow();
+		var width = <?php print get_variable('map_width');?>+32;
+		var spec ="titlebar, resizable=1, scrollbars, height=590,width=" + width + ",status=no,toolbar=no,menubar=no,location=0, left=100,top=300,screenX=100,screenY=300";
+		var url = "incident_popup.php?id="+id;
+
+		newwindow=window.open(url, id, spec);
+		if (isNull(newwindow)) {
+			alert ("Popup Incident display requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+//		starting = false;
+		newwindow.focus();
+		}
+	}				// end function do popup()
 
 	var side_bar_html = "<TABLE border=0 CLASS='sidebar' WIDTH = <?php print max(320, intval($my_session['scr_width']* 0.4));?> >";
 	side_bar_html += "<tr class='even'><td colspan=99 align='center'>Click for information</td></tr>";
@@ -549,7 +564,8 @@ function do_track(callsign) {					// added 8/6/08
 		$tab_1 .= 	$todisp . "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='main.php?id=" . $the_id . "'><U>Details</U></A>";		// 08/8/02
 		if (!(is_guest() && get_variable('guest_add_ticket')==0)) {
 			$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='edit.php?id=" . $the_id . $rand . "'><U>Edit</U></A><BR /><BR />";					// 10/21/08
-			$tab_1 .= 	"<A HREF='patient.php?ticket_id=" . $the_id . $rand ."'><U>Add Person</U></A>&nbsp;&nbsp;&nbsp;&nbsp;";
+			$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_popup('" . $the_id  . "');><FONT COLOR='blue'><B><U>Popup</B></U></FONT></SPAN><BR /><BR />" ;	// 7/7/09
+			$tab_1 .= 	"<A HREF='patient.php?ticket_id=" . $the_id . $rand ."'><U>Add Patient</U></A>&nbsp;&nbsp;&nbsp;&nbsp;";	// 7/9/09
 			$tab_1 .= 	"<A HREF='action.php?ticket_id=" . $the_id . $rand ."'><U>Add Action</U></A>";
 			}
 		$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08
@@ -818,7 +834,7 @@ function do_track(callsign) {					// added 8/6/08
 ?>
 			var myinfoTabs = [
 				new GInfoWindowTab("<?php print nl2brr(shorten($row['name'], 10));?>", "<?php print $tab_1;?>"),
-				new GInfoWindowTab("<?php print $row_aprs['source']; ?>", "<?php print $tab_2;?>"),
+				new GInfoWindowTab("APRS <?php print addslashes(substr($row_aprs['source'], -3)); ?>", "<?php print $tab_2;?>"),
 				new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
 				];
 <?php
@@ -835,7 +851,7 @@ function do_track(callsign) {					// added 8/6/08
 ?>
 			var myinfoTabs = [
 				new GInfoWindowTab("<?php print nl2brr(shorten($row['name'], 10));?>", "<?php print $tab_1;?>"),
-				new GInfoWindowTab("<?php print $row_instam['source']; ?>", "<?php print $tab_2;?>"),
+				new GInfoWindowTab("Instam <?php print addslashes(substr($row_instam['source'], -3)); ?>", "<?php print $tab_2;?>"),
 				new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>") // 830
 				];
 <?php
@@ -850,11 +866,14 @@ function do_track(callsign) {					// added 8/6/08
 <?php
 			}		// end if(!($tabs_done))
 
+		$temp = $u_types[$row['type']];		// array ($row['name'], $row['icon'])
+//		dump($temp);
+		$the_color = ($row['mobile']=="1")? 0 : 4;		// icon color black, white		-- 4/18/09
 ?>
 		var the_class = ((map_is_fixed) && (!(mapBounds.containsLatLng(point))))? "emph" : "td_label";
 		do_sidebar ("<?php print $sidebar_line; ?>", i, sym, the_class);		// (instr, id, sym, myclass)
 
-		var marker = createMarker(point, myinfoTabs,<?php print $row['type'];?>, i, sym);	// 836  - 3/3/09
+		var marker = createMarker(point, myinfoTabs, <?php print $the_color;?>, i, sym);	// 859  - 4/18/09
 		map.addOverlay(marker);
 <?php
 		}		// end position data available
@@ -956,7 +975,13 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 
 	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$my_session[user_id]" : "";
 
-	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' $restrict_ticket";
+//	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,
+//		UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' $restrict_ticket";
+
+	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,
+		UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` 
+		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
+		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`='$id' $restrict_ticket";			// 7/16/09
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (!mysql_num_rows($result)){	//no tickets? print "error" or "restricted user rights"
@@ -966,16 +991,13 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 
 	$row = stripslashes_deep(mysql_fetch_assoc($result));
 
-	$query = "SELECT *  FROM `$GLOBALS[mysql_prefix]in_types` WHERE `id`= $id";
-	$result_type = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row_type = stripslashes_deep(mysql_fetch_assoc($result_type));
-
 	if ($print == 'true') {
 
 		print "<TABLE BORDER='0' CLASS='print_TD' width='800px'>";
 		print "<TR><TD CLASS='print_TD'><B>Incident</B>:</TD>	<TD CLASS='print_TD'>" . $row['scope'].	"&nbsp;&nbsp;<I>(#" . $row['id'] . ")</I></TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Priority:</B></TD>	<TD CLASS='print_TD'>" . get_severity($row['severity']);
-		print  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Nature:</B>&nbsp;&nbsp;" . get_type($row['in_types_id']) . "</TD></TR>\n";
+		print  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Nature:</B>&nbsp;&nbsp;{$row['type']}</TD></TR>\n";
+		print "<TR><TD CLASS='print_TD'><B>Protocol:</B>:</TD>	<TD CLASS='print_TD'>{$row['protocol']}</TD></TD></TR>\n";		// 7/16/09
 		print "<TR><TD CLASS='print_TD'><B>Written</B>:</TD>	<TD CLASS='print_TD'>" . format_date($row['date']) . "</TD></TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Updated</B>:</TD>	<TD CLASS='print_TD'>" . format_date($row['updated']) . "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Reported by</B>:</TD><TD CLASS='print_TD'>" . $row['contact'].	"</TD></TR>\n";
@@ -1284,6 +1306,9 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "<TR CLASS='odd' ><TD>Priority:</TD> <TD CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nature:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
 	$print .= "</TD></TR>\n";
+
+	$print .= "<TR CLASS='odd' ><TD>Protocol:</TD> <TD CLASS='{$severityclass}'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
+	
 	$print .= "<TR CLASS='even'><TD>Written:</TD>		<TD>" . format_date($theRow['date']) . "</TD></TD></TR>\n";
 	$print .= "<TR CLASS='odd' ><TD>Updated:</TD>		<TD>" . format_date($theRow['updated']) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even'><TD>Reported by:</TD>	<TD>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
@@ -1325,6 +1350,299 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 
 
 //	} -- dummy
+
+function popup_ticket($id,$print='false', $search = FALSE) {								/* 7/9/09 - show specified ticket */
+	global $my_session, $istest;
+
+	if($istest) {
+		print "GET<br />\n";
+		dump($_GET);
+		print "POST<br />\n";
+		dump($_POST);
+		}
+
+	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
+		print "Invalid Ticket ID: '$id'<BR />";
+		return;
+		}
+
+	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$my_session[user_id]" : "";
+
+	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' $restrict_ticket";
+
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if (!mysql_num_rows($result)){	//no tickets? print "error" or "restricted user rights"
+		print "<FONT CLASS=\"warn\">No such ticket or user access to ticket is denied</FONT>";
+		exit();
+		}
+
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+?>
+	<TABLE BORDER="0" ID = "outer" ALIGN="left">
+<?php
+
+	print "<TD ALIGN='left'>";
+	print "<TABLE ID='theMap' BORDER=0><TR CLASS='odd' ><TD  ALIGN='center'>
+		<DIV ID='map' STYLE='WIDTH:" . get_variable('map_width') . "px; HEIGHT: " . get_variable('map_height') . "PX'></DIV>
+		</TD></TR>";	// 11/29/08
+
+	print "<FORM NAME='sv_form' METHOD='post' ACTION=''><INPUT TYPE='hidden' NAME='frm_lat' VALUE=" .$row['lat'] . ">";		// 2/11/09
+	print "<INPUT TYPE='hidden' NAME='frm_lng' VALUE=" .$row['lng'] . "></FORM>";
+
+	print "<TR ID='pointl1' CLASS='print_TD' STYLE = 'display:none;'>
+		<TD ALIGN='center'><B>Range:</B>&nbsp;&nbsp; <SPAN ID='range'></SPAN>&nbsp;&nbsp;<B>Brng</B>:&nbsp;&nbsp;
+			<SPAN ID='brng'></SPAN></TD></TR>\n
+		<TR ID='pointl2' CLASS='print_TD' STYLE = 'display:none;'>
+			<TD ALIGN='center'><B>Lat:</B>&nbsp;<SPAN ID='newlat'></SPAN>
+			&nbsp;<B>Lng:</B>&nbsp;&nbsp; <SPAN ID='newlng'></SPAN>&nbsp;&nbsp;<B>NGS:</B>&nbsp;<SPAN ID = 'newusng'></SPAN></TD></TR>\n";
+	print "</TABLE>\n";
+	print "</TD></TR>";
+	print "<TR CLASS='odd' ><TD COLSPAN='2' CLASS='print_TD'>";
+	$lat = $row['lat']; $lng = $row['lng'];
+	print "</TABLE>\n";
+
+
+?>
+<!--	<SCRIPT SRC='../js/usng.js' TYPE='text/javascript'></SCRIPT>
+	<SCRIPT SRC="../js/graticule.js" type="text/javascript"></SCRIPT> 10/14/08 -->
+	<SCRIPT>
+	function isNull(val) {								// checks var stuff = null;
+		return val === null;
+		}
+
+	var the_grid;
+	var grid = false;
+	function doGrid() {
+		if (grid) {
+			map.removeOverlay(the_grid);
+			grid = false;
+			}
+		else {
+			the_grid = new LatLonGraticule();
+			map.addOverlay(the_grid);
+			grid = true;
+			}
+		}
+
+	String.prototype.trim = function () {				// 9/14/08
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+
+	String.prototype.parseDeg = function() {
+		if (!isNaN(this)) return Number(this);								// signed decimal degrees without NSEW
+
+		var degLL = this.replace(/^-/,'').replace(/[NSEW]/i,'');			// strip off any sign or compass dir'n
+		var dms = degLL.split(/[^0-9.,]+/);									// split out separate d/m/s
+		for (var i in dms) if (dms[i]=='') dms.splice(i,1);					// remove empty elements (see note below)
+		switch (dms.length) {												// convert to decimal degrees...
+			case 3:															// interpret 3-part result as d/m/s
+				var deg = dms[0]/1 + dms[1]/60 + dms[2]/3600; break;
+			case 2:															// interpret 2-part result as d/m
+				var deg = dms[0]/1 + dms[1]/60; break;
+			case 1:															// decimal or non-separated dddmmss
+				if (/[NS]/i.test(this)) degLL = '0' + degLL;	// - normalise N/S to 3-digit degrees
+				var deg = dms[0].slice(0,3)/1 + dms[0].slice(3,5)/60 + dms[0].slice(5)/3600; break;
+			default: return NaN;
+			}
+		if (/^-/.test(this) || /[WS]/i.test(this)) deg = -deg; // take '-', west and south as -ve
+		return deg;
+		}
+	Number.prototype.toRad = function() {  // convert degrees to radians
+		return this * Math.PI / 180;
+		}
+
+	Number.prototype.toDeg = function() {  // convert radians to degrees (signed)
+		return this * 180 / Math.PI;
+		}
+	Number.prototype.toBrng = function() {  // convert radians to degrees (as bearing: 0...360)
+		return (this.toDeg()+360) % 360;
+		}
+	function brng(lat1, lon1, lat2, lon2) {
+		lat1 = lat1.toRad(); lat2 = lat2.toRad();
+		var dLon = (lon2-lon1).toRad();
+
+		var y = Math.sin(dLon) * Math.cos(lat2);
+		var x = Math.cos(lat1)*Math.sin(lat2) -
+						Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+		return Math.atan2(y, x).toBrng();
+		}
+
+	distCosineLaw = function(lat1, lon1, lat2, lon2) {
+		var R = 6371; // earth's mean radius in km
+		var d = Math.acos(Math.sin(lat1.toRad())*Math.sin(lat2.toRad()) +
+				Math.cos(lat1.toRad())*Math.cos(lat2.toRad())*Math.cos((lon2-lon1).toRad())) * R;
+		return d;
+		}
+    var km2feet = 3280.83;
+	var thisMarker = false;
+
+	var map;
+	var icons=[];						// note globals	- 1/29/09
+	icons[<?php print $GLOBALS['SEVERITY_NORMAL'];?>] = "./icons/blue.png";		// normal
+	icons[<?php print $GLOBALS['SEVERITY_MEDIUM'];?>] = "./icons/green.png";	// green
+	icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>] =  "./icons/red.png";		// red
+	icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =  "./icons/white.png";	// white - not in use
+
+	var baseIcon = new GIcon();
+	baseIcon.shadow = "./markers/sm_shadow.png";
+
+	baseIcon.iconSize = new GSize(20, 34);
+	baseIcon.iconAnchor = new GPoint(9, 34);
+	baseIcon.infoWindowAnchor = new GPoint(9, 2);
+
+	map = new GMap2($("map"));		// create the map
+	map.addControl(new GLargeMapControl());
+	map.addControl(new GMapTypeControl());
+	map.addControl(new GOverviewMapControl());				// 12/24/08
+<?php if (get_variable('terrain') == 1) { ?>
+	map.addMapType(G_PHYSICAL_MAP);
+<?php } ?>
+	map.setCenter(new GLatLng(<?php print $lat;?>, <?php print $lng;?>),11);
+	var icon = new GIcon(baseIcon);
+	icon.image = icons[<?php print $row['severity'];?>];
+	var point = new GLatLng(<?php print $lat;?>, <?php print $lng;?>);	// 1147
+	map.addOverlay(new GMarker(point, icon));
+	map.enableScrollWheelZoom();
+
+// ====================================Add Responding Units to Map=========================================================================
+
+	var icons=[];						// note globals	- 1/29/09
+	icons[1] = "./icons/white.png";		// normal
+	icons[2] = "./icons/black.png";	// green
+
+	var baseIcon = new GIcon();
+	baseIcon.shadow = "./markers/sm_shadow.png";
+
+	baseIcon.iconSize = new GSize(20, 34);
+	baseIcon.iconAnchor = new GPoint(9, 34);
+	baseIcon.infoWindowAnchor = new GPoint(9, 2);
+
+	var unit_icon = new GIcon(baseIcon);
+	unit_icon.image = icons[1];
+
+function createMarker(unit_point, number) {
+	var unit_marker = new GMarker(unit_point, unit_icon);
+	// Show this markers index in the info window when it is clicked
+	var html = number;
+	GEvent.addListener(unit_marker, "click", function() {unit_marker.openInfoWindowHtml(html);});
+	return unit_marker;
+}
+
+
+<?php
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	while($row = mysql_fetch_array($result)){
+	$responder_id=($row['responder_id']);
+
+		$query_unit = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$responder_id'";
+		$result_unit = mysql_query($query_unit) or do_error($query_unit, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		while($row_unit = mysql_fetch_array($result_unit)){
+		$unit_id=($row_unit['id']);
+		$mobile=($row_unit['mobile']);
+		if ($mobile == 1) {
+			echo "var unit_icon = new GIcon(baseIcon);\n";
+			echo "var unit_icon_url = \"./icons/gen_icon.php?blank=0&text=RU\";\n";						// 4/18/09
+			echo "unit_icon.image = unit_icon_url;\n";
+			echo "var unit_point = new GLatLng(" . $row_unit['lat'] . "," . $row_unit['lng'] . ");\n";
+			echo "var unit_marker = createMarker(unit_point, '" . addslashes($row_unit['name']) . "', unit_icon);\n";
+			echo "map.addOverlay(unit_marker);\n";
+			echo "\n";
+		} else {
+			echo "var unit_icon = new GIcon(baseIcon);\n";
+			echo "var unit_icon_url = \"./icons/gen_icon.php?blank=4&text=RU\";\n";						// 4/18/09
+			echo "unit_icon.image = unit_icon_url;\n";
+			echo "var unit_point = new GLatLng(" . $row_unit['lat'] . "," . $row_unit['lng'] . ");\n";
+			echo "var unit_marker = createMarker(unit_point, '" . addslashes($row_unit['name']) . "', unit_icon);\n";
+			echo "map.addOverlay(unit_marker);\n";
+			echo "\n";
+		}
+		}
+	}
+
+// =====================================End of functions to show responding units========================================================================
+
+	do_kml();			// kml functions
+
+?>
+	GEvent.addListener(map, "click", function(marker, point) {
+		if (point) {
+			var baseIcon = new GIcon();
+			baseIcon.iconSize=new GSize(32,32);
+			baseIcon.iconAnchor=new GPoint(16,16);
+			var cross = new GIcon(baseIcon, "./markers/crosshair.png", null);		// 10/13/08
+
+			map.clearOverlays();
+			var thisMarker = new GMarker(point, cross);
+			map.addOverlay(thisMarker);
+			$("newlat").innerHTML = point.lat().toFixed(6);
+			$("newlng").innerHTML = point.lng().toFixed(6);
+
+			var nlat = $("newlat").innerHTML ;
+			var nlng = $("newlng").innerHTML ;
+			var olat = $("oldlat").innerHTML ;
+			var olng = $("oldlng").innerHTML ;
+
+			var km=distCosineLaw(parseFloat(olat), parseFloat(olng), parseFloat(nlat), parseFloat(nlng));
+			var dist = ((km * km2feet).toFixed(0)).toString();
+			var dist1 = dist/5280;
+			var dist2 = (dist>5280)? ((dist/5280).toFixed(2) + " mi") : dist + " ft" ;
+
+			$("range").innerHTML	= dist2;
+			$("brng").innerHTML	= (brng (parseFloat(olat), parseFloat(olng), parseFloat(nlat), parseFloat(nlng)).toFixed(0)) + ' degr';
+			$("newusng").innerHTML= LLtoUSNG(nlat, nlng, 5);
+			$("pointl1").style.display = "block";
+			$("pointl2").style.display = "block";
+
+			var point = new GLatLng(<?php print $lat;?>, <?php print $lng;?>);	// 1196
+			map.addOverlay(new GMarker(point, icon));
+			var polyline = new GPolyline([
+			    new GLatLng(nlat, nlng),
+			    new GLatLng(olat, olng)
+				], "#FF0000", 2);
+			map.addOverlay(polyline);
+			}
+		} )
+
+	function lat2ddm(inlat) {				// 9/7/08
+		var x = new Number(inlat);
+		var y  = (inlat>0)?  Math.floor(x):Math.round(x);
+		var z = ((Math.abs(x-y)*60).toFixed(1));
+		var nors = (inlat>0.0)? " N":" S";
+		return Math.abs(y) + '\260 ' + z +"'" + nors;
+		}
+
+	function lng2ddm(inlng) {
+		var x = new Number(inlng);
+		var y  = (inlng>0)?  Math.floor(x):Math.round(x);
+		var z = ((Math.abs(x-y)*60).toFixed(1));
+		var eorw = (inlng>0.0)? " E":" W";
+		return Math.abs(y) + '\260 ' + z +"'" + eorw;
+		}
+
+
+	function do_coords(inlat, inlng) {  //9/14/08
+		if(inlat.toString().length==0) return;								// 10/15/08
+		var str = inlat + ", " + inlng + "\n";
+		str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
+		str += lat2ddm(inlat) + ", " +lng2ddm(inlng);
+		alert(str);
+		}
+
+	function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
+		var d = new Number(inval);
+		d  = (inval>0)?  Math.floor(d):Math.round(d);
+		var mi = (inval-d)*60;
+		var m = Math.floor(mi)				// min's
+		var si = (mi-m)*60;
+		var s = si.toFixed(1);
+		return d + '\260 ' + Math.abs(m) +"' " + Math.abs(s) + '"';
+		}
+
+	</SCRIPT>
+<?php
+	}				// end function popup_ticket() =======================================================
+
 
 
 ?>

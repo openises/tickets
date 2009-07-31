@@ -63,7 +63,13 @@
 3/22/09 fixed 'action' entries, instam/aprs hskpg
 3/25/09 added$GLOBALS['TOLERANCE']  for remote time validity determination, function my_is_float(), my_is_int()
 3/26/09 dropped use of last position
-5/4/09 revised My_is_float for 0 handling
+5/4/09 	revised My_is_float for 0 handling
+7/7/09 	upgrade do_send to handle smtp, LOG_CALL_RESET added, force 'waiting' message after logout
+7/7/09 	force non-zero str match, script META's addad
+7/8/09	$GLOBALS['LEVEL_UNIT'] added
+7/8/09	extract smtp name
+7/8/09	$GLOBALS['TRACK_APRS'], etc, added
+7/25/09	instam corrections, apply 1-minute poll limit, removed fm APRS
 {									// 3/25/09
 
 */
@@ -116,7 +122,8 @@ $GLOBALS['LEVEL_SUPER'] 			= 0;		// 6/9/08
 $GLOBALS['LEVEL_ADMINISTRATOR'] 	= 1;
 $GLOBALS['LEVEL_USER'] 				= 2;
 $GLOBALS['LEVEL_GUEST'] 			= 3;
-$GLOBALS['LEVEL_MEMBER'] 			= 4;		// 12/15/08
+$GLOBALS['LEVEL_MEMBER'] 			= 4;		// 12/15/08	
+$GLOBALS['LEVEL_UNIT'] 				= 5;		// 7/8/09
 
 $GLOBALS['LOG_SIGN_IN']				= 1;
 $GLOBALS['LOG_SIGN_OUT']			= 2;
@@ -137,12 +144,19 @@ $GLOBALS['LOG_CALL_DISP']			=30;		// 1/20/09
 $GLOBALS['LOG_CALL_RESP']			=31;
 $GLOBALS['LOG_CALL_ONSCN']			=32;
 $GLOBALS['LOG_CALL_CLR']			=33;
+$GLOBALS['LOG_CALL_RESET']			=34;		// 7/7/09
 
 $GLOBALS['icons'] 		= array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");
 $GLOBALS['sm_icons']	= array("sm_black.png", "sm_blue.png", "sm_green.png", "sm_red.png", "sm_white.png", "sm_yellow.png", "sm_gray.png", "sm_lt_blue.png", "sm_orange.png");
 
 $GLOBALS['SESSION_TIME_LIMIT']		= ($istest)? 1200 : 120;		// minutes of inactivity 10/19/08
 $GLOBALS['TOLERANCE']				= 5*60;		// seconds of deviation from UTC before remotes sources considered 	erroneous - 3/25/09
+
+$GLOBALS['TRACK_APRS']				=1;     	// 7/8/09
+$GLOBALS['TRACK_INSTAM']			=2;       
+$GLOBALS['TRACK_GTRACK']			=3;   
+$GLOBALS['TRACK_LOCATEA']			=4;      
+$GLOBALS['TRACK_GLAT']				=5;     
 
 $evenodd = array ("even", "odd");	// class names for alternating table row css colors
 
@@ -330,6 +344,7 @@ function show_log ($theid, $show_cfs=FALSE) {
 	global $evenodd ;	// class names for alternating table row colors
 	
 	$types = array();
+	$types[0]									=" - error - ";
 	$types[$GLOBALS['LOG_SIGN_IN']]				="Login";
 	$types[$GLOBALS['LOG_SIGN_OUT']]			="Logout";
 	$types[$GLOBALS['LOG_COMMENT']]				="Comment";		// misc comment
@@ -349,6 +364,7 @@ function show_log ($theid, $show_cfs=FALSE) {
 	$types[$GLOBALS['LOG_CALL_RESP']]			="Unit responding";
 	$types[$GLOBALS['LOG_CALL_ONSCN']]			="Unit on-scene";	
 	$types[$GLOBALS['LOG_CALL_CLR']]			="Unit clear";		
+	$types[$GLOBALS['LOG_CALL_RESET']]			="Times reset";				// 7/7/09
 	
 	
 	$query = "
@@ -765,19 +781,19 @@ function do_aprs() {				// populates the APRS tracks table
 									//
 	global $istest;
 	$dist_chk = ($istest)? 2500000.0 : 250000.0 ;		// 3/18/09
-	$delay = 1;			// minimum time in minutes between APRS queries
+//	$delay = 1;			// minimum time in minutes between APRS queries
 
-	$when = get_variable('_aprs_time');
+//	$when = get_variable('_aprs_time');
 
-	if(time() < $when) { 
-		return;
-		} 
+//	if(time() < $when) { 
+//		return;
+//		} 
 		
-	else {
+//	else {
 //		snap(__FUNCTION__ . __LINE__, "");
-		$next = time() + $delay*60;
-		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$next' WHERE `name`='_aprs_time'";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+//		$next = time() + $delay*60;
+//		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$next' WHERE `name`='_aprs_time'";
+//		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
 		$pkt_ids = array();				// 6/17/08
 		$speeds = array();				// 10/2/08
@@ -926,7 +942,7 @@ function do_aprs() {				// populates the APRS tracks table
 				}		// end while ($row =...)
 			}		// 1/23/09
 
-		}		// end else time
+//		}		// end else time
 	}		// end function do_aprs() 
 
 
@@ -1079,6 +1095,8 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		<META HTTP-EQUIV="Expires" CONTENT="0">
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 		<SCRIPT>
 		String.prototype.trim = function () {
@@ -1139,6 +1157,11 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 			parent.upper.hide_butts();				// 1/21/09
 			}		// end function do_onload () 
 
+<?php
+		if (get_variable('call_board')==2) {		// 7/7/09
+			print "\tparent.calls.location.href = 'assigns.php';\n";				// reload to show 'waiting' message 6/19/09
+			}
+?>
 		window.setTimeout("document.forms[0].frm_user.focus()", 1000);
 		</SCRIPT>
 		</HEAD>
@@ -1158,8 +1181,8 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		
 <?php
 
-		if(array_key_exists('frm_passwd', $_POST)) { print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>Login failed.Pls enter correct values and try again.</FONT><BR /><BR /></TH></TR>";}
-		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";;
+		if(array_key_exists('frm_passwd', $_POST)) { print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>Login failed. Pls enter correct values and try again.</FONT><BR /><BR /></TH></TR>";}
+		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
 
 		$t_user = ($istest)? "admin": "";		// 3/8/09
 		$t_pword = $t_user;
@@ -1380,7 +1403,7 @@ Patients	P
 Host		Q
 */
 
-	switch ($text_sel) {
+	switch ($text_sel) {		// 7/7/09
 		case 1:
 		   	$match_str = strtoupper(get_variable("msg_text_1"));				// note case
 		   	break;
@@ -1505,7 +1528,36 @@ Host		Q
 	}				// end function mail_it ()
 // ________________________________________________________
 
-function do_send ($to_str, $subject_str, $text_str ) {
+function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) {				// 7/7/09
+	require_once 'lib/swift_required.php';
+
+// $params = "outgoing.verizon.net/587/ashore3/********/ashore3@verizon.net";
+//				   0				1	   2	  3			4	
+
+	$conn_ary = explode ("/",  $my_params);
+//	dump($conn_ary) ;
+	$transport = Swift_SmtpTransport::newInstance($conn_ary[0] , $conn_ary[1])
+	  ->setUsername($conn_ary[2])
+	  ->setPassword($conn_ary[3])
+	  ;
+	
+	$mailer = Swift_Mailer::newInstance($transport);		// instantiate using  created Transport	
+	$temp_ar = explode("@", $my_to);						// extract name portion - 7/8/09
+	$the_from = (isset($conn_ary[4]))? $conn_ary[4]: $my_from;
+	$the_from_ar = explode("@", $my_from);					// to extract user portion
+															// Create a message
+	$message = Swift_Message::newInstance($my_subject)
+	  ->setFrom(array($the_from => $the_from_ar[0]))
+	  ->setTo(array($my_to , $my_to => trim($temp_ar[0])))
+	  ->setBody($my_message)
+	  ;
+	//    ->setTo(array('receiver@domain.org', 'other@domain.org' => 'Names'))
+	$result = $mailer->send($message);						//Send the message
+	
+	}		// end function smtp
+
+
+function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
 	global $istest;
 	$sleep = 4;																// seconds delay between text messages
 
@@ -1515,17 +1567,32 @@ function do_send ($to_str, $subject_str, $text_str ) {
 	if ($istest) {array_push($cell_addrs, "gmail.com");};
 
 	$host = get_variable('host');
-	$temp = get_variable('email_reply_to');
+	$temp = get_variable('email_reply_to');	
 	$reply_to = (empty($temp))? "": "'Reply-To: '". $temp ."\r\n" ;
 	
-	$headers = 'From: Tickets_CAD@' .$host . "\r\n" .
+	$temp = get_variable('email_from');												// 6/24/09
+	if (empty($temp)) {
+		$from_str = "Tickets_CAD" .'@' .$host ;
+		}
+	else {	
+		$temp_ar = split ("@", $temp);
+		if (count($temp_ar)==2) {
+			$from_str = $temp;		// OK
+			}
+		else {
+			$from_str = $temp_ar[0] . "@" . $host ;
+			}
+		}
+		
+//	$from = (empty($temp))?  "Tickets_CAD" : $temp;
+	
+	$headers = 'From:' .$from_str  . "\r\n" .
 	    $reply_to .
 	    'X-Mailer: PHP/' . phpversion();
 
 	$to_sep = $cell_sep = "";
 	$tostr = $tocellstr = "";
 	for ($i = 0; $i< count($to_array); $i++) {
-//		snap(__FUNCTION__ . __LINE__,$to_array[$i]);
 		$temp =  explode ( "@", $to_array[$i]);
 		if (in_array(trim(strtolower($temp[1])), $cell_addrs))  {				// cell addr?
 			$tocellstr .= $cell_sep . stripslashes($to_array[$i]);				// yes
@@ -1538,20 +1605,28 @@ function do_send ($to_str, $subject_str, $text_str ) {
 		}				// end for ($i = ...)
 
 	$caption="";
+	$smtp = trim(get_variable('smtp_acct'));									// 7/7/09
 	if (strlen($tostr)>0) {	
-		@mail($tostr, $subject_str, $text_str, $headers);
+		if (strlen($smtp)==0) {
+			@mail($tostr, $subject_str, $text_str, $headers);
+			}
+		else {
+			smtp ($tostr, $subject_str, $text_str, $smtp, $from_str);						// ($my_to, $my_subject, $my_message, $my_params)
+			}
 		$caption = "Email sent";
 		}
 	if (strlen($tocellstr)>0) {
-//		dump($tocellstr);
 		$lgth = 140;
 		$ix = 0;
 		$i = 1;
 		while (substr($text_str, $ix , $lgth )) {								// chunk to $lgth-length strings
 			$subject_ex = $subject_str . "/part " . $i . "/";					// 10/21/08
-//			snap(__FUNCTION__ .__LINE__,$tocellstr);
-			mail($tocellstr, $subject_ex, substr ($text_str, $ix , $lgth ), $headers);
-//			sleep ($sleep);						
+			if (strlen($smtp)==0) {			
+				mail($tocellstr, $subject_ex, substr ($text_str, $ix , $lgth ), $headers);
+				}
+			else {
+				smtp ($tocellstr, $subject_ex, substr ($text_str, $ix , $lgth ), $smtp, $from_str);	// ($my_to, $my_subject, $my_message, $my_params, $my_from)
+				}
 			if($i>1) {sleep ($sleep);}								// 10/17/08
 			$ix+=$lgth;
 			$i++;
@@ -1559,8 +1634,7 @@ function do_send ($to_str, $subject_str, $text_str ) {
 		$caption .= " - Cell mail sent";
 		}
 	return $caption;
-	}			// end function do send ()
-
+	}					// end function do send ()
 
 function is_email($email){ 	//  validate email, code courtesy of Jerrett Taylor - 10/8/08
 	if(!eregi( "^" .
@@ -1657,6 +1731,7 @@ function do_instam($key_val) {				// 3/17/09
 
 	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `instam`= 1 AND `callsign` <> ''";  // work each call/license
 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+//	snap(basename(__FILE__) . __LINE__, $query);
 	
 	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
 		$query	= "SELECT `id`,`utc_stamp` FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` = '{$row['callsign']}' ORDER BY `utc_stamp` DESC LIMIT 1";		// work each call/license
@@ -1696,21 +1771,21 @@ function do_instam($key_val) {				// 3/17/09
 	
 	$ary_data = explode ("\n", $data);
 	if (count($ary_data) > 1) {
-		for ($i=0; $i<count($ary_data); $i++) {
+		for ($i=1; $i<count($ary_data)-2; $i++) {
+//			snap(basename(__FILE__) . __LINE__, $ary_data[$i]);
+		
 			$str_pos = explode (",", $ary_data[$i]);
 			if (count($str_pos)==8) {
+//				snap(basename(__FILE__) . __LINE__, count($str_pos));
 
-//				$the_time = ($str_pos[2] - date("Z") - (get_variable('delta_mins')*60));		// map UTC to local time equiv
-//				$now = mysql_format_date($the_time);
-																								// 
 				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
 					`lat`=		" . quote_smart(trim($str_pos[3])) . ",
 					`lng`=		" . quote_smart(trim($str_pos[4])) . ",
 					`updated` = " .	quote_smart(mysql_format_date(trim($str_pos[2]))) . "
-					WHERE `callsign` LIKE " . quote_smart(trim($str_pos[1]) . '%');				// 3/17/09, 8/26/08, 3/24  --
+					WHERE `instam` = 1 and `callsign` = " . quote_smart(trim($str_pos[0]));		// 7/25/09
 
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
-//				snap (basename(__FILE__) . __LINE__, $query);
+				
 																									// 3/19/09
 				$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source`= " . quote_smart(trim($str_pos[1]));		// remove prior track this device  3/20/09
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -1740,8 +1815,17 @@ function do_instam($key_val) {				// 3/17/09
 	}		// end function do_instam()
 
 
-function get_current() {		// 3/16/09
-//	snap(basename(__FILE__), __LINE__);
+function get_current() {		// 3/16/09, 7/25/09
+	$delay = 1;			// minimum time in minutes between  queries - 7/25/09
+	$when = get_variable('_aprs_time');				// misnomer acknowledged
+	if(time() < $when) { 
+		return;
+		} 
+	else {
+		$next = time() + $delay*60;
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$next' WHERE `name`='_aprs_time'";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		}
 
 	$aprs = $instam = FALSE;	// 3/22/09
 	

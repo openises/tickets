@@ -25,6 +25,11 @@
 3/3/09 correction for MEMBER user type
 4/5/09 default map zoom added
 5/4/09 handle usng as input
+6/4/09 added Constituents and City tables
+6/27/09	added function do_glat() - hidden 7/23/09
+6/30/09 added do_mail_win(), renamed to do_all_mail
+7/16/09	floating div for 'settings' buttons
+7/24/09	hide Glat();
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -47,7 +52,6 @@
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$users .= trim($row['user']) . "\t";			
 		}			
-	
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -57,8 +61,13 @@
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<META HTTP-EQUIV="Script-date" CONTENT="6/9/08">
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<STYLE>
+	LI { margin-left: 20px;}
+	.spl { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
+
+	</STYLE>
 	<SCRIPT SRC='./js/md5.js'></SCRIPT>		<!-- 11/30/08 -->
 
 	<SCRIPT>
@@ -98,8 +107,51 @@
 		return false;
 		}				// end function in array
 
-	function do_test() {				// 8/2/08
-		var newwindow_t=window.open("opena.php", "Test Callsign",  "titlebar, resizable=1, scrollbars, height=680,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=500,screenX=50,screenY=50"); newwindow_t.focus();
+
+	starting=false;	
+	function do_mail_win() {			// 6/13/09
+		if(starting) {return;}					
+		starting=true;	
+	
+		newwindow_am=window.open("do_all_mail.php", "E-mail Window",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+		if (isNull(newwindow_am)) {
+			alert ("This requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_am.focus();
+		starting = false;
+		}
+
+
+	function do_test() {				// 8/2/08 -	smtp_test.php
+		var newwindow_t=window.open("opena.php", "Test APRS Callsign",  "titlebar, resizable=1, scrollbars, height=680,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=500,screenX=50,screenY=50"); newwindow_t.focus();
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
+
+	function do_smtp() {				// 8/2/08 -	
+		var newwindow_t=window.open("smtp_test.php", "Test SMTP",  "titlebar, resizable=1, scrollbars, height=600,width=900,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
+
+	function do_instam() {				// 7/26/09	
+		var newwindow_t=window.open("test_instam.php", "Test InstaMapper",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
+
+	function do_glat() {				// 6/27/09	
+		var newwindow_t=window.open("latitude.php", "Test Google Latitude",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -266,7 +318,8 @@
 		}				// end function all_ticks()
 
 <?php
-print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))) . "\n";;
+print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))) . "\n";
+print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 ?>
 
 	</SCRIPT>
@@ -599,10 +652,13 @@ case 'settings' :
 				}
 			}		// str_replace ( search, replace, subject)
 		
-		print "<TR><TD></TD><TD ALIGN='center'>
-			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='reset' VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='submit' VALUE='Apply'></TD></TR></FORM></TABLE>";
+		print "</FORM></TABLE>\n";		// 7/16/09
+
+		print "<DIV STYLE='display:block; position:fixed; width:auto; height:auto; top: 50px; left: 800px; background-color:transparent;'>\n
+			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'><BR /><BR />\n
+			<INPUT TYPE='button' VALUE='Reset form'  onClick='document.set_Form.reset();'><BR /><BR />\n
+			<INPUT TYPE='button' VALUE='Apply changes'  onClick='document.set_Form.submit();'>\n
+			</DIV>\n";
 ?>
 		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 		</BODY>
@@ -636,7 +692,6 @@ case 'user' :
 			$row	= mysql_fetch_array($result);
 			$caption = (is_administrator() || is_super())? "Edit": "View";
 			$disabled = (is_administrator() || is_super())? "": " DISABLED";
-
 ?>
 			<FONT CLASS="header"><?php print $caption; ?> User Data</FONT><BR /><BR />
 			<TABLE BORDER="0" CELLSPACING=1>
@@ -831,6 +886,13 @@ case 'user' :
 					}
 				}
 			else {
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 6/30/09
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				$sel_str = "<SELECT ID='units' NAME='units' STYLE= 'display:none'><\n\t<OPTION VALUE=0 SELECTED>Select one</OPTION>\n";
+				while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		
+					$sel_str .= "\t<OPTION VALUE='{$row['id']}'>{$row['name']}</OPTION>\n";		
+					}
+				$sel_str .= "\n</SELECT>\n";			
 
 ?>
 				<FONT CLASS="header">Add User</FONT><BR /><BR />
@@ -844,10 +906,11 @@ case 'user' :
 <?php if (is_super()) { ?>	<!-- / 6/9/08 -->				
 					 Super  &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
 <?php 					}  ?>
-					Administrator  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
-					Operator  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
-					Guest  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level"> &nbsp;&nbsp;&nbsp;
-					Member  &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level"> 	<!-- 3/3/09 -->
+					Admin &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level">&nbsp;&nbsp;
+					Operator &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level">&nbsp;&nbsp;
+					Guest &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level"> &nbsp;&nbsp;
+					Member &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level"> 	<!-- 3/3/09 -->
+					Unit &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_UNIT'];?>" NAME="frm_level" onClick = "set_unit()"> 	<!-- 6/30/09 -->
 					</TD></TR>
 				<TR><TD COLSPAN=4 ALIGN='center'>&nbsp;</TD></TR.
 				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Last name: </TD>
@@ -859,7 +922,7 @@ case 'user' :
 					<TD CLASS="td_label" ALIGN="right">DOB: </TD><TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="" onChange = "this.value=JSfnTrim(this.value)"/></TD></TR>
 				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE=""></TD>
 					<TD CLASS="td_label" ALIGN="right">Ident: </TD>
-					<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+					<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="" onChange = "this.value=JSfnTrim(this.value)"> <?php print $sel_str;?></TD></TR>
 				<TR CLASS="even"><TD CLASS="td_label" ALIGN="right">Info: </TD><TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE=""></TD></TR>
 				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="32" TYPE="text" NAME="frm_email" VALUE=""></TD>
 					<TD CLASS="td_label" ALIGN="right">Alternate: </TD>
@@ -1155,10 +1218,18 @@ case 'delete' :
 	default:
 	}						// end switch ($func)
 		
-	if (is_administrator() || is_super()) { 	// SHOW MENU BASED ON USER LEVEL
 ?>
 		</HEAD>
 		<BODY onLoad = 'ck_frames()'>
+<?php
+	if(!(is_guest())) {								// 6/9/08
+?>
+		<LI CLASS='spl' onClick = "do_mail_win()">Email users</A>	<!-- 6/30/09 -->
+<?php
+			}
+	if (is_administrator() || is_super()) { 	// SHOW MENU BASED ON USER LEVEL
+?>			
+		
 		<LI><A HREF="config.php?func=user&add=true">Add user</A>
 		<LI><A HREF="config.php?func=settings">Edit Settings</A>
 		<LI><A HREF="config.php?func=center">Set Default Map</A>
@@ -1174,9 +1245,12 @@ case 'delete' :
 			
 <?php
 			}								// end if(is_super()
-		}								// end if (is_administrator()|| is_super() )
+		}								// end if (is_administrator()|| is_super() ) -- latitude.php
 ?>
-		<LI><A HREF="#" onClick = "do_test()">Test Callsign</A>
+		<LI CLASS='spl'>Test:&nbsp;&nbsp;&nbsp;<A HREF="#" onClick = "do_test()"><U>APRS</U></A>&nbsp;&nbsp;&nbsp;&nbsp;
+			<A HREF="#" onClick = "do_instam()"><U>Instamapper</U></A>		&nbsp;&nbsp;&nbsp;&nbsp;
+			<A HREF="#" onClick = "do_smtp()"><U>SMTP Mail</U></A>		&nbsp;&nbsp;&nbsp;&nbsp;
+<!--		<A HREF="#" onClick = "do_glat()"><U>Google Latitude</U></A>	7/24/09	 -->
 <?php
 		if (!is_guest()) {
 ?>		
@@ -1187,12 +1261,25 @@ case 'delete' :
 ?>
 		<LI><A HREF="config.php?func=notify">Add/Edit Notifies</A>
 		<LI><A HREF="config.php?func=notify&id=0">All-Tickets Notify</A>
-		<LI></LI>
+		<BR />
+		<BR />
 		<LI><A HREF="#" onClick = "do_Post('contacts');">Contacts</A>
 		<LI><A HREF="#" onClick = "do_Post('in_types');">Incident types</A>
-		<LI><A HREF="#" onClick = "do_Post('unit_types');">Unit types</A><!-- 10/8/08 -->
+		<LI><A HREF="#" onClick = "do_Post('unit_types');">Unit types</A><!-- 10/8/08,  6/4/09 -->
 		<LI><A HREF="#" onClick = "do_Post('un_status');">Unit status types</A>
 <?php
+		if (mysql_table_exists("$GLOBALS[mysql_prefix]constituents")) 	{		// 6/4/09
+?>	
+
+		<BR />
+		<BR />
+		<LI><A HREF="#" onClick = "do_Post('city');">Cities</A>
+		<LI><A HREF="#" onClick = "do_Post('constituents');">Constituents</A>
+		<BR />
+		<BR />
+
+<?php
+		}
 		if ($istest) {
 ?>
 			<LI><A HREF="#" onClick = "do_Post('log');">Log</A>

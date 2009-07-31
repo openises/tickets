@@ -7,8 +7,9 @@ $where = " WHERE `when` > '" . $p1 . "' AND `when` < '" . $p2 . "' ";
 $query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`, t.city AS `tick_city` FROM `$GLOBALS[mysql_prefix]log`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
 	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'
+	 AND t.city IS NOT NULL 
 	ORDER BY `tick_city` ASC ";
-//dump ($query);
+snap (__LINE__, $query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 $cities = array();
 
@@ -28,7 +29,10 @@ $mygraph = new baaChart($width);
 $mygraph->setTitle("Incidents by Location", "");
 
 foreach($cities as $key => $val) {
+//	snap ($key , $val);
+	if (!(empty($key))) {
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE,$val, $key);
+		}
     }		// end foreach()
 $mygraph->setBgColor(0,0,0,1);  			// transparent background
 $mygraph->setChartBgColor(0,0,0,1);  		// as background

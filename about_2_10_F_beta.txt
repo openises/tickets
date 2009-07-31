@@ -152,10 +152,10 @@ Changes for Tickets V 2.10 F
      incident, with assigned units also shown. Mobile units are distinguished from fixed ones by icon color, black/white.
 
 90.  You may now associate a 'protocol' with each incident type.  The protocol may be whatver category of information your operation 
-     finds useful.  It may be the response protocol in, say, vehicle types and manning or specialties, or else the treatment protocol.
+     finds useful.  It may be the response protocol in, say, vehicle types/manning/specialties, or else the treatment protocol.
      
 91.  Mail functions have been significantly improved; 
-     (a) mail to all/selected users - 'members' is now available on the Config screen.
+     (a) Mail to all/selected users - 'members' included - is now available on the Config screen.
      (b) Mail to all/selected respnse units is now available on the Units screen.
      (c) A new settings item, email from, is available.
      (d) SMTP mail connection is now supported, with a test function to assist in getting the connection parameters correct.  See 
@@ -166,7 +166,10 @@ Changes for Tickets V 2.10 F
 	         outgoing.verizon.net/123/ashore999/whatever
 
 
-92.  For those of you implementing the Instamapper interface, the Configuration page does have a test function available.
+92.  For those of you implementing the Instamapper interface: 
+	 (a) The Configuration page has a test function available to help you confirm that the interface/settings are right.
+	 (b) The Configuration/Edit Settings/instam key recives the overall site/account key.
+	 (c) The Units/Add a Unit/Callsign/License-key field: Each equipped unit receives its 19-character device key.  
 
 The above may be too terse.  Let us know where further expansion wd be useful.
 

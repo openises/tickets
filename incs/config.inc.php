@@ -19,6 +19,7 @@
 3/17/09 changed aprs to 'auto_poll'
 8/26/08 added NIST time - turned off
 4/5/09 added log record count, add'l settings values
+7/12/09	added smtp account hint
 */
 $colors = array ('odd', 'even');
 
@@ -332,7 +333,7 @@ function do_insert_settings($name,$value){/* insert new values into settings tab
 	$result = mysql_query($query) or do_error($query, '', mysql_error(), __FILE__, __LINE__);
 	}
 
-function validate_email($email){ 	//really validate?/* validate email, code courtesy of Jerrett Taylor */
+function validate_email($email){ 	//really validate? - code courtesy of Jerrett Taylor 
 	if (!get_variable('validate_email')){
 		$return['status'] = true;  $return['msg'] = $email;
 		return $return;
@@ -386,6 +387,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "def_zoom":				return "Map default zoom"; break;
 		case "delta_mins":				return "Minutes delta - for server/users time synchronization"; break;
 		case "email_reply_to":			return "The default reply-to address for emailing incident information"; break;
+		case "email_from":				return "Outgoing email will use this value as the FROM value. VALID ADDRESS MANDATORY!"; break;
 		case "frameborder": 			return "Size of frameborder"; break;
 		case "framesize": 				return "Size of the top frame in pixels"; break;
 		case "gmaps_api_key":			return "Google maps API key - see HELP/README re how to obtain"; break;	
@@ -405,6 +407,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "restrict_user_tickets": 	return "Restrict to showing only tickets to current user"; break;
 		case "serial_no_ap": 			return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
 		case "situ_refr":				return "Situation map auto refresh - in seconds"; break;											// 3/11/09
+		case "smtp_acct":				return "Ex: outgoing.verizon.net/587/ashore3/*&^$#@/ashore3@verizon.net"; break;					// 7/12/09
 		case "terrain": 				return "Do/don&#39;t (1/0) include terrain map view option"; break;
 		case "ticket_per_page": 		return "Number of tickets per page to show"; break;
 		case "ticket_table_width": 		return "Width of table when showing ticket"; break;

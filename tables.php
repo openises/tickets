@@ -12,6 +12,7 @@ improvements to datatype 'time' handling
 12/29/08 icon revised to img filename - superceded 1/4/09
 1/5/09 aprs added to unit_types schema
 1/29/09 corrected if(...)
+7/7/09	revised textarea limit criterion, added Script-date meta
 */
 error_reporting(E_ALL);
 $gmap=TRUE;
@@ -33,7 +34,7 @@ $date_out_format	= 'Y-m-d H:i';		// well, date format - per php date syntax
 //$date_out_format	= 'n/j/y H:i';		// ex: 5/25/06
 $date_in_format		= 0;					// yyyy-mm-dd, per MySQL standard
 $links_col			= 0;				// in the listing display, this column sees the View/Edit/Delete function links
-$text_type_max		= 255;				// text input fields exceeding this size limit will be treated as <textarea>
+$text_type_max		= 128;				// text input fields exceeding this size limit will be treated as <textarea> 7/7/09
 $text_list_max		= 32;				// text input fields exceeding this size limit will be treated as <textarea>
 $fill_from_last		= FALSE;			// if set to TRUE, new recrods are populated from last created
 $doUTM				= FALSE;			// if set, coord displays UTM
@@ -183,6 +184,8 @@ unset ($result2);
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 </HEAD>
 <!--  onFocus="LL_showinfo(1)" onBlur="LL_hideallinfo()" -->
 <STYLE>
@@ -1284,8 +1287,7 @@ switch ($func) {
 	unset ($result);
 	print "<TR><TD COLSPAN=\"99\">&nbsp;</TD></TR></TABLE>";
 
-//	$query ="DESCRIBE $mysql_prefix`$tablename`";
-	$query ="SHOW FULL COLUMNS FROM $mysql_prefix`$tablename`";
+	$query ="SHOW FULL COLUMNS FROM `$mysql_prefix$tablename`";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	print "\n<table align=\"CENTER\" BORDER=\"0\">";
 	print "\n<TR><TH>Field</TH><TH>Type</TH><TH>Null</TH><TH>Key</TH><TH COLSPAN=3>Default/Extra</TH></TR>";

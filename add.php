@@ -30,6 +30,8 @@
 3/3/09 cleaned trash as page bottom
 3/10/09 intrusive space in ticket_id
 4/30/09 $ replaces document.getElementById, USNG text underline
+7/7/09	added protocol handling
+7/16/09	zero to in_types_id 
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -49,12 +51,12 @@ function get_add_id() {				// 2/4/09
 		return $row['id'];				// return it
 		}
 
-	else {
+	else {								// 7/16/09
 		$query  = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (
 				`id` , `in_types_id` , `contact` , `street` , `city` , `state` , `phone` , `lat` , `lng` , `date` ,
 				`problemstart` , `problemend` , `scope` , `affected` , `description` , `comments` , `status` , `owner` , `severity` , `updated` 
 			) VALUES (
-				NULL , '', " . quote_smart($_SERVER['REMOTE_ADDR']) . "	, NULL , NULL , NULL , NULL , NULL , NULL , NULL , 
+				NULL , 0, " . quote_smart($_SERVER['REMOTE_ADDR']) . "	, NULL , NULL , NULL , NULL , NULL , NULL , NULL , 
 				NULL , NULL , '', NULL , '', NULL , '" . $GLOBALS['STATUS_RESERVED'] . "', '0', '0', NULL
 			)";
 			
@@ -162,7 +164,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 			<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 			<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-			<META HTTP-EQUIV="Script-date" CONTENT="9/13/08">
+			<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 			<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 		<SCRIPT>
 <?php
@@ -777,9 +779,16 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 // *****************************************************************************
 	var tbd = "TBD";									// 1/11/09
-	function do_inc_name(str) {								// 10/4/08
+	function do_inc_name(str, indx) {								// 10/4/08, 7/7/09
 		if((document.add.frm_scope.value.trim()=="") || (document.add.frm_scope.value.trim()==tbd)) {	// 1/11/09
 			document.add.frm_scope.value = str+"/";
+			}
+		if (protocols[indx]) {
+//			$('proto_row').style.display = "block";
+			$('proto_cell').innerHTML = protocols[indx];
+			}
+		else {
+			$('proto_cell').innerHTML = "";		
 			}
 		}			// end function
 	function datechk_s(theForm) {		// pblm start vs now
@@ -944,6 +953,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 		}				// end function
 		
+	var protocols = new Array();		// 7/7/09
 </SCRIPT>
 </HEAD>
 
@@ -955,7 +965,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <TR><TD>
 <TABLE BORDER="0"></TD><TD>
 <FORM METHOD="post" ACTION="add.php?add=true" NAME="add" onSubmit="return validate(document.add)">
-<TR CLASS='even'><TD CLASS="td_label">Reported By:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+<TR CLASS='even'><TD CLASS="td_label">Reported by:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
 	<TD><INPUT SIZE="48" TYPE="text" NAME="frm_contact" VALUE="TBD" MAXLENGTH="48" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}"></TD></TR>
 <TR CLASS='odd'><TD CLASS="td_label">Phone: &nbsp;&nbsp;&nbsp;&nbsp;
 		<button type="button" onClick="Javascript:phone_lkup(document.add.frm_phone.value);"><img src="./markers/glasses.png" alt="Lookup phone no." />
@@ -964,14 +974,15 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS="td_label" >Status:</SPAN>
 		<SELECT NAME='frm_status'><OPTION VALUE='<?php print $GLOBALS['STATUS_OPEN'];?>' selected>Open</OPTION><OPTION VALUE='<?php print $GLOBALS['STATUS_CLOSED']; ?>'>Closed</OPTION></SELECT></TD></TR>
 <TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><HR SIZE=1 COLOR=BLUE WIDTH='67%' /></TD></TR>
+
 <TR CLASS='even'><TD CLASS="td_label">Priority:</TD>	<TD><SELECT NAME="frm_severity">
 	<OPTION VALUE="0" SELECTED><?php print get_severity($GLOBALS['SEVERITY_NORMAL']);?></OPTION>
 	<OPTION VALUE="1"><?php print get_severity($GLOBALS['SEVERITY_MEDIUM']);?></OPTION>
 	<OPTION VALUE="2"><?php print get_severity($GLOBALS['SEVERITY_HIGH']);?></OPTION>
-	</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	</SELECT>&nbsp;&nbsp;
 	
 	<SPAN CLASS="td_label">Nature: <FONT COLOR='RED' SIZE='-1'>*</FONT>
-		<SELECT NAME="frm_in_types_id" onChange="do_inc_name(this.options[selectedIndex].text.trim());">	<!--  10/4/08 -->
+		<SELECT NAME="frm_in_types_id" onChange="do_inc_name(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());">	<!--  10/4/08 -->
 		<OPTION VALUE=0 SELECTED>TBD</OPTION>				<!-- 1/11/09 -->
 <?php
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
@@ -985,13 +996,18 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				print "<OPTGROUP LABEL='{$temp_row['group']}'>\n";
 				}
 
-//			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' onMouseOver = 'this.title='''> {$temp_row['type']} </OPTION>\n";
 			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' title='{$temp_row['description']}'> {$temp_row['type']} </OPTION>\n";
+			if (!(empty($temp_row['protocol']))) {				// 7/7/09 - note string key
+				$temp = addslashes($temp_row['protocol']);
+				print "\n<SCRIPT>protocols[{$temp_row['id']}] = \"{$temp}\";</SCRIPT>\n";		// 7/16/09
+				}
 			$i++;
 			}		// end while()
 		print "\n</OPTGROUP>\n";
 ?>
-	</SELECT></TD></TR>
+	</SELECT>
+		&nbsp;<SPAN CLASS="td_label">Protocol:</SPAN></TD></TR>
+<TR CLASS='even' ID = 'proto_row'><TD CLASS="td_label"></TD><TD ID='proto_cell'></TD></TR>
 <?php 
 		switch (get_variable('serial_no_ap')) {									// 1/22/09
 		

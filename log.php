@@ -110,7 +110,7 @@ else {										// not empty
 				case $GLOBALS['LOG_COMMENT']:
 				$i++;
 					$print .= "<TR CLASS='{$evenodd[$i%2]}'>";
-					$temp = split(" ", $row['when']);
+					$temp = explode(" ", $row['when']);
 					if ($temp[0]==$day_part) {
 						$the_date = $temp[1];
 						}

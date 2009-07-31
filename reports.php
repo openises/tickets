@@ -50,6 +50,7 @@ else {
 	<META HTTP-EQUIV="Cache-Control" 		CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->	
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <style type="text/css">
 .hovermenu ul{font:bold 13px arial;padding-left:0;margin-left:0;height:20px;}
