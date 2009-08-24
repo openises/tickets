@@ -1,25 +1,28 @@
 <?php
 /*
-6/9/08 revised to add 'super' priv's level
+6/9/08  revised to add 'super' priv's level
 7/16/08 revised default military time
-8/8/08	added server identification
+8/8/08  added server identification
 8/26/08 added server times
 9/13/08 added lat_lng setting
 9/13/08 added wp_key
 9/13/08 added GSearch key
 8/10/08 revised level text per globals
-10/8/08	user edit revised per permission levels
+10/8/08 user edit revised per permission levels
 10/17/08 added '__sleep' setting
 1/26/09 removed gsearch key
 1/27/09 added default area code
 1/28/09 copied settings fm install
-2/3/09 	revised per session lack of time-delta adjustment
+2/3/09  revised per session lack of time-delta adjustment
 2/24/09 added 'terrain' setting
 3/11/09 added 'quick' hint
 3/17/09 changed aprs to 'auto_poll'
 8/26/08 added NIST time - turned off
-4/5/09 added log record count, add'l settings values
-7/12/09	added smtp account hint
+4/5/09  added log record count, add'l settings values
+7/12/09 added smtp account hint
+7/24/09 Added gtrack_url setting including help text.
+8/3/09 Added locale setting including help text.
+8/5/09 Added Function key settings
 */
 $colors = array ('odd', 'even');
 
@@ -105,6 +108,13 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		do_insert_settings('wp_key','729c1a751fd3d2428cfe2a7b43442c64');		// 9/13/08 
 		do_insert_settings('auto_route','1');					// 1/17/09
 		do_insert_settings('serial_no_ap','1');					// 1/17/09
+		do_insert_settings('gtrack_url','');					// 7/24/09
+		do_insert_settings('maptype','1');					// 7/24/09
+		do_insert_settings('locale','0');						// 8/3/09
+		do_insert_settings('func_key1','http://openises.sourceforge.net/,Open ISES');		// 8/5/09
+		do_insert_settings('func_key2','');					// 8/5/09
+		do_insert_settings('func_key3','');					// 8/5/09
+
 		}	//
 
 
@@ -420,7 +430,13 @@ function get_setting_help($setting){/* get help for settings */
 		case "msg_text_1": 				return "Default message string for incident new/edit notifies; see instructions"; break;		// 4/5/09										// 9/13/08
 		case "msg_text_2": 				return "Default message string for incident mini-menu email; see instructions"; break;												// 9/13/08
 		case "msg_text_3": 				return "Default message string for for dispatch notifies; see instructions"; break;												// 9/13/08
-
+		case "gtrack_url": 				return "URL for Gtrack server in format http://www.yourserver.com"; break;	//06/24/09
+		case "maptype": 				return "Default Map display type - 1 for Standard, 2 for Satellite, 3 for Terrain Map, 4 for Hybrid"; break;	//08/02/09
+//		case "locale": 					return "Locale for USNG/UTM/OSG setting plus date format 0=US Format, 1=UK Format, 2=ROW Format (UTM = UK Date Format)"; break;	//08/03/09
+		case "locale": 					return "Locale for USNG/UTM/OSG setting plus date format 0=US Format, 1=UK Format)"; break;	//08/03/09
+		case "func_key1": 				return "User Defined Function key 1 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
+		case "func_key2": 				return "User Defined Function key 2 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
+		case "func_key3": 				return "User Defined Function key 3 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}

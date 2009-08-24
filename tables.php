@@ -13,6 +13,7 @@ improvements to datatype 'time' handling
 1/5/09 aprs added to unit_types schema
 1/29/09 corrected if(...)
 7/7/09	revised textarea limit criterion, added Script-date meta
+8/20/09	handle prefixes correctly
 */
 error_reporting(E_ALL);
 $gmap=TRUE;
@@ -1333,8 +1334,9 @@ switch ($func) {
 //	}
 	
 function fnTables () {							/// displays tables comprising db $mysql_db
-	global $mysql_db, $FK_id, $id_lg, $primaries, $secondaries;
+	global $mysql_db, $mysql_prefix, $FK_id, $id_lg, $primaries, $secondaries;
 	$ctrp=$ctrs=0;
+	$pref_lgth = strlen($mysql_prefix);
 	
 	$sql = "SHOW TABLES ";
 	$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db  
@@ -1343,16 +1345,19 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 		$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db  
 		$row2 = mysql_fetch_array($result2);
 		$gotit = FALSE;
-		for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field
-			if (strtolower(substr(mysql_field_name($result2, $i), -$id_lg)) == $FK_id) {	// find any foreign key
-				$primaries[$ctrp] = $row[0];							// a primary
+		for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field - substr ( string, start, 999)
+
+			if (strtolower(substr(mysql_field_name($result2, $i), -$id_lg)) == $FK_id) {	// find any implied key
+//				$primaries[$ctrp] = $row[0];							// a primary
+				$primaries[$ctrp] = substr($row[0], $pref_lgth, 999);							// a primary - 8/20/09
 				$ctrp++;
 				$gotit = TRUE;
 				break;
 				}
 			}
-		if (!$gotit) {// not a primary
+		if (!$gotit) {				// not a primary
 			$secondaries[$ctrs] = $row[0];
+			$secondaries[$ctrs] = substr($row[0], $pref_lgth, 999);
 			$ctrs++;
 			}				
 		}

@@ -1,0 +1,24 @@
+Changed Files in 2.10 G
+
+index.php
+add.php
+edit.php
+routes.php
+units.php
+incident_popup.php
+track_u.php
+config.php
+readme.txt
+
+/incs/config.inc.php
+/incs/functions.inc.php
+/incs/functions.major.inc.php
+
+Added files in 2.10 G
+
+latitude.php
+locatea.php
+gtrack.php
+about_2_10_G_beta.txt
+gtrack_readme.txt
+

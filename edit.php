@@ -23,6 +23,10 @@
 5/2/09	USNG edit added, parsefloat
 7/7/09	protocol handling added
 7/16/09	protocol corrections
+8/2/09 Added code to get maptype variable and switch to change default maptype based on variable setting
+8/3/09 Added code to get locale variable and change USNG/OSGB/UTM dependant on variable in tabs and sidebar.
+8/7/09 Revised Actions and Patients display to clean up display and also remove ID ambiguity.
+8/8/09	resolved 'description' ambiguity, relocated 'disposition'
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -421,11 +425,19 @@
 
 		else {				// OK, do form - 7/7/09
 //			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' LIMIT 1") or do_error('', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+/*
 			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,
 				UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` 
 				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
 				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
-	
+*/
+ 
+ 			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend, UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, 
+ 				`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` FROM `$GLOBALS[mysql_prefix]ticket` 
+ 				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
+ 				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
+
+//			dump($query);
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 	
 			$row = stripslashes_deep(mysql_fetch_array($result));
@@ -497,15 +509,19 @@
 			print "<TR CLASS='odd'><TD CLASS='td_label'>Status:</TD><TD>
 				<SELECT NAME='frm_status'><OPTION VALUE='" . $GLOBALS['STATUS_OPEN'] . "' $selO>Open</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_CLOSED'] . "'$selC>Closed</OPTION></SELECT></TD></TR>";
 			print "<TR CLASS='even'><TD COLSPAN='2'>&nbsp;</TD></TR>";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>City:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print "<TR CLASS='odd'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'>City:&nbsp;&nbsp;&nbsp;&nbsp;";
 			print 		"<button type=\"button\" onClick=\"Javascript:loc_lkup(document.edit);\"><img src=\"./markers/glasses.png\" alt=\"Lookup location.\" /></button>";
 			print 		"</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
 			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; St:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
-//			print "<TR CLASS='odd'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
+//			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
 	
-			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
-			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='2' >" . $row['description'] . "</TEXTAREA></TD></TR>\n";		// 10/8/08
+			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
+			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='2' >" . $row['tick_descr'] . "</TEXTAREA></TD></TR>\n";		// 8/8/09
+
+			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08, 8/8/09
+			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
+
 			print "\n<TR CLASS='odd'><TD CLASS='td_label'>Run Start:</TD><TD>";
 			print  generate_date_dropdown("problemstart",$row['problemstart'],0, TRUE);
 			print "&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'st_unlk(document.edit);'></TD></TR>\n";
@@ -524,17 +540,33 @@
 				print "</SPAN></TD></TR>\n";
 				}
 
-			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08
-			
-			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
+			print "<TR CLASS='odd'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
 			print 	"<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
-			print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
+
+			$locale = get_variable('locale');	// 08/03/09
+			switch($locale) { 
+				case "0":
+					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
+					break;
+			
+				case "1":
+					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>OSGB</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoOSGB($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
+					break;
+			
+//				case "2":
+//					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>OSGB</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUTM($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
+//					break;
+
+				default:																	// 8/10/09
+				    print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+				}
+
+//			print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
 			print "</TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
+			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
 			$lat = $row['lat']; $lng = $row['lng'];	
-			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			print "<TR CLASS='odd'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='reset' VALUE='Reset' onclick= 'st_unlk_res(this.form); reset_end(this.form); resetmap($lat, $lng);' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>";
 ?>	
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $row['lat'];?>">				<!-- // 8/9/08 -->
@@ -545,8 +577,12 @@
 			<INPUT TYPE="hidden" NAME="frm_owner_default" VALUE="<?php print $row['owner'];?>">
 			<INPUT TYPE="hidden" NAME="frm_severity_default" VALUE="<?php print $row['severity'];?>">
 <?php
-			print "</TABLE>";		// end data
-			print "</TD><TD>";
+			print "<TR CLASS='even'><TD COLSPAN='10' ALIGN='center'><BR /><B><U>Actions and Patients</U></B><BR /></TD></TR>";	//8/7/09
+			print "<TR CLASS='odd'><TD COLSPAN='10' ALIGN='center'>";										//8/7/09
+			print show_actions($row[0], "date", TRUE, TRUE);											//8/7/09
+			print "</TD></TR>";																//8/7/09
+			print "</TABLE>";		// end data 8/7/09
+			print "</TD><TD>";																//8/7/09
 			print "<TABLE ID='mymap' border = 0><TR><TD ALIGN='center'><DIV ID='map' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX'></DIV>
 				<BR /><SPAN ID='do_grid' onClick='toglGrid()'><U>Grid</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
 				<SPAN ID='do_sv' onClick = 'sv_win(document.edit)'><U>Street view</U></SPAN> <!-- 2/11/09 -->
@@ -555,7 +591,6 @@
 			print "</TD></TR>";
 			print "<TR><TD CLASS='print_TD' COLSPAN='2'>";
 
-			print show_actions($row['id'], "date", TRUE, TRUE);		/* lists actions and patient data belonging to ticket with links */
 
 			print "</FORM>";
 			print "</TD></TR></TABLE>";		// bottom of outer
@@ -584,6 +619,29 @@
 		icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =  "./icons/white.png";	// white - not in use
 	
 		map = new GMap2(document.getElementById("map"));		// create the map
+<?php
+$maptype = get_variable('maptype');	// 08/02/09
+
+	switch($maptype) { 
+		case "1":
+		break;
+
+		case "2":?>
+		map.setMapType(G_SATELLITE_MAP);<?php
+		break;
+	
+		case "3":?>
+		map.setMapType(G_PHYSICAL_MAP);<?php
+		break;
+	
+		case "4":?>
+		map.setMapType(G_HYBRID_MAP);<?php
+		break;
+
+		default:
+		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
+	}
+?>
 		map.addControl(new GSmallMapControl());					// 1/19/09
 		map.addControl(new GMapTypeControl());
 <?php if (get_variable('terrain') == 1) { ?>

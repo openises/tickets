@@ -32,6 +32,9 @@
 4/30/09 $ replaces document.getElementById, USNG text underline
 7/7/09	added protocol handling
 7/16/09	zero to in_types_id 
+8/2/09 Added code to get maptype variable and switch to change default maptype based on variable setting
+8/3/09 Added code to get locale variable and change USNG/OSGB/UTM dependant on variable in tabs and sidebar.
+8/13/09	'date' = now added to UPDATE
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -117,7 +120,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				default:							/* error????  */
 				    $name_rev = " error  error  error ";
 				}
-																						// 8/23/08, 9/20/08
+																						// 8/23/08, 9/20/08, 8/13/09
 			// perform db update
 			$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
 			`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
@@ -136,6 +139,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			`problemend`=".		$frm_problemend . ",
 			`description`= " .	quote_smart(trim($_POST['frm_description'])) .",
 			`comments`= " . 	quote_smart(trim($_POST['frm_comments'])) .",
+			`date`='$now',
 			`updated`='$now'
 			WHERE ID='$id'";
 	
@@ -480,6 +484,30 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 	function domap() {										// called from phone, addr lookups
 		map = new GMap2($('map'));
+<?php
+$maptype = get_variable('maptype');	// 08/02/09
+
+	switch($maptype) { 
+		case "1":
+		break;
+
+		case "2":?>
+		map.setMapType(G_SATELLITE_MAP);<?php
+		break;
+	
+		case "3":?>
+		map.setMapType(G_PHYSICAL_MAP);<?php
+		break;
+	
+		case "4":?>
+		map.setMapType(G_HYBRID_MAP);<?php
+		break;
+
+		default:
+		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
+	}
+?>
+
 		$("map").style.backgroundImage = "url(./markers/loading.jpg)";
 		map.addControl(new GSmallMapControl());
 		map.addControl(new GMapTypeControl());
@@ -542,6 +570,30 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				map.addOverlay(new GPolyline(Cpoints,cColor,cWidth));
 				}
 			map = new GMap2($('map'));
+<?php
+$maptype = get_variable('maptype');	// 08/02/09
+
+	switch($maptype) { 
+		case "1":
+		break;
+
+		case "2":?>
+		map.setMapType(G_SATELLITE_MAP);<?php
+		break;
+	
+		case "3":?>
+		map.setMapType(G_PHYSICAL_MAP);<?php
+		break;
+	
+		case "4":?>
+		map.setMapType(G_HYBRID_MAP);<?php
+		break;
+
+		default:
+		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
+	}
+?>
+
 			map.addControl(new GSmallMapControl());
 			map.addControl(new GMapTypeControl());
 <?php print (get_variable('terrain') == 1)? "\t\tmap.addMapType(G_PHYSICAL_MAP);\n" : "";?>
@@ -952,7 +1004,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		load(point.lat(), point.lng(), <?php echo get_variable('def_zoom'); ?>);			// show it
 
 		}				// end function
-		
+	
 	var protocols = new Array();		// 7/7/09
 </SCRIPT>
 </HEAD>
@@ -1053,8 +1105,29 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		</TD>
 		<TD><INPUT SIZE="11" TYPE="text" NAME="show_lat" VALUE="" >
 			<INPUT SIZE="11" TYPE="text" NAME="show_lng" VALUE="" >&nbsp;&nbsp;
+<?php
+$locale = get_variable('locale');	// 08/03/09
+	switch($locale) { 
+		case "0":?>
 			<B><SPAN ID = 'USNG' onClick = "do_usng()">USNG</SPAN></B>:&nbsp;<INPUT SIZE="19" TYPE="text" NAME="frm_ngs" VALUE="" DISABLED ></TD>
-			</TR> <!-- 9/13/08, 12/3/08 -->
+			</TR> <!-- 9/13/08, 12/3/08 --><?php
+		break;
+
+		case "1":?>
+			<B><SPAN ID = 'USNG' onClick = "do_usng()"></SPAN></B>&nbsp;<INPUT SIZE="19" TYPE="hidden" NAME="frm_ngs" VALUE="" DISABLED ></TD>
+			</TR> <!-- 9/13/08, 12/3/08 --><?php
+		break;
+	
+//		case "2":?>
+//			<B><SPAN ID = 'USNG' onClick = "do_usng()"></SPAN></B>&nbsp;<INPUT SIZE="19" TYPE="hidden" NAME="frm_ngs" VALUE="" DISABLED ></TD>
+//			</TR> <!-- 9/13/08, 12/3/08 --><?php
+//		break;
+
+	default:
+	    print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+	}
+?>
+
 	<TR CLASS='even'><TD COLSPAN="3" ALIGN="center"><BR />
 		<INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="reset" VALUE="Reset" onclick= "do_reset(this.form);" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

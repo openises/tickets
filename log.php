@@ -6,6 +6,7 @@
 /*
 1/18/09 initial version
 2/30/09 delete functions added
+8/15/09	guest handling corrected
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
@@ -38,16 +39,11 @@ function validate_del() {
 </HEAD>
 <BODY>
 <?php
-if (empty($_POST)) {
+	if (!(is_guest())) {
 
-	if (is_guest()) {
+		if (empty($_POST)) {
+
 ?>
-<CENTER><BR /><BR /><BR /><BR /><BR /><H3>Guests not allowed Log access. </CENTER><BR /><BR />
-
-<INPUT TYPE='button' value='Cancel' onClick = 'window.exit();'>
-<?php } ?>
-
-
 <FORM NAME="log_form" METHOD = "post" ACTION="<?php print basename(__FILE__); ?>">
 <TABLE>
 <TR CLASS = 'even' ><TH COLSPAN=2>Station Log</TH></TR>
@@ -65,7 +61,7 @@ if (empty($_POST)) {
 <INPUT TYPE='hidden' NAME='func' VALUE='add'>
 </FORM>
 <?php 
-	}
+	}				// end if (empty($_POST))
 
 else {										// not empty
 
@@ -177,7 +173,21 @@ else {										// not empty
 <INPUT TYPE='button' VALUE='Finished' onClick = 'self.close()' />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <INPUT TYPE='button' VALUE='Log entry' onClick = 'document.dummy_form.submit();' />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <FORM NAME="dummy_form" METHOD = "post" ACTION="<?php print basename(__FILE__); ?>"></FORM>
+<?php 
+
+			} // end if/else (empty($_POST))
+
+		} 
+	else {					// 8/15/09
+?>
+<CENTER><BR /><BR /><BR /><BR /><BR /><H3>Guests are not allowed Log access. <BR /><BR />
+
+<INPUT TYPE='button' value='Cancel' onClick = 'window.close();'>
+</CENTER>
+
+<?php
+	}				// end if/else(guest)
+
+?>
 </BODY>
 </HTML>
-<?php } ?>
-

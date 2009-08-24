@@ -2,27 +2,27 @@
 /*
 5/23/08 added function do_kml() - generates JS for kml files - 
 5/31/08 added function do_log() default values
-6/4/08	added $GLOBALS['LOG_INCIDENT_DELETE']	
-6/9/08	added $GLOBALS['LEVEL_SUPER']
+6/4/08  added $GLOBALS['LOG_INCIDENT_DELETE']	
+6/9/08  added $GLOBALS['LEVEL_SUPER']
 6/16/08 added reference $GLOBALS['LEVEL_SUPER']
 6/26/08 added DELETE abandoned SESSION records
 6/26/08 added log entries to  show_log()
 6/28/08 added $my_session refresh at login
 7/16/08 limited USER_AGENT string lgth to  100
 7/18/07 dispatch disallowed for guest-level
-8/6/08	fix to show_actions() when persons empty
-8/7/08	added log actions for ACTION, PATIENT
-8/15/08	mysql_fetch_array to mysql_fetch_assoc - performance
-8/22/08	added function usng()
-8/26/08	added speed check to distance check
-9/7/08	added coords display per CG format
+8/6/08  fix to show_actions() when persons empty
+8/7/08  added log actions for ACTION, PATIENT
+8/15/08 mysql_fetch_array to mysql_fetch_assoc - performance
+8/22/08 added function usng()
+8/26/08 added speed check to distance check
+9/7/08  added coords display per CG format
 9/12/08 added USNG PHP functions
 9/14/08 empty check to lat/lng functions
-10/4/08	corrections to initial array setup to detect zero speed
-10/6/08	added function mail_it ()
+10/4/08 corrections to initial array setup to detect zero speed
+10/6/08 added function mail_it ()
 10/8/08 added window.focus()
-10/8/08	added function is_email
-10/8/08	'User' revised to 'Operator'
+10/8/08 added function is_email
+10/8/08 'User' revised to 'Operator'
 10/15/08 changed 'Comments' to 'Disposition'
 10/15/08 relocated host id in mail msg
 10/15/08 addr array to string
@@ -45,17 +45,17 @@
 1/26/09 mysql2timestamp() made public
 1/28/09 relocated function quote_smart() fm istest.php, global types removed
 1/30/09 handle MD5 passwds
-2/3/09 removed delta fm date/time evaluation
-2/4/09 added db functions - unused at this writing
+2/3/09  removed delta fm date/time evaluation
+2/4/09  added db functions - unused at this writing
 2/13/09 disallow 'member' logins
 2/15/09 added function format_date_time()
 2/16/09 added text parameter to caption string
 2/18/09 function mail_it() broken into msg() and send() functions
 2/19/09 added get_mysession ()
-3/3/09 MEMBER text addition, disallow MEMBER login
-3/5/09 renamed table _test to z_snapper
-3/7/09 removed function do_mail()
-3/8/09 test user/pword
+3/3/09  MEMBER text addition, disallow MEMBER login
+3/5/09  renamed table _test to z_snapper
+3/7/09  removed function do_mail()
+3/8/09  test user/pword
 3/12/09 unset() added
 3/16/09 added function get_current()
 3/18/09 'aprs_poll' to 'auto_poll', dist chk rev'd for testing
@@ -63,13 +63,20 @@
 3/22/09 fixed 'action' entries, instam/aprs hskpg
 3/25/09 added$GLOBALS['TOLERANCE']  for remote time validity determination, function my_is_float(), my_is_int()
 3/26/09 dropped use of last position
-5/4/09 	revised My_is_float for 0 handling
-7/7/09 	upgrade do_send to handle smtp, LOG_CALL_RESET added, force 'waiting' message after logout
-7/7/09 	force non-zero str match, script META's addad
-7/8/09	$GLOBALS['LEVEL_UNIT'] added
-7/8/09	extract smtp name
-7/8/09	$GLOBALS['TRACK_APRS'], etc, added
-7/25/09	instam corrections, apply 1-minute poll limit, removed fm APRS
+5/4/09  revised My_is_float for 0 handling
+7/7/09  upgrade do_send to handle smtp, LOG_CALL_RESET added, force 'waiting' message after logout
+7/7/09  force non-zero str match, script META's addad
+7/8/09  $GLOBALS['LEVEL_UNIT'] added
+7/8/09  extract smtp name
+7/8/09  $GLOBALS['TRACK_APRS'], etc, added
+7/25/09 instam corrections, apply 1-minute poll limit, removed fm APRS
+7/29/09 added functions do_grack, do_locatea and do_glat to get data from these datasources. Modified function get_current to include them.
+8/2/09  explode() -> split()
+8/3/09  explode() -> split() for gtrack and locateA functions
+8/7/09	Revised function generate_date_dropdown to change display based on locale setting
+8/9/09	revise glat() to handle non-Curl configurations
+8/10/09	removed 'mobile = 1' from tracking select criteria, removed locale case "2"
+8/20/09	added close_incident link
 {									// 3/25/09
 
 */
@@ -95,7 +102,7 @@ define ('SUPR_STR', 'Super');				// added 6/16/08
 $GLOBALS['STATUS_RESERVED'] 		= 0;		// 10/24/08
 $GLOBALS['STATUS_CLOSED'] 			= 1;
 $GLOBALS['STATUS_OPEN']   			= 2;
-$GLOBALS['NOTIFY_ACTION'] 			= 'Added Action/Person';
+$GLOBALS['NOTIFY_ACTION'] 			= 'Added Action/Patient';
 $GLOBALS['NOTIFY_TICKET'] 			= 'Ticket Update';
 $GLOBALS['ACTION_DESCRIPTION']		= 1;
 $GLOBALS['ACTION_OPEN'] 			= 2;
@@ -149,14 +156,14 @@ $GLOBALS['LOG_CALL_RESET']			=34;		// 7/7/09
 $GLOBALS['icons'] 		= array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");
 $GLOBALS['sm_icons']	= array("sm_black.png", "sm_blue.png", "sm_green.png", "sm_red.png", "sm_white.png", "sm_yellow.png", "sm_gray.png", "sm_lt_blue.png", "sm_orange.png");
 
-$GLOBALS['SESSION_TIME_LIMIT']		= ($istest)? 1200 : 120;		// minutes of inactivity 10/19/08
-$GLOBALS['TOLERANCE']				= 5*60;		// seconds of deviation from UTC before remotes sources considered 	erroneous - 3/25/09
+$GLOBALS['SESSION_TIME_LIMIT']		= ($istest)? 3600 : 3600;		// minutes of inactivity 10/19/08
+$GLOBALS['TOLERANCE']				= 180*60;		// seconds of deviation from UTC before remotes sources considered 	erroneous - 3/25/09
 
-$GLOBALS['TRACK_APRS']				=1;     	// 7/8/09
+$GLOBALS['TRACK_APRS']			=1;     	// 7/8/09
 $GLOBALS['TRACK_INSTAM']			=2;       
 $GLOBALS['TRACK_GTRACK']			=3;   
 $GLOBALS['TRACK_LOCATEA']			=4;      
-$GLOBALS['TRACK_GLAT']				=5;     
+$GLOBALS['TRACK_GLAT']			=5;     
 
 $evenodd = array ("even", "odd");	// class names for alternating table row css colors
 
@@ -525,7 +532,7 @@ function do_error($err_function,$err,$custom_err='',$file='',$line=''){/* raise 
 	die('<B>Execution stopped.</B></FONT>');
 	}
 
-function add_header($ticket_id)		{/* add header with links */
+function add_header($ticket_id, $no_close = FALSE)		{/* add header with links */
 	print "<BR /><NOBR><FONT SIZE='2'>This Call: ";	
 	if (is_administrator() || is_super()){
 		print "<A HREF='edit.php?id=$ticket_id'>Edit </A> | ";
@@ -537,9 +544,13 @@ function add_header($ticket_id)		{/* add header with links */
 		print "<A HREF='config.php?func=notify&id=$ticket_id'>Notify</A> | ";
 		}
 	print "<A HREF='main.php?print=true&id=$ticket_id'>Print </A> | ";
-	print "<A HREF='#' onClick = \"var mailWindow = window.open('mail.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\">E-mail </A>"; // 10/8/08
+	print "<A HREF='#' onClick = \"var mailWindow = window.open('mail.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\">E-mail </A> |"; // 10/8/08
 	if (!is_guest()) {				// 7/18/07
-		print " | <A HREF='routes.php?ticket_id=$ticket_id'>Dispatch Unit</A>";		// new 9/22
+		print "<A HREF='routes.php?ticket_id=$ticket_id'> Dispatch Unit</A> | ";		// new 9/22
+		print "<A HREF='#' onClick = \"var mailWindow = window.open('add_note.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"> Add note </A>"; // 10/8/08
+		if (!($no_close)) {
+			print "  | <A HREF='#' onClick = \"var mailWindow = window.open('close_in.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"> Close incident </A> ";  // 8/20/09
+			}
 		}
 	print "</FONT></NOBR><BR />";
 	}
@@ -593,27 +604,84 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 		if (get_variable('military_time')==1) 	$hour = date('H', $local);
 		else 									$hour = date('h', $local);
 		}
-	print "<SELECT name='frm_year_$date_suffix' $dis_str>";
-	for($i = date("Y")-1; $i < date("Y")+1; $i++){
-		print "<OPTION VALUE='$i'";
-		$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
-		}
+	$locale = get_variable('locale');				// Added use of Locale switch for Date entry pulldown to change display for locale 08/07/09
+	switch($locale) { 
+		case "0":
+			print "<SELECT name='frm_year_$date_suffix' $dis_str>";
+			for($i = date("Y")-1; $i < date("Y")+1; $i++){
+				print "<OPTION VALUE='$i'";
+				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+				}
+				
+			print "</SELECT>";
+			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			for($i = 1; $i < 13; $i++){
+				print "<OPTION VALUE='$i'";
+				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+				}
 			
-	print "</SELECT>";
-	print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
-	for($i = 1; $i < 13; $i++){
-		print "<OPTION VALUE='$i'";
-		$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
-		}
+			print "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
+			for($i = 1; $i < 32; $i++){
+				print "<OPTION VALUE=\"$i\"";
+				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+				}
+			print "</SELECT>\n&nbsp;&nbsp;";
 		
-	print "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
-	for($i = 1; $i < 32; $i++){
-		print "<OPTION VALUE=\"$i\"";
-		$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
-		}
-	print "</SELECT>\n&nbsp;&nbsp;";
+			print "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+			break;
 	
-	print "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+		case "1":
+			print "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
+			for($i = 1; $i < 32; $i++){
+				print "<OPTION VALUE=\"$i\"";
+				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+				}
+	
+			print "</SELECT>";
+			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			for($i = 1; $i < 13; $i++){
+				print "<OPTION VALUE='$i'";
+				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+				}
+	
+			print "<SELECT name='frm_year_$date_suffix' $dis_str>";
+			for($i = date("Y")-1; $i < date("Y")+1; $i++){
+				print "<OPTION VALUE='$i'";
+				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+				}
+			print "</SELECT>\n&nbsp;&nbsp;";
+		
+			print "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+			break;
+																						// 8/10/09
+//		case "2":
+//			print "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
+//			for($i = 1; $i < 32; $i++){
+//				print "<OPTION VALUE=\"$i\"";
+//				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+//				}
+//	
+//			print "</SELECT>";
+//			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+//			for($i = 1; $i < 13; $i++){
+//				print "<OPTION VALUE='$i'";
+//				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+//				}
+//	
+//			print "<SELECT name='frm_year_$date_suffix' $dis_str>";
+//			for($i = date("Y")-1; $i < date("Y")+1; $i++){
+//				print "<OPTION VALUE='$i'";
+//				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
+//				}
+//			print "</SELECT>\n&nbsp;&nbsp;";
+//		
+//			print "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+//			break;
+
+		default:
+		    print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+		}
+
 	
 	print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_hour_$date_suffix' VALUE='$hour' $dis_str>:";
 	print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_minute_$date_suffix' VALUE='$minute' $dis_str>";
@@ -721,12 +789,16 @@ function is_date($DateEntry) {						// returns true for valid non-zero date
 	else {return TRUE;}	
 	}		// end function Is_Date()
 
-function toUTM($coordsIn) {							// UTM converter - assume comma separator
+function toUTM($coordsIn, $from = "") {							// UTM converter - assume comma separator
 	$temp = explode(",", $coordsIn);
-	if (!count($temp)==2) {
+//	dump($coordsIn);
+//	dump($temp[0]);
+//	dump($temp[1]);
+//	if (!count($temp)==2) {
 //		print __LINE__; 
 //		dump ($coordsIn);
-		}
+//		}
+//	dump( __LINE__ . $from);
 	$coords = new LatLng(trim($temp[0]), trim($temp[1]));	
 	$utm = $coords->toUTMRef();
 	$temp = $utm->toString();
@@ -741,8 +813,8 @@ function get_type($id) {				// returns incident type given its id
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` WHERE `id`= $id LIMIT 1";
 	$result_type = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row_type = stripslashes_deep(mysql_fetch_assoc($result_type));
-	unset ($result_type);
-	return $row_type['type'];
+//	unset ($result_type);
+	return (isset($row_type['type']))? $row_type['type']: "?";		// 8/12/09
 	}
 
 function output_csv($data, $filename = false){
@@ -799,7 +871,8 @@ function do_aprs() {				// populates the APRS tracks table
 		$speeds = array();				// 10/2/08
 		$sources = array();
 																		// 10/4/08
-		$query = "SELECT `callsign`, `mobile` FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`= 1 AND `aprs`= 1 AND `callsign` <> ''";  // 1/23/09
+//		$query = "SELECT `callsign`, `mobile` FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`= 1 AND `aprs`= 1 AND `callsign` <> ''";  // 1/23/09
+		$query = "SELECT `callsign`, `mobile` FROM `$GLOBALS[mysql_prefix]responder` WHERE `aprs`= 1 AND `callsign` <> ''";  // 1/23/09, 8/10/09
 		$result1 = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		while ($row1 = mysql_fetch_assoc($result1)) {
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source`= '{$row1['callsign']}' ORDER BY `packet_date` DESC LIMIT 1";	// possibly none
@@ -817,7 +890,8 @@ function do_aprs() {				// populates the APRS tracks table
 		$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		unset($resultd);
 		
-		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `aprs`= 1 AND `callsign` <> ''";  // work each call sign
+//		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `aprs`= 1 AND `callsign` <> ''";  // work each call sign
+		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `aprs`= 1 AND `callsign` <> ''";  // work each call sign, 8/10/09
 		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 
 		if (mysql_affected_rows() > 0) {			// 1/23/09
@@ -1206,7 +1280,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 	}		// end function do_login()
 
 function ip_address_to_number($IPaddress) {
-	$ips = split ("\.", "$IPaddress");
+	$ips = split (".", "$IPaddress");
 	return ($ips[3] + $ips[2] * 256 + $ips[1] * 256 * 256 + $ips[0] * 256 * 256 * 256);
 	}
 
@@ -1271,7 +1345,7 @@ function get_stuff($in_file) {				// return file contents as string
 	}				// end function get_stuff()
 	
 function get_ext($filename) {				// return extension in lower-case
-	$exts = split("[/\\.]", $filename) ;
+	$exts = explode(".", $filename) ;	// 8/2/09
 	return strtolower($exts[count($exts)-1]);
 	}
 
@@ -1563,7 +1637,7 @@ function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
 
 	$to_array = explode ("|",$to_str );										// pipe-delimited string  - 10/17/08
 	require_once("cell_addrs.inc.php");										// 10/22/08
-	$cell_addrs = array( "gmail.com", "vtext.com", "messaging.sprintpcs.com", "txt.att.net", "vmobl.com", "myboostmobile.com");		// 10/5/08
+	$cell_addrs = array("vtext.com", "messaging.sprintpcs.com", "txt.att.net", "vmobl.com", "myboostmobile.com");		// 10/5/08
 	if ($istest) {array_push($cell_addrs, "gmail.com");};
 
 	$host = get_variable('host');
@@ -1673,12 +1747,13 @@ function notify_user($ticket_id,$action_id) {								// 10/20/08
 
 
 function snap($source, $stuff) {																// 10/18/08 , 3/5/09 - debug tool
-	if (mysql_table_exists("$GLOBALS[mysql_prefix]_snap_data")) {
-		$query	= "DELETE FROM `$GLOBALS[mysql_prefix]_snap_data` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
+	$table_name = "_snap_data";
+	if (mysql_table_exists($table_name)) {
+		$query	= "DELETE FROM `$table_name` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	
 //		$query = "INSERT INTO `$GLOBALS[mysql_prefix]_test` (`source`,`stuff`) VALUES('$source', '$stuff')";
-		$query = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]_snap_data` (`source`,`stuff`)  
+		$query = sprintf("INSERT INTO `$table_name` (`source`,`stuff`)  
 			VALUES(%s,%s)",
 				quote_smart_deep(trim($source)),
 				quote_smart_deep(trim($stuff)));
@@ -1729,7 +1804,8 @@ function do_instam($key_val) {				// 3/17/09
 	// http://www.instamapper.com/api?action=getPositions&key=4899336036773934943
 	// housekeep 
 
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `instam`= 1 AND `callsign` <> ''";  // work each call/license
+//	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `instam`= 1 AND `callsign` <> ''";  // work each call/license
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `instam`= 1 AND `callsign` <> ''";  				// work each call/license, 8/10/09
 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 //	snap(basename(__FILE__) . __LINE__, $query);
 	
@@ -1814,6 +1890,283 @@ function do_instam($key_val) {				// 3/17/09
 		}		// end while
 	}		// end function do_instam()
 
+function do_gtrack() {			//7/29/09
+	$gtrack_url = get_variable('gtrack_url');
+//	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `gtrack`= 1 AND `callsign` <> ''";  // work each call/license
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `gtrack`= 1 AND `callsign` <> ''";  // work each call/license, 8/10/09
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
+	$tracking_id = ($row['callsign']);
+	$exist_lat = ($row['lat']);
+	$exist_lng = ($row['lng']);
+	$exist_updated = ($row['updated']);
+	$update_error = strtotime('now - 1 hour');
+
+		$request_url = $gtrack_url . "/data.php?userid=$tracking_id";		//gtrack_url set by entry in settings table
+		$data="";
+		if (function_exists("curl_init")) {
+			$ch = curl_init();
+			$timeout = 5;
+			curl_setopt($ch, CURLOPT_URL, $request_url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+			$data = curl_exec($ch);
+			curl_close($ch);
+			}
+		else {				// not CURL
+			if ($fp = @fopen($request_url, "r")) {
+				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				fclose($fp);
+				}		
+			else {
+				print "-error 1";		// @fopen fails
+				}
+			}
+
+		$xml = new SimpleXMLElement($data);
+
+		$user_id = $xml->marker['userid'];
+		$lat = $xml->marker['lat'];
+		$lng = $xml->marker['lng'];
+		$alt = $xml->marker['alt'];
+		$date = $xml->marker['local_date'];
+		if ($date != "") {
+			list($day, $month, $year) = explode("/", $date); // expand date string to year, month and day 8/3/09
+			$date = $year . "-" . $month . "-" . $day;  // format date as mySQL date
+			$time = $xml->marker['local_time'];
+			$time = date("H:i:s", strtotime($time));	// format as mySQL time
+			$updated = $date . " " . $time;	// create updated datetime
+		}
+		$mph = $xml->marker['mph'];
+		$kph = $xml->marker['kph'];
+		$heading = $xml->marker['heading'];
+
+		if (!empty($lat) && !empty($lng)) {		//check not NULL
+	
+			if ($exist_lat<>$lat && $exist_lng<>$lng) {	// check for change in position
+
+				if(($exist_updated == $updated) && ($update_error > $updated)) {
+				} else {
+
+				$query	= "DELETE FROM $GLOBALS[mysql_prefix]tracks WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
+				$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				unset($resultd);
+	
+				$query = "UPDATE $GLOBALS[mysql_prefix]responder SET lat = '$lat', lng ='$lng', updated	= '$updated' WHERE callsign = '$user_id'";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				$query = "DELETE FROM $GLOBALS[mysql_prefix]tracks_hh WHERE source = '$user_id'";	// remove prior track this device
+				$result = mysql_query($query);
+	
+				$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks_hh (source, latitude, longitude, speed, altitude, updated) VALUES ('$user_id', '$lat', '$lng', '$mph', '$alt', '$updated')";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	
+				$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks (source, latitude, longitude, speed, altitude, packet_date, updated) VALUES ('$user_id', '$lat', '$lng', '$mph', '$alt', '$updated', '$updated')";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				}	//end if
+			}	//end if
+		}	//end if
+	}	// end while
+}	// end function do_gtrack()
+
+function do_locatea() {				//7/29/09
+	
+//	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `locatea`= 1 AND `callsign` <> ''";  // work each call/license
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `locatea`= 1 AND `callsign` <> ''";  // work each call/license, 8/10/09
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
+	$tracking_id = ($row['callsign']);
+	$exist_lat = ($row['lat']);
+	$exist_lng = ($row['lng']);
+	$exist_updated = ($row['updated']);
+	$update_error = strtotime('now - 4 hours');
+
+		$request_url = "http://www.locatea.net/data.php?userid=$tracking_id";
+		$data="";
+		if (function_exists("curl_init")) {
+			$ch = curl_init();
+			$timeout = 5;
+			curl_setopt($ch, CURLOPT_URL, $request_url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+			$data = curl_exec($ch);
+			curl_close($ch);
+			}
+		else {				// not CURL
+			if ($fp = @fopen($request_url, "r")) {
+				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				fclose($fp);
+				}		
+			else {
+				print "-error 1";		// @fopen fails
+				}
+			}
+
+		$xml = new SimpleXMLElement($data);
+
+		$user_id = $xml->marker['userid'];
+		$lat = $xml->marker['lat'];
+		$lng = $xml->marker['lng'];
+		$alt = $xml->marker['alt'];
+		$date = $xml->marker['local_date'];
+		if ($date != "") {
+			list($day, $month, $year) = explode("/", $date); // expand date string to year, month and day	8/3/09
+			$date = $year . "-" . $month . "-" . $day;  // format date as mySQL date
+			$time = $xml->marker['local_time'];
+			$time = date("H:i:s", strtotime($time));	// format as mySQL time
+			$updated = $date . " " . $time;	// create updated datetime
+		}
+		$mph = $xml->marker['mph'];
+		$kph = $xml->marker['kph'];
+		$heading = $xml->marker['heading'];
+
+		if (!empty($lat) && !empty($lng)) {		//check not NULL
+	
+			if ($exist_lat<>$lat && $exist_lng<>$lng) {	// check for change in position
+
+				if(($exist_updated == $updated) && ($update_error > $updated)) {
+				} else {
+	
+				$query	= "DELETE FROM $GLOBALS[mysql_prefix]tracks WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
+				$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				unset($resultd);
+	
+				$query = "UPDATE $GLOBALS[mysql_prefix]responder SET lat = '$lat', lng ='$lng', updated	= '$updated' WHERE callsign = '$user_id'";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				$query = "DELETE FROM $GLOBALS[mysql_prefix]tracks_hh WHERE source = '$user_id'";		// remove prior track this device
+				$result = mysql_query($query);
+	
+				$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks_hh (source, latitude, longitude, speed, altitude, updated) VALUES ('$user_id', '$lat', '$lng', '$mph', '$alt', '$updated')";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	
+				$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks (source, latitude, longitude, speed, altitude, packet_date, updated) VALUES ('$user_id', '$lat', '$lng', '$mph', '$alt', '$updated', '$updated')";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				}	//end if
+			}	//end if
+		}	//end if
+	}	// end while
+}	// end function do_locatea()
+
+function do_glat() {			//7/29/09
+
+	function get_remote($url) {				// 8/9/09
+		
+			$data="";
+			if (function_exists("curl_init")) {
+				$ch = curl_init();
+				$timeout = 5;
+				curl_setopt($ch, CURLOPT_URL, $url);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+				$data = curl_exec($ch);
+				curl_close($ch);
+				return ($data)?  json_decode($data): FALSE;			// FALSE if fails
+				}
+			else {				// no CURL
+				if ($fp = @fopen($url, "r")) {
+					while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+					fclose($fp);
+					}		
+				else {
+//					print "-error 1";		// @fopen fails
+					return FALSE;		// @fopen fails
+					}
+				}
+	
+		return json_decode($data);
+	
+		}	// end function get_remote()
+
+
+//	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `glat`= 1 AND `callsign` <> ''";  // work each call/license
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `glat`= 1 AND `callsign` <> ''";  // work each call/license, 8/10/09
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+
+	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
+		$user = ($row['callsign']);
+		$exist_lat = ($row['lat']);
+		$exist_lng = ($row['lng']);
+		$exist_updated = ($row['updated']);
+		$update_error = strtotime('now - 1 hour');
+	
+		$ret_val = array("", "", "", "");
+		$the_url = "http://www.google.com/latitude/apps/badge/api?user={$user}&type=json";
+/*
+		$ch = curl_init();
+		$timeout = 5;
+		curl_setopt($ch, CURLOPT_URL, $the_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+		$data = curl_exec($ch);
+		curl_close($ch);
+		$json = json_decode($data);
+*/
+		$json = get_remote($the_url);
+	
+	//	dump($json);
+		error_reporting(0);
+		foreach ($json as $key => $value) {				// foreach 1
+		    $temp = $value;
+			foreach ($temp as $key1 => $value1) {			// foreach 2
+			    $temp = $value1;
+				foreach ($temp as $key2 => $value2) {			// foreach 3
+					$temp = $value2;
+					foreach ($temp as $key3 => $value3) {			// foreach 4
+						switch (strtolower($key3)) {
+							case "id":
+								$ret_val[0] = $value3;
+							    break;
+							case "timestamp":
+								$ret_val[1] = $value3;
+							    break;
+							case "coordinates":
+								$ret_val[2] = $value3[0];
+								$ret_val[3] = $value3[1];
+							    break;
+							}		// end switch()
+						}		// end for each()
+			    	}		// end for each()
+				}		// end for each()
+			}		// end foreach 1
+		error_reporting(E_ALL);
+	
+		if ((empty($ret_val[0])) || ((empty($ret_val[1])))  || (!(my_is_float($ret_val[2] ))) || (!(my_is_float($ret_val[3])))) {
+			break;
+			}
+		else {							// valid glat data
+			$lat = $ret_val[3];
+			$lng = $ret_val[2];
+			$glat_id = $ret_val[0];
+			$timestamp = $ret_val[1];
+			$updated = date('Y-m-d H:i:s', $timestamp);
+		
+			if (!empty($lat) && !empty($lng)) {		//check not NULL
+			
+				if ($exist_lat<>$lat && $exist_lng<>$lng) {	// check for change in position
+		
+					if(($exist_updated == $updated) && ($update_error > $updated)) {
+						} 
+					else {		
+						$query	= "DELETE FROM $GLOBALS[mysql_prefix]tracks WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
+						$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						unset($resultd);
+				
+						$query = "UPDATE $GLOBALS[mysql_prefix]responder SET lat = '$lat', lng ='$lng', updated	= '$updated' WHERE callsign = '$glat_id'";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						$query = "DELETE FROM $GLOBALS[mysql_prefix]tracks_hh WHERE source = '$glat_id'";		// remove prior track this device  
+						$result = mysql_query($query);
+				
+						$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks_hh (source, latitude, longitude, updated) VALUES ('$glat_id', '$lat', '$lng', '$updated')";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				
+						$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks (source, latitude, longitude,packet_date, updated) VALUES ('$glat_id', '$lat', '$lng', '$updated', '$updated')";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						}			//end if/else
+					}			//end if
+				}			//end if
+			}			// end if/else()
+		}			// end while()
+
+	}		// end function do_glat();
 
 function get_current() {		// 3/16/09, 7/25/09
 	$delay = 1;			// minimum time in minutes between  queries - 7/25/09
@@ -1827,13 +2180,16 @@ function get_current() {		// 3/16/09, 7/25/09
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 
-	$aprs = $instam = FALSE;	// 3/22/09
+	$aprs = $instam = $locatea = $gtrack = $glat = FALSE;	// 3/22/09
 	
-	$query = "SELECT `id`, `aprs`, `instam` FROM `$GLOBALS[mysql_prefix]responder`WHERE ((`aprs` = 1) OR (`instam` = 1))";	
+	$query = "SELECT `id`, `aprs`, `instam`, `locatea`, `gtrack`, `glat` FROM `$GLOBALS[mysql_prefix]responder`WHERE ((`aprs` = 1) OR (`instam` = 1) OR (`locatea` = 1) OR (`gtrack` = 1) OR (`glat` = 1))";	
 	$result = mysql_query($query) or do_error($query, ' mysql error=', mysql_error(), basename( __FILE__), __LINE__);
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		if ($row['aprs'] = 1) 	{ $aprs = TRUE;}
 		if ($row['instam'] = 1) { $instam = TRUE;}
+		if ($row['locatea'] = 1) { $locatea = TRUE;}		//7/29/09
+		if ($row['gtrack'] = 1) { $gtrack = TRUE;}		//7/29/09
+		if ($row['glat'] = 1) { $glat = TRUE;}			//7/29/09
 		}		// end while ()
 	unset($result);
 	if ($aprs) 		{do_aprs();}
@@ -1842,7 +2198,11 @@ function get_current() {		// 3/16/09, 7/25/09
 		$instam = ($temp=="")? FALSE: $temp;
 		if ($instam )	{do_instam($temp);}
 		}
-	return array("aprs" => $aprs, "instam" => $instam);
+//	dump($glat);
+	if ($locatea) 	{do_locatea();}					//7/29/09
+	if ($gtrack) 		{do_gtrack();}				//7/29/09
+	if ($glat) 		{do_glat();}					//7/29/09
+	return array("aprs" => $aprs, "instam" => $instam, "locatea" => $locatea, "gtrack" => $gtrack, "glat" => $glat);		//7/29/09
 	
 	}		// end function
 
@@ -1853,5 +2213,15 @@ function my_is_float($n){									// 5/4/09
 function my_is_int($n){										// 3/25/09
     return ( $n == strval(intval($n)) )? true : false;
 	}
+
+function LLtoOSGB($lat, $lng) {
+
+	$ll2w = new LatLng($lat, $lng);
+	$ll2w->WGS84ToOSGB36();
+	$os2w = $ll2w->toOSRef($lat, $lng);
+	$osgrid = $os2w->toSixFigureString();
+
+	return $osgrid;
+}	//end function do_latlngtoosgb
 
 ?>

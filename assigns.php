@@ -368,7 +368,7 @@ show_top() ;
 					}	// end switch(resp)
 				}		// end while ( ... )
 
-			alert("369 " + the_form.res_times.checked );
+//			alert("369 " + the_form.res_times.checked );
 			the_form.res_times.checked = false;
 				
 			}  	// end function do_assgn_reset()

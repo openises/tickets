@@ -16,6 +16,8 @@
 2/24/09 added dollar function
 3/23/09 fixes per freitas email
 4/11/09 responder sort by name
+8/3/09 Added switch function to change date format dependant on locale setting. Fixed initial display to default to unit report
+8/10/09 deleted locale = '2'
 */
 error_reporting(E_ALL);									// 10/1/08
 $asof = "1/31/09";
@@ -31,9 +33,32 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 extract($_GET);
 extract($_POST);
+
+$locale = get_variable('locale');	// 08/03/09
+
 $evenodd = array ("even", "odd");	// CLASS names for alternating tbl row colors
 if (empty($_POST)) {				// default to today
-	$frm_date = date('m,d,Y');
+
+	switch($locale) { 
+		case "0":
+		$frm_date = date('m,d,Y');
+		$full_date_fmt = date('n/j/y G:i');
+		break;
+
+		case "1":
+		$frm_date = date('m,d,Y');
+		$full_date_fmt = date('j/n/y G:i');
+		break;
+	
+//		case "2":								// 8/10/09
+//		$frm_date = date('m,d,Y');
+//		$full_date_fmt = date('j/n/y G:i');
+//		break;
+
+		default:
+		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+
+	}
 	$frm_func = "dr";				// single day report
 	$group = "u";
 	}
@@ -50,7 +75,7 @@ else {
 	<META HTTP-EQUIV="Cache-Control" 		CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->	
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date($full_date_fmt, filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->	
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <style type="text/css">
 .hovermenu ul{font:bold 13px arial;padding-left:0;margin-left:0;height:20px;}
@@ -852,7 +877,7 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 		}
 
 	$i=1;
-	$checked = array("u" => "", "s" => "", "i" => "");
+	$checked = array("u" => "", "d" => "", "s" => "", "i" => ""); // 8/3/09 added d option to array to allow default to unit report correctly
 	$temp = (empty($_POST))? "u":  $_POST['frm_group']; 		// set selector fm last, default is unit
 	$checked [$temp] = " CHECKED ";								// copy fm last
 
@@ -862,7 +887,7 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 	<TR CLASS='even'><TH COLSPAN=99>Other Reports</TH></TR>
 	<TR CLASS='odd'><TD COLSPAN=8 ALIGN='center'><B>
 		Unit Log <INPUT TYPE='radio' <?php print $checked['u']; ?> NAME= 'frm_which' onClick ="Javascript: which='u';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		Dispatch Log <INPUT TYPE='radio' <?php print $checked['u']; ?> NAME= 'frm_which' onClick ="Javascript: which='d';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <!-- 1/29/09 -->
+		Dispatch Log <INPUT TYPE='radio' <?php print $checked['d']; ?> NAME= 'frm_which' onClick ="Javascript: which='d';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <!-- 1/29/09, 8/3/09 fixed default changed $checked to ['d'] -->
 		Station Log <INPUT TYPE='radio' <?php print $checked['s']; ?> NAME= 'frm_which' onClick ="Javascript: which = 's';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		Incident Summary <INPUT TYPE='radio' <?php print $checked['i']; ?> NAME= 'frm_which' onClick ="Javascript: which = 'i';"></B></TD></TR>
 
@@ -911,8 +936,27 @@ $c_urlstr =  "city_graph.php?p1=" . 		urlencode($from_to[0]) . "&p2=" . urlencod
 		$temp = mktime(0,0,0,date('m'), date('d')+$j, date('Y'));
 		print "<LI onClick = \"toUDRnav('" . date ('m,d,Y', $temp) . "')\">";
 
+$locale = get_variable('locale');	// 08/03/09
+	switch($locale) { 
+		case "0":
 		print date ("m/d", $temp);
 		print "</LI>\n";
+		break;
+
+		case "1":
+		print date ("d/m", $temp);
+		print "</LI>\n";		
+		break;
+	
+//		case "2":									// 8/10/09
+//		print date ("d/m", $temp);
+//		print "</LI>\n";
+//		break;
+
+		default:
+		    print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+	}
+
 		if ($j== -7) {
 			print "<BR /><BR /><nobr><li onClick= \"do_ugr('cw')\">This Week</li><nobr>";
 			$i++;

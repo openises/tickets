@@ -30,6 +30,8 @@
 6/30/09 added do_mail_win(), renamed to do_all_mail
 7/16/09	floating div for 'settings' buttons
 7/24/09	hide Glat();
+7/28/09	Open Glat()
+7/28/09	Add function do_gtrack and function do_locatea for test scripts plus links
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -150,8 +152,26 @@
 		newwindow_t.focus();
 		}
 
-	function do_glat() {				// 6/27/09	
+	function do_glat() {				// 7/29/09	
 		var newwindow_t=window.open("latitude.php", "Test Google Latitude",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
+
+	function do_locatea() {				// 7/29/09	
+		var newwindow_t=window.open("locatea.php", "Test Locatea",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
+
+	function do_gtrack() {				// 7/29/09	
+		var newwindow_t=window.open("gtrack.php", "Test Gtrack",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -1250,7 +1270,9 @@ case 'delete' :
 		<LI CLASS='spl'>Test:&nbsp;&nbsp;&nbsp;<A HREF="#" onClick = "do_test()"><U>APRS</U></A>&nbsp;&nbsp;&nbsp;&nbsp;
 			<A HREF="#" onClick = "do_instam()"><U>Instamapper</U></A>		&nbsp;&nbsp;&nbsp;&nbsp;
 			<A HREF="#" onClick = "do_smtp()"><U>SMTP Mail</U></A>		&nbsp;&nbsp;&nbsp;&nbsp;
-<!--		<A HREF="#" onClick = "do_glat()"><U>Google Latitude</U></A>	7/24/09	 -->
+		<A HREF="#" onClick = "do_glat()"><U>Google Latitude</U></A>		&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 7/28/09 -->
+		<A HREF="#" onClick = "do_locatea()"><U>LocateA</U></A>		&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 7/28/09 -->
+		<A HREF="#" onClick = "do_gtrack()"><U>Gtrack</U></A>			<!-- 7/28/09 -->
 <?php
 		if (!is_guest()) {
 ?>		
@@ -1292,6 +1314,18 @@ case 'delete' :
 
 <?php
 			}
+			
+		if (mysql_table_exists("$GLOBALS[mysql_prefix]facilities")) 	{		// 6/4/09
+?>	
+
+			<BR />
+			<LI><A HREF="#" onClick = "do_Post('facilities');">Facilities</A>
+			<LI><A HREF="#" onClick = "do_Post('fac_status');">Facility Status</A>
+			<BR />
+			<BR />
+<?php
+		}
+			
 		}
 	print "<BR /><BR />\n";
 	list_users();		// 9/24/08

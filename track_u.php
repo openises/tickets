@@ -6,6 +6,8 @@ original, converted from tracks.php
 10/4/08	added direction icons
 3/18/09 'aprs_poll' to 'auto_poll'
 4/8/09 correction to icon names, 'small text' added
+7/29/09	Changed titlebar to show Name and Handle
+8/2/09 Added code to get maptype variable and switch to change default maptype based on variable setting
  */
 require_once('./incs/functions.inc.php');
 //do_login(basename(__FILE__));		// in a window
@@ -15,6 +17,8 @@ $api_key = get_variable('gmaps_api_key');
 
 function list_tracks($addon = '', $start) {
 global $source, $my_session, $evenodd;
+
+
 ?>
 <SCRIPT>
 	var direcs=new Array("north.png","north_east.png","east.png","south_east.png","south.png","south_west.png","west.png","north_west.png", "north.png");	// 4/8/09
@@ -167,6 +171,30 @@ global $source, $my_session, $evenodd;
 	var points = false;								// none
 
 	map = new GMap2(document.getElementById("map"));		// create the map
+<?php
+$maptype = get_variable('maptype');	// 08/02/09
+
+	switch($maptype) { 
+		case "1":
+		break;
+
+		case "2":?>
+		map.setMapType(G_SATELLITE_MAP);<?php
+		break;
+	
+		case "3":?>
+		map.setMapType(G_PHYSICAL_MAP);<?php
+		break;
+	
+		case "4":?>
+		map.setMapType(G_HYBRID_MAP);<?php
+		break;
+
+		default:
+		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
+	}
+?>
+
 	map.addControl(new GSmallMapControl());
 	map.addControl(new GMapTypeControl());
 	map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
@@ -298,12 +326,17 @@ global $source, $my_session, $evenodd;
 $interval = intval(get_variable('auto_poll'));
 $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";	//10/4/08
 
+$query_callsign	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `callsign`=\"$source\"";				// 7/29/09
+$result_callsign	= mysql_query($query_callsign) or do_error($query_callsign, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		// 7/29/09
+$row_callsign	= mysql_fetch_assoc($result_callsign);				// 7/29/09
+$handle = ($row_callsign['handle']);				// 7/29/09
+$name = ($row_callsign['name']);				// 7/29/09
 ?>
 
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<HEAD><TITLE>Tickets - <?php print $source; ?> Tracks</TITLE>
+	<HEAD><TITLE>Tickets - <?php print $name; ?> : <?php print $handle; ?> Tracks</TITLE>
 
 <?php print $refresh; ?>	<!-- 10/4/08 -->
 	
@@ -332,7 +365,7 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 	</HEAD>
 	<BODY onLoad = "ck_frames()" onunload="GUnload()">
 	<A NAME='top'>
-		<TABLE ID='outer'><TR CLASS='even'><TD ALIGN='center' colspan=2><B><FONT SIZE='+1'>Mobile Unit <?php print $source;?> Tracks</FONT></B></TD></TR><TR><TD>
+		<TABLE ID='outer'><TR CLASS='even'><TD ALIGN='center' colspan=2><B><FONT SIZE='+1'>Mobile Unit <?php print $handle;?> : <?php print $name;?> - Tracks</FONT></B></TD></TR><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>
 			<DIV ID='map' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>

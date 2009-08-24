@@ -18,6 +18,7 @@
 1/21/09 dollar function added
 3/15/09 added error reporting
 3/18/09 'aprs_poll' to 'auto_poll'
+8/5/09 Added 3 user defined function keys
 */ 
 error_reporting(E_ALL);		// 3/15/09
 
@@ -251,8 +252,7 @@ var newwindow_c = null;
 function do_chat() {
 	if (logged_in()) {
 		if(starting) {return;}					// 6/6/08
-		starting=true;	
-	
+		starting=true;
 		newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_c)) {
 			alert ("Chat operation requires popups to be enabled. Please adjust your browser options - or else turn off the Chat option setting.");
@@ -262,6 +262,54 @@ function do_chat() {
 		starting = false;
 		}
 	}
+
+var newwindow_f1 = null;
+
+function do_func1(key1, key1_text) {
+	if (logged_in()) {
+		if(starting) {return;}						// 6/6/08
+		starting=true;
+		newwindow_f1=window.open(key1, "",  "titlebar, location=0, resizable=1, scrollbars, height=640,width=800,status=1,toolbar=1,menubar=1,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (isNull(newwindow_f1)) {
+			alert ("Function Key Operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_f1.focus();
+		starting = false;
+		}
+	}		// end function do func1()
+
+var newwindow_f2 = null;
+
+function do_func2(key2, key2_text) {
+	if (logged_in()) {
+		if(starting) {return;}						// 6/6/08
+		starting=true;
+		newwindow_f2=window.open(key2, "",  "titlebar, location=0, resizable=1, scrollbars, height=640,width=800,status=1,toolbar=1,menubar=1,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (isNull(newwindow_f2)) {
+			alert ("Function Key Operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_f2.focus();
+		starting = false;
+		}
+	}		// end function do func2()
+
+var newwindow_f3 = null;
+
+function do_func3(key3, key3_text) {
+	if (logged_in()) {
+		if(starting) {return;}						// 6/6/08
+		starting=true;
+		newwindow_f3=window.open(key3, "",  "titlebar, location=0, resizable=1, scrollbars, height=640,width=800,status=1,toolbar=1,menubar=1,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (isNull(newwindow_f3)) {
+			alert ("Function Key Operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_f3.focus();
+		starting = false;
+		}
+	}		// end function do func3()
 
 var newwindow_em = null;
 
@@ -351,9 +399,31 @@ if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' 
 	if ((intval($call_board)==1)) {				// 1/12/09
 		print"<li id = 'callboard'><A HREF='#' onClick = 'do_callBoard()'>Call Board</A></li>\n";
 		}
+
 ?>
 
 <li id = 'sta_log'><A HREF='#' onClick = 'do_sta_log()'>Log</A></li>
+
+<?php
+	$func_key1 = explode(",", get_variable('func_key1'));			//8/5/09
+	$length1 = count($func_key1);
+	if ($length1 == 2) {
+		print"<li id = 'func_key1'><A HREF='#' onClick = 'do_func1(\"$func_key1[0]\", \"$func_key1[1]\")'>$func_key1[1]</A></li>\n";
+	}
+
+	$func_key2 = explode(",", get_variable('func_key2'));			//8/5/09
+	$length2 = count($func_key2);
+	if ($length2 == 2) {
+		print"<li id = 'func_key2'><A HREF='#' onClick = 'do_func2(\"$func_key2[0]\", \"$func_key2[1]\")'>$func_key2[1]</A></li>\n";
+	}
+
+	$func_key3 = explode(",", get_variable('func_key3'));			//8/5/09
+	$length3 = count($func_key3);
+	if ($length3 == 2) {
+		print"<li id = 'func_key3'><A HREF='#' onClick = 'do_func3(\"$func_key3[0]\", \"$func_key3[1]\")'>$func_key3[1]</A></li>\n";
+	}
+?>
+
 <li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "do_logout()">Logout</A></li>
 </ul>
 </SPAN>

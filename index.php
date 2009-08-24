@@ -8,9 +8,14 @@
 2/24 comment re terrain setting
 3/25/09 schema update
 4/1/09 new settings added
-7/7/09	function do_setting added, smtp_acct, email_from, 'multi' to responders
-7/7/09	added protocol to in_types, utc_stamp
-7/14/09	auto-size CB frame
+7/7/09 function do_setting added, smtp_acct, email_from, 'multi' to responders
+7/7/09 added protocol to in_types, utc_stamp
+7/14/09 auto-size CB frame
+7/29/09 added gtrack url setting, LocateA, Gtrack, Glat and Handle fields to responder table
+8/2/09 added maptype setting which controls google map type default display
+8/3/09 added locale setting which controls USNG, OSGB and UTM display plus date format
+8/5/09 added user defined function key settings (3 keys).
+8/19/09	added circle attrib's to in_types
 */
 error_reporting(E_ALL);		// 10/1/08
 require_once('./incs/functions.inc.php');
@@ -33,6 +38,13 @@ function do_setting ($which, $what) {				// 7/7/09
 
 do_setting ('smtp_acct','');			// 7/7/09  
 do_setting ('email_from','');			// 7/7/09
+do_setting ('gtrack_url','');			// 7/7/09
+do_setting ('maptype','1');				// 8/2/09
+do_setting ('locale','0');				// 8/3/09
+do_setting ('func_key1','http://openises.sourceforge.net/,Open ISES');				// 8/5/09
+do_setting ('func_key2','');				// 8/5/09
+do_setting ('func_key3','');				// 8/5/09
+
 
 $query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `multi` INT( 1 ) NOT NULL DEFAULT '0' COMMENT 'if 1, allow multiple call assigns' AFTER `direcs`;";
 $result = @mysql_query($query);			// 7/7/09
@@ -43,9 +55,26 @@ $result = @mysql_query($query);			// 7/7/09
 $query	= "ALTER TABLE `$GLOBALS[mysql_prefix]tracks_hh` ADD `utc_stamp` BIGINT( 12 ) NOT NULL DEFAULT '0' COMMENT 'Position timestamp in UTC' AFTER `altitude` ;";
 $result = @mysql_query($query);
 
+$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `locatea` TINYINT( 2 ) NOT NULL DEFAULT '0' COMMENT 'if 1 unit uses LocateA tracking - required to set callsign' AFTER `instam`;";
+$result = @mysql_query($query);			// 7/29/09
+
+$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `gtrack` TINYINT( 2 ) NOT NULL DEFAULT '0' COMMENT 'if 1 unit uses Gtrack tracking - required to set callsign' AFTER `locatea`;";
+$result = @mysql_query($query);			// 7/29/09
+
+$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `glat` TINYINT( 2 ) NOT NULL DEFAULT '0' COMMENT 'if 1 unit uses Google Latitude tracking - required to set callsign' AFTER `gtrack`;";
+$result = @mysql_query($query);			// 7/29/09
+
+$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `handle` VARCHAR( 24 ) NULL DEFAULT 'NULL' COMMENT 'Unit Handle' AFTER `callsign`;";
+$result = @mysql_query($query);			// 7/29/09
+
+$query = "ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `radius` INT( 4 ) NOT NULL DEFAULT '0' COMMENT 'enclosing circle',
+			ADD `color` VARCHAR( 8 ) NULL DEFAULT NULL ,
+			ADD `opacity` INT( 3 ) NOT NULL DEFAULT '0';";
+$result = @mysql_query($query);			// 8/19/09
+
 $old_version = get_variable('_version');
 
-$version = "2.10 F beta";			// see usage below 7/21/09
+$version = "2.10 G beta";			// see usage below 7/21/09
 
 if (!($version == $old_version)) {		// current?
 	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08
