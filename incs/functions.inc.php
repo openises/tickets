@@ -77,6 +77,7 @@
 8/9/09	revise glat() to handle non-Curl configurations
 8/10/09	removed 'mobile = 1' from tracking select criteria, removed locale case "2"
 8/20/09	added close_incident link
+9/1/09	re-correct split-> explode
 {									// 3/25/09
 
 */
@@ -1280,7 +1281,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 	}		// end function do_login()
 
 function ip_address_to_number($IPaddress) {
-	$ips = split (".", "$IPaddress");
+	$ips = explode (".", "$IPaddress");		// 9/1/09
 	return ($ips[3] + $ips[2] * 256 + $ips[1] * 256 * 256 + $ips[0] * 256 * 256 * 256);
 	}
 
@@ -1649,7 +1650,7 @@ function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
 		$from_str = "Tickets_CAD" .'@' .$host ;
 		}
 	else {	
-		$temp_ar = split ("@", $temp);
+		$temp_ar = explode ("@", $temp);		// 9/1/09
 		if (count($temp_ar)==2) {
 			$from_str = $temp;		// OK
 			}

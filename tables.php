@@ -14,8 +14,11 @@ improvements to datatype 'time' handling
 1/29/09 corrected if(...)
 7/7/09	revised textarea limit criterion, added Script-date meta
 8/20/09	handle prefixes correctly
+8/29/09	suppress E_DEPRECATED
+09/01/09 de-error ereg_replace
 */
-error_reporting(E_ALL);
+
+error_reporting(E_ALL ^ 8192);
 $gmap=TRUE;
 require_once('./incs/functions.inc.php'); 
 if ($istest) {
@@ -625,7 +628,7 @@ switch ($func) {
 				if ($arrayattr[$i][5]!= "auto_increment") {
 					$lineno++;
 					$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";						// identifies mandatory vs. optional input
-					$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array
+					$max = @ereg_replace("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array - 9/01/09
 					print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
 					print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
 					switch (mysql_field_type($result, $i)) {
@@ -954,7 +957,7 @@ switch ($func) {
 			$disabled = ($arrayattr[$i][5] == "auto_increment")? " disabled" : "";
 			$lineno++;
 			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
-			$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array
+			$max = @ereg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array
 			print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
 			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
 			

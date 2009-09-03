@@ -16,6 +16,7 @@
 8/3/09 added locale setting which controls USNG, OSGB and UTM display plus date format
 8/5/09 added user defined function key settings (3 keys).
 8/19/09	added circle attrib's to in_types
+9/1/09	corrections re php deprecated functions, only
 */
 error_reporting(E_ALL);		// 10/1/08
 require_once('./incs/functions.inc.php');
