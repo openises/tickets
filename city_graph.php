@@ -9,7 +9,7 @@ $query = "SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`, t.city 
 	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'
 	 AND t.city IS NOT NULL 
 	ORDER BY `tick_city` ASC ";
-snap (__LINE__, $query);
+//snap (__LINE__, $query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 $cities = array();
 

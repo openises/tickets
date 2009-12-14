@@ -135,7 +135,7 @@ function validate(theForm) {
 			$counter = 0;
 			print '<TABLE BORDER="0"><TR><TD CLASS="td_header">Ticket</TD><TD CLASS="td_header">Date</TD><TD CLASS="td_header">Patient</TD></TR>';
 			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 8/28/08
-				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD VALIGN='top'><A HREF='main.php?id=$row[ticket_id]'>#$row[ticket_id]</A>&nbsp;&nbsp;</TD><TD NOWRAP VALIGN='top'>".format_date($row[updated])."&nbsp;&nbsp;&nbsp;</FONT></TD><TD><A HREF='main.php?id=$row[ticket_id]'>" . highlight($_POST['frm_query'], $row[description]) . "</A></TD></TR>\n";
+				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD VALIGN='top'><A HREF='main.php?id={$row['ticket_id']}'>#{$row['ticket_id']}</A>&nbsp;&nbsp;</TD><TD NOWRAP VALIGN='top'>".format_date($row['updated'])."&nbsp;&nbsp;&nbsp;</FONT></TD><TD><A HREF='main.php?id={$row['ticket_id']}'>" . highlight($_POST['frm_query'], $row['description']) . "</A></TD></TR>\n";
 				$counter++;
 				}
 			print '</TABLE>';
@@ -157,7 +157,7 @@ function validate(theForm) {
 			print '<TABLE BORDER="0"><TR><TD CLASS="td_header">Ticket</TD><TD CLASS="td_header">Date</TD><TD CLASS="td_header">Action</TD></TR>';
 			$counter = 0;
 			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 8/28/08
-				print "<TR CLASS='" . $evenodd[$counter%2] . "' ><TD VALIGN='top'><A HREF='main.php?id=$row[ticket_id]'>#$row[ticket_id]</A>&nbsp;&nbsp;</TD><TD NOWRAP VALIGN='top'>".format_date($row[updated])."&nbsp;&nbsp;&nbsp;</FONT></TD><TD><A HREF='main.php?id=$row[ticket_id]'>" . highlight($_POST['frm_query'], $row[description]) . "</A></TD></TR>\n";
+				print "<TR CLASS='" . $evenodd[$counter%2] . "' ><TD VALIGN='top'><A HREF='main.php?id=$row[ticket_id]'>#$row[ticket_id]</A>&nbsp;&nbsp;</TD><TD NOWRAP VALIGN='top'>".format_date($row['updated'])."&nbsp;&nbsp;&nbsp;</FONT></TD><TD><A HREF='main.php?id={$row['ticket_id']}'>" . highlight($_POST['frm_query'], $row['description']) . "</A></TD></TR>\n";
 				$counter++;
 				}
 			print '</TABLE>';

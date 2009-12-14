@@ -54,6 +54,7 @@
 7/27/09	'id' ambiguity resolved
 7/29/09 Added Gtrack, Locatea and Google Latitude tracking sources, revised mobile speed icon display
 7/29/09 Modified code to get tracking data, updated time and speed to fix errors. variable for updated and speed is now set before query result is unset. 
+8/1/09 Added Facilities display
 8/2/09 Added code to get maptype variable and switch to change default maptype based on variable setting
 8/3/09 Added code to get locale variable and change USNG/OSGB/UTM dependant on variable in tabs and sidebar.
 8/3/09 Revised function popup_ticket to remove spurious listener.
@@ -64,7 +65,19 @@
 8/12/09	toUTM() parameters corrected
 8/13/09	shorten() disposition, etc. 
 8/19/09 drawCircle() added
-8/20/09	close incident window added
+9/29/09 Added Handling for Special Tickets
+10/8/09 Index in list and on marker changed to part of name after / for both units and facilities
+10/8/09 Added Display name to remove part of name after / in name field of sidebar and in infotabs for both units and facilities
+10/21/09 Added hide/show for unavailable units in Situation map.
+10/21/09 Added check for any closed or special incidents on the database before showing the buttons in the situation screen.
+10/27/09 Added check for special incidents being due and bring to current situation screen if due and mark with * in list.
+10/27/09 Added Booked date to Info Window tab 1 for ticket.
+10/28/09 Added receiving facility to Info Window tab 1 for ticket
+10/30/09 Added dispatch times and miles to ticket print, fixed action/patient print
+10/30/09 Removed period after index in sidebar
+11/06/09 Changed "Special" Incidents to "Scheduled" Incidents.
+11/10/09 fixes to facilities display by AS
+11/11/09 top/bottom anchors added 
 */
 
 //	{ -- dummy
@@ -81,9 +94,28 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 	$get_sortby = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['sortby'])))) ) ? "" : $_GET['sortby'] ;
 	$get_offset = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['offset'])))) ) ? "" : $_GET['offset'] ;
 
-	$closed = (isset($_GET['status']) && ($_GET['status']==$GLOBALS['STATUS_CLOSED']))? "Closed" : "";
+	if (!isset($_GET['status'])) {
+		$open = "Open";
+	} else {
+	$open = (isset($_GET['status']) && ($_GET['status']==$GLOBALS['STATUS_OPEN']))? "Open" : "";
+	}
 
-	$heading = $closed ? "Closed Incidents" : "Current Situation";		// 3/2/09
+	$closed = (isset($_GET['status']) && ($_GET['status']==$GLOBALS['STATUS_CLOSED']))? "Closed" : "";
+	$scheduled = (isset($_GET['status']) && ($_GET['status']==$GLOBALS['STATUS_SCHEDULED']))? "Scheduled" : "";			// 9/29/09
+
+	if ((empty($closed)) && (empty($scheduled))) {		// 9/29/09
+		$heading = "Current Situation";
+		}
+
+	if (!empty($closed)) {					// 9/29/09
+		$heading = "Closed Incidents";
+		}
+
+	if (!empty($scheduled)) {					// 9/29/09
+		$heading = "Scheduled Incidents";
+		}
+
+//	$heading = $closed ? "Closed Incidents" : "Current Situation";		// 3/2/09
 
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 
@@ -97,23 +129,34 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 			<DIV ID='map' STYLE='WIDTH: <?php print get_variable('map_width');?>PX; HEIGHT: <?php print get_variable('map_height');?>PX'></DIV>
 
 		<BR /><CENTER><FONT CLASS='header'><?php echo get_variable('map_caption');?></FONT><BR />
-			<BR /><A HREF='#' onClick='doGrid()'><u>Grid</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick='doTraffic()'><U>Traffic</U></A><BR /><BR />
+			<BR /><A HREF='#' onClick='doGrid()'><u>Grid</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick='doTraffic()'><U>Traffic</U></A><BR /><BR />
 
-		Units:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Units:<IMG SRC = './icons/sm_white.png' BORDER=0><IMG SRC = './icons/sm_black.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 10/21/09 -->
 
 		<SPAN ID="show_it" STYLE="display: none" onClick = "do_show_Units();"><U>Show</U></SPAN>
 		<SPAN ID="hide_it" STYLE="display: ''" onClick = "do_hide_Units();"><U>Hide</U></SPAN>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<SPAN ID="hide_unavail" STYLE="display: ''" onClick = "hide_unit_stat_unavail();"><U>Hide unavailable</U></SPAN>	<!-- 10/21/09 -->
+		<SPAN ID="show_unavail" STYLE="display: ''" onClick = "show_unit_stat_unavail();"><U>Show unavailable</U></SPAN>	<!-- 10/21/09 -->
+		<BR /><BR />
+		
+		Facilities:<IMG SRC = './icons/sm_shield_green.png' BORDER=0><IMG SRC = './icons/sm_square_red.png' BORDER=0>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 10/21/09 -->
+
+		<SPAN ID="hide_fac" STYLE="display: ''" onClick = "hide_Facilities();"><U>Hide</U></SPAN>
+		<SPAN ID="show_fac" STYLE="display: none" onClick = "show_Facilities();"><U>Show</U></SPAN>
+
 		<BR /><BR />
 
-		<A HREF="#" onClick = "show_Units()">Units: 	<IMG SRC = './icons/sm_white.png' BORDER=0></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <!-- 1/9/09 -->
 		<SPAN ID="incidents" STYLE="display: inline-block">
-		Incident Priority:&nbsp;&nbsp;&nbsp;&nbsp;
+		Incident Priority:<IMG SRC = './icons/sm_blue.png' BORDER=0><IMG SRC = './icons/sm_green.png' BORDER=0><IMG SRC = './icons/sm_red.png' BORDER=0>&nbsp;&nbsp;	<!-- 10/21/09 -->
 		<A HREF="#" onClick = "hideGroup(1)">Typical: 	<IMG SRC = './icons/sm_blue.png' BORDER=0></A>&nbsp;&nbsp;&nbsp;&nbsp; <!-- 1/9/09 -->
 		<A HREF="#" onClick = "hideGroup(2)">	High: 	<IMG SRC = './icons/sm_green.png' BORDER=0></A>&nbsp;&nbsp;&nbsp;&nbsp;
 		<A HREF="#" onClick = "hideGroup(3)">Highest: 	<IMG SRC = './icons/sm_red.png' BORDER=0></A>
 		</SPAN>
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN ID="show_all_icon" STYLE="display: none"><A HREF="#" onClick = "show_All()">Show all: <IMG SRC = './markers/sm_white.png' BORDER=0></A></SPAN>
 		</NOBR></CENTER><BR />
+
+<BR />
 		</TD>
 
 		</CENTER><BR /></TD>
@@ -259,6 +302,7 @@ if (GBrowserIsCompatible()) {
 			} 	// end for ()
 		$("show_all_icon").style.display = "inline-block";
 		$("incidents").style.display = "inline-block";
+
 		}			// end function
 
 
@@ -307,6 +351,35 @@ if (GBrowserIsCompatible()) {
 		$("show_it").style.display=			"inline";				// 12/02/09
 		$("hide_it").style.display=			"none";
 		}				// end function hide_units ()
+		
+	function hide_unit_stat_unavail() {								// 10/21/09
+		for (var i = 0; i < gmarkers.length; i++) {			// traverse gmarkers array for icon type==0
+			if (gmarkers[i]) {
+				if (gmarkers[i].stat == 1) {
+					gmarkers[i].hide();
+					}
+				else {
+					gmarkers[i].show();
+					}
+				}		// end if (gmarkers[i])
+			} 	// end for ()
+		$("incidents").style.display = "inline-block";
+		$("show_all_icon").style.display =	"inline-block";
+		$("show_unavail").style.display=			"inline";
+		$("hide_unavail").style.display=			"none";
+		}				// end function hide_unit_stat_unavail ()		
+		
+	function show_unit_stat_unavail() {								// 10/21/09
+		for (var i = 0; i < gmarkers.length; i++) {			// traverse gmarkers array for icon type==0
+			if (gmarkers[i]) {
+				gmarkers[i].show();
+				}
+			} 	// end for ()
+		$("incidents").style.display = "inline-block";
+		$("show_all_icon").style.display =	"inline-block";
+		$("show_unavail").style.display=			"none";
+		$("hide_unavail").style.display=			"inline";
+		}				// end function hide_unit_stat_unavail ()			
 
 	function do_hide_Units() {						// 2/14/09
 		var params = "f_n=f1&v_n=h&sess_id=<?php print get_sess_key(); ?>";					// flag 1, value h
@@ -314,8 +387,48 @@ if (GBrowserIsCompatible()) {
 		sendRequest (url, h_handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 		}			// end function do notify()
 
+	function hide_Facilities() {								// 8/1/09
+		for (var i = 0; i < fmarkers.length; i++) {			// traverse gmarkers array for icon type==0
+			if (fmarkers[i]) {
+					fmarkers[i].hide();
+					}
+			} 	// end for ()
+		$("hide_fac").style.display = "none";
+		$("show_fac").style.display = "inline-block";
+		$("fac_table").style.display = "none";
+		}				// end function hide_Facilities ()
+
+	function show_Facilities () {								// 8/1/09
+		for (var i = 0; i < fmarkers.length; i++) {			// traverse gmarkers array for icon type==0
+			if (fmarkers[i]) {
+					fmarkers[i].show();
+					}
+			} 	// end for ()
+		$("hide_fac").style.display = "inline-block";
+		$("show_fac").style.display = "none";
+		$("fac_table").style.display = "inline-block";
+		location.href = "#bottom";				// 11/11/09
+		
+		}				// end function show_Facilities ()
+
+
 	function h_handleResult(req) {					// the 'called-back' persist function - hide
 		hide_Units();
+		}
+
+	var starting = false;
+
+	function do_mail_fac_win(id) {			// Facility email 9/22/09
+		if(starting) {return;}					
+		starting=true;	
+		var url = "do_fac_mail.php?fac_id=" + id;	
+		newwindow_in=window.open (url, 'Email_Window',  'titlebar, resizable=1, scrollbars, height=300,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300');
+		if (isNull(newwindow_in)) {
+			alert ("This requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_in.focus();
+		starting = false;
 		}
 
 	function do_show_Units() {
@@ -329,13 +442,14 @@ if (GBrowserIsCompatible()) {
 		}
 
 	function do_sidebar (instr, id, sym, myclass) {												// constructs sidebar row - 1/7/09
-		side_bar_html += "<TR CLASS='" + colors[id%2] +"' onClick = myclick(" + id + ");><TD CLASS='" + myclass + "'>" + (sym) + ".</TD>"+ instr +"</TR>\n";
+		side_bar_html += "<TR CLASS='" + colors[id%2] +"' onClick = myclick(" + id + ");><TD CLASS='" + myclass + "'>" + (sym) + "</TD>"+ instr +"</TR>\n";		// 10/30/09 removed period
 		}		// end function do_sidebar ()
 
 	function do_sidebar_nm (sidebar, line_no, rcd_id, letter) {									// no map - view responder // view_Form
 //		alert("302 " + sidebar);
 		side_bar_html += "<TR CLASS='" + colors[(line_no)%2] +"' onClick = myclick_nm(" + rcd_id + ");>";
-		side_bar_html += "<TD CLASS='td_data'>" + letter + ".</TD>" + sidebar +"</TR>\n";		// 2/13/09
+		side_bar_html += "<TD CLASS='td_data'>" + letter + "</TD>" + sidebar +"</TR>\n";		// 2/13/09, 10/29/09 removed period
+		location.href = "#top";
 		}
 
 	function myclick_nm(v_id) {				// Responds to sidebar click - view responder data
@@ -345,10 +459,20 @@ if (GBrowserIsCompatible()) {
 
 	function myclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 		GEvent.trigger(gmarkers[id], "click");
+		location.href = "#top";
 		}
 
+	function do_sidebar_fac (fac_instr, fac_id, fac_sym, myclass) {					// constructs facilities sidebar row 9/22/09
+		side_bar_html += "<TR CLASS='" + colors[fac_id%2] +"' onClick = fac_click(" + fac_id + ");><TD CLASS='" + myclass + "'><B>" + (fac_sym) + "</B></TD>"+ fac_instr +"</TR>\n";		// 10/30/09 removed period
+		location.href = "#top";
+		}		// end function do_sidebar_fac ()
 
-	function createMarker(point, tabs, color, id, sym) {					// Creates marker and sets up click event infowindow
+	function fac_click(fac_id) {					// Responds to facilities sidebar click, then triggers listener above 9/22/09
+		GEvent.trigger(fmarkers[fac_id], "click");
+		location.href = "#top";
+		}
+
+	function createMarker(point, tabs, color, stat, id, sym) {					// Creates marker and sets up click event infowindow 10/21/09 added stat to hide unavailable units
 		points = true;
 		var icon = new GIcon(baseIcon);
 //		alert("./icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + sym);
@@ -357,6 +481,7 @@ if (GBrowserIsCompatible()) {
 
 		var marker = new GMarker(point, icon);
 		marker.id = color;				// for hide/unhide
+		marker.stat = stat;				// 10/21/09
 
 		GEvent.addListener(marker, "click", function() {					// here for both side bar and icon click
 			map.closeInfoWindow();
@@ -453,12 +578,6 @@ function do_add_note (id) {				// 8/12/09
 	var noteWindow = window.open(url, 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100');
 	noteWindow.focus();
 	}
-
-function do_close_inc (id) {				// 8/20/09
-	var url = "close_in.php?ticket_id="+ id;
-	var cl_in_Window = window.open(url, 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100');
-	cl_in_Window.focus();
-	}
 	
 function do_track(callsign) {		
 	if (parent.frames["upper"].logged_in()) {
@@ -500,9 +619,14 @@ function do_popup(id) {					// added 7/9/09
 	side_bar_html += "<tr class='even'><td colspan=99 align='center'>Click for information</td></tr>";
 	side_bar_html += "<tr class='odd'><td></td><td align='center'><B>Incident</B></td><td align='center'><B>Type</B></td><td>P</td><td>A</td><td align='center'>As of</td></tr>";
 	var gmarkers = [];
+	var fmarkers = [];
 	var infoTabs = [];
+	var facinfoTabs = [];
 	var which;
 	var i = 0;			// sidebar/icon index
+
+	$("show_unavail").style.display=			"none";				// 10/21/09
+	$("hide_unavail").style.display=			"inline";
 
 	map = new GMap2($("map"));		// create the map
 <?php
@@ -557,7 +681,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		});
 
 <?php
-	$get_status = (!empty ($get_status))? $get_status : $GLOBALS['STATUS_OPEN'];			 						 // default to show all open tickets
+	$get_status = (!empty ($get_status))? $get_status : ($GLOBALS['STATUS_OPEN']) ;		 // default to show all open tickets
 	$order_by =  (!empty ($get_sortby))? $get_sortby: $my_session['sortorder']; // use default sort order?
 																				//fix limits according to setting "ticket_per_page"
 	$limit = "";
@@ -573,23 +697,41 @@ $maptype = get_variable('maptype');	// 08/02/09
 	$time_back = mysql_format_date(time() - (get_variable('delta_mins')*60) - ($cwi*3600));
 
 //	$where = ($get_status==2)? " WHERE `status`='2' OR (`status`='1'  AND `problemend` >= (NOW() - INTERVAL {$cwi} HOUR)) ": " WHERE `status`='1' ";
-	$where = ($get_status==2)? " WHERE `status`='2' OR (`status`='1'  AND `problemend` >= '{$time_back}') ": " WHERE `status`='1' ";	// 4/2/09
+//	$where = ($get_status==2)? " WHERE `status`='2' OR `status`='3' OR (`status`='1'  AND `problemend` >= '{$time_back}') ": " WHERE `status`='1' ";	// 4/2/09 9/25/09
 
+	switch($get_status) {				//9/29/09 Added capability for Scheduled Incidents 10/27/09 changed to bring scheduled incidents to front when due.
+			case 1: $where = "WHERE `status`='1'"; break;
+			case 2: $where = "WHERE `status`='2' OR (`status`='3'  AND `booked_date` <= (NOW() - INTERVAL 6 HOUR)) OR (`status`='1'  AND `problemend` >= '{$time_back}')"; break;
+			case 3: $where = "WHERE `status`='3'"; break;
+			default: $where = "WHERE `status`='2' OR (`status`='3'  AND `booked_date` <= (NOW() - INTERVAL 6 HOUR))"; break;
+			}
+	
 	if ($sort_by_field && $sort_value) {					//sort by field?
 		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, in_types.type AS `type`, in_types.id AS `t_id` FROM `$GLOBALS[mysql_prefix]ticket` LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.`in_types_id`=in_types.id  WHERE $sort_by_field='$sort_value' $restrict_ticket ORDER BY $order_by";
 		}
 	else {					// 2/2/09, 8/12/09
 //		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]in_types`.type AS `type`, `$GLOBALS[mysql_prefix]in_types`.`id` AS `t_id` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id` $where $restrict_ticket ORDER BY `severity` DESC, `$GLOBALS[mysql_prefix]ticket`.`id` ASC";		// 1/27/09
-		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]in_types`.type AS `type`, `$GLOBALS[mysql_prefix]in_types`.`id` AS `t_id`, `$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id` $where $restrict_ticket ORDER BY `status` DESC, `severity` DESC, `$GLOBALS[mysql_prefix]ticket`.`id` ASC";		// 2/2/09
+		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(booked_date) AS booked_date,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.updated) AS updated, `$GLOBALS[mysql_prefix]in_types`.type AS `type`, `$GLOBALS[mysql_prefix]in_types`.`id` AS `t_id`, `$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`, `$GLOBALS[mysql_prefix]ticket`.lat AS `lat`, `$GLOBALS[mysql_prefix]ticket`.lng AS `lng`, `$GLOBALS[mysql_prefix]facilities`.lat AS `fac_lat`, `$GLOBALS[mysql_prefix]facilities`.lng AS `fac_lng`, `$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name` FROM $GLOBALS[mysql_prefix]ticket LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id` LEFT JOIN `$GLOBALS[mysql_prefix]facilities` ON `$GLOBALS[mysql_prefix]ticket`.rec_facility=`$GLOBALS[mysql_prefix]facilities`.`id` $where $restrict_ticket ORDER BY `status` DESC, `severity` DESC, `$GLOBALS[mysql_prefix]ticket`.`id` ASC";		// 2/2/09, 10/28/09
 		}
 //	dump($query);
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 							// major while ... starts here
 
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) 	{
+
+	switch($row['status']) {				//10/27/09 to Add star to scheduled incidents on current situation screen
+		case 1: $sp = ""; break;
+		case 2: $sp = ""; break;
+		case 3: $sp = "*"; break;
+		default: $sp = ""; break;
+		}
+
+		print "\t\tvar scheduled = '$sp';\n";
 ?>
 //		var sym = i.toString();						// for sidebar and icon
-		var sym = (i+1).toString();					// for sidebar and icon
+		var sym = (i+1).toString();					// for sidebar
+		var sym2= scheduled + (i+1).toString();			// for icon
+
 <?php
 		$the_id = $row[0];
 
@@ -607,7 +749,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		switch($row['severity'])		{		//color tickets by severity
 		 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 			case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
-			default: 					$severityclass='severity_normal'; break;
+			default: 				$severityclass='severity_normal'; break;
 			}
 
 		$street = empty($row['street'])? "" : $row['street'] . "<BR/>" . $row['city'] . " " . $row['state'] ;
@@ -615,17 +757,18 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 		if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
 			$strike = "<strike>"; $strikend = "</strike>";
-			$closed = TRUE;
 			}
-		else { $strike = $strikend = ""; $closed = FALSE;}
+		else { $strike = $strikend = "";}
 		$rand = ($istest)? "&rand=" . chr(rand(65,90)) : "";													// 10/21/08
 
 		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>$strike" . shorten($row['scope'], 48)  . "$strikend</B></TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD>Booked Date:</TD><TD>" . format_date($row['booked_date']) . "</TD></TR>";	//10/27/09
 		$tab_1 .= "<TR CLASS='even'><TD>Reported by:</TD><TD>" . shorten($row['contact'], 32) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Phone:</TD><TD>" . format_phone ($row['phone']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD>Addr:</TD><TD>$street</TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD>Receiving Facility:</TD><TD>" . shorten($row['fac_name'], 30)  . "</TD></TR>";	//10/28/09
 		$utm = get_variable('UTM');
 		if ($utm==1) {
 			$coords =  $row['lat'] . "," . $row['lng'];																	// 8/12/09
@@ -636,14 +779,8 @@ $maptype = get_variable('maptype');	// 08/02/09
 		if (!(is_guest() && get_variable('guest_add_ticket')==0)) {
 			$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='edit.php?id=" . $the_id . $rand . "'><U>Edit</U></A><BR /><BR />";					// 10/21/08
 			$tab_1 .= 	"<SPAN onClick = do_popup('" . $the_id  . "');><FONT COLOR='blue'><B><U>Popup</B></U></FONT></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;	// 7/7/09
-			$tab_1 .= 	"<SPAN onClick = 'do_add_note (" . $the_id . ");'><FONT COLOR='blue'><B><U>Add note</B></U></FONT></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;	// 7/7/09
-			if(!($closed)) {
-				$tab_1 .= 	"<SPAN onClick = 'do_close_inc (" . $the_id . ");'><FONT COLOR='blue'><B><U>Close call</B></U></FONT></SPAN>" ;	// 7/7/09
-				}
-			else {
-				$tab_1 .= 	"<STRIKE><FONT COLOR='blue'><B>Close call</B></FONT></STRIKE>" ;	// 8/21/09/09			
-				}
-			$tab_1 .= 	"<BR /><BR />";
+			$tab_1 .= 	"<SPAN onClick = 'do_add_note (" . $the_id . ");'><FONT COLOR='blue'><B><U>Add note</B></U></FONT></SPAN><BR /><BR />" ;	// 7/7/09
+			
 			$tab_1 .= 	"<A HREF='patient.php?ticket_id=" . $the_id . $rand ."'><U>Add Patient</U></A>&nbsp;&nbsp;&nbsp;&nbsp;";	// 7/9/09
 			$tab_1 .= 	"<A HREF='action.php?ticket_id=" . $the_id . $rand ."'><U>Add Action</U></A>";
 			}
@@ -690,8 +827,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		$resultav = mysql_query($query) or do_error($query,'mysql_query',mysql_error(), basename( __FILE__), __LINE__);
 		$P = mysql_affected_rows ();
 
-
-		$sidebar_line = "<TD CLASS='$severityclass'  TITLE = '" . htmlentities ($row['scope'], ENT_QUOTES) . "'><NOBR>$strike" . shorten($row['scope'], 20) . " $strikend</NOBR></TD>";
+		$sidebar_line = "<TD CLASS='$severityclass'  TITLE = '" . htmlentities ($row['scope'], ENT_QUOTES) . "'><NOBR>$strike" . $sp . shorten($row['scope'], 20) . " $strikend</NOBR></TD>";	//10/27/09
 		$sidebar_line .= "<TD CLASS='$severityclass'  TITLE = '" . htmlentities ($row['type'], ENT_QUOTES) . "'><NOBR>$strike" . shorten($row['type'], 20) . " $strikend</NOBR></TD>";
 		$sidebar_line .= "<TD CLASS='td_data'><NOBR> " . $P . " </TD><TD CLASS='td_data'> " . $A . " </NOBR></TD>";
 		$sidebar_line .= "<TD CLASS='td_data'><NOBR> " . format_sb_date($row['updated']) . "</NOBR></TD>";
@@ -707,7 +843,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 			bounds.extend(point);
 			}
 		i++;																				// step the index
-		var marker = createMarker(point, myinfoTabs,<?php print $row['severity']+1;?>, i, sym);	// (point,tabs, color, id, sym) - 1/6/09
+		var marker = createMarker(point, myinfoTabs,<?php print $row['severity']+1;?>, 0, i, sym2);	// (point,tabs, color, id, sym) - 1/6/09, 10/21/09 added 0 for stat display to avoid conflicts with unit marker hide by unavailable status
 		var the_class = ((map_is_fixed) && (!(mapBounds.containsLatLng(point))))? "emph" : "td_label";
 
 		do_sidebar ("<?php print $sidebar_line;?>", i, i, the_class)							// (instr, id, sym, myclass) - 3/3/09
@@ -761,13 +897,15 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
 	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
 	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 		$temp = $row_st['id'];
 		$status_vals[$temp] = $row_st['status_val'];
+		$status_hide[$temp] = $row_st['hide'];
 		}
+
 	unset($result_st);
 
+//	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle`";	//
 	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";	//
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	print (mysql_affected_rows()==0)? "\n\t\tside_bar_html += \"<TR CLASS='even'><TD></TD><TD ALIGN='center' COLSPAN=99><B>No units!</B></TD></TR>\"\n" : "\n\t\tside_bar_html += \"<TR CLASS='even'><TD></TD><TD ALIGN='center'><B>Unit</B></TD><TD ALIGN='center' COLSPAN=2><B>Dispatch</B></TD><TD>M</TD><TD></TD></TR>\"\n" ;
@@ -784,15 +922,29 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  major while() for RESPONDER ==========
 		$got_point = FALSE;
-//		print "\n\t\tvar i=$i;\n";
-		print "\t\tvar sym = to_str({$i});\n";													// 2/13/09
 
-		$todisp = (is_guest())? "": "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";	// 08/8/02
-		$toedit = (is_guest())? "" :"&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;	// 10/8/08
-		$totrack  = ((intval($row['mobile'])==0)||(empty($row['callsign'])))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><B><U>Tracks</B></U></SPAN>" ;
+	$name = $row['name'];			//	10/8/09
+	$temp = explode("/", $name );
+	$index =  (strlen($temp[count($temp) -1])<3)? substr($temp[count($temp) -1] ,0,strlen($temp[count($temp) -1])): substr($temp[count($temp) -1] ,-3 ,strlen($temp[count($temp) -1]));		
+	
+	print "\t\tvar sym = '$index';\n";				// for sidebar and icon 10/8/09
+	
+												// 2/13/09
+		$todisp = (is_guest())? "": "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>&nbsp;&nbsp;";	// 08/8/02
+		$toedit = (is_guest())? "" :"&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;" ;	// 10/8/08
+		$totrack  = ((intval($row['mobile'])==0)||(empty($row['callsign'])))? "" : "&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><B><U>Tracks</B></U>&nbsp;&nbsp;</SPAN>" ;
+		$tofac = (is_guest())? "": "<A HREF='units.php?func=responder&view=true&dispfac=true&id=" . $row['id'] . "'><U>To Facility</U></A>&nbsp;&nbsp;";	// 08/8/02
+
 
 		$temp = $row['un_status_id'] ;		// 2/24/09
 		$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
+		$hide_status = (array_key_exists($temp, $status_hide))? $status_hide[$temp] : "??";				// 10/21/09
+		if ($hide_status == "y") {
+			$hide_unit = 1;
+			} else {
+			$hide_unit = 0;
+			}
+//dump($hide_unit);
 
 		if ($row['aprs']==1) {				// get most recent aprs position data
 			$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
@@ -932,7 +1084,13 @@ $maptype = get_variable('maptype');	// 08/02/09
 						// end bullet stuff
 // name
 
-		$sidebar_line = "<TD TITLE = '" . htmlentities ($row['name'], ENT_QUOTES) . "'><U>" . shorten($row['name'], 24) ."</U></TD>";
+		$name = $row['name'];		//	10/8/09
+		$temp = explode("/", $name );
+		$display_name = $temp[0];
+
+//		$sidebar_line = "<TD TITLE = '" . htmlentities ($row['name'], ENT_QUOTES) . "'><U>" . shorten($row['name'], 24) ."</U></TD>";
+		$sidebar_line = "<TD TITLE = '" . htmlentities ($display_name, ENT_QUOTES) . "'><U>" . shorten($display_name, 24) ."</U></TD>";	//	10/8/09
+
 
 // assignments 3/16/09
 
@@ -1016,7 +1174,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 			if (array_key_exists($row['id'], $assigns)) {
 				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['id']] . "'>" . shorten($assigns[$row['id']], 20) . "</A></TD></TR>";
 				}
-			$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . $todisp . $totrack . $toedit . "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";	// 08/8/02
+			$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . $tofac . $todisp . $totrack . $toedit . "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";	// 08/8/02
 			$tab_1 .= "</TABLE>";
 
 // tab 2
@@ -1123,7 +1281,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		var the_class = ((map_is_fixed) && (!(mapBounds.containsLatLng(point))))? "emph" : "td_label";
 		do_sidebar ("<?php print $sidebar_line; ?>", i, sym, the_class);		// (instr, id, sym, myclass)
 
-		var marker = createMarker(point, myinfoTabs, <?php print $the_color;?>, i, sym);	// 859  - 4/18/09
+		var marker = createMarker(point, myinfoTabs, <?php print $the_color;?>, <?php print $hide_unit;?>, i, sym);	// 859  - 4/18/09, 10/21/09 added status to allow hiding of unavailable units.
 		map.addOverlay(marker);
 <?php
 		}		// end position data available
@@ -1140,13 +1298,145 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 	}				// end  ==========  while() for RESPONDER ==========
 
+	$source_legend = (($aprs)||($instam)||($gtrack)||($locatea)||($glat))? "<TD CLASS='emph' ALIGN='center'>Source time</TD>": "<TD></TD>";		// if any remote data/time 3/24/09
+
+	print "\n\tside_bar_html+= \"<TR CLASS='\" + colors[i%2] +\"'><TD COLSPAN=5 ALIGN='center'>{$source_legend}</TD></TR>\";\n";
+	print "\n\tside_bar_html+= \"<TR CLASS='\" + colors[i%2] +\"'><TD COLSPAN=99 ALIGN='center'>&nbsp;&nbsp;<B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'>&bull;</FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'>&bull;</FONT>&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'>&bull;</FONT>&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'>&bull;</FONT>&nbsp;&nbsp;</TD></TR>\";\n";
 
 // }-------- END NEW -----------------------------------------------------------------------------------------
+// ====================================Add Facilities to Map 8/1/09================================================
+?>
+	var icons=[];	
+	var g=0;
+
+	var fmarkers = [];
+
+	var baseIcon = new GIcon();
+	baseIcon.shadow = "./markers/sm_shadow.png";
+
+	baseIcon.iconSize = new GSize(30, 30);
+	baseIcon.iconAnchor = new GPoint(15, 30);
+	baseIcon.infoWindowAnchor = new GPoint(9, 2);
+
+	var fac_icon = new GIcon(baseIcon);
+	fac_icon.image = icons[1];
+
+	$("hide_fac").style.display = "none";
+	$("show_fac").style.display = "inline-block";
+
+function createfacMarker(fac_point, fac_name, id, fac_icon) {
+	var fac_marker = new GMarker(fac_point, fac_icon);
+	// Show this markers index in the info window when it is clicked
+	var fac_html = fac_name;
+	fmarkers[id] = fac_marker;
+	GEvent.addListener(fac_marker, "click", function() {fac_marker.openInfoWindowHtml(fac_html);});
+	return fac_marker;
+}
+
+<?php
+
+
+	$query_fac = "SELECT *,UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]facilities`.id AS fac_id, `$GLOBALS[mysql_prefix]facilities`.description AS facility_description, `$GLOBALS[mysql_prefix]fac_types`.name AS fac_type_name, `$GLOBALS[mysql_prefix]facilities`.name AS facility_name FROM `$GLOBALS[mysql_prefix]facilities` LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]facilities`.type = `$GLOBALS[mysql_prefix]fac_types`.id LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` ON `$GLOBALS[mysql_prefix]facilities`.status_id = `$GLOBALS[mysql_prefix]fac_status`.id ORDER BY `$GLOBALS[mysql_prefix]facilities`.type ASC";
+	$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+
+	print (mysql_affected_rows()==0)? "\n\t\tside_bar_html += \"<TD colspan='99'><TABLE ID='fac_table' STYLE='display: none'><TR><TD ALIGN='center' COLSPAN=8><BR><B>Facilities</B></TD></TR><TR CLASS='even'><TD></TD><TD ALIGN='center'><B>No Facilities!</B></TD></TR>\"\n" : "\n\t\tside_bar_html += \"<TD colspan='99'><TABLE ID='fac_table' STYLE='display: none'><TR><TD ALIGN='center' COLSPAN=8><BR><B>Facilities</B></TD></TR><TR CLASS='even'><TD></TD><TD ALIGN='center'><B>Facility</B></TD><TD ALIGN='center'><B>Type</B></TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD ALIGN='center'><B>Status</B></TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD><B>&nbsp;&nbsp;&nbsp;Updated</B></TD></TR>\"\n";
+	
+	while($row_fac = mysql_fetch_array($result_fac)){
+	$fac_id=($row_fac['fac_id']);
+	$fac_type=($row_fac['icon']);
+
+	$fac_name = $row_fac['facility_name'];			//	10/8/09
+	$fac_temp = explode("/", $fac_name );
+//	$fac_index =  (strlen($temp[count($fac_temp) -1])<3)? substr($fac_temp[count($fac_temp) -1] ,0,strlen($fac_temp[count($fac_temp) -1])): substr($fac_temp[count($fac_temp) -1] ,-3 ,strlen($fac_temp[count($fac_temp) -1]));		
+	$fac_index =  (strlen($fac_temp[count($fac_temp) -1])<3)? substr($fac_temp[count($fac_temp) -1] ,0,strlen($fac_temp[count($fac_temp) -1])): substr($fac_temp[count($fac_temp) -1] ,-3 ,strlen($fac_temp[count($fac_temp) -1]));		// 11/10/09
+	
+	print "\t\tvar fac_sym = '$fac_index';\n";				// for sidebar and icon 10/8/09
+	
+//	$toroute = (is_guest())? "": "&nbsp;<A HREF='routes.php?ticket_id=" . $the_id . "'><U>Dispatch</U></A>";	// 8/2/08
+	$toroute = (is_guest())? "": "&nbsp;<A HREF='routes.php?ticket_id=" . $fac_id . "'><U>Dispatch</U></A>";	// 11/10/09
+
+	if(is_guest()) {
+		$facedit = $toroute = $facmail = "";
+		}
+	else {
+		$facedit = "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='facilities.php?func=responder&edit=true&id=" . $row_fac['fac_id'] . "'><U>Edit</U></A>" ;
+		$facmail = "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_mail_fac_win('" .$row_fac['fac_id']  . "');><U><B>Email</B></U></SPAN>" ;
+		$toroute = "&nbsp;<A HREF='fac_routes.php?fac_id=" . $fac_id . "'><U>Route To Facility</U></A>";	// 8/2/08
+		}
+
+	if ((my_is_float($row_fac['lat'])) && (my_is_float($row_fac['lng']))) {
+
+		$f_disp_name = $row_fac['facility_name'];		//	10/8/09
+		$f_disp_temp = explode("/", $f_disp_name );
+		$facility_display_name = $f_disp_temp[0];
+
+		$sidebar_fac_line = "<TD TITLE = '" . addslashes($facility_display_name) . "'><U>" . addslashes(shorten($facility_display_name, 16)) ."</U></TD>";
+		$sidebar_fac_line .= "<TD>&nbsp;&nbsp;&nbsp;" . addslashes(shorten($row_fac['fac_type_name'], 8)) ."</TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>";
+		$sidebar_fac_line .= "<TD>" . addslashes($row_fac['status_val']) ."</TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>";
+		$sidebar_fac_line .= "<TD>&nbsp;" . format_sb_date($row_fac['updated']) . "</TD>";
+
+		$fac_tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['status_val']) . " </TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_phone']) . " </TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'> " . format_date($row_fac['updated']) . "</TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . $toroute . $facedit . $facmail . "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='facilities.php?func=responder&view=true&id=" . $row_fac['fac_id'] . "'><U>View</U></A></TD></TR>";
+//		$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . $toroute . $facedit ."&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='facilities.php?func=responder&view=true&id=" . $row_fac['fac_id'] . "'><U>View</U></A></TD></TR>";
+		$fac_tab_1 .= "</TABLE>";
+
+		$fac_tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";
+		$fac_tab_2 .= "</TABLE>";
+		
+		?>
+//		var fac_sym = (g + 1).toString();				// 11/12/09
+		var myfacinfoTabs = [
+			new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
+			new GInfoWindowTab("More ...", "<?php print str_replace($eols, " ", $fac_tab_2);?>")
+			];
+<?php
+
+			echo "var fac_icon = new GIcon(baseIcon);\n";
+			echo "var fac_type = $fac_type;\n";
+			echo "var fac_icon_url = \"./icons/gen_fac_icon.php?blank=$fac_type&text=\" + (fac_sym) + \"\";\n";
+			echo "fac_icon.image = fac_icon_url;\n";
+			echo "var fac_point = new GLatLng(" . $row_fac['lat'] . "," . $row_fac['lng'] . ");\n";
+			echo "var fac_marker = createfacMarker(fac_point, myfacinfoTabs, g, fac_icon);\n";
+			echo "map.addOverlay(fac_marker);\n";
+			echo "\n";
+?>
+			if (fac_marker.isHidden()) {
+				fac_marker.show();
+			} else {
+				fac_marker.hide();
+			}
+<?php
+			}	// end if my_is_float
+?>
+		do_sidebar_fac ("<?php print $sidebar_fac_line;?>", g, fac_sym, fac_icon);
+		g++;
+<?php
+	}	// end while
+
+?>
+	side_bar_html += "</TD></TABLE>\n";
+<?php
+//}
+// =====================================End of functions to show facilities========================================================================
 
 	for ($i = 0; $i<count($kml_olays); $i++) {				// emit kml overlay calls
 		echo "\t\t" . $kml_olays[$i] . "\n";
 		}
-	$source_legend = (($aprs)||($instam))? "<TD CLASS='emph' ALIGN='center'>Source time</TD>": "<TD></TD>";		// if any remote data/time 3/24/09
 ?>
 	if (!(map_is_fixed)){
 		if (!points) {		// any?
@@ -1160,21 +1450,42 @@ $maptype = get_variable('maptype');	// 08/02/09
 	}				// end if (!(map_is_fixed))
 
 <?php
+
+
+//	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `problemend` IS NOT NULL ";		// 10/21/09
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = 1 ";		// 10/21/09
+
+		$result_ct = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$num_closed = mysql_num_rows($result_ct); 
+		unset($result_ct);
+
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = 3 ";		// 10/21/09
+		$result_scheduled = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$num_scheduled = mysql_num_rows($result_scheduled); 
+		unset($result_scheduled);
+
+//dump($num_closed);
+//dump($num_scheduled);
+//	$num_closed = 0;
+//	$num_scheduled = 0;
+
 	if(!empty($addon)) {
 		print "\n\tside_bar_html +=\"" . $addon . "\"\n";
 		}
 
-	print "\n\tside_bar_html+= \"<TR CLASS='\" + colors[i%2] +\"'><TD COLSPAN=5 ALIGN='center'>{$source_legend}</TD></TR>\";\n";
+	if(empty($open)) {									// 6/9/08  added button
+		print "\n\tvar current_button = \"<INPUT TYPE='button' VALUE='Current situation' onClick = 'document.to_all.submit()'>\"\n";
+		print "\n\tside_bar_html+= \"<TR><TD COLSPAN=99 ALIGN='center'><BR>\" + current_button + \"</TD></TR>\";\n";
+		}
+	if((empty($closed)) && ($num_closed > 0)) {									// 6/9/08  added button, 10/21/09 added check for closed incidents on the database
+		print "\n\tvar closed_button = \"<INPUT TYPE='button' VALUE='Closed Incidents' onClick = 'document.to_closed.submit()'>\"\n";
+		print "\n\tside_bar_html+= \"<TR><TD COLSPAN=99 ALIGN='center'><BR>\" + closed_button + \"</TD></TR>\";\n";
+		}
+	if((empty($scheduled)) && ($num_scheduled > 0)) {								// 9/29/09  added button for scheduled incidents, 10/21/09 added check for scheduled incidents on the database
+		print "\n\tvar scheduled_button = \"<INPUT TYPE='button' VALUE='Scheduled Incidents' onClick = 'document.to_scheduled.submit()'>\"\n";
+		print "\n\tside_bar_html+= \"<TR><TD COLSPAN=99 ALIGN='center'><BR>\" + scheduled_button + \"</TD></TR>\";\n";
+		}
 
-	print "\n\tside_bar_html+= \"<TR CLASS='\" + colors[i%2] +\"'><TD COLSPAN=99 ALIGN='center'>&nbsp;&nbsp;<B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'>&bull;</FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'>&bull;</FONT>&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'>&bull;</FONT>&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'>&bull;</FONT>&nbsp;&nbsp;</TD></TR>\";\n";
-	if(empty($closed)) {									// 6/9/08  added button
-		print "\n\tvar button = \"<INPUT TYPE='button' VALUE='Closed Calls' onClick = 'document.to_closed.submit()'>\"\n";
-		print "\n\tside_bar_html+= \"<TR><TD COLSPAN=99 ALIGN='center'><BR>\" + button + \"</TD></TR>\";\n";
-		}
-	else {									// 6/9/08  added button
-		print "\n\tvar button = \"<INPUT TYPE='button' VALUE='Current situation' onClick = 'document.to_all.submit()'>\"\n";
-		print "\n\tside_bar_html+= \"<TR><TD COLSPAN=99 ALIGN='center'><BR>\" + button + \"</TD></TR>\";\n";
-		}
 ?>
 	side_bar_html +="</TABLE>\n";
 	$("side_bar").innerHTML = side_bar_html;	// put the assembled side_bar_html contents into the side_bar div
@@ -1193,6 +1504,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		    echo "error" . __LINE__ . "\n";
 		}
 ?>
+
 
 // =============================================================================================================
 	}		// end if (GBrowserIsCompatible())
@@ -1225,12 +1537,17 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 
 	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$my_session[user_id]" : "";
 
-//	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,
-//		UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' $restrict_ticket";
-
-	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,
-		UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` FROM `$GLOBALS[mysql_prefix]ticket` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
+	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(booked_date) AS booked_date,
+		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`updated`) AS updated,
+		`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`, `$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,
+		`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`, `$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
+		`rf`.`name` AS `rec_fac_name`, `$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,
+		`$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng`, 
+		`$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
+		FROM `$GLOBALS[mysql_prefix]ticket` 
+		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
+		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` ON `$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.facility 
+		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf ON `rf`.id = `$GLOBALS[mysql_prefix]ticket`.rec_facility 
 		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
 
 //dump($query);
@@ -1242,10 +1559,31 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 
 	$row = stripslashes_deep(mysql_fetch_array($result));
 //dump($row);
+
+    $locale = get_variable('locale');    // 10/29/09
+    switch($locale) {
+        case "0":
+        $grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;USNG&nbsp;&nbsp;" . LLtoUSNG($row['lat'], $row['lng']);
+        break;
+
+        case "1":
+        $grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;OSGB&nbsp;&nbsp;" . LLtoOSGB($row['lat'], $row['lng']);    // 8/23/08, 10/15/08, 8/3/09
+        break;
+   
+        case "2":
+        $coords =  $row['lat'] . "," . $row['lng'];                                    // 8/12/09
+        $grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;UTM&nbsp;&nbsp;" . toUTM($coords);    // 8/23/08, 10/15/08, 8/3/09
+        break;
+
+        default:
+        print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
+        }
+
+
 	if ($print == 'true') {
 
 		print "<TABLE BORDER='0' CLASS='print_TD' width='800px'>";
-		print "<TR><TD CLASS='print_TD'><B>Incident</B>:</TD>	<TD CLASS='print_TD'>" . $row['scope'].	"&nbsp;&nbsp;<I>(#" . $row['id'] . ")</I></TD></TR>\n";
+		print "<TR><TD CLASS='print_TD'><B>Incident</B>:</TD>	<TD CLASS='print_TD'>" . $row['scope'].	"&nbsp;&nbsp;<I>(#" . $row['tick_id'] . ")</I></TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Priority:</B></TD>	<TD CLASS='print_TD'>" . get_severity($row['severity']);
 		print  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Nature:</B>&nbsp;&nbsp;{$row['type']}</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Protocol:</B>:</TD>	<TD CLASS='print_TD'>{$row['protocol']}</TD></TD></TR>\n";		// 7/16/09
@@ -1254,11 +1592,14 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		print "<TR><TD CLASS='print_TD'><B>Reported by</B>:</TD><TD CLASS='print_TD'>" . $row['contact'].	"</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Phone</B>:</TD>		<TD CLASS='print_TD'>" . format_phone($row['phone']) ."</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Status:</B></TD>		<TD CLASS='print_TD'>" . get_status($row['status'])."</TD></TR>\n";
+		print "<TR><TD CLASS='print_TD'><B>Scheduled date:</B></TD>		<TD CLASS='print_TD'>" . format_date($row['booked_date']) . "</TD></TR>\n";	// 10/6/09
 		print "<TR><TD CLASS='print_TD' COLSPAN='2'></TD></TR>\n";
 
 		print "<TR><TD CLASS='print_TD'><B>Address</B>:</TD>	<TD CLASS='print_TD'>" . $row['street']. "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>City</B>:</TD>		<TD CLASS='print_TD'>" . $row['city']. "&nbsp;&nbsp;&nbsp;&nbsp;<B>St</B>: " . $row['state'] . "</TD></TR>\n";
-		print "<TR VALIGN='top'><TD CLASS='print_TD'>Description:</TD>	<TD>" .  nl2br($row['tick_descr']) . "</TD></TR>\n";	//	8/12/09
+		print "<TR VALIGN='top'><TD CLASS='print_TD'><B>Description:</B></TD>	<TD>" .  nl2br($row['tick_descr']) . "</TD></TR>\n";	//	8/12/09
+		print "<TR><TD CLASS='print_TD'><B>Facility:</B></TD>		<TD CLASS='print_TD'>" . $row['fac_name']."</TD></TR>\n";	// 8/1/09
+		print "<TR><TD CLASS='print_TD'><B>Receiving Facility:</B></TD>		<TD CLASS='print_TD'>" . $row['rec_fac_name']."</TD></TR>\n";	// 10/6/09
 		print "<TR><TD CLASS='print_TD'><B>Disposition:</B></TD><TD CLASS='print_TD'>" . nl2br ($row['comments']). "</TD></TR>";
 /*		print "<TR><TD CLASS='print_TD'><B>Owner:</B></TD>		<TD CLASS='print_TD'>" . get_owner($row['owner']). "</TD></TR>\n";
 		print "<TR><TD CLASS='print_TD'><B>Issued:</B></TD>		<TD CLASS='print_TD'>" . format_date($row['date']). "</TD></TR>\n"; */
@@ -1267,10 +1608,67 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 /*		print "<TR><TD CLASS='print_TD'><B>Affected:</B></TD>	<TD CLASS='print_TD'>" . $row['affected']. "</TD></TR>\n"; */
 
 		print "<TR><TD CLASS='print_TD'><B>Position:</B></TD>	<TD CLASS='print_TD'>" . get_lat($row['lat']) . ", " .  get_lng($row['lng']) . "&nbsp;&nbsp;&nbsp;&nbsp;" . $grid_type . "</TD></TR>\n"; 		// 9/13/08
+		print "</TABLE>\n";
 
-		print show_actions($row['id'], "date", FALSE, FALSE);		// lists actions and patient data, print
+		print show_actions($row['tick_id'], "date", FALSE, FALSE);		// lists actions and patient data, print - 10/30/09
 
-//		print "\n</BODY>\n<SCRIPT SRC='../js/usng.js' TYPE='text/javascript'></SCRIPT>\n</HTML>";	10/14/08
+// =============== 10/30/09 
+
+		function my_to_date($in_date) {			// date_time format to user's spec
+			$temp = mktime(substr($in_date,11,2),substr($in_date,14,2),substr($in_date,17,2),substr($in_date,5,2),substr($in_date,8,2),substr($in_date,0,4));
+			return (good_date_time($in_date)) ?  date(get_variable("date_format"), $temp): "";		// 
+			}
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `facility_id` IS NOT NULL LIMIT 1";
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$facilities = mysql_affected_rows()>0;		// set boolean in order to avoid waste space
+
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `start_miles` IS NOT NULL  LIMIT 1";
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$miles = mysql_affected_rows()>0;		// set boolean in order to avoid waste space
+		unset($result_temp);
+
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
+			`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
+			`t`.`description` AS `thetickdescr`, `t`.`status` AS `thestatus`, `r`.`id` AS `theunitid`, `r`.`name` AS `theunit` ,
+			`f`.`name` AS `thefacility`, `g`.`name` AS `the_rec_facility`, `$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
+			FROM `$GLOBALS[mysql_prefix]assigns` 
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON (`$GLOBALS[mysql_prefix]assigns`.`facility_id` = `f`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `g` ON (`$GLOBALS[mysql_prefix]assigns`.`rec_facility_id` = `g`.`id`)
+			WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = $id
+			ORDER BY `theunit` ASC ";																// 5/25/09, 1/16/08
+
+//		dump($query );
+	
+		$asgn_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		if (mysql_affected_rows()>0) {
+			print "<P><TABLE  CLASS='print_TD' BORDER = 1 CELLPADDING = 2 STYLE = 'border-collapse: collapse;'>\n";
+			print "<TR><TH>Unit</TH><TH>D</TH><TH>R</TH><TH>E</TH>";
+			print ($facilities)? "<TH>FE</TH><TH>FA</TH>": "";
+			print "<TH>C</TH>";
+			print ($miles)? "<TH>M/S</TH><TH>M/E</TH>": "";
+			print "</TR>";
+			
+			while ( $asgn_row = stripslashes_deep(mysql_fetch_array($asgn_result))){
+				print "<TR>";			
+				print "<TD>" . shorten($asgn_row['theunit'], 24) . "</TD>";
+				print "<TD>" . my_to_date($asgn_row['dispatched']) . "</TD>";
+				print "<TD>" . my_to_date($asgn_row['responding']) . "</TD>";
+				print "<TD>" . my_to_date($asgn_row['on_scene']) . "</TD>";
+				print ($facilities)? "<TD>" . my_to_date($asgn_row['u2fenr']) . "</TD>": "";
+				print ($facilities)? "<TD>" . my_to_date($asgn_row['u2farr']) . "</TD>": "";
+				print "<TD>" . my_to_date($asgn_row['clear']) . "</TD>";
+				print ($miles)? "<TD>" . my_to_date($asgn_row['start_miles']) . "</TD>": "";
+				print ($miles)? "<TD>" . my_to_date($asgn_row['end_miles']) . "</TD>": "";
+				print "</TR>\n";				
+				}		// end while () $asgn_row = ...
+			print "</TABLE>\n";
+			}				// end if (mysql_affected_rows()>0 
+		
+// ==============
+
 		print "\n</BODY>\n</HTML>";
 		return;
 		}		// end if ($print == 'true')
@@ -1472,7 +1870,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 	map.addOverlay(new GMarker(point, icon));
 	map.enableScrollWheelZoom();
 
-// ====================================Add Responding Units to Map 8/1//09================================================
+// ====================================Add Responding Units to Map 8/1/09================================================
 
 	var icons=[];	
 	icons[1] = "./icons/white.png";		// normal
@@ -1488,13 +1886,12 @@ $maptype = get_variable('maptype');	// 08/02/09
 	var unit_icon = new GIcon(baseIcon);
 	unit_icon.image = icons[1];
 
-function createMarker(unit_point, number) {
-	var unit_marker = new GMarker(unit_point, unit_icon);
-	// Show this markers index in the info window when it is clicked
+function createMarker(unit_point, number) {		// Show this markers index in the info window when clicked
+	var unit_marker = new GMarker(unit_point, unit_icon);	
 	var html = number;
 	GEvent.addListener(unit_marker, "click", function() {unit_marker.openInfoWindowHtml(html);});
 	return unit_marker;
-}
+	}
 
 
 <?php
@@ -1534,6 +1931,104 @@ function createMarker(unit_point, number) {
 	}	//	end outer while
 
 // =====================================End of functions to show responding units========================================================================
+// ====================================Add Facilities to Map 8/1/09================================================
+?>
+
+	var icons=[];	
+	var g=0;
+
+	var fmarkers = [];
+
+	var baseIcon = new GIcon();
+	baseIcon.shadow = "./markers/sm_shadow.png";
+
+	baseIcon.iconSize = new GSize(30, 30);
+	baseIcon.iconAnchor = new GPoint(15, 30);
+	baseIcon.infoWindowAnchor = new GPoint(9, 2);
+
+	var fac_icon = new GIcon(baseIcon);
+	fac_icon.image = icons[1];
+
+function createfacMarker(fac_point, fac_name, id, fac_icon) {
+	var fac_marker = new GMarker(fac_point, fac_icon);
+	// Show this markers index in the info window when it is clicked
+	var fac_html = fac_name;
+	fmarkers[id] = fac_marker;
+	GEvent.addListener(fac_marker, "click", function() {fac_marker.openInfoWindowHtml(fac_html);});
+	return fac_marker;
+}
+
+
+<?php
+
+	$query_fac = "SELECT *,UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]facilities`.id AS fac_id, `$GLOBALS[mysql_prefix]facilities`.description AS facility_description, `$GLOBALS[mysql_prefix]fac_types`.name AS fac_type_name, `$GLOBALS[mysql_prefix]facilities`.name AS facility_name FROM `$GLOBALS[mysql_prefix]facilities` LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]facilities`.type = `$GLOBALS[mysql_prefix]fac_types`.id LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` ON `$GLOBALS[mysql_prefix]facilities`.status_id = `$GLOBALS[mysql_prefix]fac_status`.id ORDER BY `$GLOBALS[mysql_prefix]facilities`.type ASC";
+	$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);	while($row_fac = mysql_fetch_array($result_fac)){
+
+	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+
+	while($row_fac = mysql_fetch_array($result_fac)){
+
+	$fac_name = $row_fac['facility_name'];			//	10/8/09
+	$fac_temp = explode("/", $fac_name );
+	$fac_index =  (strlen($fac_temp[count($fac_temp) -1])<3)? substr($fac_temp[count($fac_temp) -1] ,0,strlen($fac_temp[count($fac_temp) -1])): substr($fac_temp[count($fac_temp) -1] ,-3 ,strlen($fac_temp[count($fac_temp) -1]));		
+	
+	print "\t\tvar fac_sym = '$fac_index';\n";				// for sidebar and icon 10/8/09
+
+	$fac_id=($row_fac['id']);
+	$fac_type=($row_fac['icon']);
+
+	$f_disp_name = $row_fac['facility_name'];		//	10/8/09
+	$f_disp_temp = explode("/", $f_disp_name );
+	$facility_display_name = $f_disp_temp[0];
+
+	if ((my_is_float($row_fac['lat'])) && (my_is_float($row_fac['lng']))) {
+
+		$fac_tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['status_val']) . " </TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_phone']) . " </TD></TR>";
+		$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date($row_fac['updated']) . "</TD></TR>";
+		$fac_tab_1 .= "</TABLE>";
+
+		$fac_tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";
+		$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";
+		$fac_tab_2 .= "</TABLE>";
+		
+?>
+//		var fac_sym = (g+1).toString();
+		var myfacinfoTabs = [
+			new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
+			new GInfoWindowTab("More ...", "<?php print str_replace($eols, " ", $fac_tab_2);?>")
+			];
+<?php
+
+			echo "var fac_icon = new GIcon(baseIcon);\n";
+			echo "var fac_type = $fac_type;\n";
+			echo "var fac_icon_url = \"./icons/gen_fac_icon.php?blank=$fac_type&text=\" + (fac_sym) + \"\";\n";
+			echo "fac_icon.image = fac_icon_url;\n";
+			echo "var fac_point = new GLatLng(" . $row_fac['lat'] . "," . $row_fac['lng'] . ");\n";
+			echo "var fac_marker = createfacMarker(fac_point, myfacinfoTabs, g, fac_icon);\n";
+			echo "map.addOverlay(fac_marker);\n";
+			echo "\n";
+		}	// end if my_is_float
+
+?>
+		g++;
+<?php
+	}	// end while
+
+}
+// =====================================End of functions to show facilities========================================================================
 
 //	$street = empty($row['street'])? "" : $row['street'] . "<BR/>" . $row['city'] . " " . $row['state'] ;  2/21/09
 
@@ -1653,17 +2148,19 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "<TR CLASS='even'><TD>Reported by:</TD>	<TD>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
 	$print .= "<TR CLASS='odd' ><TD>Phone:</TD>			<TD>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even'><TD>Status:</TD>		<TD>" . get_status($theRow['status']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd'><TD>Scheduled date:</TD>		<TD>" . format_date($theRow['booked_date']) . "</TD></TR>\n";	// 10/6/09
 
-	$print .= "<TR CLASS='odd' ><TD COLSPAN='2'>&nbsp;	<TD></TR>\n";			// separator
-	$print .= "<TR CLASS='even' ><TD>Address:</TD>		<TD>" . highlight($search, $theRow['street']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD>City:</TD>			<TD>" . highlight($search, $theRow['city']);
+	$print .= "<TR CLASS='even' ><TD COLSPAN='2'>&nbsp;	<TD></TR>\n";			// separator
+	$print .= "<TR CLASS='odd' ><TD>Address:</TD>		<TD>" . highlight($search, $theRow['street']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD>City:</TD>			<TD>" . highlight($search, $theRow['city']);
 	$print .=	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;St:&nbsp;&nbsp;" . highlight($search, $theRow['state']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD>Incident at Facility:</TD>		<TD>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
+	$print .= "<TR CLASS='even' ><TD>Receiving Facility:</TD>		<TD>" . highlight($search, $theRow['rec_fac_name']) . "</TD></TR>\n";	// 10/6/09
 
+	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Description:</TD>	<TD>" . highlight($search, nl2br($theRow['tick_descr'])) . "</TD></TR>\n";	//	8/12/09
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Disposition:</TD>	<TD>" . highlight($search, nl2br($theRow['comments'])) . "</TD></TR>\n";
 
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Description:</TD>	<TD>" . highlight($search, nl2br($theRow['tick_descr'])) . "</TD></TR>\n";	//	8/12/09
-	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Disposition:</TD>	<TD>" . highlight($search, nl2br($theRow['comments'])) . "</TD></TR>\n";
-
-	$print .= "<TR CLASS='even' ><TD>Run Start:</TD>					<TD>" . format_date($theRow['problemstart']);
+	$print .= "<TR CLASS='odd' ><TD>Run Start:</TD>					<TD>" . format_date($theRow['problemstart']);
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;" . format_date($theRow['problemend']) . "</TD></TR>\n";
 
 	$locale = get_variable('locale');	// 08/03/09
@@ -1880,8 +2377,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 	map.addOverlay(new GMarker(point, icon));
 	map.enableScrollWheelZoom();
 
-// ====================================Add Active Responding Units to Map=========================================================================
-
+// ====================================Add Active Responding Units to Map =========================================================================
 	var icons=[];						// note globals	- 1/29/09
 	icons[1] = "./icons/white.png";		// normal
 	icons[2] = "./icons/black.png";	// green
@@ -1936,13 +2432,109 @@ function createMarker(unit_point, number) {
 						echo "map.addOverlay(unit_marker);\n";
 						echo "\n";
 						}	// end if/else ($mobile)
-					}	// end ((my_is_float())
+					}	// end ((my_is_float()) - responding units
 				}	// end outer if
 			}	// end inner while
 		}	//	end outer while
 
 // =====================================End of functions to show responding units========================================================================
+// ====================================Add Facilities to Map 8/1/09================================================
+?>
+	var icons=[];	
+	var g=0;
 
+	var fmarkers = [];
+
+	var baseIcon = new GIcon();
+	baseIcon.shadow = "./markers/sm_shadow.png";
+
+	baseIcon.iconSize = new GSize(30, 30);
+	baseIcon.iconAnchor = new GPoint(15, 30);
+	baseIcon.infoWindowAnchor = new GPoint(9, 2);
+
+	var fac_icon = new GIcon(baseIcon);
+	fac_icon.image = icons[1];
+
+function createfacMarker(fac_point, fac_name, id, fac_icon) {
+	var fac_marker = new GMarker(fac_point, fac_icon);
+	// Show this markers index in the info window when it is clicked
+	var fac_html = fac_name;
+	fmarkers[id] = fac_marker;
+	GEvent.addListener(fac_marker, "click", function() {fac_marker.openInfoWindowHtml(fac_html);});
+	return fac_marker;
+}
+
+
+<?php
+
+	$query_fac = "SELECT *,UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]facilities`.id AS fac_id, `$GLOBALS[mysql_prefix]facilities`.description AS facility_description, `$GLOBALS[mysql_prefix]fac_types`.name AS fac_type_name, `$GLOBALS[mysql_prefix]facilities`.name AS facility_name FROM `$GLOBALS[mysql_prefix]facilities` LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]facilities`.type = `$GLOBALS[mysql_prefix]fac_types`.id LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` ON `$GLOBALS[mysql_prefix]facilities`.status_id = `$GLOBALS[mysql_prefix]fac_status`.id ORDER BY `$GLOBALS[mysql_prefix]facilities`.type ASC";
+	$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);	while($row_fac = mysql_fetch_array($result_fac)){
+
+	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+
+	while($row_fac = mysql_fetch_array($result_fac)){
+
+	$fac_name = $row_fac['facility_name'];			//	10/8/09
+	$fac_temp = explode("/", $fac_name );
+	$fac_index =  (strlen($temp[count($fac_temp) -1])<3)? substr($fac_temp[count($fac_temp) -1] ,0,strlen($fac_temp[count($fac_temp) -1])): substr($fac_temp[count($fac_temp) -1] ,-3 ,strlen($fac_temp[count($fac_temp) -1]));		
+	
+	print "\t\tvar fac_sym = '$fac_index';\n";				// for sidebar and icon 10/8/09
+
+	$fac_id=($row_fac['id']);
+	$fac_type=($row_fac['icon']);
+
+	$f_disp_name = $row_fac['facility_name'];		//	10/8/09
+	$f_disp_temp = explode("/", $f_disp_name );
+	$facility_display_name = $f_disp_temp[0];
+
+		if ((my_is_float($row_fac['lat'])) && (my_is_float($row_fac['lng']))) {
+
+			$fac_tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['status_val']) . " </TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_phone']) . " </TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date($row_fac['updated']) . "</TD></TR>";
+			$fac_tab_1 .= "</TABLE>";
+
+			$fac_tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";
+			$fac_tab_2 .= "</TABLE>";
+			
+			?>
+//			var fac_sym = (g+1).toString();
+			var myfacinfoTabs = [
+				new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
+				new GInfoWindowTab("More ...", "<?php print str_replace($eols, " ", $fac_tab_2);?>")
+				];
+			<?php
+
+			echo "var fac_icon = new GIcon(baseIcon);\n";
+			echo "var fac_type = $fac_type;\n";
+			echo "var fac_icon_url = \"./icons/gen_fac_icon.php?blank=$fac_type&text=\" + (fac_sym) + \"\";\n";
+			echo "fac_icon.image = fac_icon_url;\n";
+			echo "var fac_point = new GLatLng(" . $row_fac['lat'] . "," . $row_fac['lng'] . ");\n";
+			echo "var fac_marker = createfacMarker(fac_point, myfacinfoTabs, g, fac_icon);\n";
+			echo "map.addOverlay(fac_marker);\n";
+			echo "\n";
+		}	// end if my_is_float - facilities
+
+?>
+		g++;
+<?php
+	}	// end while
+
+}
+// =====================================End of functions to show facilities========================================================================
 	do_kml();			// kml functions
 
 ?>
@@ -1984,4 +2576,3 @@ function createMarker(unit_point, number) {
 	</SCRIPT>
 <?php
 	}				// end function popup_ticket() =======================================================
-?>

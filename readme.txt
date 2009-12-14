@@ -1,11 +1,15 @@
-1.  These files apply to tickets version 2.10_e beta or 2.10_f patched installation.  It is a cumulative file tha includes all prior patches.
-2.  Added 3 new tracking devices, LocateA, Gtrack and Google Latitude
-3.  Slightly revised Incident popup to tidy up screen title and improve code.
-4.  Added setting to settings table for gtrack_url to allow this to be set.
-5.  Added locale setting to change date display and select USNG, OSGB. UTM grid.
-6.  Revised code that shows/hides specific incident priorities and units.
-7.  To install, unzip and over-write the namesake files in your Tickets directory.
-8.  NOTE:  A number of the files apply to the incs/ subdirectory.  Winzip or its equivalent will handle this correctly.
+1.  These files apply to tickets version 2.10_e beta, 2.10_f or 2.10_g patched installation.  It is a cumulative file tha includes all prior patches.
+2.  Added Facilities for use both as an incident location or a receiving facility
+3.  Added Full Screen Popup.
+4.  Added mail directions to unit capability 
+5.  Added Pre-Booked (Special) tickets - booked for a future date and displayed on a separate page.
+6.  Facilities can be shown or hidden on situation screen.
+7.  Unavailable units can be hidden. Setting in unit status tables to select which status values are hidden by this.
+8.  Added links to group existing 3 function keys under a single button.
+9.  Revised Unit ID on sidebar and Markers to be shortened handle rather than automatically generated id.
+10.  Reporting phone number / name now check for persistent offenders.
+11.  To install, unzip and over-write the namesake files in your Tickets directory.
+12.  NOTE:  A number of the files apply to the incs/ subdirectory, icons/ subdirectory, js/ subdirectory and tables/ subdirectory.  Winzip or its equivalent will handle this correctly.
 
 AS
 AH

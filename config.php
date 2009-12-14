@@ -32,12 +32,16 @@
 7/24/09	hide Glat();
 7/28/09	Open Glat()
 7/28/09	Add function do_gtrack and function do_locatea for test scripts plus links
+10/6/09 Added links to Facility Status and Facility Types settings
+11/5/09 Changed window caption, per IE complaint
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
 	require_once('./incs/config.inc.php');
 	require_once('./incs/usng.inc.php');				// 9/16/08
-//	require_once('responders.php');
+
+	if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/7/09 
+	error_reporting (E_ALL  ^ E_DEPRECATED);
 	if ($istest) {
 		foreach ($_POST as $VarName=>$VarValue) 	{echo "POST:$VarName => $VarValue, <BR />";};
 		foreach ($_GET as $VarName=>$VarValue) 		{echo "GET:$VarName => $VarValue, <BR />";};
@@ -111,11 +115,11 @@
 
 
 	starting=false;	
-	function do_mail_win() {			// 6/13/09
+	function do_mail_win() {			// 6/13/09, 11/5/09
 		if(starting) {return;}					
 		starting=true;	
 	
-		newwindow_am=window.open("do_all_mail.php", "E-mail Window",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+		newwindow_am=window.open("do_all_mail.php", "E_mail",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
 		if (isNull(newwindow_am)) {
 			alert ("This requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -125,8 +129,8 @@
 		}
 
 
-	function do_test() {				// 8/2/08 -	smtp_test.php
-		var newwindow_t=window.open("opena.php", "Test APRS Callsign",  "titlebar, resizable=1, scrollbars, height=680,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=500,screenX=50,screenY=50"); newwindow_t.focus();
+	function do_test() {				// 8/2/08 -	11/5/09
+		var newwindow_t=window.open("opena.php", "Test_APRS",  "titlebar, resizable=1, scrollbars, height=680,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=500,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -134,8 +138,8 @@
 		newwindow_t.focus();
 		}
 
-	function do_smtp() {				// 8/2/08 -	
-		var newwindow_t=window.open("smtp_test.php", "Test SMTP",  "titlebar, resizable=1, scrollbars, height=600,width=900,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+	function do_smtp() {				// 8/2/08 -	11/5/09
+		var newwindow_t=window.open("smtp_test.php", "Test_SMTP",  "titlebar, resizable=1, scrollbars, height=600,width=900,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -143,8 +147,8 @@
 		newwindow_t.focus();
 		}
 
-	function do_instam() {				// 7/26/09	
-		var newwindow_t=window.open("test_instam.php", "Test InstaMapper",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+	function do_instam() {				// 7/26/09	- 11/5/09
+		var newwindow_t=window.open("test_instam.php", "Test_InstaMapper",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -152,8 +156,8 @@
 		newwindow_t.focus();
 		}
 
-	function do_glat() {				// 7/29/09	
-		var newwindow_t=window.open("latitude.php", "Test Google Latitude",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+	function do_glat() {				// 7/29/09	- 11/5/09
+		var newwindow_t=window.open("latitude.php", "Test_Google_Latitude",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -161,8 +165,8 @@
 		newwindow_t.focus();
 		}
 
-	function do_locatea() {				// 7/29/09	
-		var newwindow_t=window.open("locatea.php", "Test Locatea",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+	function do_locatea() {				// 7/29/09 - 11/5/09
+		var newwindow_t=window.open("locatea.php", "Test_Locatea",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -170,8 +174,8 @@
 		newwindow_t.focus();
 		}
 
-	function do_gtrack() {				// 7/29/09	
-		var newwindow_t=window.open("gtrack.php", "Test Gtrack",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+	function do_gtrack() {				// 7/29/09	- 11/5/09
+		var newwindow_t=window.open("gtrack.php", "Test_Gtrack",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
 			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -1289,6 +1293,7 @@ case 'delete' :
 		<LI><A HREF="#" onClick = "do_Post('in_types');">Incident types</A>
 		<LI><A HREF="#" onClick = "do_Post('unit_types');">Unit types</A><!-- 10/8/08,  6/4/09 -->
 		<LI><A HREF="#" onClick = "do_Post('un_status');">Unit status types</A>
+
 <?php
 		if (mysql_table_exists("$GLOBALS[mysql_prefix]constituents")) 	{		// 6/4/09
 ?>	
@@ -1315,12 +1320,19 @@ case 'delete' :
 <?php
 			}
 			
-		if (mysql_table_exists("$GLOBALS[mysql_prefix]facilities")) 	{		// 6/4/09
+		if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) 	{		// 10/5/09
 ?>	
 
 			<BR />
-			<LI><A HREF="#" onClick = "do_Post('facilities');">Facilities</A>
 			<LI><A HREF="#" onClick = "do_Post('fac_status');">Facility Status</A>
+<?php
+		}
+
+		if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_types")) 	{		// 10/5/09
+?>	
+
+			<BR />
+			<LI><A HREF="#" onClick = "do_Post('fac_types');">Facility Types</A>
 			<BR />
 			<BR />
 <?php

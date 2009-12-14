@@ -155,7 +155,7 @@ echo $enroute;
 echo "</FONT><BR><BR>";
 
 	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-	snap(basename(__FILE__) . __LINE__, $get_id);
+//	snap(basename(__FILE__) . __LINE__, $get_id);
 	if ($get_id) {
 		popup_ticket($get_id);
 		}

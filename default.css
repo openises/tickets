@@ -1,6 +1,5 @@
 BODY { BACKGROUND-COLOR: #EFEFEF; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 TABLE {border-collapse: collapse; }
-#BGCOLOR {BACKGROUND-COLOR: #EFEFEF;}
 INPUT { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 SELECT { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: underline }
 A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
@@ -19,6 +18,7 @@ TD { background-color: inherit; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #00
 .warn { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #CC0000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 .severity_high { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #C00000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 .severity_medium { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #008000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+.severity_normal { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #0000FF; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none; }
 .text_green { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #009000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 .text_orange { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #EBA500; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 .text_blue { FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #0000E0; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
@@ -48,3 +48,5 @@ option.Medical {background-color: #CCFF99;}
 option.Trauma {background-color: #FF9900;}
 
 checkbox {border-width: 0px;}
+*.unselected    {font: bold 13px arial;padding-left: 0;margin-left: 0;height: 20px;background-color: #EFEFEF;border-style: none; border: 3px solid transparent; }
+*.selected {font: bold 13px arial;background-color:#DEE3E7;border-style: outset;border: 3px solid #CCCCCC; }

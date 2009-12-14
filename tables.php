@@ -14,13 +14,19 @@ improvements to datatype 'time' handling
 1/29/09 corrected if(...)
 7/7/09	revised textarea limit criterion, added Script-date meta
 8/20/09	handle prefixes correctly
-8/29/09	suppress E_DEPRECATED
-09/01/09 de-error ereg_replace
+10/6/09 Added Facilities icons handling
+10/10/09 quotes corrected
+10/13/09 referential integrity checks added
+10/20/09 disallow edit/delete unit status = 'available' 
+11/2/09 correction to 10/20/09 entry
+11/8/09 ereg_replace() deprecated and replaced
 */
-
-error_reporting(E_ALL ^ 8192);
 $gmap=TRUE;
 require_once('./incs/functions.inc.php'); 
+
+if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
+error_reporting (E_ALL  ^ E_DEPRECATED);
+
 if ($istest) {
 	dump($_POST);
 //	dump($_GET);				// 9/18/08
@@ -281,6 +287,78 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 		var the_title = icons[the_index].substr (0, icons[the_index].length-4).toUpperCase();	// extract color name
 		return "<IMG SRC='" + the_sm_image + "' onClick  = 'icon_to_form(" + the_index + ")' TITLE='" + the_title +"' />";
 		}
+<?php
+		if ($row) {
+?>		
+			var which = "<?php print $row['icon'];?>";	// full size icon
+			icon_to_form(which);						// must be update or view
+<?php
+			}				// end if (isset($row))
+
+	    break;			// end case "unit_types"
+		case "fac_types":
+?>
+
+	var sm_icons = new Array();
+	var icons = new Array();
+	var type_names = new Array();
+	var icons_dir = "./icons/";
+
+<?php
+// Adds capabilities for Facilities Icons 10/6/09-----------------------------------------------
+
+	$icons = $GLOBALS['fac_icons'];
+	for ($i=0; $i<count($icons); $i++) {										// onto JS array
+		print "\ticons.push('" .$icons[$i] . "');\n";
+		}
+	
+	$sm_icons = $GLOBALS['fac_icons'];
+	for ($i=0; $i<count($sm_icons); $i++) {
+		print "\tsm_icons.push('" .$sm_icons[$i] . "');\n";
+		}
+	if (($func =="c") || ($func =="r")) {										// build array of existing names
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types`";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result))) {
+			print "\n\ttype_names.push('" . $row_fac['name'] . "');\n";		// onto JS array
+			}				// end while ()
+		}				// end if()
+?>	
+	function validate_f_t(theForm) {			// unit type entry validation - c and u
+		var errmsg="";
+		if (theForm.frm_name.value == "")				{errmsg+= "\tType name is required\n";}
+		if (theForm.frm_description.value == "")		{errmsg+= "\tType description is required\n" ;}
+		if (theForm.frm_icon.value == "")				{errmsg+= "\tIcon selection is required\n" ;}
+<?php
+	if ($func =="c")  {										//check existence
+?>
+		if (type_names.inArray(theForm.frm_name.value))	{errmsg+= "\tDuplicated Type name\n";}
+<?php
+		}			// end if ($func =="c") 
+?>		
+		if (errmsg!="") {
+			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			return false;
+			}
+		else {
+			theForm.submit();
+			}
+		}				// end function validate_f_t(theForm)
+
+	function icon_to_form(the_index) {	
+		var the_img = $('ID3');
+		the_img.src = icons_dir+sm_icons[the_index];		// display small icon
+		document.forms[1].frm_icon.value=the_index;			// icon index to form variable
+		$('ID3').style.visibility = "visible";				// initially hidden for 'create'
+		return;
+		}			
+
+	function gen_img_str(the_index) {						// returns image string for nth icon
+		var the_sm_image = icons_dir + sm_icons[the_index];
+//		alert(the_sm_image);
+		var the_title = icons[the_index].substr (0, icons[the_index].length-4).toUpperCase();	// extract color name
+		return "<IMG SRC='" + the_sm_image + "' onClick  = 'icon_to_form(" + the_index + ")' TITLE='" + the_title +"' />";
+		}
 		
 
 <?php
@@ -291,8 +369,11 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 <?php
 			}				// end if (isset($row))
 
-	    break;			// end case "unit_types"
+	    break;			// end case "fac_types"
+
 	    }				// end switch ($tablename)
+
+// End of code for capabilities for Facilities Icons 10/6/09-----------------------------------------------
 ?>
 
 function $() {									// 12/20/08
@@ -341,7 +422,11 @@ function JSfnBrowserSniffer() {													//detects the capabilities of the br
 		identity.className=newClass;
 		}
 
-
+	function JSfnDisallow (thefunc, theid) {		// 10/20/09
+		alert("Disallowed");
+		return false;	
+		}
+		
 	function JSfnToFunc (thefunc, theid) {
 		if (thefunc == "d" ) {
 			if (!confirm ("Please confirm item deletion?\n\n" )) {
@@ -619,8 +704,9 @@ switch ($func) {
 						print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__from\" VALUE=\"$value\" />\n";
 						break;
 					case "_on":
-						$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
-						print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$value\" />\n";
+//						$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
+						$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+						print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$now\" />\n";
 						break;
 					}				// end switch ()
 				}				// end if (substr())
@@ -628,7 +714,8 @@ switch ($func) {
 				if ($arrayattr[$i][5]!= "auto_increment") {
 					$lineno++;
 					$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";						// identifies mandatory vs. optional input
-					$max = @ereg_replace("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array - 9/01/09
+//					$max = ereg_replac("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array - 11/8/09
+					$max = preg_replace("[^0-9]", "", $arrayattr[$i][1]);						// max input lgth per attrib's array
 					print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
 					print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
 					switch (mysql_field_type($result, $i)) {
@@ -742,7 +829,19 @@ switch ($func) {
 	break;														// end 'Create record'
 	
 	case "r":																			// Retrieve/List =================
-	function fnLinkTDm ( $theclass, $theid, $thestring) {		// returns <td ... /td>
+	function fnLinkTDm ( $theclass, $theid, $thestring, $the_in_use) {		// returns <td ... /td>
+		global $tablename, $mysql_prefix;
+		$disallow = (($tablename == $mysql_prefix . "un_status") && ($theid==1));
+
+		$the_js_func = ($disallow)? "JSfnDisallow" : "JSfnToFunc" ;		// 10/20/09
+
+		if ($the_in_use) {																	// 10/13/09
+			$on_click = "onclick = \"alert('DELETE disallowed for this item');\"";
+			}
+		else {
+			$on_click = "onclick = \"{$the_js_func}('d', '" . $theid. "');\"";
+			}
+	
 		$breakat = 24;
 		if (strlen($thestring) > $breakat) {
 			$return = " CLASS='" . $theclass . "' onmouseover =\"document.getElementById('b" . $theid . "').style.visibility='hidden' ; document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; document.getElementById('b" . $theid . "').style.visibility='visible' ; \" >\n";
@@ -750,22 +849,26 @@ switch ($func) {
 			$return .= substr($thestring, $breakat) . "</SPAN><SPAN id=\"c" . $theid . "\" style=\"visibility: hidden\">\n";
 			$return .= ". . . <IMG SRC='markers/view.png' BORDER=0 TITLE = 'click to view this' onclick = \"JSfnToFunc('v', '" . $theid . "');\">";
 			$return .= " | ";
-			$return .= " <IMG SRC='markers/edit.png' BORDER=0 TITLE = 'click to edit this' onclick = \"JSfnToFunc('u', '" . $theid . "');\">";
+			$return .= " <IMG SRC='markers/edit.png' BORDER=0 TITLE = 'click to edit this' onclick = \"{$the_js_func}('u', '" . $theid . "');\">";
 			$return .= " | ";
-			$return .= "<IMG SRC='markers/del.png' BORDER=0 TITLE = 'click to delete this' onclick = \"JSfnToFunc('d', '" . $theid. "');\">";
-			$return .= " | </SPAN>\n";
+			if (!($the_in_use)) {																	// 11/2/09			
+				$return .= "<IMG SRC='markers/del.png' BORDER=0 TITLE = 'click to delete this' $on_click> | ";
+				}
+			$return .= "</SPAN>\n";
 			}
 		else {
 			$return = " CLASS='" . $theclass . "' onmouseover =\"document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; \" >\n";
 			$return .= "<SPAN id=\"c" . $theid . "\" style=\"visibility: hidden\">\n";
 			$return .= " <IMG SRC='markers/view.png' BORDER=0 TITLE = 'click to view this' onclick = \"JSfnToFunc('v', '" . $theid . "');\">";
 			$return .= " | ";
-			$return .= "<IMG SRC='markers/edit.png' BORDER=0 TITLE = 'click to edit this' onclick = \"JSfnToFunc('u', '" . $theid . "');\">";
+			$return .= "<IMG SRC='markers/edit.png' BORDER=0 TITLE = 'click to edit this' onclick = \"{$the_js_func}('u', '" . $theid . "');\">";
 			$return .= " | ";
-			$return .= "<IMG SRC='markers/del.png' BORDER=0 TITLE = 'click to delete this' onclick = \"JSfnToFunc('d', '" . $theid. "');\">";
-			$return .= " | </SPAN>\n";
+			if (!($the_in_use)) {																	// 11/2/09
+				$return .= "<IMG SRC='markers/del.png' BORDER=0 TITLE = 'click to delete this' $on_click> | ";
+				}
+			$return .= "</SPAN>\n";
 			}
-		return "<TD " . $return . $thestring ."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>\n";
+		return "<TD ALIGN='right'" . $return . $thestring ."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>\n";
 		}			// end function fnLinkTDm ()
 
 			
@@ -830,6 +933,46 @@ switch ($func) {
 			$lineno++;
 			print "<TR valign=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";			// alternate line bg colors
 			for($i = 0; $i < $cols; $i++){													// each column
+						
+//				dump (mysql_field_name($result, $i) . ":" . $row[$i]);				
+
+				$in_use = FALSE;				// test for index value in use - 10/13/09
+				if ($i==0) {					// index column only
+					switch ($tablename) {		
+						case "unit_types":						// 
+							$the_table = $mysql_prefix . "responder";
+							$query ="SELECT * FROM `$the_table` WHERE `type` = {$row[$i]}  LIMIT 1";						// get row count only
+							$res_test = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$in_use = (mysql_affected_rows()>0);
+						    break;
+						case "un_status":						// default, show
+//							dump($row[$i]);
+							$the_table = $mysql_prefix . "responder";
+							$query ="SELECT * FROM `$the_table` WHERE `un_status_id` = {$row[$i]}  LIMIT 1";						// get row count only
+							$res_test = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$in_use = ((mysql_affected_rows()>0) || (intval ($row[$i])==1));	// 11/2/09
+						    break;
+						case "fac_status":						// default, show
+							$the_table = $mysql_prefix . "facilities";
+							$query ="SELECT * FROM `$the_table` WHERE `status_id` = {$row[$i]}  LIMIT 1";						// get row count only
+							$res_test = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$in_use = (mysql_affected_rows()>0);
+						    break;
+						case "fac_types":						// 
+							$the_table = $mysql_prefix . "facilities";
+							$query ="SELECT * FROM `$the_table` WHERE `type` = {$row[$i]}  LIMIT 1";						// get row count only
+							$res_test = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$in_use = (mysql_affected_rows()>0);
+						    break;
+						case "in_types":						// 
+							$the_table = $mysql_prefix . "ticket";
+							$query ="SELECT * FROM `$the_table` WHERE `in_types_id` = {$row[$i]}  LIMIT 1";						// get row count only
+							$res_test = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$in_use = (mysql_affected_rows()>0);
+						    break;						    
+						}
+					}
+			
 				$lgth = strlen(mysql_field_name($result, $i));								// shortened column name
 				if (isset($row[$i])) {														// not empty
 
@@ -838,7 +981,7 @@ switch ($func) {
 						}
 					else {
 						if ($i == $links_col) {												// 'name' or 'descr' or default
-							print fnLinkTDm ( "mylink" , $row[0] , $row[$i]);				// generate JS function link - assume id as column 0
+							print fnLinkTDm ( "mylink" , $row[0] , $row[$i] , $in_use );	// generate JS function link - assume id as column 0
 							}
 						else {
 							if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {	// check terminal 3 chars
@@ -857,7 +1000,10 @@ switch ($func) {
 							if(($tablename=="unit_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
 								$thedata = "<IMG SRC='./icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
 								}
-							
+							if(($tablename=="fac_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
+								$thedata = "<IMG SRC='./icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
+								}
+						
 					
 							print "<TD CLASS=\"mylink\" >" . $thedata . "</TD>\n";			// type not "datetime" and name not "descript"
 							}		// end else ...
@@ -947,8 +1093,9 @@ switch ($func) {
 					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__from\" VALUE=\"$value\" />\n";
 					break;
 				case "_on":
-					$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
-					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$value\" />\n";
+//					$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
+					$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 11/8/09
+					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$now\" />\n";
 					break;
 				}				// end switch ()
 			}				// end if (substr())
@@ -957,7 +1104,8 @@ switch ($func) {
 			$disabled = ($arrayattr[$i][5] == "auto_increment")? " disabled" : "";
 			$lineno++;
 			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
-			$max = @ereg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array
+//			$max = ereg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array  - 11/8/09
+			$max = preg_replace("[^0-9]", "", $arrayattr[$i][1]);				// max input lgth per attrib's array
 			print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
 			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
 			
@@ -1120,7 +1268,9 @@ switch ($func) {
 		$custom	= TRUE;
 		}
 	else {
-	
+
+		$disallow = (($tablename == $mysql_prefix . "un_status") && ($id==1));		// 10/20/09	
+//		dump($disallow);
 ?>
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>
@@ -1184,8 +1334,16 @@ switch ($func) {
 	<TR><TD COLSPAN="2" ALIGN="center">
 	<BR />
 	<INPUT TYPE="button" 	VALUE="Continue" onClick = "Javascript: document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
+<?php
+	$disallow = (($tablename == $mysql_prefix . "un_status") && ($id==1));		// 10/20/09	
+	if (!($disallow)) {
+?>	
 	<INPUT TYPE="button" 	NAME="del_but" VALUE="Delete this entry" onclick="JSfnToFunc ('d', '<?php print $id ?>');"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" 	NAME="edl_but" VALUE="Edit this entry" onclick="JSfnToFunc('u', '<?php print $id ?>');"/></TD></TR>
+	<INPUT TYPE="button" 	NAME="edl_but" VALUE="Edit this entry" onclick="JSfnToFunc('u', '<?php print $id ?>');"/></TD>
+<?php
+	}
+?>	
+	</TR>
 	</FORM>
 	</TD></TR></TABLE>
 <?php
@@ -1403,12 +1561,16 @@ if ($calstuff!="") {
 	print "<link rel='stylesheet' type='text/css' media='all' href='./js/calendar-win2k-cold-1.css' title='win2k-cold-1' />\n";
 	print "<script type='text/javascript' src='./js/calendar.js'></script>\n";
 	print "<script type='text/javascript' src='./js/calendar-en.js'></script>\n";
-	print "<script type='text/javascript' src='./js/calendar-setup.js\"></script>\n";
+	print "<script type='text/javascript' src='./js/calendar-setup.js\'></script>\n";		// 10/10/09
 
 	print "<SCRIPT TYPE=\"text/javascript\">\n";
 	print $calstuff;
 	print "\n</SCRIPT>\n";
 	}
 ?>
+<CENTER>
+<FORM NAME = 'finform' METHOD = 'post' ACTION = 'config.php'>
+<INPUT TYPE='button' VALUE = 'Finished' onClick = 'this.form.submit()'>
+</FORM>
 </BODY>
 </HTML>

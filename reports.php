@@ -18,6 +18,7 @@
 4/11/09 responder sort by name
 8/3/09 Added switch function to change date format dependant on locale setting. Fixed initial display to default to unit report
 8/10/09 deleted locale = '2'
+10/31/09 corrected  dispatch log no-data display
 */
 error_reporting(E_ALL);									// 10/1/08
 $asof = "1/31/09";
@@ -428,20 +429,20 @@ td.highest	{font-family: Verdana, Arial, Helvetica, sans-serif;color:#FF0000;fon
 				<TD>". substr($times[4], 8, 8) . $diff[2] . "</TD>
 				<TD>". substr($times[5], 8, 8) . $diff[3] . "</TD></TR>\n";
 
+			print "<TR><TD ALIGN='center' COLSPAN=99>";
+			$i++;
+			print "</TD></TR>";
+//			print "<TR CLASS='" . $evenodd[$i%2] . "'><TD COLSPAN=3 ALIGN='right'>count: </TD><TD ALIGN='right'>" . $counts[0] . 					"</TD><TD ALIGN='right'>" . $counts[1] . 					"</TD><TD ALIGN='right'>" . $counts[2] . "</TD></TR>";
+
+			$stats[0] = ($counts[0]==0)? "" : round(($minutes[0]/$counts[0]), 1);
+			$stats[1] = ($counts[1]==0)? "" : round(($minutes[1]/$counts[1]), 1);
+			$stats[2] = ($counts[2]==0)? "" : round(($minutes[2]/$counts[2]), 1);
+
+			print "<TR CLASS='" . $evenodd[$i%2] . "'><TD COLSPAN=3 ALIGN='right'><b>average elapsed minutes from dispatch: </b></TD><TD ALIGN='right'>" . $stats[0] . 	"</TD><TD ALIGN='right'>" .  $stats[1]. "</TD><TD ALIGN='right'>" . $stats[2] . "</TD></TR>";
 			}		// end if (mysql_affected_rows()>0)
-		else {
+		else {																// 10/31/09
 			print "\n<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'><br /><I>No data for this period</I><BR /></TD></TR>\n";
 			}
-		print "<TR><TD ALIGN='center' COLSPAN=99>";
-		$i++;
-		print "</TD></TR>";
-//		print "<TR CLASS='" . $evenodd[$i%2] . "'><TD COLSPAN=3 ALIGN='right'>count: </TD><TD ALIGN='right'>" . $counts[0] . 					"</TD><TD ALIGN='right'>" . $counts[1] . 					"</TD><TD ALIGN='right'>" . $counts[2] . "</TD></TR>";
-
-		$stats[0] = ($counts[0]==0)? "" : round(($minutes[0]/$counts[0]), 1);
-		$stats[1] = ($counts[1]==0)? "" : round(($minutes[1]/$counts[1]), 1);
-		$stats[2] = ($counts[2]==0)? "" : round(($minutes[2]/$counts[2]), 1);
-
-		print "<TR CLASS='" . $evenodd[$i%2] . "'><TD COLSPAN=3 ALIGN='right'><b>average elapsed minutes from dispatch: </b></TD><TD ALIGN='right'>" . $stats[0] . 	"</TD><TD ALIGN='right'>" .  $stats[1]. "</TD><TD ALIGN='right'>" . $stats[2] . "</TD></TR>";
 
 		print "</TABLE>\n";
 		}		// end function do_dispreport()

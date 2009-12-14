@@ -23,6 +23,8 @@
 7/24/09 Added gtrack_url setting including help text.
 8/3/09 Added locale setting including help text.
 8/5/09 Added Function key settings
+10/20/09 Replaced eregi with preg_replace to work with php 5.30 and greater.
+11/01/09 Added setting for reverse geocoding on or off when setting location of incident - default off.
 */
 $colors = array ('odd', 'even');
 
@@ -114,7 +116,7 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		do_insert_settings('func_key1','http://openises.sourceforge.net/,Open ISES');		// 8/5/09
 		do_insert_settings('func_key2','');					// 8/5/09
 		do_insert_settings('func_key3','');					// 8/5/09
-
+		do_insert_settings('reverse_geo','0');				// 11/01/09		
 		}	//
 
 
@@ -352,12 +354,12 @@ function validate_email($email){ 	//really validate? - code courtesy of Jerrett 
 
 //	if (!eregi("^[0-9a-z_]([-_.]?[0-9a-z])*@[0-9a-z][-.0-9a-z]*\\.[a-z]{2,4	}[.]?$",$email, $check)) --
 
-	if(!eregi( "^" .
+	if(!preg_match( "/^" .			// replaced eregi() with preg_replace() 10/20/09
             "[a-z0-9]+([_\\.-][a-z0-9]+)*" .    //user
             "@" .
             "([a-z0-9]+([\.-][a-z0-9]+)*)+" .   //domain
             "\\.[a-z]{2,}" .                    //sld, tld
-            "$", $email, $regs)
+            "$/", $email, $regs)
    			) {
 
 		$return['status'] = false;
@@ -437,6 +439,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "func_key1": 				return "User Defined Function key 1 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "func_key2": 				return "User Defined Function key 2 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "func_key3": 				return "User Defined Function key 3 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
+		case "reverse_geo": 			return "Use Reverse Geocoding when setting location for an incident. 1 for yes, 0 for no. Default is 0"; break;	//11/01/09
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}

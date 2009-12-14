@@ -10,10 +10,10 @@
 3/18/09 'aprs_poll' to 'auto_poll'
 4/10/09 frames check for call board
 7/16/09	protocol handling added
-11/11/09 'top' and 'bottom' anchors added
 */
 error_reporting(E_ALL);			// 9/13/08
-require_once('./incs/functions.inc.php');
+require_once('./incs/functions.inc.php');	// full_scr.inc.php
+require_once('./incs/full_scr.inc.php');	//
 $api_key = get_variable('gmaps_api_key');		// empty($_GET)
 
 if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
@@ -103,9 +103,8 @@ $poll_val = ($temp==0)? "none" : $temp ;
 	  var i;
 	  var elements = $('a','b','c',obj1,obj2,'d','e');
 	  for ( i=0;i
-	*/  
-		
-	
+	*/  		
+
 	</SCRIPT>
 	<SCRIPT SRC='./js/usng.js' TYPE='text/javascript'></SCRIPT>		<!-- 10/14/08 -->
 	<SCRIPT SRC='./js/graticule.js' type='text/javascript'></SCRIPT>
@@ -113,31 +112,16 @@ $poll_val = ($temp==0)? "none" : $temp ;
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>
 
-<BODY onload = "ck_frames();" onunload="GUnload();">
-<A NAME="top"> <!-- 11/11/09 -->
+<BODY onunload="GUnload();">
 <?php
-include("./incs/links.inc.php");
+//require_once('./incs/links.inc.php');
 //	dump($my_session);
 	$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
 	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
 	$get_sort_by_field = 	(array_key_exists('sort_by_field', ($_GET)))?	$_GET['sort_by_field']:	NULL;
 	$get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	NULL;
 
-	if ($get_print) {
-		show_ticket($get_id,'true');
-		print "<BR /><P ALIGN='left'>";
-		}
-	else if ($get_id) {
-		add_header($get_id);
-		show_ticket($get_id);
-		print "<BR /><P ALIGN='left'>";
-		}
-	else if ($get_sort_by_field && $get_sort_value) {
-		list_tickets($get_sort_by_field, $get_sort_value);
-		}
-	else {
-		list_tickets();
-		}
+	full_scr();
 ?>
 <FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_CLOSED'];?>'>
@@ -148,6 +132,4 @@ include("./incs/links.inc.php");
 <FORM NAME='to_scheduled' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'> <!-- 1/23/09 -->
 <INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_SCHEDULED'];?>'>
 </FORM>
-
-<A NAME="bottom"> <!-- 11/11/09 -->
 </BODY></HTML>

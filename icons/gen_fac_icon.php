@@ -17,7 +17,7 @@ function do_icon ($icon, $text, $color) {
 	$len = strlen($text);
 	$p1 = ($len <= 2)? 1:2 ;
 	$p2 = ($len <= 2)? 3:2 ;
-	$px = (imagesx($im) - 7 * $len) / 2 + $p1;
+	$px = (imagesx($im) -7 * $len) / 2 + $p1;
 	$font = 'arial.ttf';
 	$contrast = ($color)? imagecolorallocate($im, 255, 255, 255): imagecolorallocate($im, 0, 0, 0); // white on dark?
 
@@ -27,9 +27,9 @@ function do_icon ($icon, $text, $color) {
 	imagedestroy($im);
 	}
 				// the following array must be kept in synch with $GLOBALS['icons'] 
-				
-$icons =   array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");		// 1/9/09
-$light =   array( TRUE, 		TRUE, 		FALSE, 		 FALSE, 	FALSE, 		FALSE, 		FALSE, 			FALSE, 		FALSE);		// white text?
+
+$icons = array("square_red.png", "square_black.png", "square_white.png", "square_yellow.png", "square_blue.png", "square_green.png", "shield_red.png", "shield_grey.png", "shield_green.png", "shield_blue.png", "shield_orange.png");	// 1/9/09
+$light = array( TRUE, 		  TRUE,		FALSE, 		 FALSE, 		TRUE, 			FALSE, 		TRUE, 		   FALSE, 		  TRUE, 		FALSE, 		FALSE);		// white text?
 	
 $the_icon = $icons[$_GET['blank']];				// 0 thru 8 (note: total 9)
 $the_text = substr($_GET['text'], 0, 3);		// enforce 2-char limit

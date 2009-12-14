@@ -27,6 +27,18 @@
 8/3/09 Added code to get locale variable and change USNG/OSGB/UTM dependant on variable in tabs and sidebar.
 8/7/09 Revised Actions and Patients display to clean up display and also remove ID ambiguity.
 8/8/09	resolved 'description' ambiguity, relocated 'disposition'
+9/22/09 Added Incident to Facility capability
+9/29/09	'frequest fliers' added
+10/1/09 added special ticket type - for pre-booked tickets
+10/2/09	added locale check for WP lookup
+10/5/09 Added Mouseover help text to all field labels.
+10/6/09 Added Mouseover help text to all field labels.
+10/6/09 Added Receiving Facility, added links button
+10/12/09 Incident at facility menu is hidden by default - click radio button to show.
+10/13/09 Added reverse geocoding - map click now returns address and location to form.
+11/01/09 Added use of reverse_geo setting to switch off reverse geocoding if not required - default is off.
+11/06/09 Changed "Special" Incidents to "Scheduled" Incidents
+11/06/09 Moved both Facility dropdown menus to the same area.
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
@@ -36,9 +48,12 @@
 	if($istest) {dump($_POST);}
 	$addrs = FALSE;										// notifies address array doesn't exist
 	function edit_ticket($id) {							/* post changes */
+
+//dump($_POST['frm_year_booked_date']);
 		global $addrs, $NOTIFY_TICKET;
 
 		$post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
+		$post_frm_meridiem_booked_date = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_booked_date'])))) ) ? "" : $_POST['frm_meridiem_booked_date'] ;	//10/1/09
 		$post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
 
 		$_POST['frm_description'] 	= strip_html($_POST['frm_description']);		//clean up HTML tags
@@ -56,8 +71,15 @@
 			if ($post_frm_meridiem_problemstart == 'pm'){
 				$post_frm_meridiem_problemstart	= ($post_frm_meridiem_problemstart + 12) % 24;
 				}
+			if (isset($_POST['frm_meridiem_booked_date'])) {	//10/1/09
+				if ($_POST['frm_meridiem_booked_date'] == 'pm'){
+					$_POST['frm_hour_booked_date'] = ($_POST['frm_hour_booked_date'] + 12) % 24;
+					}
+				}
+
 //			if ($_POST['frm_meridiem_problemend'] == 'pm') 	$_POST['frm_hour_problemend'] 	= ($_POST['frm_hour_problemend'] + 12) % 24;
 			}
+
 		if(empty($post_frm_owner)) {$post_frm_owner=0;}
 //		$frm_problemstart = $_POST['frm_year_problemstart']-$_POST['frm_month_problemstart']-$_POST['frm_day_problemstart'] $_POST['frm_hour_problemstart']:$_POST['frm_minute_problemstart']:00";
 		$frm_problemstart = "$_POST[frm_year_problemstart]-$_POST[frm_month_problemstart]-$_POST[frm_day_problemstart] $_POST[frm_hour_problemstart]:$_POST[frm_minute_problemstart]:00$post_frm_meridiem_problemstart";
@@ -72,20 +94,30 @@
 					$_POST['frm_hour_problemend'] = ($_POST['frm_hour_problemend'] + 12) % 24;
 					}
 				}
+			if (isset($_POST['frm_meridiem_booked_date'])) {	//10/1/09
+				if ($_POST['frm_meridiem_booked_date'] == 'pm'){
+					$_POST['frm_hour_booked_date'] = ($_POST['frm_hour_booked_date'] + 12) % 24;
+					}
+				}
 			}
 		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart("$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00") : "NULL";
+		$frm_booked_date  = (isset($_POST['frm_year_booked_date'])) ?  quote_smart("$_POST[frm_year_booked_date]-$_POST[frm_month_booked_date]-$_POST[frm_day_booked_date] $_POST[frm_hour_booked_date]:$_POST[frm_minute_booked_date]:00") : "NULL";	//10/1/09
+
 //		dump ($frm_problemend);
-		
+//		dump ($frm_booked_date);
+	
 		// perform db update
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		if(empty($post_frm_owner)) {$post_frm_owner=0;}
-																					// 8/23/08, 9/20/08
+																					// 8/23/08, 9/20/08, 9/22/09 (Facility), 10/1/09 (receiving facility)
 		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
 		`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
 		`street`= " . 		quote_smart(trim($_POST['frm_street'])) .",
 		`city`= " . 		quote_smart(trim($_POST['frm_city'])) .",
 		`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
 		`phone`= " . 		quote_smart(trim($_POST['frm_phone'])) . ",
+		`facility`= " . 		quote_smart(trim($_POST['frm_facility_id'])) . ",
+		`rec_facility`= " . 		quote_smart(trim($_POST['frm_rec_facility_id'])) . ",
 		`lat`= " . 			quote_smart(trim($_POST['frm_lat'])) . ",
 		`lng`= " . 			quote_smart(trim($_POST['frm_lng'])) . ",
 		`scope`= " . 		quote_smart(trim($_POST['frm_scope'])) . ",
@@ -97,15 +129,32 @@
 		`problemend`=".		$frm_problemend . ",
 		`description`= " .	quote_smart(trim($_POST['frm_description'])) .",
 		`comments`= " . 	quote_smart(trim($_POST['frm_comments'])) .",
+		`booked_date`= ".	$frm_booked_date . ",
 		`updated`='$now'
 		WHERE ID='$id'";
 
+//dump($query);
+
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		if (($_POST['frm_status'])== $GLOBALS['STATUS_OPEN']) {		// log the change
-			do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id);	
+		if (($_POST['frm_status']== $GLOBALS['STATUS_OPEN']) || ($_POST['frm_status']== $GLOBALS['STATUS_SCHEDULED'])) {		// log the change
+			if ($_POST['frm_facility_id'] == 0) {
+				do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id);
+				} else {
+				do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id);
+				do_log($GLOBALS['LOG_FACILITY_INCIDENT_CHANGE'], $id);	//10/1/09
+				}
 			}
 		else {
-			do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $id);
+			if ($_POST['frm_facility_id'] == 0) {
+				do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $id);
+				} else {
+				do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $id);
+				do_log($GLOBALS['LOG_FACILITY_INCIDENT_CLOSE'], $id);	//10/1/09
+				}
+			}
+		
+		if ($_POST['frm_exist_rec_fac'] != $_POST['frm_rec_facility_id']) {
+			do_log($GLOBALS['LOG_CALL_REC_FAC_CHANGE'], $id);	//10/7/09	
 			}
 
 		print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
@@ -332,6 +381,14 @@
 			}
 		}				// end function validate(theForm)
 
+	function do_fac_to_loc(text, index){													// 9/22/09
+			var curr_lat = fac_lat[index];
+			var curr_lng = fac_lng[index];
+			do_lat(curr_lat);
+			do_lng(curr_lng);
+			pt_to_map (document.edit, curr_lat, curr_lng)
+	}					// end function do_fac_to_loc
+
 	function do_end(theForm) {				// make run-end date/time inputs available for posting
 		elem = document.getElementById("runend1");
 		elem.style.visibility = "visible";
@@ -348,6 +405,22 @@
 ?>
 		}
 	var good_end = false;		// boolean defines run end 
+
+	function do_booking(theForm) {				// 	10/1/09 make booking date/time inputs available for posting
+		elem = document.getElementById("booked1");
+		elem.style.visibility = "visible";
+		theForm.frm_year_booked_date.disabled = false;
+		theForm.frm_month_booked_date.disabled = false;
+		theForm.frm_day_booked_date.disabled = false;
+		theForm.frm_hour_booked_date.disabled = false;
+		theForm.frm_minute_booked_date.disabled = false;
+		
+<?php
+	if (!get_variable('military_time')){
+		print "\tdocument.edit.frm_meridiem_booked_date.disabled = false;\n";
+		}
+?>
+		}
 
 	function reset_end(theForm) {		// on reset()
 		if (!good_end) {
@@ -378,7 +451,17 @@
 		theForm.frm_minute_problemstart.disabled = true;
 //		document.getElementById("lock").style.visibility = "visible";	// 8/23/08
 		}
-	
+
+	function pb_unlk(theForm) {										// Booking time enable 8/10/08
+		theForm.frm_year_booked_date.disabled = false;
+		theForm.frm_month_booked_date.disabled = false;
+		theForm.frm_day_booked_date.disabled = false;
+		theForm.frm_hour_booked_date.disabled = false;
+		theForm.frm_minute_booked_date.disabled = false;
+		if (theForm.frm_meridiem_booked_date) {theForm.frm_meridiem_booked_date.disabled = false;}
+		document.getElementById("pb_lock").style.visibility = "hidden";	//8/23/08
+		}
+
 	function do_inc_nature(indx) {										// 7/16/09
 		if (protocols[indx]) {
 			$('proto_cell').innerHTML = protocols[indx];
@@ -390,11 +473,15 @@
 		}			// end function
 		
 	var protocols = new Array();		// 7/7/09
+	var fac_lat = [];
+	var fac_lng = [];
 </SCRIPT>
 </HEAD>
 
 <BODY onLoad = "do_notify(); ck_frames()" onunload="GUnload()">
-<?php 
+<?php
+require_once('./incs/links.inc.php');
+ 
 	$id = $_GET['id'];
 
 	if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {		/* update ticket */
@@ -432,7 +519,7 @@
 				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
 */
  
- 			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend, UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, 
+ 			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend, UNIX_TIMESTAMP(booked_date) AS booked_date, UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, 
  				`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` FROM `$GLOBALS[mysql_prefix]ticket` 
  				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
  				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
@@ -450,6 +537,7 @@
 				}
 			$priorities = array("","severity_medium","severity_high" );			// 2/21/09
 			$theClass = $priorities[$row['severity']];
+			$exist_rec_fac = $row['rec_facility'];
 
 				
 			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' CLASS = 'BGCOLOR'>\n";
@@ -458,8 +546,9 @@
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
 			print "<TABLE BORDER='0' ID='data'>\n";
 			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='$theClass'>Edit Run Ticket</FONT> (#" . $id . ")</TD></TR>";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Incident name:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Priority:</TD><TD CLASS='$theClass'><SELECT NAME='frm_severity'>";		// 2/21/09
+			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=2><FONT CLASS='header'><FONT SIZE='-2'>(mouseover caption for help information)</FONT></FONT><BR /><BR /></TD></TR>";
+			print "<TR CLASS='even'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\" Incident Name - Use an easily identifiable name.\" >Incident name</A>:</TD><TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='" . $row['scope'] . "' MAXLENGTH='48'></TD></TR>\n"; 
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Incident Priority - Normal, Medium or High. Affects order and coloring of Incidents on Situation display\">Priority</A>:</TD><TD CLASS='$theClass'><SELECT NAME='frm_severity'>";		// 2/21/09
 			$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
 			$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
 			$hsel = ($row['severity']==$GLOBALS['SEVERITY_HIGH'])? "SELECTED" : "" ;
@@ -467,7 +556,7 @@
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_NORMAL'] . "' $nsel>normal</OPTION>";
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_MEDIUM'] . "' $msel>medium</OPTION>";
 			print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>high</OPTION>";
-			print "</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS='td_label'>Nature:</SPAN>\n";
+			print "</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS='td_label'><A HREF=\"#\" TITLE=\"Incident Nature or Type - Available types are set in in_types table in the configuration\">Nature</A>:</SPAN>\n";
 
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -496,66 +585,154 @@
 				}
 			unset ($result);
 			print "</OPTGROUP></SELECT>";
-			print "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS='td_label'>Protocol:</SPAN></TD></TR>\n";
+			print "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN CLASS='td_label'><A HREF=\"#\" TITLE=\"Incident Protocol - this will show automatically if a protocol is set for the Incident Type in the configuration\">Protocol</A>:</SPAN></TD></TR>\n";
 
 			print "<TR CLASS='even'><TD CLASS='td_label'></TD><TD ID='proto_cell'>{$row['protocol']}</TD></TR>\n";
-			
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Reported by:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Phone:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><HR SIZE=1 COLOR=BLUE WIDTH='67%' /></TD></TR>\n";
+
+			if (good_date($row['booked_date'])) {	//10/1/09
+//				dump(__LINE__);
+//				dump($row['booked_date']);
+				print "\n<TR CLASS='even'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Scheduled Date. Must be set if Incident Status is *Scheduled*. Sets date and time for a future booked incident, mainly used for non immediate patient transport. Click on Radio button to show date fields.\">Scheduled Date</A>:</TD><TD>";
+				generate_date_dropdown("booked_date",$row['booked_date']);
+				print "</TD></TR>\n";
+				}
+			else {	//10/1/09
+				print "\n<TR CLASS='even' valign='middle'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Scheduled Date. Must be set if Incident Status is *Scheduled*. Sets date and time for a future booked incident, mainly used for non immediate patient transport. Click on Radio button to show date fields.\">Scheduled Date</A>: &nbsp;&nbsp;<input type='radio' name='boo_but' onClick = 'do_booking(this.form);' /></TD><TD>";
+				print "<SPAN style = 'visibility:hidden' ID = 'booked1'>";
+				generate_date_dropdown('booked_date',0, TRUE);
+				print "</TD></TR>\n";
+				print "</SPAN></TD></TR>\n";
+				}
+
+				print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><HR SIZE=1 COLOR=BLUE WIDTH='67%' /></TD></TR>\n";			
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Caller reporting the incident\">Reported by</A>:</TD><TD><INPUT SIZE='48' TYPE='text' 	NAME='frm_contact' VALUE='" . $row['contact'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Phone number - for US only, you can use the lookup button to get the callers name and location using the White Pages\">Phone</A>:&nbsp;&nbsp;&nbsp;&nbsp;";
 			print 		"<button type=\"button\" onClick=\"Javascript:phone_lkup(document.edit.frm_phone.value);\"><img src=\"./markers/glasses.png\" alt=\"Lookup phone no.\" /></button>";	// 1/19/09
 			print 		"</TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_phone' VALUE='" . $row['phone'] . "' MAXLENGTH='16'></TD></TR>\n";
 			$selO = ($row['status']==$GLOBALS['STATUS_OPEN'])?   "SELECTED" :"";
 			$selC = ($row['status']==$GLOBALS['STATUS_CLOSED'])? "SELECTED" :"" ;
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Status:</TD><TD>
-				<SELECT NAME='frm_status'><OPTION VALUE='" . $GLOBALS['STATUS_OPEN'] . "' $selO>Open</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_CLOSED'] . "'$selC>Closed</OPTION></SELECT></TD></TR>";
+			$selP = ($row['status']==$GLOBALS['STATUS_SCHEDULED'])? "SELECTED" :"" ;
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Incident Status - Open or Closed or set to Scheduled for future booked calls\">Status</A>:</TD><TD>
+				<SELECT NAME='frm_status'><OPTION VALUE='" . $GLOBALS['STATUS_OPEN'] . "' $selO>Open</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_CLOSED'] . "'$selC>Closed</OPTION><OPTION VALUE='" . $GLOBALS['STATUS_SCHEDULED'] . "'$selP>Scheduled</OPTION></SELECT></TD></TR>";
 			print "<TR CLASS='even'><TD COLSPAN='2'>&nbsp;</TD></TR>";
-			print "<TR CLASS='odd'><TD CLASS='td_label'>Location: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>City:&nbsp;&nbsp;&nbsp;&nbsp;";
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Location - type in location in fields, click location on map or use *Located at Facility* menu below \">Location</A>: </TD><TD><INPUT SIZE='48' TYPE='text'NAME='frm_street' VALUE='" . $row['street'] . "' MAXLENGTH='48'></TD></TR>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"City - defaults to default city set in configuration. Type in City if required\">City</A>:&nbsp;&nbsp;&nbsp;&nbsp;";
 			print 		"<button type=\"button\" onClick=\"Javascript:loc_lkup(document.edit);\"><img src=\"./markers/glasses.png\" alt=\"Lookup location.\" /></button>";
 			print 		"</TD><TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE='" . $row['city'] . "' MAXLENGTH='32' onChange = 'this.value=capWords(this.value)'>\n";
-			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; St:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
+			print 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=\"#\" TITLE=\"State - US State or non-US Country code e.g. UK for United Kingdom\">St</A>:&nbsp;&nbsp;<INPUT SIZE='2' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='2'></TD></TR>\n";
 //			print "<TR CLASS='even'><TD CLASS='td_label'>Affected:</TD><TD><INPUT TYPE='text' SIZE='48' NAME='frm_affected' VALUE='" . $row['affected'] . "' MAXLENGTH='48'></TD></TR>\n";
-	
-			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Synopsis:</TD>";
+
+			if (!($row['facility'] == NULL)) {				// 9/22/09
+
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Use the first dropdown menu to select the Facility where the incident is located at, use the second dropdown menu to select the facility where persons from the incident will be received\">Facility</A>: &nbsp;&nbsp;</TD>";		// 2/21/09
+			$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
+			$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			print "<TD><SELECT NAME='frm_facility_id' onChange='do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());'>";
+			print "<OPTION VALUE=0>Not using facility</OPTION>";
+
+			$deflat = get_variable('def_lat');
+			$deflng = get_variable('def_lng');
+			print "\n<SCRIPT>fac_lat[" . 0 . "] = " . $deflat . " ;</SCRIPT>\n";
+			print "\n<SCRIPT>fac_lng[" . 0 . "] = " . $deflng . " ;</SCRIPT>\n";
+
+				while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+					if ($row['facility'] == $row_fc['id']) {		// 9/22/09
+						$sel = " SELECTED";
+						} else {
+						$sel = "";
+						}			
+					print "<OPTION VALUE=" . $row_fc['id'] . $sel . ">" . $row_fc['name'] . "</OPTION>";
+					print "\n<SCRIPT>fac_lat[" . $row_fc['id'] . "] = " . $row_fc['lat'] . " ;</SCRIPT>\n";
+					print "\n<SCRIPT>fac_lng[" . $row_fc['id'] . "] = " . $row_fc['lng'] . " ;</SCRIPT>\n";
+					}
+				print "</SELECT></TD></TR>";
+				unset ($result_fc);
+				} else {
+
+				$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
+				$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				$pulldown = '<option>Incident at Facility?</option>';
+					while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+						$pulldown .= "<option value=\"{$row_fc['id']}\">{$row_fc['name']}</option>\n";
+						print "\n<SCRIPT>fac_lat[" . $row_fc['id'] . "] = " . $row_fc['lat'] . " ;</SCRIPT>\n";
+						print "\n<SCRIPT>fac_lng[" . $row_fc['id'] . "] = " . $row_fc['lng'] . " ;</SCRIPT>\n";
+					}
+			unset ($result_fc);
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Use the first dropdown menu to select the Facility where the incident is located at, use the second dropdown menu to select the facility where persons from the incident will be received\">Facility?</A>:</TD>";
+			print "<TD><SELECT NAME='frm_facility_id' onChange='do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim())'>$pulldown</SELECT></TD></TR>";
+			}
+
+			if (!($row['rec_facility'] == NULL)) {				// 10/1/09
+				$query_rfc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
+				$result_rfc = mysql_query($query_rfc) or do_error($query_rfc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				print "<TR CLASS='odd'><TD CLASS='td_label'> </TD>";
+				print "<TD><SELECT NAME='frm_rec_facility_id'>";
+				print "<OPTION VALUE=0>No receiving facility</OPTION>";
+
+					while ($row_rfc = mysql_fetch_array($result_rfc, MYSQL_ASSOC)) {
+						if ($row['rec_facility'] == $row_rfc['id']) {		// 10/1/09
+							$sel2 = " SELECTED";
+							} else {
+							$sel2 = "";
+							}			
+						print "<OPTION VALUE=" . $row_rfc['id'] . $sel2 . ">" . $row_rfc['name'] . "</OPTION>";
+						}
+				print "</SELECT></TD></TR>";
+				unset ($result_rfc);
+				} else {
+
+				$query_rfc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";			//10/1/09
+				$result_rfc = mysql_query($query_rfc) or do_error($query_rfc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				$pulldown2 = '<option>Receiving Facility?</option>';
+					while ($row_rfc = mysql_fetch_array($result_rfc, MYSQL_ASSOC)) {
+						$pulldown2 .= "<option value=\"{$row_rfc['id']}\">{$row_rfc['name']}</option>\n";
+				}
+			unset ($result_rfc);
+			print "<TR CLASS='odd'><TD CLASS='td_label'> </TD>";
+			print "<TD><SELECT NAME='frm_rec_facility_id'>$pulldown2</SELECT></TD></TR>";	//10/1/09
+			}
+
+			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Synopsis - Details about the Incident, ensure as much detail as possible is completed\">Synopsis</A>:</TD>";
 			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='2' >" . $row['tick_descr'] . "</TEXTAREA></TD></TR>\n";		// 8/8/09
 
-			print "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Disposition:</TD>";				// 10/21/08, 8/8/09
+			print "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Disposition - additional comments about incident\">Disposition</A>:</TD>";				// 10/21/08, 8/8/09
 			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
 
-			print "\n<TR CLASS='odd'><TD CLASS='td_label'>Run Start:</TD><TD>";
+			print "\n<TR CLASS='even'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Run-start, Incident start time. Edit by clicking padlock icon to enable date & time fields\">Run Start</A>:</TD><TD>";
 			print  generate_date_dropdown("problemstart",$row['problemstart'],0, TRUE);
 			print "&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'st_unlk(document.edit);'></TD></TR>\n";
 			if (good_date($row['problemend'])) {
 //				dump(__LINE__);
 //				dump($row['problemend']);
-				print "\n<TR CLASS='even'><TD CLASS='td_label'>Run End:</TD><TD>";
+				print "\n<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Run-end, Incident end time. When Incident is closed, click on radio button which will enable date & time fields\">Run End</A>:</TD><TD>";
 				generate_date_dropdown("problemend",$row['problemend']);
 				print "</TD></TR>\n";
 				}
 			else {
-				print "\n<TR CLASS='even' valign='middle'><TD CLASS='td_label'>Run End: &nbsp;&nbsp;<input type='radio' name='re_but' onClick ='do_end(this.form);' /></TD><TD>";
+				print "\n<TR CLASS='odd' valign='middle'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Run-end, Incident end time. When Incident is closed, click on radio button which will enable date & time fields\">Run End</A>: &nbsp;&nbsp;<input type='radio' name='re_but' onClick ='do_end(this.form);' /></TD><TD>";
 				print "<SPAN style = 'visibility:hidden' ID = 'runend1'>";
 				generate_date_dropdown('problemend',0, TRUE);
 				print "</TD></TR>\n";
 				print "</SPAN></TD></TR>\n";
 				}
 
-			print "<TR CLASS='odd'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U>Position</U>:</TD><TD>";
-			print 	"<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
+			print "<TR CLASS='even'><TD CLASS='td_label' onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U><A HREF=\"#\" TITLE=\"Position - Lat and Lng for Incident position. Click to show all position data.\">Position</A>:</U>:</TD><TD>";
+			print "<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
 
 			$locale = get_variable('locale');	// 08/03/09
 			switch($locale) { 
 				case "0":
-					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
+					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U><A HREF=\"#\" TITLE=\"US National Grid Co-ordinates.\">USNG</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
 					break;
 			
 				case "1":
-					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>OSGB</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoOSGB($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
+					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U><A HREF=\"#\" TITLE=\"United Kingdom Ordnance Survey Grid Reference.\">OSGB</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoOSGB($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
 					break;
 			
 //				case "2":
-//					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>OSGB</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUTM($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
+//					print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U><A HREF=\"#\" TITLE=\"United Kingdom Ordnance Survey Grid Reference.\">OSGB</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUTM($row['lat'], $row['lng']) . "' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
 //					break;
 
 				default:																	// 8/10/09
@@ -564,9 +741,9 @@
 
 //			print "<B><SPAN ID = 'USNG' onClick = \"do_usng()\"><U>USNG</U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' ></TD></TR>";		// 9/13/08, 5/2/09
 			print "</TD></TR>\n";
-			print "<TR CLASS='even'><TD CLASS='td_label'>Updated:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
+			print "<TR CLASS='odd'><TD CLASS='td_label'><A HREF=\"#\" TITLE=\"Incident last updated - date & time.\">Updated</A>:</TD><TD>" . format_date($row['updated']) . "</TD></TR>\n";		// 10/21/08
 			$lat = $row['lat']; $lng = $row['lng'];	
-			print "<TR CLASS='odd'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			print "<TR CLASS='even'><TD COLSPAN='2' ALIGN='center'><BR /><INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE='reset' VALUE='Reset' onclick= 'st_unlk_res(this.form); reset_end(this.form); resetmap($lat, $lng);' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>";
 ?>	
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $row['lat'];?>">				<!-- // 8/9/08 -->
@@ -576,8 +753,9 @@
 			<INPUT TYPE="hidden" NAME="frm_scope_default" VALUE="<?php print $row['scope'];?>">
 			<INPUT TYPE="hidden" NAME="frm_owner_default" VALUE="<?php print $row['owner'];?>">
 			<INPUT TYPE="hidden" NAME="frm_severity_default" VALUE="<?php print $row['severity'];?>">
+			<INPUT TYPE="hidden" NAME="frm_exist_rec_fac" VALUE="<?php print $$exist_rec_fac;?>">
 <?php
-			print "<TR CLASS='even'><TD COLSPAN='10' ALIGN='center'><BR /><B><U>Actions and Patients</U></B><BR /></TD></TR>";	//8/7/09
+			print "<TR CLASS='even'><TD COLSPAN='10' ALIGN='center'><BR /><B><U><A HREF=\"#\" TITLE=\"List of all actions and patients atached to this Incident\">Actions and Patients</A></U></B><BR /></TD></TR>";	//8/7/09
 			print "<TR CLASS='odd'><TD COLSPAN='10' ALIGN='center'>";										//8/7/09
 			print show_actions($row[0], "date", TRUE, TRUE);											//8/7/09
 			print "</TD></TR>";																//8/7/09
@@ -590,8 +768,6 @@
 			
 			print "</TD></TR>";
 			print "<TR><TD CLASS='print_TD' COLSPAN='2'>";
-
-
 			print "</FORM>";
 			print "</TD></TR></TABLE>";		// bottom of outer
 ?>
@@ -664,6 +840,10 @@ $maptype = get_variable('maptype');	// 08/02/09
 		var point = new GLatLng(<?php print $lat;?>, <?php print $lng;?>);	
 		map.addOverlay(new GMarker(point, icon));
 		thePoint = point;
+		var geocoder = "";
+		var address = "";
+		var rev_coding_on = 0;	// 11/01/09
+	
 
 <?php
 		$in_strike = 	($row['status']== $GLOBALS['STATUS_CLOSED'])? "<strike>": "";							// 11/7/08
@@ -672,7 +852,6 @@ $maptype = get_variable('maptype');	// 08/02/09
 		do_kml();			// kml functions
 
 ?>
-
 	GEvent.addListener(map, "click", function(marker, point) {
 		if (marker) {
 			map.removeOverlay(marker);
@@ -688,6 +867,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 			do_ngs(document.edit);								// 8/23/08
 			map.addOverlay(new GMarker(point, icon));			// GLatLng.
 			map.setCenter(point, 12);
+			getAddress(marker, point);					// 10/13/09
 			thePoint = point;
 			}
 
@@ -805,7 +985,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		return xmlhttp;
 		}
 
-	function handleResult(req) {			// the called-back function
+	function handleResult(req) {			// the called-back function 9/29/09 added frequent fliers
 		if (req.responseText.substring(0,1)=="-") {
 			alert("lookup failed");
 			}
@@ -838,7 +1018,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		function pt_to_map (my_form, lat, lng) {				// 1/19/09
 			my_form.frm_lat.value=lat;	
 			my_form.frm_lng.value=lng;		
-			
+	
 			my_form.show_lat.value=do_lat_fmt(my_form.frm_lat.value);
 			my_form.show_lng.value=do_lng_fmt(my_form.frm_lng.value);
 			
@@ -882,7 +1062,37 @@ $maptype = get_variable('maptype');	// 08/02/09
 			}
 		}				// end function addrlkup()
 
+// *****************************************Reverse Geocoder 10/13/09
+	var geocoder;
+	var address;
+	var rev_coding_on = '<?php print get_variable('reverse_geo');?>';	// 11/01/09	
+
+	function getAddress(overlay, latlng) {
+  		var geocoder = new GClientGeocoder();
+		if (rev_coding_on == 1) {	// 11/01/09
+			if (latlng != null) {
+				address = latlng;   
+				geocoder.getLocations(latlng, showAddress);  }
+			}
+		}	
+
+	function showAddress(response) {
+		map.clearOverlays();  
+			if (!response || response.Status.code != 200) {
+				alert("Status Code:" + response.Status.code);
+			} else {
+				place = response.Placemark[0];
+ 				locality = response.Placemark[0].AddressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality;   
+				point = new GLatLng(place.Point.coordinates[1],place.Point.coordinates[0]);
+				marker = new GMarker(point);
+				map.addOverlay(marker);
+				document.edit.frm_street.value = place.address;
+				document.edit.frm_city.value = locality.LocalityName;
+			}
+		}
+
 // *****************************************************************************
+
 
 	</SCRIPT>
 

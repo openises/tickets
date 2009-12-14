@@ -2,6 +2,7 @@
 /*
 4/26/09 initial release
 5/25/09 reset defined here to avoid need for current functions.inc.php
+10/6/09 added unused entries for unit to facility fields
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php'); 
@@ -17,6 +18,8 @@ $GLOBALS['LOG_CALL_RESET']			= 34;		// 5/25/09
 //	`dispatched` = NULL,
 //	`responding` = NULL,
 //	`on_scene` = NULL,
+//	`u2fenr` = NULL,
+//	`u2farr` = NULL,
 //	`clear` = NULL,
 //	`as_of` = $now
 //	WHERE `id` = {$_POST['frm_id']} LIMIT 1;";
