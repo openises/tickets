@@ -71,7 +71,7 @@
 8/1/09	corrections to unit delete, dispatch any unit
 8/2/09 Added code to get maptype variable and switch to change default maptype based on variable setting
 8/3/09 Added code to get locale variable and change USNG/OSGB/UTM dependant on variable in tabs and sidebar.
-8/8/09	'handle' made optional
+8/8/09 'handle' made optional
 8/10/09	locale = 2 dropped, default added
 8/11/09	validate() rewritten
 8/12/09	corrected delete 
@@ -82,15 +82,14 @@
 10/8/09 Added Display name to remove part of name after / in name field of sidebar and in infotabs
 10/29/09 Removed Period after index in sidebar
 11/11/09 Fixed sidebar when not using map location, 'top' anchor added.
+11/15/09 added map position 'clear' option, corrections to 'select incidents for dispatch'
+11/17/09 limited access to edit functions to super, admin
+11/20/09 display sort order
 */
 
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
-// for AF  only
-	$QUERY = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `multi` TINYINT( 1 ) NOT NULL DEFAULT '0' COMMENT 'allow multiple assigns' AFTER `instam` TABLE `responder` ADD `multi` TINYINT( 1 ) NOT NULL DEFAULT '0' COMMENT 'allow multiple assigns' AFTER `instam` ;";
-	$result = @mysql_query($query) ;
-	unset ($result);
 $key_field_size = 30;						// 7/23/09
 
 //$tolerance = 5 * 60;		// nr. seconds report time may differ from UTC
@@ -429,7 +428,6 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 				else 				{return false;}
 				}
 			}
-
 		theForm.frm_mobile.value = (theForm.frm_mob_disp.checked)? 1:0;
 		theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;		// 4/27/09
 
@@ -865,6 +863,20 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 <?php
 
+	function can_do_dispatch($the_row) {
+		if (intval($the_row['multi'])==1) return TRUE;
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
+			if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
+				unset ($result_temp, $row_temp); 
+				return FALSE;
+				}
+			}		// end while ($row_temp ...)
+		unset ($result_temp, $row_temp); 
+		return TRUE;					// none found, can dispatch
+		}		// end function can_do_dispatch()
+
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 
 	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black");
@@ -880,7 +892,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		}
 	unset($result_st);
 
-	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle`";	//
+	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle` ASC, name ASC";	// 11/20/09
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$aprs = FALSE;
 	$instam = FALSE;
@@ -893,31 +905,18 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 	$utc = gmdate ("U");
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  major while() for RESPONDER ==========
+		$do_dispatch = can_do_dispatch($row);				// 11/17/09
 		$got_point = FALSE;
 		print "\n\t\tvar i=$i;\n";
 		$tofac = (is_guest())? "": "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&dispfac=true&id=" . $row['id'] . "'><U>To Facility</U></A>&nbsp;&nbsp;";	// 10/6/09
-		$todisp = (is_guest())? "": "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>&nbsp;&nbsp;&nbsp;";	// 08/8/02
+//		$todisp = (is_guest())? "": "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>&nbsp;&nbsp;&nbsp;";	// 08/8/02
+		$todisp = ((is_guest()) || (!(can_do_dispatch($row))))? "" : "&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>&nbsp;&nbsp;&nbsp;";	// 08/8/02, 9/19/09
+//		dump(is_guest());
+//		dump((can_do_dispatch($row)));
+//		dump((is_guest()) || (!(can_do_dispatch($row))));
+//		dump(__LINE__);
 		$toedit = (is_guest())? "" :"&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;" ;	// 10/8/08
 		$totrack  = ((intval($row['mobile'])==0)||(empty($row['callsign'])))? "" : "&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><B><U>Tracks</B></U></SPAN>" ;
-
-
-
-//	$utc = gmdate ("U");
-//	while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  major while() for RESPONDER ==========
-//		$got_point = FALSE;
-//		print "\n\t\tvar i=$i;\n";
-//	$totrack  = ((intval($row['mobile'])==0)||(empty($row['callsign'])))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><B><U>Tracks</B></U></SPAN>" ;
-//
-//	if(is_guest()) {
-//		$todisp = $toedit = $tomail = "";
-//		}
-//	else {
-//		$todisp = "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&view=true&disp=true&id=" . $row['id'] . "'><U>Dispatch</U></A>";	// 08/8/02
-//		$toedit = "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>" ;	// 10/8/08
-//		$tomail = "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = 'do_mail_in_win({$row['id']})'><U><B>Email</B></U></SPAN>" ;	// 10/8/08
-//	
-//		}
-		
 
 		$temp = $row['un_status_id'] ;		// 2/24/09
 		$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
@@ -1060,7 +1059,6 @@ $maptype = get_variable('maptype');	// 08/02/09
 	$display_name = $temp[0];
 
 		$sidebar_line = "<TD TITLE = '" . addslashes($display_name) . "'><U>" . addslashes(shorten($display_name, 24)) ."</U></TD>";			// 10/8/09
-//		$sidebar_line = "<TD TITLE = '" . addslashes($row['name']) . "'><U>" . addslashes(shorten($row['name'], 24)) ."</U></TD>";				// 4/27/09
 
 // assignments 3/16/09
 
@@ -1236,8 +1234,7 @@ $index =  (strlen($temp[count($temp) -1])<3)? substr($temp[count($temp) -1] ,0,s
 		
 ?>
 
-var unit_id = "<?php print $index;?>";	//	10/8/09
-
+		var unit_id = "<?php print $index;?>";	//	10/8/09
 	
 		var the_class = ((map_is_fixed) && (!(mapBounds.containsLatLng(point))))? "emph" : "td_label";		// 4/3/09
 		var handle = "<?php print substr(($row['handle']),1);?>";
@@ -1294,8 +1291,8 @@ var unit_id = "<?php print $index;?>";	//	10/8/09
 	do_kml();
 ?>
 
-
 </SCRIPT>
+
 <?php
 	}				// end function list_responders() ===========================================================
 
@@ -1424,15 +1421,6 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 			else alert("451: An unknown error occurred.");
 			}		// end function handleErrors()
 
-//		function onGDirectionsLoad(){
-//			var temp = gdir.getSummaryHtml();
-//			alert(extr_num(temp));
-//	 		Use this function to access information about the latest load() results.
-//	 			e.g.
-//	 		$("getStatus").innerHTML = gdir.getStatus().code;
-//	 		and yada yada yada...
-//			}		// function onGDirectionsLoad()
-
 	    function setDirections(fromAddress, toAddress, locale) {				// 12/15/08
 	    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale, preserveViewport : true  });
 			GEvent.addListener(Direcs, "addoverlay", GEvent.callback(Direcs, cb()));
@@ -1528,15 +1516,16 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 		$print .= "</SCRIPT>\n";
 		return $print;
 		}		// end function do calls()
-
-	$_postfrm_remove = 	(array_key_exists ('frm_remove',$_POST ))? $_POST['frm_remove']: "";
-	$_getgoedit = 		(array_key_exists ('goedit',$_GET )) ? $_GET['goedit']: "";
-	$_getgoadd = 		(array_key_exists ('goadd',$_GET ))? $_GET['goadd']: "";
-	$_getedit = 		(array_key_exists ('edit',$_GET))? $_GET['edit']:  "";
-	$_getadd = 			(array_key_exists ('add',$_GET))? $_GET['add']:  "";
-	$_getview = 		(array_key_exists ('view',$_GET ))? $_GET['view']: "";
-	$_dodisp = 			(array_key_exists ('disp',$_GET ))? $_GET['disp']: "";
-	$_dodispfac = 			(array_key_exists ('dispfac',$_GET ))? $_GET['dispfac']: "";	//10/6/09
+	
+	$_postmap_clear = 	(array_key_exists ('frm_clr_pos',$_POST ))? 	$_POST['frm_clr_pos']: "";	// 11/19/09
+	$_postfrm_remove = 	(array_key_exists ('frm_remove',$_POST ))? 		$_POST['frm_remove']: "";
+	$_getgoedit = 		(array_key_exists ('goedit',$_GET )) ? 			$_GET['goedit']: "";
+	$_getgoadd = 		(array_key_exists ('goadd',$_GET ))? 			$_GET['goadd']: "";
+	$_getedit = 		(array_key_exists ('edit',$_GET))? 				$_GET['edit']:  "";
+	$_getadd = 			(array_key_exists ('add',$_GET))? 				$_GET['add']:  "";
+	$_getview = 		(array_key_exists ('view',$_GET ))? 			$_GET['view']: "";
+	$_dodisp = 			(array_key_exists ('disp',$_GET ))? 			$_GET['disp']: "";
+	$_dodispfac = 		(array_key_exists ('dispfac',$_GET ))? 			$_GET['dispfac']: "";	//10/6/09
 
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
@@ -1550,6 +1539,8 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 			$station = TRUE;			//
 			$the_lat = empty($_POST['frm_lat'])? "NULL" : quote_smart(trim($_POST['frm_lat'])) ; // 2/24/09
 			$the_lng = empty($_POST['frm_lng'])? "NULL" : quote_smart(trim($_POST['frm_lng'])) ;
+//			if (($_POST['frm_clr_pos'])=='on') {$the_lat = $the_lng = "NULL";}				// 11/15/09
+			if ($_postmap_clear=='on') {$the_lat = $the_lng = "NULL";}				// 11/19/09
 			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
 				`name`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
 				`handle`= " . 		quote_smart(trim($_POST['frm_handle'])) . ",
@@ -1945,12 +1936,19 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 			print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
 		
 		}
+	if (!(empty($row['lat']))) {				// 11/15/09
+		print "<TR CLASS='even' VALIGN='baseline'><TD CLASS='td_label'><A HREF='#' TITLE='Clear from map'>Clear position</A>:&nbsp;</TD>
+			<TD><INPUT TYPE='checkbox' NAME='frm_clr_pos'/>\n";	
+		}
+	else {
+		print "<INPUT TYPE='hidden' NAME='frm_clr_pos' VALUE='' />\n";
+		}
 ?>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS="odd" VALIGN='baseline'><TD CLASS="td_label"><A HREF="#" TITLE="Delete unit from system - disallowed if unit is assigned to any calls.">Remove Unit</A>:&nbsp;</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
 		<?php print $cbtext; ?></TD></TR>
 		<TR CLASS = "even">
-			<TD COLSPAN=4 ALIGN='center'><BR><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<TD COLSPAN=4 ALIGN='center'><BR><INPUT TYPE="button" VALUE="Cancel" onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE="reset" VALUE="Reset" onClick="map_reset()";>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE="button" VALUE="Submit for Update" onClick="validate(document.res_edit_Form);"></TD></TR>
 		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
@@ -1987,8 +1985,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 <?php
 		exit();
 		}		// end if ($_GET['edit'])
-// view =================================================================================================================
-// view =================================================================================================================
+// =================================================================================================================
 // view =================================================================================================================
 
 		if ($_getview == 'true') {
@@ -2087,7 +2084,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 	if ($glat_sel == " SELECTED") { $tracking_set="Google Lat";}		
 
 ?>
-			<FONT CLASS="header">&nbsp;'<?php print $row['name'] ;?>' Data</FONT> (#<?php print$row['id'];?>) <BR /><BR />
+			<FONT CLASS="header">&nbsp;'<?php print $row['name'] ;?>' Data</FONT> (#<?php print $row['id'];?>) <BR /><BR />
 			<TABLE BORDER=0 ID='outer'><TR><TD>
 			<TABLE BORDER=0 ID='view_unit' STYLE='display: block'>
 			<FORM METHOD="POST" NAME= "res_view_Form" ACTION="units.php?func=responder">
@@ -2135,10 +2132,6 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 
 			}
 
-//			if ((get_variable('UTM')==1)&& (!empty($lat))) {
-//				$coords =  $lat . "," . $lng;
-//				print "<TR CLASS='even'><TD CLASS='td_label'>UTM Grid:</TD><TD>" . toUTM($coords) . "</TD></TR>\n";
-//				}
 			}		// end if (my_is_float($lat))
 
 		if (isset($rowtr)) {																	// got tracks?
@@ -2151,15 +2144,14 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 			$lng = $rowtr['longitude'];
 			}
 
-		$toedit = (is_administrator() || is_super())? "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;": "" ;
+		$toedit = (is_administrator() || is_super())? "<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n": "" ;
 ?>
 			<TR><TD>&nbsp;</TD></TR>
-<?php
-		if (is_administrator() || is_super()) {
-?>
 			<TR CLASS = "odd"><TD COLSPAN=2 ALIGN='center'>
 			<INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE="button" VALUE="to Edit" 	onClick= "to_edit_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<?php print $toedit ;?>		<!-- 11/17/09 -->
+
 			<INPUT TYPE="button" VALUE="to Dispatch" 	onClick= "$('incidents').style.display='block'; $('view_unit').style.display='none';">	<!-- 8/1/09 -->
 
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>" />
@@ -2167,36 +2159,55 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 2/24/
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
 			</TD></TR>
 <?php
-			}		// end if (is_administrator() || is_super())
 		print "</FORM></TABLE>\n";
 		print "\n" . show_assigns(1,$row['id'] ) . "\n";
 ?>
 			<BR /><BR /><BR />
 			<TABLE BORDER=0 ID = 'incidents' STYLE = 'display:none' >
-			<TR CLASS='odd'><TH COLSPAN=99 CLASS='header'> Click incident to dispatch '<?php print $row['name'] ;?>'</TH></TR>
+			<TR CLASS='even'><TH COLSPAN=99 CLASS='header'> Click incident to dispatch '<?php print $row['name'] ;?>'</TH></TR>
 			<TR><TD></TD></TR>
 
-<?php																								// 6/1/08 - added
-		$query_t = "SELECT * FROM $GLOBALS[mysql_prefix]ticket ORDER BY `id`";
+<?php
+											// 11/15/09 - identify candidate incidents - i. e., open and not already assigned to this unit
+		$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$row['id']}";
+		$result_temp = mysql_query($query_t) or do_error($query_t, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$ctr = 0;		// count hits
+		if (mysql_affected_rows()>0) {
+			$work = $sep = "";
+			$ctr = 0;		// count hits
+			while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {
+				if (!(is_date($row_temp['clear']))) {
+					$ctr++;										// if open
+					$work .= $sep . $row_temp['ticket_id'];
+					$sep = ", ";								// set comma separator for next
+					}					// end if (is_date())
+				}					// end while ($row_temp)
+			}					// end if (mysql_affected_rows()>0)
+
+		$instr = ($ctr == 0)? "" : " AND `id` NOT IN ({$work})";
+		
+		$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` 
+			WHERE `status` IN ({$GLOBALS['STATUS_OPEN']}, {$GLOBALS['STATUS_SCHEDULED']}) {$instr}";
+
 		$result_t = mysql_query($query_t) or do_error($query_t, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-							// major while ... starts here
-		$i=0;
+		$i=0;			
 		while ($row_t = stripslashes_deep(mysql_fetch_array($result_t))) 	{
-			switch($row_t['severity'])		{		//color tickets by severity
+			switch($row_t['severity'])		{								//color tickets by severity
 			 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
-				default: 					$severityclass='severity_normal'; break;
+				default: 							$severityclass='severity_normal'; break;
 				}
-//			dump ($row);
 
 			print "\t<TR CLASS ='" .  $evenodd[($i+1)%2] . "' onClick = 'to_routes(\"" . $row_t['id'] . "\")'>\n";
-			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['scope']}'>" . shorten($row_t['scope'], 24) . "</TD>\n";
-			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['description']}'>" . shorten($row_t['description'], 24) . "</TD>\n";
-			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['street']} {$row_t['city']}'>" . shorten($row_t['street'], 24) . "</TD>\n";
-			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['city']}'>" . shorten($row_t['city'], 10). "</TD>";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['scope']}'>" . 						shorten($row_t['scope'], 24) . "</TD>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['description']}'>" . 				shorten($row_t['description'], 24) . "</TD>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['street']} {$row_t['city']}'>" . 	shorten($row_t['street'], 24) . "</TD>\n";
+			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['city']}'>" . 						shorten($row_t['city'], 8). "</TD>";
 			print "\t\t</TR>\n";
 			$i++;
-			}
+			}				// end while ($row_t ... )
+
+			print ($i>0)? "" : "<TR><TD COLSPAN=99 ALIGN='center'><BR />No incidents available</TD></TR>\n";
 ?>
 			<TR><TD ALIGN="center" COLSPAN=99><BR /><BR />
 				<INPUT TYPE="button" VALUE="Cancel" onClick = "$('incidents').style.display='none'; $('view_unit').style.display='block';">

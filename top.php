@@ -34,6 +34,7 @@ $row = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result))
 //  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
 $whom = (empty($row))? NOT_STR: $row['user_name'];
 $level =(empty($row))? NA_STR: get_level_text($row['level']);	
+$logo = get_variable('logo');
 ?>
 	
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -50,14 +51,11 @@ $level =(empty($row))? NA_STR: get_level_text($row['level']);
 <style type="text/css">
 BODY { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
 A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-/* .hovermenu ul{font: bold 13px arial;padding-left: 0;margin-left: 0;height: 20px;}  */
 .hovermenu ul li{list-style: none;display: inline;} 
 .hovermenu ul li a{padding: 2px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;border: 2px solid #EFEFEF;}
 .hovermenu ul li a:hover{background-color: #DEE3E7;border-style: outset;} 
 *.selected {background-color: #DEE3E7;border-style: inset; }
 *.unselected {background-color: #EFEFEF;border-style: none; }
-/* Apply mousedown effect only to NON IE browsers
-html>body .hovermenu ul li a:active{ border-style: inset;} */
 
 </style>
 <SCRIPT>
@@ -240,7 +238,8 @@ function do_callBoard() {
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=1100,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+
+		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=1000,status=0,toolbar=0,menubar=0,location=0, left=20,top=300,screenX=20,screenY=300");
 		if (isNull(newwindow_cb)) {
 			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
 			return;
@@ -265,54 +264,6 @@ function do_chat() {
 		starting = false;
 		}
 	}
-
-//var newwindow_f1 = null;
-
-//function do_func1(key1, key1_text) {
-//	if (logged_in()) {
-//		if(starting) {return;}						// 6/6/08
-//		starting=true;
-//		newwindow_f1=window.open(key1, "",  "titlebar, location=0, resizable=1, scrollbars, height=640,width=800,status=1,toolbar=1,menubar=1,location=0, left=100,top=300,screenX=100,screenY=300");
-//		if (isNull(newwindow_f1)) {
-//			alert ("Function Key Operation requires popups to be enabled. Please adjust your browser options.");
-//			return;
-//			}
-//		newwindow_f1.focus();
-//		starting = false;
-//		}
-//	}		// end function do func1()
-
-//var newwindow_f2 = null;
-
-//function do_func2(key2, key2_text) {
-//	if (logged_in()) {
-//		if(starting) {return;}						// 6/6/08
-//		starting=true;
-//		newwindow_f2=window.open(key2, "",  "titlebar, location=0, resizable=1, scrollbars, height=640,width=800,status=1,toolbar=1,menubar=1,location=0, left=100,top=300,screenX=100,screenY=300");
-//		if (isNull(newwindow_f2)) {
-//			alert ("Function Key Operation requires popups to be enabled. Please adjust your browser options.");
-//			return;
-//			}
-//		newwindow_f2.focus();
-//		starting = false;
-//		}
-//	}		// end function do func2()
-
-//var newwindow_f3 = null;
-
-//function do_func3(key3, key3_text) {
-//	if (logged_in()) {
-//		if(starting) {return;}						// 6/6/08
-//		starting=true;
-//		newwindow_f3=window.open(key3, "",  "titlebar, location=0, resizable=1, scrollbars, height=640,width=800,status=1,toolbar=1,menubar=1,location=0, left=100,top=300,screenX=100,screenY=300");
-//		if (isNull(newwindow_f3)) {
-//			alert ("Function Key Operation requires popups to be enabled. Please adjust your browser options.");
-//			return;
-//			}
-//		newwindow_f3.focus();
-//		starting = false;
-//		}
-//	}		// end function do func3()
 
 var newwindow_fs = null;
 
@@ -376,26 +327,27 @@ function show_butts() {						// 10/27/08
 
 <table border=0 cellpadding=0>
 <tr valign='top'>
-	<td><img src="t.gif" border=0></td>
-	<td><FONT SIZE="3">ickets <?php print get_variable('_version') ." on <B>".get_variable('host')."</B></FONT>"; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		Logged in as: 
-		<span ID="whom"><?php print $whom ; ?></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-		Permissions: <SPAN ID="level"><?php print $level; ?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><img src="<?php print $logo;?>" border=0></td>
+	<td><FONT SIZE="3">ickets <?php print get_variable('_version') ." on <B>".get_variable('host')."</B></FONT>"; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Logged in: 
+		<span ID="whom"><?php print $whom ; ?></span>&nbsp;&nbsp;&nbsp;&nbsp; 
+		Perm's: <SPAN ID="level"><?php print $level; ?></SPAN>&nbsp;&nbsp;&nbsp;
 <?php
 	$temp = get_variable('auto_poll');
 	$poll_val = ($temp==0)? "none" : $temp ;
 ?>
-		<SPAN onClick = "toggle_aprs()">Auto Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		Module: <SPAN ID="script"></SPAN>
-<nobr><span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
-<ul>
-<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Situation</A></li> <!-- 6/9/08, 1/17/09  -->
-<li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New Call</A></li>
+		<SPAN onClick = "toggle_aprs()">Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
+		Module: <SPAN ID="script"></SPAN><br>
+<span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
+<ul style="text-align: left;">
+<nobr>
+<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Situation</A></li>
+<li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New</A></li>
 <li id = "resp"><A HREF="units.php" target="main">Units</A></li>
-<li id = "resp"><A HREF="facilities.php" target="main">Facilities</A></li>	<!-- 10/6/09 -->
+<li id = "resp"><A HREF="facilities.php" target="main">Fac's</A></li>	<!-- 10/6/09 -->
 <li id = "search"><A HREF="search.php" target="main">Search</A></li>
 <li id = "reps"><A HREF="reports.php" target="main">Reports</A></li>
-<li id = "config"><A HREF="config.php" target="main">Configuration</A></li>
+<li id = "config"><A HREF="config.php" target="main">Config</A></li>
 <?php
 $dir = "./emd_cards";
 
@@ -408,7 +360,7 @@ if (file_exists ($dir)) {
 		    }
 		}
 	if (!empty($card_file)){		
-		print"<li id = \"emdcard\"><A HREF='#' onClick = \"do_emd_card('".$dir . "/" . $filename . "')\">EM Card</A></li>\n";
+		print"<li id = \"emdcard\"><A HREF='#' onClick = \"do_emd_card('".$dir . "/" . $filename . "')\">Card</A></li>\n";
 		}
 	}
 
@@ -424,36 +376,17 @@ if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' 
 
 	$call_board = get_variable('call_board');
 	if ((intval($call_board)==1)) {				// 1/12/09
-		print"<li id = 'callboard'><A HREF='#' onClick = 'do_callBoard()'>Call Board</A></li>\n";
+		print"<li id = 'callboard'><A HREF='#' onClick = 'do_callBoard()'>Board</A></li>\n";
 		}
 
 ?>
 
 <li id = 'sta_log'><A HREF='#' onClick = 'do_sta_log()'>Log</A></li>
-<li id = 'ful_scr'><A HREF='#' onClick = 'do_full_scr()'>Popup Sit Disp</A></li>
+<li id = 'ful_scr'><A HREF='#' onClick = 'do_full_scr()'>Full scr</A></li>
 <li id = 'links'><A HREF='#' onClick = "parent.main.document.getElementById('links').style.display='inline';">Links</A></li><!-- 9/19/09 -->
-<?php
-//
-//	$func_key1 = explode(",", get_variable('func_key1'));			//8/5/09
-//	$length1 = count($func_key1);
-//	if ($length1 == 2) {
-//		print"<li id = 'func_key1'><A HREF='#' onClick = 'do_func1(\"$func_key1[0]\", \"$func_key1[1]\")'>$func_key1[1]</A></li>\n";
-//	}
-//
-//	$func_key2 = explode(",", get_variable('func_key2'));			//8/5/09
-//	$length2 = count($func_key2);
-//	if ($length2 == 2) {
-//		print"<li id = 'func_key2'><A HREF='#' onClick = 'do_func2(\"$func_key2[0]\", \"$func_key2[1]\")'>$func_key2[1]</A></li>\n";
-//	}
-//
-//	$func_key3 = explode(",", get_variable('func_key3'));			//8/5/09
-//	$length3 = count($func_key3);
-//	if ($length3 == 2) {
-//		print"<li id = 'func_key3'><A HREF='#' onClick = 'do_func3(\"$func_key3[0]\", \"$func_key3[1]\")'>$func_key3[1]</A></li>\n";
-//	}
-?>
 
 <li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "do_logout()">Logout</A></li>
+</nobr>
 </ul>
 </SPAN>
 </NOBR>

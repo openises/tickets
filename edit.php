@@ -541,6 +541,8 @@ require_once('./incs/links.inc.php');
 
 				
 			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' CLASS = 'BGCOLOR'>\n";
+			print "<TR CLASS='odd'><TD ALIGN='left COLSPAN=2>" . add_header($id, TRUE) . "</TD></TR>\n";	// 11/27/09
+			print "<TR CLASS='odd'><TD>&nbsp;</TD></TR>\n";	
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left'>";
 	
 			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='edit.php?id=$id&action=update'>";
@@ -753,7 +755,7 @@ require_once('./incs/links.inc.php');
 			<INPUT TYPE="hidden" NAME="frm_scope_default" VALUE="<?php print $row['scope'];?>">
 			<INPUT TYPE="hidden" NAME="frm_owner_default" VALUE="<?php print $row['owner'];?>">
 			<INPUT TYPE="hidden" NAME="frm_severity_default" VALUE="<?php print $row['severity'];?>">
-			<INPUT TYPE="hidden" NAME="frm_exist_rec_fac" VALUE="<?php print $$exist_rec_fac;?>">
+			<INPUT TYPE="hidden" NAME="frm_exist_rec_fac" VALUE="<?php print $exist_rec_fac;?>">
 <?php
 			print "<TR CLASS='even'><TD COLSPAN='10' ALIGN='center'><BR /><B><U><A HREF=\"#\" TITLE=\"List of all actions and patients atached to this Incident\">Actions and Patients</A></U></B><BR /></TD></TR>";	//8/7/09
 			print "<TR CLASS='odd'><TD COLSPAN='10' ALIGN='center'>";										//8/7/09

@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 /*
 5/23/08 per AD7PE - line 432
 8/25/08 handling sgl quotes in unit names
@@ -35,14 +36,19 @@
 10/28/09 Add Loading Directions message in floating menu.
 10/29/09 Added ticket scope to hidden form filed for passing to do_direcs_mail script
 11/12/09 corrections for 'direcs' handling, array indexing
+11/15/09 revised logic re identifying units with position data
+11/23/09 'quick' operation restored
+11/27/09 relocated incident information to underneath map, added address to floating div
 */
 
 $from_top = 20;				// buttons alignment, user-reviseable as needed
 $from_left = 400;
+$show_tick_left = FALSE;	// controls left-side vs. right-side appearance of incident details - 11/27/09
 
-error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 $my_session = do_login(basename(__FILE__));		// returns session array
+//snap(__LINE__, basename(__FILE__));
+
 if($istest) {
 //	dump(basename(__FILE__));
 	print "GET<br />\n";
@@ -51,6 +57,11 @@ if($istest) {
 	dump($_POST);
 	}
 	
+session_start(); 								// 11/21/09
+if (!(isset ($_SESSION['allow_dirs']))) {	
+	$_SESSION['allow_dirs'] = 'true';			// note js-style LC
+	}
+
 $api_key = get_variable('gmaps_api_key');
 $_GET = stripslashes_deep($_GET);
 $eol = "< br />\n";
@@ -67,7 +78,7 @@ $sm_icons = $GLOBALS['sm_icons'];
 
 function get_icon_legend (){			// returns legend string - 1/1/09
 	global $u_types, $sm_icons;
-	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";
+	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle` ASC, `name` ASC";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$print = "";											// output string
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
@@ -89,11 +100,18 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
     <style type="text/css">
-      body 					{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
-      table 				{border-collapse: collapse; }
-      table.directions th 	{background-color:#EEEEEE;}	  
-      img 					{color: #000000;}
-    </style>
+		body 				{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
+		table 				{border-collapse: collapse; }
+		table.directions th {background-color:#EEEEEE;}	  
+		img 				{color: #000000;}
+		span.even 			{background-color: #DEE3E7;}
+		span.warn			{display:none; background-color: #FF0000; color: #FFFFFF; font-weight: bold; font-family: Verdana, Arial, sans serif; }
+
+		span.mylink			{margin-right: 32PX; text-decoration:underline; font-weight: bold; font-family: Verdana, Arial, sans serif;}
+		span.other_1		{margin-right: 32PX; text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
+		span.other_2		{margin-right: 8PX;  text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
+    	</style>
+
 <SCRIPT>
 	try {	
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
@@ -103,6 +121,33 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	catch(e) {
 		}
 	
+//	var url = "do_session.php?the_name=the_value";
+
+	function syncAjax(strURL) {							// synchronous ajax function
+		if (window.XMLHttpRequest) {						 
+			AJAX=new XMLHttpRequest();						 
+			} 
+		else {																 
+			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		if (AJAX) {
+			AJAX.open("GET", strURL, false);														 
+			AJAX.send(null);							// form name
+//			alert ("332 " + AJAX.responseText);
+			return AJAX.responseText;																				 
+			} 
+		else {
+			alert ("837: failed");
+			return false;
+			}																						 
+		}		// end function sync Ajax(strURL)
+
+	function docheck(in_val){				// JS boolean  - true/false
+		document.routes_Form.frm_allow_dirs.value = in_val;	
+		url = "do_session.php?the_name=allow_dirs&the_value=" + in_val.trim();
+		syncAjax(url);			// note asynch call
+		}
+		
 	function isNull(arg) {
 		return arg===null;
 		}
@@ -119,6 +164,11 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 			}
 		return elements;
 		}
+
+	String.prototype.trim = function () {									// added 6/10/08
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+
 
 </SCRIPT>	
 <?php
@@ -228,7 +278,7 @@ if (!empty($_POST)) {				// 77-200
 		}		// end function do mail_win()
 
 <?php 
-	if(get_variable('call_board')==2) {
+	if(intval(get_variable('call_board'))==2) {
 		print "\n\tparent.top.calls.location.reload(true);\n";
 		}
 ?>	
@@ -238,25 +288,26 @@ if (!empty($_POST)) {				// 77-200
 <?php
 	$addr_str = urlencode( implode("|", array_unique($addrs)));
 	if (empty($addr_str)) {
-		print "\n<BODY>\n";
-		require_once('./incs/links.inc.php');
+		$next = (intval(get_variable('quick'))==1)? " onLoad = 'document.cont_form.submit();'" : "";			//3/11/09
+		print "\n<BODY $next>\n";
 		}
 	else {
-		print "\n<BODY onLoad = \"do_mail_win('" . $addr_str . "', '" . $_POST['frm_ticket_id'] . "')\">\n";
-	require_once('./incs/links.inc.php');
-
+		$next = (intval(get_variable('quick'))==1)? "; document.cont_form.submit();" : "";
+		print "\n<BODY onLoad = \"do_mail_win('" . $addr_str . "', '" . $_POST['frm_ticket_id'] . "')$next \">\n";
 		}
 ?>
 	<CENTER><BR><BR><BR><BR><H3>Call Assignments made to:<BR /><?php print substr((str_replace ( "\n", ", ", $_POST['frm_name_str'])) , 0, -2);?><BR><BR> <!-- 11/8/08 -->
-	See call Board</H3>
+<?php print (intval(get_variable("call_board")) == 1)? "See Call Board": "";?>	
+	</H3>
 	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php">
 	<INPUT TYPE='button' VALUE='Continue' onClick = "document.cont_form.submit()">
 	</FORM></BODY></HTML>
 <?php		
 	}		// end if (!empty($_POST))
 else {		// 201-439
+
 ?>
-<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2.s&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 <SCRIPT SRC="./js/usng.js"></SCRIPT>		<!-- 10/14/08 -->
 <SCRIPT SRC="./js/graticule.js"></SCRIPT>
 	
@@ -318,8 +369,6 @@ else {		// 201-439
 		var j=-1;
 		for (var i=1; i< inArray.length; i++){											// 11/12/09
 			if ((lats[i]) &&  (parseFloat(inArray[i]) < parseFloat(minsofar))) { 		// 11/12/09
-//			if ((direcs[i]) &&  (parseFloat(inArray[i]) < parseFloat(minsofar))) { 		// 11/12/09
-//			if (parseFloat(inArray[i]) < parseFloat(minsofar)) { 		// 11/12/09
 				j=i;
 				minsofar=inArray[i];
 				}
@@ -340,13 +389,14 @@ function doReset() {
 	}	// end function doReset()
 	
 <?php
-	$addrs = FALSE;													// notifies address array doesn't exist
+	$addrs = FALSE;												// notifies address array doesn't exist
 	if (array_key_exists ( "email", $_GET)) {						// 10/23/08
 		$addrs = notify_user(0,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
 		}				// end if (array_key_exists())
 
-	$dispatches = array();											// unit id to ticket descr	- 5/23/09
-
+	$dispatches_disp = array();										// unit id to ticket descr	- 5/23/09
+	$dispatches_act = array();										// actuals
+	
 	$query = "SELECT *, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,  `t`.`scope` AS `theticket`,
 		`r`.`id` AS `theunit_id` FROM `$GLOBALS[mysql_prefix]assigns` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 	ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
@@ -359,16 +409,20 @@ function doReset() {
 
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		if(!(empty($row['theunit_id']))) {
+			$dispatches_act[$row['theunit_id']] = (empty($row['clear']))? $row['ticket_id']:"";	// blank = unit unassigned
+
 			if ($row['multi']==1) {
-				$dispatches[$row['theunit_id']] = "&nbsp;&nbsp;* ";					// identify as multiple - 5/22/09
+				$dispatches_disp[$row['theunit_id']] = "&nbsp;&nbsp;* ";					// identify as multiple - 5/22/09
+//				print __LINE__;
+//				dump($dispatches_disp);
 				}
 			else {
-				$dispatches[$row['theunit_id']] = (empty($row['clear']))? $row['theticket']:"";	// blank = unit unassigned
+				$dispatches_disp[$row['theunit_id']] = (empty($row['clear']))? $row['theticket']:"";	// blank = unit unassigned
+//				print __LINE__;
+//				dump($dispatches_disp);				
 				}		// end if/else(...)
 			}
 		}		// end while (...)
-
-//	dump($dispatches);
 
 //										8/10/09, 10/6/09
 	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(booked_date) AS booked_date,
@@ -407,22 +461,48 @@ function doReset() {
 </SCRIPT>
 <BODY onLoad = "do_notify(); ck_frames()" onunload="GUnload()">
 <A NAME='top'>
-	<TABLE ID='outer' BORDER = 0 ID= 'main' STYLE='display:block' >
+	<TABLE ID='outer' BORDER = 0 ID= 'main' STYLE='display:block'>
 	<TR><TD VALIGN='top'><DIV ID='side_bar' STYLE='width: 400px'></DIV>
-		<BR>
-			<DIV ID='the_ticket' style='width: 500px;'><?php print do_ticket($row_ticket, 500, FALSE, FALSE); ?></DIV>
+<?php
+	$the_width = get_variable('map_width');
+
+	if ($show_tick_left) { 				// 11/27/09
+		print "\n<BR>\n<DIV ID='the_ticket' STYLE='width: " .  get_variable('map_width') . "'>\n";	
+		print do_ticket($row_ticket, $the_width, FALSE, FALSE); 
+		print "\n</DIV>\n";		
+		}
+?>
 		</TD>
 		<TD VALIGN="top" ALIGN='center'>
 			<DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
-			<BR /><A HREF='#' onClick='doGrid()'><U>Grid</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='#' onClick='doTraffic()'><U>Traffic</U>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<A HREF='#' onClick = "sv_win('<?php print $row_ticket['lat'];?>','<?php print $row_ticket['lng'];?>' );"><U>Street view</U></A> <!-- 8/17/09 -->			
+			<BR />
+			<SPAN CLASS = "mylink" onClick ='doGrid()'>Grid</SPAN>
+			<SPAN CLASS = "mylink" onClick ='doTraffic()'>Traffic</SPAN>
+			<SPAN CLASS = "mylink" onClick = "sv_win('<?php print $row_ticket['lat'];?>','<?php print $row_ticket['lng'];?>' );">Street view</SPAN> <!-- 8/17/09 -->
+			<SPAN CLASS = "warn" ID = "loading_2">Loading Directions, Please wait........</SPAN>
+			<SPAN CLASS = "even" ID = "directions_ok_no">&nbsp;
+			<SPAN CLASS = "other_1">Directions&nbsp;&raquo;</SPAN>
+			<SPAN CLASS = "other_2">
+<?php
+		$checked_ok = ($_SESSION['allow_dirs'] =='true')? " CHECKED ": "";
+		$checked_no = ($_SESSION['allow_dirs'] =='true')? "": " CHECKED ";
+?>
+				OK: <INPUT TYPE='radio' name='frm_dir' VALUE = true  <?php print $checked_ok; ?> onClick = "docheck(this.value);" />&nbsp;&nbsp;
+				No: <INPUT TYPE='radio' name='frm_dir' VALUE = false <?php print $checked_no; ?> onClick = "docheck(this.value);" /></SPAN>
+				&nbsp;</SPAN></SPAN>
 			<BR />
 			<BR />
 <?php
 		print get_icon_legend ();
 ?>
-			<BR />
+			<BR /><BR />
+<?php
+	if (!($show_tick_left)) {				// 11/27/09
+		print "\n<DIV ID='the_ticket' STYLE='width: " .  get_variable('map_width') . "'>\n";	
+		print do_ticket($row_ticket, $the_width, FALSE, FALSE); 
+		print "\n</DIV>\n";		
+		}
+?>
 			<DIV ID="directions" STYLE="width: <?php print get_variable('map_width');?>"></DIV>
 		</TD></TR></TABLE><!-- end outer -->
 	<DIV ID='bottom' STYLE='display:none'>
@@ -433,8 +513,9 @@ function doReset() {
 		
 
 	<FORM NAME='can_Form' ACTION="main.php">
-	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
+	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>"/>	
 	</FORM>	
+
 	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print basename( __FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db'>
 	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>
@@ -443,8 +524,9 @@ function doReset() {
 	<INPUT TYPE='hidden' NAME='frm_name_str' 	VALUE= "">
 	<INPUT TYPE='hidden' NAME='frm_status_id' 	VALUE= "1">
 	<INPUT TYPE='hidden' NAME='frm_facility_id' 	VALUE= "<?php print $facility;?>"> <!-- 10/6/09 -->
-	<INPUT TYPE='hidden' NAME='frm_rec_facility_id' 	VALUE= "<?php print $rec_fac;?>"> <!-- 10/6/09 -->
+	<INPUT TYPE='hidden' NAME='frm_rec_facility_id' VALUE= "<?php print $rec_fac;?>"> <!-- 10/6/09 -->
 	<INPUT TYPE='hidden' NAME='frm_comments' 	VALUE= "New">
+	<INPUT TYPE='hidden' NAME='frm_allow_dirs' VALUE = <?php print $_SESSION['allow_dirs']; ?> />	<!-- 11/21/09 -->
 	</FORM>
 	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>	<!-- 10/25/08 -->
@@ -453,8 +535,16 @@ function doReset() {
 	<DIV STYLE="position:fixed; width:120px; height:auto; top:<?php print $from_top;?>px; left:<?php print $from_left;?>px; background-color: transparent;">	<!-- 5/17/09, 7/7/09 -->
 		
 <?php
+			function get_addr(){				// returns incident address 11/27/09
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`={$_GET['ticket_id']} LIMIT 1";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(FILE__), __LINE__);
+				$row = stripslashes_deep(mysql_fetch_array($result));
+				return "{$row['street']} {$row['city']} {$row['state']}"; 
+				}		// end function get_addr()
+
 			$thefunc = (is_guest())? "guest()" : "validate()";		// disallow guest attempts
-	$nr_units = 1;
+			$nr_units = 1;
+			$addr = get_addr();
 
 			print "<SPAN ID=\"mail_button\" STYLE=\"display: 'none'\">";	//10/6/09
 			print "<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);'>";	//10/6/09
@@ -470,6 +560,7 @@ function doReset() {
 			if ($nr_units>0) {			
 				print "<BR /><INPUT TYPE='button' value='DISPATCH\nUNITS' onClick = '" . $thefunc . "' />\n";	// 6/14/09
 				}
+			print "<BR /><BR /><SPAN STYLE='display: 'inline-block'><NOBR><H2><I>&nbsp;&nbsp;{$addr}</I></H2></NOBR></SPAN>\n";
 			print "<SPAN ID=\"loading\" STYLE=\"display: 'inline-block'\">";
 			print "<TABLE BGCOLOR='red' WIDTH='80%'><TR><TD><FONT COLOR='white'><B>Loading Directions, Please wait........</B></FONT></TD></TR></TABLE>";		// 10/28/09
 			print "</SPAN>";
@@ -552,6 +643,7 @@ function doReset() {
 		}			// end function do notify()
 </SCRIPT>
 <?php		
+//	print __LINE__;
 			}
 	$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
 	print do_list($unit_id);
@@ -560,7 +652,7 @@ function doReset() {
 	}			// end if/else !empty($_POST)
 
 function do_list($unit_id ="") {
-	global $row_ticket, $my_session, $dispatches, $from_top, $from_left, $eol;
+	global $row_ticket, $my_session, $dispatches_disp, $dispatches_act, $from_top, $from_left, $eol;
 	
 	switch($row_ticket['severity'])		{		//color tickets by severity
 	 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
@@ -573,6 +665,7 @@ function do_list($unit_id ="") {
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
 		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`=" . $_GET['ticket_id'] . " LIMIT 1";			// 7/24/09 10/16/08 Incident location 09/25/09 Pre Booking
 
+//	print __LINE__;
 //	dump($query);
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -613,17 +706,30 @@ function do_list($unit_id ="") {
 		var colors = new Array ('odd', 'even');
 		
 		var Direcs = null;			// global
+		var Now;
+		var mystart;
+		var myend;
 	    function setDirections(fromAddress, toAddress, recfacAddress, locale, unit_id) {	//10/6/09
-			$("mail_button").style.display = "none";	//10/6/09
-			$("loading").style.display = "inline-block";		// 10/28/09		
-		    	last_from = fromAddress;
-		    	last_to = toAddress;
+
+			if (document.routes_Form.frm_allow_dirs.value==='false') {return false;}		// 11/21/09
+			
+			$("mail_button").style.display = "none";			//10/6/09
+			$("loading").style.display = "inline-block";		// 10/28/09
+
+			$("directions_ok_no").style.display = "none";
+			$("loading_2").style.display = "inline-block";
+			
+		    last_from = fromAddress;
+		    last_to = toAddress;
 			rec_fac = recfacAddress;
 			f_unit = unit_id;	//10/6/09
-			   	G_START_ICON.image = "./icons/sm_white.png";
-			   	G_START_ICON.iconSize = new GSize(12,20); 
-			   	G_END_ICON.image = "./icons/sm_white.png";
-			   	G_END_ICON.iconSize = new GSize(12,20);         	
+			G_START_ICON.image = "./icons/sm_white.png";
+			G_START_ICON.iconSize = new GSize(12,20); 
+			G_END_ICON.image = "./icons/sm_white.png";
+			G_END_ICON.iconSize = new GSize(12,20);         	
+
+			Now = new Date();      				// Grab the current date.
+			mystart = Now.getTime(); 		// Initialize variable Start
 	
 			if (rec_fac != "") {	//10/6/09
 			    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress + " to: " + recfacAddress, { "locale": locale, preserveViewport : true  });
@@ -631,12 +737,17 @@ function do_list($unit_id ="") {
 				else{
 			    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale, preserveViewport : true  });
 					}
-				GEvent.addListener(Direcs, "addoverlay", GEvent.callback(Direcs, cb())); 
+				GEvent.addListener(Direcs, "addoverlay", GEvent.callback(Direcs, cb2())); 		// 11/21/09
 		    	}		// end function set Directions()
 
-		function cb() {	//10/6/09
-			setTimeout(cb2,2000);     // I THINK you need quotes around the named function - here's 2 seconds of delay
-			}      // end function cb()
+//		function cb() {	//10/6/09
+//			Now = new Date();      				// Grab the current date.
+//			var myend = Now.getTime(); 		// Initialize variable Start
+//			alert("708 " + (myend - mystart));
+//	
+//			setTimeout("cb2()",1);     		// (confirmed) I THINK you need quotes around the named function - here's 2 seconds of delay
+//			setTimeout("cb2()",2000);		// I THINK you need quotes around the named function - here's 2 seconds of delay
+//			}      // end function cb()
 
 		function cb2() {                               // callback function 10/6/09
 			var output_direcs = "";
@@ -648,11 +759,9 @@ function do_list($unit_id ="") {
 					var gstep = groute.getStep(j);
 					var directions_text =  gstep.getDescriptionHtml();
 					var directions_dist = gstep.getDistance().html;
-//					alert ("1387 " + gstep.getDescriptionHtml());
-//					alert ("1388 " + gstep.getDistance().html);
 					output_direcs = output_direcs + directions_text + " " + directions_dist + ". " + "\n";
+					}
 				}
-			}
 //			alert("Raw Output" + output_direcs);	//10/6/09
 			output_direcs = output_direcs.replace("<div class=\"google_note\">", "\n -");	//10/6/09
 			output_direcs = output_direcs.replace("Destination", "\n***Destination");	//10/6/09
@@ -663,8 +772,10 @@ function do_list($unit_id ="") {
 //			alert(output_direcs);	//10/6/09
 			have_direcs = 1;	//10/6/09
 			$("mail_button").style.display = "inline-block";	//10/6/09
-			$("loading").style.display = "none";		// 10/28/09					
-		}                // end function cb2()
+			$("loading").style.display = "none";		// 10/28/09	
+			$("loading_2").style.display = "none";
+			$("directions_ok_no").style.display = "inline-block";			
+			}                // end function cb2()
 
 		function mail_direcs(f) {	//10/6/09
 			f.target = 'Mail Form'
@@ -683,14 +794,14 @@ function do_list($unit_id ="") {
 			marker = null;
 			gmarkers[id] = null;										// marker to array for side_bar click function
 	
-			side_bar_html += "<TR CLASS='" + colors[(id+1)%2] +"' VALIGN='bottom' onClick = myclick(" + id + "," + unit_id +");><TD>";
+			side_bar_html += "<TR ID = '_tr" + id  + "' CLASS='" + colors[(id+1)%2] +"' VALIGN='bottom' onClick = myclick(" + id + "," + unit_id +");><TD>";
 
 			side_bar_html += "<IMG BORDER=0 SRC='rtarrow.gif' ID = \"R" + id + "\"  STYLE = 'visibility:hidden;'></TD>";
 			var letter = ""+ id;										// start with 1 - 1/5/09 - 1/29/09
 
 //			var the_class = (direcs[id])?  "emph" : "td_label";
 			var the_class = (lats[id])?  "emph" : "td_label";
-			side_bar_html += "<TD CLASS='" + the_class + "'>" + letter + ". "+ sidebar +"</TD></TR>\n";
+			side_bar_html += "<TD CLASS='" + the_class + "'>" + letter + " "+ sidebar +"</TD></TR>\n";
 			return null;
 			}				// end function create Marker()
 
@@ -732,25 +843,30 @@ function do_list($unit_id ="") {
 			}				// end function create Marker()
 	
 		function myclick(id, unit_id) {								// responds to side bar click
+//			alert (821);
 			var norecfac = "";
-			document.getElementById(current_id).style.visibility = "hidden";			// hide last check
+			if (document.getElementById(current_id)) {
+				document.getElementById(current_id).style.visibility = "hidden";			// hide last check if defined
+				}
 			current_id= "R"+id;
 			document.getElementById(current_id).style.visibility = "visible";			// show newest
-			if (lats[id]) {
+			if (lats[id]) {																// position data?
 				$('mail_dir_but').style.visibility = "visible";			// 11/12/09	
-
 				var thelat = <?php print $lat;?>; var thelng = <?php print $lng;?>;		// coords of click point
 <?php
 				if ($row_ticket['rec_facility'] > 0) {
 ?>				
 					var thereclat = <?php print $rf_lat;?>; var thereclng = <?php print $rf_lng;?>;									//adds in receiving facility
-//					alert(747);
-					setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, thereclat + " " + thereclng, "en_US", unit_id);	// get directions
+					if (direcs[id]) {
+						setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, thereclat + " " + thereclng, "en_US", unit_id);	// get directions
+						}
 <?php
 					} 
 				else {
 ?>				
-					setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, norecfac, "en_US", unit_id);					// get directions
+					if (direcs[id]) {
+						setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, norecfac, "en_US", unit_id);					// get directions
+						}
 <?php
 					}
 ?>
@@ -758,46 +874,11 @@ function do_list($unit_id ="") {
 			else {
 				$('directions').innerHTML = "";							// no position data, no directions
 				$('mail_dir_but').style.visibility = "hidden";			// 11/12/09	 -
-//				map.removeOverlay(Direcs);
 
 				}
 
-			}					// end function my click(id)
-		function my_old_click(id, unit_id) {								// responds to side bar click
-			alert(733);
-//			$("mail_button").style.display = "inline-block";
-			have_direcs = 1;	//10/6/09
-			which = id;
-			var norecfac = "";
-			document.getElementById(current_id).style.visibility = "hidden";		// hide last check
-			current_id= "R"+id;
-			document.getElementById(current_id).style.visibility = "visible";		// show newest
-			if (direcs[id]) {														// 7/13/09
-				if (!(lats[id])) {
-					alert("777 Cannot route -  no position data currently available\n.");
-					}
-				else {
-					var thelat = <?php print $lat;?>; var thelng = <?php print $lng;?>;		// coords of click point
-<?php
-					if ($row_ticket['rec_facility'] > 0) {
-?>					
-						var thereclat = <?php print $rf_lat;?>; var thereclng = <?php print $rf_lng;?>;									//adds in receiving facility
-//						alert(747);
-						setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, thereclat + " " + thereclng, "en_US", unit_id);	// get directions
-<?php
-						} 
-					else {
-?>					
-						setDirections(lats[id] + " " + lngs[id], thelat + " " + thelng, norecfac, "en_US", unit_id);					// get directions
-<?php
-						}
-?>
-					}
-				}		// end if (direcs[id]) 
-			else {
-				$('directions').innerHTML = "";				// 11/12/09
-				}
-
+			$("directions").innerHTML= "";								// prior directions no longer apply - 11/21/09
+			if (gdir) {	gdir.clear();}
 			}					// end function my click(id)
 
 		var the_grid;
@@ -882,7 +963,11 @@ function do_list($unit_id ="") {
 				return false;
 				}
 			else {
-				if (confirm ("Please confirm Unit dispatch as follows\n\n" + msgstr)) {
+				var quick = <?php print (intval(get_variable("quick")==1))? "true;\n" : "false;\n";?>
+			
+//				if (confirm ("Please confirm Unit dispatch as follows\n\n" + msgstr)) {
+				if ((quick) || (confirm ("Please confirm unit dispatch\n\n" + msgstr))) {		// 11/23/09
+
 					document.routes_Form.frm_id_str.value = document.routes_Form.frm_id_str.value.substring(0, document.routes_Form.frm_id_str.value.length - 1);	// drop trailing separator
 					document.routes_Form.frm_name_str.value = msgstr;	// for re-use
 					document.routes_Form.submit();
@@ -944,9 +1029,10 @@ function do_list($unit_id ="") {
 		var i = 0;			// sidebar/icon index
 	
 		map = new GMap2(document.getElementById("map_canvas"));		// create the map
+		map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
 		map.addControl(new GSmallMapControl());						// 9/23/08
 		map.addControl(new GMapTypeControl());
-<?php if (get_variable('terrain') == 1) { ?>
+<?php if (intval(get_variable('terrain')) == 1) { ?>
 		map.addMapType(G_PHYSICAL_MAP);
 <?php } ?>	
 
@@ -954,7 +1040,6 @@ function do_list($unit_id ="") {
 		
 		GEvent.addListener(gdir, "load", onGDirectionsLoad);
 		GEvent.addListener(gdir, "error", handleErrors);
-		map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
 	
 		var bounds = new GLatLngBounds();						// create empty bounding box
 	
@@ -980,14 +1065,13 @@ function do_list($unit_id ="") {
 		bounds.extend(point);										// Incident into BB
 	
 		GEvent.addListener(map, "infowindowclose", function() {		// re-center after  move/zoom
-//			alert(943);
 			setDirections(last_from, last_to, "en_US") ;
 			});
 		var accept_click = false;					// 10/15/08
 		GEvent.addListener(map, "click", function(marker, point) {		// point.lat()
 			var the_start = point.lat().toString() + "," + point.lng().toString();
 			var the_end = thelat.toString() + "," + thelng.toString();	
-//			alert(949)
+
 			setDirections(the_start, the_end, "en_US");
 			});				// end GEvent.addListener()
 
@@ -996,6 +1080,23 @@ function do_list($unit_id ="") {
 	    var km2mi = 0.6214;				// 
 		
 <?php
+
+		function get_cd_str($in_row) {				// unit row in, 
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE  `ticket_id` = {$_GET['ticket_id']} 
+				 AND (`responder_id`={$in_row['unit_id']}) AND `clear` IS NULL LIMIT 1;";
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			if(mysql_affected_rows()==1) 		{return " CHECKED DISABLED ";}
+
+			if (intval($in_row['multi'])==1) 	{return "";}				// allowed
+																			// on another run?
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`={$in_row['unit_id']} AND `clear` IS NULL LIMIT 1;";
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			if(mysql_affected_rows()==1) 		{return " DISABLED ";}
+			else							 	{return "";}
+
+			}			// function get_cd_str($in_row)
+			
+
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 												// build js array of responders to this ticket - possibly none
 		$query = "SELECT `ticket_id`, `responder_id` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $_GET['ticket_id'];
@@ -1006,20 +1107,23 @@ function do_list($unit_id ="") {
 			}
 		print "\n";
 
+//			LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a` 	ON (`$GLOBALS[mysql_prefix]responder`.`id` = `a`.`responder_id`)
+
+
 		$where = (empty($unit_id))? "" : " WHERE `$GLOBALS[mysql_prefix]responder`.`id` = $unit_id ";		// revised 5/23/08 per AD7PE 
 		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus`, `contact_via` FROM $GLOBALS[mysql_prefix]responder
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
 			$where
-			ORDER BY `name` ASC, `unit_id` ASC";	
+			ORDER BY `name` ASC, `unit_id` ASC";
 
-//		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//		dump(mysql_affected_rows());
+
 		if(mysql_affected_rows()>0) {
 													// major while ... for RESPONDER data starts here
 			$i = $k = 1;				// sidebar/icon index
 			while ($unit_row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 7/13/09
 				$has_coords = ((my_is_float($unit_row['lat'])) && (my_is_float($unit_row['lng'])));				// 2/25/09, 7/7/09
+				$has_rem_source = ((intval ($unit_row['aprs'])==1)||(intval ($unit_row['instam'])==1)||(intval ($unit_row['locatea'])==1)||(intval ($unit_row['gtrack'])==1)||(intval ($unit_row['glat'])==1));		// 11/15/09
 
 				if(is_email($unit_row['contact_via'])) {
 					print "\t\temail= true\n";				
@@ -1055,7 +1159,7 @@ function do_list($unit_id ="") {
 				var dist_mi = "na";
 				var multi = <?php print (intval($unit_row['multi'])==1)? "true;\n" : "false;\n";?>	// 5/22/09
 <?php
-				$dispatched_to = (array_key_exists($unit_row['unit_id'], $dispatches))?  $dispatches[$unit_row['unit_id']]: "";
+				$dispatched_to = (array_key_exists($unit_row['unit_id'], $dispatches_disp))?  $dispatches_disp[$unit_row['unit_id']]: "";
 				if ($has_coords ) {
 ?>		
 					lats[i] = <?php print $unit_row['lat'];?>; 		// 774 now compute distance - in km
@@ -1071,7 +1175,7 @@ function do_list($unit_id ="") {
 <?php
 					}
 
-				if (!(empty($unit_row['callsign']))) {
+				if (($has_coords) && ($has_rem_source) && (!(empty($unit_row['callsign'])))) {				// 11/15/09
 					$thespeed = "";
 					$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
 						WHERE `source`= '$unit_row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";
@@ -1113,9 +1217,9 @@ function do_list($unit_id ="") {
 <?php						
 						}				// end  no track data
 										// 8/7/09
-					}		// if has callsign
+					}		// end if (has rem_source ... )
 			
-				else {				// no callsign
+				else {				// no rem_source
 					if ($has_coords) {					//  2/25/09
 ?>
 						var myinfoTabs = [
@@ -1132,11 +1236,11 @@ function do_list($unit_id ="") {
 						}		// end if ($has_coords)
 
 					$thespeed = "";
-					}									// END IF/ELSE (callsign)
-
-				print (((!(intval($unit_row['multi'])==1))) && isset($dispatches[$unit_row['unit_id']]))? "\n\tvar is_checked =  ' CHECKED ';\n\tvar is_disabled =  ' DISABLED ';\n": "\n\tvar is_checked =  '';\n\tvar is_disabled =  '';\n";
+					}									// END IF/ELSE (rem_source)
+		
+//				dump(get_cd_str($unit_row));
 ?>					
-				sidebar_line = "<TD ALIGN='center'><INPUT TYPE='checkbox' " + is_checked + is_disabled + " NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
+				sidebar_line = "<TD ALIGN='center'><INPUT TYPE='checkbox' <?php print get_cd_str($unit_row); ?> NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
 
 				sidebar_line += "<TD TITLE = \"<?php print addslashes($unit_row['name']);?>\">";
 				sidebar_line += "<NOBR><?php print shorten($unit_row['name'], 20);?></NOBR></TD>";
@@ -1159,7 +1263,7 @@ function do_list($unit_id ="") {
 <?php
 					}				// end if ($has_coords) 
 				else {
-					print "\n\tdo_sidebar(sidebar_line, color, i);\n";
+					print "\n\t\t\t\tdo_sidebar(sidebar_line, color, i);\n";
 					}		// end if/else ($has_coords)
 				$i++;
 				$k++;
@@ -1206,13 +1310,16 @@ function do_list($unit_id ="") {
 				if ($rec_fac > 0) {					
 ?>					
 					var thereclat = <?php print $rf_lat;?>; var thereclng = <?php print $rf_lng;?>;	//adds in receiving facility
-//					alert(1165);
-					setDirections(lats[start] + " " + lngs[start], thelat + " " + thelng, thereclat + " " + thereclng, "en_US", unit_id);	// get directions	10/6/09
+					if (direcs[start]) {
+						setDirections(lats[start] + " " + lngs[start], thelat + " " + thelng, thereclat + " " + thereclng, "en_US", unit_id);	// get directions	10/6/09
+						}
 <?php
 					} 
 				else {
 ?>				
-					setDirections(lats[start] + " " + lngs[start], thelat + " " + thelng, norecfac, "en_US", unit_id);	// get directions	10/6/09
+					if (direcs[start]) {
+						setDirections(lats[start] + " " + lngs[start], thelat + " " + thelng, norecfac, "en_US", unit_id);	// get directions	10/6/09
+						}
 					location.href = "#top";				// 11/12/09
 
 <?php
@@ -1222,11 +1329,6 @@ function do_list($unit_id ="") {
 				}
 			}
 
-//		for(i=0; i<document.forms['routes_Form'].elements.length; i++) {
-//			if (document.forms['routes_Form'].elements[i].type=='checkbox') {
-//				alert(document.forms['routes_Form'].elements[i].disabled);
-//				}
-//			}
 					
 		}		// end if (GBrowserIsCompatible())
 
@@ -1235,6 +1337,13 @@ function do_list($unit_id ="") {
 		}
 
 //	alert(993);
+
+//	for (i=1;i<9999; i++) {
+//		var the_id = '_tr' + i;
+//		if (!($(the_id))) {break;}
+//		$(the_id).style.display = 'none';
+//		}
+//	alert("1288 " + (i-1));
 		
 	</SCRIPT>
 	

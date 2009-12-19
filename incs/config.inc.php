@@ -388,7 +388,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "allow_notify": 			return "Allow/deny notification of ticket updates"; break;
 		case "auto_poll":				return "APRS/Instamapper will be polled every n minutes.  Use 0 for no poll"; break;
 		case "auto_route": 				return "Do/don&#39;t (1/0) use routing for new tickets"; break;												// 9/13/08
-		case "call_board":				return "Call Board - 0, 1, n - for none, window, fixed frame size"; break;
+		case "call_board":				return "Call Board - 0, 1, 2 - for none, floating window, fixed frame"; break;
 		case "chat_time":				return "Keep n hours of Chat"; break;
 		case "date_format": 			return "Format dates according to php function date() variables"; break;	
 		case "def_area_code":			return "Default telephone area code"; break;
@@ -440,6 +440,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "func_key2": 				return "User Defined Function key 2 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "func_key3": 				return "User Defined Function key 3 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "reverse_geo": 			return "Use Reverse Geocoding when setting location for an incident. 1 for yes, 0 for no. Default is 0"; break;	//11/01/09
+		case "logo": 					return "Enter filename of your site's logo file here"; break;	//11/01/09
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}

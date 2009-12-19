@@ -18,6 +18,7 @@
 8/19/09	added circle attrib's to in_types
 11/1/09 Added setting for reverse geocoding on or off when setting location of incident.
 11/11/09 Version no. to  11B
+11/23/09 Version no. to  11C
 */
 error_reporting(E_ALL);		// 10/1/08
 require_once('./incs/functions.inc.php');
@@ -47,6 +48,7 @@ do_setting ('func_key1','http://openises.sourceforge.net/,Open ISES');				// 8/5
 do_setting ('func_key2','');				// 8/5/09
 do_setting ('func_key3','');				// 8/5/09
 do_setting ('reverse_geo','0');				// 11/1/09
+do_setting ('logo','t.png');				// 11/1/09
 
 $query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]facilities` (`id` bigint(8) NOT NULL auto_increment, `name` text, `direcs` tinyint(2) NOT NULL default '1' COMMENT '0=>no directions, 1=> yes', `description` text NOT NULL, `capab` varchar(255) default NULL COMMENT 'Capability', `status_id` int(4) NOT NULL default '0', `other` varchar(96) default NULL, `handle` varchar(24) default NULL, `contact_name` varchar(64) default NULL, `contact_email` varchar(64) default NULL, `contact_phone` varchar(15) default NULL, `security_contact` varchar(64) default NULL, `security_email` varchar(64) default NULL, `security_phone` varchar(15) default NULL, `opening_hours` mediumtext, `access_rules` mediumtext, `security_reqs` mediumtext, `pager_p` varchar(64) default NULL, `pager_s` varchar(64) default NULL, `send_no` varchar(64) default NULL, `lat` double default NULL, `lng` double default NULL, `type` tinyint(1) default NULL, `updated` datetime default NULL, `user_id` int(4) default NULL, `callsign` varchar(24) default NULL, `_by` int(7) NOT NULL, `_from` varchar(16) NOT NULL, `_on` datetime NOT NULL, PRIMARY KEY  (`id`), UNIQUE KEY `ID` (`id`)) ENGINE=MyISAM AUTO_INCREMENT=43 DEFAULT CHARSET=latin1 AUTO_INCREMENT=43;";
 $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);			// 7/7/09
@@ -128,7 +130,7 @@ $result = mysql_query($query);		// 10/21/09
 
 $old_version = get_variable('_version');
 
-$version = "2.11 B beta";			// 11/11/09
+$version = "2.11 C beta";			// 11/23/09
 
 if (!($version == $old_version)) {		// current?
 	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=". quote_smart($version)." WHERE `name`='_version' LIMIT 1";	// 5/28/08

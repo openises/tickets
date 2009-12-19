@@ -261,7 +261,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	
 	function handleResult(req) {				// the 'called-back' function
 <?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+		if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
 ?>
 		}
 
@@ -298,12 +298,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	function createXMLHTTPObject() {
 		var xmlhttp = false;
 		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
+			try { xmlhttp = XMLHttpFactories[i](); }
+			catch (e) { continue; }
 			break;
 			}
 		return xmlhttp;
@@ -319,7 +315,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	
 		}				// end if/else ($addrs)
 
-	$form_name = (get_variable('auto_route')==0)? "to_main" : "to_routes";	
+	$form_name = (intval(get_variable('auto_route'))==1)? "to_routes" : "to_main";	
 ?>
 
 		</SCRIPT>

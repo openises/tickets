@@ -21,31 +21,32 @@ $thresh_h = array(1, 5, 30, 40, 50, 60, 30);	// threshold times in minutes - hig
 
 // ========================================================================================================
 //
-// Call board layout values - group percentages followed by individual columnn widths
+// Call board layout values - group percentages followed by individual columnn widths - 11/27/09
 //
 // ========================================================================================================
 
-$TBL_INC_PERC = 40;		// incident group - four columns  -  40 percent as default
-$TBL_UNIT_PERC = 35;	// unit group, includes checkboxes  -  35 percent as default
-$TBL_CALL_PERC = 25;	// call group - three columns  -  25 percent as default
-						// total shd be 100
 
+$TBL_INC_PERC = 50;		// incident group - four columns  -  50 percent as default
+$TBL_UNIT_PERC = 35;	// unit group, includes checkboxes  -  35 percent as default
+$TBL_CALL_PERC = 10;	// call group - three columns  -  10 percent as default
+						// total shd be ~ 100
 //						column width in characters - use zero to suppress display
 
-$COLS_INCID = 12;		// incident name -  12 characters as default
-$COLS_OPENED = 5;		// date/time opened -  5 characters as default
-$COLS_DESCR = 12;		// incident description -  12 characters as default
-$COLS_ADDR = 12;		// address -  12 characters as default
+$COLS_INCID = 18;		// incident name -  18 characters as default
+$COLS_OPENED = 0;		// date/time opened -  0 characters as default
+$COLS_DESCR = 100;		// incident description -  100 characters as default
+$COLS_ADDR = 100;		// address -  100 characters as default
 
-$COLS_UNIT = 8;			// unit name
+$COLS_UNIT = 15;			// unit name
 
-$COLS_ASOF = 5;			// call as-of date/time -  5 characters as default
-$COLS_USER = 8;			// last update by user xxx -  8 characters as default
+$COLS_ASOF = 9;			// call as-of date/time -  9 characters as default
+$COLS_USER = 3;			// last update by user xxx -  3 characters as default
 $COLS_COMMENTS = 8;		// run comments -  8 characters as default
 
 // ======== End of user-reviseable values ======================================================================
 
 /*
+	alert(<?php print __LINE__;?>);
 5/23/08	fix to status_val field name
 6/4/08	Deletion logic revised to remove  timed-based inactive and add explicit deletions
 6/26/08	added $doTick to assign view/edit ticket functions by priv level	
@@ -91,6 +92,7 @@ $COLS_COMMENTS = 8;		// run comments -  8 characters as default
 11/2/09 correction to insert param count
 11/4/09 mileage added to add form
 11/6/09 removed quote - source ???, removed old id manipulation in function our_reset()
+11/27/09 revised default column widths - per AF; removed redundant form
 */
 require_once('./incs/functions.inc.php'); 
 
@@ -168,6 +170,12 @@ function show_top() {				// generates the document introduction
 		span.ok{font-weight: light; color: gray;}
 
 		span.over {font-weight: light; color: red;}
+
+		#bar 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
+		* html #bar { /*\*/position: absolute; top: expression((4 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((40 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
+		#foo > #bar { position: fixed; top: 4px; right: 40px; }
+		
+		
 				
 		</STYLE>
 <SCRIPT>
@@ -177,14 +185,13 @@ function show_top() {				// generates the document introduction
 		else {
 			if (in_val >= max_val) return max_val;
 			if (in_val <= min_val) return min_val;
-			alert ("err 153");
+			alert ("err 188");
 			}
 		}
 	
 	function reSizeScr(lines) {				// 140			-- 5/23/09
-//			var the_width = (lines >0) ? 1020: 600;
-			var the_height = ((lines * 23)+160);
-			window.resizeTo((0.9)* screen.width, tween(the_height, 260, window.screen.height - 200));		// 10/31/09 - derived via trial/error (more of the latter, mostly)
+			var the_height = ((lines * 23)+120);
+			window.resizeTo((0.98)* screen.width, tween(the_height, 260, window.screen.height - 200));		// 10/31/09 - derived via trial/error (more of the latter, mostly)
 		}		// end function reSizeScr()
 
 function do_add_btn() {							// 11/4/09
@@ -289,15 +296,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}
 		return elements;
 		}
-	
-	/* function $() Sample Usage:
-	var obj1 = document.getElementById('element1');
-	var obj2 = document.getElementById('element2');
-	function alertElements() {
-	  var i;
-	  var elements = $('a','b','c',obj1,obj2,'d','e');
-	  for ( i=0;i
-	*/  
 		
 	String.prototype.trim = function () {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
@@ -404,7 +402,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		function do_assgn_reset(id, the_form) {						// 4/26/09
 	
 			function our_reset(id, the_form) {									// reset dispatch checks 
-//				alert("380 " + the_form.name);
 				var dis = <?php print ($guest)? "true": "false"; ?>;			// disallow guest actions
 	
 				the_form.res_times.checked = false;
@@ -445,7 +442,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	
 	
 			function our_delete(id, the_form) {				// delete this dispatch record
-//				alert(397);
 				$('del_id').style.display='block';
 				var url = "assign_del.php";
 				var postData = "frm_id=" + id;				// the post string
@@ -454,7 +450,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				}		// end function our_delete()
 
 			function our_wrapup() {
-//				alert(406);
 				setTimeout('$(\'del_id\').style.display=\'none\';', 2000);			// show for 2 seconds
 
 //				window.location.reload();
@@ -467,9 +462,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 				switch(resp.toLowerCase()){			// process the input
 				
-					case null:			// user cancelled
-						the_form.res_times.checked = false;
-						return;
 
 					case "r":
 						our_reset(id, the_form);
@@ -478,10 +470,13 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 					case "d":
 						our_delete(id, the_form)
 						break;
+
+					default:			// user cancelled
+						the_form.res_times.checked = false;
+						return;
 					}	// end switch(resp)
 				}		// end while ( ... )
 
-//			alert("369 " + the_form.res_times.checked );
 			the_form.res_times.checked = false;
 				
 			}  	// end function do_assgn_reset()
@@ -538,22 +533,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		</SCRIPT>
 		</HEAD>
 		<BODY onLoad = "reSizeScr()"><CENTER>		<!-- add 1/12/09 -->
-
-			<DIV ID = 'add_btns' STYLE="display:block; position:fixed; width:120px; height:auto; top:<?php print $from_top + 30;?>px; right: 150px; background-color:transparent; text-align:left;">	<!-- 5/17/09 -->
-				
-<!--			<INPUT TYPE="button" VALUE="Cancel" onClick="reSizeScr();history.back();" CLASS = 'btn' />&nbsp;&nbsp; -->
-<?php
-	if (get_variable('call_board')==1) {
-		print "\t<INPUT TYPE='button' VALUE='Cancel'  CLASS = 'btn' onClick='reSizeScr();history.back();' />&nbsp;&nbsp;\n";
-		}
-	else {
-		print "\t<INPUT TYPE='button' VALUE='Cancel'  CLASS = 'btn' onClick='window.close();' />&nbsp;&nbsp;\n";
-		}
-?>
-				<INPUT TYPE="button" VALUE="Reset" onclick="Javascript: document.add_Form.reset();"  CLASS = 'btn' /><BR /><BR />
-				<INPUT TYPE="button" VALUE="           Submit           " name="sub_but" onClick="validate_ad(document.add_Form)" CLASS = 'btn' >  
-				</LEFT>
-			</DIV>
 			<BR /><BR />
 			<TABLE BORDER=0 ALIGN='center'>
 			<FORM NAME="add_Form"  ACTION = "<?php print basename(__FILE__); ?>" METHOD = "post">
@@ -635,6 +614,17 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			<INPUT TYPE='hidden' NAME='func' 		VALUE= 'add_db' />
 			<INPUT TYPE='hidden' NAME='frm_log_it' 	VALUE='' />
 			</FORM>
+				
+<?php
+	if (get_variable('call_board')==1) {
+		print "\t<INPUT TYPE='button' VALUE='Cancel'  CLASS = 'btn' onClick='reSizeScr();history.back();' />&nbsp;&nbsp;\n";
+		}
+	else {
+		print "\t<INPUT TYPE='button' VALUE='Cancel'  CLASS = 'btn' onClick='window.close();' />&nbsp;&nbsp;\n";
+		}
+?>
+				<INPUT TYPE="button" VALUE="Reset" onclick="Javascript: document.add_Form.reset();"  CLASS = 'btn' />&nbsp;&nbsp;
+				<INPUT TYPE="button" VALUE="           Submit           " name="sub_but" onClick="validate_ad(document.add_Form)" CLASS = 'btn' >  
 <?php	
 			break;				// end case 'add' ==== } ===
 			
@@ -651,11 +641,11 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				$lines = count($temp);
 											
 ?>
-					<SCRIPT>
-//					alert(492);
+<SCRIPT>
 					function handleResult(req) {				// the called-back function
-						alert(630);
-						}
+<?php
+		if ($istest) {print "\n\t alert('error at ' . __LINE__ . ');\n";}
+?>		
 			
 					function send_it() {
 						var url = "do_send.php";		// ($to_str, $subject_str, $text_str )
@@ -665,16 +655,18 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 						var the_msg = escape(document.add_cont_form.frm_text.value);		// the variables
 			
 						var postData = "to_str=" + the_to +"&subject_str=" + the_subj + "&text_str=" + the_msg; // the post string
-						sendRequest(url,handleResult,postData) ;
-						}		// end function send_it()			
+//						sendRequest(url,handleResult,postData) ;
+						sendRequest(url,dummy,postData) ;
+						}		// end function send it()			
 			
 					function dummy() {		
+						window.close();
 						}
 			
 			
-					</SCRIPT>
-					</HEAD>
-				<BODY>		<!-- add_db 1/12/09 -->
+</SCRIPT>
+</HEAD>
+<BODY>		<!-- add_db 1/12/09 -->
 
 					<TABLE ALIGN='center' BORDER=0><TR VALIGN='top'>
 					<TD ALIGN='right'>
@@ -683,13 +675,13 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD ALIGN='center'>
-						<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
+						<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">	<!-- 11/27/09 -->
 						<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+2; ?>><?php print mail_it ($to_str, "New", $ticket_id, 3, TRUE);?></TEXTAREA> 
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD ALIGN='left'>
-						<INPUT TYPE='button' VALUE='Send message' onClick = "send_it(); setTimeout('dummy()',1000); document.can_Form.submit()"  CLASS = 'btn'><BR />
-						<INPUT TYPE='button' VALUE='Do NOT send' onClick = "document.can_Form.submit()"  CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
+						<INPUT TYPE='button' VALUE='Send message' onClick = "send_it(); setTimeout('dummy()',1000); document.can_Form.submit()"  CLASS = 'btn'><BR /><BR />
+						<INPUT TYPE='button' VALUE='Do NOT send' onClick = "window.close();"  CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
 						<INPUT TYPE='hidden' NAME='func' VALUE='list'>
 						</FORM>
 					</TD>
@@ -762,15 +754,8 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 </SCRIPT>
 </HEAD>
 	<BODY>
-		<BR><BR><CENTER><H3>Complete!</H3><BR><BR>
-		<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
-<?php
-	$on_click = (get_variable('call_board')==1)? "document.add_cont_form.submit();": "window.close();";
-?>
-	<INPUT TYPE='button' VALUE='Continue' CLASS = 'btn' onClick='<?php print $on_click;?>' />&nbsp;&nbsp;
-
-		<INPUT TYPE='hidden' NAME='func' VALUE='board'/>
-		</FORM></BODY></HTML>
+		<BR><BR><CENTER><H3>Dispatch record written - email?</H3><BR><BR>
+</BODY></HTML>
 <?php
 			break;				// end case 'add_db' ==== } =====
 				
@@ -862,11 +847,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			if (AJAX) {
 				AJAX.open("GET", strURL, false);														 
 				AJAX.send(null);							// form name
-	//			alert ("332 " + AJAX.responseText);
 				return AJAX.responseText;																				 
 				} 
 			else {
-				alert ("837: failed");
+				alert ("856: failed");
 				return false;
 				}																						 
 			}		// end function sync Ajax(strURL)
@@ -888,7 +872,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	
 		function hide_but(id) {
 			var theid = "TD"+id;
-//			alert("576 " + !$(theid));
 			if(!$(theid)) {return false;}		// 9/17/08
 			elem = $(theid);
 			elem.style.display = "none";
@@ -905,7 +888,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			var url = "as_up_un_status.php" + querystr;			// 
 			var payload = syncAjax(url);						// 
 			if (payload.substring(0,1)=="-") {	
-				alert ("876: msg failed ");
+				alert ("895: msg failed ");
 				return false;
 				}
 			else {
@@ -939,7 +922,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	$lines=1;
 	$onload_str = (get_variable('call_board')==1)? "onLoad = 'reSizeScr({$lines})'": "";
 ?>
-	<BODY <?php print $onload_str;?> ><!-- 811 -->
+	<BODY <?php print $onload_str;?> ><!-- 947 -->
 	<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 	
 	<CENTER>
@@ -988,18 +971,15 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		var win_spec = "titlebar, resizable=1, scrollbars, height=200,width=1000,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300";
 		function open_list_win(){
 //			document.list_win_form.submit();				// 10/31/09
-//			alert(858);
 			var cb_window=window.open('<?php print basename(__FILE__);?>?func=list', 'Callboard_List', win_spec);
 			cb_window.focus();
 			}		// end function
 	
 		function open_add_win(){
-//			alert(865);
 			var cb_window=window.open('<?php print basename(__FILE__);?>?func=add&close=y', 'Callboard_Add',  'titlebar, resizable=1, scrollbars, height=200,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50'); cb_window.focus();
 				}		// end function
 	
 		function open_edit_win(the_id){
-//			alert(870);
 			var the_url = "<?php print basename(__FILE__);?>?func=edit&id="+ the_id;
 			var cb_window=window.open(the_url, 'Callboard_Edit',  'titlebar, resizable=1, scrollbars, height=200,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50'); cb_window.focus();
 				}		// end function
@@ -1013,7 +993,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}		// end function
 	
 		function apply_all_clicked (){
-//			alert(880);
 			do_all();
 			$('apply_btn').style.display='none'; 					// hide 'Apply all'
 			$('can_btn').style.display='none'; 						// hide 'Cancel'
@@ -1028,7 +1007,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}
 			
 		function checkbox_clicked(){								//  hide/show on any cb click 10/21/09
-//			alert(895);
 			$('add_btn').style.display='none';
 			$('mail_btn').style.display='none';
 			$('list_btn').style.display='none';
@@ -1039,7 +1017,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}
 		
 		function cancel_clicked(){									//  hide/show on Cancel click 10/21/09
-//			alert(906);
 			do_res();
 			$('add_btn').style.display='inline';
 			$('mail_btn').style.display='inline';
@@ -1053,9 +1030,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		var starting = false;						// 2/15/09
 	
 		function do_mail_win(addrs, ticket_id) {	// 3/27/09
-//			alert(920);
 			if(starting) {return;}					// dbl-click catcher
-//			alert("503 " +addrs);
 			starting=true;	
 			window.blur();							// blur current window
 			var url = "mail_edit.php?ticket_id=" + ticket_id + "&addrs=" + addrs + "&text=";	// no text
@@ -1074,25 +1049,42 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	</SCRIPT>
 	<FORM NAME='dummy_form' ACTION='index.php' TARGET='_top'></FORM>
 	<P ALIGN='LEFT'>
+	<DIV ID="foo"><DIV ID="bar">
+		<TABLE BORDER=0 STYLE = "border-collapse:collapse;" CELLSPACING=1>
+		<TR><TD COLSPAN=2><SPAN CLASS = "emph" ID = "done_id" STYLE="display:none"><B>&nbsp;Done!&nbsp;</B></SPAN></TD></TR>
+		<TR><TD COLSPAN=2><SPAN CLASS = "emph" ID = "del_id"  STYLE="display:none"><B>&nbsp;Deleted!&nbsp;</B></SPAN></TD></TR>
+		
+		<?php if (!($guest)) { ; ?>		
+		
+		<TR><TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Apply all" ID = "apply_btn" onClick = "apply_all_clicked ();" STYLE="display:none" />
+			</TD>
+			<TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Cancel"    ID = "can_btn"   onClick = "cancel_clicked();"   STYLE="display:none" /> 
+			</TD></TR>
+		<TR><TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Add"       ID = "add_btn"   onClick = "do_add_btn()" STYLE="display:inline" />
+			</TD>
+			<TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Mail  "      ID = "mail_btn"  onClick = "do_mail_all_win();"  STYLE="display:inline" />
+			</TD></TR>
+		
+		<?php } ?>	
+		
+		<TR><TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "List  "      ID = "list_btn"  onClick = "open_list_win();"    STYLE="display:inline" />		
+			</TD>
+			<TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Close"     ID = "close_btn" onClick = "self.close()"        STYLE="display:inline" />
+			</TD></TR>
+		<TR><TD ALIGN='left' COLSPAN=2><INPUT TYPE="button" CLASS="btn" VALUE = "Refresh"   ID = "refr_btn"  onClick = "do_refresh()" STYLE="display:inline" />
+			</TD></TR>
+		
+		<?php
+			$btn_text = ($my_session['f2'] == "h")? "Show": "Hide";
+			$frm_val = ($my_session['f2'] == "h")? "s": "h";
+		?>
+		
+		<TR><TD ALIGN='left' COLSPAN=2>Cleared: <SPAN onClick = "do_hors('<?php print $frm_val ;?>')"><U><?php print $btn_text ;?></U></SPAN>
+		</TD></TR>
+		</TABLE>
+	</DIV></DIV>
+	
   
-	<SPAN CLASS = "emph" ID = "done_id" STYLE="display:none"><B>&nbsp;Done!&nbsp;</B></SPAN>
-	<SPAN CLASS = "emph" ID = "del_id"  STYLE="display:none"><B>&nbsp;Deleted!&nbsp;</B></SPAN>
-	<?php if (!($guest)) { ; ?>		
-		<INPUT TYPE="button" CLASS="btn" VALUE = "Apply all" ID = "apply_btn" onClick = "apply_all_clicked ();" STYLE="display:none" />
-		<INPUT TYPE="button" CLASS="btn" VALUE = "Cancel"    ID = "can_btn"   onClick = "cancel_clicked();"   STYLE="display:none" /> 
-		<INPUT TYPE="button" CLASS="btn" VALUE = "Add"       ID = "add_btn"   onClick = "do_add_btn()" STYLE="display:inline" />
-		<INPUT TYPE="button" CLASS="btn" VALUE = "Mail"      ID = "mail_btn"  onClick = "do_mail_all_win();"  STYLE="display:inline" />
-<?php } ?>	
-	<INPUT TYPE="button" CLASS="btn" VALUE = "List"      ID = "list_btn"  onClick = "open_list_win();"    STYLE="display:inline" />		
-	<INPUT TYPE="button" CLASS="btn" VALUE = "Close"     ID = "close_btn" onClick = "self.close()"        STYLE="display:inline" />
-	<INPUT TYPE="button" CLASS="btn" VALUE = "Refresh"   ID = "refr_btn"  onClick = "do_refresh()"        STYLE="display:inline" />
-	<BR /><BR />
-<?php
-	$btn_text = ($my_session['f2'] == "h")? "Show": "Hide";
-	$frm_val = ($my_session['f2'] == "h")? "s": "h";
-?>
-	Cleared: <SPAN onClick = "do_hors('<?php print $frm_val ;?>')"><U><?php print $btn_text ;?></U></SPAN>
-
 </DIV>
 
 <?php	
@@ -1395,12 +1387,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		var announce;					// set = false for group update $('apply_btn').style.visibility
 
 	function handleResult(req) {			// the called-back function
-//		alert("1249 " + req);
 		if (announce) {alert('Update complete (no e-mail sent)');}
 		}			// end function handle Result(
 	
 	function do_sub(the_form) {				// form submitted	1/20/09, 2/28/09, 5/20/09
-//		alert(1234);
 		var vals = sep = "";
 		for (j=0; j<document.forms[the_form].elements.length; j++) {
 
@@ -1417,7 +1407,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		params += "&frm_tick="+document.forms[the_form].frm_ticket_id.value;
 		params += "&frm_unit="+document.forms[the_form].frm_responder_id.value;
 		params += "&frm_vals="+ vals;
-//		alert(params);
 		sendRequest ('assigns_t.php',handleResult, params);			// does the work
 		}			// end function do_sub()
 
@@ -1425,7 +1414,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	var the_ticket_id = "";
 
 	function do_this_form(the_index) {				// call ajax function for each clicked button
-//		alert(1279);
 		the_val = parseInt(the_index)+1;
 //		var t=setTimeout("var dummy = false",10000);
 		do_sub(the_index);				// 
@@ -1443,7 +1431,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	function do_all() {										// 2/19/09
 		var do_refresh = false;								// 6/16/09
 		for (i=0; i< document.forms.length; i++) {			// look at each form
-//			alert(document.forms[i].name);
 			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_dispatched.disabled ) && (document.forms[i].frm_dispatched.checked)) {do_this_form(i);}
 			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_responding.disabled ) && (document.forms[i].frm_responding.checked)) {do_this_form(i);}
 			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_on_scene.disabled ) && (document.forms[i].frm_on_scene.checked))   {do_this_form(i);}
@@ -1454,11 +1441,9 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 //			if ((document.forms[i].name.substring(0,1)=="F") && (document.forms[i].frm_clear) && (!document.forms[i].frm_clear.disabled ) && (document.forms[i].frm_clear.checked)) {do_this_form(i); do_refresh = true;}		// 6/16/09
 			}
 		if (do_refresh) {document.can_Form.submit();}		//  at least one checked item - do screen refresh  6/16/09
-//		alert(1308);
 		}		// end function do all()
 
 	function clr_all_btn(){
-//		alert(986);
 		var a_check = false;
 
 		for (i=0; i< document.forms.length; i++) {			// look at each form
@@ -1469,7 +1454,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			if ((document.forms[i].name.substring(0,1)=="F") && (!document.forms[i].frm_u2farr.disabled ) && (document.forms[i].frm_u2farr.checked)) 			{a_check = true; }	//10/6/09
 			if ((document.forms[i].name.substring(0,1)=="F") && (document.forms[i].frm_clear) && (!document.forms[i].frm_clear.disabled ) && (document.forms[i].frm_clear.checked)) {a_check = true;  }
 			}				// end for ( ... )
-//		alert("995 " + a_check);
 		if (!a_check){
 			$('apply_btn').style.visibility='hidden'; 
 			}
@@ -1628,7 +1612,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}
 		</SCRIPT>
 		</HEAD>
-		<BODY onLoad = "reSizeScr(16)"><CENTER>		<!-- 1415 - 1/12/09 -->
+		<BODY onLoad = "reSizeScr(16)"><CENTER>		<!-- 1654 - 1/12/09 -->
 			<DIV ID = 'edit_btns' STYLE="display:block; position:fixed; width:120px; height:auto; top:<?php print $from_top + 20;?>px; right: 150px; background-color:transparent; text-align:left;">	<!-- 5/17/09 -->				
 				<INPUT TYPE="button" VALUE="Cancel" onClick="history.back();" CLASS = 'btn' />	
 				<INPUT TYPE="button" VALUE="Reset" onclick="document.edit_Form.reset();"  CLASS = 'btn' />	
@@ -2137,7 +2121,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 ?>
 	  
 	</HEAD>
-	<BODY  onLoad = 'reSizeScr(<?php print $lines;?> )'><!-- 1803 -->
+	<BODY  onLoad = 'reSizeScr(<?php print $lines;?> )'><!-- 2162 -->
 	<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 	<CENTER>
 <?php
@@ -2373,13 +2357,14 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 <?php
 	$where = (get_variable('call_board')==2)? "index.php" :  basename(__FILE__);
+	$lines = isset($lines)? $lines: 1;
 ?>
 	<FORM NAME='can_Form' METHOD="post" TARGET = '_top' ACTION = "<?php print $where; ?>"/>
 	<INPUT TYPE='hidden' NAME='func' VALUE='board'/>
 	<INPUT TYPE='hidden' NAME='lines' value='<?php print $lines;?>'/>
 	</FORM>
 
-	</BODY></HTML><!-- 2284 -->
+	</BODY></HTML><!-- <?php print $lines;?> --><!-- <?php print __LINE__;?> -->
 <?php
 	}		// end else ...		1/13/09
 

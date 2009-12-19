@@ -80,6 +80,9 @@
 9/29/09 Added additional $Globals for new log events and Status Special
 10/20/09 Added function remove_nls to strip new lines from database entries for use in JS tooltips.
 11/7/09 E_DEPRECATED, is_email() redo for deprecated
+11/20/09 revised show_log () for shortened field display and title
+11/21/09 $_SESSION destroy added to logout
+11/27/09 added no-edit option to function add_header()
 {									// 3/25/09
 
 */
@@ -382,7 +385,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 
 // } { -- dummy
 
-function show_log ($theid, $show_cfs=FALSE) {
+function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09
 	global $evenodd ;	// class names for alternating table row colors
 	
 	$types = array();
@@ -413,18 +416,18 @@ function show_log ($theid, $show_cfs=FALSE) {
 	$types[$GLOBALS['LOG_CALL_REC_FAC_UNSET']]	="Incident Receiving Facility Unset";		// 10/5/09	
 	$types[$GLOBALS['LOG_CALL_REC_FAC_CLEAR']]	="Incident Receiving Facility Cleared";		// 10/5/09
 
-	$types[$GLOBALS['LOG_FACILITY_DISP']]		="Unit disp to Facility";		// 9/22/09
-	$types[$GLOBALS['LOG_FACILITY_RESP']]		="Unit resp to Facility";		// 9/22/09
+	$types[$GLOBALS['LOG_FACILITY_DISP']]		="Unit disp to Facility";			// 9/22/09
+	$types[$GLOBALS['LOG_FACILITY_RESP']]		="Unit resp to Facility";			// 9/22/09
 	$types[$GLOBALS['LOG_FACILITY_ONSCN']]		="Unit on-scene at Facility";		// 9/22/09
 	$types[$GLOBALS['LOG_FACILITY_CLR']]		="Unit clear from Facility";		// 9/22/09
 	$types[$GLOBALS['LOG_FACILITY_RESET']]		="Times reset";		// 9/22/09
 	
-	$types[$GLOBALS['LOG_FACILITY_ADD']]		="Facility Added";		// 9/22/09
+	$types[$GLOBALS['LOG_FACILITY_ADD']]		="Facility Added";			// 9/22/09
 	$types[$GLOBALS['LOG_FACILITY_CHANGE']]		="Facility Changed";		// 9/22/09
 
 	$types[$GLOBALS['LOG_FACILITY_INCIDENT_OPEN']]	="Incident to Facility open";		// 9/29/09
 	$types[$GLOBALS['LOG_FACILITY_INCIDENT_CLOSE']]	="Incident to Facility close";		// 9/29/09
-	$types[$GLOBALS['LOG_FACILITY_INCIDENT_CHANGE']]	="Incident to Facility changed";		// 9/29/09
+	$types[$GLOBALS['LOG_FACILITY_INCIDENT_CHANGE']]="Incident to Facility changed";	// 9/29/09
 
 	$types[$GLOBALS['LOG_CALL_U2FENR']]		="Receiving Facility en-route";		// 9/29/09
 	$types[$GLOBALS['LOG_CALL_U2FARR']]		="Receiving Facility arrived";		// 9/29/09
@@ -438,29 +441,28 @@ function show_log ($theid, $show_cfs=FALSE) {
 		LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON ($GLOBALS[mysql_prefix]log.who = u.id)
 		WHERE `$GLOBALS[mysql_prefix]log`.`ticket_id` = $theid
 		";
-//`	dump($query);		
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
+
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
-//		dump($row);
-		if ($i==0) {
-			$print .= "<TR CLASS='even'><TD COLSPAN=99 ALIGN='center'><B> Log: <I>". shorten($row['tickname'], 32) . "</I></B></TD></TR>";
+		if ($i==0) {				// 11/20/09
+			$print .= "<TR CLASS='even'><TD TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><B> Log: <I>". shorten($row['tickname'], 32) . "</I></B></TD></TR>";
 			$cfs_head = ($show_cfs)? "<TD ALIGN='center'>CFS</TD>" : ""  ;
 			$print .= "<TR CLASS='odd'><TD ALIGN='center'>Code</TD>" . $cfs_head . "<TD ALIGN='center'>Unit</TD><TD ALIGN='center'>Status</TD><TD ALIGN='center'>When</TD><TD ALIGN='center'>By</TD><TD ALIGN='center'>From</TD></TR>";
 			}
 	
-		$print .= "<TR CLASS='" . $evenodd[$i%2] . "'>" .
-			"<TD>". $types[$row['code']] . "</TD>";
+		$print .= "<TR CLASS='" . $evenodd[$i%2] . "'>" .				// 11/20/09
+			"<TD TITLE =\"{$types[$row['code']]}\">". shorten($types[$row['code']], 20) . "</TD>"; // 
 		if ($show_cfs) {
-			$print .= "<TD>". shorten($row['tickname'], 32) . "</TD>";
+			$print .= "<TD TITLE =\"{$row['tickname']}\">". shorten($row['tickname'], 16) . "</TD>";	// 2009-11-07 22:37:41 - substr($row['when'], 11, 5)
 			}
 		$print .= 
-			"<TD>". shorten($row['unitname'], 32) . "</TD>".
-			"<TD>". $row['theinfo'] . "</TD>".
-			"<TD>". format_date($row['when']) . "</TD>".
-			"<TD>". $row['thename'] . "</TD>".
-			"<TD>". $row['from'] . "</TD>".
+			"<TD TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>".
+			"<TD TITLE =\"{$row['theinfo']}\">". 	shorten($row['theinfo'], 16) . "</TD>".
+			"<TD TITLE =\"" . format_date($row['when']) . "\">". date ("H:i", $row['when']) . "</TD>".
+			"<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>".
+			"<TD TITLE =\"{$row['from']}\">". 		substr($row['from'], -4) . "</TD>".
 			"</TR>";
 			$i++;
 		}
@@ -570,6 +572,9 @@ function get_variable($which){								/* get variable from db settings table, re
 	
 function do_logout($return=FALSE){						/* logout - destroy session data */
 	global $my_session;
+	
+	session_start(); 								// 11/21/09
+	session_destroy();
 	if (!empty($my_session)) {				// logged in?
 		do_log($GLOBALS['LOG_SIGN_OUT'],0,0,$my_session['user_id']);				// log the logout	
 		}
@@ -590,10 +595,12 @@ function do_error($err_function,$err,$custom_err='',$file='',$line=''){/* raise 
 	die('<B>Execution stopped.</B></FONT>');
 	}
 
-function add_header($ticket_id, $no_close = FALSE)		{/* add header with links */
+function add_header($ticket_id, $no_edit = FALSE) {		// 11/27/09
 	print "<BR /><NOBR><FONT SIZE='2'>This Call: ";	
 	if (is_administrator() || is_super()){
-		print "<A HREF='edit.php?id=$ticket_id'>Edit </A> | ";
+		if (!($no_edit)) {
+			print "<A HREF='edit.php?id=$ticket_id'>Edit </A> | ";
+			}
 //		print "<A HREF='edit.php?id=$ticket_id&delete=1'>Delete </A> | ";
 		if (!is_closed($ticket_id)) {
 			print "<A HREF='action.php?ticket_id=$ticket_id'>Add Action</A> | ";
@@ -607,12 +614,11 @@ function add_header($ticket_id, $no_close = FALSE)		{/* add header with links */
 		print "<A HREF='routes.php?ticket_id=$ticket_id'> Dispatch Unit</A> | ";		// new 9/22
 		print "<A HREF='#' onClick = \"var mailWindow = window.open('add_note.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"> Add note </A>"; // 10/8/08
 		if (!is_closed($ticket_id)) {		// 10/5/09
-//		if (!($no_close)) {				// 10/5/09
 			print "  | <A HREF='#' onClick = \"var mailWindow = window.open('close_in.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"> Close incident </A> ";  // 8/20/09
 			}
 		}
 	print "</FONT></NOBR><BR />";
-	}
+	}				// function add_header()
 
 function is_closed($id){/* is ticket closed? */
 	return check_for_rows("SELECT id,status FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id' AND status='$GLOBALS[STATUS_CLOSED]'");
@@ -1521,6 +1527,9 @@ function get_lng($in_lng) {					// 9/7/08
 	
 function mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {				// 10/6/08, 10/15/08,  2/18/09, 3/7/09
 	global $istest;
+
+snap(basename(__FILE__) . " " .__LINE__, $to_str);
+
 /*
 Subject		A
 Inciden		B  Title
@@ -1696,6 +1705,7 @@ function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) {				// 7
 
 
 function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
+	snap(basename(__FILE__), __LINE__);
 	global $istest;
 	$sleep = 4;																// seconds delay between text messages
 
@@ -1746,6 +1756,7 @@ function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
 	$smtp = trim(get_variable('smtp_acct'));									// 7/7/09
 	if (strlen($tostr)>0) {	
 		if (strlen($smtp)==0) {
+			snap(basename(__FILE__), __LINE__);
 			@mail($tostr, $subject_str, $text_str, $headers);
 			}
 		else {
@@ -1826,13 +1837,12 @@ function notify_user($ticket_id,$action_id) {								// 10/20/08
 
 
 function snap($source, $stuff) {																// 10/18/08 , 3/5/09 - debug tool
-	$table_name = "_snap_data";
-	if (mysql_table_exists($table_name)) {
-		$query	= "DELETE FROM `$table_name` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
+	global $snap_table;				// defined in istest.inc.php
+	if (mysql_table_exists($snap_table)) {
+		$query	= "DELETE FROM `$snap_table` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	
-//		$query = "INSERT INTO `$GLOBALS[mysql_prefix]_test` (`source`,`stuff`) VALUES('$source', '$stuff')";
-		$query = sprintf("INSERT INTO `$table_name` (`source`,`stuff`)  
+		$query = sprintf("INSERT INTO `$snap_table` (`source`,`stuff`)  
 			VALUES(%s,%s)",
 				quote_smart_deep(trim($source)),
 				quote_smart_deep(trim($stuff)));

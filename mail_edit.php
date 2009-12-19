@@ -115,6 +115,7 @@ function do_val(theForm) {										// 2/28/09
 	}		// end if (empty($_POST))
 
 else {
+	snap(basename(__FILE__), __LINE__ );
 	do_send ($_POST['frm_addrs'], $_POST['frm_subj'],  $_POST['frm_text'] );		// ($to_str, $subject_str, $text_str ) 7/13/09
 ?>
 </SCRIPT>

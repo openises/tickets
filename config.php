@@ -34,6 +34,8 @@
 7/28/09	Add function do_gtrack and function do_locatea for test scripts plus links
 10/6/09 Added links to Facility Status and Facility Types settings
 11/5/09 Changed window caption, per IE complaint
+11/17/09 removed password update from 'edit my profile'
+9/26/09 corrections to floating div, per IE
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -72,6 +74,10 @@
 	<STYLE>
 	LI { margin-left: 20px;}
 	.spl { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
+
+#bar 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
+* html #bar { /*\*/position: absolute; top: expression((60 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((320 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
+#foo > #bar { position: fixed; top: 60px; right: 320px; }
 
 	</STYLE>
 	<SCRIPT SRC='./js/md5.js'></SCRIPT>		<!-- 11/30/08 -->
@@ -555,20 +561,20 @@ case 'profile' :					//update profile
 ?>
 			<FONT CLASS="header">Edit My Profile</FONT><BR /><BR /><TABLE BORDER="0">
 			<FORM METHOD="POST" ACTION="config.php?func=profile&go=true"><INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'];?>">
-			<TR CLASS="even"><TD CLASS="td_label">New Password:</TD><TD><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd" VALUE=''> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"  VALUE=''></TD></TR>
-			<TR CLASS="odd"><TD CLASS="td_label">Email:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['email'];?>" NAME="frm_email"></TD></TR>
-			<TR CLASS="even"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['info'];?>" NAME="frm_info"></TD></TR>
-			<!-- <TR><TD CLASS="td_label">Show reporting actions:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_reporting" <?php if($row['reporting']) print " checked";?>></TD></TR> -->
-			<TR CLASS="odd"><TD CLASS="td_label">Tickets per page:</TD><TD><INPUT SIZE="47" MAXLENGTH="3" TYPE="text" VALUE="<?php print $row['ticket_per_page'];?>" NAME="frm_ticket_per_page"></TD></TR>
-			<TR CLASS="even"><TD CLASS="td_label">Sort By:</TD><TD><SELECT NAME="frm_sortorder">
+<!--		<TR CLASS="even"><TD CLASS="td_label">New Password:</TD><TD><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd" VALUE=''> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"  VALUE=''></TD></TR> 11/17/09 -->
+			<TR CLASS="even"><TD CLASS="td_label">Email:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['email'];?>" NAME="frm_email"></TD></TR>
+			<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['info'];?>" NAME="frm_info"></TD></TR>
+<!-- 		<TR><TD CLASS="td_label">Show reporting actions:</TD><TD ALIGN="right"><INPUT TYPE="checkbox" VALUE="1" NAME="frm_reporting" <?php if($row['reporting']) print " checked";?>></TD></TR> -->
+			<TR CLASS="even"><TD CLASS="td_label">Tickets per page:</TD><TD><INPUT SIZE="47" MAXLENGTH="3" TYPE="text" VALUE="<?php print $row['ticket_per_page'];?>" NAME="frm_ticket_per_page"></TD></TR>
+			<TR CLASS="odd"><TD CLASS="td_label">Sort By:</TD><TD><SELECT NAME="frm_sortorder">
 			<OPTION value="date" <?php if($row['sortorder']=='date') print " selected";?>>Date</OPTION>
 			<OPTION value="description" <?php if($row['sortorder']=='description') print " selected";?>>Description</OPTION>
 			<OPTION value="affected" <?php if($row['sortorder']=='affected') print " selected";?>>Affected</OPTION>
 			</SELECT>&nbsp; Descending <INPUT TYPE="checkbox" value="1" name="frm_sort_desc" <?php if ($row['sort_desc']) print "checked";?>></TD></TR>
 			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $my_session['user_id'];?>">
 			<INPUT TYPE='hidden' NAME='frm_hash' VALUE='<?php print $row['passwd'];?>'>	<!-- 11/30/08 -->
-			<TR CLASS="odd"><TD></TD>
-				<TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<TR CLASS="even">
+				<TD ALIGN="center" COLSPAN=2><BR /><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;
 				<INPUT TYPE="button" VALUE="Submit" onClick = validate_prof(this.form)></TD></TR>
 			</FORM></TABLE>
@@ -678,12 +684,13 @@ case 'settings' :
 		
 		print "</FORM></TABLE>\n";		// 7/16/09
 
-		print "<DIV STYLE='display:block; position:fixed; width:auto; height:auto; top: 50px; left: 800px; background-color:transparent;'>\n
-			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'><BR /><BR />\n
-			<INPUT TYPE='button' VALUE='Reset form'  onClick='document.set_Form.reset();'><BR /><BR />\n
-			<INPUT TYPE='button' VALUE='Apply changes'  onClick='document.set_Form.submit();'>\n
-			</DIV>\n";
 ?>
+		<DIV ID="foo"><DIV ID="bar">		<!-- 9/26/09 -->
+			<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'><BR /><BR />
+			<INPUT TYPE='button' VALUE='Reset form'  onClick='document.set_Form.reset();'><BR /><BR />
+			<INPUT TYPE='button' VALUE='Apply changes'  onClick='document.set_Form.submit();'>
+		</DIV></DIV>
+
 		<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>		
 		</BODY>
 		<SCRIPT>
@@ -1128,8 +1135,7 @@ case 'dump' :				// see mysql.inc.php	for MySQL parameters
 		}
 	echo "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
 	
-	echo "\n<pre>"; 
-	
+	echo "\n<pre>\n"; 
 	break;
     
 case 'delete' :	

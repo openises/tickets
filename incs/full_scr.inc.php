@@ -4,6 +4,7 @@
 10/26/09 Added Facilities and hide and show unavailable units from functions_major.inc.php
 10/27/09 Added check for scheduled incidents being due and bring to current situation screen if due and mark with * in list.
 10/27/09 Added Booked date to Info Window tab 1.
+11/27/09 corrections to indexing
 */
 
 //	{ -- dummy
@@ -1224,9 +1225,11 @@ function createfacMarker(fac_point, fac_name, id, fac_icon) {
 	$fac_type=($row_fac['icon']);
 
 	$fac_name = $row_fac['facility_name'];			//	10/8/09
-//	$fac_name = $row_fac['name'];			//	10/8/09
-	$fac_temp = explode("/", $fac_name );
-	$fac_index =  (strlen($temp[count($fac_temp) -1])<3)? substr($fac_temp[count($fac_temp) -1] ,0,strlen($fac_temp[count($fac_temp) -1])): substr($fac_temp[count($fac_temp) -1] ,-3 ,strlen($fac_temp[count($fac_temp) -1]));		
+//	$fac_name = $row_fac['name'];					//	10/8/09
+	$fac_temp = explode("/", $fac_name );			//  11/27/09
+	$fac_index =  (strlen($fac_temp[count($fac_temp) -1])<3)? 
+		substr($fac_temp[count($fac_temp) -1] ,0,strlen($fac_temp[count($fac_temp) -1])):
+		substr($fac_temp[count($fac_temp) -1] ,-3 ,strlen($fac_temp[count($fac_temp) -1]));		
 	
 	print "\t\tvar fac_sym = '$fac_index';\n";				// for sidebar and icon 10/8/09
 	
