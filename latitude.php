@@ -1,6 +1,9 @@
 <?php
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
+/*
+12/13/09 added hyphen enforcement, curl availbility check
+*/
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -21,8 +24,6 @@ if (empty($_POST)) {
 ?>
 </HEAD>
 <BODY>
-<BR />
-<BR />
 <BR />
 <BR />
 <CENTER><H3>Google Latitude test</H3>
@@ -48,13 +49,28 @@ Badge: <INPUT TYPE='text' NAME = 'frm_badge' SIZE = '24' value='' />	<!-- ex: -6
 function do_galt($user) {				// given user id,  returns Google Latitude id, timestamp and coords as a 4-element array, if found - else FALSE
 	$ret_val = array("", "", "", "");
 	$the_url = "http://www.google.com/latitude/apps/badge/api?user={$user}&type=json";
-	$ch = curl_init();
 	$timeout = 5;
-	curl_setopt($ch, CURLOPT_URL, $the_url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-	$data = curl_exec($ch);
-	curl_close($ch);
+
+	if (function_exists("curl_init")) {						// 12/13/09
+		$ch = curl_init();
+		$timeout = 5;
+		curl_setopt($ch, CURLOPT_URL, $request_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+		$data = curl_exec($ch);
+		curl_close($ch);
+		}
+	else {				// not CURL
+		$data="";
+		if ($fp = @fopen($the_url, "r")) {
+			while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+			fclose($fp);
+			}		
+		else {
+			print "-error 1";		// @fopen fails
+			}
+		}
+
 	$json = json_decode($data);
 
 	error_reporting(0);
@@ -92,16 +108,14 @@ function do_galt($user) {				// given user id,  returns Google Latitude id, time
 	}			// end function do_galt();
 
 //	$user = "-681721551039318347";				// known good value
-	$user = $_POST['frm_badge'];
+	$hyphen = (substr ($_POST['frm_badge'] , 0 , 1)=="-")? "" : "-";	// force 12/13/09
+	$user = $hyphen . $_POST['frm_badge'];
 	$results = do_galt($user);
 	$caption = ($results)? "Successful": "Fails";
 
 	if ($results) {
 		$api_key = get_variable('gmaps_api_key');		// empty($_GET)
 
-echo $results[3];
-echo "<br>";
-echo $results[2];
 ?>	
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -130,8 +144,10 @@ echo $results[2];
   <CENTER>
   <br /><br />
   <H3>Google Latitude Test Successful<br />
-	with public location badge: <?php print $results[0]; ?></H3><br /><br />
-    <div id="map_canvas" style="width: 500px; height: 300px"></div>
+	with public location badge: <?php print $results[0]; ?></H3>
+	position: <?php  echo "{$results[3]} {$results[2]}";?>
+	<br /><br />
+    <div id="map_canvas" style="width: 256px; height: 256px"></div>
     <br /><br /><input type='button' value="Again" onClick = 'location.href="<?php print basename(__FILE__); ?>"' />&nbsp;&nbsp;&nbsp;&nbsp;
   </body><input type='button' value="Finished" onClick = "self.close()" /><br /><br />
   </body>

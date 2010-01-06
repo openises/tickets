@@ -80,6 +80,7 @@
 11/11/09 top/bottom anchors added
 11/20/09 sort order handle, name
 12/17/09 added unit status update functions
+12/19/09 disable for guest priv's
 */
 
 //	{ -- dummy
@@ -90,16 +91,13 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 	global $my_session, $istest;
 
 		function get_un_stat_sel($u_id, $s_id) {					// returns select list as string - 12/17/09
-//			dump ($u_id);
-//			dump ($s_id);
-			
-			global $guest;
+			$guest = is_guest();
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
 			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
  			$dis = ($guest)? " DISABLED": "";								// 9/17/08
 			$the_grp = strval(rand());			//  force initial OPTGROUP value
 			$i = 0;
-			$outstr = "\t\t<SELECT name='frm_status_id'  ONFOCUS = 'ignore=true;' ONCHANGE = 'ignore=true;  do_sel_update({$u_id}, this.value)' >";
+			$outstr = "\t\t<SELECT name='frm_status_id' {$dis} ONFOCUS = 'ignore=true;' ONCHANGE = 'ignore=true;  do_sel_update({$u_id}, this.value)' >";	// 12/19/09 
 			while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
 				if ($the_grp != $row['group']) {
 					$outstr .= ($i == 0)? "": "\t</OPTGROUP>";
@@ -111,7 +109,6 @@ function list_tickets($sort_by_field='',$sort_value='') {	// list tickets ======
 				$i++;
 				}		// end while()
 			$outstr .= "\t\t</OPTGROUP>\t\t</SELECT>";
-//			dump($outstr);
 			return $outstr;
 			unset($result_st);
 			}

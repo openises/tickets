@@ -39,6 +39,7 @@ error_reporting(E_ALL);
 11/15/09 revised logic re identifying units with position data
 11/23/09 'quick' operation restored
 11/27/09 relocated incident information to underneath map, added address to floating div
+12/09/09 Changed order of unit display to match that in situation screen.
 */
 
 $from_top = 20;				// buttons alignment, user-reviseable as needed
@@ -1114,7 +1115,7 @@ function do_list($unit_id ="") {
 		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus`, `contact_via` FROM $GLOBALS[mysql_prefix]responder
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
 			$where
-			ORDER BY `name` ASC, `unit_id` ASC";
+			ORDER BY `handle` ASC, `name` ASC, `unit_id` ASC";		// 12/09/09
 
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 

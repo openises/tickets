@@ -2,7 +2,12 @@
 error_reporting(E_ALL);
 //	file as_up_un_status.php
 require_once('./incs/functions.inc.php'); 
+//snap(basename(__FILE__), __LINE__);
 extract($_GET);
+//snap(basename(__LINE__), count($_GET));
+//snap(basename(__LINE__), $frm_status_id);
+//snap(basename(__LINE__), $frm_responder_id);
+
 $now = time() - (get_variable('delta_mins')*60);
 
 $query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= ";

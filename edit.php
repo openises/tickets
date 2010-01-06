@@ -39,13 +39,14 @@
 11/01/09 Added use of reverse_geo setting to switch off reverse geocoding if not required - default is off.
 11/06/09 Changed "Special" Incidents to "Scheduled" Incidents
 11/06/09 Moved both Facility dropdown menus to the same area.
+12/16/09 quick-based click by-pass.
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php'); 
 	do_login(basename(__FILE__));
 
-	if($istest) {dump($_GET);}
-	if($istest) {dump($_POST);}
+	if($istest) {print "_GET"; dump($_GET);}
+	if($istest) {print "_POST";dump($_POST);}
 	$addrs = FALSE;										// notifies address array doesn't exist
 	function edit_ticket($id) {							/* post changes */
 
@@ -478,6 +479,19 @@
 </SCRIPT>
 </HEAD>
 
+<?php
+	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
+	if(!(empty($_POST))  && $quick) {
+?>
+	<BODY onLoad = "do_notify(); parent.frames['upper'].show_msg ('Edit applied!'); document.go_Form.submit();">
+		<FORM NAME='go_Form' METHOD = 'post' ACTION="main.php">
+		</FORM>	
+		</BODY></HTML>
+	
+<?php
+		}
+		
+?>		
 <BODY onLoad = "do_notify(); ck_frames()" onunload="GUnload()">
 <?php
 require_once('./incs/links.inc.php');

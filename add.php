@@ -46,6 +46,7 @@
 11/01/09 Added use of reverse_geo setting to switch off reverse geocoding if not required - default is off.
 11/06/09 Changed "Special" incident type to "Scheduled".
 11/06/09 Moved both Facility dropdown menus to the same area
+12/16/09 added call-history operation
 */
 require_once('./incs/functions.inc.php');
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
@@ -246,8 +247,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>	
 	function do_notify() {
 
-//		alert(178);
-		
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "TICKET - New: ";
 		var theId = '<?php print $_POST['ticket_id'];?>';
@@ -266,7 +265,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		}
 
 	function sendRequest(url,callback,postData) {
-//		alert(165);
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
@@ -413,10 +411,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		}		// end function sv win()
 
 
-	function isNullOrEmpty(str) {
-		if (null == str || "" == str) {return true;} else { return false;}
-		}
-	
 	String.prototype.trim = function () {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
@@ -428,6 +422,31 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		return  (chknum(val) && !((val> hi) || (val < lo)));}
 	
 	
+	starting=false;						// 12/16/09
+	function do_hist_win() {
+		if(starting) {return;}	
+		var goodno = document.add.frm_phone.value.replace(/\D/g, "" );		// strip all non-digits - 1/18/09
+<?php
+	if (get_variable("locale") ==0) {				// USA only
+?>
+		if (goodno.length<10) {
+			alert("10-digit phone no. required - any format");
+			return;}
+<?php
+		}		// end locale check
+?>		
+		starting=true;	
+		var url = "call_hist.php?frm_phone=" + goodno;
+		newwindow_c_h=window.open(url, "Call_hist",  "titlebar, resizable=1, scrollbars, height=640,width=760,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+		if (isNullOrEmpty(newwindow_c_h)) {
+			starting = false;
+			alert ("Call history operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_c_h.focus();
+		starting = false;
+		}		// function do hist_win()
+			
 	function do_coords(inlat, inlng) { 										 //9/14/08
 		if((inlat.length==0)||(inlng.length==0)) {return;}
 		var str = inlat + ", " + inlng + "\n";
@@ -474,7 +493,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				return lat2ddm(inlat);
 			 	break;
 			default:
-				alert ( "error 479");
+				alert ( "error 496");
 			}	
 		}
 
@@ -490,7 +509,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				return lng2ddm(inlng);
 			 	break;
 			default:
-				alert ("error 495");
+				alert ("error 512");
 			}	
 		}
 
@@ -590,7 +609,6 @@ $maptype = get_variable('maptype');	// 08/02/09
 	
 		
 		GEvent.addListener(map, "click", function(marker, point) {		// lookup
-//			alert(349);
 			if (marker) {
 				map.removeOverlay(marker);
 //				document.add.frm_lat.disabled=document.add.frm_lat.disabled=false;
@@ -792,7 +810,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 		req.onreadystatechange = function () {
 			if (req.readyState != 4) return;
 			if (req.status != 200 && req.status != 304) {
-				alert('797: HTTP error ' + req.status);
+				alert('813: HTTP error ' + req.status);
 				return;
 				}
 			callback(req);
@@ -927,7 +945,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 	function showAddress(response) {
 		map.clearOverlays();  
 			if (!response || response.Status.code != 200) {
-				alert("Status Code:" + response.Status.code);
+				alert("948: Status Code:" + response.Status.code);
 			} else {    
 				place = response.Placemark[0];    
 				point = new GLatLng(place.Point.coordinates[1],place.Point.coordinates[0]);
@@ -1027,8 +1045,6 @@ $maptype = get_variable('maptype');	// 08/02/09
 			var curr_lng = fac_lng[index];
 			do_lat(curr_lat);
 			do_lng(curr_lng);
-//			alert(fac_lat[index]);
-//			alert(fac_lng[index]);
 			load(curr_lat, curr_lng, <?php echo get_variable('def_zoom'); ?>);			// show it
 			document.add.frm_lat.disabled=true;
 			document.add.frm_lng.disabled=true;
@@ -1331,6 +1347,7 @@ $locale = get_variable('locale');	// 08/03/09
 ?>
 
 	<TR CLASS='even'><TD COLSPAN="3" ALIGN="center"><BR />
+		<INPUT TYPE="button" VALUE="History"  onClick="do_hist_win();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="button" VALUE="Cancel"  onClick="history.back();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="reset" VALUE="Reset" onclick= "do_reset(this.form);" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<INPUT TYPE="submit" VALUE="Submit"></TD></TR>	<!-- 8/11/08 -->

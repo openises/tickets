@@ -83,6 +83,7 @@
 11/20/09 revised show_log () for shortened field display and title
 11/21/09 $_SESSION destroy added to logout
 11/27/09 added no-edit option to function add_header()
+12/13/09 force GLat badge hyphen
 {									// 3/25/09
 
 */
@@ -1528,7 +1529,7 @@ function get_lng($in_lng) {					// 9/7/08
 function mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {				// 10/6/08, 10/15/08,  2/18/09, 3/7/09
 	global $istest;
 
-snap(basename(__FILE__) . " " .__LINE__, $to_str);
+//	snap(basename(__FILE__) . " " .__LINE__, $to_str);
 
 /*
 Subject		A
@@ -1705,7 +1706,7 @@ function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) {				// 7
 
 
 function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
-	snap(basename(__FILE__), __LINE__);
+//	snap(basename(__FILE__), __LINE__);
 	global $istest;
 	$sleep = 4;																// seconds delay between text messages
 
@@ -1986,9 +1987,9 @@ function do_gtrack() {			//7/29/09
 	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
 	$tracking_id = ($row['callsign']);
-	$exist_lat = ($row['lat']);
-	$exist_lng = ($row['lng']);
-	$exist_updated = ($row['updated']);
+	$db_lat = ($row['lat']);
+	$db_lng = ($row['lng']);
+	$db_updated = ($row['updated']);
 	$update_error = strtotime('now - 1 hour');
 
 		$request_url = $gtrack_url . "/data.php?userid=$tracking_id";		//gtrack_url set by entry in settings table
@@ -2032,9 +2033,9 @@ function do_gtrack() {			//7/29/09
 
 		if (!empty($lat) && !empty($lng)) {		//check not NULL
 	
-			if ($exist_lat<>$lat && $exist_lng<>$lng) {	// check for change in position
+			if ($db_lat<>$lat && $db_lng<>$lng) {	// check for change in position
 
-				if(($exist_updated == $updated) && ($update_error > $updated)) {
+				if(($db_updated == $updated) && ($update_error > $updated)) {
 				} else {
 
 				$query	= "DELETE FROM $GLOBALS[mysql_prefix]tracks WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
@@ -2065,9 +2066,9 @@ function do_locatea() {				//7/29/09
 	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
 	$tracking_id = ($row['callsign']);
-	$exist_lat = ($row['lat']);
-	$exist_lng = ($row['lng']);
-	$exist_updated = ($row['updated']);
+	$db_lat = ($row['lat']);
+	$db_lng = ($row['lng']);
+	$db_updated = ($row['updated']);
 	$update_error = strtotime('now - 4 hours');
 
 		$request_url = "http://www.locatea.net/data.php?userid=$tracking_id";
@@ -2111,9 +2112,9 @@ function do_locatea() {				//7/29/09
 
 		if (!empty($lat) && !empty($lng)) {		//check not NULL
 	
-			if ($exist_lat<>$lat && $exist_lng<>$lng) {	// check for change in position
+			if ($db_lat<>$lat && $db_lng<>$lng) {	// check for change in position
 
-				if(($exist_updated == $updated) && ($update_error > $updated)) {
+				if(($db_updated == $updated) && ($update_error > $updated)) {
 				} else {
 	
 				$query	= "DELETE FROM $GLOBALS[mysql_prefix]tracks WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
@@ -2165,35 +2166,24 @@ function do_glat() {			//7/29/09
 	
 		return json_decode($data);
 	
-		}	// end function get_remote()
+		}	// end function get remote()
 
 
-//	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `glat`= 1 AND `callsign` <> ''";  // work each call/license
 	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `glat`= 1 AND `callsign` <> ''";  // work each call/license, 8/10/09
 	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 
 	while ($row = @mysql_fetch_assoc($result)) {		// for each responder/account
-		$user = ($row['callsign']);
-		$exist_lat = ($row['lat']);
-		$exist_lng = ($row['lng']);
-		$exist_updated = ($row['updated']);
+		$hyphen = (substr ($row['callsign'] , 0 , 1)=="-")? "" : "-";				// force 12/13/09
+		$user = $hyphen . $row['callsign'];
+		$db_lat = ($row['lat']);
+		$db_lng = ($row['lng']);
+		$db_updated = ($row['updated']);
 		$update_error = strtotime('now - 1 hour');
 	
 		$ret_val = array("", "", "", "");
 		$the_url = "http://www.google.com/latitude/apps/badge/api?user={$user}&type=json";
-/*
-		$ch = curl_init();
-		$timeout = 5;
-		curl_setopt($ch, CURLOPT_URL, $the_url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-		$data = curl_exec($ch);
-		curl_close($ch);
-		$json = json_decode($data);
-*/
 		$json = get_remote($the_url);
-	
-	//	dump($json);
+//		dump($json);
 		error_reporting(0);
 		foreach ($json as $key => $value) {				// foreach 1
 		    $temp = $value;
@@ -2226,31 +2216,32 @@ function do_glat() {			//7/29/09
 		else {							// valid glat data
 			$lat = $ret_val[3];
 			$lng = $ret_val[2];
-			$glat_id = $ret_val[0];
+			$temp = $ret_val[0];
+			$glat_id = str_replace  ( "-", "" ,$ret_val[0]);		// drop ldg hyphen - 12/13/09
 			$timestamp = $ret_val[1];
 			$updated = date('Y-m-d H:i:s', $timestamp);
 		
 			if (!empty($lat) && !empty($lng)) {		//check not NULL
-			
-				if ($exist_lat<>$lat && $exist_lng<>$lng) {	// check for change in position
+				if ($db_lat<>$lat && $db_lng<>$lng) {	// check for change in position
+//					snap(__LINE__, "");
 		
-					if(($exist_updated == $updated) && ($update_error > $updated)) {
+					if(($db_updated == $updated) && ($update_error > $updated)) {
 						} 
 					else {		
-						$query	= "DELETE FROM $GLOBALS[mysql_prefix]tracks WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
+						$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
 						$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 						unset($resultd);
 				
-						$query = "UPDATE $GLOBALS[mysql_prefix]responder SET lat = '$lat', lng ='$lng', updated	= '$updated' WHERE callsign = '$glat_id'";
+						$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `lat` = '$lat', `lng` ='$lng', `updated`	= '$updated' WHERE `callsign` LIKE '%{$glat_id}'";		// 12/13/09
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-						$query = "DELETE FROM $GLOBALS[mysql_prefix]tracks_hh WHERE source = '$glat_id'";		// remove prior track this device  
+						$query = "DELETE FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` LIKE '%{$glat_id}'";		// remove prior track this device  
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 				
-						$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks_hh (source, latitude, longitude, updated) VALUES ('$glat_id', '$lat', '$lng', '$updated')";
+						$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks_hh` (`source`, `latitude`, `longitude`, `updated`) VALUES ('$glat_id', '$lat', '$lng', '$updated')";
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 				
-						$query = "INSERT INTO $GLOBALS[mysql_prefix]tracks (source, latitude, longitude,packet_date, updated) VALUES ('$glat_id', '$lat', '$lng', '$updated', '$updated')";
+						$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (`source`, `latitude`, `longitude`,`packet_date`, `updated`) VALUES ('$glat_id', '$lat', '$lng', '$updated', '$updated')";
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 						}			//end if/else
 					}			//end if
@@ -2292,7 +2283,7 @@ function get_current() {		// 3/16/09, 7/25/09
 		}
 //	dump($glat);
 	if ($locatea) 	{do_locatea();}					//7/29/09
-	if ($gtrack) 		{do_gtrack();}				//7/29/09
+	if ($gtrack) 	{do_gtrack();}					//7/29/09
 	if ($glat) 		{do_glat();}					//7/29/09
 	return array("aprs" => $aprs, "instam" => $instam, "locatea" => $locatea, "gtrack" => $gtrack, "glat" => $glat);		//7/29/09
 	

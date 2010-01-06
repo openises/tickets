@@ -31,10 +31,11 @@ if($istest) {
 <SCRIPT>
 </SCRIPT>
 </HEAD>
-<BODY onLoad = "if(document.frm_note) {document.frm_note.frm_text.focus() ;}"><CENTER>
 <?php
 if (empty($_POST)) { 
 ?>
+<BODY onLoad = "document.frm_note.frm_text.focus();">
+<CENTER>
 <H4>Enter note text</H4>
 <FORM NAME='frm_note' METHOD='post' ACTION = '<?php print basename(__FILE__);?>'>
 <TEXTAREA NAME='frm_text' COLS=60 ROWS = 3></TEXTAREA>
@@ -48,7 +49,7 @@ Disposition &raquo; <INPUT TYPE = 'radio' NAME='frm_add_to' value='1' /><BR /><B
 <INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print $_GET['ticket_id']; ?>' />
 </FORM>
 <?php
-		}
+		}		// end if (empty($_POST))
 	else {
 		$field_name = array('description', 'comments');
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_POST['frm_ticket_id']} LIMIT 1";
@@ -64,15 +65,25 @@ Disposition &raquo; <INPUT TYPE = 'radio' NAME='frm_add_to' value='1' /><BR /><B
 		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `{$field_name[$_POST['frm_add_to']]}`= " . quote_smart($the_text) . " WHERE `id` = " . quote_smart($_POST['frm_ticket_id'])  ." LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 //		dump($query);
-	
+
+	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
+	if ($quick) {
 ?>
+	<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Note added!'); window.close();">
+	</BODY></HTML>
+	
+<?php
+	}				// end if ($quick)
+else {
+?>
+<BODY>http://127.0.0.1/tickets_next/edit.php?id=403#
+<BR /><BR />
 <H3>Note added to Call '<?php print $row['scope'];?>'</H3><BR /><BR />
 <INPUT TYPE = 'button' VALUE = 'Finished' onClick = 'window.close()'>
-
-<?php
-		unset($result);
-
-		}		// end if/else
-?>		
 </BODY>
 </HTML>
+<?php
+		unset($result);
+		}		// end if/else
+	}		// end if/else (empty())
+?>

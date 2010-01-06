@@ -28,6 +28,18 @@ $cb_fixed_part = 60;
 $cb_min = 96;
 $cb_max = 240;
 
+
+if ($istest) {											// 12/13/09
+	$query = "CREATE TABLE IF NOT EXISTS `_snap_data` (
+		`id` int(4) NOT NULL AUTO_INCREMENT,
+		`source` text,
+		`stuff` text,
+		`when` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (`id`)
+			) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+	}
+
 function do_setting ($which, $what) {				// 7/7/09
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '$which' LIMIT 1";		// 5/25/09
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);

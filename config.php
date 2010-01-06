@@ -36,6 +36,7 @@
 11/5/09 Changed window caption, per IE complaint
 11/17/09 removed password update from 'edit my profile'
 9/26/09 corrections to floating div, per IE
+11/30/09 dump-to-screen copy function added
 */
 	error_reporting(E_ALL);
 	require_once('./incs/functions.inc.php');
@@ -1124,18 +1125,32 @@ case 'dump' :				// see mysql.inc.php	for MySQL parameters
 	$backup->list_tables(); 												// list all tables
 	$broj = count($backup->tables); 										// count all tables, $backup->tables 
 																			//   will be array of table names
-	echo "<pre>\n"; //start preformatted output
-	echo "\n\n-- start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start \n";
-	echo "\n-- Dumping tables for database: $mysql_db\n"; //write "intro" ;)
+?>
+<SCRIPT>
+function copyit() {						// 11/30/09
+	var tempval= document.the_form.the_dump;
+	tempval.focus();
+	tempval.select();
+	therange=tempval.createTextRange();
+	therange.execCommand("Copy");
+	}
+//  End -->
+</SCRIPT>
+
+<?php
+	$_echo ="\n\n-- start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start \n";
+	$_echo .="\n-- Dumping tables for database: $mysql_db\n"; //write "intro" ;)
 	
 	for ($i=0;$i<$broj;$i++) {						//dump all tables:
 		$table_name = $backup->tables[$i]; 			//get table name
 		$backup->dump_table($table_name); 			//dump it to output (buffer)
-		echo htmlspecialchars($backup->output); 	//write output
+		$_echo .=htmlspecialchars($backup->output); 	//write output
 		}
-	echo "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
+	$_echo .="\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
 	
-	echo "\n<pre>\n"; 
+	echo "\n<FORM NAME='the_form'><TEXTAREA NAME ='the_dump' COLS=120 ROWS=20>{$_echo}</TEXTAREA>";
+	echo "<BR /><BR /><INPUT onclick='copyit()' type='button' value='Click to copy the dump' name='cpy'\>\n</FORM>\n";
+
 	break;
     
 case 'delete' :	

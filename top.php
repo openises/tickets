@@ -22,6 +22,7 @@
 9/7/09 Added Full Screen button
 9/19/09 Moved user defined function keys to links button
 10/6/09 Added Facilities button to top menu
+12/13/09 function show_msg() added - usage: parent.frames["upper"].show_msg ("hello");
 */ 
 error_reporting(E_ALL);		// 3/15/09
 
@@ -48,282 +49,291 @@ $logo = get_variable('logo');
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 	<META NAME="description" content="A free, Open Source Computer-Aided-Dispatch (CAD) application, especially suited to Volunteer Groups">	
 	<META NAME="keywords" content="'Computer-aided-dispatch', '9-1-1', Volunteers, CAD, Search and Rescue, Emergency Medicine, Open Source, PHP, MySQL, Mash-ups, Google Maps">
-<style type="text/css">
-BODY { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-.hovermenu ul li{list-style: none;display: inline;} 
-.hovermenu ul li a{padding: 2px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;border: 2px solid #EFEFEF;}
-.hovermenu ul li a:hover{background-color: #DEE3E7;border-style: outset;} 
-*.selected {background-color: #DEE3E7;border-style: inset; }
-*.unselected {background-color: #EFEFEF;border-style: none; }
+<STYLE TYPE="text/css">
+	BODY { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+	A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
+	.hovermenu ul li{list-style: none;display: inline;} 
+	.hovermenu ul li a{padding: 2px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;border: 2px solid #EFEFEF;}
+	.hovermenu ul li a:hover{background-color: #DEE3E7;border-style: outset;} 
+	*.selected {background-color: #DEE3E7;border-style: inset; }
+	*.unselected {background-color: #EFEFEF;border-style: none; }
+	#bar 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
+	* html #bar { /*\*/position: absolute; top: expression((8 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((40 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
+	#foo > #bar { position: fixed; top: 8px; right: 40px; }
+	.message{ FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+	</STYLE>
 
-</style>
 <SCRIPT>
 var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
-var ADM_STR = '<?php echo ADM_STR;?>';			// Admin priv level, defined in functions.inc.php 
-var SUPR_STR = '<?php echo SUPR_STR;?>';		// super priv level, defined in functions.inc.php 6/16/08
-var call_frame = <?php print (intval(get_variable('call_board')) > 1)? "true": "false"; ?>	// call board frame allowed? 1/12/09
-
-var starting = false;							// 6/6/08
-
-function $() {									// 1/21/09
-	var elements = new Array();
-	for (var i = 0; i < arguments.length; i++) {
-		var element = arguments[i];
-		if (typeof element == 'string')
-			element = document.getElementById(element);
-		if (arguments.length == 1)
-			return element;
-		elements.push(element);
-		}
-	return elements;
-	}
-
-/* function $() Sample Usage:
-var obj1 = document.getElementById('element1');
-var obj2 = document.getElementById('element2');
-function alertElements() {
-  var i;
-  var elements = $('a','b','c',obj1,obj2,'d','e');
-  for ( i=0;i
-*/  
-function isNull(val) {								// checks var stuff = null;
-	return val === null;
-	}
-
-function logged_in() {								// returns boolean
-	var temp = $("whom").innerHTML==NOT_STR;
-	return !temp;
-	}
+	var ADM_STR = '<?php echo ADM_STR;?>';			// Admin priv level, defined in functions.inc.php 
+	var SUPR_STR = '<?php echo SUPR_STR;?>';		// super priv level, defined in functions.inc.php 6/16/08
+	var call_frame = <?php print (intval(get_variable('call_board')) > 1)? "true": "false"; ?>	// call board frame allowed? 1/12/09
 	
-function calls_start () {						// called from main.php 1/12/09
-	if (call_frame) {	
-		parent.calls.location.href = 'assigns.php'
+	var starting = false;							// 6/6/08
+	
+	function $() {									// 1/21/09
+		var elements = new Array();
+		for (var i = 0; i < arguments.length; i++) {
+			var element = arguments[i];
+			if (typeof element == 'string')
+				element = document.getElementById(element);
+			if (arguments.length == 1)
+				return element;
+			elements.push(element);
+			}
+		return elements;
 		}
-	}
-function calls_end () {
-	if (call_frame) {
-		parent.calls.location.href = 'assigns.php';
+	
+	/* function $() Sample Usage:
+	var obj1 = document.getElementById('element1');
+	var obj2 = document.getElementById('element2');
+	function alertElements() {
+	  var i;
+	  var elements = $('a','b','c',obj1,obj2,'d','e');
+	  for ( i=0;i
+	*/  
+	function isNull(val) {								// checks var stuff = null;
+		return val === null;
 		}
-	}	
-
-function ck_frames() {		// onLoad = "ck_frames()"
-	if(self.location.href==parent.location.href) {
-		self.location.href = 'index.php';
+	
+	function show_msg (msg) {						// 12/13/09
+		$('msg_span').innerHTML = msg;				// show for 3 second
+		setTimeout("$('msg_span').innerHTML =''", 3000);
 		}
-	}		// end function ck_frames()
-
-function shut_down(){
-	if (aprs) {window.clearInterval(aprs);}			// 5/28/08
-	if (!isNull(newwindow_cb)) {					// call board window?
-		newwindow_cb.close();
+	
+	function logged_in() {								// returns boolean
+		var temp = $("whom").innerHTML==NOT_STR;
+		return !temp;
 		}
-	if (!isNull(newwindow_c)) {						// chat window?
-		newwindow_c.close();	
-		}
-	}			// end function shut_down()			// cards window allowed
-
-var which = "";	// id of last-invoked li
-function go_there (where, id) {
-	if (!which=="") {
-		}		// end if(which)
-	document.go.action = where;
-	which = id;
-	document.go.submit();
-	}				// end function go_there () 
-
-function syncAjax(strURL) {							// synchronous ajax function
-	if (window.XMLHttpRequest) {						 
-		AJAX=new XMLHttpRequest();						 
-		} 
-	else {																 
-		AJAX=new ActiveXObject("Microsoft.XMLHTTP");
-		}
-	if (AJAX) {
-		AJAX.open("GET", strURL, false);														 
-		AJAX.send(null);							// form name
-		return AJAX.responseText;																				 
-		} 
-	else {
-		alert ("118: ajax failed")
-		return false;
-		}																						 
-	}		// end function sync Ajax(strURL)
-
-function AsyncAjax(strURL) {						// asynch ajax() function
-	var xmlHttpReq = false;
-	var self = this;
-	if (window.XMLHttpRequest) {					// Mozilla/Safari
-		self.xmlHttpReq = new XMLHttpRequest();
-		}
-	else if (window.ActiveXObject) {				// IE
-		self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
-		}
-	self.xmlHttpReq.open('POST', strURL, true);
-	self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	self.xmlHttpReq.onreadystatechange = function() {
-		if (self.xmlHttpReq.readyState == 4) {
-			var temp = self.xmlHttpReq.responseText
-			return temp;		// for test purpose only
+		
+	function calls_start () {						// called from main.php 1/12/09
+		if (call_frame) {	
+			parent.calls.location.href = 'assigns.php'
 			}
 		}
-	self.xmlHttpReq.send("");
-	window.setInterval("self.xmlHttpReq.abort();", 1000);		// wait a second and kill
-	}
-
-// ex useage:	<input value="Go" type="button" onclick='JavaScript:AsyncAjax("whatever.php")'>
-// cross-frame function call:  parent.frames["upper"].s tart_poll();
-var aprs_poll;
-var aprs = new Boolean(false);									// 
-var temp;
-function get_aprs_time() {		// 
-	var temp = syncAjax("get_aprs_poll.php");					// gets poll cycle period via server-side get_variable('auto_poll');
-	return temp;
-	}
-
-function get_aprs() {		//
-//	alert(154);
-	temp = AsyncAjax ("get_php_aprs.php");						// runs do_aprs() server-side to update the db
-	}
-
-function start_poll() {											// start the process
-	var aprs_poll = get_aprs_time();							// cycle period
-	if ((parseInt(aprs_poll)==0) || (aprs_poll==new Boolean (NaN)))	{
-		window.clearInterval(aprs)
+	function calls_end () {
+		if (call_frame) {
+			parent.calls.location.href = 'assigns.php';
+			}
+		}	
+	
+	function ck_frames() {		// onLoad = "ck_frames()"
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		}		// end function ck_frames()
+	
+	function shut_down(){
+		if (aprs) {window.clearInterval(aprs);}			// 5/28/08
+		if (!isNull(newwindow_cb)) {					// call board window?
+			newwindow_cb.close();
+			}
+		if (!isNull(newwindow_c)) {						// chat window?
+			newwindow_c.close();	
+			}
+		}			// end function shut_down()			// cards window allowed
+	
+	var which = "";	// id of last-invoked li
+	function go_there (where, id) {
+		if (!which=="") {
+			}		// end if(which)
+		document.go.action = where;
+		which = id;
+		document.go.submit();
+		}				// end function go there () 
+	
+	function syncAjax(strURL) {							// synchronous ajax function
+		if (window.XMLHttpRequest) {						 
+			AJAX=new XMLHttpRequest();						 
+			} 
+		else {																 
+			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		if (AJAX) {
+			AJAX.open("GET", strURL, false);														 
+			AJAX.send(null);							// form name
+			return AJAX.responseText;																				 
+			} 
+		else {
+			alert ("118: ajax failed")
+			return false;
+			}																						 
+		}		// end function sync Ajax(strURL)
+	
+	function AsyncAjax(strURL) {						// asynch ajax() function
+		var xmlHttpReq = false;
+		var self = this;
+		if (window.XMLHttpRequest) {					// Mozilla/Safari
+			self.xmlHttpReq = new XMLHttpRequest();
+			}
+		else if (window.ActiveXObject) {				// IE
+			self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		self.xmlHttpReq.open('POST', strURL, true);
+		self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		self.xmlHttpReq.onreadystatechange = function() {
+			if (self.xmlHttpReq.readyState == 4) {
+				var temp = self.xmlHttpReq.responseText
+				return temp;		// for test purpose only
+				}
+			}
+		self.xmlHttpReq.send("");
+		window.setInterval("self.xmlHttpReq.abort();", 1000);		// wait a second and kill
+		}
+	
+	// ex useage:	<input value="Go" type="button" onclick='JavaScript:AsyncAjax("whatever.php")'>
+	// cross-frame function call:  parent.frames["upper"].s tart_poll();
+	var aprs_poll;
+	var aprs = new Boolean(false);									// 
+	var temp;
+	function get_aprs_time() {		// 
+		var temp = syncAjax("get_aprs_poll.php");					// gets poll cycle period via server-side get_variable('auto_poll');
+		return temp;
+		}
+	
+	function get_aprs() {		//
+	//	alert(154);
+		temp = AsyncAjax ("get_php_aprs.php");						// runs do_aprs() server-side to update the db
+		}
+	
+	function start_poll() {											// start the process
+		var aprs_poll = get_aprs_time();							// cycle period
+		if ((parseInt(aprs_poll)==0) || (aprs_poll==new Boolean (NaN)))	{
+			window.clearInterval(aprs)
+			$("poll_id").innerHTML = "none";
+			return;} 
+		else {
+			get_aprs();												// kick off
+			aprs = window.setInterval("get_aprs()", aprs_poll*60*1000);	// aprs => Boolean(true);	
+			$("poll_id").innerHTML = aprs_poll + " min.";
+			}
+		}				// end function start poll()
+	
+	function stop_poll() {
+		if (aprs) {window.clearInterval(aprs);}
+		aprs =  Boolean(false);	
 		$("poll_id").innerHTML = "none";
-		return;} 
-	else {
-		get_aprs();												// kick off
-		aprs = window.setInterval("get_aprs()", aprs_poll*60*1000);	// aprs => Boolean(true);	
-		$("poll_id").innerHTML = aprs_poll + " min.";
 		}
-	}				// end function start poll()
-
-function stop_poll() {
-	if (aprs) {window.clearInterval(aprs);}
-	aprs =  Boolean(false);	
-	$("poll_id").innerHTML = "none";
-	}
-	
-function toggle_aprs() {
-	if (!(($('level').innerHTML==ADM_STR) || ($('level').innerHTML==SUPR_STR))){		// 5/28/08 allow admin or super only
-		return;
-		}
-	else {
-		if (aprs) 	{stop_poll();}
-		else 		{start_poll();}
-		}
-	}				// end function toggle_aprs()
-
-var newwindow_sl = null;
-
-function do_sta_log() {				// 1/19/09
-	if (logged_in()) {
-		if(starting) {return;}						// 6/6/08
-		starting=true;	
-		newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-		if (isNull(newwindow_sl)) {
-			alert ("Station log operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+		
+	function toggle_aprs() {
+		if (!(($('level').innerHTML==ADM_STR) || ($('level').innerHTML==SUPR_STR))){		// 5/28/08 allow admin or super only
 			return;
 			}
-		newwindow_sl.focus();
-		starting = false;
-		}
-	}		// end function do sta_log()
-
-
-var newwindow_cb = null;
-
-function do_callBoard() {
-	if (logged_in()) {
-		if(starting) {return;}						// 6/6/08
-		starting=true;	
-
-		newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=1000,status=0,toolbar=0,menubar=0,location=0, left=20,top=300,screenX=20,screenY=300");
-		if (isNull(newwindow_cb)) {
-			alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
-			return;
+		else {
+			if (aprs) 	{stop_poll();}
+			else 		{start_poll();}
 			}
-		newwindow_cb.focus();
-		starting = false;
-		}
-	}		// end function do callBoard()
-
-var newwindow_c = null;
+		}				// end function toggle_aprs()
 	
-function do_chat() {
-	if (logged_in()) {
+	var newwindow_sl = null;
+	
+	function do_sta_log() {				// 1/19/09
+		if (logged_in()) {
+			if(starting) {return;}						// 6/6/08
+			starting=true;	
+			newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			if (isNull(newwindow_sl)) {
+				alert ("Station log operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+				return;
+				}
+			newwindow_sl.focus();
+			starting = false;
+			}
+		}		// end function do sta_log()
+	
+	
+	var newwindow_cb = null;
+	
+	function do_callBoard() {
+		if (logged_in()) {
+			if(starting) {return;}						// 6/6/08
+			starting=true;	
+	
+			newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=1000,status=0,toolbar=0,menubar=0,location=0, left=20,top=300,screenX=20,screenY=300");
+			if (isNull(newwindow_cb)) {
+				alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+				return;
+				}
+			newwindow_cb.focus();
+			starting = false;
+			}
+		}		// end function do callBoard()
+	
+	var newwindow_c = null;
+		
+	function do_chat() {
+		if (logged_in()) {
+			if(starting) {return;}					// 6/6/08
+			starting=true;
+			newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			if (isNull(newwindow_c)) {
+				alert ("Chat operation requires popups to be enabled. Please adjust your browser options - or else turn off the Chat option setting.");
+				return;
+				}
+			newwindow_c.focus();
+			starting = false;
+			}
+		}
+	
+	var newwindow_fs = null;
+	
+	var newwindow_fs;
+	
+	function do_full_scr() {                            //9/7/09
+		if (logged_in()) {
+			if(starting) {return;}                        // 6/6/08 fullscreen=yes
+	
+			if(window.focus() && newwindow_fs) {newwindow_fs.focus()}    // if already exists
+			starting=true;
+	
+			params  = 'width='+screen.width;
+			params += ', height='+screen.height;
+			params += ', top=0, left=0'
+			params += ', fullscreen=yes';
+			newwindow_fs=window.open("full_scr.php", "full_scr", params);
+			if (isNull(newwindow_fs)) {
+				alert ("This operation requires popups to be enabled. Please adjust your browser options.");
+				return;
+				}
+			newwindow_fs.focus();
+			starting = false;
+			}
+		}        // end function do full_scr()
+	
+	function do_emd_card(filename) {
 		if(starting) {return;}					// 6/6/08
-		starting=true;
-		newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-		if (isNull(newwindow_c)) {
-			alert ("Chat operation requires popups to be enabled. Please adjust your browser options - or else turn off the Chat option setting.");
-			return;
-			}
-		newwindow_c.focus();
-		starting = false;
-		}
-	}
-
-var newwindow_fs = null;
-
-var newwindow_fs;
-
-function do_full_scr() {                            //9/7/09
-	if (logged_in()) {
-		if(starting) {return;}                        // 6/6/08 fullscreen=yes
-
-		if(window.focus() && newwindow_fs) {newwindow_fs.focus()}    // if already exists
-		starting=true;
-
-		params  = 'width='+screen.width;
-		params += ', height='+screen.height;
-		params += ', top=0, left=0'
-		params += ', fullscreen=yes';
-		newwindow_fs=window.open("full_scr.php", "full_scr", params);
-		if (isNull(newwindow_fs)) {
-			alert ("This operation requires popups to be enabled. Please adjust your browser options.");
-			return;
-			}
-		newwindow_fs.focus();
-		starting = false;
-		}
-	}        // end function do full_scr()
-
-function do_emd_card(filename) {
-	if(starting) {return;}					// 6/6/08
-	starting=true;	
-
-	newwindow_em=window.open(filename, "emdCard",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
-	if (isNull(do_emd_card)) {
-		alert ("EMD Card operation requires popups to be enabled. Please adjust your browser options.");
-		return;
-		}
-	newwindow_em.focus();
-	starting = false;
-	}
+		starting=true;	
 	
-function do_logout() {						// 10/27/08
-	hide_butts();
-	$('whom').innerHTML=NOT_STR; 
-	stop_poll();
-	calls_end ();							// 1/12/09
-	}
-
-function hide_butts() {						// 10/27/08
-	$("buttons").style.visibility = "hidden";
-	}
-function show_butts() {						// 10/27/08
-	$("buttons").style.visibility = "visible";
-	}
-
-</SCRIPT>
+		newwindow_em=window.open(filename, "emdCard",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+		if (isNull(do_emd_card)) {
+			alert ("EMD Card operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_em.focus();
+		starting = false;
+		}
+		
+	function do_logout() {						// 10/27/08
+		hide_butts();
+		$('whom').innerHTML=NOT_STR; 
+		stop_poll();
+		calls_end ();							// 1/12/09
+		}
+	
+	function hide_butts() {						// 10/27/08
+		$("buttons").style.visibility = "hidden";
+		}
+	function show_butts() {						// 10/27/08
+		$("buttons").style.visibility = "visible";
+		}
+	
+	</SCRIPT>
 <NOSCRIPT>
 	Tickets requires a JavaScript-capable browser.
-</NOSCRIPT>	
+	</NOSCRIPT>	
 </HEAD>
-<!--<BODY onLoad = "ck_frames(); start_poll()" onunload="shut_down()"> -->
 <BODY onLoad = "ck_frames();" onunload="shut_down()">
+<DIV ID="foo"><DIV ID="bar"><SPAN ID = 'msg_span' CLASS = 'message'></SPAN></DIV></DIV>
 
 <table border=0 cellpadding=0>
 <tr valign='top'>
@@ -337,7 +347,7 @@ function show_butts() {						// 10/27/08
 	$poll_val = ($temp==0)? "none" : $temp ;
 ?>
 		<SPAN onClick = "toggle_aprs()">Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
-		Module: <SPAN ID="script"></SPAN><br>
+		Module: <SPAN ID="script"></SPAN>&nbsp;&nbsp;<SPAN ID = 'msg_span'></SPAN><br>
 <span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
 <ul style="text-align: left;">
 <nobr>

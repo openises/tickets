@@ -28,10 +28,11 @@ if($istest) {
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD>
-<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
 <?php
 if (empty($_POST)) { 
-
+?>
+<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
+<?php
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . quote_smart($_GET['ticket_id'])  ." LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$row = mysql_fetch_assoc($result);
@@ -41,15 +42,39 @@ if (empty($_POST)) {
 		else {
 			do_is_start();
 			}
-		}		// end if (empty($_POST))
+		}		// end if (empty($_POST))		
 		
 else {			// not empty then is finished
-	do_is_finished();
-	}				 // end else
+	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
+//	dump($quick);
+	if ($quick) {
+		do_is_finished();
+?>
+<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!'); window.close();">
+</BODY></HTML>
+<?php
+		}
+	else{
+?>
+<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
+<?php
+		do_is_finished();
+?>
+?>
+<H3>Call '<?php print $row['scope'];?>' closed</H3><BR /><BR />
+<INPUT TYPE = 'button' VALUE = 'Finished' onClick = 'window.close()'>
+</BODY>
+</HTML>
+
+<?php
+		}				 // end if/else quick
+	
+	}		// end if/else
 
 function do_is_closed() {
 	global $row;
 ?>		
+<CENTER>
 	<H3>Call '<?php print $row['scope'];?>' is already closed</H3><BR /><BR />
 	<INPUT TYPE = 'button' VALUE = 'Cancel' onClick = 'window.close()'>	
 	</BODY>
@@ -104,13 +129,6 @@ function do_is_finished(){
 		$row = mysql_fetch_assoc($result);
 //		dump($query);
 		do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])	;
-?>
-<H3>Call '<?php print $row['scope'];?>' closed</H3><BR /><BR />
-<INPUT TYPE = 'button' VALUE = 'Finished' onClick = 'window.close()'>
-</BODY>
-</HTML>
-
-<?php
 		unset($result);
 
 	} // end function do_is_finished()

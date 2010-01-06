@@ -93,6 +93,7 @@ $COLS_COMMENTS = 8;		// run comments -  8 characters as default
 11/4/09 mileage added to add form
 11/6/09 removed quote - source ???, removed old id manipulation in function our_reset()
 11/27/09 revised default column widths - per AF; removed redundant form
+12/13/09 applied filter to 'open assigns' list
 */
 require_once('./incs/functions.inc.php'); 
 
@@ -115,7 +116,7 @@ function show_top() {				// generates the document introduction
 		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
 		<META HTTP-EQUIV="Script-date" 			CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-		<STYLE>
+	<STYLE>
 		span.even 	{ background-color: #DEE3E7;}
 		.odd 	{ background-color: #EFEFEF;}
 		.plain 	{ background-color: #FFFFFF;}
@@ -172,8 +173,8 @@ function show_top() {				// generates the document introduction
 		span.over {font-weight: light; color: red;}
 
 		#bar 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
-		* html #bar { /*\*/position: absolute; top: expression((4 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((40 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
-		#foo > #bar { position: fixed; top: 4px; right: 40px; }
+		* html #bar { /*\*/position: absolute; top: expression((4 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((30 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
+		#foo > #bar { position: fixed; top: 4px; right: 30px; }
 		
 		
 				
@@ -185,16 +186,16 @@ function show_top() {				// generates the document introduction
 		else {
 			if (in_val >= max_val) return max_val;
 			if (in_val <= min_val) return min_val;
-			alert ("err 188");
+			alert ("err 189");
 			}
 		}
 	
 	function reSizeScr(lines) {				// 140			-- 5/23/09
-			var the_height = ((lines * 23)+120);
-			window.resizeTo((0.98)* screen.width, tween(the_height, 260, window.screen.height - 200));		// 10/31/09 - derived via trial/error (more of the latter, mostly)
+		var the_height = ((lines * 23)+120);
+		window.resizeTo((0.98)* screen.width, tween(the_height, 260, window.screen.height - 200));		// 10/31/09 - derived via trial/error (more of the latter, mostly)
 		}		// end function reSizeScr()
 
-function do_add_btn() {							// 11/4/09
+	function do_add_btn() {							// 11/4/09
 <?php
 		if (intval(get_variable('call_board'))==1) {
 ?>		
@@ -268,9 +269,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 ?>	
 	<SCRIPT>
-	//alert (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML);
-	//if ((!window.opener) || (window.opener.parent.frames["upper"].document.getElementById("whom").innerHTML == "not"))
-	//		{self.location.href = 'index.php';}				// must run only as window, with user logged in
 	var myuser = "<?php print isset($my_session)?$my_session['user_name']: "not";?>";
 	var mylevel = "<?php print isset($my_session)?get_level_text($my_session['level']): "na";?>";
 	var myscript = "<?php print isset($my_session)? LessExtension(basename( __FILE__)): "login";?>";
@@ -319,7 +317,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			if (req.status != 200 && req.status != 304) {
 <?php
 	if($istest) {print "\t\t\talert('HTTP error ' + req.status + ' " . __LINE__ . "');\n";}
-//	snap(__LINE__, __FILE__);
 ?>
 				return;
 				}
@@ -492,7 +489,9 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		print "\n<SCRIPT>\n";
 		print "\t\tassigns = new Array();\n";
 		
-		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of FROM `$GLOBALS[mysql_prefix]assigns` ORDER BY `as_of` DESC";
+//		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of FROM `$GLOBALS[mysql_prefix]assigns` ORDER BY `as_of` DESC";
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ORDER BY `as_of` DESC";	// 12/13/09
+
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		while($row = stripslashes_deep(mysql_fetch_array($result))) {
 			print "\t\tassigns['" .$row['ticket_id'] .":" . $row['responder_id'] . "']=true;\n";	// build assoc array of ticket:unit pairs
@@ -526,7 +525,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	
 		function reSizeScr() {
 <?php
-			if (get_variable('call_board')==1) {print "window.resizeTo(1100,320);\n";}
+			if (get_variable('call_board')==1) {print "\t\twindow.resizeTo(1100,320);\n";}
 ?>				
 			}
 	
@@ -544,8 +543,9 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 <?php
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = " . $GLOBALS['STATUS_OPEN']. " ORDER BY `scope`"; 
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+					$sel = (mysql_affected_rows()== 1)? "SELECTED" : "";		// if 1, select it
 					while ($row = mysql_fetch_array($result))  {
-						print "\t\t<OPTION value='" . $row['id'] . "'>" . $row['scope'] . "</OPTION>\n";		
+						print "\t\t<OPTION value='{$row['id']}' {$sel}> {$row['scope']}</OPTION>\n";		
 						}
 ?>
 					</SELECT>	
@@ -614,6 +614,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			<INPUT TYPE='hidden' NAME='func' 		VALUE= 'add_db' />
 			<INPUT TYPE='hidden' NAME='frm_log_it' 	VALUE='' />
 			</FORM>
+			<BR /><BR />
 				
 <?php
 	if (get_variable('call_board')==1) {
@@ -629,11 +630,11 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			break;				// end case 'add' ==== } ===
 			
 
-							//	id, as_of, status_id, ticket_id, unit_id, comment, user_id
+								//	id, as_of, status_id, ticket_id, unit_id, comment, user_id
 		case 'add_db' : 		// ==== { ====
 		
 			function handle_mail($to_str, $unit_id, $unit_name, $ticket_id) {				// 6/16/09 
-//				snap(basename(__FILE__), __LINE__);
+				global $istest;
 				
 				$text = "";
 				$the_msg = mail_it ($to_str, $text, $ticket_id, 3, TRUE);		// get default msg text
@@ -644,48 +645,111 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 <SCRIPT>
 					function handleResult(req) {				// the called-back function
 <?php
-		if ($istest) {print "\n\t alert('error at ' . __LINE__ . ');\n";}
+		if ($istest) {print "\n\t alert(648);\n";}
 ?>		
-			
-					function send_it() {
+						}		// end function handle Result()	
+
+					function send_it(addr, msg) {				// 12/13/09
+					
+						function isValidEmail(str) {
+							return (str.lastIndexOf(".") > 2) && (str.indexOf("@") > 0) && (str.lastIndexOf(".") > (str.indexOf("@")+1)) && (str.indexOf("@") == str.lastIndexOf("@"));
+							} 
+						
+						sep=outstr=errstr="";
+						temp = addr.split(',');						// comma sep's
+						for (i=0;i<temp.length;i++) {				// build string of valid addresses
+							if ((temp[i].trim().length>0) && (!(isValidEmail(temp[i].trim()))))
+								{errstr +="\t" + temp[i].trim()+"\n";} 
+							else {
+								if (temp[i].trim().length>0) {		// OK and not empty?
+									outstr +=sep + temp[i].trim();
+									sep = "|";						// note pipe separator
+									}
+								}
+							}		// end for ()
+						if (errstr.length>0)	{					// errors?
+							alert("Invalid addresses:\n" +errstr );
+							return false;
+							}
+						if (outstr.length==0)	{					// empty?
+							alert("Valid addresses required\n");
+							return false;
+							}
+						
 						var url = "do_send.php";		// ($to_str, $subject_str, $text_str )
-			
-						var the_to = escape("<?php print $to_str; ?>");
+						
+						var the_to = addr;
 						var the_subj = escape("New Dispatch");
-						var the_msg = escape(document.add_cont_form.frm_text.value);		// the variables
-			
+						var the_msg = escape(msg);		// the variables
+						
 						var postData = "to_str=" + the_to +"&subject_str=" + the_subj + "&text_str=" + the_msg; // the post string
-//						sendRequest(url,handleResult,postData) ;
 						sendRequest(url,dummy,postData) ;
-						}		// end function send it()			
+						return true;
+						
+						}		// end function send it()
+					
+											
 			
 					function dummy() {		
 						window.close();
 						}
-			
+
+					function ender() {
+						$('sending').style.display = 'none';
+<?php
+			print "\n\t\t\t\t\t\t\t"; 
+			print (get_variable('call_board')==1)? "document.add_cont_form.submit();\n" : "window.close();\n";
+?>			
+						}		// end function ender()
+							
+		
+					function do_send_it () {
+						if (send_it(document.add_mail_form.frm_to.value, document.add_mail_form.frm_text.value )) {
+							$('sending').style.display = 'inline';
+							opener.parent.frames["upper"].show_msg ("Email sent!");
+							setTimeout("ender();",3000); 
+							}
+						else {
+							return false;		// error notice was alerted
+							}
+						} 				// end function do send_it ()
+						
 			
 </SCRIPT>
 </HEAD>
 <BODY>		<!-- add_db 1/12/09 -->
 
-					<TABLE ALIGN='center' BORDER=0><TR VALIGN='top'>
-					<TD ALIGN='right'>
-						<B>Notification to: <?php print $unit_name; ?></B><BR/><BR/>
-						<I>edit message to suit</I>
+			<TABLE ALIGN='center' BORDER=4><TR VALIGN='top'>
+			<TR><TH COLSPAN=3 ALIGN='center'>Dispatch record written<BR /><BR /></TH></TR>
+			<TR><TD ALIGN='right'>
+					<B>Notification to <?php print $unit_name; ?>:</B><BR/><BR/>
+					<I>edit message to suit</I>&nbsp;&nbsp;
+				</TD>
+				<TD>&nbsp;</TD>
+				<TD ALIGN='left'>
+					<FORM NAME='add_mail_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">	<!-- 11/27/09 -->
+<?php
+			$msg_str = "Dispatching {$unit_name}" . mail_it ($to_str, "New", $ticket_id, 3, TRUE); 
+?>			
+					<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+3; ?>><?php print $msg_str;?></TEXTAREA>
+					
+					</TD></TR>
+			<TR VALIGN='top'><TD ALIGN='right'><B>Email:</B></TD><TD></TD>
+				<TD><INPUT TYPE='text' name='frm_to' SIZE=64 VALUE='<?php print $to_str ;?>'/> <I> (use comma separator)</I><BR /><BR />
 					</TD>
-					<TD>&nbsp;</TD>
-					<TD ALIGN='center'>
-						<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">	<!-- 11/27/09 -->
-						<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+2; ?>><?php print mail_it ($to_str, "New", $ticket_id, 3, TRUE);?></TEXTAREA> 
-					</TD>
-					<TD>&nbsp;</TD>
-					<TD ALIGN='left'>
-						<INPUT TYPE='button' VALUE='Send message' onClick = "send_it(); setTimeout('dummy()',1000); document.can_Form.submit()"  CLASS = 'btn'><BR /><BR />
-						<INPUT TYPE='button' VALUE='Do NOT send' onClick = "window.close();"  CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
-						<INPUT TYPE='hidden' NAME='func' VALUE='list'>
-						</FORM>
-					</TD>
-					</TR></TABLE>
+					</TR>
+				<TR VALIGN = 'bottom'>
+				<TD COLSPAN=2></TD>
+				<TD ALIGN='left' COLSPAN=2>
+					<INPUT TYPE='button' VALUE='    Reset    ' onClick = "document.add_mail_form.reset();"  CLASS = 'btn'>&nbsp;&nbsp;&nbsp;
+					<INPUT TYPE='button' VALUE='Send message' onClick = "do_send_it ();"  CLASS = 'btn'>&nbsp;&nbsp;&nbsp;
+					<INPUT TYPE='button' VALUE='Do NOT send' onClick = "window.close();"  CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
+					<INPUT TYPE='hidden' NAME='func' VALUE='list'>&nbsp;&nbsp;&nbsp;&nbsp;
+					<SPAN ID = 'sending' CLASS = 'header' STYLE = 'display: none'>Sending!<SPAN>
+					</FORM>
+				</TD>
+				</TR></TABLE>
+
 <?php  			
 				}				// end function handle mail()
 //			dump($_POST);
@@ -727,9 +791,9 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 //			snap(basename(__FILE__), __LINE__);
 			$to_str = $row['contact_via'];
 			
-			if (is_email($to_str)) {		// 3/9/09
+//			if (is_email($to_str)) {		// 3/9/09
 				handle_mail($to_str, $frm_unit_id, $row['name'], $frm_ticket_id);
-				}
+//				}
 
 //			$host  = $_SERVER['HTTP_HOST'];						// 6/26/09
 //			$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
@@ -753,9 +817,18 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 <SCRIPT>
 </SCRIPT>
 </HEAD>
-	<BODY>
-		<BR><BR><CENTER><H3>Dispatch record written - email?</H3><BR><BR>
-</BODY></HTML>
+<BODY>
+	<BR><BR><CENTER>
+
+	<BR><BR>
+		<FORM NAME='add_cont_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">
+<?php
+	$on_click = (get_variable('call_board')==1)? "document.add_cont_form.submit();": "window.close();";
+?>
+		<INPUT TYPE='hidden' NAME='func' VALUE='board'/>
+		</FORM>
+	</BODY></HTML>
+
 <?php
 			break;				// end case 'add_db' ==== } =====
 				
@@ -850,7 +923,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				return AJAX.responseText;																				 
 				} 
 			else {
-				alert ("856: failed");
+				alert ("926: failed");
 				return false;
 				}																						 
 			}		// end function sync Ajax(strURL)
@@ -888,7 +961,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			var url = "as_up_un_status.php" + querystr;			// 
 			var payload = syncAjax(url);						// 
 			if (payload.substring(0,1)=="-") {	
-				alert ("895: msg failed ");
+				alert ("964: msg failed ");
 				return false;
 				}
 			else {
@@ -920,7 +993,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	</HEAD>
 <?php
 	$lines=1;
-	$onload_str = (get_variable('call_board')==1)? "onLoad = 'reSizeScr({$lines})'": "";
+	$onload_str = (get_variable('call_board')==1)? "onLoad = '\t\treSizeScr({$lines})'": "";
 ?>
 	<BODY <?php print $onload_str;?> ><!-- 947 -->
 	<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
@@ -1596,16 +1669,14 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				}
 			}		// end function confirmation()
 <?php
-		if (get_variable('call_board')==1) {print "reSizeScr(18);\n";}
+		if (get_variable('call_board')==1) {print "\t\treSizeScr(18);\n";}
 ?>				
 		function enable(instr) {
 			var element= instr
 			$(element).style.visibility = "visible";
-	//		var i = document.forms[0].length;
 			for (i=0; i<document.forms[0].length;i++){
 					var start = document.forms[0].elements[i].name.length - instr.length
 					if (instr == document.forms[0].elements[i].name.substring(start,99)) {
-	//					alert (document.forms[0].elements[i].name.substring(start,99));
 						document.forms[0].elements[i].disabled = false;
 						}
 				}
@@ -1923,7 +1994,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET " .$unit_sql. " `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) . ", `start_miles`= " . quote_smart($_POST['frm_miles_strt']) . ", `end_miles`= " . quote_smart($_POST['frm_miles_end']) ;	//10/6/09
 			$query .= $date_part;
 			$query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-//dump($query);
+
 			$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
 	
 			$message = "Update Applied";
@@ -2036,14 +2107,14 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}		// end function
 		
 		/*
-		$row["problemstart"])
-		$row["dispatched"])
-		$row["responding"])
-		$row["on_scene"])
-		$row["u2fenr"])
-		$row["u2farr"])
-		$row["clear"])
-		$row["problemend"])
+		$row["problemstart"]
+		$row["dispatched"]
+		$row["responding"]
+		$row["on_scene"]
+		$row["u2fenr"]
+		$row["u2farr"]
+		$row["clear"]
+		$row["problemend"]
 		*/
 			
 		function show_diff($secs) {				// seconds in, returns formatted conversion
@@ -2307,12 +2378,11 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 //				snap(basename(__FILE__), __LINE__);
 				print "<TR><TD COLSPAN=99 ALIGN='center'><BR /><B>End</B><BR /></TD></TR>";
 			}		// end if (mysql_affected_rows()>0) 
-		print "</TABLE>";
-		print "<DIV STYLE='position:fixed; width:120px; height:auto; top:0px; right: 0px; background-color:#EFEFEF;'>";
-
-		print "<BR /><BR /><BR /><INPUT TYPE='button' VALUE = 'Finished' onClick = 'window.close()'  CLASS = 'btn'>";
-		print "</DIV>";
 ?>
+		</TABLE>
+		<DIV ID='foo'><DIV ID='bar'>		<!-- 12/13/09 -->
+		<INPUT TYPE='button' VALUE = 'Finished' onClick = 'window.close()'  CLASS = 'btn'>
+		</DIV></DIV>
 		<FORM NAME='finform' METHOD='post' ACTION = '<?php print basename(__FILE__);?>'>
 		<INPUT TYPE = 'hidden' NAME='func' VALUE='board'>
 		</FORM>
