@@ -14,8 +14,14 @@
 1/24/09 revised per generated icons
 2/24/09 corrected png names
 3/18/09 'aprs_poll' to 'auto_poll'
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+8/13/10 map.setUIToDefault();	
+3/15/11 changed stylesheet.php to stylesheet.php
 */
-require_once('./incs/functions.inc.php');
+
+@session_start();
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
 
@@ -40,19 +46,19 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	$print = "";											// output string
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$temp = $u_types[$row['type']];
-		$print .= "\t\t" .$temp[0] . " &raquo; <IMG SRC = './icons/" . $sm_icons[$temp[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
+		$print .= "\t\t" .$temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$temp[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
 		}
 	return $print;
 	}			// end function get_icon_legend ()
 	
 function list_responders($addon = '', $start) {
-global $u_types, $my_session;
+global $u_types;
 ?>
 <SCRIPT>
 
 	try {
-		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 		}
 	catch(e) {
@@ -169,8 +175,8 @@ global $u_types, $my_session;
 		var letter = String.fromCharCode("A".charCodeAt(0) + id);		// start with A - 1/5/09
 
 		var icon = new GIcon(listIcon);
-		var icon_url = "./icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + letter;				// 1/5/09
-		icon.image = icon_url;		// ./icons/gen_icon.php?blank=4&text=zz"
+		var icon_url = "./our_icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + letter;				// 1/5/09
+		icon.image = icon_url;		// ./our_icons/gen_icon.php?blank=4&text=zz"
 
 		var marker = new GMarker(point, icon);
 		marker.id = color;				// for hide/unhide - unused
@@ -288,7 +294,9 @@ unset($result);
 	var points = false;								// none
 
 	map = new GMap2(document.getElementById("map"));		// create the map
-	map.addControl(new GSmallMapControl());
+//	map.addControl(new GSmallMapControl());
+	map.setUIToDefault();									// 8/13/10
+
 	map.addControl(new GMapTypeControl());
 	map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);		// <?php echo get_variable('def_lat'); ?>
 
@@ -437,7 +445,7 @@ unset($result);
 		$temptype = $u_types[$row['type']];
 		$the_type = $temptype[0];																			// 1/1/09
 
-		$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 //		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $the_type . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $row['description']), 32) . "</TD></TR>";
@@ -463,7 +471,7 @@ unset($result);
 ?>			
 				do_sidebar ("<?php print str_replace($eols, " ", $sidebar_line); ?>", i);
 <?php			
-				$tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "'>";
+				$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 				$tab_2 .="<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $last['source'] . "</B></TD></TR>";
 				$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $last['course'] . ", Speed:  " . $last['speed'] . ", Alt: " . $last['altitude'] . "</TD></TR>";
 				$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $last['closest_city'] . "</TD></TR>";
@@ -547,15 +555,15 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 		print "\t<META HTTP-EQUIV='refresh' CONTENT='" . 60*$temp . "'>\n";
 		}
 ?>	
-	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 
 <?php
 	print "<SCRIPT>\n";
 	print "var user = '";
-	print $my_session['user_name'];
+	print $_SESSION['user'];
 	print "'\n";
-	print "\nvar level = '" . get_level_text ($my_session['level']) . "'\n";
+	print "\nvar level = '" . get_level_text ($_SESSION['level']) . "'\n";
 ?>	
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = user;
 	parent.frames["upper"].document.getElementById("level").innerHTML  = level;
@@ -573,7 +581,7 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 
 </SCRIPT>
 	</HEAD>
-	<BODY onLoad = "ck_frames()" onunload="GUnload()">
+	<BODY onLoad = "ck_frames()" onUnload="GUnload()">
 		<TABLE ID='outer'><TR CLASS='even'><TD ALIGN='center' colspan=2><B><FONT SIZE='+1'>Mobile Unit Tracks</FONT></B></TD></TR><TR><TD>
 			<DIV ID='side_bar'></DIV>
 			</TD><TD ALIGN='center'>

@@ -25,7 +25,20 @@
 8/5/09 Added Function key settings
 10/20/09 Replaced eregi with preg_replace to work with php 5.30 and greater.
 11/01/09 Added setting for reverse geocoding on or off when setting location of incident - default off.
-*/
+1/23/10 revised per table 'session' removal
+3/21/10 pie chart settings hint added
+8/13/10	hints added for recent settings
+8/27/10 hint added
+8/29/10 dispatch status tags hnt added
+9/3/10 added unit to user display
+12/4/10 cloud handling added
+1/10/11 Added setting for group or dispatch
+1/22/11 allow UC in email addr's
+3/15/11 Help for CSS color settings
+3/18/11 Added aprs.fi key help.
+6/10/11 Added revisable Title string
+11/7/11	Added Statistics users to count in System Summary
+ */
 $colors = array ('odd', 'even');
 
 /* run the OPTIMIZE sql query on all tables */
@@ -34,7 +47,6 @@ function optimize_db(){
 	}
 /* reset database to defaults */
 function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
-	global $my_session;
 	if($ticket)	{
 	 	print '<LI> Deleting actions...';
 		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]action") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
@@ -117,63 +129,14 @@ function reset_db($user=0,$ticket=0,$settings=0,$purge=0){
 		do_insert_settings('func_key2','');					// 8/5/09
 		do_insert_settings('func_key3','');					// 8/5/09
 		do_insert_settings('reverse_geo','0');				// 11/01/09		
+		do_insert_settings('group_or_dispatch','0');				// 12/16/10	
 		}	//
 
 
 	print '<LI> Database reset done<BR /><BR />';
 	}
 
-function browser($instr) {
-	if ( strpos($instr, 'Gecko') ) {
-		if ( strpos($instr, 'Netscape') )	{
-			$browser = 'Netscape (Gecko/Netscape)';
-			}
-		else if ( strpos($instr, 'Firefox') )	 {
-			$browser = 'Mozilla Firefox (Gecko/Firefox)';
-			}
-		else {
-			$browser = 'Mozilla (Gecko/Mozilla)';
-			}
-		}
-	else if ( strpos($instr, 'MSIE') ) {
-		if ( strpos($instr, 'Opera') )	{
-			$browser = 'Opera (MSIE/Opera/Compatible)';
-			}
-		else {
-			$browser = 'Internet Explorer (MSIE/Compatible)';
-			}
-		}
-	else {
-		if ( strpos($instr, 'Opera') )	{
-			$browser = 'Opera (MSIE/Opera/Compatible)';
-			}
-		else {
-			$browser = 'Others browsers';
-			}
-		}
-	return $browser;
-	}		// end function
-
-function logged_on() {
-	global $colors;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` ORDER BY `user_name`";	// 6/15/08 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$print = "<TABLE BORDER=1><TR CLASS='even'><TH COLSPAN=99>Logged on</TD></TR>\n";
-	$i=0;
-	while($row = stripslashes_deep(mysql_fetch_array($result))) {
-		$print .= "<TR CLASS='" . $colors[$i%2] . "'>";
-		$print .= "<TD><B>" . $row['user_name'] . "</B></TD>";
-		$print .= "<TD>" . browser($row['browser']) . "</TD>";
-		$the_time = $row['last_in'] - (get_variable('delta_mins')*60);				// 2/3/09
-		$print .= "<TD>" . format_date("". $the_time) . "</TD>";	 				// adjust with server time offset
-		$print .= "<TR>\n";	
-		}
-	$print .= "</TABLE>\n";
-	return $print;
-	}			// end function logged_on()
-
 function show_stats(){			/* 6/9/08 show database/user stats */
-	global $my_session;
 	
 	function ntp_time() {
 	// ntp time servers to contact
@@ -217,7 +180,8 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	$oper_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_USER]"));
 	$admin_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_ADMINISTRATOR]"));
 	$guest_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_GUEST]"));
-	$super_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_SUPER]"));
+	$super_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_SUPER] AND `passwd` <> '55606758fdb765ed015f0612112a6ca7'"));	//	11/07/11
+	$stats_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_STATS]"));
 	$ticket_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`"));
 	$ticket_open_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE status='$GLOBALS[STATUS_OPEN]'"));
 	$ticket_rsvd_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE status='$GLOBALS[STATUS_RESERVED]'"));
@@ -234,6 +198,7 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 
 
 	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . get_variable('_version') . "</B></TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Server OS:</TD><TD ALIGN='left'>" . php_uname() . "</TD></TR>";	
 	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
 	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
 
@@ -265,12 +230,12 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 		$plural = ($row['the_count']!= 1)? "s": "";
 		$out_str .= $row['the_count'] ." " . $type_color[$row['type']] . $plural . ", " ;
 		}
-	$show_str = $out_str . "total " . $total;
+	$show_str = $out_str . $total . " total";
 	unset($result);	
 
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>" . $show_str . "</TD></TR>";
 	
-	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db)." total</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, $stats_in_db Statistics ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db+$stats_in_db)." total</TD></TR>";	//	11/07/11
 
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
@@ -280,63 +245,73 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Log records in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>{$nr_logs}</TD></TR>";		// 4/5/09
 		
 	print "<TR CLASS='even'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
-	print $my_session['user_name'] . ", " .	get_level_text ($my_session['level']);
+	print $_SESSION['user'] . ", " .	get_level_text ($_SESSION['level']);
 
 //	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
-	$my_session['ticket_per_page'] == 0 ? print ", unlimited " : print $my_session['ticket_per_page'];
-	print " tickets/page, order by '".str_replace('DESC','descending', $my_session['sortorder'])."'</TD></TR>";
+	$_SESSION['ticket_per_page'] == 0 ? print ", unlimited " : print $_SESSION['ticket_per_page'];
+	print " tickets/page, order by '".str_replace('DESC','descending', $_SESSION['sortorder'])."'</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
 	print "<TR CLASS='even'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
 	print $_SERVER["HTTP_USER_AGENT"];
 	print  "</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $my_session['scr_width'] . " x " . $my_session['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 
-function list_users(){/* list users */
-	global $my_session, $colors;
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user`") or do_error('list_users()::mysql_query()', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	if (!check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]user`")) { print '<B>[no users found]</B><BR />'; return; 	}
-	print "<TABLE BORDER='0'>";
-	$caption = (is_guest() || is_user())? "": "- click to edit";
+function list_users(){		/* list users */
+	global $colors;						// 9/3/10
+//	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user`") or do_error('list_users()::mysql_query()', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$query = "SELECT *,
+		`u`.`id` AS `userid`,
+		`r`.`name` AS `unitname`,
+		`r`.`id` AS `unitid`
+		FROM `$GLOBALS[mysql_prefix]user` `u`
+		LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`u`.`responder_id` = `r`.`id`)
+		WHERE `passwd` <> '55606758fdb765ed015f0612112a6ca7'	
+		ORDER BY `u`.`user` ASC ";																// 5/25/09, 1/16/08
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	if (mysql_affected_rows()==0) 	 { print '<B>[no users found]</B><BR />'; return; 	}
+
+//	if (!check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]user`")==0) { print '<B>[no users found]</B><BR />'; return; 	}
+	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 1/23/10
+
+	print "<TABLE BORDER='0' CELLPADDING=2>";
+	$caption = (has_admin())?" - click to edit":  ""; 	// 
 	print "<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><B>Users" . $caption . " </B></TD></TR>";
-	print "<TR CLASS='odd'><TD><B>ID&nbsp;&nbsp;&nbsp;</B></TD><TD><B>User&nbsp;&nbsp;&nbsp;</B></TD><TD><B>Call&nbsp;&nbsp;&nbsp;</B></TD><TD><B>Description&nbsp;&nbsp;&nbsp;</B></TD><TD><B>Level&nbsp;&nbsp;&nbsp;</B></TD></TR>";
+	print "<TR CLASS='odd'><TD><B>ID</B></TD>
+		<TD><B>&nbsp;User</B></TD>
+		<TD><B>&nbsp;Online</B></TD>
+		<TD><B>&nbsp;Level</B></TD>
+		<TD><B>&nbsp;Unit</B></TD>
+		<TD><B>&nbsp;Call</B></TD>
+		<TD><B>&nbsp;Description</B></TD>
+		<TD><B>&nbsp;Log in</B></TD>
+		<TD><B>&nbsp;From</B></TD>
+		<TD><B>&nbsp;Browser</B></TD>
+		</TR>";
 	$i=1;
 	while($row = stripslashes_deep(mysql_fetch_array($result))) {				// 10/8/08
-		if (is_guest() || is_user()) {
-			print "<TR CLASS='" . $colors[$i%2] . "'><TD>" . $row['id'] . "</TD><TD>" . $row['user'] . "</TD><TD>" . $row['callsign'] . "</TD><TD>" . $row['info'] . "</TD><TD>";
-			}
-		else {
-			print "<TR CLASS='" . $colors[$i%2] . "'><TD><A HREF=\"config.php?func=user&id=" . $row['id'] . "\">#" . $row['id'] . "</A></TD><TD>" . $row['user'] . "</TD><TD>" . $row['callsign'] . "</TD><TD>" . $row['info'] . "</TD><TD>";
-			}
+		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$row['userid']}' \"": "";
 
-		switch($row['level'])	{
-			case $GLOBALS['LEVEL_SUPER']:			print get_level_text($GLOBALS['LEVEL_SUPER']);			break;		// 6/9/08, 8/10/08
-			case $GLOBALS['LEVEL_ADMINISTRATOR']:	print get_level_text($GLOBALS['LEVEL_ADMINISTRATOR']);	break;
-			case $GLOBALS['LEVEL_USER']:			print get_level_text($GLOBALS['LEVEL_USER']);			break;
-			case $GLOBALS['LEVEL_GUEST']:			print get_level_text($GLOBALS['LEVEL_GUEST']);			break;
-			case $GLOBALS['LEVEL_MEMBER']:			print get_level_text($GLOBALS['LEVEL_MEMBER']);			break;
-			}
-
-		print "</TD></TR>\n";
-		$i++;
+		$level = get_level_text($row['level']);
+		$login = format_date_time($row['login']);
+		$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
+		print "<TR CLASS='{$colors[$i%2]}' {$onclick}>
+				<TD>{$row['userid']}</TD>
+				<TD>&nbsp;{$row['user']}</TD>
+				<TD ALIGN = 'center'>{$online}</TD>
+				<TD>{$level}</TD>
+				<TD>{$row['unitname']}</TD> 
+				<TD>{$row['callsign']}</TD>
+				<TD>{$row['info']}</TD>
+				<TD>{$login}</TD>
+				<TD>{$row['_from']}</TD>
+				<TD>{$row['browser']}</TD>
+				</TR>\n";
+		$i++;		
 		}
 	print '</TABLE><BR />';
-	}
-
-function reload_session(){/* reload session variables from db after profile update */
-	global $my_session;
-
-	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`='$my_session[user_name]'";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	$my_session 	= mysql_fetch_array($result);
-/*	
-	$my_session['level'] 				= $row['level'];
-	$my_session['reporting']	 		= $row['reporting'];
-	$my_session['ticket_per_page'] 	= $row['ticket_per_page'];
-	$my_session['sortorder']			= $row['sortorder'].($row['sort_desc'] ? "DESC" : "");
-*/
-	}
+	}		// end function list_users()
 
 function do_insert_settings($name,$value){/* insert new values into settings table */
 	$query =  sprintf("INSERT INTO `$GLOBALS[mysql_prefix]settings` (`name`,`value`) VALUES(%s,%s)",
@@ -354,11 +329,11 @@ function validate_email($email){ 	//really validate? - code courtesy of Jerrett 
 
 //	if (!eregi("^[0-9a-z_]([-_.]?[0-9a-z])*@[0-9a-z][-.0-9a-z]*\\.[a-z]{2,4	}[.]?$",$email, $check)) --
 
-	if(!preg_match( "/^" .			// replaced eregi() with preg_replace() 10/20/09
-            "[a-z0-9]+([_\\.-][a-z0-9]+)*" .    //user
+	if(!preg_match( "/^" .			// replaced eregi() with preg_replace() 10/20/09, 1/22/11
+            "[a-zA-Z0-9]+([_\\.-][a-zA-Z0-9]+)*" .    //user
             "@" .
-            "([a-z0-9]+([\.-][a-z0-9]+)*)+" .   //domain
-            "\\.[a-z]{2,}" .                    //sld, tld
+            "([a-zA-Z0-9]+([\.-][a-zA-Z0-9]+)*)+" .   //domain
+            "\\.[a-zA-Z]{2,}" .                    	//sld, tld
             "$/", $email, $regs)
    			) {
 
@@ -419,7 +394,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "restrict_user_tickets": 	return "Restrict to showing only tickets to current user"; break;
 		case "serial_no_ap": 			return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
 		case "situ_refr":				return "Situation map auto refresh - in seconds"; break;											// 3/11/09
-		case "smtp_acct":				return "Ex: outgoing.verizon.net/587/ashore3/*&^$#@/ashore3@verizon.net"; break;					// 7/12/09
+		case "smtp_acct":				return "Ex: outgoing.verizon.net/587/ashore4/*&^$#@/ashore4@verizon.net"; break;					// 7/12/09
 		case "terrain": 				return "Do/don&#39;t (1/0) include terrain map view option"; break;
 		case "ticket_per_page": 		return "Number of tickets per page to show"; break;
 		case "ticket_table_width": 		return "Width of table when showing ticket"; break;
@@ -428,22 +403,69 @@ function get_setting_help($setting){/* get help for settings */
 		case "wp_key": 					return "White pages lookup key - obtain your own for high volume use"; break;												// 9/13/08
 		case "closed_interval": 		return "Closed tickets and cleared dispatches are visible for this many hours"; break;												// 9/13/08
 		case "def_zoom_fixed": 			return "Dynamic or fixed map/zoom; 0 dynamic, 1 fixed situ, 2 fixed units, 3 both"; break;												// 9/13/08
-		case "instam_key": 				return "Instamapper master account key"; break;												// 9/13/08
+		case "instam_key": 				return "Instamapper &#39;Master API key&#39;"; break;												// 9/13/08
 		case "msg_text_1": 				return "Default message string for incident new/edit notifies; see instructions"; break;		// 4/5/09										// 9/13/08
 		case "msg_text_2": 				return "Default message string for incident mini-menu email; see instructions"; break;												// 9/13/08
 		case "msg_text_3": 				return "Default message string for for dispatch notifies; see instructions"; break;												// 9/13/08
 		case "gtrack_url": 				return "URL for Gtrack server in format http://www.yourserver.com"; break;	//06/24/09
 		case "maptype": 				return "Default Map display type - 1 for Standard, 2 for Satellite, 3 for Terrain Map, 4 for Hybrid"; break;	//08/02/09
-//		case "locale": 					return "Locale for USNG/UTM/OSG setting plus date format 0=US Format, 1=UK Format, 2=ROW Format (UTM = UK Date Format)"; break;	//08/03/09
-		case "locale": 					return "Locale for USNG/UTM/OSG setting plus date format 0=US Format, 1=UK Format)"; break;	//08/03/09
+		case "locale": 					return "Locale for USNG/UTM/OSG setting plus date format - 0=US, 1=UK, 2=ROW "; break;	//08/03/09
 		case "func_key1": 				return "User Defined Function key 1 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "func_key2": 				return "User Defined Function key 2 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "func_key3": 				return "User Defined Function key 3 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
 		case "reverse_geo": 			return "Use Reverse Geocoding when setting location for an incident. 1 for yes, 0 for no. Default is 0"; break;	//11/01/09
-		case "logo": 					return "Enter filename of your site's logo file here"; break;	//11/01/09
+		case "logo": 					return "Enter filename of your site logo file here"; break;	//8/13/10
+		case "pie_charts": 				return "Severity/Incident types/Location pie chart diameters, in pixels"; break;	// 3/21/10
+		case "internet": 				return "Internet/network connection available: 1 (default) for Yes, 2 for No, 3 for maybe - will check network dynamically"; break;	// 8/13/10		
+		case "sound_mp3": 				return "Enter filename of your site mp3 alert tone - Default is phonesring.mp3"; break;	// 8/13/10
+		case "sound_wav": 				return "Enter filename of your site WAV alert tone - Default is aooga.wav"; break;	// 8/13/10			
+		case "oper_can_edit": 			return "Operator is disallowed (0) or allowed to (1) edit incident data"; break;	// 8/27/10		
+		case "disp_stat": 				return "Dispatch status tags, slash-separated; for &#39;dispatched&#39;, responding&#39;, &#39;on-scene&#39;, &#39;facility-enroute&#39;, &#39;facility arrived&#39;, &#39;clear&#39; IN THAT ORDER! (D/R/O/FE/FA/Clear)"; break;	// 8/29/10		
+		case "group_or_dispatch": 		return "Show hide categories for units on the situation screen are based on show/hide setting in un_status table (0 - default) or on status groups in un_status table (1)"; break;	// 8/29/10		
+		case "aprs_fi_key": 			return "To use aprs location data you will need to sign up for an aprs.fi user account/key (free).  Obtain from http://aprs.fi"; break;	// 3/19/11		
+		case "title_string": 			return "If text is entered here it replaces the default title in the top bar."; break;	// 6/10/11		
 		default: 						return "No help for '$setting'"; break;	//
 		}
 	}
+	
+function get_css_day_help($setting){/* get help for color settings	3/15/11 */
+	switch($setting) {
+		case "page_background":				return "Main Page Background color."; break;
+		case "normal_text": 				return "Normal text color."; break;
+		case "row_dark": 					return "Dark background color of list entries."; break;
+		case "row_light": 					return "Dark background color of list entries."; break;
+		case "row_plain": 					return "Plain Row Background color"; break;
+		case "select_menu_background": 		return "Background color for pulldown (select) menus."; break;
+		case "select_menu_foreground": 		return "Text color for pulldown (select) menus."; break;
+		case "form_input_text":				return "Form field text color."; break;
+		case "form_input_box_background": 	return "Form field background color."; break;
+		case "legend":						return "Text color for unit and facility legends."; break;
+		case "links":						return "Text color for links."; break;
+		case "other_text": 					return "All other text elements color."; break;	
+		case "list_header_text": 			return "Text color for list headings."; break;		
+		default: 							return "No help for '$setting'"; break;	//
+		}
+	}	
+	
+function get_css_night_help($setting){/* get help for color settings	3/15/11 */
+	switch($setting) {
+		case "page_background":				return "Main Page Background color."; break;
+		case "normal_text": 				return "Normal text color."; break;
+		case "row_dark": 					return "Dark background color of list entries."; break;
+		case "row_light": 					return "Dark background color of list entries."; break;
+		case "row_plain": 					return "Plain Row Background color"; break;
+		case "select_menu_background": 		return "Background color for pulldown (select) menus."; break;
+		case "select_menu_foreground": 		return "Text color for pulldown (select) menus."; break;
+		case "form_input_text":				return "Form field text color."; break;
+		case "form_input_box_background": 	return "Form field background color."; break;
+		case "legend":						return "Text color for unit and facility legends."; break;
+		case "links":						return "Text color for links."; break;
+		case "other_text": 					return "All other text elements color."; break;	
+		case "list_header_text": 			return "Text color for list headings."; break;		
+		default: 							return "No help for '$setting'"; break;	//		default: 						return "No help for '$setting'"; break;	//
+		}
+	}		
+	
 //		case 'kml files':  				return 'Dont/Do display KML files - 0/1'; break;
 //def_zoom_fixed
 

@@ -56,16 +56,16 @@ function dump_table($tablename) {
 	}
 
 function get_table_structure($tablename) {
-
+//	snap(__LINE__, $tablename);
 	$arr = array("NO" => "NOT NULL", "YES" => "NULL");
 
 	$this->output .= "\n\n-- Dumping structure for table: $tablename\n\n";
 	if ($this->droptableifexists) { $this->output .= "DROP TABLE IF EXISTS `$tablename`;\nCREATE TABLE `$tablename` (\n"; 	}
 		else { $this->output .= "CREATE TABLE `$tablename` (\n"; 	}
-	$sql = mysql_query("DESCRIBE $tablename");
+	$sql = mysql_query("DESCRIBE $tablename");		// returns resource(22) of type (mysql result)
+//	dump($tablename . ": " . gettype($sql));
 	$this->fields = array();
-	while ($row = mysql_fetch_array($sql)) {
-	
+	while ($row = mysql_fetch_array($sql)) {	
 		$name = $row[0]; //name
 		$type = $row[1]; //type
 		$null = $arr[strtoupper(trim($row[2]))]; //null?

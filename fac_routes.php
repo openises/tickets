@@ -6,14 +6,25 @@
 10/28/09 Add Loading Directions message in floating menu.
 10/29/09 Added ticket scope to hidden form filed for passing to do_direcs_mail script
 11/13/09 correction for apostrophe handling
+7/16/10 detailmap.setCenter correction
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+8/13/10 map.setUIToDefault();
+11/23/10 - mi vs km per locale
+3/15/11	Added reference to revisable stylesheet for configurable colors.
+5/4/11 get_new_colors() added
+5/28/11 intrusion detection added
+6/10/11 Added Regions / Groups
 */
 
 $from_top = 20;				// buttons alignment, user-reviseable as needed
 $from_left = 400;
 
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
-$my_session = do_login(basename(__FILE__));		// returns session array
+
+@session_start();
+if ((isset($_REQUEST['ticket_id'])) && (!(strval(intval($_REQUEST['ticket_id']))===$_REQUEST['ticket_id']))) {	shut_down();}	// 5/28/11
+require_once($_SESSION['fip']);		//7/28/10
+do_login(basename(__FILE__));
 if($istest) {
 //	dump(basename(__FILE__));
 	print "GET<br />\n";
@@ -22,7 +33,22 @@ if($istest) {
 	dump($_POST);
 	}
 	
+function get_ticket_id () {				// 5/4/11
+
+	if (array_key_exists('ticket_id', ($_REQUEST))) {
+		$_SESSION['active_ticket'] = $_REQUEST['ticket_id'];
+		return (integer) $_REQUEST['ticket_id'];
+		}
+	elseif (array_key_exists('active_ticket', $_SESSION)) {
+		return (integer) $_SESSION['active_ticket'];	
+		}
+	else {
+		echo "error at "	 . __LINE__;
+		}								// end if/else
+	}				// end function	
+	
 $api_key = get_variable('gmaps_api_key');
+$conversion = get_dist_factor();				// KM vs mi - 11/23/10
 $_GET = stripslashes_deep($_GET);
 $eol = "< br />\n";
 
@@ -44,14 +70,12 @@ function get_icon_legend (){
 	$print = "";											// output string
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$type_data = $u_types[$row['type']];
-		$print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './icons/" . $sm_icons[$type_data[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
+		$print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$type_data[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
 		}
 	return $print;
 	}			// end function get_icon_legend ()
 
 function do_fac($theFac, $theWidth, $search=FALSE, $dist=TRUE) {
-
-	global $my_session;
 
 	$print = "<TABLE BORDER='0'ID='left' width='" . $theWidth . "'>\n";		//
 	$print .= "<TR CLASS='even'><TD CLASS='td_data' COLSPAN=2 ALIGN='center'><B>Facility: <I>" . highlight($search,$theFac['fac_name']) . "</B></TD></TR>\n";
@@ -90,16 +114,22 @@ function do_fac($theFac, $theWidth, $search=FALSE, $dist=TRUE) {
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
-	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">		<!-- 3/15/11 -->
     <style type="text/css">
+	.box { background-color: transparent; border: none; color: #000000; padding: 0px; position: absolute; }
+	.bar { background-color: transparent; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em; }
+	
+	.box2 { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:10000; width: 180px; }
+	.bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
+	.content { padding: 1em; text-align: center; }	
       body 					{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
       table.directions th 	{background-color:#EEEEEE;}	  
       img 					{color: #000000;}
     </style>
 <SCRIPT>
 	try {	
-		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 		}
 	catch(e) {
@@ -122,6 +152,117 @@ function do_fac($theFac, $theWidth, $search=FALSE, $dist=TRUE) {
 		return elements;
 		}
 </SCRIPT>	
+<script type="text/javascript">//<![CDATA[
+//*****************************************************************************
+// Do not remove this notice.
+//
+// Copyright 2001 by Mike Hall.
+// See http://www.brainjar.com for terms of use.
+//*****************************************************************************
+// Determine browser and version.
+function Browser() {
+	var ua, s, i;
+	this.isIE		= false;
+	this.isNS		= false;
+	this.version = null;
+	ua = navigator.userAgent;
+	s = "MSIE";
+	if ((i = ua.indexOf(s)) >= 0) {
+		this.isIE = true;
+		this.version = parseFloat(ua.substr(i + s.length));
+		return;
+		}
+	s = "Netscape6/";
+	if ((i = ua.indexOf(s)) >= 0) {
+		this.isNS = true;
+		this.version = parseFloat(ua.substr(i + s.length));
+		return;
+		}
+	// Treat any other "Gecko" browser as NS 6.1.
+	s = "Gecko";
+	if ((i = ua.indexOf(s)) >= 0) {
+		this.isNS = true;
+		this.version = 6.1;
+		return;
+		}
+	}
+var browser = new Browser();
+var dragObj = new Object();		// Global object to hold drag information.
+dragObj.zIndex = 0;
+function dragStart(event, id) {
+	var el;
+	var x, y;
+	if (id)										// If an element id was given, find it. Otherwise use the element being
+		dragObj.elNode = document.getElementById(id);	// clicked on.
+	else {
+		if (browser.isIE)
+			dragObj.elNode = window.event.srcElement;
+		if (browser.isNS)
+			dragObj.elNode = event.target;
+		if (dragObj.elNode.nodeType == 3)		// If this is a text node, use its parent element.
+			dragObj.elNode = dragObj.elNode.parentNode;
+		}
+	if (browser.isIE) {			// Get cursor position with respect to the page.
+		x = window.event.clientX + document.documentElement.scrollLeft
+			+ document.body.scrollLeft;
+		y = window.event.clientY + document.documentElement.scrollTop
+			+ document.body.scrollTop;
+		}
+	if (browser.isNS) {
+		x = event.clientX + window.scrollX;
+		y = event.clientY + window.scrollY;
+		}
+	dragObj.cursorStartX = x;		// Save starting positions of cursor and element.
+	dragObj.cursorStartY = y;
+	dragObj.elStartLeft	= parseInt(dragObj.elNode.style.left, 10);
+	dragObj.elStartTop	 = parseInt(dragObj.elNode.style.top,	10);
+	if (isNaN(dragObj.elStartLeft)) dragObj.elStartLeft = 0;
+	if (isNaN(dragObj.elStartTop))	dragObj.elStartTop	= 0;
+	dragObj.elNode.style.zIndex = ++dragObj.zIndex;		// Update element's z-index.
+	if (browser.isIE) {									// Capture mousemove and mouseup events on the page.
+		document.attachEvent("onmousemove", dragGo);
+		document.attachEvent("onmouseup",	 dragStop);
+		window.event.cancelBubble = true;
+		window.event.returnValue = false;
+		}
+	if (browser.isNS) {
+		document.addEventListener("mousemove", dragGo,	 true);
+		document.addEventListener("mouseup",	 dragStop, true);
+		event.preventDefault();
+		}
+	}
+function dragGo(event) {
+	var x, y;
+	if (browser.isIE) {	// Get cursor position with respect to the page.
+		x = window.event.clientX + document.documentElement.scrollLeft
+			+ document.body.scrollLeft;
+		y = window.event.clientY + document.documentElement.scrollTop
+			+ document.body.scrollTop;
+		}
+	if (browser.isNS) {
+		x = event.clientX + window.scrollX;
+		y = event.clientY + window.scrollY;
+		}
+	dragObj.elNode.style.left = (dragObj.elStartLeft + x - dragObj.cursorStartX) + "px";	// Move drag element by the same amount the cursor has moved.
+	dragObj.elNode.style.top	= (dragObj.elStartTop	+ y - dragObj.cursorStartY) + "px";
+	if (browser.isIE) {
+		window.event.cancelBubble = true;
+		window.event.returnValue = false;
+		}
+	if (browser.isNS)
+		event.preventDefault();
+	}
+function dragStop(event) {
+	if (browser.isIE) {	// Stop capturing mousemove and mouseup events.
+		document.detachEvent("onmousemove", dragGo);
+		document.detachEvent("onmouseup",	 dragStop);
+		}
+	if (browser.isNS) {
+		document.removeEventListener("mousemove", dragGo,	 true);
+		document.removeEventListener("mouseup",	 dragStop, true);
+		}
+	}
+//]]></script>	
 <?php
 
 if (!empty($_POST)) {
@@ -130,6 +271,43 @@ if (!empty($_POST)) {
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
 ?>	
 <SCRIPT>
+	function checkArray(form, arrayName)	{	//	5/3/11
+		var retval = new Array();
+		for(var i=0; i < form.elements.length; i++) {
+			var el = form.elements[i];
+			if(el.type == "checkbox" && el.name == arrayName && el.checked) {
+				retval.push(el.value);
+			}
+		}
+	return retval;
+	}	
+		
+	function checkForm(form)	{	//	6/10/11
+		var errmsg="";
+		var itemsChecked = checkArray(form, "frm_group[]");
+		if(itemsChecked.length > 0) {
+			var params = "f_n=viewed_groups&v_n=" +itemsChecked+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
+			var url = "persist3.php";	//	3/15/11	
+			sendRequest (url, fvg_handleResult, params);				
+	//			form.submit();
+		} else {
+			errmsg+= "\tYou cannot Hide all the regions\n";
+			if (errmsg!="") {
+				alert ("Please correct the following and re-submit:\n\n" + errmsg);
+				return false;
+			}
+		}
+	}
+
+	function fvg_handleResult(req) {	// 6/10/11	The persist callback function for viewed groups.
+		document.region_form.submit();
+		}
+		
+	function form_validate(theForm) {	//	6/10/11
+	//		alert("Validating");
+		checkForm(theForm);
+		}				// end function validate(theForm)
+
 	function sendRequest(url,callback,postData) {
 		var req = createXMLHTTPObject();
 		if (!req) return;
@@ -227,8 +405,8 @@ else {		// 201-439
 	
 
 <SCRIPT>
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 	String.prototype.parseDeg = function() {
@@ -335,7 +513,7 @@ function doReset() {
 	print "var thelat = " . $row_fac['lat'] . ";\nvar thelng = " . $row_fac['lng'] . ";\n";		// set js-accessible location data
 ?>
 </SCRIPT>
-<BODY onLoad = "do_notify(); ck_frames()" onunload="GUnload()">
+<BODY onLoad = "do_notify(); ck_frames()" onUnload="GUnload()">
 <?php
 require_once('./incs/links.inc.php');
 ?>
@@ -370,7 +548,7 @@ require_once('./incs/links.inc.php');
 	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print basename( __FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db'>
 	<INPUT TYPE='hidden' NAME='frm_fac_id' 	VALUE='<?php print $_GET['fac_id']; ?>'>
-	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $my_session['user_id'];?>">
+	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>">
 	<INPUT TYPE='hidden' NAME='frm_id_str' 		VALUE= "">
 	<INPUT TYPE='hidden' NAME='frm_name_str' 	VALUE= "">
 	<INPUT TYPE='hidden' NAME='frm_status_id' 	VALUE= "1">
@@ -401,7 +579,82 @@ require_once('./incs/links.inc.php');
 	print "</SPAN>";
 ?>
 	</DIV>
-	
+<?php
+		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 
+		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
+		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
+		
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
+		$result = mysql_query($query);	// 4/13/11
+		$al_groups = array();
+		$al_names = "";	
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
+			$al_groups[] = $row['group'];
+			if(!(is_super())) {
+				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
+				$result2 = mysql_query($query2);	// 4/13/11
+				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
+					$al_names .= $row2['group_name'] . ", ";
+					}
+				} else {
+					$al_names = "ALL. Superadmin Level";
+				}
+			}
+
+
+		$from_left = 85;	//	5/3/11
+		$from_top = 50;		//	5/3/11	
+		
+		if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11		
+?>
+		<div id = 'outer' style = "position:fixed; left:<?php print $from_left;?>%; top:<?php print $from_top;?>%; z-index: 1000; ">		<!-- 5/3/11 -->
+		<div id="boxC" class="box2" style="z-index:1000;">
+		  <div class="bar2" STYLE="color:red; z-index: 1000;"
+			   onmousedown="dragStart(event, 'boxC')"><i>Drag me</i></div>
+		  <div id="region_boxes" class="content" style="z-index: 1000;"></div>
+		</div>
+		</div>
+<?php
+}
+		function get_buttons($user_id) {		//	5/3/11
+			if(isset($_SESSION['viewed_groups'])) {
+				$regs_viewed= explode(",",$_SESSION['viewed_groups']);
+				}
+			
+			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$user_id' ORDER BY `group`";			//	5/3/11
+			$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+
+			$al_buttons="";	
+			while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	//	5/3/11
+				if(!empty($regs_viewed)) {
+					if(in_array($row2['group'], $regs_viewed)) {
+						$al_buttons.="<DIV style='float: left; width: 100%; text-align: left;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV>";
+					} else {
+						$al_buttons.="<DIV style='float: left; width: 100%; text-align: left;'><INPUT TYPE='checkbox' name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV>";
+					}
+					} else {
+						$al_buttons.="<DIV style='float: left; width: 100%; text-align: left;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV>";
+					}
+				}
+			return $al_buttons;
+			}
+		
+		if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11
+?>
+			<SCRIPT>
+				side_bar_html= "";
+				side_bar_html+="<TABLE><TR class='heading_2'><TH ALIGN='center' COLSPAN=99>Viewed <?php print get_text("Regions");?></TH></TR><TR class='even'><TD CLASS='td_label'><form name='region_form' METHOD='post' action='#'><DIV>";
+				side_bar_html += "<?php print get_buttons($_SESSION['user_id']);?>";
+				side_bar_html+="</DIV></form></TD></TR><TR><TD COLSPAN=99>&nbsp;</TD></TR><TR><TD ALIGN='center' COLSPAN=99><INPUT TYPE='button' VALUE='Update' onClick='form_validate(document.region_form);'></TD></TR></TABLE>";
+				$("region_boxes").innerHTML = side_bar_html;		
+			</SCRIPT>
+<?php
+			} 			
+?>				
+		<A NAME="page_bottom" /> <!-- 5/13/10 -->	
+		<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
+		<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print get_ticket_id (); ?>' />	<!-- 10/25/08 -->
+		</FORM>		
 	</BODY>
 
 <?php
@@ -486,7 +739,7 @@ require_once('./incs/links.inc.php');
 	}			// end if/else !empty($_POST)
 
 function do_list($unit_id ="") {
-	global $row_fac, $my_session, $dispatches, $from_top, $from_left, $eol;
+	global $row_fac, $dispatches, $from_top, $from_left, $eol, $conversion;
 	
 ?>
 <SCRIPT>
@@ -506,9 +759,9 @@ function do_list($unit_id ="") {
 	    	last_from = fromAddress;
 	    	last_to = toAddress;
 		f_unit = unit_id;
-		   	G_START_ICON.image = "./icons/sm_white.png";
+		   	G_START_ICON.image = "./our_icons/sm_white.png";
 		   	G_START_ICON.iconSize = new GSize(12,20); 
-		   	G_END_ICON.image = "./icons/sm_white.png";
+		   	G_END_ICON.image = "./our_icons/sm_white.png";
 		   	G_END_ICON.iconSize = new GSize(12,20);         	
 
 	    	var Direcs = gdir.load("from: " + fromAddress + " to: " + toAddress, { "locale": locale, preserveViewport : true  });
@@ -578,9 +831,9 @@ function do_list($unit_id ="") {
 			var icon = new GIcon(listIcon);
 			var uid = unit_id;
 			var letter = ""+ id;	
-			var icon_url = "./icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + letter;
+			var icon_url = "./our_icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + letter;
 	
-			icon.image = icon_url;		// ./icons/gen_icon.php?blank=4&text=zz"
+			icon.image = icon_url;		// ./our_icons/gen_icon.php?blank=4&text=zz"
 			var marker = new GMarker(point, icon);
 			marker.id = color;				// for hide/unhide - unused
 		
@@ -591,8 +844,10 @@ function do_list($unit_id ="") {
 				marker.openInfoWindowTabsHtml(infoTabs[id]);
 				var dMapDiv = document.getElementById("detailmap");
 				var detailmap = new GMap2(dMapDiv);
-				detailmap.addControl(new GSmallMapControl());
-				detailmap.setCenter(point, 13);  					// larger # = closer
+//				detailmap.addControl(new GSmallMapControl());
+				map.setUIToDefault();										// 8/13/10
+
+				detailmap.setCenter(point, 17);  					// larger # = closer - 7/16/10
 				detailmap.addOverlay(marker);
 				});
 		
@@ -764,7 +1019,9 @@ function do_list($unit_id ="") {
 		var i = 0;			// sidebar/icon index
 	
 		map = new GMap2(document.getElementById("map_canvas"));		// create the map
-		map.addControl(new GSmallMapControl());
+//		map.addControl(new GSmallMapControl());
+		map.setUIToDefault();										// 8/13/10
+
 		map.addControl(new GMapTypeControl());
 <?php if (get_variable('terrain') == 1) { ?>
 		map.addMapType(G_PHYSICAL_MAP);
@@ -812,7 +1069,7 @@ function do_list($unit_id ="") {
 
 		var nr_units = 	0;
 		var email= false;
-	    var km2mi = 0.6214;				// 
+	  	var km2mi = <?php print $conversion ;?>;				// 
 		
 <?php
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
@@ -846,7 +1103,7 @@ function do_list($unit_id ="") {
 <?php
 				if ($has_coords) {
 //					snap (__LINE__, $unit_row['unit_id']);
-					$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
+					$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 					$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($unit_row['name'], 48) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $unit_row['description']), 32) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='odd'><TD>Status:</TD><TD>" . $unit_row['unitstatus'] . " </TD></TR>";
@@ -890,7 +1147,7 @@ function do_list($unit_id ="") {
 					
 						$track_row = stripslashes_deep(mysql_fetch_array($result_tr));			// most recent track report
 			
-						$tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
+						$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 						$tab_2 .= "<TR><TH CLASS='even' COLSPAN=2>" . $track_row['source'] . "</TH></TR>";
 						$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $track_row['course'] . ", Speed:  " . $track_row['speed'] . ", Alt: " . $track_row['altitude'] . "</TD></TR>";
 						$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $track_row['closest_city'] . "</TD></TR>";
@@ -934,7 +1191,7 @@ function do_list($unit_id ="") {
 						lats[i] = <?php print $unit_row['lat'];?>; // 819 now compute distance - in km
 						lngs[i] = <?php print $unit_row['lng'];?>;
 						distances[i] = distCosineLaw(parseFloat(lats[i]), parseFloat(lngs[i]), parseFloat(<?php print $row_fac['lat'];?>), parseFloat(<?php print $row_fac['lng'];?>));	// note: km
-					    var km2mi = 0.6214;				// 
+					    var km2mi = <?php print $conversion ;?>;				// 
 						var dist_mi = ((distances[i] * km2mi).toFixed(1)).toString();				// to feet
 <?php
 						}		// end if ($has_coords)
@@ -975,7 +1232,7 @@ function do_list($unit_id ="") {
 				
 			}				// end if(mysql_affected_rows()>0)
 ?>
- 		var point = new GLatLng(<?php echo $row_fac['lat']; ?>, <?php echo $row_fac['lng']; ?>);	// incident
+ 		var point = new GLatLng(<?php echo $row_fac['lat']; ?>, <?php echo $row_fac['lng']; ?>);	//
 		var baseIcon = new GIcon();
 		var inc_icon = new GIcon(baseIcon, "./markers/sm_black.png", null);
 		var thisMarker = new GMarker(point);

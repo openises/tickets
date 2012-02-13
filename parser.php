@@ -205,7 +205,7 @@
 	if(empty($mysql_user)) 	{ die("Failed! Tickets 'database user name' value absent from 'incs/mysql.inc.php' file. " . __LINE__ . "\n");}
 
 //	if (!@mysql_connect($_POST['frm_db_host'], $_POST['frm_db_user'], $_POST['frm_db_password'])) {
-	if (!@mysql_connect ($mysql_host, $mysql_user, $mysql_passwd) { die("Failed! Unable to connect to MySQL . ".  __LINE__ . "\n"); }
+	if (!@mysql_connect ($mysql_host, $mysql_user, $mysql_passwd)) { die("Failed! Unable to connect to MySQL . ".  __LINE__ . "\n"); }	//	fixed missing close bracket
 	   
 	if (!(table_exists("settings",FALSE))) { die("Failed! Tickets 'Settings' table absent. ".  __LINE__ . "\n"); }
 

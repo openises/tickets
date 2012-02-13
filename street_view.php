@@ -2,9 +2,12 @@
 /*
 2/9/09 initial version
 2/11/09 error messages revised
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
 error_reporting(E_ALL);									// 10/1/08
-require_once('./incs/functions.inc.php'); 				// 11/21/08
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 $api_key = get_variable('gmaps_api_key');
 
 ?>
@@ -55,7 +58,7 @@ $api_key = get_variable('gmaps_api_key');
 		
 	</script>
 	</head>
-	<body onLoad = "do_the_view()" onunload="GUnload()">
+	<body onLoad = "do_the_view()" onUnload="GUnload()">
 	<div name="pano" id="pano" style="width: 600px; height: 400px"></div>
 	</body>
 </html>

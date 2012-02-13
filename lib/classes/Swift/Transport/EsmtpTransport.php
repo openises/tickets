@@ -1,6 +1,7 @@
 <?php
 
 /*
+7/4/10 public function () -> function()
  The ESMTP Transport from Swift Mailer.
  
  This program is free software: you can redistribute it and/or modify
@@ -210,7 +211,8 @@ class Swift_Transport_EsmtpTransport
   // -- Mixin invocation code
   
   /** Mixin handling method for ESMTP handlers */
-  private function __call($method, $args)
+//  private function __call($method, $args)
+  function __call($method, $args)				// 7/4/10
   {
     foreach ($this->_handlers as $handler)
     {

@@ -1,12 +1,19 @@
 <?php
 /*
 8/17/09	initial release - mail to facility
+7/16/10 added check for no addressees
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);		//
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
+$evenodd = array ("even", "odd");
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 <HEAD>
 <TITLE><?php print LessExtension(basename(__FILE__));?> </TITLE>
@@ -17,7 +24,7 @@ require_once('./incs/functions.inc.php');
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <STYLE>
 #.plain 	{ background-color: #FFFFFF;}
 </STYLE>
@@ -25,10 +32,8 @@ require_once('./incs/functions.inc.php');
 
 //dump($_POST);
 
-if (empty($_POST)) {		
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . quote_smart(trim($_GET['fac_id'])). " LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = mysql_fetch_assoc($result);
+if (empty($_POST)) {
+
 ?>
 
 <SCRIPT>
@@ -50,12 +55,24 @@ if (empty($_POST)) {
 		return elements;
 		}
 	
+	function reSizeScr(lines){
+		var the_width = 720;
+		var the_height = ((lines * 21)+400);				// values derived via trial/error (more of the latter, mostly)
+		window.resizeTo(the_width,the_height);	
+		}
 
 	function validate() {
+		var addr_err = true;
+			for (i=0; i< document.mail_form.length; i++) {
+			 	if ((document.mail_form.elements[i].name.substring(0, 2) == 'cb') && (document.mail_form.elements[i].checked)) {
+			 		addr_err = false;
+		 			}
+		 		}
+	
 		var errmsg="";
-		if (document.mail_form.frm_addr.value.trim()=="") {errmsg+="Message address is required";}
-		if (document.mail_form.frm_subj.value.trim()=="") {errmsg+="Message subject is required";}
-		if (document.mail_form.frm_text.value.trim()=="") {errmsg+="Message text is required";}
+		if (addr_err) 									  {errmsg+="One or more addresses required\n";}
+		if (document.mail_form.frm_subj.value.trim()=="") {errmsg+="Message subject is required\n";}
+		if (document.mail_form.frm_text.value.trim()=="") {errmsg+="Message text is required\n";}
 		if (!(errmsg=="")){
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -67,42 +84,78 @@ if (empty($_POST)) {
 
 	</SCRIPT>
 	</HEAD>
-
-	<BODY><CENTER>		<!-- 1/12/09 -->
-	<CENTER><H3>Mail to Facility</H3>
-	<P>
-		<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
-		<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
-		<TABLE BORDER = 0>
-		<TR CLASS= 'even'>
-			<TD ALIGN='right'>To:</TD><TD><INPUT NAME='frm_name' SIZE=32 VALUE = '<?php print $row['contact_name'];?>'></TD>
-			</TR>
-
-		<TR CLASS= 'odd'>
-			<TD ALIGN='right'>Addr:</TD><TD><INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $row['contact_email'];?>'></TD>
-			</TR>
 	
-		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=2><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
-		<TR CLASS='odd'><TD ALIGN='right'>Message:</TD><TD COLSPAN=2> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
-		<TR CLASS='even'><TD ALIGN='center' COLSPAN=3><BR /><BR />
-			<INPUT TYPE='button' 	VALUE='Send' onClick = "validate()">&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='reset' 	VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();'><BR /><BR />
+<?php
+
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ";		// (array_key_exists('first', $search_array)) 
+	$query .= (array_key_exists('fac_id', $_GET))? " WHERE `id` = " . quote_smart(trim($_GET['fac_id'])) . " LIMIT 1": "";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+//	dump($query);
+?>
+	<BODY onLoad = "reSizeScr(<?php print mysql_affected_rows();?>)"><CENTER>		<!-- 1/12/09 -->
+
+	<CENTER>		<!-- 1/12/09 -->
+	<CENTER><H3>Facility Mail </H3>
+<?PHP
+	if (mysql_affected_rows()>0) {
+		print "<FORM NAME='mail_form' METHOD='post' ACTION='" . basename(__FILE__) . "'>\n";
+		print "<TABLE BORDER = 0 ALIGN='center'>\n";
+		$i = 0;
+		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			if (is_email($row['contact_email'])) {
+				print "<TR CLASS = '{$evenodd[($i%2)]}'><TD><INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$row['contact_email']}' CHECKED></TD>
+					<TD>{$row['name']}</TD><TD>{$row['contact_name']}</TD><TD>{$row['contact_email']}</TD><TD></TD></TR>\n";
+				$i++;
+				}
+			if (is_email($row['security_email'])) {
+				print "<TR CLASS = '{$evenodd[($i%2)]}'><TD><INPUT TYPE='checkbox' NAME='cb" .$i. "' VALUE='" . $row['security_email'] . "' CHECKED></TD>
+					<TD>{$row['name']}</TD><TD>{$row['security_contact']}</TD><TD>{$row['security_email']}</TD><TD></TD></TR>\n";
+				$i++;
+				}	// end if (is_email)
+			}		// end while()
+		}				// end if (mysql_affected_rows()>0) 
+
+	if ($i > 0 ) {							// 7/16/10
+				
+?>
+		<TR><TD COLSPAN=5>&nbsp;</TD></TR>	
+		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=4><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
+		<TR CLASS='odd'><TD ALIGN='right'>Message:</TD><TD COLSPAN=4> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
+		<TR CLASS='even'><TD></TD><TD ALIGN='left' COLSPAN=3><BR /><BR />
+			<INPUT TYPE='button' 	VALUE='Send' onClick = "validate()"  STYLE =  'margin-left: 100px'>
+			<INPUT TYPE='reset' 	VALUE='Reset' STYLE =  'margin-left: 20px'>
+			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();'STYLE =  'margin-left: 20px'><BR /><BR />
 			</TD></TR>
 			</TABLE></FORM>
 <?php
+		}		// end if ($i > 0 )
+	else {
+?>
+		<BR /><H3>No facility addresses available</H3><BR /><BR />
+		<INPUT TYPE='button'  VALUE = 'Close' onClick='window.close();' />
+<?php
+	
+		}		// end if/else end if ($i > 0 )
+		
 		}		// end if (empty($_POST)) {
 
 	else {
-
-			do_send ($_POST['frm_addr'], $_POST['frm_subj'], $_POST['frm_text'] );	// ($to_str, $subject_str, $text_str )
+		$addr_str = $sep = "";
+		foreach ($_POST as $VarName=>$VarValue) {
+			if (substr($VarName, 0, 2) == 'cb') {
+				$addr_str .= $sep . $VarValue;
+				$sep = "|";
+				}				// end if
+			}		// end foreach
+		do_send ($addr_str, $_POST['frm_subj'], $_POST['frm_text'] );	// ($to_str, $subject_str, $text_str ) - | separator
 ?>
-	<BODY><CENTER>		
+	<BODY>
 	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3>
 	<BR /><BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();'><BR /><BR />
 
 <?php
 
 	}		// end else
-?> </BODY>
+?>
+</BODY>
 </HTML>

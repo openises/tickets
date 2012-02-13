@@ -224,7 +224,7 @@ function getZoneNumber(lat, lon) {
 ***************************************************************************/
 function LLtoUTM(lat,lon, utmcoords) {
   // utmcoords is a 2-D array declared by the calling routine
-
+//alert(227);
   lat = parseFloat(lat);
   lon = parseFloat(lon);
 

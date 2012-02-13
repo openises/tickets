@@ -36,6 +36,7 @@
 2/14/09 session flags to varchar
 2/21/09 check file write-able
 2/24/09 added 'terrain' setting
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 	
 error_reporting(E_ALL);				// 2/3/09 
@@ -62,13 +63,12 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 </HEAD><BODY>
 <FONT CLASS="header">Installing <?php print $version; ?> </FONT><BR /><BR />
 <SCRIPT>

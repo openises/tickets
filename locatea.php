@@ -1,9 +1,13 @@
 <?php
 /*
 7/25/09	initial release
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -18,7 +22,7 @@ require_once('./incs/functions.inc.php');
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 </HEAD>
 <BODY>
 
@@ -76,7 +80,7 @@ function do_gt($user, $url) {
 
 	if (!($user_id)) {
 ?>
-
+<BR />
 <FORM NAME= 'frm_locatea' METHOD='get' ACTION = '<?php print basename(__FILE__);?>'>
 <TABLE ALIGN='center'>
 <TR CLASS  = 'even'><TH COLSPAN=2>LocateA Test Fails for key: <?php print $_POST['dev_key'];?></TH></TR>
@@ -116,8 +120,9 @@ function do_gt($user, $url) {
 	}			// end if (!(empty($_POST))) 
 else {
 ?>
+<BR /><BR />
 <TABLE ALIGN = 'center' cellpadding = 4 BORDER = 0>
-<TR CLASS  = 'even'><TH COLSPAN=2>Locatea Test</TH></TR>
+<TR CLASS  = 'even'><TH COLSPAN=2>LocateA Test</TH></TR>
 <FORM NAME= 'frm_locatea' METHOD='post' ACTION = '<?php print basename(__FILE__);?>'>
 </TD></TR>
 <TR CLASS  = 'odd'><TD>

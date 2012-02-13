@@ -1,6 +1,7 @@
 <?php 
 /*
 1/12/09 initial version
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);		// 10/1/08
 
@@ -14,7 +15,7 @@ error_reporting(E_ALL);		// 10/1/08
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 </HEAD>
 <BODY>
 <br><CENTER><H3>Waiting for login</H3>

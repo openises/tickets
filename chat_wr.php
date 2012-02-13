@@ -1,11 +1,12 @@
 <?php
-	require_once('./incs/functions.inc.php'); 
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 	extract ($_GET);	
 /*
 	chat_messages : // id message  when chat_room_id user_id from
 */
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-
 	$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]chat_messages` (`when`, `message`, `chat_room_id`,  `user_id`,  `from`)
 					VALUES (%s,%s,%s,%s,%s)",
 						quote_smart($now),

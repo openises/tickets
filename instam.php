@@ -1,8 +1,11 @@
 <?php 
 /*
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);		// 10/1/08
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 
 function do_my_instam($key) {				// 3/17/09
 	// http://www.instamapper.com/api?action=getPositions&key=4899336036773934943
@@ -162,6 +165,6 @@ if (!(empty($instam_key ))) {
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<TITLE>Tickets <?php print get_variable('_version');?></TITLE>
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 </FRAMESET>
 </HTML>

@@ -1,10 +1,15 @@
 <?php
 /*
 6/30/09	initial release
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+12/18/10 set signal added
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);		//
 	
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once('incs/functions.inc.php');		//7/28/10
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -17,7 +22,7 @@ require_once('./incs/functions.inc.php');
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="6/13/09">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <STYLE>
 #.plain 	{ background-color: #FFFFFF;}
 </STYLE>
@@ -148,7 +153,31 @@ if (empty($_POST)) {
 
 ?>	
 		<TR CLASS='<?php print $evenodd[($i)%2]; ?>'><TD>Subject: </TD><TD COLSPAN=2><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
+<SCRIPT>
+	function set_signal(inval) {				// 12/18/10
+		var temp_ary = inval.split("|", 2);		// inserted separator
+		document.mail_form.frm_text.value+=" " + temp_ary[1] + ' ';		
+		document.mail_form.frm_text.focus();		
+		}		// end function set_signal()
+</SCRIPT>
 		<TR CLASS='<?php print $evenodd[($i+1)%2]; ?>'><TD>Message:</TD><TD COLSPAN=2> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
+
+		<TR CLASS='<?php print $evenodd[($i+1)%2]; ?>'>		<!-- 11/15/10 -->
+			<TD></TD><TD CLASS="td_label">Signal &raquo; 
+
+				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+				<OPTION VALUE=0 SELECTED>Select</OPTION>
+<?php
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+					}
+?>
+			</SELECT>
+			</TD></TR>
+
+
 		<TR CLASS='<?php print $evenodd[($i)%2]; ?>'><TD ALIGN='center' COLSPAN=3><BR /><BR />
 			<INPUT TYPE='button' 	VALUE='Send' onClick = "do_step_2()">&nbsp;&nbsp;&nbsp;&nbsp;
 			<INPUT TYPE='reset' 	VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;

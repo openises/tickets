@@ -17,7 +17,6 @@ for ($i=0; $i<count($the_keys); $i++) {
 
 		}
 	}
-
 ?>
 <CENTER>
 <DIV ID='links' STYLE="display:none;"><?php print $str;?> <br/> <br/></DIV><!-- display:none/block/inline -->

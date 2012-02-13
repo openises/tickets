@@ -1,148 +1,298 @@
-<?php 
+<?php
+
 /*
-11/3/07 added frame jump prevention
-3/25/08 added module identification
-5/28/08	added guest can no longer toggle APRS
-5/28/08	added version force update and log schema change. 
-6/6/08	added double-click prevention
-6/9/08  removed 'Closed Calls' button
-6/16/08 added start_poll() to body onload();
-6/26/08 added conditional to KML_files insert
-8/6/08	version number change
-9/8/08	added settings value to allow for varied lat/lng display formats
-9/18/08 version no. change - revised tables.php
-10/27/08 button bar visibility
-1/12/09 don't show callboard if frame used, add call start/end functions
-1/17/09 "Situation" replaces 'Active Calls'
-1/19/09 Log button added
-1/21/09 dollar function added
-3/15/09 added error reporting
-3/18/09 'aprs_poll' to 'auto_poll'
-8/5/09 Added 3 user defined function keys
-9/7/09 Added Full Screen button
-9/19/09 Moved user defined function keys to links button
-10/6/09 Added Facilities button to top menu
-12/13/09 function show_msg() added - usage: parent.frames["upper"].show_msg ("hello");
-*/ 
-error_reporting(E_ALL);		// 3/15/09
+1/3/10 complete re-write to support button light-up for multi-user operation
+1/11/10 added do_set_sess_exp() 
+4/1/10 JSON replaces eval
+4/5/10 do_time, cb width calc, cb script rename, syncAjax() {
+4/7/10 $cycle added, 'mu_init' to 'get_latest.php', unit position change now tracked
+4/10/10 replaced JSON return with tab-sep'd string
+4/11/10 removed poll value references
+4/15/10 fullscreen=no
+5/12/10 show/hide Board button
+6/12/10 browser id, audible alarms added for new ticket, chat invite
+7/3/10 changed Card to SOP's
+7/21/10 hide cb frame on logout
+7/27/10 Unit login handling added
+7/28/10 window focus added, logout moved to top row
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+8/8/10 implment version no. as hyphen-separated string
+8/16/10 convert synch ajax to asynch
+8/20/10 'term' => 'mobile'
+8/21/10 light up active module/button
+8/24/10 emd card handling cleanup
+8/25/10 server variables handling cleaned up
+8/27/10 chat error detection
+10/28/10 additions to support modules
+1/7/11  JSON re-introduced with length validation and parseInt()
+3/15/11 added reference to stylesheet.php for revisable day night colors.
+5/4/11 day/night color changes added
+5/10/11 log window width increased
+6/28/11 try/catch added to accommodate main's new auto-refresh
+2/10/12	added logout() call to error detection 3 places
+*/
 
-require_once('./incs/functions.inc.php');
-$sess_key = get_sess_key();
-$the_time_limit = 2*60*60;
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
-$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = (mysql_affected_rows()==1)? stripslashes_deep(mysql_fetch_array($result)) : "";
-//  		sess_id  user_name  user_id  level  ticket_per_page  sortorder  scr_width  scr_height  browser  last_in 10
-$whom = (empty($row))? NOT_STR: $row['user_name'];
-$level =(empty($row))? NA_STR: get_level_text($row['level']);	
-$logo = get_variable('logo');
+error_reporting(E_ALL);
+require_once('./incs/functions.inc.php');		//7/28/10
+require_once('./incs/browser.inc.php');			// 6/12/10
+@session_start();
+
+if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
+	require_once('./incs/modules.inc.php');
+	}
+	
+$temp = intval(get_variable('auto_poll'));
+$poll_cycle_time = ($temp > 0)? ($temp * 1000) : 15000;	// seconds to ms - 8/20/10
+
+$browser = trim(checkBrowser(FALSE));						// 6/12/10
 ?>
-	
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<HEAD><TITLE>Tickets - Top Frame</TITLE>
-	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-	<META HTTP-EQUIV="Expires" CONTENT="0">
-	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-	<META NAME="description" content="A free, Open Source Computer-Aided-Dispatch (CAD) application, especially suited to Volunteer Groups">	
-	<META NAME="keywords" content="'Computer-aided-dispatch', '9-1-1', Volunteers, CAD, Search and Rescue, Emergency Medicine, Open Source, PHP, MySQL, Mash-ups, Google Maps">
-<STYLE TYPE="text/css">
-	BODY { BACKGROUND-COLOR: #EEEEEE; FONT-WEIGHT: normal; FONT-SIZE: 10px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-	A { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-	.hovermenu ul li{list-style: none;display: inline;} 
-	.hovermenu ul li a{padding: 2px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;border: 2px solid #EFEFEF;}
-	.hovermenu ul li a:hover{background-color: #DEE3E7;border-style: outset;} 
-	*.selected {background-color: #DEE3E7;border-style: inset; }
-	*.unselected {background-color: #EFEFEF;border-style: none; }
-	#bar 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
-	* html #bar { /*\*/position: absolute; top: expression((8 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((40 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
-	#foo > #bar { position: fixed; top: 8px; right: 40px; }
-	.message{ FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-	</STYLE>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML>
+<HEAD>
+<TITLE><?php print ucwords (LessExtension(basename(__FILE__)));?> </TITLE>
+<META NAME="Author" CONTENT="" />
+<META NAME="Keywords" CONTENT="" />
+<META NAME="Description" CONTENT="" />
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+<META HTTP-EQUIV="Expires" CONTENT="0" />
+<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
+<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 
+<STYLE type="text/css">
+	table			{border-collapse:collapse;}
+	table, td, th	{border:0px solid black;}
+	.signal_r { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #FF3366;
+  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #FF3366;font-weight: bolder;}
+	.signal_b { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #00CCFF;
+  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #00CCFF;font-weight: bolder;}
+	.signal_w { margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 2px; border-STYLE: inset; border-color: #3366FF;
+  				  padding: 1px 0.5em;text-decoration: none;float: left;color: white;background-color: #3366FF;font-weight: bolder;}
+	.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
+  				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: #DEE3E7;font-weight: bolder;}
+	.plain 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 1px; border-STYLE: inset; border-color: #FFFFFF;
+  				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;font-weight: bolder;}
+	.message { FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+
+	.hover_lo 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
+  				  padding: 1px 0.5em;text-decoration: none; color: black;background-color: #DEE3E7;font-weight: bolder;}
+	.plain_lo 	{  margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 3px; border-STYLE: hidden; border-color: #FFFFFF;}
+	input		{background-color:transparent;}		/* Benefit IE radio buttons */
+  	</STYLE>
+<link rel="stylesheet" type="text/css" href="/fvlogger/logger.css" /> 
+<SCRIPT SRC="./js/misc_function.js"></SCRIPT>	<!-- 1/6/11 JSON call-->
+<SCRIPT SRC='./js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
 <SCRIPT>
-var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
-	var ADM_STR = '<?php echo ADM_STR;?>';			// Admin priv level, defined in functions.inc.php 
-	var SUPR_STR = '<?php echo SUPR_STR;?>';		// super priv level, defined in functions.inc.php 6/16/08
-	var call_frame = <?php print (intval(get_variable('call_board')) > 1)? "true": "false"; ?>	// call board frame allowed? 1/12/09
-	
-	var starting = false;							// 6/6/08
-	
+	var current_butt_id = "main";
+<?php
+if(file_exists("./incs/modules.inc.php")) {
+	?>
+	var ticker_active = <?php print module_active("Ticker");?>;
+<?php
+	} else {
+	?>
+	var ticker_active = 0;
+<?php
+	}
+	?>
+
+	var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
+
+	String.prototype.trim = function () {
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+
 	function $() {									// 1/21/09
 		var elements = new Array();
 		for (var i = 0; i < arguments.length; i++) {
 			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
+			if (typeof element == 'string')		element = document.getElementById(element);
+			if (arguments.length == 1)			return element;
 			elements.push(element);
 			}
 		return elements;
 		}
-	
-	/* function $() Sample Usage:
-	var obj1 = document.getElementById('element1');
-	var obj2 = document.getElementById('element2');
-	function alertElements() {
-	  var i;
-	  var elements = $('a','b','c',obj1,obj2,'d','e');
-	  for ( i=0;i
-	*/  
+
 	function isNull(val) {								// checks var stuff = null;
 		return val === null;
 		}
-	
-	function show_msg (msg) {						// 12/13/09
-		$('msg_span').innerHTML = msg;				// show for 3 second
-		setTimeout("$('msg_span').innerHTML =''", 3000);
+
+	function do_time() {		//4/5/10
+		var today=new Date();
+		today.setDate(today.getSeconds()+7.5);		// half-adjust
+		var hours = today.getHours();
+		var h=(hours < 10)?  "0" + hours : hours ;
+		var mins = today.getMinutes();
+		var m=(mins < 10)?  "0" + mins : mins ;
+		$('time_of_day').innerHTML=h+":"+m;
 		}
+
+	var the_time = setInterval("do_time()", 15000);
 	
-	function logged_in() {								// returns boolean
-		var temp = $("whom").innerHTML==NOT_STR;
-		return !temp;
+	var is_initialized = false;
+	var mu_interval = null;
+	var lit=new Array();
+
+	var chat_id = 0;				// new chat invite - 8/25/10
+	var ticket_id = 0;				// new ticket
+	var unit_id;					// 'moved' unit
+	var updated;					// 'moved' unit date/time
+	var dispatch;					// latest dispatch status change - date-time
+
+	function do_loop() {								// monitor for changes - 4/10/10, 6/10/11	
+		sendRequest ('get_latest_id.php',get_latest_id_cb, "");	
+		}			// end function do_loop()		
+
+	var arr_lgth_good = 6;								// size of a valid returned array
+	function get_latest_id_cb(req) {					// get_latest_id callback() - 8/16/10
+
+		try {
+			var the_id_arr=JSON.decode(req.responseText);	// 1/7/11
+			}
+		catch (e) {
+			alert(<?php echo __LINE__;?>);
+			do_logout();				// 2/10/12			
+//			alert(req.responseText);
+			return;
+			}
+
+		try {			
+			var the_arr_lgth = the_id_arr.length;		// sanity check
+			}
+		catch (e) {
+			alert(<?php echo __LINE__;?>);
+			do_logout();				// 2/10/12
+			return;
+			}			
+		
+		if (the_arr_lgth != arr_lgth_good)  {
+			alert(<?php echo __LINE__;?>);
+			do_logout();				// 2/10/12
+			}
+
+		var temp = parseInt(the_id_arr[0]);				// new chat invite?
+		if (temp > chat_id) {
+			chat_id = temp;
+			chat_signal();								// light the chat button
+			}
+	
+		var temp =  parseInt(the_id_arr[1]);			// ticket?
+		if (temp > ticket_id) {
+			ticket_id = temp;
+			tick_signal();								// light the ticket button
+			}
+	
+		var temp =  parseInt(the_id_arr[2]);			// unit?
+		var temp1 =  the_id_arr[3].trim();				// unit timestamp?
+		
+		if ((temp != unit_id) || (temp1 != updated)) {
+			unit_id = temp;
+			updated =  temp1;							// timestamp this unit
+			$('unit_id').innerHTML = unit_id;			// unit id
+			unit_signal();								// light the unit button
+			}
+
+		if (the_id_arr[4].trim() != dispatch)  {		// 1/21/11
+
+			dispatch = the_id_arr[4].trim();
+			unit_signal();								// light the unit button
+			}
+
+		}			// end function get_latest_id_cb()		
+
+	function toHex(x) {
+		hex="0123456789ABCDEF";almostAscii=' !"#$%&'+"'"+'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ['+'\\'+']^_`abcdefghijklmnopqrstuvwxyz{|}';r="";
+		for(i=0;i<x.length;i++){
+			let=x.charAt(i);pos=almostAscii.indexOf(let)+32;
+			h16=Math.floor(pos/16);h1=pos%16;r+=hex.charAt(h16)+hex.charAt(h1);
+			};
+		return r;
+		};
+
+	function mu_get() {								// set cycle
+		if (mu_interval!=null) {return;}			// ????
+		mu_interval = window.setInterval('do_loop()', <?php print $poll_cycle_time;?>);		// 4/7/10 
+		}			// end function mu get()
+
+
+	function mu_init() {								// get initial values from server -  4/7/10
+
+		if (is_initialized) { return; }
+		is_initialized = true;
+
+		sendRequest ('get_latest_id.php',init_cb, "");			
+			function init_cb(req) {
+		
+//				the_id_str = syncAjax("get_latest_id.php");			// note synch call
+				var the_id_arr=JSON.decode(req.responseText);				// 1/7/11
+				
+				if (the_id_arr.length != 6)  {
+					alert("server error at <?php print basename(__FILE__) . " " . __LINE__;?> ");
+					}
+				else {
+					chat_id =  parseInt(the_id_arr[0]);	
+					ticket_id = parseInt(the_id_arr[1]);		
+					unit_id =  parseInt(the_id_arr[2]);		
+					updated =  the_id_arr[3].trim();					// timestamp this unit
+					dispatch = the_id_arr[4].trim();					// 1/21/11
+					}
+
+				mu_get();				// start loop
+				
+				}				// end function init_cb()
+		}				// end function mu_init()
+
+
+	function do_set_sess_exp() {			// set session expiration  - 1/11/10
+		sendRequest ('set_cook_exp.php',set_cook_exp_handleResult, "");	
 		}
 		
-	function calls_start () {						// called from main.php 1/12/09
-		if (call_frame) {	
-			parent.calls.location.href = 'assigns.php'
-			}
-		}
-	function calls_end () {
-		if (call_frame) {
-			parent.calls.location.href = 'assigns.php';
-			}
+	function set_cook_exp_handleResult() {
 		}	
-	
-	function ck_frames() {		// onLoad = "ck_frames()"
-		if(self.location.href==parent.location.href) {
-			self.location.href = 'index.php';
+
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				return;
+				}
+			callback(req);
 			}
-		}		// end function ck_frames()
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
 	
-	function shut_down(){
-		if (aprs) {window.clearInterval(aprs);}			// 5/28/08
-		if (!isNull(newwindow_cb)) {					// call board window?
-			newwindow_cb.close();
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+	
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
 			}
-		if (!isNull(newwindow_c)) {						// chat window?
-			newwindow_c.close();	
-			}
-		}			// end function shut_down()			// cards window allowed
-	
-	var which = "";	// id of last-invoked li
-	function go_there (where, id) {
-		if (!which=="") {
-			}		// end if(which)
-		document.go.action = where;
-		which = id;
-		document.go.submit();
-		}				// end function go there () 
-	
-	function syncAjax(strURL) {							// synchronous ajax function
+		return xmlhttp;
+		}
+
+	function syncAjax(strURL) {							// synchronous ajax function - 4/5/10
 		if (window.XMLHttpRequest) {						 
 			AJAX=new XMLHttpRequest();						 
 			} 
@@ -155,85 +305,205 @@ var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in f
 			return AJAX.responseText;																				 
 			} 
 		else {
-			alert ("118: ajax failed")
+			alert ("201: failed")
 			return false;
 			}																						 
-		}		// end function sync Ajax(strURL)
+		}		// end function sync Ajax()
 	
-	function AsyncAjax(strURL) {						// asynch ajax() function
-		var xmlHttpReq = false;
-		var self = this;
-		if (window.XMLHttpRequest) {					// Mozilla/Safari
-			self.xmlHttpReq = new XMLHttpRequest();
-			}
-		else if (window.ActiveXObject) {				// IE
-			self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
-			}
-		self.xmlHttpReq.open('POST', strURL, true);
-		self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		self.xmlHttpReq.onreadystatechange = function() {
-			if (self.xmlHttpReq.readyState == 4) {
-				var temp = self.xmlHttpReq.responseText
-				return temp;		// for test purpose only
-				}
-			}
-		self.xmlHttpReq.send("");
-		window.setInterval("self.xmlHttpReq.abort();", 1000);		// wait a second and kill
-		}
+
+	function do_audible() {	// 6/12/10
+		try 		{document.getElementsByTagName('audio')[0].play();}
+		catch (e) 	{}		// ignore	
+		}				// end function do_audible()
+		
+	function get_line_count() {							// 4/5/10
+		var url = "do_get_line_ct.php";
+		var payload = syncAjax(url);						// does the work
+		return payload;
+		}		// end function get line_count()
 	
-	// ex useage:	<input value="Go" type="button" onclick='JavaScript:AsyncAjax("whatever.php")'>
-	// cross-frame function call:  parent.frames["upper"].s tart_poll();
-	var aprs_poll;
-	var aprs = new Boolean(false);									// 
-	var temp;
-	function get_aprs_time() {		// 
-		var temp = syncAjax("get_aprs_poll.php");					// gets poll cycle period via server-side get_variable('auto_poll');
-		return temp;
-		}
-	
-	function get_aprs() {		//
-	//	alert(154);
-		temp = AsyncAjax ("get_php_aprs.php");						// runs do_aprs() server-side to update the db
-		}
-	
-	function start_poll() {											// start the process
-		var aprs_poll = get_aprs_time();							// cycle period
-		if ((parseInt(aprs_poll)==0) || (aprs_poll==new Boolean (NaN)))	{
-			window.clearInterval(aprs)
-			$("poll_id").innerHTML = "none";
-			return;} 
-		else {
-			get_aprs();												// kick off
-			aprs = window.setInterval("get_aprs()", aprs_poll*60*1000);	// aprs => Boolean(true);	
-			$("poll_id").innerHTML = aprs_poll + " min.";
-			}
-		}				// end function start poll()
-	
-	function stop_poll() {
-		if (aprs) {window.clearInterval(aprs);}
-		aprs =  Boolean(false);	
-		$("poll_id").innerHTML = "none";
+	function chat_signal() {									// light the button
+		CngClass("chat", "signal_r");
+		lit["chat"] = true;
+		do_audible();				// 6/12/10
 		}
 		
-	function toggle_aprs() {
-		if (!(($('level').innerHTML==ADM_STR) || ($('level').innerHTML==SUPR_STR))){		// 5/28/08 allow admin or super only
-			return;
+	function unit_signal() {										// light the units button and - if not already lit red - the situation button
+//		CngClass("resp", "signal_b");								//  
+		if (lit["main"]) {return; }									// already lit - possibly red
+		CngClass("main", "signal_b");
+		lit["main"] = true;
+		}
+		
+	function tick_signal() {										// light the button
+		CngClass("main", "signal_r");
+		lit["main"] = true;
+		do_audible();				// 6/12/10
+		}
+
+	function CngClass(obj, the_class){
+		$(obj).className=the_class;
+		return true;
+		}
+
+	function do_hover (the_id) {
+		if (the_id == current_butt_id) {return true;}				// 8/21/10
+		if (lit[the_id]) {return true;}
+		CngClass(the_id, 'hover');
+		return true;
+		}
+	function do_lo_hover (the_id) {
+		CngClass(the_id, 'lo_hover');
+		return true;
+		}
+	function do_plain (the_id) {				// 8/21/10
+		if (the_id == current_butt_id) {return true;}
+		if (lit[the_id] ) {return true;}
+		CngClass(the_id, 'plain');
+		return true;
+		}
+	function do_lo_plain (the_id) {
+		CngClass(the_id, 'lo_plain');
+		return true;
+		}
+	function do_signal (the_id) {		// lights the light
+		lit[the_id] = true;
+		CngClass(the_id, 'signal');
+		return true;
+		}
+	function do_off_signal (the_id) {
+		CngClass(the_id, 'plain')
+		return true;
+		}
+
+	function light_butt(btn_id) {				// 8/24/10 -     
+		CngClass(btn_id, 'signal_w')			// highlight this button
+		if(!(current_butt_id == btn_id)) {	
+			do_off_signal (current_butt_id);	// clear any prior one if different
 			}
-		else {
-			if (aprs) 	{stop_poll();}
-			else 		{start_poll();}
+		current_butt_id = btn_id;				// 
+		}				// end function light_butt()
+
+	function go_there (where, the_id) {		//
+		CngClass(the_id, 'signal_w')			// highlight this button
+		if(!(current_butt_id == the_id)) {	
+			do_off_signal (current_butt_id);	// clear any prior one if different
 			}
-		}				// end function toggle_aprs()
+		current_butt_id = the_id;				// 8/21/10
+		lit[the_id] = false;
+		document.go.action = where;
+		document.go.submit();
+		}				// end function go there ()
+
+	function show_msg (msg) {	
+		$('msg_span').innerHTML = msg;			
+		setTimeout("$('msg_span').innerHTML =''", 3000);	// show for 3 seconds
+		}
 	
+	function logged_in() {								// returns boolean
+		var temp = $("whom").innerHTML==NOT_STR;
+		return !temp;
+		}
+
+	function do_logout() {						// 10/27/08
+		$("user_id").innerHTML  = 0;
+		$('time_of_day').innerHTML="";
+
+		clearInterval(mu_interval);
+		mu_interval = null;
+		$('whom').innerHTML=NOT_STR; 
+		is_initialized = false;
+
+		if(ticker_active == 1) {
+			clearInterval(ticker_interval);
+			var ticker_interval = null;
+			ticker_is_initialized = false;
+		}
+
+		try {						// close() any open windows
+			newwindow_c.close();
+			}
+		catch(e) {
+			}
+		try {
+			newwindow_sl.close();
+			}
+		catch(e) {
+			}
+		try {
+			newwindow_cb.close();
+			}
+		catch(e) {
+			}
+		try {
+			newwindow_fs.close();
+			}
+		catch(e) {
+			}
+		try {
+			newwindow_em.close();
+			}
+		catch(e) {
+			}
+
+		newwindow_sl = newwindow_cb = newwindow_c = newwindow_fs = newwindow_em = null;
+
+		hide_butts();		// hide buttons
+
+<?php if (get_variable('call_board') == 2) { ?>
+
+		parent.document.getElementById('the_frames').setAttribute('rows', '<?php print (get_variable('framesize') + 25);?>, 0, *'); // 7/21/10
+
+<?php } ?>
+
+//		alert(383);
+		$('gout').style.display = 'none';		// hide the logout button
+		document.gout_form.submit();			// send logout 
+		}
+	
+	function hide_butts() {						// 10/27/08, 3/15/11
+		setTimeout(" $('buttons').style.visibility = 'hidden';" , 1000);
+		$("daynight").style.display = "none";				// 5/2/11
+		$("main_body").style.backgroundColor  = "<?php print get_css('page_background', 'Day');?>";
+		$("main_body").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("tagline").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("user_id").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("unit_id").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("script").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("time_of_day").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("whom").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("level").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("logged_in_txt").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("perms_txt").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("modules_txt").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		$("time_txt").style.color  = "<?php print get_css('titlebar_text', 'Day');?>";
+		try {
+			$('manual').style.display = 'none';		// hide the manual link	- possibly absent
+			}
+		catch(e) {
+			}
+		}
+
+	function show_butts() {						// 10/27/08
+		$("buttons").style.visibility = "visible";
+		$("daynight").style.display = "inline";
+		}
+
+//	============== module window openers ===========================================
+
 	var newwindow_sl = null;
+	var starting;
 	
 	function do_sta_log() {				// 1/19/09
+		light_butt('log') ;
+		if ((newwindow_sl) && (!(newwindow_sl.closed))) {newwindow_sl.focus(); return;}		// 7/28/10	
 		if (logged_in()) {
 			if(starting) {return;}						// 6/6/08
 			starting=true;	
-			newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			do_set_sess_exp();		// session expiration update
+			newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 			if (isNull(newwindow_sl)) {
-				alert ("Station log operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+				alert ("Station log operation requires popups to be enabled. Please adjust your browser options.");
 				return;
 				}
 			newwindow_sl.focus();
@@ -245,13 +515,19 @@ var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in f
 	var newwindow_cb = null;
 	
 	function do_callBoard() {
+		light_butt('call');
+		if ((newwindow_cb) && (!(newwindow_cb.closed))) {newwindow_cb.focus(); return;}		// 7/28/10
 		if (logged_in()) {
 			if(starting) {return;}						// 6/6/08
-			starting=true;	
-	
-			newwindow_cb=window.open("assigns.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=1000,status=0,toolbar=0,menubar=0,location=0, left=20,top=300,screenX=20,screenY=300");
+			starting=true;
+			do_set_sess_exp();		// session expiration update
+			var the_height = 60 + (16 * get_line_count());
+			var the_width = (2.0 * Math.floor((Math.floor(.90 * screen.width) / 2.0)));
+
+			newwindow_cb=window.open("board.php", "callBoard",  "titlebar, location=0, resizable=1, scrollbars, height="+the_height+", width="+the_width+", status=0,toolbar=0,menubar=0,location=0, left=20,top=300,screenX=20,screenY=300");
+
 			if (isNull(newwindow_cb)) {
-				alert ("Call Board operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+				alert ("Call Board operation requires popups to be enabled. Please adjust your browser options.");
 				return;
 				}
 			newwindow_cb.focus();
@@ -260,36 +536,54 @@ var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in f
 		}		// end function do callBoard()
 	
 	var newwindow_c = null;
+
+	function chat_win_close() {				// called from chat.pgp
+		newwindow_c = null;
+		}
 		
 	function do_chat() {
+		light_butt('chat') ;
+		if ((newwindow_c) && (!(newwindow_c.closed))) {newwindow_c.focus(); return;}		// 7/28/10
+	
 		if (logged_in()) {
 			if(starting) {return;}					// 6/6/08
 			starting=true;
-			newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			do_set_sess_exp();		// session expiration update
+			try {
+				newwindow_c.focus();
+				}
+			catch(e) {
+				}
+
+			newwindow_c=window.open("chat.php", "chatBoard",  "titlebar, resizable=1, scrollbars, height=480,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 			if (isNull(newwindow_c)) {
 				alert ("Chat operation requires popups to be enabled. Please adjust your browser options - or else turn off the Chat option setting.");
 				return;
 				}
 			newwindow_c.focus();
 			starting = false;
+			CngClass("chat", "plain");
+
 			}
 		}
 	
 	var newwindow_fs = null;
 	
-	var newwindow_fs;
-	
 	function do_full_scr() {                            //9/7/09
+		light_butt('full');
+		if ((newwindow_fs) && (!(newwindow_fs.closed))) {newwindow_fs.focus(); return;}		// 7/28/10
+	
 		if (logged_in()) {
-			if(starting) {return;}                        // 6/6/08 fullscreen=yes
+			if(starting) {return;}                        // 4/15/10 fullscreen=no
+			do_set_sess_exp();		// session expiration update
 	
 			if(window.focus() && newwindow_fs) {newwindow_fs.focus()}    // if already exists
 			starting=true;
 	
 			params  = 'width='+screen.width;
 			params += ', height='+screen.height;
-			params += ', top=0, left=0'
-			params += ', fullscreen=yes';
+			params += ', top=0, left=0', scrollbars = 1
+			params += ', fullscreen=no';
 			newwindow_fs=window.open("full_scr.php", "full_scr", params);
 			if (isNull(newwindow_fs)) {
 				alert ("This operation requires popups to be enabled. Please adjust your browser options.");
@@ -299,108 +593,286 @@ var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in f
 			starting = false;
 			}
 		}        // end function do full_scr()
-	
+
 	function do_emd_card(filename) {
-		if(starting) {return;}					// 6/6/08
-		starting=true;	
-	
-		newwindow_em=window.open(filename, "emdCard",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
-		if (isNull(do_emd_card)) {
-			alert ("EMD Card operation requires popups to be enabled. Please adjust your browser options.");
+		light_butt('card') ;
+		try {
+			newwindow_em=window.open(filename, "emdCard",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+			}
+		catch (e) {
+			}
+		try {
+			newwindow_em.focus();;
+			}
+		catch (e) {
+			}
+		if (isNull(newwindow_em)) {
+			alert ("SOP Doc's operation requires popups to be enabled. Please adjust your browser options.");
 			return;
 			}
-		newwindow_em.focus();
 		starting = false;
 		}
-		
-	function do_logout() {						// 10/27/08
-		hide_butts();
-		$('whom').innerHTML=NOT_STR; 
-		stop_poll();
-		calls_end ();							// 1/12/09
-		}
-	
-	function hide_butts() {						// 10/27/08
-		$("buttons").style.visibility = "hidden";
-		}
-	function show_butts() {						// 10/27/08
-		$("buttons").style.visibility = "visible";
-		}
-	
-	</SCRIPT>
-<NOSCRIPT>
-	Tickets requires a JavaScript-capable browser.
-	</NOSCRIPT>	
-</HEAD>
-<BODY onLoad = "ck_frames();" onunload="shut_down()">
-<DIV ID="foo"><DIV ID="bar"><SPAN ID = 'msg_span' CLASS = 'message'></SPAN></DIV></DIV>
 
-<table border=0 cellpadding=0>
-<tr valign='top'>
-	<td><img src="<?php print $logo;?>" border=0></td>
-	<td><FONT SIZE="3">ickets <?php print get_variable('_version') ." on <B>".get_variable('host')."</B></FONT>"; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		Logged in: 
-		<span ID="whom"><?php print $whom ; ?></span>&nbsp;&nbsp;&nbsp;&nbsp; 
-		Perm's: <SPAN ID="level"><?php print $level; ?></SPAN>&nbsp;&nbsp;&nbsp;
+<?php
+$start_up_str = (empty($_SESSION))? "": " mu_init();"; 
+$the_whom = (empty($_SESSION))? NOT_STR: $_SESSION['user']; 
+$the_level = (empty($_SESSION))? "na": get_level_text($_SESSION['level']); 
+$day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night'])) ? $_SESSION['day_night'] : 'Day';
+print "\n\t var the_whom = '{$the_whom}'\n";
+print "\t var the_level ='{$the_level}'\n"; 
+
+function get_daynight() {
+	$day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night'])) ? $_SESSION['day_night'] : 'Day';
+	return $day_night;
+	}
+?>
+	function do_day_night(which){
+		for (i=0;i<document.day_night_form.elements.length;i++) {
+			if ((document.day_night_form.elements[i].type=='radio') && (document.day_night_form.elements[i].name=='frm_daynight')) {
+				if (document.day_night_form.elements[i].value == which) {
+					document.day_night_form.elements[i].checked = true;
+					document.day_night_form.elements[i].disabled = true;
+					}
+				else {
+					document.day_night_form.elements[i].checked = false;
+					document.day_night_form.elements[i].disabled = false;
+					}
+				}				// end if (type=='radio')
+			}
+		}		// end function do_day_night()
+	
+
+
+	function top_init() {					// initialize display
+		CngClass('main', 'signal_w');		// light up 'sit' button - 8/21/10
+		$("whom").innerHTML  =	the_whom;
+		$("level").innerHTML =	the_level;
+		do_time();
+<?php												// 5/4/11
+		if (empty($_SESSION)) {						// pending login
+			$day_checked = $night_checked = "";
+			$day_disabled = $night_disabled= "DISABLED";
+			}
+		else {				// logged-in
+			if (($_SESSION['day_night']) == 'Day') {	
+				$day_checked = "CHECKED";			// allow only 'night'
+				$day_disabled = "DISABLED";
+				$night_checked = "";
+				$night_disabled = "";
+				}
+			else {
+				$day_checked = "";					//  allow only 'day'
+				$day_disabled = "";
+				$night_checked = "CHECKED";
+				$night_disabled = "DISABLED";
+				}	
+?>
+			show_butts();														// navigation buttons
+			$("gout").style.display  = "inline";								// logout button
+			$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";	
+			$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";			// user name
+			$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
+			mu_init();															// start polling
+			
+<?php
+			}				// end if/else (empty($_SESSION))
+?>		
+		}		// end function top_init() 
+
+	function do_log (instr) {
+		$('log_div').innerHTML += instr + "<br />";
+		}
+
+	function get_new_colors() {										// 5/4/11 - a simple refresh
+		window.location.href = '<?php print basename(__FILE__);?>';
+		}
+
+	function set_day_night(which) {			// 5/2/11
+		sendRequest ('./ajax/do_day_night_swap.php', day_night_callback, "");			
+			function day_night_callback(req) {
+				var the_ret_val = req.responseText;	
+				try {
+					parent.frames["main"].get_new_colors();			// reloads main frame
+					}
+				catch (e) {
+					}
+				window.clearInterval(mu_interval);
+				get_new_colors();								// reloads top				
+				}									// end function day_night_callback()				
+		}
+
+	function do_manual(filename){							// launches Tickets manual page -  5/27/11
+		try {
+			newwindow_em=window.open(filename, "Manual",  "titlebar, resizable=1, scrollbars, height=640,width=800,status=0,toolbar=0,menubar=0,location=0, left=20,top=20,screenX=20,screenY=20");
+			}
+		catch (e) {
+			}
+		try {
+			newwindow_em.focus();;
+			}
+		catch (e) {
+			}
+		}		// end do_manual()
+		
+	</SCRIPT>
+</HEAD>
+
+<BODY ID="main_body" onLoad = "top_init();">	<!-- 3/15/11 -->
+	<TABLE ALIGN='left'>
+		<TR VALIGN='top'>
+			<TD ROWSPAN=2><IMG SRC="<?php print get_variable('logo');?>" BORDER=0 /></TD>
+			<TD>
+<?php
+
+	$temp = get_variable('_version');				// 8/8/10
+	$version_ary = explode ( "-", $temp, 2);
+	if(get_variable('title_string')=="") {
+		$title_string = "<FONT SIZE='3'>ickets " . trim($version_ary[0]) . " on <B>" . get_variable('host') . "</B></FONT>";
+		} else {
+		$title_string = "<FONT SIZE='3'><B>" .get_variable('title_string') . "</B></FONT>";
+		}
+?>
+				<SPAN ID="tagline" CLASS="titlebar_text"><?php print $title_string; ?></SPAN>	<!-- 3/15/11 -->
+				<SPAN ID="logged_in_txt" STYLE = 'margin-left: 8px;' CLASS="titlebar_text"><?php print get_text("Logged in"); ?>:</SPAN>	<!-- 3/15/11 -->
+				<SPAN ID="whom" CLASS="titlebar_text"><?php print NOT_STR ; ?></SPAN>
+				<SPAN ID="perms_txt" CLASS="titlebar_text">:<SPAN ID="level" CLASS="titlebar_text">na</SPAN>&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
+						
 <?php
 	$temp = get_variable('auto_poll');
-	$poll_val = ($temp==0)? "none" : $temp ;
+
+	$dir = "./emd_cards";
+	
+	if (file_exists ($dir)) {
+		$dh  = opendir($dir);
+		while (false !== ($filename = readdir($dh))) {
+			if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
+			    $card_file = $filename;						// at least one pdf, use first encountered
+			    break;
+			    }
+			}
+	
+		$card_addr=(!empty($card_file))? $dir . "/" . $filename  : "";
+		}	
+		
 ?>
-		<SPAN onClick = "toggle_aprs()">Poll:</SPAN> <SPAN ID="poll_id"><?php print $poll_val;?></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
-		Module: <SPAN ID="script"></SPAN>&nbsp;&nbsp;<SPAN ID = 'msg_span'></SPAN><br>
-<span id = "buttons" class="hovermenu" style="visibility: visible">	<!-- 10/27/08 -->
-<ul style="text-align: left;">
-<nobr>
-<li id = "main1"><A HREF="main.php" target="main" 	onClick = "go_there ( 'main.php', 'main1');">Situation</A></li>
-<li id = "add"><A HREF='add.php' target='main' 		onClick = "go_there ( 'add.php', 'add');">New</A></li>
-<li id = "resp"><A HREF="units.php" target="main">Units</A></li>
-<li id = "resp"><A HREF="facilities.php" target="main">Fac's</A></li>	<!-- 10/6/09 -->
-<li id = "search"><A HREF="search.php" target="main">Search</A></li>
-<li id = "reps"><A HREF="reports.php" target="main">Reports</A></li>
-<li id = "config"><A HREF="config.php" target="main">Config</A></li>
+				<SPAN ID='user_id' STYLE="display:none" CLASS="titlebar_text">0</SPAN><!-- default value - 5/29/10, 3/15/11 -->
+				<SPAN ID='unit_id' STYLE="display:none" CLASS="titlebar_text"></SPAN><!-- unit that has just moved - 4/7/10, 3/15/11 -->
+				<SPAN ID='modules_txt' CLASS="titlebar_text"><?php print get_text("Module"); ?>: </SPAN><SPAN ID="script" CLASS="titlebar_text">login</FONT></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
+				<SPAN ID='daynight' CLASS="titlebar_text"  STYLE = 'display:none'>
+					<FORM NAME = 'day_night_form' STYLE = 'display: inline-block'>
+											<!-- set in  above -->
+					<INPUT TYPE="radio" NAME="frm_daynight" VALUE="Day" <?php print "{$day_disabled} {$day_checked}" ;?> 		onclick = ' set_day_night(this.value);'>Day&nbsp;&nbsp;&nbsp;&nbsp;
+					<INPUT TYPE="radio" NAME="frm_daynight" value="Night" <?php print "{$night_disabled}  {$night_checked}" ;?> onclick = 'set_day_night(this.value);' >Night&nbsp;&nbsp;&nbsp;&nbsp;
+					
+					</FORM>
+				</SPAN>
+				<SPAN ID='time_txt' CLASS="titlebar_text"><?php print get_text("Time"); ?>: </SPAN><b><SPAN ID="time_of_day" CLASS="titlebar_text"></SPAN></b></FONT>&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
+<?php				// 5/26/11
+	$dir = "./manual";
+	
+	if (file_exists ($dir)) {
+		$dh  = opendir($dir);
+		while (false !== ($filename = readdir($dh))) {
+			if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
+			    $manual_file = $filename;						// at least one pdf, use first encountered
+			    break;
+			    }
+			}
+	
+		$manual_addr=(!empty($manual_file))? $dir . "/" . $filename  : "";
+		}	
+		
+	if (!(empty($manual_addr))) {
+?>
+
+				<SPAN ID='manual' CLASS="titlebar_text" onClick = "do_manual('<?php echo $manual_addr;?>');" STYLE="display:none;"  ><U>Manual</U></SPAN>
 <?php
-$dir = "./emd_cards";
-
-if (file_exists ($dir)) {
-	$dh  = opendir($dir);
-	while (false !== ($filename = readdir($dh))) {
-		if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
-		    $card_file = $filename;						// at least one pdf, use first encountered
-		    break;
-		    }
-		}
-	if (!empty($card_file)){		
-		print"<li id = \"emdcard\"><A HREF='#' onClick = \"do_emd_card('".$dir . "/" . $filename . "')\">Card</A></li>\n";
-		}
-	}
-
-if (!intval(get_variable('chat_time')==0)) { print "<li id = 'chat'><A HREF='#' onClick = 'do_chat()'>Chat</A></li>\n";}
+			}
+?>
+				<SPAN ID = 'gout' CLASS = 'hover_lo' onClick = "do_logout()" STYLE="display:none;" ><?php print get_text("Logout"); ?></SPAN> <!-- 7/28/10 -->
+				
+<?php
+		if ($_SERVER['HTTP_HOST'] == "127.0.0.1") { print "&nbsp;&nbsp;&nbsp;&nbsp;DB:&nbsp;{$mysql_db}&nbsp;&nbsp;&nbsp;&nbsp;";}
 ?>	
-<IMG SRC='./markers/led.gif' BORDER=0 STYLE="display:none;">
-<li id = "help"><A HREF="help.php" target="main">Help</A></li>
+
+				<SPAN ID='msg_span' CLASS = 'message'></SPAN>
+				<br />
+			</TD></TR>
+		<TR><TD ID = 'buttons' STYLE = "visibility:hidden">
+			<SPAN ID = 'main'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick ="go_there('main.php', this.id);"><?php print get_text("Situation"); ?></SPAN>
+			<SPAN ID = 'add'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('add.php', this.id);"><?php print get_text("New"); ?></SPAN>
+			<SPAN ID = 'resp'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('units.php', this.id);"><?php print get_text("Units"); ?></SPAN>
+			<SPAN ID = 'facy'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('facilities.php', this.id);"><?php print get_text("Fac's"); ?></SPAN>
+			<SPAN ID = 'srch'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('search.php', this.id);"><?php print get_text("Search"); ?></SPAN>
+			<SPAN ID = 'reps'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('reports.php', this.id);"><?php print get_text("Reports"); ?></SPAN>
+			<SPAN ID = 'conf'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('config.php', this.id);"><?php print get_text("Config"); ?></SPAN>
 <?php
-	$caption = get_variable('link_capt');
-	if (!empty($caption)) {
-		print "<li id = 'iframe1'><A HREF=\"iframe1.php\" target=\"main\">" . get_variable('link_capt') . "</A></li>\n";
-		}
-
-	$call_board = get_variable('call_board');
-	if ((intval($call_board)==1)) {				// 1/12/09
-		print"<li id = 'callboard'><A HREF='#' onClick = 'do_callBoard()'>Board</A></li>\n";
-		}
-
+	if (!(empty($card_addr))) {
 ?>
+			<SPAN ID = 'card'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "starting = false; do_emd_card('<?php print $card_addr; ?>')"><?php print get_text("SOP's"); ?></SPAN>	<!-- 7/3/10 -->
+<?php
+			}
+		if (!intval(get_variable('chat_time')==0)) { 		
+?>
+			<SPAN ID = 'chat'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "starting=false; do_chat();"><?php print get_text("Chat"); ?></SPAN>
+<?php
+			}
+		$call_disp_attr = (get_variable('call_board')==1)?  "inline" : "none"; 
+?>			
+			<SPAN ID = 'help'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('help.php', this.id);"><?php print get_text("Help"); ?></SPAN>
+			<SPAN ID = 'log'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "do_sta_log()"><?php print get_text("Log"); ?></SPAN>
+			<SPAN ID = 'full'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "starting=false; do_full_scr()"><?php print get_text("Full scr"); ?></SPAN>			
+			<SPAN ID = 'links'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "light_butt('links'); parent.main.$('links').style.display='inline';"><?php print get_text("Links"); ?></SPAN>
+			<SPAN ID = 'call'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "starting=false;do_callBoard()" STYLE = 'display:<?php print $call_disp_attr; ?>'><?php print get_text("Board"); ?></SPAN> <!-- 5/12/10 -->
+<!-- ================== -->
+			<SPAN ID = 'term'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('mobile.php', this.id);"><?php print get_text("Mobile"); ?></SPAN>	<!-- 7/27/10 -->
+<!-- ================== -->
+						</TD>
+		</TR>
+			
+	</TABLE>
+	<FORM NAME="go" action="#" TARGET = "main"></FORM>
+	
+	<FORM NAME="gout_form" action="main.php" TARGET = "main">
+	<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />
+	</FORM>
+	<P>
+		<DIV ID = "log_div"></DIV>
+<!-- <button onclick = 'alert(getElementById("user_id"))'>Test</button> -->
+<?php
+	$the_wav_file = get_variable('sound_wav');		// browser-specific cabilities as of 6/12/10
+	$the_mp3_file = get_variable('sound_mp3');
 
-<li id = 'sta_log'><A HREF='#' onClick = 'do_sta_log()'>Log</A></li>
-<li id = 'ful_scr'><A HREF='#' onClick = 'do_full_scr()'>Full scr</A></li>
-<li id = 'links'><A HREF='#' onClick = "parent.main.document.getElementById('links').style.display='inline';">Links</A></li><!-- 9/19/09 -->
-
-<li id = "logout"><A HREF="main.php?logout=true" target="main" onClick = "do_logout()">Logout</A></li>
-</nobr>
-</ul>
-</SPAN>
-</NOBR>
-</TD></TR></TABLE>
-<FORM NAME="go" action="#" TARGET = "main"></FORM>
-</BODY></HTML>
-
+	$temp = explode (" ", $browser);
+	switch (trim($temp[0])) {		
+	    case "firefox" :
+			print (empty($the_wav_file))? "\n": "\t\t<audio src=\"./sounds/{$the_wav_file}\" preload></audio>\n";
+			break;
+	    case "chrome" :
+	    case "safari" :
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
+			break;
+	    default:
+		}	// end switch
+?>
+<!--  example frame manipulation
+<button onClick = "alert(parent.document.getElementById('the_frames').getAttribute('rows'));">Get</button>
+<button onClick = "parent.document.getElementById('the_frames').setAttribute('rows', '600, 100, *');">Set</button>
+-->
+</BODY>
+</HTML>

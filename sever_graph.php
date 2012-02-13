@@ -1,22 +1,28 @@
 <?php  
 /*
-7/14/09	'IS NOT NULL' added to query
+3/21/10 settings value for pie diameter added
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
-require_once('./incs/functions.inc.php'); 
+
+
+@session_start();
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 extract($_GET);
 
+$severities = array();
+$temp = explode ("/", get_variable('pie_charts'));
+$severity_diam = (count($temp)> 0 )? $temp[0] : "300";		// 3/21/10
+
 $where = " WHERE `when` > '" . $p1 . "' AND `when` < '" . $p2 . "' ";
-//				7/14/09
 $query = "
 	SELECT *, UNIX_TIMESTAMP(`when`) AS `when`, t.id AS `tick_id`,t.scope AS `tick_name`, t.severity AS `tick_severity` FROM `$GLOBALS[mysql_prefix]log`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON (log.ticket_id = t.id)
-	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."' AND t.severity IS NOT NULL
+	". $where . " AND `code` = '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'
 	ORDER BY `tick_severity` ASC		
 	";
 //dump ($query);
-//snap(__LINE__, $query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-$severities = array();
 
 while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// build assoc arrays of types and counts
 	if (array_key_exists($row['severity'], $severities)) {
@@ -30,13 +36,12 @@ while($row = stripslashes_deep(mysql_fetch_array($result), MYSQL_ASSOC)){			// b
 //$severities = ksort ($severities);
 $legends = array ("NORMAL", "MEDIUM", "HIGH");
 include('baaChart.php');
-$width = isset($img_width)? $img_width: 300;
+$width = isset($img_width)? $img_width: $severity_diam;		// 3/21/10
 $mygraph = new baaChart($width);
 //$mygraph->setTitle($from, $to);
 $mygraph->setTitle("Incidents by Severity", "");
 
 foreach($severities as $key => $val) {
-//	snap($key, $val);
 	if ((strlen($key)>0)) {
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE,$val, $legends[$key]);
 		}

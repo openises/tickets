@@ -3,8 +3,11 @@
 2/9/09 inintial version
 2/22/09 per revised schema
 2/23/09 added responder position update
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
-	require_once('./incs/functions.inc.php'); 
+	
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 	extract ($_POST);	
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 //	var params = "frm_lat=" + escape(the_lat) + "&frm_lng=" + escape(the_lng) + "&frm_id=" + escape(the_id);
@@ -29,7 +32,7 @@
 	$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
 		`lat`= " . 			quote_smart($frm_lat) . ",
 		`lng`= " . 			quote_smart($frm_lng) . ",		
-		`user_id`= " . 		quote_smart(trim($my_session['user_id'])) . ",
+		`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
 		`updated`= " . 		quote_smart($now) . " 
 		WHERE `id`= " . 	quote_smart($frm_id) . ";";
 

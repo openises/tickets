@@ -2,8 +2,16 @@
 /*
 9/18/08 filename changes to XXX.txt
 1/21/09 added show butts - re button menu
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+12/1/10 get_text Patient, disposition added
+5/4/11 get_new_colors() added
 */
-	require_once('./incs/functions.inc.php');
+
+session_start();
+require_once('./incs/functions.inc.php');
+$patient = get_text("Patient");						// 12/1/10
+$disposition = get_text("Disposition");				// 12/1/10
+
 ?>
 <HTML>
 <HEAD>
@@ -19,19 +27,24 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	}		// end function ck_frames()
 
 	try {
-		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 		}
 	catch(e) {
 		}
+
+	function get_new_colors() {								// 5/4/11
+		window.location.href = '<?php print basename(__FILE__);?>';
+		}
+
 
 </SCRIPT>
 
 </HEAD><BODY onLoad = "ck_frames()">
 <FONT CLASS="header">Tickets Help</FONT><BR /><BR />
 <LI> <A HREF="help.php?q=tickets">Background</A>
-<LI> <A HREF="help.php?q=tickets">Tickets, Actions, and Patient Data</A>
+<LI> <A HREF="help.php?q=tickets"><?php print $patient; ?>, Actions, and <?php print $patient; ?> Data</A>
 <LI> <A HREF="help.php?q=config">Configuration</A>
 <LI> <A HREF="help.php?q=notify">Notifies</A>
 <LI> <A HREF="help.php?q=develop">Developer Notes</A>
@@ -71,9 +84,9 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 
 		<FONT CLASS="header">Tickets, Actions, and Patients</FONT><BR /><blockquote>
 		A ticket describes a single dispatch run. A given ticket may have any number of actions related to it to describe work in progress or
-		adding sidenotes, and are described below.  Similarly, any number of <B>Patient</b> records may be written, each associated with a
+		adding sidenotes, and are described below.  Similarly, any number of <B><?php print $patient; ?></b> records may be written, each associated with a
 		given ticket, and may be used to capture information regarding patients handled by the dispatch team.  A ticket contains several
-		information elements describing the dispatch task disposition. <B>Issue date</B> defines the date and time
+		information elements describing the dispatch task <?php print $disposition;?>. <B>Issue date</B> defines the date and time
 		the ticket was created, <B>problem start</B> and <B>problem end</B> date and time for when the dispatch task starts and ends.
 		The <B>scope</B> is now being used for incident description, whereas it had been used differently in the original PHPTicket,.
 		The <B>owner</B> field identifies the user who wrote the ticket.<BR /><BR />
@@ -82,7 +95,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		value, using the edit form.  Closed tickets may be re-opened by changing the status again. Removed tickets however are deleted
 		permanently from the database,  with its related action and patient records.
 		The <B>description</B> field describes the ticket in some depth, while the Comments field may be used to record information on the
-		item's final disposition.<BR /><BR />
+		item's final <?php print $disposition;?>.<BR /><BR />
 		When the issue described in a ticket is updated, <B>action</B> and/or <B>patient</B> records may be written to reflect that
 		change, these being largely unstructured values with a date recording the date/time the item was added.<BR /><BR />
 		On the main <b>Current Call Tickets</b> screen, colored bullets indentify mobile Units, with the bullet color identifying
@@ -149,7 +162,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'install')) {
 ?>
 		<FONT CLASS="header"><BR />Installing/Upgrading</FONT><BR /><blockquote>
-		Tickets is installed and upgraded through <B>install.php</B>. You'll need valid information about the MySQL database instalaltion.
+		Tickets is installed and upgraded through <B>install.php</B>. You'll need valid information about the MySQL database installation.
 		More info on the install process can be found in <B>install.php</B>.
 		<FONT CLASS="warn">WARNING: Do NOT keep <B>install.php</B> accessible to everyone after installation/upgrading.</FONT></blockquote>
 <?php
@@ -170,7 +183,10 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 ?>
 		<blockquote>
 		<FONT CLASS="header"><BR />Credits</FONT><BR />
-		Version 2 was programmed by Arnie Shore, shoreas at gmail dot com, based on thoughts, ideas and suggestions from its users.  Thanks, folks.<BR />
+		While Version 2 was initially programmed by Arnie Shore, shoreas at gmail dot com, Andy Harvey joined us in early '09, and in
+		addition to programming skills, brought considerable experience as a hands-on user. Much of what you see in Tickets today (Spring '11) is his work.  <br />
+		Alan Jump has contributed a sorely-needed user manual, an under-appreciated component of any system that makes any claims to user-friendliness and ease-of-use.<br />
+		And, certainly the thoughts, ideas and suggestions from our users have also been key contributors to the progress we've made.  Thanks, folks.<BR /><BR />
 		Programming of the base version of Tickets was by Daniel Netz, netz "at" home "dot" se</A><BR />
 		Base version SourceForge Project: <A HREF="http://www.sourceforge.net/projects/ticket/" target="new">sourceforge.net/projects/ticket/<BR />
 		Base version CSV Repository: <A HREF="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ticket/" target="new">cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ticket/</A><BR />

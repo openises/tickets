@@ -1,9 +1,14 @@
 <?php
 /*
 7/25/09	initial release
+1/21/10 captions changed to conform to IM usage
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -18,7 +23,7 @@ require_once('./incs/functions.inc.php');
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 </HEAD>
 <BODY>
 
@@ -62,7 +67,7 @@ if (!(empty($_POST))) {
 			return $ary_data;
 		}		// end function
 	
-	$ary = test_instam($_POST['dev_key']) ;
+	$ary = test_instam(trim($_POST['dev_key'])) ;
 	if (!($ary)) {
 ?>
 
@@ -87,9 +92,9 @@ if (!(empty($_POST))) {
 for ($i = 1; $i<(count($ary) - 2); $i++) {
 	$tmp_ary = explode (",", $ary[$i]);
 ?>
-<TR CLASS='odd'><TD>Device license:</TD><TD><?php print $tmp_ary[0];?></TD></TR>
+<TR CLASS='odd'><TD>Device key:</TD><TD><?php print $tmp_ary[0];?></TD></TR>
 <TR CLASS='even'><TD>Name</TD><TD><?php print $tmp_ary[1];?></TD></TR>
-<TR CLASS='odd'><TD>Time</TD><TD><?php print $tmp_ary[2];?></TD></TR>
+<TR CLASS='odd'><TD>Time</TD><TD><?php print format_date($tmp_ary[2]);?></TD></TR>
 <TR CLASS='even'><TD>lat</TD><TD><?php print $tmp_ary[3];?></TD></TR>
 <TR CLASS='odd'><TD>Lng:</TD><TD><?php print $tmp_ary[4];?></TD></TR>
 <TR CLASS='even'><TD>Course:</TD><TD><?php print $tmp_ary[5];?></TD></TR>
@@ -118,7 +123,7 @@ else {
 <FORM NAME= 'frm_instam' METHOD='post' ACTION = '<?php print basename(__FILE__);?>'>
 </TD></TR>
 <TR CLASS  = 'odd'><TD>
-License key:
+Master API key:
 </TD><TD>
 	<INPUT NAME = 'dev_key' TYPE = 'text' SIZE = '30' VALUE=''>	<BR /><BR />
 </TD></TR>

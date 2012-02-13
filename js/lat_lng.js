@@ -2,7 +2,13 @@
 /*
 9/16/08 initial release
 */
-	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08		
+//	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08	
+
+	function IncludeJavaScript(jsFile) {
+		document.write('<script type="text/javascript" src="' + jsFile + '"></scr' + 'ipt>'); 
+		}
+
+	IncludeJavaScript('geotools2.js');	
 	
 	function do_coords(inlat, inlng) { 										 //9/14/08
 		if((inlat.length==0)||(inlng.length==0)) {return;}

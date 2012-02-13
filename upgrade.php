@@ -2,9 +2,13 @@
 /*
 3/18/09 added direcs
 3/22/09 remove terrain, add version settings update
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);		// 10/1/08
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 
 $old_version = get_variable('_version'); 
 $from_version = "2.10 D beta";
@@ -54,7 +58,7 @@ $result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_er
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 </HEAD>
 <BODY>
 <BR /><BR /><BR /><CENTER>

@@ -1,6 +1,8 @@
 <?php
 //	areas server-side create script
-require_once('./incs/functions.inc.php');		// some irv_functions
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 
 $istest=FALSE;
 extract($_POST);

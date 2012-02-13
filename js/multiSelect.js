@@ -59,7 +59,7 @@ function buildMultipleSelects() {
 			divElement.style.width	= width + "px";
 			divElement.style.height   = height + "px";
 			divElement.style.border   = "2px inset white";
-			divElement.style.font = "10pt Arial";
+			divElement.style.font = "8pt Arial";
 			divElement.className	  = 'customMultipleSelect';
 			
 			optionObjects = ms.getElementsByTagName('option');

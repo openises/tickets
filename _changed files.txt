@@ -1,0 +1,26 @@
+1.  config.php - user tables priv's, incident numbers
+2.  add.php, add_nm.php for tab order, incident numbers
+3.  install.php 'password' => MD5
+4.  tables.php get comments, check/uncheck
+5.  schema - facilities type description size increase
+6.  tables edit - disallow deleting id's in use
+7.  mobile.php - centering
+8.  functions.inc.php - occasional session key  undefined
+9.  functions_major_nm.inc.php - print, etc. to match FMP
+10. routes_nm.php - SQL for FMP_NM
+11. board.php 'as_of' time display correction
+12. login.inc.php - double body tag, defer
+13. FMP_nm - screen real estate issues
+14. routes_inc.php re unit selection
+15. several for mi/km conversion based on locale
+16. add, add_nm, edit, edit_nm locale-based 'state' field size
+17. chat gets corrections plus codes capability.
+18. remotes.php major redo.
+19. FMP re remotes speed
+20. Get_text for Nature, Disposition, Incident, Incidents, Patient
+21. '_cloud' setting
+22. units, facilities  session test relocation
+23. reports re sql fix and get_text
+24. edit, edit_nm re adding _by to update fields
+25. top.php re spurious fvlogger reference
+26. signals handling added to add, edit, action, patient, do_unit_mail, plus _NM variants.

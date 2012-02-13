@@ -4,7 +4,7 @@
 		<INPUT TYPE="hidden" NAME="indexname" 	VALUE="id" />
 		<INPUT TYPE="hidden" NAME="sortby" 		VALUE="id" />
 		<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
-		<INPUT TYPE="hidden" NAME="frm__by" 	VALUE="<?php print $my_session['user_id']; ?>" />
+		<INPUT TYPE="hidden" NAME="frm__by" 	VALUE="<?php print $_SESSION['user_id']; ?>" />
 		<INPUT TYPE="hidden" NAME="frm__from" 	VALUE="<?php print $_SERVER['REMOTE_ADDR']; ?>" />
 		<INPUT TYPE="hidden" NAME="frm__on" 	VALUE="<?php print mysql_format_date(time() - (get_variable('delta_mins')*60));?>" />
 		<INPUT TYPE="hidden" NAME="frm_icon" 	VALUE="" />
@@ -17,7 +17,7 @@
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Description:</TD>
 		<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_description" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 	<TR VALIGN="top" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Icon:</TD>
-		<TD><IMG ID='ID3' SRC="" STYLE="visibility:hidden;"></TD></TR>
+		<TD><IMG ID='ID3' SRC="sm_icons[0]" STYLE="visibility:hidden;"></TD></TR>
 	<TR CLASS="even"><TD></TD><TD ALIGN='center'>&nbsp;&nbsp;&nbsp;&nbsp;
 <SCRIPT>
 			for (i=0; i<sm_icons.length-1; i++) {						// generate icons display

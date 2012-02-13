@@ -29,7 +29,7 @@ $thresh_h = array(1, 5, 30, 40, 50, 60, 30);	// threshold times in minutes - hig
 $TBL_INC_PERC = 50;		// incident group - four columns  -  50 percent as default
 $TBL_UNIT_PERC = 35;	// unit group, includes checkboxes  -  35 percent as default
 $TBL_CALL_PERC = 10;	// call group - three columns  -  10 percent as default
-						// total shd be ~ 100
+						// total shd be @session_start(); 100
 //						column width in characters - use zero to suppress display
 
 $COLS_INCID = 18;		// incident name -  18 characters as default
@@ -94,8 +94,17 @@ $COLS_COMMENTS = 8;		// run comments -  8 characters as default
 11/6/09 removed quote - source ???, removed old id manipulation in function our_reset()
 11/27/09 revised default column widths - per AF; removed redundant form
 12/13/09 applied filter to 'open assigns' list
+3/18/10 added log 'dispatch' entry
+5/26/10 corrected unit id references
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+9/29/10 do_diff moved to FIP, use mysql2timestamp for conversion
+9/1/10 added updates to responder meta-data three places
+3/15/11 changed stylesheet.php to stylesheet.php
 */
-require_once('./incs/functions.inc.php'); 
+
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 
 $from_top = 0;		// position of 'floating' div, pixels from  top of frame
 //$guest = is_guest();		// 10/31/09
@@ -115,7 +124,7 @@ function show_top() {				// generates the document introduction
 		<META HTTP-EQUIV="Pragma" 				CONTENT="NO-CACHE"/>
 		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
 		<META HTTP-EQUIV="Script-date" 			CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-		<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+		<LINK REL=StyleSheet HREF="stylesheet.php" TYPE="text/css">	<!-- 3/15/11 -->
 	<STYLE>
 		span.even 	{ background-color: #DEE3E7;}
 		.odd 	{ background-color: #EFEFEF;}
@@ -175,12 +184,15 @@ function show_top() {				// generates the document introduction
 		#bar 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
 		* html #bar { /*\*/position: absolute; top: expression((4 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((30 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
 		#foo > #bar { position: fixed; top: 4px; right: 30px; }
+
+		#barl 		{ width: auto; height: auto; background:transparent; z-index: 100; } 
+		* html #barl { /*\*/position: absolute; top: expression((4 + (ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop)) + 'px'); right: expression((30 + (ignoreMe2 = document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft)) + 'px');/**/ }
+		#fool > #barl { position: fixed; top: 4px; left: 1100px; }
 		
 		
 				
 		</STYLE>
 <SCRIPT>
-
 	function tween(in_val, min_val, max_val) {							// min and max inclusive
 		if ((in_val >= min_val) && (in_val<= max_val)) return in_val;
 		else {
@@ -222,23 +234,20 @@ function show_top() {				// generates the document introduction
 <?php
 	}		// end function show_top()
 
-	function my_to_date($in_date) {			// date_time format to user's spec
-		$temp = mktime(substr($in_date,11,2),substr($in_date,14,2),substr($in_date,17,2),substr($in_date,5,2),substr($in_date,8,2),substr($in_date,0,4));
+	function my_to_date($in_date) {			// date_time format to user's spec - 9/29/10
+		$temp = mysql2timestamp($in_date);
 		return (good_date_time($in_date)) ?  date(get_variable("date_format"), $temp): "";		// 
 		}
 	
 	function my_to_date_sh($in_date) {			// short date_time string
-		$temp = mktime(substr($in_date,11,2),substr($in_date,14,2),substr($in_date,17,2),substr($in_date,5,2),substr($in_date,8,2),substr($in_date,0,4));
+		$temp = mysql2timestamp($in_date);
 		return (good_date_time($in_date)) ?  date("H:i", $temp): "";		// 
 		}
 
-sleep(1);		// wait for possible logout to complete	
-$the_time_limit = $GLOBALS['SESSION_TIME_LIMIT'] * 60;		// seconds
-$sess_key = get_sess_key();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]session` WHERE `sess_id` = '" . $sess_key . "' AND `last_in` > '" . (time()-$the_time_limit) . "' LIMIT 1";
-$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	sleep(1);		// wait for possible logout to complete	
+	@session_start();
 
-if (!mysql_affected_rows()==1) {			//logged-in?				1/13/09
+	if(empty($_SESSION))    {		// expired?
 	show_top() ;
 ?>
 
@@ -258,8 +267,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		}				// end if (!mysql_affected_rows())
 	else {
 	
-		upd_lastin();				// update session time
-		
+		set_sess_exp();				// update session time		
 		extract($_POST);
 //		$func = (!(array_key_exists('func', $_POST)))? "board" : $_POST['func'];		// array_key_exists ( mixed key, array search )
 		$func = (!(array_key_exists('func', $_REQUEST)))? "board" : $_REQUEST['func'];		// array_key_exists ( mixed key, array search )
@@ -269,9 +277,9 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 ?>	
 	<SCRIPT>
-	var myuser = "<?php print isset($my_session)?$my_session['user_name']: "not";?>";
-	var mylevel = "<?php print isset($my_session)?get_level_text($my_session['level']): "na";?>";
-	var myscript = "<?php print isset($my_session)? LessExtension(basename( __FILE__)): "login";?>";
+	var myuser = "<?php print $_SESSION['user']?$_SESSION['user']: "not";?>";
+	var mylevel = "<?php print isset($_SESSION['level'])?get_level_text($_SESSION['level']): "na";?>";
+	var myscript = "<?php print isset($_SESSION['user'])? LessExtension(basename( __FILE__)): "login";?>";
 	
 	if (!(window.opener==null)){					// 1/12/09
 		try {
@@ -507,6 +515,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				if (!(parseInt(theForm.frm_miles_strt.value.trim()) == theForm.frm_miles_strt.value.trim())) 
 													{errmsg+= "\tStart mileage error\n";}
 				}
+			if (!(theForm.frm_miles_onsc.value.trim()) =="") {							// 11/4/09
+				if (!(parseInt(theForm.frm_miles_onsc.value.trim()) == theForm.frm_miles_onsc.value.trim())) 
+													{errmsg+= "\tOn scene mileage error\n";}
+				}
 			if (!(theForm.frm_miles_end.value.trim()) =="") {
 				if (!(parseInt(theForm.frm_miles_end.value.trim()) == theForm.frm_miles_end.value.trim())) 
 													{errmsg+= "\tEnd mileage error\n";}
@@ -604,13 +616,19 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 			<TR CLASS='odd'><TD CLASS="td_label" ALIGN="right">Mileage:</TD> <!--11/4/09-->
 				<TD colspan=3 ALIGN='center'>
-					<SPAN CLASS="td_label"> Start:</SPAN> <INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_strt" VALUE="" TYPE="text" />
-					<SPAN STYLE = "WIDTH: 60PX; DISPLAY: inline-block"></SPAN>
-					<SPAN CLASS="td_label">End:</SPAN>
-				<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_end" VALUE="" TYPE="text" /></TD></TR>
+					<SPAN CLASS="td_label"> Start:</SPAN> 
+					<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_strt" VALUE="" TYPE="text" />
+
+					<SPAN CLASS="td_label" STYLE = 'margin-left:40px'> On scene:</SPAN> 
+					<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_onsc" VALUE="" TYPE="text" />
+					
+					<SPAN CLASS="td_label" STYLE = 'margin-left:40px'>End:</SPAN>
+					<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_end" VALUE="" TYPE="text" />
+					
+					</TD></TR>
 			 </TABLE>
 					 
-			<INPUT TYPE='hidden' NAME='frm_by_id'	VALUE= "<?php print $my_session['user_id'];?>" />
+			<INPUT TYPE='hidden' NAME='frm_by_id'	VALUE= "<?php print $_SESSION['user_id'];?>" />
 			<INPUT TYPE='hidden' NAME='func' 		VALUE= 'add_db' />
 			<INPUT TYPE='hidden' NAME='frm_log_it' 	VALUE='' />
 			</FORM>
@@ -730,6 +748,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 					<FORM NAME='add_mail_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">	<!-- 11/27/09 -->
 <?php
 			$msg_str = "Dispatching {$unit_name}" . mail_it ($to_str, "New", $ticket_id, 3, TRUE); 
+			$finished_str = ((get_variable('call_board')==1))? "self.location.href = '" . basename(__FILE__) . "'": "window.close();";
 ?>			
 					<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+3; ?>><?php print $msg_str;?></TEXTAREA>
 					
@@ -743,7 +762,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				<TD ALIGN='left' COLSPAN=2>
 					<INPUT TYPE='button' VALUE='    Reset    ' onClick = "document.add_mail_form.reset();"  CLASS = 'btn'>&nbsp;&nbsp;&nbsp;
 					<INPUT TYPE='button' VALUE='Send message' onClick = "do_send_it ();"  CLASS = 'btn'>&nbsp;&nbsp;&nbsp;
-					<INPUT TYPE='button' VALUE='Do NOT send' onClick = "window.close();"  CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
+					<INPUT TYPE='button' VALUE='Do NOT send' onClick = "<?php print $finished_str;?>" CLASS = 'btn'> 	<!-- 6/16/09 - force refresh -->
 					<INPUT TYPE='hidden' NAME='func' VALUE='list'>&nbsp;&nbsp;&nbsp;&nbsp;
 					<SPAN ID = 'sending' CLASS = 'header' STYLE = 'display: none'>Sending!<SPAN>
 					</FORM>
@@ -761,10 +780,12 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 				$temp = trim($frm_miles_strt);				// 11/4/09
 				$start_mi = (empty($temp))? 0: $temp ;
+				$temp = trim($frm_miles_onsc);				// 12/9/10
+				$onsc_mi = (empty($temp))? 0: $temp ;
 				$temp = trim($frm_miles_end);
 				$end_mi = (empty($temp))? 0: $temp ;
 
-				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `dispatched`, `status_id`, `ticket_id`, `responder_id`, `comments`, `start_miles`, `end_miles`, `user_id`)
+				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `dispatched`, `status_id`, `ticket_id`, `responder_id`, `comments`, `start_miles`, `on_scene_miles`, `end_miles`, `user_id`)
 								VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
 									quote_smart($now),
 									quote_smart($now),
@@ -773,15 +794,22 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 									quote_smart($frm_unit_id),
 									quote_smart($frm_comments),
 									quote_smart($start_mi),
+									quote_smart($onsc_mi),
 									quote_smart($end_mi),
 									quote_smart($frm_by_id));
 		
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 									// apply status update to unit status
-				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 11/8/08
+				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+					`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
+					`_by`= " . 			quote_smart(trim($_SESSION['user_id'])) . ",
+					`_from`= " . 		quote_smart(trim($_SERVER['REMOTE_ADDR'])) . ",
+					`_on`= " . 			quote_smart(trim($now)) . "
+					WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 11/8/08
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		
 				do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $frm_unit_id, $frm_status_id);
+				do_log($GLOBALS['LOG_CALL_DISP'], $frm_ticket_id, $frm_unit_id, $frm_status_id);	// 3/18/10
 				}					// end if (mysql_affected_rows()==0)
 				
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " .quote_smart($frm_unit_id)  ." LIMIT 1";	// 1/29/09
@@ -840,10 +868,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}
 																				
 	if ((array_key_exists("chg_hide", $_POST)) && ($_POST['chg_hide']==1)) {			// change persistence value - 2/18/09
+
 		$temp = $_POST['hide_cl'];
-		$query = "UPDATE `$GLOBALS[mysql_prefix]session` SET `f2` ='$temp' WHERE `sess_id`='$sess_key' LIMIT 1";
-		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
-		$my_session = get_mysession();			// refresh session array
+		@session_start();
+		$_SESSION['f2'] = 	$temp;		// show/hide closed assigns
 		}
 ?>
 	<SCRIPT>
@@ -1000,14 +1028,22 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 	
 	<CENTER>
 <?php
-		function get_un_stat_sel($s_id, $b_id) {					// returns select list as string
+		function get_un_stat_sel($s_id, $b_id) {					// returns select list as string 
 			global $guest;
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`, `$GLOBALS[mysql_prefix]un_status` 
+				WHERE `$GLOBALS[mysql_prefix]un_status`.`id` = $s_id 
+				AND `$GLOBALS[mysql_prefix]un_status`.`id` = `$GLOBALS[mysql_prefix]responder`.`un_status_id` LIMIT 1" ;	
+			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$row = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_st)) : FALSE;
+			$init_bg_color = ($row)? $row['bg_color'] : "transparent";
+			$init_txt_color = ($row)? $row['text_color']: "black";		
+
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";	
 			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
  			$dis = ($guest)? " DISABLED": "";								// 9/17/08
 			$the_grp = strval(rand());			//  force initial OPTGROUP value
 			$i = 0;
-			$outstr = "\n\t\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)' $dis >\n";
+			$outstr = "\n\t\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)' $dis STYLE='background-color:{$init_bg_color}; color:{$init_txt_color};' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;'>\n";
 			while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
 				if ($the_grp != $row['group']) {
 					$outstr .= ($i == 0)? "": "\t</OPTGROUP>\n";
@@ -1015,10 +1051,12 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 					$outstr .= "\t\t<OPTGROUP LABEL='$the_grp'>\n";
 					}
 				$sel = ($row['id']==$s_id)? " SELECTED": "";
-				$outstr .= "\t\t\t<OPTION VALUE=" . $row['id'] . $sel .">" . $row['status_val'] . "</OPTION>\n";
+				$outstr .= "\t\t\t<OPTION VALUE=" . $row['id'] . $sel ." STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};'>" . $row['status_val'] . "</OPTION>\n";
 				$i++;
 				}		// end while()
 			$outstr .= "\t\t</OPTGROUP>\n\t\t</SELECT>\n";
+//			dump ($outstr);
+
 			return $outstr;
 			unset($result_st);
 			}
@@ -1127,7 +1165,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		<TR><TD COLSPAN=2><SPAN CLASS = "emph" ID = "done_id" STYLE="display:none"><B>&nbsp;Done!&nbsp;</B></SPAN></TD></TR>
 		<TR><TD COLSPAN=2><SPAN CLASS = "emph" ID = "del_id"  STYLE="display:none"><B>&nbsp;Deleted!&nbsp;</B></SPAN></TD></TR>
 		
-		<?php if (!($guest)) { ; ?>		
+<?php if (!($guest)) { ; ?>		
 		
 		<TR><TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Apply all" ID = "apply_btn" onClick = "apply_all_clicked ();" STYLE="display:none" />
 			</TD>
@@ -1138,7 +1176,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			<TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "Mail  "      ID = "mail_btn"  onClick = "do_mail_all_win();"  STYLE="display:inline" />
 			</TD></TR>
 		
-		<?php } ?>	
+<?php } ?>	
 		
 		<TR><TD ALIGN='left'><INPUT TYPE="button" CLASS="btn" VALUE = "List  "      ID = "list_btn"  onClick = "open_list_win();"    STYLE="display:inline" />		
 			</TD>
@@ -1147,10 +1185,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		<TR><TD ALIGN='left' COLSPAN=2><INPUT TYPE="button" CLASS="btn" VALUE = "Refresh"   ID = "refr_btn"  onClick = "do_refresh()" STYLE="display:inline" />
 			</TD></TR>
 		
-		<?php
-			$btn_text = ($my_session['f2'] == "h")? "Show": "Hide";
-			$frm_val = ($my_session['f2'] == "h")? "s": "h";
-		?>
+<?php
+			$btn_text = ($_SESSION['show_closed'] == "h")? "Show": "Hide";
+			$frm_val = ($_SESSION['show_closed'] == "h")? "s": "h";
+?>
 		
 		<TR><TD ALIGN='left' COLSPAN=2>Cleared: <SPAN onClick = "do_hors('<?php print $frm_val ;?>')"><U><?php print $btn_text ;?></U></SPAN>
 		</TD></TR>
@@ -1161,7 +1199,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 </DIV>
 
 <?php	
-		switch ($my_session['f2']) {		// persistence flags 2/18/09
+		switch ($_SESSION['show_closed']) {		// persistence flags 2/18/09
 			case "":						// default, show
 			case " ":						// 
 			case "s":						
@@ -1185,8 +1223,16 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			default:
 			    echo "error" . __LINE__ . "\n";
 			}
-		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, `$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , `$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`, `t`.`description` AS `thetickdescr`, `t`.`status` AS `thestatus`,
-			`r`.`id` AS `theunitid`, `r`.`name` AS `theunit` , `$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
+		$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of,
+			`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
+			`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+			`u`.`user` AS `theuser`, `t`.`scope` AS `theticket`,
+			`t`.`description` AS `thetickdescr`,
+			`t`.`status` AS `thestatus`,
+			`r`.`id` AS `theunitid`,
+			`r`.`name` AS `theunit` ,
+			`r`.`type` AS `theunittype` ,
+			`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
 			FROM `$GLOBALS[mysql_prefix]assigns` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
@@ -1197,6 +1243,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 
 		$lines = mysql_affected_rows();
+//		dump($query);
 		print "\n<SCRIPT>\n\tvar lines = {$lines};\n</SCRIPT>\n";		// hand to JS - 5/23/09
 		if ($lines == 0) {												// empty?
 			
@@ -1293,15 +1340,21 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 						}
 					else {
 						$strike = $strikend = "";
-						}			
- 
+						}			 
 
-					if (!($row['responder_id']==0)) {																	// 5/11/09
+					if (!($row['theunitid'] == 0)) {																	// 5/26/10
+						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`	WHERE `id`= '{$row['theunittype']}' LIMIT 1";
+						$result_type = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+						$row_type = (mysql_affected_rows() > 0) ? stripslashes_deep(mysql_fetch_assoc($result_type)) : "";
+						$the_bg_color = empty($row_type)?	"transparent" : $GLOBALS['UNIT_TYPES_BG'][$row_type['icon']];		// 3/15/10
+						$the_text_color = empty($row_type)? "black" :		$GLOBALS['UNIT_TYPES_TEXT'][$row_type['icon']];		// 
+						unset ($row_type);
 
 						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : addslashes($row['theunit']) ;			// id only if absent
 						$short_name = cb_shorten($unit_name, $COLS_UNIT);
 						print "\t<TD CLASS='$theClass' onClick = {$doUnit}('{$row['responder_id']}') 
-							 onmouseover=\"Tip('[#{$row['theunitid']}] {$unit_name}')\" ALIGN='left' onmouseout=\"UnTip()\"><B>{$short_name}</B></TD>\n";							// unit 8/24/08, 1/17/09
+							 onmouseover=\"Tip('[#{$row['theunitid']}] {$unit_name}')\" ALIGN='left' onmouseout=\"UnTip()\">
+							 <SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'><B>{$short_name}</B></SPAN></TD>\n";							// unit 8/24/08, 1/17/09
 						
 						print "\t<TD  CLASS='mylink' onmouseover =\"$('c{$i}').style.visibility='visible';\" onmouseout = \"$('c{$i}').style.visibility='hidden'; \" ALIGN='center'>
 							\n\t<SPAN id=\"c{$i}\" style=\"visibility: hidden\">
@@ -1394,11 +1447,16 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 							}
 						print "\t<TD CLASS='$theClass' {$ttip_str} ><INPUT TYPE='checkbox' NAME='frm_clear' $is_cd > </TD>\n"; 
 						
-
+//						dump($row['responder_id']);
+//						dump($unit_ids);
 						if (!in_array ($row['responder_id'], $unit_ids)) {				// 10/9/08
 							$unit_st_val = (array_key_exists($row['un_status_id'], $status_vals_ar))? $status_vals_ar[$row["un_status_id"]]: "";
-	
-							print "\t<TD  onmouseover=\"Tip('{$unit_st_val}')\" TITLE= '$unit_st_val' onmouseout=\"UnTip()\">" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
+							if (empty($row['theunitid'])) {				// 3/15/10
+								print "\t<TD COLSPAN=2 ALIGN='left'><SPAN STYLE='margin-left: 10px'>na</SPAN></TD>\n";
+								}
+							else {	
+								print "\t<TD  onmouseover=\"Tip('{$unit_st_val}')\" TITLE= '$unit_st_val' onmouseout=\"UnTip()\">" .  get_un_stat_sel($row['un_status_id'], $i) . "</TD>\n";						// status
+								}
 							
 							print "\t<TD>\n\t<SPAN ID=TD$i STYLE='display:none'><INPUT TYPE='button' VALUE='Go'  CLASS = 'btn' onClick=\"to_server(F$i); window.opener.parent.frames['main'].location.reload();\">\n"; 		// 9/28/08
 							print "\t<INPUT TYPE='button' VALUE='Cancel'   CLASS = 'btn' onClick=\"document.F$i.reset();hide_but($i)\"></SPAN></TD>\n";
@@ -1413,7 +1471,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 						}		// end 'no responder'
 
 					$d1 = $row['assign_as_of'];
-					$d2 = mktime(substr($d1,11,2),substr($d1,14,2),substr($d1,17,2),substr($d1,5,2),substr($d1,8,2),substr($d1,0,4));
+					$d2 = mysql2timestamp($d1);		// 9/29/10
 
 					$temp = "[#{$row['assign_id']}] " . date(get_variable("date_format"), $d2);
 					
@@ -1787,9 +1845,12 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 			<TR CLASS=''><TD CLASS="td_label" ALIGN="right">Mileage:</TD> <!--10/6/09-->
 				<TD colspan=3 ALIGN='center'>
-					<SPAN CLASS="td_label"> Start:</SPAN> <INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_strt" VALUE="<?php print $asgn_row['start_miles']; ?>" TYPE="text" <?php print $disabled;?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<SPAN CLASS="td_label"> Start:</SPAN> 
+					<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_strt" VALUE="<?php print $asgn_row['start_miles']; ?>" TYPE="text" <?php print $disabled;?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<SPAN CLASS="td_label"> On scene:</SPAN> 
+					<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_onsc" VALUE="<?php print $asgn_row['on_scene_miles']; ?>" TYPE="text" <?php print $disabled;?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 					<SPAN CLASS="td_label">End:</SPAN>
-				<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_end" VALUE="<?php print $asgn_row['end_miles']; ?>" TYPE="text" <?php print $disabled;?>></TD></TR>
+					<INPUT MAXLENGTH="8" SIZE="8" NAME="frm_miles_end" VALUE="<?php print $asgn_row['end_miles']; ?>" TYPE="text" <?php print $disabled;?>></TD></TR>
 <?php
 		 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		// mysql format
 	
@@ -1933,7 +1994,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 ?>			
 				</TD></TR>
 			 </tbody></table>
-			<INPUT TYPE='hidden' NAME='frm_by_id' value= "<?php print $my_session['user_id'];?>"/>
+			<INPUT TYPE='hidden' NAME='frm_by_id' value= "<?php print $_SESSION['user_id'];?>"/>
 			<INPUT TYPE='hidden' NAME='func' value= 'edit_db'/>
 			<INPUT TYPE='hidden' NAME='frm_complete' value= ''/> 
 			<INPUT TYPE='hidden' NAME='frm_id' value= '<?php print $frm_id; ?>'/>
@@ -1963,8 +2024,14 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $frm_ticket_id);
 				}
 				
-			if (isset($frm_unit_status_id)) {
-				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_unit_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_unit_id) ." LIMIT 1";
+			if (isset($frm_unit_status_id)) {		// 10/4/10
+				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
+					`un_status_id`= " . quote_smart($frm_unit_status_id) . ", 
+					`_by`= " . 			quote_smart(trim($_SESSION['user_id'])) . ",
+					`_from`= " . 		quote_smart(trim($_SERVER['REMOTE_ADDR'])) . ",
+					`_on`= " . 			quote_smart(trim($now)) . ",
+					`updated` = " . quote_smart($now) . " 
+					WHERE `id` = " . quote_smart($frm_unit_id) ." LIMIT 1";
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 				do_log($GLOBALS['LOG_UNIT_CHANGE'], $frm_unit_id);	
 				}
@@ -1975,6 +2042,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 				}
 			
+
+
+
+
 			$frm_dispatched =	(array_key_exists('frm_db', $_POST))? 	quote_smart($_POST['frm_year_dispatched'] . "-" . $_POST['frm_month_dispatched'] . "-" . $_POST['frm_day_dispatched']." " . $_POST['frm_hour_dispatched'] . ":". $_POST['frm_minute_dispatched'] .":00") : "";
 			$frm_responding = 	(array_key_exists('frm_rb', $_POST))? 	quote_smart($_POST['frm_year_responding'] . "-" . $_POST['frm_month_responding'] . "-" . $_POST['frm_day_responding']." " . $_POST['frm_hour_responding'] . ":". $_POST['frm_minute_responding'] .":00") : "";
 			$frm_on_scene = 	(array_key_exists('frm_os', $_POST))?  	quote_smart($_POST['frm_year_on_scene'] . "-" .   $_POST['frm_month_on_scene'] . "-" .   $_POST['frm_day_on_scene']." " .   $_POST['frm_hour_on_scene'] . ":".   $_POST['frm_minute_on_scene'] .":00") : "";
@@ -1991,12 +2062,19 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 			$unit_sql = (isset($frm_unit_id))?	" `responder_id`=" .quote_smart($frm_unit_id) . ", " :"";			// 1/15/09
 
-			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET " .$unit_sql. " `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) . ", `start_miles`= " . quote_smart($_POST['frm_miles_strt']) . ", `end_miles`= " . quote_smart($_POST['frm_miles_end']) ;	//10/6/09
+//			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET " .$unit_sql. " `as_of`= " . quote_smart($now) . ", `comments`= " . quote_smart($_POST['frm_comments']) . ", `start_miles`= " . quote_smart($_POST['frm_miles_strt']) . ", `end_miles`= " . quote_smart($_POST['frm_miles_end']) ;	//10/6/09
+			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET " .$unit_sql. " 
+				`as_of`= " . quote_smart($now) . ", 
+				`comments`= " . quote_smart($_POST['frm_comments']) . ", 
+				`start_miles`= " . quote_smart($_POST['frm_miles_strt']) . ", 
+				`on_scene_miles`= " . quote_smart($_POST['frm_miles_onsc']) . ", 
+				`end_miles`= " . quote_smart($_POST['frm_miles_end']) ;	//10/6/09, 12/9/10
+
 			$query .= $date_part;
 			$query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
 
 			$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
-	
+
 			$message = "Update Applied";
 ?>
 			</HEAD>
@@ -2014,7 +2092,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		
 			$query  = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";	
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	
+
 			$message = "Assign record deleted";
 ?>
 			</HEAD>
@@ -2133,41 +2211,11 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			$outstr .=":" . $mins_show;
 			return $outstr;
 			}				// end function
-
-		function do_diff($indx, $row){		// returns diff in seconds
-			switch ($indx) {
-				case 0:
-					$temp = mktime(substr($row['dispatched'],11,2),substr($row['dispatched'],14,2),0,substr($row['dispatched'],5,2),substr($row['dispatched'],8,2),substr($row['dispatched'],0,4));
-				    break;
-				case 1:
-					$temp = mktime(substr($row['responding'],11,2),substr($row['responding'],14,2),0,substr($row['responding'],5,2),substr($row['responding'],8,2),substr($row['responding'],0,4));
-				    break;
-				case 2:
-					$temp = mktime(substr($row['on_scene'],11,2),substr($row['on_scene'],14,2),0,substr($row['on_scene'],5,2),substr($row['on_scene'],8,2),substr($row['on_scene'],0,4));		
-				    break;
-				case 3:
-					$temp = mktime(substr($row['u2fenr'],11,2),substr($row['u2fenr'],14,2),0,substr($row['u2fenr'],5,2),substr($row['u2fenr'],8,2),substr($row['u2fenr'],0,4));		
-				    break;
-				case 4:
-					$temp = mktime(substr($row['u2farr'],11,2),substr($row['u2farr'],14,2),0,substr($row['u2farr'],5,2),substr($row['u2farr'],8,2),substr($row['u2farr'],0,4));		
-				    break;
-				case 5:
-					$temp = mktime(substr($row['clear'],11,2),substr($row['clear'],14,2),0,substr($row['clear'],5,2),substr($row['clear'],8,2),substr($row['clear'],0,4));		
-				    break;
-				case 6:
-					$temp = mktime(substr($row['problemend'],11,2),substr($row['problemend'],14,2),0,substr($row['problemend'],5,2),substr($row['problemend'],8,2),substr($row['problemend'],0,4));		
-				    break;
-				default:
-					dump($indx);				// error  error  error  error  error 
-				}
-			return $temp - mktime(substr($row['problemstart'],11,2),substr($row['problemstart'],14,2),0,substr($row['problemstart'],5,2),substr($row['problemstart'],8,2),substr($row['problemstart'],0,4));		
-			}
 																
 	if ((array_key_exists("chg_hide", $_POST)) && ($_POST['chg_hide']==1)) {			// change persistence value - 2/18/09
 		$temp = $_POST['hide_cl'];
-		$query = "UPDATE `$GLOBALS[mysql_prefix]session` SET `f2` ='$temp' WHERE `sess_id`='$sess_key' LIMIT 1";
-		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
-		$my_session = get_mysession();			// refresh session array
+		@session_start();
+		$_SESSION['f2'] = 	$temp;		// show/hide closed assigns
 		}
 	$priorities = array("","severity_medium","severity_high" );
 
@@ -2213,7 +2261,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 			$i = 1;	
 	
-			print "<TABLE BORDER=0 ALIGN='left'  cellspacing = 1 CELLPADDING = 1 ID='call_board' STYLE='display:block'>\n";	// 5/24/09
+			print "<TABLE BORDER=0 ALIGN='center'  cellspacing = 1 CELLPADDING = 1 ID='call_board' STYLE='display:block'>\n";	// 5/24/09
  			print "<TR CLASS='even'><TD COLSPAN=99 ALIGN = 'center'><B>Call Board</B> - {$lines } calls <FONT SIZE='-3'><I> &nbsp;&nbsp;&nbsp;&nbsp;(mouseover for details)</I></FONT></TD></TR>\n";	// 5/24/09
 		
 			$doUnit = ($guest)? "viewU" : "editU";
@@ -2325,10 +2373,10 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 						}			
  
 
-					if (!($row['responder_id']==0)) {	
-						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : addslashes($row['theunit']) ;			// id only if absent
+					if (!($row['theunitid']==0)) {					// 5/26/10
+						$unit_name = empty($row['theunitid']) ? "[#{$row['theunitid']}]" : addslashes($row['theunit']) ;			// id only if absent
 						$short_name = shorten($unit_name, 10);
-						print "\t<TD ALIGN='left' CLASS='$theClass' onClick = \"ignore('{$row['responder_id']}')\" 
+						print "\t<TD ALIGN='left' CLASS='$theClass' onClick = \"ignore('{$row['theunitid']}')\" 
 							 onmouseover=\"Tip('{$unit_name}')\" ALIGN='left' onmouseout=\"UnTip()\"><B>{$short_name}</B></TD>\n";							// unit 8/24/08, 1/17/09
 						}			// end 'got a responder'
 					else {	
@@ -2364,6 +2412,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 					
 					if ($miles) {
 						print "\t<TD ALIGN='left' CLASS='$theClass' >" . $row['start_miles'] . "&nbsp;</TD>\n";	
+						print "\t<TD ALIGN='left' CLASS='$theClass' >" . $row['on_scene_miles'] . "&nbsp;</TD>\n";	// 12/9/10
 						print "\t<TD ALIGN='left' CLASS='$theClass' >" . $row['end_miles'] . "&nbsp;</TD>\n";
 						$dist = ((my_is_int($row['start_miles'])) && (my_is_int($row['end_miles'])))? ($row['end_miles'] -  $row['start_miles']) : "";
 						print "\t<TD ALIGN='left' CLASS='$theClass' >{$dist}</TD>\n";
@@ -2380,7 +2429,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			}		// end if (mysql_affected_rows()>0) 
 ?>
 		</TABLE>
-		<DIV ID='foo'><DIV ID='bar'>		<!-- 12/13/09 -->
+		<DIV ID='fool'><DIV ID='barl'>		<!--5/26/10 -->
 		<INPUT TYPE='button' VALUE = 'Finished' onClick = 'window.close()'  CLASS = 'btn'>
 		</DIV></DIV>
 		<FORM NAME='finform' METHOD='post' ACTION = '<?php print basename(__FILE__);?>'>

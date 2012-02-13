@@ -1,6 +1,7 @@
 <?php
 /*
 8/9/09	handle missing curl 
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 error_reporting(E_ALL);
 ?>
@@ -15,7 +16,7 @@ error_reporting(E_ALL);
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <?php
 if (empty($_POST)) {
 ?>
@@ -40,7 +41,9 @@ if (empty($_POST)) {
 <?php
 		}				// end if (empty($_POST)) {
 	else {
-		require_once('./incs/functions.inc.php');
+		 
+		@session_start();
+		require_once($_SESSION['fip']); 
 
 		function get_remote($url) {				// 8/9/09
 			

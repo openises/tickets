@@ -1,8 +1,11 @@
 <?php
 /*
 9/16/08 correction to $_GET variable name
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
-require_once('./incs/functions.inc.php'); 
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 
 //	dump($_GET);	// (505) 266-4450
 //	$url = "http://www.google.com/search?q=4108498721";

@@ -2,10 +2,21 @@
 /*
 7/08/09 Created Incident Popup from track_u.php
 7/29/09 Revised code for statistics display and background color determined by severity
+3/12/10 added incident age to stats, revised display 
+3/25/10 added 'dispatched' and 'cleared' to display
+6/25/10 added year check to NULL for cleared assigns
+7/4/10 added ticket details to head section
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+8/26/10 fmp added - AH
+3/15/11 changed stylesheet.php to stylesheet.php
 */
 
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
+do_login(basename(__FILE__));
+require_once($_SESSION['fmp']);		// 8/26/10
 $api_key = get_variable('gmaps_api_key');		// empty($_GET)
 
 if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
@@ -27,29 +38,26 @@ if ($istest) {
 		}
 	}
 
-$remotes = get_current();							// set auto-refresh if any mobile units														
-$interval = intval(get_variable('auto_poll'));
-$refresh = ((($remotes['aprs']) || ($remotes['instam']) || ($remotes['locatea']) || ($remotes['gtrack']) || ($remotes['glat'])) && ($interval>0))? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>\n": "";
 $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
-$id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
+$id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
 
-$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
+$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
 $row = mysql_fetch_assoc($result);
 $title = $row['scope'];
 $ticket_severity = get_severity($row['severity']);
 $ticket_type = get_type($row['in_types_id']);
 $ticket_status = get_status($row['status']);
 $ticket_updated = format_date_time($row['updated']);
-
+$ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
+$ticket_start = $row['problemstart'];		//
+$ticket_end = $row['problemend'];		//
+$ticket_start_str = format_date($row['problemstart']);		//
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Incident Popup - Incident <?php print $title;?> <?php print $ticket_updated;?></TITLE>
-
-<?php print $refresh; ?>
-	
-	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
 
 <?php
@@ -86,79 +94,104 @@ $ticket_updated = format_date_time($row['updated']);
 	
 </HEAD>
 <?php
+$severities = $colors = array();
+$severities[$GLOBALS['SEVERITY_NORMAL']] = "#DEE3E7";
+$severities[$GLOBALS['SEVERITY_MEDIUM']] = "#00FF00";
+$severities[$GLOBALS['SEVERITY_HIGH']] = "#F80000";
 
+$colors[$GLOBALS['SEVERITY_NORMAL']] = "black";
+$colors[$GLOBALS['SEVERITY_MEDIUM']] = "black";
+$colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 
-
-switch($ticket_severity) {			// Background color determined by Ticket Severity 7/29/09
-
-	case "normal" :
-	?>	
-	<BODY style="background-color:#0066FF;" onload = "ck_frames();" onunload="GUnload();">
-	<A NAME='top'>
-	<FONT COLOR="white">
-	<?php
-	break;
-
-	case "medium" :
-	?>
-	<BODY style="background-color:#00FF00;" onload = "ck_frames();" onunload="GUnload();">
-	<A NAME='top'>
-	<FONT COLOR="black">
-	<?php
-	break;
-
-	case "high" :
-	?>
-	<BODY style="background-color:#F80000;" onload = "ck_frames();" onunload="GUnload();">
-	<A NAME='top'>
-	<FONT COLOR="yellow">
-	<?php
-	break;
-}
+echo "<BODY style='background-color:{$severities[$row['severity']]}; text-color: {$colors[$row['severity']]};' onLoad = 'ck_frames();' onUnload='GUnload();'>";
+echo "<TABLE ALIGN = 'center'><TR><TD>";
 
 /* Creates statistics header and details of responding and en-route units 7/29/09 */
 
-	$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id' AND `responding` IS NOT NULL AND `on_scene` IS NULL AND `clear` IS NULL");
-	$num_rows_responding = mysql_num_rows($result_responding);
+$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+	WHERE ticket_id='$id'
+	AND `dispatched` IS NOT NULL 
+	AND `responding` IS NULL 
+	AND `on_scene` IS NULL 
+	AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
+$num_rows_dispatched = mysql_num_rows($result_dispatched);
 
-	$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id' AND `on_scene` IS NOT NULL AND `clear` IS NULL");
-	$num_rows_on_scene = mysql_num_rows($result_on_scene);
+$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+	WHERE ticket_id='$id'
+	AND `responding` IS NOT NULL 
+	AND `on_scene` IS NULL 
+	AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
+$num_rows_responding = mysql_num_rows($result_responding);
 
-$stats = "Severity:&nbsp;" . $ticket_severity . "<BR>" . "Tot units en-route&nbsp;=&nbsp;" . $num_rows_responding . "&nbsp;&nbsp;&nbsp;---&nbsp;&nbsp;&nbsp;Tot units on scene&nbsp;=&nbsp;" . $num_rows_on_scene . "<BR>" . "Units on scene:&nbsp;";
+$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+	WHERE ticket_id='$id' 
+	AND `on_scene` IS NOT NULL 
+	AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')	
+	");		// 6/25/10
+$num_rows_on_scene = mysql_num_rows($result_on_scene);
+	
+$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart, 
+	`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
+	`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+	`r`.`id` AS `unit_id`,
+	`r`.`name` AS `unit_name` ,
+	`r`.`type` AS `unit_type` ,
+	`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
+	FROM `$GLOBALS[mysql_prefix]assigns` 
+	LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+	LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+		WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
+		AND ticket_id='$id' ";
+
+$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+$num_rows_cleared = mysql_affected_rows();
+$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
+$elapsed = my_date_diff($ticket_start, $ticket_end);		// 5/13/10
+echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;&nbsp;&nbsp;Status: {$ticket_status}</B><BR />";
+$stats = "<B>Severity:&nbsp;{$ticket_severity}, <SPAN STYLE='background-color:white; color:black;'>&nbsp;age: $elapsed&nbsp;</SPAN>";
 
 echo $stats;
 
-	while ($row_on_scene = mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
-	$responder = $row_on_scene['responder_id'];		
-		$result_resp = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$responder'");
-		$row_resp = mysql_fetch_assoc($result_resp);
-		$resp_name = $row_resp['name'];
-		$handle = $row_resp['handle'];
-
-	$responding = $resp_name . ":&nbsp;" . $handle . ",&nbsp;&nbsp;";
-	echo $responding;
+echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
+while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+	$row = mysql_fetch_assoc($result);
+	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
 	}
 
-echo "<BR>Units en-route: ";
+echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
+while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+	$row = mysql_fetch_assoc($result);
+	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+	}
 
-	while ($row_responding = mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
-	$responder = $row_responding['responder_id'];		
-		$result_resp = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$responder'");
-		$row_resp = mysql_fetch_assoc($result_resp);
-		$resp_name = $row_resp['name'];
-		$handle = $row_resp['handle'];
+echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
+while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+	$row = mysql_fetch_assoc($result);
+	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+	}
 
-$enroute = $resp_name . ":&nbsp;" . $handle . ",&nbsp;&nbsp;";
-echo $enroute;
-}
+echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
+while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
+	echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
+	}
 
-echo "</FONT><BR><BR>";
+echo "</B><BR><BR>";
 
 	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-//	snap(basename(__FILE__) . __LINE__, $get_id);
+
 	if ($get_id) {
-		popup_ticket($get_id);
+		if($_SESSION['internet']) {
+			popup_ticket($get_id);
+		} else {
+			show_ticket($get_id, $print='false', $search = FALSE);
+			}
 		}
+
+echo "<CENTER><br clear = 'both'/><br /><br /><SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;{$ticket_addr}&nbsp;</SPAN>" ;
+echo "<BR /><BR /&nbsp;><U><SPAN onClick = 'window.close();' STYLE='background-color:white; font-weight:bold; color:black; text-decoration:underline'>Finished</SPAN></U>&nbsp;</CENTER>";
 ?>
 <FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_CLOSED'];?>'>
@@ -166,4 +199,5 @@ echo "</FONT><BR><BR>";
 <FORM NAME='to_all' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='status' VALUE=''>
 </FORM>
+</TD></TR></TABLE>
 </BODY></HTML>

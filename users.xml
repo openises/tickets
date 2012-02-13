@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<users>
+<user>
+<name>John Doe</name>
+<address>Binary Avenue 1234 FL</address>
+<email>john@john-domain.com</email>
+</user>
+<user>
+<name>Janet Smith</name>
+<address>Crazy Bits Road 4568 CA</address>
+<email>janet@janet-domain.com</email>
+</user>
+<user>
+<name>James Smith</name>
+<address>Socket Boulevard 7894 OH</address>
+<email>james@james-domain.com</email>
+</user>
+<user>
+<name>Silvia Wilson</name>
+<address>Protocol Avenue 5652 NY</address>
+<email>silvia@silvia-domain.com</email>
+</user>
+<user>
+<name>Alejandro Gervasio</name>
+<address>Boulevard of Objects 10101 AR</address>
+<email>alejandro@alejandro-domain.com</email>
+</user>
+</users>

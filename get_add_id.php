@@ -1,9 +1,12 @@
 <?php
 /*
 2/3/09 initial release - returns an existing reserved id from this remote or else a new one
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 													// do we have one fm this user
 	$query  = "SELECT `id`, `contact` FROM `$GLOBALS[mysql_prefix]ticket` 
 		WHERE `status`= '" . $GLOBALS['STATUS_RESERVED'] . "' AND  `contact` = " . quote_smart($_SERVER['REMOTE_ADDR']) . " LIMIT 1";

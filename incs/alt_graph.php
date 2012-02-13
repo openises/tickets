@@ -3,7 +3,9 @@
 10/5/08 sql tidy-up
 */
 error_reporting(E_ALL);
-require_once('./functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 
 
 //snap (__FILE__, __LINE__);
@@ -47,8 +49,8 @@ function is_my_null($inchar) {
 	}
 
 function get_low($in_date) {		// ex:2008-08-26 21:31:09
-	$ar1 = explode(" ", $in_date);
-	$ar2 = explode(":", $ar1[1]);		// time
+	$ar1 = split(" ", $in_date);
+	$ar2 = split(":", $ar1[1]);		// time
 	$ar2[0] = floor ($ar2[0]/4)*4;
 	$ar2[0] = str_pad ($ar2[0], 2,"0" , STR_PAD_LEFT);	// pad ldg 0 if needed
 	$ar2[1] = $ar2[2] = "00"; 

@@ -4,10 +4,18 @@ routes to incident from selected unit
 08/7/31 cloned from routes.php 
 1/21/09 added show butts - re button menu
 3/11/09 scroll wheel operation added
+1/7/10 added 'call taker' alias
+7/16/10 detailmap.setCenter correction
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+11/23/10 - mi vs km per locale
+3/15/11 changed stylesheet.php to stylesheet.php
+
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
-$my_session = do_login(basename(__FILE__));		// returns session array
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
+do_login(basename(__FILE__));
 if($istest) {
 	dump(basename(__FILE__));
 	print "GET<br />\n";
@@ -15,6 +23,7 @@ if($istest) {
 	print "POST<br />\n";
 	dump($_POST);
 	}
+$conversion = get_dist_factor();				// KM vs mi - 11/23/10
 	
 $api_key = get_variable('gmaps_api_key');
 $_GET = stripslashes_deep($_GET);
@@ -27,7 +36,7 @@ $_GET = stripslashes_deep($_GET);
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
     <style type="text/css">
       body 					{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
       table.directions th 	{background-color:#EEEEEE;}	  
@@ -61,8 +70,8 @@ if (!empty($_POST)) {
 <SCRIPT>
 
 try {
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 	}
 catch(e) {
@@ -84,8 +93,8 @@ else {
 	
 
 <SCRIPT>
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $my_session['user_name'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($my_session['level']);?>";
+	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 	String.prototype.parseDeg = function() {
@@ -174,14 +183,21 @@ function doReset() {
 	}	// end function doReset()
 	
 </SCRIPT>
-<?php
-	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated  FROM $GLOBALS[mysql_prefix]ticket WHERE ID=" . $_GET['ticket_id'] . " LIMIT 1";			// get Incident location
+<?php								// 1/7/10
+	$query = "SELECT *,
+		UNIX_TIMESTAMP(problemstart) AS problemstart,
+		UNIX_TIMESTAMP(problemend) AS problemend,
+		UNIX_TIMESTAMP(date) AS date,
+		UNIX_TIMESTAMP(updated) AS updated,
+		`_by` AS `call_taker`
+		FROM $GLOBALS[mysql_prefix]ticket 
+		WHERE ID=" . $_GET['ticket_id'] . " LIMIT 1";			// get Incident location
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row_unit = stripslashes_deep(mysql_fetch_array($result));
 	unset ($result);
 ?>
-<!--	<BODY onLoad = "ck_frames()" onunload='GUnload()'> -->
-	<BODY onunload='GUnload()'>
+<!--	<BODY onLoad = "ck_frames()" onUnload='GUnload()'> -->
+	<BODY onUnload='GUnload()'>
 	<TABLE ID='outer' BORDER = 0>
 	<TR><TD VALIGN='top'><DIV ID='side_bar' STYLE='width: 400px'></DIV>
 		<BR>
@@ -204,7 +220,7 @@ function doReset() {
 	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print basename( __FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db'>
 	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>
-	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $my_session['user_id'];?>">
+	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>">
 	<INPUT TYPE='hidden' NAME='frm_id_str' 		VALUE= "">
 	<INPUT TYPE='hidden' NAME='frm_name_str' 	VALUE= "">
 	<INPUT TYPE='hidden' NAME='frm_status_id' 	VALUE= "1">
@@ -224,7 +240,7 @@ function doReset() {
 	}			// end if/else !empty($_POST)
 
 function do_list($unit_id ="") {
-	global $row_unit, $my_session;
+	global $row_unit;
 	
 ?>
 <SCRIPT>
@@ -257,7 +273,7 @@ function do_list($unit_id ="") {
 				var dMapDiv = document.getElementById("detailmap");
 				var detailmap = new GMap2(dMapDiv);
 				detailmap.addControl(new GSmallMapControl());
-				detailmap.setCenter(point, 13);  					// larger # = closer
+				detailmap.setCenter(point, 17);  					// larger # = closer - 7/16/10
 				detailmap.addOverlay(marker);
 				});
 	
@@ -473,7 +489,7 @@ function do_list($unit_id ="") {
 				unit_ids[i] = <?php print $unit_row['unit_id'];?>;
 				distances[i]=9999.9;
 <?php
-				$tab_1 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
+				$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 				$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($unit_row['name'], 48) . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $unit_row['description']), 32) . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='odd'><TD>Status:</TD><TD>" . $unit_row['unitstatus'] . " </TD></TR>";
@@ -498,7 +514,7 @@ function do_list($unit_id ="") {
 					if (mysql_affected_rows()>0) {		// got a track?
 						$track_row = stripslashes_deep(mysql_fetch_array($result_tr));			// most recent track report
 			
-						$tab_2 = "<TABLE CLASS='infowin' width='" . $my_session['scr_width']/4 . "px'>";
+						$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 						$tab_2 .= "<TR><TH CLASS='even' COLSPAN=2>" . $track_row['source'] . "</TH></TR>";
 						$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $track_row['course'] . ", Speed:  " . $track_row['speed'] . ", Alt: " . $track_row['altitude'] . "</TD></TR>";
 						$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $track_row['closest_city'] . "</TD></TR>";
@@ -515,7 +531,7 @@ function do_list($unit_id ="") {
 						lats[i] = <?php print $track_row['latitude'];?>;									// now compute distance - in km
 						lngs[i] = <?php print $track_row['longitude'];?>;
 						distances[i] = distCosineLaw(parseFloat(lats[i]), parseFloat(lngs[i]), parseFloat(<?php print $row_unit['lat'];?>), parseFloat(<?php print $row_unit['lng'];?>));
-					    var km2mi = 0.6214;				// 
+					    var km2mi = <?php print $conversion ;?>;				// 
 						var dist_mi = ((distances[i] * km2mi).toFixed(1)).toString();				// to miles
 <?php
 						$thespeed = ($track_row['speed'] == 0)?"<FONT COLOR='red'><B>&bull;</B></FONT>"  : "<FONT COLOR='green'><B>&bull;</B></FONT>" ;
@@ -553,7 +569,7 @@ function do_list($unit_id ="") {
 						lats[i] = <?php print $unit_row['lat'];?>;									// now compute distance - in km
 						lngs[i] = <?php print $unit_row['lng'];?>;
 						distances[i] = distCosineLaw(parseFloat(lats[i]), parseFloat(lngs[i]), parseFloat(<?php print $row_unit['lat'];?>), parseFloat(<?php print $row_unit['lng'];?>));	// note: km
-					    var km2mi = 0.6214;				// 
+					    var km2mi = <?php print $conversion ;?>;				// 
 						var dist_mi = ((distances[i] * km2mi).toFixed(1)).toString();				// to feet
 			
 						sidebar_line = "<TD><?php print shorten($unit_row['name'], 16);?></TD><TD>"+ dist_mi+"</TD>";

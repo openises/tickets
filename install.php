@@ -39,11 +39,17 @@
 3/17/09 chgd aprs_poll to auto_poll
 3/22/09 removed redundant def_area_code
 4/10/09 responder schema update
+1/23/10 - removed table session
+8/5/10 version number base - to permit index.php to update schema, internet setting added
+8/8/10    accomodate absent mysql.inc.php - as install trigger
+10/29/10  'PASSWORD' => 'MD5' to accommodate old MySQL versions
+12/18/10   write permissions test corrected
+1/10/11 Added default setting for Group or dispatch
 */
 
 error_reporting(E_ALL);				// 2/3/09
 
-$version = "2.10 E beta";			// see usage below 1/30/09
+$version = "2.20 A base beta";				// see usage below 8/5/10
 
 function dump($variable) {
 	echo "\n<PRE>";					// pretty it a bit
@@ -65,7 +71,6 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">
@@ -129,29 +134,50 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		//check if tables exists and if drop_tables is 1
 
 		table_exists($db_prefix."action",$drop_tables);		// 10/11/08	 - 1/25/09
+		table_exists($db_prefix."allocates",$drop_tables);		
 		table_exists($db_prefix."assigns",$drop_tables);
+		table_exists($db_prefix."captions",$drop_tables);		
 		table_exists($db_prefix."certs",$drop_tables);
 		table_exists($db_prefix."certs_x_user",$drop_tables);
+		table_exists($db_prefix."chat_invites",$drop_tables);		
 		table_exists($db_prefix."chat_messages",$drop_tables);
 		table_exists($db_prefix."chat_rooms",$drop_tables);
 		table_exists($db_prefix."cities",$drop_tables);
 		table_exists($db_prefix."clones",$drop_tables);
+		table_exists($db_prefix."codes",$drop_tables);		
+		table_exists($db_prefix."constituents",$drop_tables);		
 		table_exists($db_prefix."contacts",$drop_tables);
 		table_exists($db_prefix."courses",$drop_tables);
 		table_exists($db_prefix."courses_x_user",$drop_tables);
+		table_exists($db_prefix."css_day",$drop_tables);
+		table_exists($db_prefix."css_night",$drop_tables);		
 		table_exists($db_prefix."documents",$drop_tables);
 		table_exists($db_prefix."documents_log",$drop_tables);
+		table_exists($db_prefix."facilities",$drop_tables);		
+		table_exists($db_prefix."fac_status",$drop_tables);	
+		table_exists($db_prefix."fac_types",$drop_tables);	
+		table_exists($db_prefix."hints",$drop_tables);	
+		table_exists($db_prefix."insurance",$drop_tables);		
 		table_exists($db_prefix."in_types",$drop_tables);
 		table_exists($db_prefix."log",$drop_tables);
 		table_exists($db_prefix."logins",$drop_tables);
+		table_exists($db_prefix."mmarkup",$drop_tables);	
+		table_exists($db_prefix."mmarkups_cats",$drop_tables);	
+		table_exists($db_prefix."modules",$drop_tables);		
 		table_exists($db_prefix."notify",$drop_tables);
 		table_exists($db_prefix."patient",$drop_tables);
 		table_exists($db_prefix."photos",$drop_tables);
+		table_exists($db_prefix."pin_ctrl",$drop_tables);	
+		table_exists($db_prefix."places",$drop_tables);		
+		table_exists($db_prefix."region",$drop_tables);		
+		table_exists($db_prefix."region_type",$drop_tables);		
+		table_exists($db_prefix."remote_devices",$drop_tables);		
 		table_exists($db_prefix."responder",$drop_tables);
-		table_exists($db_prefix."session",$drop_tables);
+		table_exists($db_prefix."rss",$drop_tables);		
 		table_exists($db_prefix."settings",$drop_tables);
 		table_exists($db_prefix."skills",$drop_tables);
 		table_exists($db_prefix."skills_x_user",$drop_tables);
+		table_exists($db_prefix."stats_settings",$drop_tables);		
 		table_exists($db_prefix."teams",$drop_tables);
 		table_exists($db_prefix."teams_x_user",$drop_tables);
 		table_exists($db_prefix."team_types",$drop_tables);
@@ -563,6 +589,12 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		 `id` bigint(8) NOT NULL auto_increment,
 		 `ticket_id` int(8) NOT NULL default '0',
 		 `name` varchar(32) default NULL,
+		 `fullname` varchar(64) NULL default NULL,
+		 `dob` varchar(32) NULL default NULL,
+		 `gender` int(1) NOT NULL default '0',
+		 `insurance_id` int(3) NOT NULL default '0' COMMENT 'see table insurance',
+		 `facility_contact` varchar(64) NULL,
+		 `facility_id` int(3) NOT NULL default '0',		 
 		 `date` datetime default NULL,
 		 `description` text NOT NULL,
 		 `user` int(8) default NULL,
@@ -630,40 +662,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
 		$tables .= $table_name . ", ";
-// -- --------------------------------------------------------
 
-// --
-// -- Table structure for table `session` 2/11/09, 2/14/09
-// --
-
-		$table_name = prefix("session");
-		$query = "CREATE TABLE `$table_name` (
-
-		  `id` bigint(4) NOT NULL auto_increment,
-		  `sess_id` varchar(40) default NULL,
-		  `user_name` varchar(40) default NULL,
-		  `user_id` int(4) default NULL,
-		  `level` int(2) default NULL,
-		  `ticket_per_page` varchar(16) default NULL,
-		  `sortorder` varchar(16) default NULL,
-		  `scr_width` varchar(16) default NULL,
-		  `scr_height` varchar(16) default NULL,
-		  `browser` varchar(100) default NULL,
-		  `f1` varchar(1) NOT NULL default ' ' COMMENT 'flag 1',
-		  `f2` varchar(1) NOT NULL default ' ' COMMENT 'flag 2',
-		  `f3` varchar(1) NOT NULL default ' ' COMMENT 'flag 3',
-		  `f4` varchar(1) NOT NULL default ' ' COMMENT 'flag 4',
-		  `p1` varchar(48) default NULL COMMENT 'param 1',
-		  `p2` varchar(48) default NULL COMMENT 'param 2',
-		  `p3` varchar(48) default NULL COMMENT 'param 3',
-		  `p4` varchar(48) default NULL COMMENT 'param 4',
-		  `last_in` bigint(20) default NULL,
-		  PRIMARY KEY  (`id`),
-		  UNIQUE KEY `ID` (`id`)
-		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
-
-		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
-		$tables .= $table_name . ", ";
 // -- --------------------------------------------------------
 
 // --
@@ -998,13 +997,13 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		}
 
 
-	function create_user() {	// create default super user (note: priv's level 'super') and guest // 6/9/08
+	function create_user() {	// create default super user (note: priv's level 'super') and guest // 6/9/08, 10/29/10
 		global $db_prefix;
 		$tablename = prefix("user");
 		print "<P>";
-		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('admin',PASSWORD('admin'),'Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('admin',MD5('admin'),'Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
 		print "<LI> Created user '<B>admin</B>'";
-		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('guest',PASSWORD('guest'),'Guest',3,0,1,'date',0,'$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('guest',MD5('guest'),'Guest',3,0,1,'date',0,'$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
 		print "<LI> Created user '<B>guest</B>'";
 		print "</P>";
 		}
@@ -1038,6 +1037,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		do_insert_settings('frameborder','1');
 		do_insert_settings('framesize','50');
 		do_insert_settings('gmaps_api_key',$_POST['frm_api_key']);		//
+		do_insert_settings('group_or_dispatch','0');		//		1/10/11
 		do_insert_settings('guest_add_ticket','0');
 		do_insert_settings('host','www.yourdomain.com');
 		do_insert_settings('instam_key','');			// 4/10/09
@@ -1064,6 +1064,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		do_insert_settings('UTM','0');
 		do_insert_settings('validate_email','1');
 		do_insert_settings('wp_key','729c1a751fd3d2428cfe2a7b43442c64');		// 9/13/08
+		do_insert_settings ('internet','1');		// 8/5/10
 
 		print "<LI> Inserted default settings";
 		}
@@ -1214,10 +1215,11 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 <?php
 		}
 	else {
-		$filename = './incs/mysql.inc.php';				// 2/21/09
-		if (!is_writable($filename)) {
-		    die ("ERROR! File '{$filename}' is not writable.  This must be corrected for installation.");
+		$filename = './incs';							// 12/18/10
+		if (!is_writable($filename)) {					// 8/8/10 - 
+		    die ("ERROR! Directory '{$filename}' is not writable. 'Write' permissions must be corrected for installation.");
 			}
+		$filename = './incs/mysql.inc.php';				// 2/21/09
 
 		$dir = "./";
 		$dh  = opendir($dir);
@@ -1232,7 +1234,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		if (!in_array("markers", $files)) 	{$dirsOK=FALSE;}
 
 		if (!$dirsOK) {
-			print "<br><br><br><center><h3>At least one of the Tickets subdirectories is missing, and this needs to be corrected.<br /><br />You might check into how the Tickets zip file was unzipped or otherwise installed.<br><br><br><br><A HREF='mailto:shoreas@Gmail.com?subject=Tickets Install Problem'><u>Or click here to contact the developer.</u></A></h3></center>";
+			print "<br><br><br><center><h3>At least one of the Tickets subdirectories is missing, and this needs to be corrected.<br /><br />You might check into how the Tickets zip file was unzipped or otherwise installed.<br><br><br><br><A HREF='mailto:info@TicketsCAD.org?subject=Tickets Install Problem'><u>Or click here to contact the developer.</u></A></h3></center>";
 			}
 		else {
 ?>

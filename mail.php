@@ -7,8 +7,13 @@
 10/7/08	ajax-ify for inter-message delay
 10/17/08 changed addr string to pipe-delim'd
 3/22/09 added mobile as email addr
+7/19/10 line # print removed
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+3/15/11 changed stylesheet.php to stylesheet.php
 */
-require_once('./incs/functions.inc.php');
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 if($istest) {
 	print "GET";
 	dump ($_GET);
@@ -16,7 +21,7 @@ if($istest) {
 	dump ($_POST);
 	}
 extract ($_GET);
-
+// outgoing.verizon.net/587//ashore4/pug2skim/ashore4@verizon.net
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -28,7 +33,7 @@ extract ($_GET);
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <?php
 
 if (empty ($_POST)) {
@@ -160,7 +165,7 @@ if (empty ($_POST)) {
 <?php
 	}		// end if (empty ($_POST))
 else {
-	print __LINE__;
+//	print __LINE__;				// 7/19/10
 //	snap(basename(__FILE__) . __LINE__, $_POST['frm_to_str'] );
 //	snap(basename(__FILE__) . __LINE__, $_POST['frm_subj'] );
 //	snap(basename(__FILE__) . __LINE__, $_POST['frm_text']);

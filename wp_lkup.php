@@ -3,32 +3,66 @@
 8/7/08	initial release - replaces a Google search
 1/18/09 POST replace GET
 1/26/09 added functions.inc, get_variable for wp key 
-10/1/09	v=revised return string to include match count as initial entry
+10/1/09	revised return string to include match count as initial entry
+3/13/10 constituents table handling added
+4/30/10 accommodate add'l phone fields
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+8/6/10  Added test for internet available
+9/2/10 corrected test for internet available
+9/30/10 fix per JB email
+5/11/11
 */
-require_once('./incs/functions.inc.php');				// 1/26/09
+
+require_once('incs/functions.inc.php');		//7/28/10
 
 $phone = (empty($_POST))? "4108498721": $_POST['phone'];
 
+	function do_the_row($inRow) {		// for ticket or constituents data
+		global $apartment, $misc, $aptStr;
+		$outStr = $inRow['contact']	. ";";		// phone
+		$outStr .= $inRow['phone']	. ";";			// phone
+		$outStr .= $inRow['street'] . (stripos($inRow['street'],$aptStr))? "" : $apartment;		// street and apartment - 3/13/10
+		
+		$outStr .= $inRow['street']	. $apartment . ";";			// street and apartment - 3/13/10
+		$outStr .= $inRow['city']	. ";";			// city 
+		$outStr .= $inRow['state']	. ";";			// state 	
+		$outStr .= ";";								// frm_zip - unused 
+		$outStr .=$inRow['lat']		. ";"; 
+		$outStr .=$inRow['lng']		. ";"; 
+		$outStr .=$misc			. ";"; 			// possibly empty - 3/13/10
+		return 	$outStr;						// end function do_the_row()
+		}
+
+															// collect constituent data this phone no.
+$aptStr = " Apt:";															
+//$query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]constituents` WHERE `phone`= '{$phone}' LIMIT 1";			// 4/30/10
+$query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]constituents` WHERE `phone`= '{$phone}'
+	OR `phone_2`= '{$phone}' OR `phone_3`= '{$phone}' OR `phone_4`= '{$phone}'	LIMIT 1";
+
+$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$cons_row = (mysql_affected_rows()==1) ? stripslashes_deep(mysql_fetch_array($result)): NULL;
+$apartment = 	(is_null($cons_row))? "" : $aptStr . $cons_row['apartment']; 						// note brackets
+$misc = 		(is_null($cons_row))? "" : $cons_row['miscellaneous'];
+
 $query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `phone`= '{$phone}' ORDER BY `updated` DESC";			// 9/29/09
 $result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$ret = mysql_affected_rows() . ";";			// common to all returns
+$ret = mysql_affected_rows() . ";";						// common to each  return
+//dump(mysql_affected_rows());
 if (mysql_affected_rows()> 0) {							// build return string from newest incident data
 	$row = stripslashes_deep(mysql_fetch_array($result));
-	$ret .= $row['contact']	. ";";			// phone
-	$ret .= $row['phone']	. ";";			// phone
-	$ret .= $row['street']	. ";";			// street
-	$ret .= $row['city']	. ";";			// city 
-	$ret .= $row['state']	. ";";			// state 	
-	$ret .= ";";							// frm_zip - unused 
-	$ret .=$row['lat']		. ";"; 
-	$ret .=$row['lng']		. ";"; 
-	unset($result);
+	$ret .= do_the_row($row);
 	}
-else {											// no priors
-	if (get_variable("locale") ==0) {				// USA only
+
+ elseif (!(is_null($cons_row))) {						// 3/13/10
+	$ret .= do_the_row($cons_row);						// otherwise use constituents data
+	}
+
+else {													// no priors or constituents - do WP
+//	dump(__LINE__);
+//	if ((get_variable("locale") ==0) && ( $_SESSION['internet'])) {				// 9/30/10 - USA only and if internet available - 7/6/10, 9/2/10
 		$wp_key = get_variable("wp_key");				// 1/26/09
 		$url = "http://api.whitepages.com/reverse_phone/1.0/?phone=" . urlencode($phone) . ";api_key=". $wp_key;
-		if(isset($phone)) {				// phone lookup
+		if(isset($phone)) {								// wp phone lookup
 			$url = "http://api.whitepages.com/reverse_phone/1.0/?phone=" . urlencode($phone) . ";api_key=". $wp_key;
 			}
 		$data = "";
@@ -49,7 +83,7 @@ else {											// no priors
 				}
 			}
 				
-	//						target: "Arnold Shore;(410) 849-8721;1684 Anne Ct;  Annapolis; MD;21401;lattitude;longitude"
+	//						target: "Arnold Shore;(410) 849-8721;1684 Anne Ct;  Annapolis; MD;21401;lattitude;longitude; miscellaneous"
 		if  (!(((strpos ($data, "Invalid")>0)) || ((strpos ($data, "Missing")>0)))){
 	
 			$aryk[0] = "<wp:firstname>";
@@ -61,6 +95,7 @@ else {											// no priors
 			$aryk[6] = "<wp:zip>";
 			$aryk[7] = "<wp:latitude>";
 			$aryk[8] = "<wp:longitude>";
+//			dump($aryk);
 			$aryv = array(9);				// values
 		//	First Last;(123) 456-7890;1234 Name Ct,  Where, NY 12345"
 			$arys[0] = " ";		// firstname
@@ -83,7 +118,8 @@ else {											// no priors
 				$lhe = $pos+strlen($aryk[$i]);
 				$rhe = strpos ( $data, "<", $lhe);
 				$aryv[$i] = substr ( $data, $lhe , $rhe-$lhe );		// substr ( string, start , length )
-				}
+				}		// end for ($i...)
+//			dump($aryv);
 	
 			if (!(empty($arys))) {									// 11/11/09
 				for ($i=0; $i< count($aryk); $i++) {				// append return string to match count
@@ -92,8 +128,10 @@ else {											// no priors
 				unset($result);
 				}
 			}
-		}					// end USA only
+//		}					// end USA only
 	}					// end no priors
+
+//dump($ret);
 print $ret;
 		
 /*

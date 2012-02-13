@@ -1,5 +1,10 @@
 <?php 
-	require_once('./incs/functions.inc.php');
+/*
+3/15/11 changed stylesheet.php to stylesheet.php
+*/
+
+@session_start();
+require_once($_SESSION['fip']);		//7/28/10
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -9,7 +14,7 @@
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 
 <BODY>
 <?php

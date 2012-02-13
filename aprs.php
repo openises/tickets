@@ -1,6 +1,12 @@
 <?php
-//	6/25/08	- initial implementation
-require_once('./incs/functions.inc.php');
+/*
+6/25/08	- initial implementation
+7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
+3/15/11 changed stylesheet.php to stylesheet.php
+*/
+
+@session_start();
+require_once('./incs/functions.inc.php');		//7/28/10
 $host  = $_SERVER['HTTP_HOST'];
 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 $self = "http://$host$uri/";
@@ -13,7 +19,7 @@ $self = "http://$host$uri/";
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 
 <script type="text/javascript">
 //<![CDATA[
