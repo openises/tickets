@@ -9,23 +9,31 @@
 4/24/11 - aprs error suppress added
 4/25/11 - glat - check position or time change, sane() added
 6/10/11 - Internal Tickets Tracker added (do_t_tracker)
-7/6/11 do_ogts() added
+7/6/11 -  do_ogts() added
 9/25/11 - do_ogts() revised to accommodate 3-element 'ogts_info' setting
 11/15/11 - fixes to GLat(), LocateA(), do_gtrack() - correct $result => $temp_result
+2/22/12 - applied corrections to sane(), incl revised threshold logic to avoid strtotime()
 */
 
-function sane($in_lat, $in_lng, $in_time) {			// applies sanity check to input values
-	if (!(is_float($in_lat)) && (is_float($in_lng)) && (!(is_int($in_time))))	return FALSE;
-	if (($in_lat> 90.0) || ($in_lat> 90.0)) 									return FALSE;
-	if (($in_lat== 0.0) || ($in_lng== 0.0))										return FALSE;
-	if (( $in_lng> 180.0) || ( $in_lng<-180.0))									return FALSE;
-	
-	$ts_threshold_p = mysql2timestamp(strtotime('now - 24 hour'));	// integer time value
-	$ts_threshold_f = mysql2timestamp(strtotime('now + 24 hour'));	
-	return ($in_time>$ts_threshold_p)&& ($in_time>$ts_threshold_f);	
+function sane($in_lat, $in_lng, $in_time) {			// applies sanity check to input values - returns boolean - 2/22/12
+	snap(__LINE__, $in_lat);
+	snap(__LINE__, $in_lng);
+	snap(__LINE__, $in_time);
+	if ((!(is_float($in_lat))) || 
+		(!(is_float($in_lng))) || 
+		(!(is_int($in_time))))							return FALSE;	// 2/22/12
+	if (abs($in_lat> 90.0)) 							return FALSE;	
+	if ((abs($in_lat== 0.0)) || (abs($in_lng== 0.0)))	return FALSE;
+	if (abs($in_lng)> 180.0)							return FALSE;
+	$one_day = 24*60*60;						// set 24-hour window each side of now - 2/22/12
+	$ts_threshold_p = now() - $one_day;			// past 
+	$ts_threshold_f = now() + $one_day;			// future
+
+//	return (!(($in_time<$ts_threshold_p) || ($in_time>$ts_threshold_f)));		// 2/22/12
+	return (($in_time>$ts_threshold_p) && ($in_time<$ts_threshold_f));		// 2/22/12
 	}				// end function same()
 
-function get_current() {		// 3/16/09, 6/10/11, 7/25/09
+function get_current() {		// 3/16/09, 6/10/11, 7/25/09 
 	$delay = 1;			// minimum time in minutes between  queries - 7/25/09
 	$when = get_variable('_aprs_time');				// misnomer acknowledged
 	if(time() < $when) { 
@@ -331,12 +339,13 @@ function do_glat() {			//7/29/09
 		$glat_id = $ret_val[0];									// 8/24/10
 		$timestamp = $ret_val[1];
 		$updated = mysql_format_date($timestamp);				// to datetime format
-		
+		snap(__LINE__, $updated);
 		if ( sane( $lat, $lng, $timestamp )) {					// discard if invalid or stale
+			snap(__LINE__, $timestamp);
 		
-			$queryd	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
-			$resultd = mysql_query($queryd) or do_error($queryd, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			unset($resultd);
+//			$queryd	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records 
+//			$resultd = mysql_query($queryd) or do_error($queryd, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+//			unset($resultd);
 																			// 4/25/11
 			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
 				`lat` = '{$lat}', `lng` ='{$lng}', `updated`	= '{$updated}' 
@@ -344,8 +353,8 @@ function do_glat() {			//7/29/09
 				AND  (`callsign` LIKE '%{$glat_id}'))";	
 			$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
 
-			$query = "DELETE FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` LIKE '%{$glat_id}'";		// remove prior track this device  
-			$result_temp = mysql_query($query);	// 7/28/10, 11/15/11
+//			$query = "DELETE FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` LIKE '%{$glat_id}'";		// remove prior track this device  
+//			$result_temp = mysql_query($query);	// 7/28/10, 11/15/11
 			
 			$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks_hh` (`source`, `latitude`, `longitude`, `updated`) VALUES ('$glat_id', '$lat', '$lng', '$updated')";
 			$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -354,7 +363,7 @@ function do_glat() {			//7/29/09
 			$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			}			// end if (sane())
 		else {
-//			snap(__LINE__,  $row['callsign'] );
+			snap(__LINE__,  $row['callsign'] );
 			}
 		}			// end while()
 

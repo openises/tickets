@@ -7,6 +7,8 @@
 1/6/11 - json encode added
 6/10/11 Added groups capability - restricts 
 2/10/12 added error handling
+2/21/12 corrections two places to disambiguate 'id'
+2/25/12 added act_id and pat_id to the returned array  -AS
 */
 error_reporting(E_ALL);
 @session_start();
@@ -64,15 +66,15 @@ if(!isset($curr_viewed)) {			//	6/10/11
 	}
 
 	$where2 .= "AND `a`.`type` = 1";	
-				
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` `t`
- 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON `t`.`id` = `a`.`resource_id`
-		WHERE `t`.`_by` <> {$me} AND `t`.`status` = {$GLOBALS['STATUS_OPEN']} $where2 ORDER BY `t`.`id` DESC LIMIT 1";		// broadcasts
-$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;				// 2/10/12
-$row = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
-
-$the_tick_id = ($row)? $row['id'] : "0";
-
+											// 2/21/12
+	$query = "SELECT *, `t`.`id` AS `the_ticket_id` FROM `$GLOBALS[mysql_prefix]ticket` `t`
+	 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON `t`.`id` = `a`.`resource_id`
+			WHERE `t`.`_by` <> {$me} AND `t`.`status` = {$GLOBALS['STATUS_OPEN']} $where2 ORDER BY `t`.`id` DESC LIMIT 1";		// broadcasts
+	$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;				// 2/10/12
+	$row = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
+	
+	$the_tick_id = ($row)? $row['the_ticket_id'] : "0";		// 2/21/12
+	
 							// position updates?
 							
 if(!isset($curr_viewed)) {			//	6/10/11
@@ -126,8 +128,8 @@ if (!($row )) {				// latest unit status updates written by others
 		}
 
 		$where2 .= "AND `a`.`type` = 2";
-		
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` `r`
+											// 2/21/12
+	$query = "SELECT *, `r`.`id` AS `the_responder_id` FROM `$GLOBALS[mysql_prefix]responder` `r`
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON `r`.`id` = `a`.`resource_id`
 	WHERE `r`.`user_id` != {$me} $where2 $where4 ORDER BY `r`.`updated` DESC LIMIT 1";		// get most recent
 	$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
@@ -135,7 +137,7 @@ if (!($row )) {				// latest unit status updates written by others
 	}
 
 if ($row) {
-	$_SESSION['unit_flag_1'] = $row['id'];
+	$_SESSION['unit_flag_1'] = $row['the_responder_id'];			// 2/21/12
 //	$_SESSION['unit_flag_2'] = $me;		// 6/11/10
 	}
 						// 1/21/11 - get most recent dispatch
@@ -169,12 +171,23 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` `as`
 $result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
 $assign_row = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
 
+// 2/25/12 - AS
+
+$query = "SELECT `updated` FROM `$GLOBALS[mysql_prefix]action` WHERE `updated` = ( SELECT MAX(`updated`) FROM `$GLOBALS[mysql_prefix]action` ) LIMIT 1";
+$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
+$act_row =  (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
+
+$query = "SELECT `updated` FROM `$GLOBALS[mysql_prefix]patient` WHERE `updated` = ( SELECT MAX(`updated`) FROM `$GLOBALS[mysql_prefix]patient` ) LIMIT 1";
+$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
+$pat_row =  (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
+
+$the_act_id = ($act_row)? $act_row['updated'] : "0";		// action item
+$the_pat_id = ($pat_row)? $pat_row['updated'] : "0";		// patient item
 
 $the_unit_id = ($row)? $row['id'] : "0";
 $the_updated = ($row)? $row['updated'] : "0";
 $the_dispatch_change = ($assign_row)? $assign_row['as_of']: "";
-$the_hash = md5($the_chat_id . $the_tick_id . $the_unit_id . $the_updated . $the_dispatch_change);
-$ret_arr = array ($the_chat_id, $the_tick_id, $the_unit_id, $the_updated, $the_dispatch_change, $the_hash);
-
+$the_hash = md5($the_chat_id . $the_tick_id . $the_unit_id . $the_updated . $the_dispatch_change . $the_act_id . $the_pat_id);
+$ret_arr = array ($the_chat_id, $the_tick_id, $the_unit_id, $the_updated, $the_dispatch_change, $the_act_id, $the_pat_id, $the_hash);
 print json_encode($ret_arr);				// 1/6/11
 ?>

@@ -14,6 +14,7 @@
 3/19/11 get_unit() added for unit login, $_SESSION['user_unit_id']
 5/10/11 logo changed
 7/3/11 key check corrected
+3/1/12 Changed level['MEMBER'] to level['UNIT']
 */
 
 function do_logout($return=FALSE){						/* logout - destroy session data */
@@ -271,12 +272,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 				$host  = $_SERVER['HTTP_HOST'];
 				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
-//				$extra = ($row['level']== $GLOBALS['LEVEL_UNIT'])? 'mobile.php' : 'main.php?log_in=1';				// 8/29/10
-
 				$unit_id = get_unit();				// 3/19/11
 				$level = $row['level'];
 				
-				if($level == $GLOBALS['LEVEL_UNIT']) {
+				if($level == $GLOBALS['LEVEL_UNIT']) {	//	3/1/12
 					$extra = 'mobile.php';
 					} else if ($level == $GLOBALS['LEVEL_STATS'] ) {
 					$extra = 'stats_scr.php?stats=stats';

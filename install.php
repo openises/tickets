@@ -45,6 +45,7 @@
 10/29/10  'PASSWORD' => 'MD5' to accommodate old MySQL versions
 12/18/10   write permissions test corrected
 1/10/11 Added default setting for Group or dispatch
+2/26/12 86-character requirement lifted, per API changes at Google.
 */
 
 error_reporting(E_ALL);				// 2/3/09
@@ -84,7 +85,7 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		var errmsg="";
 		if (theForm.frm_db_host.value == "")			{errmsg+= "\tMySQL HOST name is required\n";}
 		if (theForm.frm_db_dbname.value == "")			{errmsg+= "\tMySQL DATABASE name is required\n";}
-		if (theForm.frm_api_key.value.length != 86)		{errmsg+= "\tGMaps API key is required - 86 chars\n";}
+//		if (theForm.frm_api_key.value.length != 86)		{errmsg+= "\tGMaps API key is required - 86 chars\n";}	- AS - no longer applies 2/26/12
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -1193,9 +1194,9 @@ switch(strtoupper($_SERVER["HTTP_HOST"])) {
 		an optional name if you're only using one database or need multiple instances. Thus a prefix of <B>my_</B> would name the
 		tables <B>my_action</B>, <B>my_user</B> etc.<BR /><BR />
 
-		2.  The Google Maps API key is obtained from them at http://www.google.com/apis/maps/signup.html and is free.  There, you'll be asked
+		2.  The Google Maps API key HAD BEEN (!) obtained from them at http://www.google.com/apis/maps/signup.html and is free.  There, you'll be asked
 		for the domain name to which the key applies, and that will be the Tickets server and directory address.  If you're planning multiple
-		installations as many keys as you may need are available.  Please note:  That key is an 86-character string, which should be
+		installations as many keys as you may need are available.  Please note:  That key WAS(!) an 86-character string, which should be
 		copy/pasted from them into the form.  Hint: email that key to yourself, along with the other form entries.<BR /><BR />
 
 		3.  The <B>Re-install</B> option <FONT CLASS="warn">drops all Tickets data</FONT> in the specified database and re-installs them;

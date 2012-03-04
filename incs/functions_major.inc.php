@@ -139,6 +139,7 @@ $iw_width = 	"300px";		// map infowindow with
 6/10/11 Added Groups and Boundaries
 6/28/11 do_kml corrections applied
 8/1/11  do_landb revised and relocated
+2/18/12 minor fix
 */
 
 $nature = get_text("Nature");			// 12/03/10
@@ -3003,6 +3004,7 @@ if(!isset($curr_viewed)) {			//	6/10/11
 		$strike = $strike_end = "";
 		$the_flag = $name . "_flag";
 		if (($track_type > 0) && ((abs($utc - $the_time)) > $GLOBALS['TOLERANCE'])) {								// attempt to identify  non-current values
+			snap(__LINE__, abs($utc - $the_time));
 			$strike = "<STRIKE>"; $strike_end = "</STRIKE>";
 			}
 
@@ -3660,7 +3662,7 @@ function tester() {
 
 function show_ticket($id,$print='false', $search = FALSE) {								/* show specified ticket */
 	global $iw_width, $istest, $zoom_tight, $nature, $disposition, $patient, $incident, $incidents, $col_width;	// 12/3/10, 8/4/11
-	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";			// 1/25/09
+	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
 
 	if($istest) {
 		print "GET<br />\n";

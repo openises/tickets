@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "2.20 C beta - 2/10/12";	
+$version = "2.20 D beta - 3/2/12";	
 
 /*
 10/1/08 added error reporting
@@ -83,7 +83,7 @@ $version = "2.20 C beta - 2/10/12";
 7/5/11 ogts field added to responder schema, settings
 8/2/11 tables mmarkup and cats schema added
 9/26/11 Changed Value field in settings table to varcahr (128) to fix issues with fiueld length for SMTP mail settings
-2/10/12 Version number change
+3/2/12 Version number change
 */
 
 //snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));

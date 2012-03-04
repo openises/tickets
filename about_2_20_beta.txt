@@ -580,7 +580,7 @@ Changes for Tickets V 2.20 B
 
 191.  Various fixes, no new functionality.
 
-changes for Tickets V 2.20 C
+Changes for Tickets V 2.20 C
 
 192.  Fixes to Units and Facilities in no maps mode fixing issue with removal of Regions assignment when editing.
 
@@ -590,8 +590,14 @@ changes for Tickets V 2.20 C
 194.  Provided for more graceful response to session timeout and certain internal errors, which will now force a 
       login.  These are logged, and will appear in the Station Log Report.
       
-And, as always, we've applied a goodly number of corrections.
+Changes for Tickets V 2.20 D  - This is largely a maintenance release with important corrections applied in 
+      several functions.
 
-February '12
+195.  We've applied a significant changes to the mobile function: Open tickets are now shown, scheduled 
+      incidents are clearly shown with a small clock icon, and - widely requested - it will auto-refresh on
+      a new ticket, a change in dispatch status, or an action or person item written.
+      
+
+March '12
 Arnie Shore
 Andy Harvey, UK
