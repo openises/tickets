@@ -1,0 +1,205 @@
+2.9
+=====
++ APRS data handling significantly corrected and improved. Repeated zero-speed posreps are not retained.
++ Dispatch to a unit that has its 'contact via' setting an email address - including one for cellphone texting - generates mail to that address.
++ Cellphones/texting messages will be automatically 'chunked' to reflect the size limit per message.
++ Operator-level users may now perform all needed ticket, unit and dispatch data updates.
++ The database schema was expanded to accommodate expected growth in Tickets capabilities.  Teams and members - with attributes of titles, 
+      skills, courses taken, certificates gained, plus document management and photos - are now schema elements, although without any code 
+      in this version.
+
+2.8
+=====
++ Call Board function added as 'situation summary' capability
++ User setting for coordinates display format added
++ USNG position data addes to each position function
++ Directory structure revised - for inc's and js scripts
++ Track display corrected to add a sanity check in case of malfunctioning APRS equipment
++ Track display now includes an altitude graph.
++ Report module includes pie charts for incident information.
+2.6 and 2.7
+=====
++ Assigns function added, relating units to incidents - see assigns.php
++ Routes function added, provideing driving directions - see routes.php
++ Map height and width added as settable values
++ Map fixed image pre-load added - for performance
++ EMS Card function added - with PDF by Bob Austin
++ Lightweight Chat function added
++ Added display of module name to top frame.
+
+2.4.a
+=====
++ Corrections applied to accommodate multi-line descriptions on tickets and units
++ Frame jump prevention applied to all body onLoad events
++ am/pm date/time handling corrected
++ File existence checks bypassed, for performance
++ Map sizes changed to 256 multiples, for performance
++ Tickets version no. display added to config summary.
+
+2.4 
+=====
++ Routes module was added to show driving directions from units to incident
++ Delete tickets function added - for closed tickets only
++ Problem-end-date handling corrected.
+
+2.3 
+=====
++ An 'auto poll' feature was added for automatic APRS polling, via CONGIGURATION/Auto_Poll 
+	value, with zero, the default value, signifying no auto-poll.  Otherwise, this is the poll
+	frequency in minutes. Clicking on the displayed value toggles the auto-poll function.
++ We added the TRACKS module, which displays APRS track data accumulated within the last 10 days.
++ User data was extended to include user call sign, in anticipation of some future use.
++ INSTALL was revised to assign a predetermined GMAPS API key if the host domain is either 
+	'localhost' or '127.0.0.1' - common values during testing.
++ A newly added Ticket will now link automatically to the UNITS module, for rapid selection of 
+	a unit for response.
++ NOTIFY was corrected to generate notification email automatically on any change or action on 
+	selected run ticket.
++ The GMAPS API key was made user-revisable via the CONFIGURATION/GMaps API Key entry.
++ Selected modules were revised for automatic refresh every three minutes in order to keep the
+	displays more current.
+
+2.2
+=====
++ The routes script was added, accessed via a link on the "this Ticket" header.  This feature displays a route to the 
+    selected incident from each response unit. The nearest unit is selected initially.
++ APRS data handling was further revised and significantly strengthened by Randy Hammock. (Thanks, guy!)
++ We performed a rather thorough scrub of undefined variables, no longer assuming that PHP errors would be hidden.
++ Install was revised to include an initial test of the  entered MySQL connection parameters, hopefully avoiding 
+    detours to never-never-land.
+
+2.1
+=====
++ APRS data handling was revised to avoid storing duplicates, and also to delete returns older than 30 days.
++ An improvement to get_variables() significantly reduced the MySQL hit rate, with good performance improvement.
++ Current tickets display now includes those closed within 24 hours, these displayed with a strikethrough.
++ Install was revised to confirm that the subdirectory structure was valid - detecting bad unzipping.
++ Search was corrected to display the map if a singleton result.
++ PHPCoord and associated UTM displays were corrected. (Thanks, Beau)
++ Several leftover JS alerts were removed from config.php
+
+2.0
+=====
++ Too many changes to go into the details here, but the major ones are as follows.
++ The big one is the addition of GMaps, allowing the capture of geographic information 
+   associated with each ticket.
++ Table Patient was added, as a variant on table Action.
++ Table Responder was added, to maintain information on Response Units - mobile or fixed.
++ Table Tracks was added, capturing information on the location of mobile Response Units.
++ We added an interface to aprsworld for the capture of APRS data on these.
++ Table Log was added to capture logging information for future use in reporting. Not used
+  in this release.
+
+0.71
+=====
++ finally custom tags support, see "help.php" and "tickets and actions" section for more info
++ initial EXPERIMENTAL email support, please read README before using
++ error in README, conf.inc.php should be mysql.inc.php
++ missing mysql prefix at line 257 in config.php 			
++ edit.php at line 94: wrong value for frm_owner field
++ functions.php.inc: is_* functions for checking user levels can now check for specified $user_id,
+  broke the "edit user" screen in most cases
+
+
+0.7
+===
+User specific:
++ WARNING: database structure has been modified and is NOT backwards compatible
+  see README for upgrade instructions.
++ the setting "military_time" handles the two kinds of entering dates
++ action field now handles multiple lines
++ the setting "allow_anonymous_login" has been replaced by the guest user type
++ users are either administrators, users or guests, guests can add tickets
+  (if the setting "guest_add_ticket" is on) and see/search tickets but no more
++ tickets are now deleted using the "Delete Ticket" link and not the status dropdown menu
++ installation now automated in install.php, see install.php and README for more info
++ phpticket now supports database table prefix, set in mysql.inc.php
++ using special characters in fields no longer breaks the formatting
++ add/edit screen doesn't show "owner" field if "restrict_user_add" setting is on
++ affected and scope field in "show ticket" now links to a list of tickets with the same value
++ search improved, e.g. if search returns only one ticket, show it in whole instead of in the list
++ owner now defaults to the current user (in the dropdown list) when adding a ticket
++ a general interface overhaul, textareas for description and action fields
++ new "show ticket" layout, width of tables are controlled by setting "ticket_table_width"
++ tickets now have severity level (normal,medium,high), colored blue/green/red (or other specified in default.css)
++ edit.php didn't order actions by date
++ re-done the "print ticket" output to proper html
++ all dates are now formatted in the "date_format" setting, same variables as php function date()
++ improved search capabilities
++ setting "restrict_user_add" restrics user to post ticket as himself only
++ setting "restrict_user_tickets" restrics visible tickets to current user, admin sees all tickets though
++ users can change sort order and showing x number of tickets/page in their profile
++ the usual code clean-up
+
+Developer specific:
++ INSTALL and README has been merged
++ mysql.inc.php now handles the mysql variables
++ moved edit_ticket() to edit.php, add_ticket() to add.php for speed
++ config.inc.php now contains the specific functions used in config.php to increase loading times
++ removed mysql_open, mysql_shutdown and conf.inc.php. functions.inc.php now handles everything
++ removed logout.php, print.php and ticket.php, same function now located in main.php
+
+
+0.65
+====
++ delete user now deletes belonging notifies
++ converted all doublequotes to singles where possible to hopefully increase speed
++ finally added support for anonymous login (setting "allow_anonymous_login")
++ maintenance release
++ only backwards compatible to PHP 4.1.0+
++ hopefully fixed all compatibility issues with register_globals being off
++ function get_query_val() is now deprecated, using $_GET[]
++ custom tags support added, [b]bold[/b], [i]italics[/i] so far,
+  setting "allow_custom_tags" enables/disables this feature
++ option to validate email in notifies, setting "validate_email"
++ created a debug output function (software versions, settings etc)
++ help section is updated
++ settings help on mouseover on settings page
++ abbreviation support for long description and affected strings, 
+  settings abbreviate_description and abbreviate_affected
++ fixed nasty loop in do_error() vs. get_variable(), error_level setting removed, code
+  would loop if database couldn't be selected.
++ improved search capabilities
++ added database optimize option under "Configuration", doing an 
+  "OPTIMIZE TABLE ticket, action, user, settings, notify"
+
+
+0.6
+======
++ print ticket and notify by email now wordwraps description and actions
++ most font properties are now in the default.css for easy editing
++ implementing stylesheets (default.css) to simplify code(ing) and improve UI
++ removing all html tags now due to CrossSite Scripting problems, again than you Ulf
++ fixed some bad SQL queries, thanks again Ulf
++ ticket.php and print.php was missing do_login(), thanks Ulf
++ added initial notify possibility by email
++ added individual ticket/user/settings reset in database reset function
++ added "edit profile" option in configuration screen
++ various minor cosmetic code/layout fixes
+
+
+0.5
+===
++ note: database is NOT compatible with previous versions
++ printable tickets now available
++ all preferences except mysql info are now set in config.php
++ all variables previously in conf.inc.php is now stored in the db table
+  "settings" except mysql connection values.
++ initial session support
++ changed id fields in db from tinyint(4) to int(8) to handler larger dbs
++ sorting by date, description and affected added in ticket list
++ ticket description is stripped off all HTML except I,B and U tags
++ added primitive search function
++ the usual tweaks and fixes
+
+
+0.4
+===
++ added help section
++ added administrator user option for add/edit/deletion of users
++ added user editing
++ added reset database option
++ new layout using frames, hopefully a faster and easier one
++ all ticket data is now editable
++ general code cleanup/optimizing
++ more sanity checks to see if ticket is in table before fetching it

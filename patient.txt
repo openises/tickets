@@ -1,0 +1,13 @@
+
+$fullname =	 		get_text("Full name");
+$dateofbirth =	 	get_text("Date of birth");
+$gender =	 		get_text("Gender");
+$insurance =	 	get_text("Insurance");
+$facilitycontact = 	get_text("Facility contact");
+
+<?php echo $fullname;?>	 	
+<?php echo $dateofbirth;?>	
+<?php echo $gender;?>	 	
+<?php echo $insurance;?>	
+<?php echo $facilitycontact
+

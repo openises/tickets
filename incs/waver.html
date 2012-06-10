@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+<META NAME="Author" CONTENT="">
+<META NAME="Keywords" CONTENT="">
+<META NAME="Description" CONTENT="">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<META HTTP-EQUIV="Expires" CONTENT="0">
+<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<SCRIPT>
+function do_wav() {
+	alert(15);
+	try 		{document.getElementsByTagName('audio')[0].play();}
+	catch (e) 	{alert("not supported");}
+	}
+function do_mid() {
+	alert(20);
+	try 		{document.getElementsByTagName('audio')[1].play();}
+	catch (e) 	{alert("not supported");}
+	}
+function do_mp3() {
+	alert(25);
+	try 		{document.getElementsByTagName('audio')[2].play();}
+	catch (e) 	{alert("not supported");}
+	}
+</SCRIPT>
+</HEAD>
+<BODY>
+<input type = button onClick = "do_wav();" VALUE = 'Play wav'>
+<input type = button onClick = "do_mid();" VALUE = 'Play midi'>
+<input type = button onClick = "do_mp3();" VALUE = 'Play mp3'>
+<audio src="../aooga.wav" preload></audio>
+<audio src="../bass_1.mid" preload></audio>
+<audio src="../phonesring.mp3" preload></audio>
+
+waver.html
+</BODY>
+</HTML>
+phonesring.mp3

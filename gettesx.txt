@@ -1,0 +1,29 @@
+><?php print get_text("Location"); ?><		     			>Location <
+><?php print get_text("City"); ?><     		     			>City<
+><?php print get_text("Phone"); ?><    		     			>Phone< 
+><?php print get_text("Nature"); ?><   		     			>Nature<  
+><?php print get_text("Protocol"); ?>< 		     			>Protocol<    
+><?php print get_text("Synopsis"); ?>< 		     			>Synopsis<    
+><?php print get_text("911 Contacted"); ?><     	   		>911 Contacted<
+><?php print get_text("Reported by"); ?><     		     	>Reported by<
+><?php print get_text("Incident name"); ?><     		   	>Incident name<
+><?php print get_text("Scheduled Date"); ?><     		   	>Scheduled Date<
+><?php print get_text("Run Start"); ?><     		    	>Run Start<
+><?php print get_text("Run End"); ?><     		     		>Run End<
+><?php print get_text("Disposition"); ?><     		     	>Disposition<
+><?php print get_text("Incident Lat/Lng"); ?><     		    >Incident Lat/Lng<
+
+
+
+" . get_text("Popup") . "    
+" . get_text("Edit") . "    
+" . get_text("Delete") . "    
+" . get_text("Add Action") . "    
+" . get_text("Add Patient") . "    
+" . get_text("Notify") . "    
+" . get_text("Print") . "    
+" . get_text("E-mail") . "    
+" . get_text("Add note") . "    
+" . get_text("Close incident") . "    
+" . get_text("Dispatch Unit") . "    
+
