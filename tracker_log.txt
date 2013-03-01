@@ -1,0 +1,38 @@
+<pre>Array
+(
+    [cmd] => test
+    [username] => 999
+    [pw] => 000
+)
+</pre><pre>Array
+(
+    [longitude] => -2.12433
+    [latitude] => 51.88963
+    [altitude] => 135.1
+    [speed] => 0.0
+    [heading] => 67.6
+    [date] => 20110608
+    [time] => 141852.000
+    [username] => 999
+    [pw] => 000
+)
+</pre><pre>Array
+(
+    [longitude] => -2.12432
+    [latitude] => 51.88966
+    [altitude] => 117.8
+    [speed] => 0.0
+    [heading] => 45.2
+    [date] => 20110608
+    [time] => 141921.000
+    [username] => 999
+    [pw] => 000
+)
+</pre><pre>Array
+(
+    [longitude] => -2.12427332
+    [latitude] => 51.88979373
+    [time] => 2011-12-12T13:08:53
+    [user] => 999
+)
+</pre>
