@@ -450,7 +450,6 @@ function OLD_show_assigns($which, $id) {				// 08/8/5, 4/30/10
 	
 	}			// end function get_assigns()
 
-
 function show_actions ($the_id, $theSort="date", $links, $display) {			/* list actions and patient data belonging to ticket */
 	if ($display) {
 		$evenodd = array ("even", "odd");		// class names for display table row colors
@@ -458,43 +457,70 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	else {
 		$evenodd = array ("plain", "plain");	// print
 		}
-	$query = "SELECT `id`, `name` FROM `$GLOBALS[mysql_prefix]responder`";
+	$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder`";
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$responderlist = array();
 	$responderlist[0] = "NA";	
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$responderlist[$act_row['id']] = $act_row['name'];
+		$responderlist[$act_row['id']] = $act_row['handle'];
 		}
-	$print = "<TABLE BORDER='0' ID='patients' width=" . max(320, intval($_SESSION['scr_width']* 0.4)) . ">";
+	$print = "<TABLE WIDTH='100%' ALIGN='center' ID='patients'>";
 																	/* list patients */
-	$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date`,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id`='$the_id' ORDER BY `date`";
+	$query = "SELECT *
+		FROM `$GLOBALS[mysql_prefix]patient` `p` 
+ 		LEFT JOIN `$GLOBALS[mysql_prefix]insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
+ 		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";
+
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$caption = get_text("Patient") .": &nbsp;&nbsp;";
+	$caption = get_text("Patients");
 	$actr=0;
+	$genders = array("", "M", "F", "T", "U");
+	if(mysql_num_rows($result) > 0) {
+		$print .= "<TR style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
+		}
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$print .= "<TR CLASS='" . $evenodd[$actr%2] . "' WIDTH='100%'><TD VALIGN='top' NOWRAP CLASS='td_label'>" . $caption . "</TD>";
-		$print .= "<TD NOWRAP>" . $act_row['name'] . "</TD><TD NOWRAP>". format_date($act_row['updated']) . "</TD>";
-		$print .= "<TD NOWRAP> by <B>".get_owner($act_row['user'])."</B>";
+		$the_gender = $genders[$act_row['gender']];
+
+//		$tipstr = addslashes("Name: {$act_row['name']}<br> Fullname: {$act_row['fullname']}<br> DOB: {$act_row['dob']}<br> Gender: {$the_gender}<br>Insurance_id: {$act_row['ins_value']}<br>Facility_contact: {$act_row['facility_contact']}<br>    Date: {$act_row['date']}<br>    Description: {$act_row['description']}");
+		$tipstr = addslashes("Name: {$act_row['name']}<br> Fullname: {$act_row['fullname']}<br> DOB: {$act_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$act_row['ins_value']}<br>    Facility_contact: {$act_row['facility_contact']}<br>    Date: {$act_row['date']}<br>Description:{$act_row['description']}");
+	
+		$print .= "<TR CLASS='{$evenodd[$actr%2]}' WIDTH='100%'  onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">\n";
+		$print .= "<TD NOWRAP>{$act_row['name']}</TD>\n
+			\t<TD NOWRAP>Z". format_date_2($act_row['updated']) . "</TD>\n";
+		$print .= "\t<TD NOWRAP> by <B>". get_owner($act_row['user'])."</B>";
 		
-		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD>" . nl2br($act_row['description']) . "</TD>";
+		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD>\n
+			\t<TD>" . shorten($act_row['description'], 24) . "</TD>\n";
+			
 		if ($links) {
-			$print .= "<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
-				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD></TR>\n";	
+			$print .= "\t<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$act_row['id']}&action=edit'>edit</A>|
+				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
 				}
+		$print .=  "\t<TD></TD><TD>Y({$genders[$act_row['gender']]}) - {$act_row['fullname']} -
+					 Z{$act_row['dob']}</TD>\n
+				\t<TD></TD><TD>A{$act_row['ins_value']} -
+				B{$act_row['facility_contact']}</TD>\n
+			</TR>\n";
+		
 		$caption = "";				// once only
 		$actr++;
 		}
 																	/* list actions */
-	$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date`,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$the_id' ORDER BY `date`";
+	$query = "SELECT *
+		FROM `$GLOBALS[mysql_prefix]action` 
+		WHERE `ticket_id`='$the_id' 
+		ORDER BY `date`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if ((mysql_affected_rows() + $actr)==0) { 				// 8/6/08
+	if ((mysql_affected_rows())==0) { 				// 8/6/08
 		return "";
 		}				
 	else {
-		$caption = "Actions: &nbsp;&nbsp;";
+		$caption = get_text("Actions");
 		$pctr=0;
+		$print .= "<TR style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";			
 		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-			$print .= "<TR CLASS='" . $evenodd[$pctr%2] . "' WIDTH='100%'><TD VALIGN='top' NOWRAP CLASS='td_label'>$caption</TD>";
+		$tipstr = addslashes($act_row['description']);		
+			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' WIDTH='100%' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
 			$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array
 			$sep = $respstring = "";
 			for ($i=0 ;$i< count($responders);$i++) {				// build string of responder names
@@ -503,21 +529,25 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 					$sep = "<BR />";
 					}
 				}
-			
-			$print .= "<TD NOWRAP>" . $respstring . "</TD><TD NOWRAP>".format_date($act_row['updated']) ."</TD>";
-			$print .= "<TD NOWRAP>by <B>".get_owner($act_row['user'])."</B> ";
+
+			$print .= "<TD CLASS='normal_text' NOWRAP>" . $respstring . "</TD><TD CLASS='normal_text' NOWRAP>". format_date_2($act_row['updated']) ."</TD>";	//	3/15/11
+			$print .= "<TD CLASS='normal_text' NOWRAP>by <B>".get_owner($act_row['user'])."</B> ";	//	3/15/11
 			$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
-			$print .= "</TD><TD WIDTH='100%'>" . nl2br($act_row['description']) . "</TD>";
+			$print .= "</TD><TD CLASS='normal_text'>" . nl2br($act_row['description']) . "</TD>";	//	3/15/11
 			if ($links) {
 				$print .= "<TD><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
-					<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD></TR>\n";	
+					<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD>";	
 				}
+			$print .= "</TR>\n";
 			$caption = "";
 			$pctr++;
-			}				// end if/else (...)
+			}				// end while (...)
+		$print .= "<TR CLASS='spacer'><TD COLSPAN=99 CLASS='spacer'>&nbsp;</TD></TR>";
 		$print .= "</TABLE>\n";
 		return $print;
 		}				// end else
+
+
 	}			// end function show_actions
 
 // } { -- dummy
@@ -1209,31 +1239,12 @@ function get_lng($in_lng) {					// 9/7/08
 		}
 	}				// end function get_lng()
 	
-function mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {				// 10/6/08, 10/15/08,  2/18/09, 3/7/09
+function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {	// 10/6/08, 10/15/08,  2/18/09, 3/7/09, 10/23/12, 11/14/2012, 12/14/2012
 	global $istest;
-
-/*
-Subject		A
-Inciden		B  Title
-Priorit		C  Priorit
-Nature		D  Nature
-Written		E  Written
-Updated		F  As of
-Reporte		G  By
-Phone: 		H  Phone: 
-Status:		I  Status:
-Address		J  Location
-Descrip		K  Descrip
-Disposi		L  Disposi
-Start/end	M
-Map: " 		N  Map: " 
-Actions		O
-Patients	P
-Host		Q
-911 contact	R				// 6/26/10
-*/
+//	if (is_null($text_sel)) {$text_sel = 1;}			//
 
 	switch ($text_sel) {		// 7/7/09
+		case NULL:				// 11/15/2012
 		case 1:
 		   	$match_str = strtoupper(get_variable("msg_text_1"));				// note case
 		   	break;
@@ -1244,17 +1255,16 @@ Host		Q
 		   	$match_str = strtoupper(get_variable("msg_text_3"));
 		   	break;
 		}
-	if (empty($match_str)) {$match_str = implode ("", range("A", "R"));}		// empty get all
 
-	require_once("cell_addrs.inc.php");			// 10/22/08
-	$cell_addrs = array( "vtext.com", "messaging.sprintpcs.com", "txt.att.net", "vmobl.com", "myboostmobile.com");		// 10/5/08
-	if ($istest) {array_push($cell_addrs, "gmail.com");};
+	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "V"));}		// empty get all - force non-zero hit
 	
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$ticket_id' LIMIT 1";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`=$ticket_id LIMIT 1";
 	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
-//	dump($t_row);
-	$eol = "\n";
+	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
+
+	$eol = PHP_EOL;
+	$locale = get_variable('locale');	
 
 	$message="";
 	$_end = (good_date_time($t_row['problemend']))?  "  End:" . $t_row['problemend'] : "" ;		// 
@@ -1265,55 +1275,79 @@ Host		Q
 				case "A":
 				    break;
 				case "B":
-					$message .= "Incident: " . $t_row['scope'] . $eol;
+					$gt = get_text("Incident");
+					$message .= "{$gt}: {$the_scope}{$eol}";
 				    break;
 				case "C":
-					$message .= "Priority: " . get_severity($t_row['severity']) . $eol;
+					$gt = get_text("Priority");
+					$message .= "{$gt}: " . get_severity($t_row['severity']) . $eol;
 				    break;
 				case "D":
-					$message .= "Nature: " . get_type($t_row['in_types_id']) . $eol;
+					$gt = get_text("Nature");
+					$message .= "{$gt}: " . get_type($t_row['in_types_id']) . $eol;
 				    break;
 				case "J":
+					$gt = get_text("Addr");
 					$str = "";
 					$str .= (empty($t_row['street']))? 	""  : $t_row['street'] . " " ;
 					$str .= (empty($t_row['city']))? 	""  : $t_row['city'] . " " ;
 					$str .= (empty($t_row['state']))? 	""  : $t_row['state'];
-					$message .= empty($str) ? "" : "Addr: " . $str . $eol;
+					$message .= empty($str) ? "" : "{$gt}: " . $str . $eol;
 				    break;
 				case "K":
-					$message .= (empty($t_row['description']))?  "": "Descr: ". wordwrap($t_row['description']).$eol;
+					$gt = get_text("Description");
+					$message .= (empty($t_row['description']))?  "": "{$gt}: ". wordwrap($t_row['description']).$eol;
 				    break;
 				case "G":
-					$message .= "Reported by: " . $t_row['contact'] . $eol;
+					$gt = get_text("Reported by");
+					$message .= "{$gt}: " . $t_row['contact'] . $eol;
 				    break;
 				case "H":
-					$message .= (empty($t_row['phone']))?  "": "Phone: " . format_phone ($t_row['phone']) . $eol;
+					$gt = get_text("Phone");
+					$message .= (empty($t_row['phone']))?  "": "{$gt}: " . format_phone ($t_row['phone']) . $eol;
 					break;
 				case "E":
-					$message .= (empty($t_row['date']))? "":  "Written: " . format_date_time($t_row['date']) . $eol;
+					$gt = get_text("Written");
+					$message .= (empty($t_row['date']))? "":  "{$gt}: " . format_date_2($t_row['date']) . $eol;
 				    break;
 				case "F":
-					$message .= "Updated: " . format_date_time($t_row['updated']) . $eol;
+					$gt = get_text("Updated");
+					$message .= "{$gt}: " . format_date_2($t_row['updated']) . $eol;
 				    break;
 				case "I":
-					$message .= "Status: ".get_status($t_row['status']).$eol;
+					$gt = get_text("Status");
+					$message .= "{$gt}: ".get_status($t_row['status']).$eol;
 				    break;
 				case "L":
-					$message .= (empty($t_row['comments']))? "": "Disp: ".wordwrap($t_row['comments']).$eol;
+					$gt = get_text("Disposition");
+					$message .= (empty($t_row['comments']))? "": "{$gt}: ".wordwrap($t_row['comments']).$eol;
 				    break;
 				case "M":
-					$message .= "Run Start: " . format_date_time($t_row['problemstart']). $_end .$eol;
+					$gt = get_text("Run Start");
+					$message .= get_text("{$gt}") . ": " . format_date_2($t_row['problemstart']). $_end .$eol;
 				    break;
 				case "N":
-					$usng = LLtoUSNG($t_row['lat'], $t_row['lng']);
-					$message .= "Map: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $usng . "\n";
+					$gt = get_text("Position");
+					if($locale == 0) {
+						$usng = LLtoUSNG($t_row['lat'], $t_row['lng']);
+						$message .= "{$gt}: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $usng . "\n";
+						}
+					if($locale == 1) {
+						$osgb = LLtoOSGB($t_row['lat'], $t_row['lng']);
+						$message .= "{$gt}: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $osgb . "\n";
+						}	
+					if($locale == 2) {
+						$utm = LLtoUTM($t_row['lat'], $t_row['lng']);
+						$message .= "{$gt}: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $utm . "\n";
+						}							
 				    break;
 			
 				case "P":															
+					$gt = get_text("Patient");
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 					if (mysql_affected_rows()>0) {
-						$message .= "\nPatient:\n";
+						$message .= "\n{$gt}:\n";
 						while($pat_row = stripslashes_deep(mysql_fetch_array($result))){
 							$message .= $pat_row['name'] . ", " . $pat_row['updated']  . "- ". wordwrap($pat_row['description'], 70)."\n";
 							}
@@ -1322,10 +1356,11 @@ Host		Q
 				    break;
 			
 				case "O":
+					$gt = get_text("Actions");
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 					if (mysql_affected_rows()>0) {
-						$message .= "\nActions:\n";
+						$message .= "\n{$gt}:\n";
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 						while($act_row = stripslashes_deep(mysql_fetch_array($result))) {
 							$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
@@ -1335,125 +1370,204 @@ Host		Q
 				    break;
 			
 				case "Q":
-					$message .= "Tickets host: ".get_variable('host').$eol;
+					$gt = get_text("Tickets host");
+					$message .= "{$gt}: ".get_variable('host').$eol;
 				    break;
 
 				case "R":							// 6/26/10
-					$message .= (empty($t_row['nine_one_one']))?  "": "911: ". wordwrap($t_row['nine_one_one']).$eol;
+					$gt = get_text("911 Contacted");
+					$message .= (empty($t_row['nine_one_one']))?  "": "{$gt}: " . wordwrap($t_row['nine_one_one']).$eol;	//	11/10/11
 				    break;
 
-				default:
-				    $message = "Match string error:" . $match_str[$i]. " " . $match_str . $eol ;
+				case "S":		// 6/20/12 - 12/14/2012
+					$gt = get_text("Links");
+					$protocol = explode("/", $_SERVER["SERVER_PROTOCOL"]);
+					$uri = explode("/", $_SERVER["REQUEST_URI"]);
+					unset ($uri[count($uri)-1]);
+					$uri = join("/", $uri);					
+					//$message .= "{$gt}: {$temp_arr[0]}://{$_SERVER['HTTP_HOST']}:{$_SERVER['SERVER_PORT']}/main.php?id={$ticket_id}";
+					$message .= "{$gt}: {$protocol[0]}//{$_SERVER["SERVER_ADDR"]}:{$_SERVER["SERVER_PORT"]}{$uri}?id={$ticket_id}";
+					break;
+				case "T":							// 6/20/12
+					$gt = get_text("Facility");
+					if ((intval($t_row['rec_facility'])>0) || (intval($t_row['facility'])>0)) {
+						$the_facility = (intval($t_row['rec_facility'])>0)? intval($t_row['rec_facility']) : intval($t_row['facility']);					
+						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`={$the_facility} LIMIT 1";	
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
+						if (mysql_num_rows ($result)>0) {
+							$f_row = stripslashes_deep(mysql_fetch_array($result));
+							$message .= "{$gt}: {$f_row['beds_info']}\n";
+							}
+						}
+				    break;
 
+				case "U":		// 11/13/2012
+					$query_u = "SELECT  `handle` FROM `$GLOBALS[mysql_prefix]assigns` `a`
+						LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`a`.`responder_id` = `r`.`id`)
+						WHERE `a`.`ticket_id` = $ticket_id AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
+						ORDER BY `handle` ASC ";																// 5/25/09, 1/16/08
+					$result_u = mysql_query($query_u) or do_error($query_u, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
+					if (mysql_num_rows($result_u)>0) {
+						$gt = get_text("Units");
+						$message .= "\n{$gt} (" . mysql_num_rows($result_u) . "):\n";
+						while($u_row = stripslashes_deep(mysql_fetch_assoc($result_u))) {
+							$message .= "{$u_row['handle']},";
+							}
+						}	
+					unset ($result_u);
+					break;
+					
+				case "V":
+					$gt = get_text("Scheduled For");
+					$message .= get_text("{$gt}") . ": " . format_date_2($t_row['booked_date']). $_end .$eol;
+				    break;
+				
+				default:
+//				    $message = "Match string error:" . $match_str[$i]. " " . $match_str . $eol ;
+					@session_start();
+					$err_str = "mail error: '{$match_str[$i]}' @ " .  __LINE__;		// 6/18/12
+					if (!(array_key_exists ( $err_str, $_SESSION ))) {		// limit to once per session
+						do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_str);
+						$_SESSION[$err_str] = TRUE;		
+						}
 				}		// end switch ()
 			}		// end if(!($match_...))
 		}		// end for ($i...)
 
 	$message = str_replace("\n.", "\n..", $message);					// see manual re mail win platform peculiarities
 
-	$subject = (strpos ($match_str, "A" ))? $subject = $text . $t_row['scope'] . " (#" .$t_row['id'] . ")": "";
+	$subject = (strpos ($match_str, "A" ))? "": "Incident: {$the_scope}";	// 11/14/2012 - 11/14/2012 - don't duplicate
 
 	if ($txt_only) {
 		return $subject . "\n" . $message;		// 2/16/09
 		}
 	else {
-		do_send ($to_str,  $subject, $message);
+		$smsg_to_str = ($smsg_to_str == NULL) ? "" : $smsg_to_str;
+		do_send ($to_str, $smsg_to_str, $subject, $message, $ticket_id, 0);	//	10/23/12
 		}
-	}				// end function mail_it ()
-// ________________________________________________________
+	}				// end function mail_it ()// ________________________________________________________
 
 function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) { 
     require_once('smtp.inc.php');                                        // defer load until required - 8/2/10
     real_smtp ($my_to, $my_subject, $my_message, $my_params, $my_from);
     }                         // end function smtp
 
-function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
+function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $responder_ids) {					// 7/7/09
+//	print $to_str . "," . $smsg_to_str . "," . $subject_str . "," . $text_str . "," . $ticket_id . "," . $responder_ids . "<BR />";
+	$the_resp_ids = "";
+	if($responder_ids != 0) {
+		$the_responder_ids = explode("|", $responder_ids);
+		$the_responders = "";
+		$sep = "";
+		$the_resp_ids = implode(",", $the_responder_ids);
+		foreach($the_responder_ids as $val) {
+			if($val == 0) {
+				$the_responders = "Not Set";
+				} else {
+				$the_responders = get_responder($val) . $sep;
+				$sep = ",";
+				}
+			}
+		$the_responders = substr($the_responders,0,-1);
+	} else {
+		$the_responders = "";
+	}
+
+	$count_cells = $count_ll = $count_smsg = 0; 				// counters	
+	$theaddresses = "";
 	global $istest;
-	$sleep = 4;																// seconds delay between text messages
-
-	function stripLabels($sText){
-		$labels = array("Incident:", "Priority:", "Nature:", "Addr:", "Descr:", "Reported by:", "Phone:", "Written:", "Updated:", "Status:", "Disp:", "Run Start:", "Map:", get_text("Patient") .":", "Actions:", "Tickets host:"); // 5/9/10
-		for ($x = 0; $x < count($labels); $x++) {
-			$sText = str_replace($labels[$x] , '', $sText);
-			}
-		return $sText;
+	require_once('smtp.inc.php');     									// defer load until required - 8/2/10
+	require_once("messaging.inc.php");     									// defer load until required - 4/24/12
+	$sleep = 4;															// seconds delay between text messages
+	$now = time() - (intval(intval(get_variable('delta_mins')))*60);
+	$my_smtp_ary = explode ("/",  trim(get_variable('smtp_acct')));   
+	if ((count($my_smtp_ary)>1) && (count($my_smtp_ary)<5)) {					// 4/19/11, 10/23/12, 11/2/12
+		 do_log($GLOBALS['LOG_ERROR'], 0, 0, "Invalid smtp account information: " . trim(get_variable('smtp_acct')));
+		 return;
 		}
-	
-	$to_array = explode ("|",$to_str );										// pipe-delimited string  - 10/17/08
+
+	$temp = explode("/", trim(get_variable('email_reply_to'))); 
+	if (!(is_email(trim($temp[0])))) {								// accommodate possible /B
+		do_log($GLOBALS['LOG_ERROR'], 0, 0, "Invalid email reply-to: " . trim(get_variable('email_reply_to')));
+		return ;		
+		}
+	if(!function_exists('stripLabels')) {
+		function stripLabels($sText){
+			$labels = array("Incident:", "Priority:", "Nature:", "Addr:", "Descr:", "Reported by:", "Phone:", "Written:", "Updated:", "Status:", "Disp:", "Run Start:", "Map:", "Patient:", "Actions:", "Tickets host:"); // 5/9/10
+			for ($x = 0; $x < count($labels); $x++) {
+				$sText = str_replace($labels[$x] , '', $sText);
+				}
+			return $sText;
+			}
+		}
+	$to_array = array_values(array_unique(explode ("|", ($to_str))));		// input is pipe-delimited string  - 10/17/08
+	$to_smsg_array = ($smsg_to_str != NULL) ? array_values(array_unique(explode (",", ($smsg_to_str)))) : NULL;		// input is comma string  - 4/24/12
 	require_once("cell_addrs.inc.php");										// 10/22/08
-	$cell_addrs = array("vtext.com", "messaging.sprintpcs.com", "txt.att.net", "vmobl.com", "myboostmobile.com");		// 10/5/08
-	if ($istest) {array_push($cell_addrs, "gmail.com");};
-
-	$host = get_variable('host');
-	$temp = get_variable('email_reply_to');	
-//	$reply_to = (empty($temp))? "": "'Reply-To: '". $temp ."\r\n" ; 
-	$reply_to = (empty($temp))? "": "'Reply-To: ". $temp ."'\r\n" ;		// 2/18/10
-	
-	$temp = get_variable('email_from');												// 6/24/09
-	if (empty($temp)) {
-		$from_str = "Tickets_CAD" .'@' .$host ;
-		}
-	else {	
-		$temp_ar = explode("@", $temp);
-		if (count($temp_ar)==2) {
-			$from_str = $temp;		// OK
-			}
-		else {
-			$from_str = $temp_ar[0] . "@" . $host ;
-			}
-		}
-		
-//	$from = (empty($temp))?  "Tickets_CAD" : $temp;
-	
-	$headers = 'From:' .$from_str  . "\r\n" .
-	    $reply_to .
-	    'X-Mailer: PHP/' . phpversion();
-
-	$to_sep = $cell_sep = "";
-	$tostr = $tocellstr = "";
-	for ($i = 0; $i< count($to_array); $i++) {
-		$temp =  explode ( "@", $to_array[$i]);
-		if (in_array(trim(strtolower($temp[1])), $cell_addrs))  {				// cell addr?
-			$tocellstr .= $cell_sep . stripslashes($to_array[$i]);				// yes
-			$cell_sep = ",";
-			}
-		else {																	// no
-			$tostr .= $to_sep . stripslashes($to_array[$i]);
-			$to_sep = ",";														// comma separated addr string
-			}
-		}				// end for ($i = ...)
-
-	$caption="";
-	$smtp = trim(get_variable('smtp_acct'));									// 7/7/09
-	if (strlen($tostr)>0) {	
-		if (strlen($smtp)==0) {
-			@mail($tostr, $subject_str, $text_str, $headers);
-			}
-		else {
-			smtp ($tostr, $subject_str, $text_str, $smtp, $from_str);						// ($my_to, $my_subject, $my_message, $my_params)
-			}
-		$caption = "Email sent";
-		}
-	if (strlen($tocellstr)>0) {
-		$lgth = 140;
-		$ix = 0;
-		$i = 1;
-		$cell_text_str = stripLabels($text_str);								// strip labels 5/10/10
-		while (substr($cell_text_str, $ix , $lgth )) {								// chunk to $lgth-length strings
-			$subject_ex = $subject_str . "/part " . $i . "/";					// 10/21/08
-			if (strlen($smtp)==0) {			
-				mail($tocellstr, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $headers);
+	$ary_cell_addrs = $ary_ll_addrs = array();
+	if($to_str != "") {
+		if(count($to_array) > 0) {
+			for ($i = 0; $i < count($to_array); $i++) {								// walk down the input address string/array
+				$temp =  explode ( "@", $to_array[$i]);
+				include('cell_addrs.inc.php');										// 10/22/08				
+				if (in_array(trim(strtolower($temp[1])), $cell_addrs))  {				// cell addr?
+					array_push ($ary_cell_addrs, $to_array[$i]);						// yes
+					}
+				else {																	// no, land line addr
+					array_push ($ary_ll_addrs, $to_array[$i]);	
+					}
+				}				// end for ($i = ...)
+			$caption="";
+			$my_from_ary = explode("/", trim(get_variable('email_from')));				// note /B option
+			$my_replyto_str = trim(get_variable('email_reply_to'));
+			if (count($ary_ll_addrs)>0) {												// got landline addee's?
+				$theaddresses = implode(",", $ary_ll_addrs);
+				if($the_responders == "") { $the_responders = $theaddresses;}
+		//								($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)	
+				if (count($my_smtp_ary)>1) {
+					$count_ll = do_swift_mail ($my_smtp_ary, $ary_ll_addrs, $subject_str, $text_str, $my_from_ary, $my_replyto_str );	
+					store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets');	// 7/9/12		
+					}
+				else {
+		//								($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)
+					$count_ll = do_native_mail ($my_smtp_ary, $ary_ll_addrs, $subject_str, $text_str, $my_from_ary, $my_replyto_str );
+					store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets'); // 7/9/12				
+					}		
 				}
-			else {
-				smtp ($tocellstr, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $smtp, $from_str);	// ($my_to, $my_subject, $my_message, $my_params, $my_from)
-				}
-			if($i>1) {sleep ($sleep);}								// 10/17/08
-			$ix+=$lgth;
-			$i++;
-			}
-		$caption .= " - Cell mail sent";
-		}
-	return $caption;
+			if (count($ary_cell_addrs)>0) {		// got cell addee's?
+				$theaddressess = implode(",", $ary_cell_addrs);
+				if($the_responders == "") { $the_responders = $theaddresses;}	
+				$lgth = 140;
+				$ix = 0;
+				$i = 1;
+				$cell_text_str = stripLabels($text_str);								// strip labels 5/10/10
+				while (substr($cell_text_str, $ix , $lgth )) {							// chunk to $lgth-length strings
+					$subject_ex = $subject_str . "/part " . $i . "/";					// 10/21/08
+		//										 ($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)	
+					if (count($my_smtp_ary)>1) {
+						$count_cells = do_swift_mail ($my_smtp_ary, $ary_cell_addrs, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $my_from_ary, $my_replyto_str);
+						store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets');	 // 7/9/12			
+						} else {
+		//										  ($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)
+						$count_cells = do_native_mail ($my_smtp_ary, $ary_cell_addrs, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $my_from_ary, $my_replyto_str);	
+						store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets');	 // 7/9/12				
+						if($i>1) {sleep ($sleep);}								// 10/17/08
+						}	//	end if/else	(count($my_smtp_ary)>1))		// 12/13/2012	
+					$ix+=$lgth;
+					$i++;
+					}				// end while (substr($cell_text_...))
+				}		// end if (count($ary_cell_addrs)>0)
+			}	//	end if(count($to_array) > 0)
+		}	//	end if($to_str != "")
+	if($smsg_to_str != "") {
+		if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {
+			if (count($to_smsg_array)>0) {		// got sms gateway addresses?
+				$addressess = "";
+				$cell_text_str = stripLabels($text_str);								// strip labels 5/10/10
+				$count_smsg = do_smsg_send(get_msg_variable('smsg_orgcode'),get_msg_variable('smsg_apipin'),"OG SMS Dispatch Message",$cell_text_str,"CALLSIGNS",$smsg_to_str,"standard_priority",get_msg_variable('smsg_replyto'),"SENDXML", $ticket_id);			
+				}	// end if (count($to_smsg_array)>0)
+			}	// end if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3))
+		}	//	end if($smsg_to_str != "")
+	return (string) ($count_ll + $count_cells + $count_smsg);
 	}					// end function do send ()
 
 function is_email($email){		   //  validate email, code courtesy of Jerrett Taylor - 10/8/08, 7/2/10

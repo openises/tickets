@@ -128,7 +128,6 @@
 		$the_now = strtotime(mysql_format_date(time() - (get_variable('delta_mins')*60)));		
 		$backup = new MySQLDump(); //create new instance of MySQLDump
 		$the_db = $mysql_prefix . $mysql_db;
-		$the_db = $mysql_prefix . $mysql_db;		
 		$backup->connect($mysql_host,$mysql_user,$mysql_passwd,$the_db);		// connect
 		if (!$backup->connected) { die('Error: '.$backup->mysql_error); } 		// MySQL parameters from mysql.inc.php
 		$backup->list_tables(); 												// list all tables
@@ -137,13 +136,20 @@
 		$the_db_dump ="\n\n-- start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start \n";
 		$the_db_dump .="\n-- Dumping tables for database: $mysql_db\n"; //write "intro" ;)
 		
+		// for ($i=0;$i<$broj;$i++) {						//dump all tables:
+			// $table_name = $backup->tables[$i]; 			//get table name
+			// if(($mysql_prefix != "")  || (strrpos($table_name, $mysql_prefix) === 0)) {
+				// $backup->dump_table($table_name); 			//dump it to output (buffer)
+				// $the_db_dump .=htmlspecialchars($backup->output); 	//write output
+				// }
+			// }
+		
 		for ($i=0;$i<$broj;$i++) {						//dump all tables:
 			$table_name = $backup->tables[$i]; 			//get table name
-			if(strrpos($table_name, $mysql_prefix) === 0) {
-				$backup->dump_table($table_name); 			//dump it to output (buffer)
-				$the_db_dump .=htmlspecialchars($backup->output); 	//write output
-				}
-			}
+			$backup->dump_table($table_name); 			//dump it to output (buffer)
+			$_echo .=htmlspecialchars($backup->output); 	//write output
+			}		
+		
 		$the_db_dump .="\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
 		$file = './backups/' . $the_now . '_tickets_backup.sql';
 		$fh = fopen($file, 'w');
@@ -1028,6 +1034,7 @@ if (mysql_num_rows($result)>0) {
 		if((isset($_GET['auth'])) && ($_GET['auth'] == 'true') && ($_POST['frm_confirm'] == 'yes')) {
 			print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
 			dump_db();	//	for security, dump db to file;
+			print "Database Backed Up<BR />";
 			$ticket = ((isset($_POST['frm_ticket'])) && ($_POST['frm_ticket'] == 1)) ? 1 : 0;
 			$responders = ((isset($_POST['frm_responders'])) && ($_POST['frm_responders'] == 1)) ? 1 : 0;
 			$facilities = ((isset($_POST['frm_facilities'])) && ($_POST['frm_facilities'] == 1)) ? 1 : 0;
@@ -1340,7 +1347,6 @@ if (mysql_num_rows($result)>0) {
 					print "</DIV";
 				}
 ?>	
-<!--				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right"><?php print get_text("organisation");?>: </TD><TD><?php print get_org_control($id);?></TD></TR>	-->
 				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"><?php print get_text("Units");?>: </TD><TD><?php print $sel_str;?></TD></TR>
 				<TR VALIGN="baseline" CLASS="spacer"><TD class="spacer" COLSPAN=99 ALIGN='center'>&nbsp;</TD></TR>
 				<TR VALIGN="baseline" CLASS="even"><TD COLSPAN=4 ALIGN='center'>&nbsp;</TD></TR>
@@ -1825,7 +1831,7 @@ if (mysql_num_rows($result)>0) {
 	
 		for ($i=0;$i<$broj;$i++) {						//dump all tables:
 			$table_name = $backup->tables[$i]; 			//get table name
-			if(strrpos($table_name, $mysql_prefix) === 0) {
+			if(($mysql_prefix != "")  || (strrpos($table_name, $mysql_prefix) === 0)) {
 				$backup->dump_table($table_name); 			//dump it to output (buffer)
 				$_echo .=htmlspecialchars($backup->output); 	//write output
 				}	
@@ -2363,6 +2369,7 @@ ul {
 			<TABLE BORDER=0><TR CLASS = 'odd'>				
 			<TD><LI><A HREF="config.php?func=msg_settings">Messaging Settings</A></TD>	<!-- 10/23/12 -->
 			<TD><LI><A HREF="msg_archive.php">Message Archiving</A></TD>				<!-- 10/23/12 -->	
+			<TD><LI><A HREF="#" onClick = "do_Post('known_sources');">Email White List</A></TD>			<!-- 10/23/12 -->			
 			<TD><LI><A HREF="#" onClick = "get_msgs();">Get all Messages</A></TD>			<!-- 10/23/12 -->		
 			<TD><LI><A HREF="#" onClick = "do_Post('std_msgs');">Edit Standard Messages</A></TD>			<!-- 10/23/12 -->
 			<TD><LI><A HREF="#" onClick = "do_Post('replacetext');">Message Text replacement</A></TD>			<!-- 10/23/12 -->			

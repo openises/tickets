@@ -593,25 +593,25 @@ function doReset() {
 
 //										8/10/09, 10/6/09, 1/7/10
 	$query = "SELECT *,
-		UNIX_TIMESTAMP(problemstart) AS problemstart,
-		UNIX_TIMESTAMP(problemend) AS problemend,
-		UNIX_TIMESTAMP(booked_date) AS booked_date,		
-		UNIX_TIMESTAMP(date) AS date,
-		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`updated`) AS updated,
-		 `$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`,
-		 `$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,
-		 `$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
-		 `$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
+		`$GLOBALS[mysql_prefix]ticket`.`problemstart` AS `problemstart`,
+		`$GLOBALS[mysql_prefix]ticket`.`problemend` AS `problemend`,
+		`$GLOBALS[mysql_prefix]ticket`.`booked_date` AS `booked_date`,		
+		`$GLOBALS[mysql_prefix]ticket`.`date` AS `date`,
+		`$GLOBALS[mysql_prefix]ticket`.`updated` AS `updated`,
+		`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`,
+		`$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,
+		`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
+		`$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
 		`$GLOBALS[mysql_prefix]ticket`.`street` AS `tick_street`,
 		`$GLOBALS[mysql_prefix]ticket`.`city` AS `tick_city`,
 		`$GLOBALS[mysql_prefix]ticket`.`state` AS `tick_state`,		 
-		 `$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
-		 `rf`.`name` AS `rec_fac_name`,
-		 `rf`.`lat` AS `rf_lat`,
-		 `rf`.`lng` AS `rf_lng`,
-		 `$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,
-		 `$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng` 
-		 FROM `$GLOBALS[mysql_prefix]ticket`  
+		`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
+		`rf`.`name` AS `rec_fac_name`,
+		`rf`.`lat` AS `rf_lat`,
+		`rf`.`lng` AS `rf_lng`,
+		`$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,
+		`$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng` 
+		FROM `$GLOBALS[mysql_prefix]ticket`  
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` ON (`$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]ticket`.`facility`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 

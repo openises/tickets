@@ -1083,6 +1083,7 @@ function createXMLHTTPObject() {
 			print "<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />";	//10/6/09
 			print "<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident' />";	//10/6/09
 			print "<INPUT TYPE='hidden' NAME='frm_scope' VALUE='' />"; // 10/29/09
+			print "<INPUT TYPE='hidden' NAME='frm_tick_id' VALUE='" . get_ticket_id() . "' />"; // 10/29/09			
 			print "<INPUT TYPE='submit' value='Mail Direcs' ID = 'mail_dir_but' STYLE = 'visibility: hidden;' />";	//10/6/09
 			print "</FORM>";	
 			print "<INPUT TYPE='button' VALUE='Reset' onClick = 'show_butts(to_hidden) ; doReset()' ID = 'reset_but' STYLE = 'visibility: hidden;'  />";

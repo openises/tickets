@@ -13,6 +13,7 @@ error_reporting(E_ALL);
 @session_start();
 require_once($_SESSION['fip']);		//7/28/10
 require_once('./incs/messaging.inc.php');
+$tick_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != "")) ? $_GET['ticket_id'] : 0;
 if (empty($_POST)) {
 	$query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_GET['ticket_id']} LIMIT 1";	
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -103,7 +104,7 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 	
 	function set_message(message) {	//	10/23/12
 		var randomnumber=Math.floor(Math.random()*99999999);	
-		var tick_id = <?php print $tik_id;?>;
+		var tick_id = <?php print $tick_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
 		sendRequest (url,replacetext_cb, "");			
 			function replacetext_cb(req) {
@@ -118,11 +119,14 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 		}		// end function set_message(message)
 <?php
 	if (empty($_POST)) {
+//		dump($_GET);
 		$to_str = "ashore4@verizon.net";
-		$text = mail_it ($_GET['addrs'], $_GET['smsgaddrs'], $_GET['text'], $_GET['ticket_id'], 1, TRUE) ;		// returns msg text **ONLY** //	4/24/12
+//		$smsgaddrs = ((isset($_GET['smsgaddrs'])) && ($_GET['smsgaddrs'] != "")) ? $_GET['smsgaddrs'] : $smsgaddrs;
+		$smsgaddrs = "";
+		$text = mail_it ($_GET['addrs'], $smsgaddrs, $_GET['text'], $_GET['ticket_id'], 1, TRUE) ;		// returns msg text **ONLY** //	4/24/12
 //		dump($text);
 		$temp = explode("\n", $text);
-	$finished_str = ((get_variable('call_board')==1))? "location.href = 'board.php'": "window.close();";	// 8/30/10
+		$finished_str = ((get_variable('call_board')==1))? "location.href = 'board.php'": "window.close();";	// 8/30/10
 ?>
 
 </SCRIPT>
@@ -161,11 +165,12 @@ $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'
 		<TD><INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'></TD> <!-- 10/23/12 -->
 	</TR>
 <?php
-if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {	//	10/23/12
+	if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {	//	10/23/12
+		$smsgaddrs = ((isset($_GET['smsgaddrs'])) && ($_GET['smsgaddrs'] != "")) ? $_GET['smsgaddrs'] : "";
 
 ?>
 		<TR CLASS='even'><TD><?php get_provider_name(get_msg_variable('smsg_provider'));?> Addresses: </TD>
-			<TD><INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $_GET['smsgaddrs'];?>'></TD>
+			<TD><INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsgaddrs;?>'></TD>
 		</TR>	
 		<TR CLASS='even'><TD>Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: </TD> <!-- 10/23/12 -->
 			<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="0"></TD> <!-- 10/23/12 -->
@@ -180,13 +185,16 @@ if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3))
 <?php
 	}
 ?>
-<TR CLASS='odd'><TD COLSPAN=2 ALIGN = 'center'>
-<INPUT TYPE="hidden" NAME = 'ticket_id' VALUE="<?php print $_GET['ticket_id'];?>"/> <!-- 10/23/12 -->
-<INPUT TYPE="hidden" NAME = 'frm_title' VALUE="<?php print $row['scope'];?>"/>
-<INPUT TYPE="button" VALUE="OK - mail this" onClick = "do_val(document.mail_frm);">&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_frm.reset();">&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE="button" VALUE="Dont send" onClick = "if(confirm('Confirm_do_not_send?')) {<?php print $finished_str;?>}">
-	</TD></TR></TABLE>
+	<TR CLASS='odd'>
+		<TD COLSPAN=2 ALIGN = 'center'>
+			<INPUT TYPE="hidden" NAME = 'ticket_id' VALUE="<?php print $_GET['ticket_id'];?>"/> <!-- 10/23/12 -->
+			<INPUT TYPE="hidden" NAME = 'frm_title' VALUE="<?php print $row['scope'];?>"/>
+			<INPUT TYPE="button" VALUE="OK - mail this" onClick = "do_val(document.mail_frm);">&nbsp;&nbsp;&nbsp;&nbsp;
+			<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_frm.reset();">&nbsp;&nbsp;&nbsp;&nbsp;
+			<INPUT TYPE="button" VALUE="Dont send" onClick = "if(confirm('Confirm_do_not_send?')) {<?php print $finished_str;?>}">
+		</TD>
+	</TR>
+</TABLE>
 </FORM>
 <?php
 	}		// end if (empty($_POST))
@@ -194,7 +202,7 @@ if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3))
 else {
 	$the_responders = array();
 	$the_emails = explode('|',$_POST['frm_addrs']);
-	$the_sms = explode(',', $_POST['frm_smsgaddrs']);
+	$the_sms = ((isset($_POST['frm_smsgaddrs'])) && ($_POST['frm_smsgaddrs'] != "")) ? explode(',', $_POST['frm_smsgaddrs']) : "";
 	$email_addresses = ($_POST['frm_addrs'] != "") ? $_POST['frm_addrs'] : "";
 	$smsg_addresses = ((isset($_POST['frm_use_smsg'])) && ($_POST['frm_use_smsg'] == 1) && ($_POST['frm_smsgaddrs'] != "")) ? $_POST['frm_smsgaddrs'] : "";
 	foreach($the_emails as $val) {
@@ -207,13 +215,15 @@ else {
 		}
 	$the_resp_ids = array_unique($the_responders);
 	$resps = substr(implode(',', $the_resp_ids), 0 -2);
-	do_send ($email_addresses, $smsg_addresses, "Tickets CAD",  $_POST['frm_text'], $_POST['ticket_id'], $resps );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
+	$count = do_send ($email_addresses, $smsg_addresses, "Tickets CAD",  $_POST['frm_text'], $_POST['ticket_id'], $resps );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 ?>
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad = "setTimeout('window.close()',3000);"><CENTER>
-<BR /><BR /><H3>Emailing dispatch notifications</H3><P>
+<BODY onLoad = "setTimeout('window.close()',6000);"><CENTER>
+<BR /><BR /><H3>Emailing dispatch notifications</H3><BR /><BR />
+<P><?php print $count;?> Message(s) sent</P>
+
 <?php
 	}				// end else
 ?>

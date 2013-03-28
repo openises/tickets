@@ -16,7 +16,7 @@ require_once($_SESSION['fip']);		//7/28/10
 //snap(basename(__FILE__) . __LINE__, $_POST['subject_str'] );
 //snap(basename(__FILE__) . __LINE__, $_POST['text_str']);
 
-do_send ($_POST['to_str'], $_POST['subject_str'], $_POST['text_str'] ) ;
+do_send ($_POST['to_str'], $_POST['subject_str'], $_POST['text_str'], 0, 0 ) ;
 
 //snap(basename(__FILE__) . __LINE__, 0);
 print "";

@@ -209,7 +209,7 @@ if (empty($_POST)) {
 
 	else {
 
-			do_send ($_POST['frm_add_str'], $_POST['frm_subj'], $_POST['frm_text'] );	// ($to_str, $subject_str, $text_str )
+			do_send ($_POST['frm_add_str'], "", $_POST['frm_subj'], $_POST['frm_text'], 0, 0);	// ($to_str, $subject_str, $text_str )
 ?>
 	<BODY onLoad = "reSizeScr(2)"><CENTER>		<!-- 1/12/09 -->
 	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3>

@@ -1744,7 +1744,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 //-------------------------END OF BOUNDARIES STUFF-------------------------		
 	function can_do_dispatch($the_row) {
 		if (intval($the_row['multi'])==1) return TRUE;
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";	// all dispatches this unit
 		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
 			if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able

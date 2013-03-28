@@ -121,10 +121,10 @@ function do_plain (the_id) {				// 8/21/10
 	}
 		
 function get_archive(thearchive, button) {
-	$('all_read_but').style.display = "none";
-	$('all_unread_but').style.display = "none";
-	$('empty_waste').style.display = "none";	
-	$('del').innerHTML = "&nbsp;&nbsp;";	
+	if($('all_read_but')) { $('all_read_but').style.display = "none"; }
+	if($('all_unread_but')) { $('all_unread_but').style.display = "none"; }
+	if($('empty_waste')) { $('empty_waste').style.display = "none"; }	
+	if($('del')) { $('del').innerHTML = "&nbsp;&nbsp;";	}
 	folder = "archive";
 	clear_filter(folder);	
 	thebutton = button;
@@ -135,10 +135,10 @@ function get_archive(thearchive, button) {
 	}
 	
 function get_wastebin() {
-	$('all_read_but').style.display = "none";
-	$('all_unread_but').style.display = "none";
-	$('empty_waste').style.display = "inline-block";
-	$('del').innerHTML = "Res";	
+	if($('all_read_but')) { $('all_read_but').style.display = "none"; }
+	if($('all_unread_but')) { $('all_unread_but').style.display = "none"; }
+	if($('empty_waste')) { $('empty_waste').style.display = "inline-block"; }
+	if($('del')) { $('del').innerHTML = "Res"; }
 	folder = "wastebasket";	
 	clear_filter(folder);
 	light_butt('deleted');
@@ -147,10 +147,10 @@ function get_wastebin() {
 	}
 	
 function get_inbox() {
-	$('all_read_but').style.display = "inline-block";
-	$('all_unread_but').style.display = "inline-block";
-	$('empty_waste').style.display = "none";	
-	$('del').innerHTML = "Del";	
+	if($('all_read_but')) { $('all_read_but').style.display = "inline-block"; }
+	if($('all_unread_but')) { $('all_unread_but').style.display = "inline-block"; }
+	if($('empty_waste')) { $('empty_waste').style.display = "none";	}
+	if($('del')) { $('del').innerHTML = "Del"; }	
 	folder = "inbox";	
 	clear_filter(folder);		
 	light_butt('inbox');
@@ -159,10 +159,10 @@ function get_inbox() {
 	}
 
 function get_sent() {
-	$('all_read_but').style.display = "inline-block";
-	$('all_unread_but').style.display = "inline-block";
-	$('empty_waste').style.display = "none";	
-	$('del').innerHTML = "Del";	
+	if($('all_read_but')) { $('all_read_but').style.display = "inline-block"; }
+	if($('all_unread_but')) { $('all_unread_but').style.display = "inline-block"; }
+	if($('empty_waste')) { $('empty_waste').style.display = "none"; }
+	if($('del')) { $('del').innerHTML = "Del";	}
 	folder = "sent";	
 	clear_filter(folder);		
 	light_butt('sent');

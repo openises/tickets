@@ -3631,7 +3631,7 @@ function tester() {
 
 //	} { -- dummy
 
-function show_ticket($id,$print='false', $search = FALSE) {								/* show specified ticket */
+function show_ticket($id,$print=FALSE, $search = FALSE) {								/* show specified ticket */
 	global $iw_width, $istest, $zoom_tight, $nature, $disposition, $patient, $incident, $incidents, $col_width;	// 12/3/10, 8/4/11
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
 	if($istest) {
@@ -3649,8 +3649,8 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 
 //	Regions stuff	6/10/11		
 		
-print get_buttons_inner();	// 4/12/12
-print get_buttons_inner2();	//	4/12/12
+	print get_buttons_inner();	// 4/12/12
+	print get_buttons_inner2();	//	4/12/12
 
 //	End of Regions stuff
 	
@@ -3782,12 +3782,15 @@ print get_buttons_inner2();	//	4/12/12
 	
 		print "<TR CLASS='print_TD'><TD ALIGN='left' >" . get_text("Position") . ": </TD>		
 				<TD ALIGN='left'>" . get_lat($row['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($row['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
-		print "<TR><TD colspan=2 ALIGN='left'>";
+		print "<TR CLASS='print_TD'><TD colspan=2 ALIGN='left'>";
 		print show_log ($row[0]);				// log
 		print "</TD></TR>";
-		print "<TR STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $row['lat'] . "</SPAN><SPAN ID='oldlng'>" . $row['lng'] . "</SPAN></TD></TR>";
-		print "<TR><TD colspan=2 ALIGN='left'>";
-		print show_actions($row['tick_id'], "date", FALSE, FALSE);		// lists actions and patient data, print - 10/30/09
+		print "<TR CLASS='print_TD' STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $row['lat'] . "</SPAN><SPAN ID='oldlng'>" . $row['lng'] . "</SPAN></TD></TR>";
+		print "<TR><TD COLSPAN=99>";
+		print show_assigns(0, $row[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
+		print "</TD></TR>";		
+		print "<TR CLASS='print_TD'><TD colspan=99 ALIGN='left'>";
+		print show_actions($row['tick_id'], "date", FALSE, TRUE);		// lists actions and patient data, print - 10/30/09
 		print "</TD></TR>";
 		print "</TABLE>\n";
 		print "<BR /><BR /><BR />";
@@ -4440,7 +4443,7 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;
@@ -4925,11 +4928,11 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";	
-	$print .= list_messages($theRow[0], "date", FALSE, FALSE);
+	$print .= list_messages($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR>";
 	$print .= "</TABLE>\n<BR /><BR /><BR /><BR /></DIV>";	
-//	print $print;
+	print $print;
 	return $print;
 	}		// end function do ticket(

@@ -19,6 +19,7 @@ $zoom_tight = FALSE;		// replace with a decimal number to over-ride the standard
 2/8/12 Fixed error on single region operation - editing a unit removes region 1 region allocation.
 3/24/12 fixed to accommodate OGTS in validate()
 12/1/2012 - unix time revisions
+4/19/13 - Revision to fix blank unit list
 */
 
 session_start();
@@ -495,7 +496,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 	function can_do_dispatch($the_row) {
 		if (intval($the_row['multi'])==1) return TRUE;
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";	// all dispatches this unit
 		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
 			if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
@@ -678,7 +679,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		var handle = "<?php print substr(($row['handle']),1);?>";
 		var longhandle = "<?php print $row['handle'];?>";
 <?php		
-		print "\tdo_sidebar(\" {$sidebar_line} \" , i, {$row['id']}, {$row['unit_id']}, unit_id);\n";	// sidebar only - no map, 11/11/09
+		print "\tdo_sidebar(\" {$sidebar_line} \" , i, {$row['unit_id']}, {$row['unit_id']}, unit_id);\n";	// sidebar only - no map, 11/11/09, 04/19/13
 	$i++;				// zero-based
 	}				// end  ==========  while() for RESPONDER ==========
 

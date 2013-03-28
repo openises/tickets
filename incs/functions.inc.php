@@ -165,6 +165,7 @@
 11/14/2012 realigned mail_it formal paramters to accommodate optional smsg_to_str
 11/30/2012 significant re-do, dropping unixtimestamp in favor of strtotime.  Also see FMP
 12/14/2012 corrections to case "S", if/else for cell messages, date string handling in function mail_it
+3/4/2013 corrections to function format_date_2()
 */
 error_reporting(E_ALL);
 
@@ -511,29 +512,27 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$responderlist[$act_row['id']] = $act_row['handle'];
 		}
-	$print = "<TABLE BORDER='4' ID='patients' STYLE = 'width:auto'>";
+	$print = "<TABLE WIDTH='100%' ALIGN='center' ID='patients'>";
 																	/* list patients */
-	$query = "SELECT *,
-		`date` AS `date`, 
-		`updated` AS `updated` 
+	$query = "SELECT *
 		FROM `$GLOBALS[mysql_prefix]patient` `p` 
  		LEFT JOIN `$GLOBALS[mysql_prefix]insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
  		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";
 
-//	dump($query);
-
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$caption = get_text("Patient") . ": &nbsp;&nbsp;";
+	$caption = get_text("Patients");
 	$actr=0;
 	$genders = array("", "M", "F", "T", "U");
+	if(mysql_num_rows($result) > 0) {
+		$print .= "<TR style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
+		}
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$the_gender = $genders[$act_row['gender']];
 
 //		$tipstr = addslashes("Name: {$act_row['name']}<br> Fullname: {$act_row['fullname']}<br> DOB: {$act_row['dob']}<br> Gender: {$the_gender}<br>Insurance_id: {$act_row['ins_value']}<br>Facility_contact: {$act_row['facility_contact']}<br>    Date: {$act_row['date']}<br>    Description: {$act_row['description']}");
 		$tipstr = addslashes("Name: {$act_row['name']}<br> Fullname: {$act_row['fullname']}<br> DOB: {$act_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$act_row['ins_value']}<br>    Facility_contact: {$act_row['facility_contact']}<br>    Date: {$act_row['date']}<br>Description:{$act_row['description']}");
 	
-		$print .= "<TR CLASS='heading' WIDTH='100%'  onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">\n
-			\t<TD VALIGN='top' NOWRAP CLASS='td_label'>{$caption}</TD>\n";
+		$print .= "<TR CLASS='{$evenodd[$actr%2]}' WIDTH='100%'  onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">\n";
 		$print .= "<TD NOWRAP>{$act_row['name']}</TD>\n
 			\t<TD NOWRAP>Z". format_date_2($act_row['updated']) . "</TD>\n";
 		$print .= "\t<TD NOWRAP> by <B>". get_owner($act_row['user'])."</B>";
@@ -543,13 +542,10 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 			
 		if ($links) {
 			$print .= "\t<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$act_row['id']}&action=edit'>edit</A>|
-				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD></TR>\n";	
+				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
 				}
-		$print .= "</TR><TR>\n";
 		$print .=  "\t<TD></TD><TD>Y({$genders[$act_row['gender']]}) - {$act_row['fullname']} -
 					 Z{$act_row['dob']}</TD>\n
-			</TR>\n
-			<TR>
 				\t<TD></TD><TD>A{$act_row['ins_value']} -
 				B{$act_row['facility_contact']}</TD>\n
 			</TR>\n";
@@ -558,23 +554,21 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 		$actr++;
 		}
 																	/* list actions */
-	$query = "SELECT *,
-		`date` AS `date`,
-		`updated` AS `updated` 
+	$query = "SELECT *
 		FROM `$GLOBALS[mysql_prefix]action` 
 		WHERE `ticket_id`='$the_id' 
 		ORDER BY `date`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if ((mysql_affected_rows() + $actr)==0) { 				// 8/6/08
+	if ((mysql_affected_rows())==0) { 				// 8/6/08
 		return "";
 		}				
 	else {
-		$caption = "Actions: &nbsp;&nbsp;";
+		$caption = get_text("Actions");
 		$pctr=0;
+		$print .= "<TR style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";			
 		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$tipstr = addslashes($act_row['description']);		
-			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' WIDTH='100%' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\" >
-				<TD VALIGN='top' NOWRAP CLASS='td_label'>$caption</TD>";
+			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' WIDTH='100%' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
 			$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array
 			$sep = $respstring = "";
 			for ($i=0 ;$i< count($responders);$i++) {				// build string of responder names
@@ -587,17 +581,21 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 			$print .= "<TD CLASS='normal_text' NOWRAP>" . $respstring . "</TD><TD CLASS='normal_text' NOWRAP>". format_date_2($act_row['updated']) ."</TD>";	//	3/15/11
 			$print .= "<TD CLASS='normal_text' NOWRAP>by <B>".get_owner($act_row['user'])."</B> ";	//	3/15/11
 			$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
-			$print .= "</TD><TD CLASS='normal_text' WIDTH='100%'>" . nl2br($act_row['description']) . "</TD>";	//	3/15/11
+			$print .= "</TD><TD CLASS='normal_text'>" . nl2br($act_row['description']) . "</TD>";	//	3/15/11
 			if ($links) {
 				$print .= "<TD><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
-					<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD></TR>\n";	
+					<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD>";	
 				}
+			$print .= "</TR>\n";
 			$caption = "";
 			$pctr++;
 			}				// end if/else (...)
+		$print .= "<TR CLASS='spacer'><TD CLASS='spacer'>&nbsp;</TD></TR>";
 		$print .= "</TABLE>\n";
 		return $print;
 		}				// end else
+
+
 	}			// end function show_actions
 	
 function list_messages($the_id, $theSort="date", $links, $display) {
@@ -1974,7 +1972,7 @@ Ticket link S				// 6/20/12
 Facility 	T				// 6/20/12
 */
 
-function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE, $smsg_to_str) {	// 10/6/08, 10/15/08,  2/18/09, 3/7/09, 10/23/12, 11/14/2012, 12/14/2012
+function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {	// 10/6/08, 10/15/08,  2/18/09, 3/7/09, 10/23/12, 11/14/2012, 12/14/2012
 	global $istest;
 //	if (is_null($text_sel)) {$text_sel = 1;}			//
 
@@ -1991,12 +1989,12 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 		   	break;
 		}
 
-	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "U"));}		// empty get all - force non-zero hit
+	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "V"));}		// empty get all - force non-zero hit
 	
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`=$ticket_id LIMIT 1";
 	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
-	$the_scope = strlen(trim($t_row['scope'])>0)? trim($t_row['scope']) :"[#{$ticket_id}]" ;	// possibly empty
+	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
 
 	$eol = PHP_EOL;
 	$locale = get_variable('locale');	
@@ -2131,7 +2129,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 						if (mysql_num_rows ($result)>0) {
 							$f_row = stripslashes_deep(mysql_fetch_array($result));
-							$message .= "{$gt}: {$f_row['handle']}\n";
+							$message .= "{$gt}: {$f_row['beds_info']}\n";
 							}
 						}
 				    break;
@@ -2139,7 +2137,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 				case "U":		// 11/13/2012
 					$query_u = "SELECT  `handle` FROM `$GLOBALS[mysql_prefix]assigns` `a`
 						LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`a`.`responder_id` = `r`.`id`)
-						WHERE `a`.`ticket_id` = $ticket_id
+						WHERE `a`.`ticket_id` = $ticket_id AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
 						ORDER BY `handle` ASC ";																// 5/25/09, 1/16/08
 					$result_u = mysql_query($query_u) or do_error($query_u, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 					if (mysql_num_rows($result_u)>0) {
@@ -2151,7 +2149,15 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 						}	
 					unset ($result_u);
 					break;
-				
+					
+				case "V":
+					$gt = get_text("Scheduled For");
+					if($t_row['booked_date'] == NULL) {
+						$message .= "" . $_end .$eol;
+						} else {
+						$message .= get_text("{$gt}") . ": " . format_date_2($t_row['booked_date']). $_end .$eol;
+						}
+				    break;
 				
 				default:
 //				    $message = "Match string error:" . $match_str[$i]. " " . $match_str . $eol ;
@@ -3114,8 +3120,10 @@ function get_index_str ($in_str) {
 		}
 
 	function format_date_2($date_in){								// datetime: 2012-11-03 14:13:45 - 11/29/2012
-		if (get_variable('locale')==1)	{ return date("j/n/y H:i",$date_in);}		// 08/27/10 - Revised to show UK format for locale = 1	
-		else 							{ return date(get_variable("date_format"), strtotime($date_in));	}	// note strtotime()
+
+		$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
+		if (get_variable('locale')==1)	{ return date("j/n/y H:i", intval($date_wk));}					// 08/27/10 - Revised to show UK format for locale = 1	
+		else 							{ return date(get_variable("date_format"), intval($date_wk)); }
 		}
 
 	function log_error($err_arg) {							// reports non-fatal error - 11/29/2012

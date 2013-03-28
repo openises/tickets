@@ -127,7 +127,7 @@ $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_er
 $num_tick = mysql_num_rows($result);
 
 //	Number of Tickets not assigned
-$query = "SELECT *,`$GLOBALS[mysql_prefix]ticket`.`problemstart`) AS problemstart,
+$query = "SELECT *,UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`problemstart`) AS problemstart,
 		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`problemend`) AS problemend,
 		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`booked_date`) AS booked_date,	
 		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`date`) AS date, 

@@ -783,8 +783,9 @@ if((!isset($_SESSION)) && (empty($_POST))) {
 	$description = ((isset($_POST['orig_facility'])) && ($_POST['orig_facility'] != 0)) ? quote_smart(trim($_POST['frm_street'] . "/n " . $_POST['frm_city'] . "/n" . $_POST['frm_state'] . "/n" . $_POST['frm_description'])) : $_POST['frm_description'];
 	$meridiem_request_date = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_request_date'])))) ) ? "" : $_POST['frm_meridiem_request_date'] ;
 	$request_date = "$_POST[frm_year_request_date]-$_POST[frm_month_request_date]-$_POST[frm_day_request_date] $_POST[frm_hour_request_date]:$_POST[frm_minute_request_date]:00$meridiem_request_date";	
+	$phone = ((isset($_POST['frm_phone'])) && ($_POST['frm_phone'] != "")) ? $_POST['frm_phone'] : "none";
 	$query = "INSERT INTO `$GLOBALS[mysql_prefix]requests` (
-				`org`
+				`org`,
 				`contact`, 
 				`street`, 
 				`city`, 
@@ -811,20 +812,20 @@ if((!isset($_SESSION)) && (empty($_POST))) {
 				`_from` 
 				) VALUES (
 				" . 0 . ",
-				" . get_user_name($_SESSION['user_id']) . ",
-				" . addslashes($street) . ",	
-				" . addslashes($city) . ",	
-				" . addslashes($state) . ",	
-				" . addslashes($_POST['frm_patient']) . ",
-				" . addslashes($_POST['frm_phone']) . ",		
+				'" . addslashes(get_user_name($_SESSION['user_id'])) . "',
+				'" . addslashes($street) . "',	
+				'" . addslashes($city) . "',	
+				'" . addslashes($state) . "',	
+				'" . addslashes($_POST['frm_patient']) . "',
+				'" . addslashes($phone) . "',		
 				" . $_POST['frm_orig_fac'] . ",					
 				" . $_POST['frm_rec_fac'] . ",	
-				" . addslashes($_POST['frm_scope']) . ",	
-				" . addslashes($description) . ",					
-				" . addslashes($_POST['frm_comments']) . ",		
-				" . $lat . ",		
-				" . $lng . ",				
-				" . $request_date . ",
+				'" . addslashes($_POST['frm_scope']) . "',	
+				'" . addslashes($description) . "',					
+				'" . addslashes($_POST['frm_comments']) . "',		
+				'" . $lat . "',		
+				'" . $lng . "',				
+				'" . $request_date . "',
 				'Open',
 				NULL,
 				NULL,

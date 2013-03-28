@@ -655,7 +655,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				global $istest;
 				
 				$text = "";
-				$the_msg = mail_it ($to_str, $text, $ticket_id, 3, TRUE);		// get default msg text
+				$the_msg = mail_it ($to_str, "", $text, $ticket_id, 3, TRUE);		// get default msg text
 				$temp = (explode("\n", $text));
 				$lines = count($temp);
 											
@@ -747,7 +747,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 				<TD ALIGN='left'>
 					<FORM NAME='add_mail_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">	<!-- 11/27/09 -->
 <?php
-			$msg_str = "Dispatching {$unit_name}" . mail_it ($to_str, "New", $ticket_id, 3, TRUE); 
+			$msg_str = "Dispatching {$unit_name}" . mail_it ($to_str, "", "New", $ticket_id, 3, TRUE); 
 			$finished_str = ((get_variable('call_board')==1))? "self.location.href = '" . basename(__FILE__) . "'": "window.close();";
 ?>			
 					<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $lines+3; ?>><?php print $msg_str;?></TEXTAREA>

@@ -201,21 +201,21 @@ function show_top() {				// generates the document introduction
 		document.can_Form.submit();					// reload frame or window
 		}		// end function do_refresh()
 
-function do_frm_refresh() {				// frame refresh - call board option 2
-	var temp = parent.document.getElementById('the_frames').getAttribute('rows');		// e.g., '63, 126,*'
-	var rows = temp.split(",", 4)
-	var height_in_pix = get_lines().trim();
-	rows[1] = height_in_pix;
-	temp = rows.join(",");
-	parent.document.getElementById('the_frames').setAttribute('rows', temp);		// set revised cb frame height
-	document.nav_form.func.value='board';
-	document.nav_form.submit();														// refresh it
-	}
-	
-function get_lines(){							// returns pixel count
-	lines = syncAjax("lines_a.php");			// note synch call - 8/10/10
-	return lines;	
-	}				// end function get_lines()
+	function do_frm_refresh() {				// frame refresh - call board option 2
+		var temp = parent.document.getElementById('the_frames').getAttribute('rows');		// e.g., '63, 126,*'
+		var rows = temp.split(",", 4)
+		var height_in_pix = get_lines().trim();
+		rows[1] = height_in_pix;
+		temp = rows.join(",");
+		parent.document.getElementById('the_frames').setAttribute('rows', temp);		// set revised cb frame height
+		document.nav_form.func.value='board';
+		document.nav_form.submit();														// refresh it
+		}
+		
+	function get_lines(){							// returns pixel count
+		lines = syncAjax("lines_a.php");			// note synch call - 8/10/10
+		return lines;	
+		}				// end function get_lines()
 	
 	
 	function tween(in_val, min_val, max_val) {							// min and max inclusive
@@ -314,7 +314,7 @@ require_once('./incs/links.inc.php');
 $evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 
 ?>
-<CENTER><BR><SPAN ID='zzstart' onClick = "Javascript: self.location.href = '<?php print basename(__FILE__); ?>';"><H3>Call board loading ...</H3></span>
+<CENTER><BR><SPAN ID='zzstart' onClick = "Javascript: self.location.href = '<?php print basename(__FILE__); ?>';"><H3>Call board loading ...</H3></span></CENTER>
 </BODY><!-- <?php echo __LINE__;?> -->
 </HTML>
 
@@ -332,7 +332,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		$user = is_user();			// 5/11/10
 
 ?>	
-	<SCRIPT>
+<SCRIPT>
 	var myuser = "<?php print $_SESSION['user']?$_SESSION['user']: "not";?>";
 	var mylevel = "<?php print isset($_SESSION['level'])?get_level_text($_SESSION['level']): "na";?>";
 	var myscript = "<?php print isset($_SESSION['user'])? LessExtension(basename( __FILE__)): "login";?>";
@@ -589,7 +589,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 ?>
 <SCRIPT>
 function do_post() {
-	document.temp_Form.frm_ticket_id.value=<?php print $row['id'];?>;
+	document.temp_Form.frm_ticket_id.value=<?php print $row['tick_id'];?>;
 	document.temp_Form.submit();
 	}
 setTimeout('do_post()', 1000);	
@@ -614,7 +614,7 @@ setTimeout('do_post()', 1000);
 					while ($row = mysql_fetch_array($result))  {
 						$addr = substr($row['street'] . " " . $row['city'] . " " . $row['state'], 0, 24);
 						$descr = substr($row['scope'] , 0, 24) . " - " . $addr ;
-						print "\t\t\t<OPTION value='{$row['id']}'> {$descr}</OPTION>\n";		
+						print "\t\t\t<OPTION value='{$row['tick_id']}'> {$descr}</OPTION>\n";		
 //						$the_ticket_id = $row['id'];
 						}
 ?>
@@ -680,8 +680,9 @@ setTimeout('do_post()', 1000);
 				if (array_key_exists($unit_row['id'], $assigns)) 	{ return " DISABLED ";}
 				else 												{ return "";}		
 				}				// end function get_cd_str ()
-					
-			print "\n<SCRIPT>\n";
+?>
+<SCRIPT>					
+<?php
 			print "\t\tassigns = new Array();\n";
 			
 			$query = "SELECT *,`as_of` AS `as_of` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ORDER BY `as_of` DESC";	// 12/13/09
@@ -691,7 +692,6 @@ setTimeout('do_post()', 1000);
 				print "\t\tassigns['" .$row['ticket_id'] .":" . $row['responder_id'] . "']=true;\n";	// build assoc array of ticket:unit pairs
 				}
 ?>
-		<SCRIPT>	
 		function validate_ad(theForm) {
 			var errmsg="";
 			if (theForm.frm_unit_id_str.value == "")	{errmsg+= "\tSelect one or more units\n";}
@@ -848,7 +848,7 @@ setTimeout('do_post()', 1000);
 				global $istest;
 				
 				$text = "";
-				$the_msg = mail_it ($to_str, $text, $ticket_id, 3, TRUE);		// get default msg text
+				$the_msg = mail_it ($to_str, "", $text, $ticket_id, 3, TRUE);		// get default msg text
 				$temp = (explode("\n", $text));
 				$msg_lines = count($temp);
 											
@@ -937,7 +937,7 @@ setTimeout('do_post()', 1000);
 				<TD ALIGN='left'>
 					<FORM NAME='add_mail_form' METHOD = 'post' ACTION = "<?php print basename(__FILE__); ?>">	<!-- 11/27/09 -->
 <?php
-			$msg_str = "Dispatching" . mail_it ($to_str, "New", $ticket_id, 3, TRUE); 
+			$msg_str = "Dispatching" . mail_it ($to_str, "", "New", $ticket_id, 3, TRUE); 
 ?>			
 					<TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print $msg_lines+8; ?>><?php print $msg_str;?></TEXTAREA>
 					
@@ -976,7 +976,7 @@ setTimeout('do_post()', 1000);
 				$tot_mi = (empty($temp))? 0: $temp ;		//	10/23/12			
 																// 12/9/10
 				$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `dispatched`, `ticket_id`, `responder_id`, `comments`, `start_miles`, `on_scene_miles`, `end_miles`, `miles`, `user_id`)
-								VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+								VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
 									quote_smart($now),
 									quote_smart($now),
 									quote_smart($frm_ticket_id),
