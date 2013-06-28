@@ -1,0 +1,30 @@
+Files changed for RC delta - Tuesday, April 02, 2013.  All related to GMaps API V3 unless otherwise noted below.
+
+add.php 
+banner.php 
+circle.php 
+config.php
+directions.php 
+distances.php 
+edit.php
+facilities.php 
+index.php - version no. change
+install.php 
+landb.php 
+main.php 
+routes.php
+units.php 
+incs\functions.inc.php
+incs\config.setcenter.inc.php
+incs\full_scr.inc.php 
+incs\functions_major.inc.php 
+incs\landb.inc.php 
+incs\routes_inc.php 
+js\domready.js
+js\elabel_v3.js
+js\ELabels3.js
+js\epoly.js 
+js\epoly_v3.js 
+js\gmaps_v3_init.js 
+js\graticule_V3.js 
+
