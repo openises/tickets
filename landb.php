@@ -41,7 +41,7 @@ require_once('incs/functions.inc.php');
 		
 
 @session_start();
-
+session_write_close();
 do_login(basename(__FILE__));
 
 $by = empty($_SESSION)? 0: $_SESSION['user_id'];
@@ -92,10 +92,15 @@ $_func = (empty($_POST)) ?  "l" : $_POST['_func'];							// list mode as default
 <SCRIPT SRC="./js/jscolor/jscolor.js"  type="text/javascript"></SCRIPT>
 
 <?php
-	$api_key = trim(get_variable('gmaps_api_key'));
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+$api_key = trim(get_variable('gmaps_api_key'));
+$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+	$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	} else {
+	$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	}
 ?>
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>sensor=false"></SCRIPT>
+<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 <SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
 <SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 <SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->

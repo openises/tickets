@@ -23,6 +23,7 @@
 */
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
@@ -607,7 +608,14 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Tickets - Tracks Module</TITLE>
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
-	<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>&libraries=geometry,weather&sensor=false"></SCRIPT>
+<?php
+	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		} else {
+		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		}
+?>
+	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 	<SCRIPT SRC='./js/graticule_V3.js' type='text/javascript'></SCRIPT> 
 	<SCRIPT SRC='./js/misc_function.js' type='text/javascript'></SCRIPT>  <!-- 4/14/10 -->
 	<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>

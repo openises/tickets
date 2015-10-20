@@ -5,6 +5,7 @@
 error_reporting(E_ALL);	
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 
 function between ($in_str, $start_str, $end_str, $begin = 0) {		// returns string between two given values

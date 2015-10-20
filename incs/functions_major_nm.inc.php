@@ -31,25 +31,12 @@ $incidents = get_text("Incidents");
 function do_updated ($instr) {		// 11/3/2012
 	return substr($instr, 8, 8);
 	}
-
-function get_can_edit() {				// 5/1/11
-	if (empty($_SESSION)) {return FALSE;}
-	else	{
-		switch ($_SESSION['level']) {
-			case $GLOBALS['LEVEL_SUPER']:
-			case $GLOBALS['LEVEL_ADMINISTRATOR']:
-				return TRUE;
-				break;
-			case $GLOBALS['LEVEL_USER'] :
-				return (trim(get_variable('oper_can_edit'))==1);
-				break;
-			case $GLOBALS['LEVEL_GUEST']:
-			case $GLOBALS['LEVEL_MEMBER']:
-			case $GLOBALS['LEVEL_UNIT']:
-				return FALSE;	
-			}		// end switch 
-		}		// end if/else
-	}		// end function 
+	
+function get_can_edit() {										// 8/27/10, 08/12/15
+	$oper_can_edit = ((is_user()) && (get_variable('oper_can_edit') == 1));
+	$unit_can_edit = ((is_unit()) && (get_variable('unit_can_edit') == 1));	
+	return (is_administrator() || is_super() || ($oper_can_edit) || ($unit_can_edit));
+	} 	// end function can_edit()
 
 if (!(function_exists ('get_lat'))) {
 	function get_lat($in_lat) {					// 9/7/08
@@ -126,21 +113,8 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 	@session_start();		// 
 	$captions = array("Current situation", "{$incidents} closed today", "{$incidents} closed yesterday+", "{$incidents} closed this week", "{$incidents} closed last week", "{$incidents} closed last week+", "{$incidents} closed this month", "{$incidents} closed last month", "{$incidents} closed this year", "{$incidents} closed last year", "Scheduled {$incidents}");
 	$by_severity = array(0, 0, 0);				// counters // 5/2/10
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	//	5/4/11
-	$result = mysql_query($query);	//	5/4/11
-	$al_groups = array();
-	$al_names = "";	
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	5/4/11
-		$al_groups[] = $row['group'];
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	//	5/4/11
-		$result2 = mysql_query($query2);	// 4/18/11
-		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	//	//	5/4/11		
-				$al_names .= $row2['group_name'] . ", ";
-			}
-	}
-	if(is_super()) {	//	5/4/11
-		$al_names .= "Superadmin Level";
-	}	
+	
+	$al_groups = $_SESSION['user_groups'];
 	
 	if ((array_key_exists('func', $_GET)) && ($_GET['func'] == 10)) {		//	3/15/11
 		$func = 10;
@@ -162,7 +136,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 	$open = (isset($_GET['status']) && ($_GET['status']==$GLOBALS['STATUS_SCHEDULED']))? "Scheduled" : "";	//	11/29/10
 	}
 	
-	if(isset($_SESSION['viewed_groups'])) {	//	5/4/11
+	if(array_key_exists('viewed_groups', $_SESSION)) {	//	5/4/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		} else {
 		$curr_viewed = $al_groups;
@@ -791,7 +765,7 @@ function cs_handleResult(req) {					// the 'called-back' function for show curre
 	$restrict_ticket = "";
 //	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
 	$time_back = mysql_format_date(time() - (get_variable('delta_mins')*60) - ($cwi*3600));
-if(isset($_SESSION['viewed_groups'])) {		//	5/4/11
+if(array_key_exists('viewed_groups', $_SESSION)) {		//	5/4/11
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 	}
 if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
@@ -1117,13 +1091,9 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 
 	$order_str = $order_values[$_SESSION['unit_flag_2']];											// 6/11/10
 																									// 6/25/10
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	// 4/18/11
-	$result = mysql_query($query);	// 4/18/11
-	$al_groups = array();
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/18/11
-		$al_groups[] = $row['group'];
-		}	
-	if(isset($_SESSION['viewed_groups'])) {
+	$al_groups = $_SESSION['user_groups'];
+	
+	if(array_key_exists('viewed_groups', $_SESSION)) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
@@ -1341,14 +1311,9 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 
 	$fac_order_str = $fac_order_values[$_SESSION['fac_flag_2']];		// 3/15/11		
 	
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	5/4/11
-	$result = mysql_query($query);	//	5/4/11
-	$al_groups = array();
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	5/4/11
-		$al_groups[] = $row['group'];
-		}	
+	$al_groups = $_SESSION['user_groups'];	
 	
-	if(isset($_SESSION['viewed_groups'])) {
+	if(array_key_exists('viewed_groups', $_SESSION)) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
@@ -1528,7 +1493,6 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		return;
 		}
 				// 9/30/12
-//	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
 	$restrict_ticket = "";
 										// 1/7/10
 	$query = "SELECT *,
@@ -1548,6 +1512,9 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		`$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
 		`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,		
 		`rf`.`name` AS `rec_fac_name`,
+		`rf`.`street` AS `rec_fac_street`,
+		`rf`.`city` AS `rec_fac_city`,
+		`rf`.`state` AS `rec_fac_state`,
 		`$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,		
 		`$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng`,		 
 		`$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
@@ -1605,8 +1572,9 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 				<TD ALIGN='left'></TR>\n";			// separator
 		print empty($row['fac_name'])? "" : "<TR CLASS='print_TD' ><TD ALIGN='left'>" . $incident . " at Facility:</TD>	
 				<TD ALIGN='left'>" .  $row['fac_name'] . "</TD></TR>\n";	// 8/1/09, 3/27/10
+		$rec_fac_details = empty($row['rec_fac_name'])? "" : $row['rec_fac_name'] . "<BR />" . $row['rec_fac_street'] . "<BR />" . $row['rec_fac_city'] . "<BR />" . $row['rec_fac_state'];
 		print empty($row['rec_fac_name'])? "" : "<TR CLASS='print_TD' ><TD ALIGN='left'>Receiving Facility:</TD>	
-				<TD ALIGN='left'>" .  $row['rec_fac_name'] . "</TD></TR>\n";	// 10/6/09	
+				<TD ALIGN='left'>" .  $rec_fac_details . "</TD></TR>\n";	// 10/6/09	
 		print empty($row['comments'])? "" : "<TR CLASS='print_TD'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>
 				<TD ALIGN='left'>" .  nl2br($row['comments']) . "</TD></TR>\n";	
 		print "<TR CLASS='print_TD' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD>				
@@ -1641,11 +1609,10 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		print show_log ($row[0]);				// log
 		print "</TD></TR>";
 		print "<TR><TD colspan=2 ALIGN='left'>";
-
 		print show_assigns(0, $row['tick_id']);				// 'id' ambiguity - 7/27/09 - 5/21/2013
 		print "</TD></TR>";
 		print "<TR><TD colspan=99 ALIGN='left'>";
-		print show_actions( $row['tick_id'], "date", FALSE, FALSE );		//  5/21/2013
+		print show_actions( $row['tick_id'], "date", FALSE, TRUE );		//  5/21/2013
 		print "</TD></TR>";
 		print "</TABLE>\n";
 
@@ -1665,17 +1632,11 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 ?>
 	<TABLE BORDER="0" ID = "outer" ALIGN="left">
 	<TR VALIGN="top"><TD CLASS="print_TD" ALIGN="left">
+	<DIV id='loc_warnings' style='z-index: 1000; display: none; height: 100px; width: 100%; font-size: 1.5em; font-weight: bold; border: 2px outset #707070;'></DIV>	
 <?php
 	print do_ticket($row, max(320, intval($_SESSION['scr_width']* 0.4)), $search) ;				// 2/25/09
-	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
-
-	print "</TR>";
-	print "<TR CLASS='odd' ><TD COLSPAN='2' CLASS='print_TD'>";
-//  $lat = $row['lat']; $lng = $row['lng'];
-
 //	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
-
-	print "</TD></TR>\n";
+	print "</TR>";
 	print "</TABLE>\n";
 
 
@@ -1685,6 +1646,34 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 	function isNull(val) {								// checks var stuff = null;
 		return val === null;
 		}
+		
+	function find_warnings(tick_lat, tick_lng) {	//	9/10/13
+		randomnumber=Math.floor(Math.random()*99999999);
+		var theurl ="./ajax/loc_warn_list.php?version=" + randomnumber + "&lat=" + tick_lat + "&lng=" + tick_lng;
+		sendRequest(theurl, loc_w_cb, "");
+		function loc_w_cb(req) {
+			var the_warnings=JSON.decode(req.responseText);
+			var the_count = the_warnings[0]
+			if(the_count != 0) {
+				$('loc_warnings').innerHTML = the_warnings[1];
+				$('loc_warnings').style.display = 'block';
+				}
+			}			
+		}
+
+	var start_wl = false;
+	function wl_win(the_Id) {				// 2/11/09
+		if(start_wl) {return;}				// dbl-click proof
+		start_wl = true;					
+		var url = "warnloc_popup.php?id=" + the_Id;
+		newwindow_wl=window.open(url, "sta_log",  "titlebar=no, location=0, resizable=1, scrollbars, height=600,width=750,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (!(newwindow_wl)) {
+			alert ("Locations warning operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+			return;
+			}
+		newwindow_wl.focus();
+		start_wl = false;
+		}		// end function sv win()	
 	</SCRIPT>
 <?php
 
@@ -1727,8 +1716,8 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 
 	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
 	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>" . $incident . " at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
-	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['rec_fac_name']) . "</TD></TR>\n";	// 10/6/09
-
+	$rec_fac_details = empty($theRow['rec_fac_name'])? "" : $theRow['rec_fac_name'] . "<BR />" . $theRow['rec_fac_street'] . "<BR />" . $theRow['rec_fac_city'] . "<BR />" . $theRow['rec_fac_state'];
+	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
 	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['comments'])) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD>					<TD ALIGN='left'>" . format_date_2(strtotime($theRow['problemstart']));
 	$elaped_str = (intval($theRow['problemend'])> 1)?  $elapsed : "";
@@ -1755,16 +1744,16 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 
 	$print .= "<TR CLASS='odd'><TD ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
 		<TD ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
-
+	$print .= "<TR><TD colspan=99 ALIGN='left'>";
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
+	$print .="</TD></TR>";
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
 	$print .= show_log ($theRow[0]);				// log
 	$print .="</TD></TR>";
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09
 	$print .="</TD></TR>";
-	$print .= "<TR><TD colspan=99 ALIGN='left'>";
-	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
-	$print .="</TD></TR>";
+
 	$print .= "</TABLE>\n";
 
 	return $print;
@@ -1803,7 +1792,8 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD ALIGN='left'>Scheduled date:</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
 	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
 	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>{$incident} at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
-	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['rec_fac_name']) . "</TD></TR>\n";	// 10/6/09
+	$rec_fac_details = empty($theRow['rec_fac_name'])? "" : $theRow['rec_fac_name'] . "<BR />" . $theRow['rec_fac_street'] . "<BR />" . $theRow['rec_fac_city'] . "<BR />" . $theRow['rec_fac_state'];
+	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
 	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD> <TD ALIGN='left'>" . format_date_2(strtotime($theRow['problemstart']));
 	$end_str = (good_date_time($theRow['problemend']))? format_date_2(strtotime($theRow['problemend'])) : "";
@@ -1838,7 +1828,7 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
+	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";	
 	$print .= list_messages($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR>";
@@ -1880,7 +1870,8 @@ function do_ticket_only($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						//
 	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD ALIGN='left'>Scheduled date:</TD>		<TD ALIGN='left'>" . format_date_2($theRow['booked_date']) . "</TD></TR>\n";	// 10/6/09
 	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
 	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>{$incident} at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
-	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['rec_fac_name']) . "</TD></TR>\n";	// 10/6/09
+	$rec_fac_details = empty($theRow['rec_fac_name'])? "" : $theRow['rec_fac_name'] . "<BR />" . $theRow['rec_fac_street'] . "<BR />" . $theRow['rec_fac_city'] . "<BR />" . $theRow['rec_fac_state'];
+	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
 	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD> <TD ALIGN='left'>" . format_date_2($theRow['problemstart']);
 	$end_str = (good_date_time($theRow['problemend']))? format_date_2(strtotime($theRow['problemend'])) : "";
@@ -1924,7 +1915,7 @@ function do_ticket_extras($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;

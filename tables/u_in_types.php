@@ -27,18 +27,44 @@
 		<TD>
 			<SPAN STYLE = "margin-left:20px;">Normal &raquo; <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '0' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[0];?>/></SPAN>
 			<SPAN STYLE = "margin-left:20px;">Medium &raquo; <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '1' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[1];?>/></SPAN>
-			<SPAN STYLE = "margin-left:20px;">High &raquo; 	 <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '2' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[2];?>/></SPAN>		
+			<SPAN STYLE = "margin-left:20px;">High &raquo; 	 <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '2' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[2];?>/></SPAN>
 		</TD></TR>
 
-	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Group:</TD>
-		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="<?php print $row['group'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
-	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT MAXLENGTH=11 SIZE=11 TYPE= "text" NAME="frm_sort" VALUE="<?php print $row['sort'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
-	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Radius:</TD><TD><INPUT MAXLENGTH=4 SIZE=4 TYPE= "text" NAME="frm_radius" VALUE="<?php print $row['radius'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
+<?php						// 4/4/2015
+	switch($row['watch']) {
+		case "0":	$checked1_value = "CHECKED"; 	$checked2_value = ""; 			break;
+		default: 	$checked1_value = ""; 			$checked2_value = "CHECKED";
+		}
+?>
+	<TR VALIGN="baseline" CLASS="even">
+		<TD CLASS="td_label" ALIGN="right">Watch:</TD>
+		<TD VALIGN='baseline'><B>
+			<SPAN STYLE = 'margin-left:20px;'>No &raquo; <INPUT TYPE='radio' NAME="frm_watch" VALUE= "0" <?php print $checked1_value;?>/>
+			<SPAN STYLE = 'margin-left:20px;'>Yes &raquo; <INPUT TYPE='radio' NAME="frm_watch" VALUE= "1" <?php print $checked2_value;?>/>
+			</TD></TR>
 
-	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Color:</TD>
+	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Group:</TD>
+		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="<?php print $row['group'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT MAXLENGTH=11 SIZE=11 TYPE= "text" NAME="frm_sort" VALUE="<?php print $row['sort'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
+	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Radius:</TD><TD><INPUT MAXLENGTH=4 SIZE=4 TYPE= "text" NAME="frm_radius" VALUE="<?php print $row['radius'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
+
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Color:</TD>
 		<TD><INPUT MAXLENGTH="8" SIZE="8" type="text" NAME="frm_color" VALUE="<?php print $row['color'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
-	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Opacity:</TD><TD><INPUT MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_opacity" VALUE="<?php print $row['opacity'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
-		<TR><TD COLSPAN="99" ALIGN="center">
+	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Opacity:</TD><TD><INPUT MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_opacity" VALUE="<?php print $row['opacity'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
+<?php
+	$mg_select = "<SELECT NAME='frm_notify_mailgroup'>";
+	$mg_select .= "<OPTION VALUE=0 SELECTED>Select Mail List</OPTION>";
+	$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
+	$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
+		$sel = ($row['notify_mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
+		$mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
+		}
+	$mg_select .= "</SELECT>";
+?>
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Notify Mailgroup:</TD><TD><?php print $mg_select;?></TD></TR>
+	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Notify Email:</TD><TD><INPUT MAXLENGTH=256 SIZE=60 TYPE= "text" NAME="frm_notify_email" VALUE="<?php print $row['notify_email'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+	<TR><TD COLSPAN="99" ALIGN="center">
 	<BR />
 	<INPUT TYPE="button" 	VALUE="Cancel" onClick = "Javascript: document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
 
@@ -47,4 +73,5 @@
 	<INPUT TYPE="button" 	NAME="del_but" VALUE="Delete this entry" onclick="if (confirm('Please confirm DELETE action')) {this.form.func.value='d'; this.form.submit();}"/></TD></TR>
 	</FORM>
 	</TD></TR></TABLE>
-<?php	
+<?php
+//	4/4/2015 - added 'watch' attribute handling

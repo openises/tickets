@@ -19,7 +19,7 @@ $sess_id = 	$_POST['sess_id'];				// sess_id
 //$query = "UPDATE `$GLOBALS[mysql_prefix]session` SET `$f_n` ='$v_n' WHERE `sess_id`='$sess_id' LIMIT 1";
 //$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 
-@session_start(); 		// 1/23/10
 $_SESSION[$f_n] = $v_n;
+session_write_close();
 print"";
 ?>

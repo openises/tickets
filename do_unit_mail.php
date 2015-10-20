@@ -20,23 +20,28 @@ if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
 set_time_limit(0);
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');
 require_once('./incs/messaging.inc.php');
 //dump($_REQUEST);
-function distance($lat1, $lon1, $lat2, $lon2, $unit) { 
-	$theta = $lon1 - $lon2; 
-	$dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta)); 
-	$dist = acos($dist); 
-	$dist = rad2deg($dist); 
-	$miles = $dist * 60 * 1.1515;
-	$unit = strtoupper($unit);
+function distance($lat1, $lon1, $lat2, $lon2, $unit) {
+	if(my_is_float($lat1) && my_is_float($lon1) && my_is_float($lat2) && my_is_float($lon2)) {
+		$theta = $lon1 - $lon2; 
+		$dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta)); 
+		$dist = acos($dist); 
+		$dist = rad2deg($dist); 
+		$miles = $dist * 60 * 1.1515;
+		$unit = strtoupper($unit);
 
-	if ($unit == "K") {
-		return ($miles * 1.609344); 
-		} else if ($unit == "N") {
-		return ($miles * 0.8684);
+		if ($unit == "K") {
+			return ($miles * 1.609344); 
+			} else if ($unit == "N") {
+			return ($miles * 0.8684);
+			} else {
+			return $miles;
+			}
 		} else {
-		return $miles;
+		return 0;
 		}
 	}
 
@@ -55,13 +60,9 @@ $tik_id = 0;
 
 if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 	$step = (((integer) $_GET['name'])==0)? 1 : 0 ;
-//	print $_GET['addrs'];
-//	$step = 0;		// unit id - or 0 - passed as get ['name']
 	} elseif((!(empty($_GET))) && (isset($_GET['the_ticket'])))  {	//	10/23/12
 	$tik_id = $_GET['the_ticket'];
 	$step = (((integer) $_GET['the_ticket'])==0)? 0 : 2 ;
-//	print $_GET['addrs'];
-//	$step = 0;		// unit id - or 0 - passed as get ['name']	
 	} else {
 //	dump(__LINE__);
 	if (empty($_POST)) {
@@ -204,7 +205,6 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -331,7 +331,7 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 ?>				
 					<TR>
 						<TD ALIGN='left' COLSPAN=2>
-							<input type="radio" name="use_smsg" VALUE="0" checked> Use Email<br>	<!-- 10/23/12 -->
+							<input type="radio" name="use_smsg" VALUE="0" checked> Use Email or Twitter<br>	<!-- 10/23/12 -->
 							<input type="radio" name="use_smsg" VALUE="1"> Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?<br>	<!-- 10/23/12 -->
 						</TD>
 					</TR>
@@ -408,9 +408,23 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 			$t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`	FROM `$GLOBALS[mysql_prefix]ticket` `t`	WHERE `id` = {$tik_id} LIMIT 1";
 			$t_result = mysql_query($t_query) or do_error($t_query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 			$t_row = stripslashes_deep(mysql_fetch_assoc($t_result), MYSQL_ASSOC);			
-			
+			$assigned_resp = array();			
 			$default_msg = "Ticket ID *" . $tik_id . "*";	//	10/23/12
 			if ((!array_key_exists ( 'frm_sel_inc', $_POST)) || ($_POST['frm_sel_inc']==0)) {
+				$query_ass = "SELECT *, 
+					`r`.`id` AS `responder_id`
+					FROM `$GLOBALS[mysql_prefix]assigns` `a`
+					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`a`.`responder_id` = `r`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	 `s` ON (`r`.`un_status_id` = `s`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
+					WHERE `ticket_id` = {$tik_id} AND LOCATE('@', `contact_via`) > 1
+					AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
+					ORDER BY `r`.`id` ASC ";	//	10/23/12			
+				$result_ass = mysql_query($query_ass) or do_error($query_ass, 'mysql query failed', mysql_error(), __FILE__, __LINE__);				
+				while($row_ass = stripslashes_deep(mysql_fetch_assoc($result_ass), MYSQL_ASSOC)){
+					$assigned_resp[] = $row_ass['responder_id'];
+					}
+			
 				$query = "SELECT *,	`r`.`id` AS `responder_id`,
 					`r`.`lat` AS `r_lat`,
 					`r`.`lng` AS `r_lng`				
@@ -511,12 +525,17 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 					print "<TABLE ALIGN = 'center' BORDER=0><TR><TD>\n";
 					print "<DIV  style='width: auto; height: 500PX; overflow-y: scroll; overflow-x: none; border: 1px outset #FFFFFF; padding: 10px;' >";	//	10/23/12
 					foreach($the_arr as $val) {
+						if(!empty($assigned_resp)) {
+							$checked = in_array($val['responder_id'],$assigned_resp) ? "checked" : "";
+							} else {
+							$checked = "";
+							}
 //					while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
 						$smsg = (($val['smsg_id'] == NULL) || ($val['smsg_id'] == "")) ? "NONE" : $val['smsg_id'] ;
 						$e_add = (($val['contact_via'] == NULL) || ($val['contact_via'] == "")) ? "NONE" : $val['contact_via'] ;
 						$dist = (round($val['distance'],1) != 0) ? "Dist: " . round($val['distance'],1) : "";         
 						print "\t<SPAN STYLE='background-color:{$val['bg_color']}; color:{$val['text_color']}; display: inline-block; white-space: nowrap;'>
-							<INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$val['contact_via']}:{$val['responder_id']}:{$val['smsg_id']}'>
+							<INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$val['contact_via']}:{$val['responder_id']}:{$val['smsg_id']}' {$checked}>
 							&nbsp;&nbsp;{$dist} &nbsp;&nbsp;{$val['name']}&nbsp;&nbsp;(<I>(E) {$e_add} - (SMSG) {$smsg}</I> )</SPAN><BR />\n";	//	10/23/12
 						$i++;
 						}		// end while()

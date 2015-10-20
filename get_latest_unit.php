@@ -26,5 +26,6 @@ if ($row) {
 //	$_SESSION['unit_flag_2'] = $me;
 	}
 print ($row)? $row['id'] : "0";
+session_write_close();
 
 ?>

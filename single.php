@@ -11,6 +11,7 @@
 error_reporting(E_ALL);	
 		// 7/28/10
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		// 7/28/10
 require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 	$query = "SELECT *,
@@ -37,10 +38,10 @@ require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
 		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`={$_GET['ticket_id']} LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
-//	dump($query);
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
 	@session_start();
+	session_write_close();
 
 
 ?>

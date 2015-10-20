@@ -379,8 +379,6 @@ Changes for Tickets V 2.11 F
 
 142.  This file is now available via link on the Config screen. 
 
-
-
 (Scroll up for additional information re earlier versions; note that much of the information remains pertinent.)
 
 Changes for Tickets V 2.11 G
@@ -678,10 +676,245 @@ Changes for Tickets V 2.30A
 	  
 209.  As usual, various corrections applied in this release regarding functionality and security.   
 
+Changes for Tickets V 2.30B & C
+
+211.  Various fixes to Messaging
+
+Changes for Tickets V 2.40A
+
+212.  Revised mapping to Google Maps API V3.
+
+213.  Various other fixes to messaging.
+
+Changes for Tickets V 2.40B
+
+214.  Creation of map markup now supported - revised from Google maps API V2 to V3.
+
+215.  New "Hello All Stations" (HAS) feature. Allows broadcast message to all logged in users.  Optional, see setting 
+	  "broadcast", and note that the default value is 0, for 'off'.  This feature is experimental; when active, it
+	  requires an Internet connection.
+
+216.  Addition of setting to allow user definition of how many hours before current time, booked calls are hidden from 
+	  the current situation screen.  See setting "hide_booked", where the default is 48 hours.
+
+217.  Addition of system/messaging setting to determine whether incoming email messages from pop3 server are deleted 
+	  after download. Look under messaging settings (note you only see these settings if the system setting
+	  "use_messaging" is not 0.
+	  
+218.  We now provide for an 'ICS-213' button in the top menu; see setting 'ics_top', where a setting of '1' exercises
+	  this option.  Default is '0', for 'off'.
+
+219.  Database schema was revised to add indexing to certain of the larger tables.  Volume users will see some 
+	  performance gains.  And as usual various other fixes.
+
+Changes for Tickets 2.40C
+
+220.  Various fixes. No new functionality.
+
+Changes for Tickets 2.40D
+
+221.  Added PHP native mail test script
+
+222.  Various fixes including messaging, auto unit status and some map functions.
+
+Changes for Tickets 2.41A
+
+223.  Major revisions to Portal - revised main screen, added statistics, new request now in a popup, added ability to 
+      specifiy multiple address requests, provided marker infowindows.
+	 
+224.  Requests via the portal are now acknowledged by email back to the user - needs user email address set. Also status
+      changes (acceptance, decline) are also notified.
+
+225.  Added Mail Lists (mailgroups). These are added and edited via config and collect potential entries from users, units
+      and contacts. Mail Lists are currently only used for system messages (notifies etc) rather than normal mail functionality.
+	  
+226.  Added "Responder Mobile" page. This is accessed directly via ./rm off your tickets directory or automatically if system
+      setting "use responder mobile" is set to 1. The screen is set up for unit rather than admin use and provided specific
+	  unit functions such as inbuilt tracking, messaging, chat, status updates (on-scene etc).
+	  
+227.  The "Responder mobile" page uses Open Streetmaps and supports the use of maps downloaded to the Tickets server. To download
+      map tiles go to the main tickets config page and see the link to "download map tiles". (please note that this can take a 
+	  long time depending on the area chosen.
+	  
+228.  Addition of some new fields to Incident screen ("About address" and "to address") and to units and facilities screens ("About Status
+      and for facilities email or email list). For Facilities the email and email list send a notify of a new job dispatched to or from
+	  that facility.
+	  
+229.  Added location warnings. You can add new locations to be warned about (previous incidents etc) and when adding a new incident
+      Tickets will look at that table and present warnings about any locations within a user definable distance (see config / edit settings).
+	  
+230.  Revision to chat to correctly update logged in users during a current chat - checked on a regualr basis.
+
+231.  Revision to the "Cleanse Regions" routine to enhance the ability to resolve regions based issues and correct any tickets, units etc
+      that have not been allocated to a region or where there are duplicate entries.
+	  
+232.  Auto Dispatch Status - Tickets can be set to automatically update the unit status based on a change in the dispatch status - the
+      specific status values are user definable in config.
+	  
+233.  Per session selection of show or hide maps available at login.
+
+234.  Files - the ability to store files (documents / pictures) securely against Tickets, Units, Facilities, general tickets use and specific
+      portal users. For portal users this could be to store client / service user specific training or contractual documents which are then only
+	  viewable to that user. Can also set global Tickets or portal documents which could be generic processes, contact lists etc. File types can
+	  be documents or pictures, executable scripts are excluded by the file upload script. The directory is protected and barred for direct access.
+
+234.  Various other fixes as normal including coping where a logged in user has no allocated regions.
+
+Changes for Tickets 2.41B
+
+235.  Various fixes, no new functionality
+
+Changes for Tickets 2.41C
+
+236.  4 Fixes to Callboard and notifies.
+
+Changes for Tickets 2.41D
+
+237.  4 Fixes to Units, top bar, messaging, notifies, new Incident and Responder Mobile page.
+
+Changes for Tickets 2.41E
+
+238.  Added Live tracking of mobile tracked units to situation screen.
+
+239.  Fixes to Units, Routes, Portal, New Incident and Location Warnings.
+
+Changes for Tickets 2.41F
+
+240.  Fixed google maps api for use with SSL.
+
+Changes for Tickets 2.41G
+
+241.  Added change password capability to portal.
+
+242.  Added Xastir tracking- requires Xastir server to be setup and creation of Xastir DFB (from within Xastir). Xastir DB must be
+      on the same server as Tickets but not necessarily on the same DB. 
+	  
+243.  Added sound to new message notification and modified new request notification. Adde flag for number of unread messages to message button.
+
+244.  Revised handling of Instamapper to support new Instamapper API.
+
+245.  Fixed the units show / hide on the situation screen for incorrectly handling persistence across pages.
+
+246.  Various other fixes
+
+Changes for 2.41H
+
+247.  Additional ICS forms now available (now supports 205, 205a, 213 and 214.
+
+248.  Fix to Whitepages Looup
+
+249.  Fix to KML file display.
+
+250.  New system setting to restrict unit level users from viewing other data on the system apart from the mobile
+      or Responder Mobile pages. Default for this is switched off, if you want to restrict units set the system setting 
+      "restrict Units" to 1.
+
+Changes for 2.41J
+
+251.  Fix to KML display, fixes issue with polygons showing filled even though they shouldn't be.
+
+252.  A 'buildings' capability has been added to the existing 'places' operation.  Using it when callers often  
+      identify location by building name - as in residential and campus complexes - facilitates rapid  incident
+      location, saving precious seconds in writing new incidents.
+
+253.  Revision to mail handling defaulting assigned units to be checked ready to send.
+
+254.  As usual, various fixes.
+
+Changes for 2.41K
+
+255.  Fix to KML display for new incident and edit incident.
+
+256.  Fixed email sending from portal when using smtp mail.
+
+257.  Fixed issue with messages stored for responder who no longer exists.
+
+258.  Revised link within notify email.
+
+Changes for 3.00A (almost too many changes to list)
+
+259.  Major re-write to use Open Streetmaps instead of Google Maps.
+
+260.  Use of Open Streetmaps allows downloading offline map tiles for use when not connected to the internet.
+
+261.  Revised most screens and included new sidebar for Messages, regions, Map controls and Files.
+
+262.  Added Major Incident feature. This is still in it's infancy and is open to suggestions.
+
+263.  Added ability to remove files in the file list for Superadmin.
+
+Changes for 3.01A bug fix release
+
+264.  Bug fix release, no major new functionality.
+
+Changes for 3.02A - bug fix release
+
+265.  Bug fix release, no major new functionality.
+
 Let us know if the above is too terse and where further expansion wd be useful.
+
+Changes for 3.03A - bug fix release plus enhancement to Major Incidents and addition of OS-Watch feature
+
+266.  Addition of OS-Watch feature which provides operators the ability to monitor if responders are on-scene
+      for an extended period which may indicate a problem.
+	 
+267.  Enhancements to Major Incidents.
+
+268.  Change to Incident Edit form so that new notes are added to the disposition box with timestamp and in an
+      ordered manner.
+	  
+269.  Various maintenance fixes.
+
+Changes for 3.04A
+
+270.  Various maintenance fixes including fixing no-maps mode.
+
+Changes for 3.05A
+
+271.  Fix to Notifications.
+
+272.  Additional setting for on-scene watch to determine who receives alerts.
+
+Changes for 3.06A - Performance improvement release
+
+273.  Various changes to improve load times especially for large installations.
+
+274.  New feature for "Add" Incident - now searches various tables with address elements for existing
+      matching entries and provides autocomplete suggestions.
+	  
+275.  Added two new geolocation providers in addition to OSM Nominatim. Now can use Google or Bing
+      with setting to determine provider used. Also added place name search box to map (does not work
+	  with Internet Explorer currently.)
+	  
+276.  Enhancement to Major Incidents - addition of location for command posts with map marker. 
+
+277.  Selected Map Layer persists while logged in. Default Map layer can be set in settings using the setting 
+      default map layer.
+
+278.  Various other maintenance fixes.
+
+Changes for 3.07A - Maintenance release
+
+279.  Various maintenance fixes.
+
+Changes for 3.08A - Additional features and maintenance release
+
+280.  Various maintenance fixes.
+
+281.  Addition of Ordnance Survey maps as basemap for all main map screens) (UK only).
+
+282.  Complete revision of the service user portal to reflect changes to maps as well as update
+      list display and add map infowindows with buttons to open requests.
+	  
+283.  Revisions to Mobile screen.
+
+284.  Addition of Twitter as a message destination. See <A HREF='twitter.txt'>Here</A> for more details.
+
+285.  Revision to sidebar to use pictorial buttons as being more space efficient.
+	 
 <A NAME = 'bottom'></A>
 
-February '13
+June '15
 Arnie Shore
 Andy Harvey, UK
 

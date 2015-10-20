@@ -6,6 +6,7 @@ msg_status.php - used by message.php to change read status of a message
 require_once('../incs/functions.inc.php');
 extract($_GET);
 @session_start();
+session_write_close();
 $result_code = 0;
 
 $the_users = array();	
@@ -23,6 +24,14 @@ $where = ($id == 0) ? "" : " WHERE `id` = '" . $id . "'";
 $the_messages = array();
 $the_readers = array();
 $the_user = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
+$the_folder = $_GET['folder'];
+if($the_folder == 'inbox') {
+	$msgDirection = " AND (`msg_type` = 2 OR `msg_type` = 4 OR `msg_type` = 5)";
+	} elseif($the_folder == 'sent') {
+	$msgDirection = " AND (`msg_type` = 1 OR `msg_type` = 3)";
+	} else {
+	$msgDirection = "";
+	}
 
 if($id == 0) {	// It's a read or unread all
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
@@ -44,16 +53,16 @@ if($id == 0) {	// It's a read or unread all
 			if($the_readers != NULL) {
 				if(!in_array($the_user, $the_readers, true)) {
 					$the_new_readers = ($the_readers != NULL) ? implode(",", $the_readers) . "," . $the_user: $the_user;
-					$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . ", `readby`= '" . $the_new_readers . "' WHERE `id` = " . $val[0];
+					$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . ", `readby`= '" . $the_new_readers . "' WHERE `id` = " . $val[0] . $msgDirection;
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);	
 					$result_code++;
 					} else {
-					$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . " WHERE `id` = " . $val[0];
+					$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . " WHERE `id` = " . $val[0] . $msgDirection;
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);		
 					$result_code++;						
 					}
 				} else {
-				$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . ", `readby` = '" . $the_user . "' WHERE `id` = " . $val[0];
+				$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . ", `readby` = '" . $the_user . "' WHERE `id` = " . $val[0] . $msgDirection;
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);		
 				$result_code++;				
 			}
@@ -72,7 +81,7 @@ if($id == 0) {	// It's a read or unread all
 				}
 			$the_new_readers2 = implode(",", $the_new_readers);
 			$the_new_status = (count($the_new_readers) >= 1) ? 1 : 0;
-			$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . ", `readby`= '" . $the_new_readers2 . "' WHERE `id` = " . $val[0];
+			$query = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `read_status` = " . $the_new_status . ", `readby`= '" . $the_new_readers2 . "' WHERE `id` = " . $val[0] . $msgDirection;
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 			$result_code++;
 			}
@@ -125,3 +134,5 @@ if($result_code >= 1) {
 	}
 	
 print json_encode($response);
+exit();
+?>

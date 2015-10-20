@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 */
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 										// housekeep old invites
 $query = "DELETE from `$GLOBALS[mysql_prefix]chat_invites` WHERE `_on` < DATE_SUB(NOW(),INTERVAL 1 DAY )";

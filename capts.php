@@ -15,6 +15,7 @@ $cols = 6;	// no. of columns in the list presentation
 error_reporting(E_ALL);				
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 //do_login(basename(__FILE__));
 
@@ -29,7 +30,6 @@ if ($istest) {
 		}
 	}
 
-@session_start();	
 $func = (empty($_POST))? "l":$_POST['func'];
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">

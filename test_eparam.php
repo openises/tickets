@@ -22,6 +22,7 @@ print $host . "<BR />";
 $mbox = imap_open($host, $user, $password);
 
 @session_start();
+session_write_close();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}

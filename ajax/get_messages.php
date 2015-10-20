@@ -17,7 +17,7 @@ $the_result = "";
 if (empty($_SESSION)) {
 	header("Location: ../index.php");
 	}
-do_login(basename(__FILE__));
+session_write_close();
 $retrivemode = (!empty($_GET['mode'])) ? 1 : 0;
 $response = 0;
 $response2 = 0;
@@ -43,5 +43,5 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 3))
 $ret_arr[] = $response;
 $ret_arr[] = $response2;
 print json_encode($ret_arr);
-	
+exit();
 ?>	

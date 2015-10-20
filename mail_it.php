@@ -8,6 +8,7 @@
 */
 
 @session_start();
+session_write_close();
 require_once('incs/functions.inc.php');		//7/28/10 - functions_mail.php
 // snap(__LINE__);
 //  ($to_str, $text, $ticket_id) - 10/15/08

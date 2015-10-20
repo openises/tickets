@@ -1,5 +1,6 @@
 /*
 1/11/2013 - initial release
+7/3/2013 removed disfunctional 'zoom_changed' listener
 */
 //	gmaps_v3_init(call_back, map_obj, 'map_canvas', ...
 
@@ -91,11 +92,11 @@
 				infoWindow.close();
 				});
 
-			google.maps.event.addListener(in_map, 'zoom_changed', function() {
-				zoom_var = in_map.getZoom();		// set global
-				var posnObj={lat:parseFloat(window.lat_var), lng:parseFloat(window.lng_var), zoom:parseInt(in_map.getZoom())};		// define position object
-				callback(posnObj);										// return it
-				});		// end zoom listener
+//			google.maps.event.addListener(in_map, 'zoom_changed', function() {		// 7/3/2013
+//				zoom_var = in_map.getZoom();		// set global
+//				var posnObj={lat:parseFloat(window.lat_var), lng:parseFloat(window.lng_var), zoom:parseInt(in_map.getZoom())};		// define position object
+//				callback(posnObj);										// return it
+//				});		// end zoom listener
 
 			google.maps.event.addListener(myMarker, "dragend", function(event) {
 				var point = myMarker.getPosition();				// retuns LatLng

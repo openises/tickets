@@ -135,7 +135,8 @@
 10/19/10 u2fenr reference correction
 11/29/10 case "2"
 11/30/10 get_text Patient added
-
+7/10/13 Revisions to function show_actions( to correct failure to show patients if no actions.
+9/10/13 Added function show_unit_log()
 */
 error_reporting(E_ALL);
 
@@ -462,8 +463,8 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$responderlist = array();
 	$responderlist[0] = "NA";	
-	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$responderlist[$act_row['id']] = $act_row['name'];
+	while ($resp_row = stripslashes_deep(mysql_fetch_assoc($result))){
+		$responderlist[$resp_row['id']] = $resp_row['name'];
 		}
 	$print = "<TABLE BORDER='0' ID='patients' width=" . max(320, intval($_SESSION['scr_width']* 0.4)) . ">";
 																	/* list patients */
@@ -471,15 +472,15 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$caption = get_text("Patient") .": &nbsp;&nbsp;";
 	$actr=0;
-	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($pat_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$print .= "<TR CLASS='" . $evenodd[$actr%2] . "' WIDTH='100%'><TD VALIGN='top' NOWRAP CLASS='td_label'>" . $caption . "</TD>";
-		$print .= "<TD NOWRAP>" . $act_row['name'] . "</TD><TD NOWRAP>". format_date($act_row['updated']) . "</TD>";
-		$print .= "<TD NOWRAP> by <B>".get_owner($act_row['user'])."</B>";
+		$print .= "<TD NOWRAP>" . $pat_row['name'] . "</TD><TD NOWRAP>". format_date($pat_row['updated']) . "</TD>";
+		$print .= "<TD NOWRAP> by <B>".get_owner($pat_row['user'])."</B>";
 		
-		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD>" . nl2br($act_row['description']) . "</TD>";
+		$print .= ($pat_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD>" . nl2br($pat_row['description']) . "</TD>";
 		if ($links) {
-			$print .= "<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
-				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD></TR>\n";	
+			$print .= "<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id=" . $pat_row['id'] . "&action=edit'>edit</A>|
+				<A HREF='patient.php?id=" . $pat_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD></TR>\n";	
 				}
 		$caption = "";				// once only
 		$actr++;
@@ -488,7 +489,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	$query = "SELECT *,UNIX_TIMESTAMP(date) AS `date`,UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$the_id' ORDER BY `date`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if ((mysql_affected_rows() + $actr)==0) { 				// 8/6/08
-		return "";
+//		return "";	// 7/10/13 removed as it causes failure to show Patients if no actions present	
 		}				
 	else {
 		$caption = "Actions: &nbsp;&nbsp;";
@@ -514,10 +515,10 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 				}
 			$caption = "";
 			$pctr++;
-			}				// end if/else (...)
-		$print .= "</TABLE>\n";
-		return $print;
-		}				// end else
+			}				// end while (...)
+		}				// end else			
+	$print .= "</TABLE>\n";	// 7/10/13 moved out of actions if/else as it fails to close the table if there are no actions.
+	return $print;
 	}			// end function show_actions
 
 // } { -- dummy
@@ -568,6 +569,57 @@ function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09
 	return $print;
 	}		// end function get_log ()
 //	} -- dummy
+
+function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
+	global $evenodd ;	// class names for alternating table row colors
+	require('./incs/log_codes.inc.php');
+		
+	$query = "
+		SELECT *, 
+		`when` AS `when`,
+		`l`.`id` AS `log_id`,
+		`t`.`scope` AS `tickname`,
+		`r`.`handle` AS `unitname`,
+		`l`.`info` AS `comment`,
+		`s`.`status_val` AS `theinfo`,
+		`u`.`user` AS `thename` 
+		FROM `$GLOBALS[mysql_prefix]log` l
+		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t 		ON (l.ticket_id = t.id)
+		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r 	ON (l.responder_id = r.id)
+		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s 	ON (l.info = s.id)
+		LEFT JOIN `$GLOBALS[mysql_prefix]user` u 		ON (l.who = u.id)
+		WHERE `l`.`responder_id` = {$theid} 
+		ORDER BY `when` ASC";								// 10/2/12
+	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+	$i = 0;
+	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
+
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		if ($i==0) {				// 11/20/09
+			$print .= "<TR CLASS='heading'><TD CLASS='heading' TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><U>Log: <I>". shorten($row['tickname'], 32) . "</I></U></TD></TR>";
+			$cfs_head = ($show_cfs)? "<TD ALIGN='center'>CFS</TD>" : ""  ;
+			$print .= "<TR CLASS='odd'><TD ALIGN='left'>Code</TD>" . $cfs_head . "<TD ALIGN='left'>Unit</TD><TD ALIGN='left'>Status</TD><TD ALIGN='left'>Comment</TD><TD ALIGN='left'>When</TD><TD ALIGN='left'>By</TD></TR>";
+			}
+		$print .= "<TR CLASS='" . $evenodd[$i%2] . "' onClick = 'view_log_entry({$row['log_id']});'>" .				// 11/20/09
+			"<TD TITLE =\"{$types[$row['code']]}\">". shorten($types[$row['code']], 20) . "</TD>"; // 
+		if ($show_cfs) {
+			$print .= "<TD TITLE =\"{$row['tickname']}\">". shorten($row['tickname'], 16) . "</TD>";	// 2009-11-07 22:37:41 - substr($row['when'], 11, 5)
+			}
+		$theComment = (!is_numeric($row['comment'])) ? $row['comment'] : "";
+		$print .= 
+			"<TD TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>".
+			"<TD TITLE =\"{$row['theinfo']}\">". 	shorten($row['theinfo'], 16) . "</TD>".
+			"<TD TITLE =\"{$row['comment']}\">". 	shorten($theComment, 24) . "</TD>".
+			"<TD TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_date_2(strtotime($row['when'])) . "</TD>".
+			"<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>".
+			"</TR>";
+			$i++;
+		}
+	$print .= "</TABLE>";
+	return $print;
+	}		// end function show_unit_log ()
+//	} -- dummy
+
 function set_ticket_status($status,$id){				/* alter ticket status */
 	$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET status='$status' WHERE ID='$id'LIMIT 1";
 	$result = mysql_query($query) or do_error("set_ticket_status(s:$status, id:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -1263,6 +1315,14 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					$str .= (empty($t_row['city']))? 	""  : $t_row['city'] . " " ;
 					$str .= (empty($t_row['state']))? 	""  : $t_row['state'];
 					$message .= empty($str) ? "" : "{$gt}: " . $str . $eol;
+					$gt = get_text("About Address");
+					$str2 = "";
+					$str2 .= (empty($t_row['address_about']))? 	""  : $t_row['address_about'] . " " ;
+					$message .= empty($str2) ? "" : "{$gt}: " . $str2 . $eol;
+					$gt = get_text("To Address");
+					$str3 = "";
+					$str3 .= (empty($t_row['to_address']))? 	""  : $t_row['to_address'] . " " ;
+					$message .= empty($str3) ? "" : "{$gt}: " . $str3 . $eol;
 				    break;
 				case "K":
 					$gt = get_text("Description");

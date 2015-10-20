@@ -6,6 +6,7 @@
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 //dump($_GET);
 //dump($_POST);

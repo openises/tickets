@@ -1,0 +1,16 @@
+OS-Watch
+
+Tix now provides timed notifications of responders in two classes:  those on-scene, and those with status values or on incident types identifying these as to be 'watched'. Notifications consist of popup windows listing such responders, with links to appropriate functions.
+
+These notifications are presented to each super-admin logged in.  
+
+    1.  Config/Setting "OS-watch" consists of a slash-separated set of three numbers representing the minutes between successive notifications, grouped by priority.
+
+    2.  Example:  A value of '5/15/60' will report every 5 minutes responders on-scene at priority incidents; every 15 minutes for normal priority calls, and 60 minutes for other responders to be monitored on an hourly basis (Let's refer to these as Routine). A zero value turns off that time slice, so '0/0/120' reports only units with status value or incident type with 'watch' set every two hours, while '0/0/0' deactivates it completely.
+
+    4.  Routine includes responers with Unit Status with 'Watch' checked, and also responders on calls that have 'Watch' checked in the Incident Type, if these aren't on-scene.
+
+    3.  With '5/15/60', the 5-minute window popup will list only those on-scene at priority calls; the 15-minute list will show responders on-scene at normal and priority calls; the 60-minute list will list all - Priority, Normal and Routine.
+
+AS - April '15
+

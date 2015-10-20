@@ -57,14 +57,6 @@ $order = (isset($sort)) ? "ORDER BY " . $sort : "ORDER BY `date`" ;
 $order2 = (isset($way)) ? $way : "DESC";
 $actr=0;
 
-$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder`";
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$responderlist = array();
-$responderlist[0] = "NA";	
-$caption = "Messages: ";	
-while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-	$responderlist[$act_row['id']] = $act_row['handle'];
-	}	
 $print = "<TABLE BORDER='0' ID='messages' style='width: " . $the_win_width . "px; max-height: 300px; padding: 10px;'>";	
 $query = "SELECT *,date AS `date`,_on AS `_on`,
 		`m`.`id` AS `message_id`,
@@ -86,7 +78,7 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$the_class = ($msg_row['read_status'] == 0) ? 0 : 1;
 		$the_message_id = $msg_row['message_id'];
 		$the_responder = $msg_row['resp_id'];
-		$resp_name = (isset($responderlist[$the_responder])) ? $responderlist[$the_responder] : "INCOMING";	
+		$resp_name = get_respondername($the_responder);	
 		$the_message = strip_tags($msg_row['message']);
 		if($msg_row['recipients'] == NULL) {
 			$respstring = $resp_name;		
@@ -94,12 +86,7 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 			$responders = explode (" ", trim($msg_row['recipients']));	// space-separated list to array
 			$sep = $respstring = "";
 			for ($i=0 ;$i < count($responders);$i++) {				// build string of responder names
-				if (in_array($responders[$i], $responderlist)) {
-					$respstring .= $sep . $responders[$i];
-					$sep = "<BR />";
-					} else {
-					$respstring .= $responders[$i];
-					}
+				$respstring .= $sep . $responders[$i];
 				}
 			}
 			
@@ -128,7 +115,7 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$ret_arr[$counter][3] = $fromname;
 		$ret_arr[$counter][4] = $respstring;
 		$ret_arr[$counter][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
-		$ret_arr[$counter][6] = stripslashes_deep(shorten($the_message, 2000));
+		$ret_arr[$counter][6] = htmlentities(shorten($the_message, 2000));
 		$ret_arr[$counter][7] = format_date_2(strtotime($msg_row['date']));
 		$ret_arr[$counter][8] = get_owner($msg_row['_by']);	
 		$ret_arr[$counter][9] = $the_class;
@@ -137,4 +124,5 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		} // end while	
 	}				// end else
 print json_encode($ret_arr);
+exit();
 ?>

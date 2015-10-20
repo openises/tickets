@@ -6,6 +6,7 @@
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');	
 
 // Declare arrays for all resource ids
@@ -164,6 +165,21 @@ if(!empty($_POST)) {
 			}
 		return elements;
 		}	
+		
+	function do_hover (the_id) {
+		CngClass(the_id, 'hover');
+		return true;
+		}
+
+	function do_plain (the_id) {				// 8/21/10
+		CngClass(the_id, 'plain');
+		return true;
+		}
+
+	function CngClass(obj, the_class){
+		$(obj).className=the_class;
+		return true;
+		}	
 	</SCRIPT>
 	</HEAD>
 	<BODY onLoad='ck_frames();'>
@@ -214,7 +230,7 @@ if(!empty($_POST)) {
 		</DIV>
 		<DIV id='right_col' style='width: 40%; height: 500px; position: absolute; top: 60px; right: 2%; border: 3px outset #DEDEDE; background-color: #F0F0F0;'>
 			<DIV class='heading' style='width: 100%;'>HELP</DIV>
-			<DIV class='td_data' style='width: 100%;'>
+			<DIV style='width: 100%; word-break: normal;'>
 			This page is to set the Auto Status text values and their associated status values.<BR /><BR />
 			On the left side sre the status values currently configured on the Tickets CAD system. These can be changed through Config / Units Status. Next to these are a text box 
 			where you can type in the text values you want to search for in incoming SMS messages. The Responder sending the message will put this text between the start and end tags

@@ -184,8 +184,8 @@ if(empty($_POST)) {	//	Upload a file for import
 	<BODY style='background-color: #EFEFEF;'>
 	<CENTER>
 	<DIV id='outer' style='position: absolute; width: 100%;'>
-		<DIV style='position: relative; top: 5%; width: 60%; max-height: 350px; border: 2px outset #FFFFFF; background-color: #FEF7D6; padding: 20px;'>
-		Data successfully imported.<BR />
+		<DIV style='position: relative; top: 5%; width: 60%; max-height: 350px; border: 2px outset #FFFFFF; background-color: #FEF7D6; padding: 20px; text-align: center;'>
+		Data successfully imported.<BR /><BR /><BR />
 		<SPAN ID = 'close_but' class = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.close();">Finish</SPAN>			
 		</DIV>
 	</DIV>

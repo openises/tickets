@@ -70,7 +70,7 @@ function validateForm (theForm) {
 	<TD colspan = 2 align= "center"><br/>
 	<input type="button" value="Submit" onclick = "validateForm (document.mail_form)">
 	<input type="button" value="Reset" onclick = "document.mail_form.reset(); document.mail_form.frm_from.focus();"  STYLE = 'margin-left: 24px;'>
-	<input type="button" value="Cancel" STYLE = 'margin-left: 24px;'>
+	<input type="button" value="Cancel" STYLE = 'margin-left: 24px;' onClick = "self.close();">
 	</TD>
 </TR>
 </TABLE>
@@ -101,7 +101,7 @@ else {
 ?>
 	<p align='center'>
 	<input type="button" value="Another?" onclick = "document.mail_form.submit();">
-	<input type="button" value="Finished ?" onclick = "this.window.close();" style = "margin-left:20px;">
+	<INPUT TYPE='button' VALUE = "Finished" onClick = "self.close();" />	
 	</p>
 <?php
 	}		// end if/else if (empty($_POST)) 

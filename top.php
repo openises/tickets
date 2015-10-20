@@ -2,7 +2,7 @@
 
 /*
 1/3/10 complete re-write to support button light-up for multi-user operation
-1/11/10 added do_set_sess_exp() 
+1/11/10 added do_set_sess_exp()
 4/1/10 JSON replaces eval
 4/5/10 do_time, cb width calc, cb script rename, syncAjax() {
 4/7/10 $cycle added, 'mu_init' to 'get_latest.php', unit position change now tracked
@@ -38,17 +38,24 @@
 5/29/2013 - revised message handling/notification, do_logout() calls commented out in try/catch error handling
 5/30/2013 - set 5-second poll cycle.
 6/3/2013 - made HAS button appearance conditional on setting
+7/2/2013 include setting internet in HAS include
+7/16/13 Revisions to strings for top bars which fail on intial load after install and stop buttons from showing.
+10/25/13 Revised get_filelist and associated timer.
+1/3/14 Added Road Condition Alert markers and live moving unit markers
+1/30/14 Revised new message handling and added unread messages flag
+3/23/2015 - corrected script-name to 'os_watch' 2 places
+3/30/2015 - added OSW initialization
+4/2/2015 - added data existence check
 */
 
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');		// 7/28/10
 require_once('./incs/browser.inc.php');			// 6/12/10
 @session_start();
-
+session_write_close();
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	require_once('./incs/modules.inc.php');
 	}
-	
 //$temp = intval(get_variable('auto_poll'));
 //$poll_cycle_time = ($temp > 0)? ($temp * 1000) : 15000;	// 5/30/2013
 $poll_cycle_time = 5000;	// five seconds to ms - 8/20/10
@@ -73,31 +80,16 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 <STYLE type="text/css">
 	table			{border-collapse:collapse;}
 	table, td, th	{border:0px solid black;}
-	.signal_r { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #FF3366;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #FF3366;font-weight: bolder;}
-	.signal_b { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #00CCFF;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #00CCFF;font-weight: bolder;}
-	.signal_w { margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 2px; border-STYLE: inset; border-color: #3366FF;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: white;background-color: #3366FF;font-weight: bolder;}
-	.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
-  				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: #DEE3E7;font-weight: bolder;}
-	.plain 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 1px; border-STYLE: inset; border-color: #FFFFFF;
-  				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;font-weight: bolder;}
 	.message { FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-
-	.hover_lo 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
-  				  padding: 1px 0.5em;text-decoration: none; color: black;background-color: #DEE3E7;font-weight: bolder;}
-	.plain_lo 	{  margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 3px; border-STYLE: hidden; border-color: #FFFFFF;}
 	input		{background-color:transparent;}		/* Benefit IE radio buttons */
-  	</STYLE>
-<link rel="stylesheet" type="text/css" href="/fvlogger/logger.css" /> 
+</STYLE>
 <SCRIPT SRC="./js/misc_function.js"></SCRIPT>	<!-- 1/6/11 JSON call-->
 <SCRIPT SRC='./js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
 
 <SCRIPT>
 	var current_butt_id = "main";
 	var internet = false;
-	var is_messaging = 0;		
+	var is_messaging = 0;
 <?php
 if(file_exists("./incs/modules.inc.php")) {
 	?>
@@ -142,14 +134,17 @@ if(file_exists("./incs/modules.inc.php")) {
 		}
 
 	var the_time = setInterval("do_time()", 15000);
-	
 	var is_initialized = false;
 	var nmis_initialized = false;	//	10/23/12
 	var mu_interval = null;
 	var nm_interval = null;			//	10/23/12
 	var msgs_interval = null;		//	10/23/12
 	var emsgs_interval = null;		//	10/23/12
+	var pos_interval = null;
 	var lit=new Array();
+	var lit_r = new Array();
+	var lit_o = new Array();
+	var unread_messages = 0;
 
 	var chat_id = 0;				// new chat invite - 8/25/10
 	var ticket_id = 0;				// new ticket
@@ -157,9 +152,12 @@ if(file_exists("./incs/modules.inc.php")) {
 	var updated;					// 'moved' unit date/time
 	var dispatch;					// latest dispatch status change - date-time
 	var new_msg = 0;				// New messages, 10/23/12
+	var the_unit = 0;
+	var the_status = 0;
+	var the_time = 0;
 
 	function do_msgs_loop() {		//	10/23/12
-		var randomnumber=Math.floor(Math.random()*99999999);	
+		var randomnumber=Math.floor(Math.random()*99999999);
 		if (window.XMLHttpRequest) {
 			xmlHttp = new XMLHttpRequest();
 			xmlHttp.open("GET", "./ajax/get_messages.php?version=" + randomnumber, true);
@@ -168,7 +166,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			}
 		}			// end function do_msgs_loop()
 
-	function handleRequestStateChange2() {	//	10/23/12
+	function handleRequestStateChange2() {	//	10/23/12, 1/30/14
 		var the_resp;
 		var the_val;
 		if (xmlHttp.readyState == 4) {
@@ -177,7 +175,7 @@ if(file_exists("./incs/modules.inc.php")) {
 				for(var key in response[0]) {
 					the_resp = key;
 					the_val = response[0][key];
-					un_stat_chg(the_resp, the_val)
+					un_stat_chg(the_resp, the_val);
 					}
 				if(response[1]) {
 					var the_mess = response[1][0];
@@ -185,30 +183,34 @@ if(file_exists("./incs/modules.inc.php")) {
 					if(the_stored != 0) {
 						show_msg("There are " + the_stored + " new messages");
 						msg_signal_r();								// light the msg button
-						}	
+						} else {
+						msg_signal_r_off();								// unlight the msg button
+						}
 					}
 				}
 			}
 		}
-		
+
 	function do_loop() {								// monitor for changes - 4/10/10, 6/10/11
-		var randomnumber=Math.floor(Math.random()*99999999);		
-		sendRequest ('get_latest_id.php?version=' + randomnumber,get_latest_id_cb, "");	
-		}			// end function do_loop()	
+		var randomnumber=Math.floor(Math.random()*99999999);
+		sendRequest ('get_latest_id.php?version=' + randomnumber,get_latest_id_cb, "");
+		}			// end function do_loop()
 
 	function do_latest_msgs_loop() {	//	10/23/12
-		var randomnumber=Math.floor(Math.random()*99999999);		
-		sendRequest ('./ajax/get_latest_messages.php?version=' + randomnumber,get_latest_messages_cb, "");	
+		var randomnumber=Math.floor(Math.random()*99999999);
+		sendRequest ('./ajax/list_message_totals.php?version=' + randomnumber,get_latest_messages_cb, "");
 		}
-		
 	function un_stat_chg(unit_id, the_stat_id) {	//	10/23/12
 		var the_stat_control = "frm_status_id_u_" + unit_id;
-		if(typeof parent.frames["main"].change_status_sel == 'function') { 
-			parent.frames["main"].change_status_sel(the_stat_control, the_stat_id);	
+		if(typeof parent.frames["main"].change_status_sel == 'function') {
+			parent.frames["main"].change_status_sel(the_stat_control, the_stat_id);
 			}
-		}	
+		}
 
-	var arr_lgth_good = 9;								// size of a valid returned array - 2/25/12, 10/23/12
+	var arr_lgth_good = 15;								// size of a valid returned array - 3/23/2015
+	var gd = new Date();								// 3/23/2015
+	var g_time_now = gd.getTime();						// set global vals
+	g_priority_run_at = g_normal_run_at = g_routine_run_at = g_time_now ;					// next routine  when-to-run ( 60 mins nominal default)
 
 	function get_latest_id_cb(req) {					// get_latest_id callback() - 8/16/10
 		try {
@@ -217,37 +219,36 @@ if(file_exists("./incs/modules.inc.php")) {
 		catch (e) {
 //			alert(req.responseText);
 //			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
-//			do_logout();				// 2/10/12			
+//			do_logout();				// 2/10/12
 			return;
 			}
 
-		try {			
+		try {
 			var the_arr_lgth = the_id_arr.length;		// sanity check
 			}
 		catch (e) {
-			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
+//			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 //			do_logout();				// 2/10/12
 			return;
-			}			
-		
+			}
+//		alert("237 " + the_id_arr[12]);
+//		alert("238 " + the_id_arr.length);
 		if (the_arr_lgth != arr_lgth_good)  {
 			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 //			do_logout();				// 2/10/12
 			}
 
 		var temp = parseInt(the_id_arr[0]);				// new chat invite?
-		if (temp > chat_id) {
+		if (temp != chat_id) {
 			chat_id = temp;
 			chat_signal();								// light the chat button
 			}
-	
 		$("div_ticket_id").innerHTML = the_id_arr[1].trim();	// 2/19/12
 		var temp =  parseInt(the_id_arr[1]);			// ticket?
-		if (temp > ticket_id) {
+		if (temp != ticket_id) {
 			ticket_id = temp;
 			tick_signal();								// light the ticket button
 			}
-	
 		var temp =  parseInt(the_id_arr[2]);			// unit?
 		var temp1 =  the_id_arr[3].trim();				// unit timestamp?
 		if ((temp != unit_id) || (temp1 != updated)) {	//	10/23/12
@@ -273,33 +274,89 @@ if(file_exists("./incs/modules.inc.php")) {
 			misc_signal();													// situation button blue if ...
 			$("div_patient_id").innerHTML = the_id_arr[6].trim();
 			}
-		
-		if (the_id_arr[7] != $("div_requests_id").innerHTML) {
+		if (the_id_arr[7] != $("div_requests_id").innerHTML) {	//		9/10/13
 			if(the_id_arr[7] != "0") {
 				$("div_requests_id").innerHTML = the_id_arr[7];
 				$("reqs").style.display = "inline-block";
-				$("reqs").innerHTML = "Open Requests = " + the_id_arr[7];			
+				$("reqs").innerHTML = "Open Requests = " + the_id_arr[7];
+				} else if (the_id_arr[8] != "0") {
+				$("div_requests_id").innerHTML = the_id_arr[7];
+				$("reqs").style.display = "inline-block";
+				$("reqs").innerHTML = "Requests";
+				} else {
+				$("div_requests_id").innerHTML = the_id_arr[7];
+				$("reqs").style.display = "none";
+				$("reqs").innerHTML = "";
 				}
 			}
-		}			// end function get_latest_id_cb()		
-		
-	function get_latest_messages_cb(req) {					// get_latest_messages callback(), 10/23/12
-		try {
-			var the_msg_arr=JSON.decode(req.responseText);	// 1/7/11
+
+		var temp2 =  parseInt(the_id_arr[9]);			// unit?	9/10/13
+		var temp3 =  parseInt(the_id_arr[10]);			// status?	9/10/13
+		var temp4 =  the_id_arr[11].trim();				// unit timestamp?	9/10/13
+		if ((temp2 != the_unit) || (temp3 != the_status) || (temp4 != the_time)) {	//		9/10/13
+			the_unit = temp2;	//		9/10/13
+			the_status = temp3;	//		9/10/13
+			the_time =  temp4;	// timestamp this unit, 	9/10/13
+			un_stat_chg(the_unit, the_status);	//		9/10/13
 			}
-		catch (e) {
-			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
-//			do_logout();				// 2/10/12			
-			return;
+// 						3/23/2015
+
+		var os_setting_arr = the_id_arr[13].split("/");
+		if (!(os_setting_arr.length == 3)) { os_setting_arr = [5, 15, 60]; }		// user setting error
+
+		var cycle_p = os_setting_arr[0];		// priority cycle in minutes
+		var cycle_n = os_setting_arr[1];		// normal
+		var cycle_r = os_setting_arr[2];		// routine
+
+		gl = new Date();								// 3/23/2015
+		l_time_now = gl.getTime();						// local
+		var rand = Math.floor(Math.random() * 10000);	// cache buster
+//		alert("321 " + the_id_arr[12]);
+		var we_have_arr = the_id_arr[12].split(","); 		//  priority, normal, routine
+
+		var cond_p = ( (we_have_arr[0] > 0 ) && ( cycle_p > 0 ) && ( l_time_now >= g_priority_run_at ) );			// priority - 4/2/2015
+		var cond_n = ( (we_have_arr[1] > 0 ) && ( cycle_n > 0 ) && ( l_time_now >= g_normal_run_at ) );				// normal
+		var cond_r = ( (we_have_arr[2] > 0 ) && ( cycle_r > 0 ) && ( l_time_now >= g_routine_run_at ) );			// routine
+
+		if (cond_r) {		// routine = do everything
+			g_routine_run_at = 		l_time_now + (cycle_r*60*1000);		// next routine  when-to-run, note global
+			g_priority_run_at = 	l_time_now + (cycle_p*60*1000);		// next priority when-to-run, note global
+			g_normal_run_at = 		l_time_now + (cycle_n*60*1000);		// next normal   when-to-run, note global
+			var window_addr = "os_watch.php?mode=3&rand=" + rand; ;
+			newwindow_co=window.open( window_addr, "Watch_out",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			setTimeout(function() { newwindow_co.focus(); }, 1);
 			}
 
-		var msgtemp = parseInt(the_msg_arr[0]);				// new message?
-		if (msgtemp > new_msg) {
-			new_msg = msgtemp;
-			msg_signal_r();								// light the msg button
+		else if (cond_n) {		// normal = do normal and priority
+			g_priority_run_at = 	l_time_now + (cycle_p*60*1000);			// next priority when-to-run, note global
+			g_normal_run_at = 		l_time_now + (cycle_n*60*1000);			// next normal when-to-run, note global
+			var window_addr = "os_watch.php?mode=2&rand=" + rand; ;
+			newwindow_co=window.open( window_addr, "Watch_out",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			setTimeout(function() { newwindow_co.focus(); }, 1);
 			}
-		}			// end function get_latest_messages_cb()		
-		
+
+		else if (cond_p) {		// priority = do priority only
+			g_priority_run_at = 		l_time_now + (cycle_p*60*1000);		// next 5-minute when to run, note global
+			var window_addr = "os_watch.php?mode=1&rand=" + rand; ;
+			newwindow_co=window.open( window_addr, "Watch_out",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			setTimeout(function() { newwindow_co.focus(); }, 1);
+			}		// end else if (cond_p)
+
+// 3/23/2015
+		}			// end function get_latest_id_cb()
+	function get_latest_messages_cb(req) {					// get_latest_messages callback(), 10/23/12, 1/30/14
+		var the_msg_arr=JSON.decode(req.responseText);
+		var the_number = parseInt(the_msg_arr[0][0]);
+		unread_messages = the_number;
+		if(unread_messages != 0) {
+			$("msg").innerHTML = "Msgs (" + unread_messages + ")";
+			msg_signal_o();
+			} else {
+			$("msg").innerHTML = "Msgs";
+			msg_signal_o_off();
+			}
+		new_msgs_get();
+		}			// end function get_latest_messages_cb()
 	function toHex(x) {
 		hex="0123456789ABCDEF";almostAscii=' !"#$%&'+"'"+'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ['+'\\'+']^_`abcdefghijklmnopqrstuvwxyz{|}';r="";
 		for(i=0;i<x.length;i++){
@@ -311,72 +368,88 @@ if(file_exists("./incs/modules.inc.php")) {
 
 	function mu_get() {								// set cycle
 		if (mu_interval!=null) {return;}			// ????
-		mu_interval = window.setInterval('do_loop()', <?php print $poll_cycle_time;?>);		// 4/7/10 
+		mu_interval = window.setInterval('do_loop()', <?php print $poll_cycle_time;?>);		// 4/7/10
 		}			// end function mu get()
-		
 	function new_msgs_get() {								// set cycle, 10/23/12
 		if (nm_interval!=null) {return;}			// ????
-		nm_interval = window.setInterval('do_latest_msgs_loop()', 180000); 
+		nm_interval = window.setInterval('do_latest_msgs_loop()', 30000);
 		}			// end function mu get()
 
 	function messages_get() {								// set cycle, 10/23/12
 		if (msgs_interval!=null) {return;}			// ????
-		msgs_interval = window.setInterval('do_msgs_loop()', 180000);
-		}			// end function mu get()		
+		msgs_interval = window.setInterval('do_msgs_loop()', 30000);
+		}			// end function mu get()
 
 	function mu_init() {								// get initial values from server -  4/7/10
-		var randomnumber=Math.floor(Math.random()*99999999);	
+		var randomnumber=Math.floor(Math.random()*99999999);
 		if (is_initialized) { return; }
 		is_initialized = true;
 
-		sendRequest ('get_latest_id.php?version=' + randomnumber,init_cb, "");			
+		sendRequest ('get_latest_id.php?version=' + randomnumber,init_cb, "");
 			function init_cb(req) {
-		
 //				the_id_str = syncAjax("get_latest_id.php");			// note synch call
 				var the_id_arr=JSON.decode(req.responseText);				// 1/7/11
-				
-				if (the_id_arr.length != 9)  {						// 2/25/12, 10/23/12
+//				alert("410 " + the_id_arr.length );
+				if (the_id_arr.length != arr_lgth_good)  {						// 2/25/12, 10/23/12
 					alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 					}
 				else {
-					chat_id =  parseInt(the_id_arr[0]);	
-					ticket_id = parseInt(the_id_arr[1]);		
-					unit_id =  parseInt(the_id_arr[2]);		
+					chat_id =  parseInt(the_id_arr[0]);
+					ticket_id = parseInt(the_id_arr[1]);
+					unit_id =  parseInt(the_id_arr[2]);
 					updated =  the_id_arr[3].trim();					// timestamp this unit
 					dispatch = the_id_arr[4].trim();					// 1/21/11
 					$("div_ticket_id").innerHTML = the_id_arr[1].trim();	// 2/19/12
 					$("div_assign_id").innerHTML = the_id_arr[4].trim();	// 2/19/12
 					$("div_action_id").innerHTML = the_id_arr[5].trim();	// 2/25/12
 					$("div_patient_id").innerHTML = the_id_arr[6].trim();	// 2/25/12
-					if(the_id_arr[7] != "0") {	//	10/23/12
-						$("div_requests_id").innerHTML = the_id_arr[7];	
+					if(the_id_arr[7] != "0") {	//		9/10/13
+						$("div_requests_id").innerHTML = the_id_arr[7];
 						$("reqs").style.display = "inline-block";
 						$("reqs").innerHTML = "Open Requests = " + the_id_arr[7];
+						} else if (the_id_arr[8] != "0") {
+						$("div_requests_id").innerHTML = the_id_arr[7];
+						$("reqs").style.display = "inline-block";
+						$("reqs").innerHTML = "Requests";
+						} else {
+						$("div_requests_id").innerHTML = the_id_arr[7];
+						$("reqs").style.display = "none";
+						$("reqs").innerHTML = "";
 						}
 					}
 				mu_get();				// start loop
-				get_msgs();
+//				do_positions();	//	1/3/14
+//				do_conditions(); //	1/3/14
+				var is_messaging = parseInt("<?php print get_variable('use_messaging');?>");
+				if((is_messaging == 1) || (is_messaging == 2) || (is_messaging == 3)) {
+					get_msgs();
+					nm_init();
+					}
 				}				// end function init_cb()
 		}				// end function mu_init()
-		
-	function nm_init() {								// get initial values from server -  10/23/12
-		var randomnumber=Math.floor(Math.random()*99999999);		
+
+	function nm_init() {								// get initial values from server -  10/23/12, 1/30/14
+		var randomnumber=Math.floor(Math.random()*99999999);
 		if (nmis_initialized) { return; }
 		nmis_initialized = true;
-		sendRequest ('./ajax/get_latest_messages.php?version=' + randomnumber,msg_cb, "");			
+		sendRequest ('./ajax/list_message_totals.php?version=' + randomnumber,msg_cb, "");
 			function msg_cb(req) {
 				var the_msg_arr=JSON.decode(req.responseText);
-				if (the_msg_arr[0] == 1) {
-					msg_signal_r();
+				var the_number = parseInt(the_msg_arr[0][0]);
+				unread_messages = the_number;
+				if(unread_messages != 0) {
+					$("msg").innerHTML = "Msgs (" + unread_messages + ")";
+					msg_signal_o();
 					} else {
+					$("msg").innerHTML = "Msgs";
+					msg_signal_o_off();
 					}
-				new_msgs_get();					
+				new_msgs_get();
 				}			// end function msg_cb()
-		}				// end function nm_init()		
-				
+		}				// end function nm_init()
 // for messages
 	function get_msgs() {	//	10/23/12
-		var randomnumber=Math.floor(Math.random()*99999999);		
+		var randomnumber=Math.floor(Math.random()*99999999);
 	  	// call the server to execute the server side operation
 		if (window.XMLHttpRequest) {
 			xmlHttp = new XMLHttpRequest();
@@ -385,8 +458,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			xmlHttp.send(null);
 			}
 		}
-		
-	function handleRequestStateChange() {	//	10/23/12
+	function handleRequestStateChange() {	//	10/23/12, 1/30/14
 		var the_resp;
 		var the_val;
 		if (xmlHttp.readyState == 4) {
@@ -395,35 +467,91 @@ if(file_exists("./incs/modules.inc.php")) {
 				for(var key in response[0]) {
 					the_resp = key;
 					the_val = response[0][key];
-					un_stat_chg(the_resp, the_val)
-					}	
+					un_stat_chg(the_resp, the_val);
+					}
 				if(response[1]) {
 					var the_mess = response[1][0];
 					var the_stored = response[1][1];
 					if(the_stored != 0) {
 						show_msg("There are " + the_stored + " new messages");
 						msg_signal_r();								// light the msg button
-						}	
+						} else {
+						msg_signal_r_off();								// unlight the msg button
+						}
 					}
 				}
 			}
-		messages_get();		
+		messages_get();
 		}
-		
+
+// for responder positions
+	function do_positions() {	//	1/3/14
+		var randomnumber=Math.floor(Math.random()*99999999);
+	  	// call the server to execute the server side operation
+		if (window.XMLHttpRequest) {
+			respxmlHttp = new XMLHttpRequest();
+			respxmlHttp.open("GET", "./ajax/responder_data.php?version=" + randomnumber, true);
+			respxmlHttp.onreadystatechange = readPositions;
+			respxmlHttp.send(null);
+			}
+		}
+	function readPositions() {	//	1/3/14
+		if (respxmlHttp.readyState == 4) {
+			if (respxmlHttp.status == 200) {
+				var resp_positions = JSON.decode(respxmlHttp.responseText);
+				for(var key in resp_positions) {
+					var the_resp_id = resp_positions[key][0];
+					var the_resp_lat = parseFloat(resp_positions[key][4]);
+					var the_resp_lng = parseFloat(resp_positions[key][5]);
+					if(typeof parent.frames["main"].set_marker_position == 'function') {
+						parent.frames["main"].set_marker_position(the_resp_id, the_resp_lat, the_resp_lng);
+						}
+					}
+				}
+			}
+		positions_get();
+		}
+	function positions_get() {			// set cycle, 1/3/14
+		if (pos_interval!=null) {return;}			// ????
+		pos_interval = window.setInterval('do_positions_loop()', 30000);
+		}			// end function mu get()
+	function do_positions_loop() {	//	1/3/14
+		var randomnumber=Math.floor(Math.random()*99999999);
+	  	// call the server to execute the server side operation
+		if (window.XMLHttpRequest) {
+			respxmlHttp = new XMLHttpRequest();
+			respxmlHttp.open("GET", "./ajax/responder_data.php?version=" + randomnumber, true);
+			respxmlHttp.onreadystatechange = readPositions2;
+			respxmlHttp.send(null);
+			}
+		}
+	function readPositions2() {	//	1/3/14
+		if (respxmlHttp.readyState == 4) {
+			if (respxmlHttp.status == 200) {
+				var resp_positions = JSON.decode(respxmlHttp.responseText);
+				for(var key in resp_positions) {
+					var the_resp_id = resp_positions[key][0];
+					var the_resp_lat = parseFloat(resp_positions[key][4]);
+					var the_resp_lng = parseFloat(resp_positions[key][5]);
+					if(typeof parent.frames["main"].set_marker_position == 'function') {
+						parent.frames["main"].set_marker_position(the_resp_id, the_resp_lat, the_resp_lng);
+						}
+					}
+				}
+			}
+		}
 	function do_set_sess_exp() {			// set session expiration  - 1/11/10
-		var randomnumber=Math.floor(Math.random()*99999999);		
-		sendRequest ('set_cook_exp.php?version=' + randomnumber,set_cook_exp_handleResult, "");	
+		var randomnumber=Math.floor(Math.random()*99999999);
+		sendRequest ('set_cook_exp.php?version=' + randomnumber,set_cook_exp_handleResult, "");
 		}
-		
 	function set_cook_exp_handleResult() {
-		}	
+		}
 
 	function sendRequest(url,callback,postData) {
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-//		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -436,14 +564,12 @@ if(file_exists("./incs/modules.inc.php")) {
 		if (req.readyState == 4) return;
 		req.send(postData);
 		}
-	
 	var XMLHttpFactories = [
 		function () {return new XMLHttpRequest()	},
 		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
 		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
 		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
 		];
-	
 	function createXMLHTTPObject() {
 		var xmlhttp = false;
 		for (var i=0;i<XMLHttpFactories.length;i++) {
@@ -459,67 +585,100 @@ if(file_exists("./incs/modules.inc.php")) {
 		}
 
 	function syncAjax(strURL) {							// synchronous ajax function - 4/5/10
-		if (window.XMLHttpRequest) {						 
-			AJAX=new XMLHttpRequest();						 
-			} 
-		else {																 
+		if (window.XMLHttpRequest) {
+			AJAX=new XMLHttpRequest();
+			}
+		else {
 			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
 			}
 		if (AJAX) {
-			AJAX.open("GET", strURL, false);														 
+			AJAX.open("GET", strURL, false);
 			AJAX.send(null);							// form name
-			return AJAX.responseText;																				 
-			} 
+			return AJAX.responseText;
+			}
 		else {
 			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 			return false;
-			}																						 
+			}
 		}		// end function sync Ajax()
-	
 
 	function do_audible() {	// 6/12/10
 		try 		{document.getElementsByTagName('audio')[0].play();}
-		catch (e) 	{}		// ignore	
+		catch (e) 	{}		// ignore
 		}				// end function do_audible()
-		
 	function get_line_count() {							// 4/5/10
 		var url = "do_get_line_ct.php";
 		var payload = syncAjax(url);						// does the work
 		return payload;
 		}		// end function get line_count()
-	
 	function chat_signal() {									// light the button
 		CngClass("chat", "signal_r");
 		lit["chat"] = true;
 		do_audible();				// 6/12/10
 		}
-		
 	function unit_signal() {										// light the units button and - if not already lit red - the situation button
-//		CngClass("resp", "signal_b");								//  
 		if (lit["main"]) {return; }									// already lit - possibly red
 		CngClass("main", "signal_b");
 		lit["main"] = true;
 		}
-		
-	function msg_signal() {										// light the msg button, 10/23/12
+	function msg_signal() {										// light the msg button, 10/23/12, 1/30/14
 		if (lit["msg"]) {return; }									// already lit - possibly red
 		CngClass("msg", "signal_b");
 		lit["msg"] = true;
 		}
-		
-	function msg_signal_r() {										// light the msg button, 10/23/12
-		if (lit["msg"]) {return; }									// already lit - possibly red
+	function msg_signal_r() {										// light the msg button, 10/23/12, 1/30/14
+		if (lit_r["msg"]) {return; }									// already lit - possibly red
 		CngClass("msg", "signal_r");
-		lit["msg"] = true;
+		lit_r["msg"] = true;
+		do_audible();				// 1/20/14
 		}
-		
+
+	function msg_signal_r_off() {										// light the msg button, 10/23/12, 1/30/14
+		if (!lit_r["msg"]) {return; }									// not lit ignore
+		if(unread_messages != 0) {
+			CngClass("msg", "signal_o");
+			lit_o["msg"] = true;
+			} else {
+			if(lit["msg"]) {
+				CngClass("msg", "signal_b");
+				lit_o["msg"] = false;
+				} else {
+				CngClass("msg", "plain");
+				lit_o["msg"] = false;
+				}
+			}
+		lit_r["msg"] = false;
+		lit_o["msg"] = true;
+		}
+	function msg_signal_o() {										// light the msg button, 10/23/12, 1/30/14
+		if (lit_o["msg"]) {return; }									// already lit - possibly red
+		if (lit_r["msg"]) {return; }
+		CngClass("msg", "signal_o");
+		lit_o["msg"] = true;
+		}
+
+	function msg_signal_o_off() {										// light the msg button, 10/23/12, 1/30/14
+		if (!lit_o["msg"]) {return; }									// not lit ignore
+		if (lit_r["msg"]) {
+			CngClass("msg", "signal_r");
+			} else {
+			if(lit["msg"]) {
+				CngClass("msg", "signal_b");
+				lit_o["msg"] = false;
+				} else {
+				CngClass("msg", "plain");
+				lit_o["msg"] = false;
+				}
+			}
+		lit_o["msg"] = false;
+		}
 	function tick_signal() {										// red light the button
 		CngClass("main", "signal_r");
 		lit["main"] = true;
 		do_audible();				// 6/12/10
 		}
 																	// 2/25/12
-	function misc_signal() {										// blue light to situation button if not already lit 
+	function misc_signal() {										// blue light to situation button if not already lit
 		if (lit["main"]) {return; }									// already lit - possibly red
 		CngClass("main", "signal_b");
 		lit["main"] = true;
@@ -560,17 +719,17 @@ if(file_exists("./incs/modules.inc.php")) {
 		return true;
 		}
 
-	function light_butt(btn_id) {				// 8/24/10 -     
+	function light_butt(btn_id) {				// 8/24/10 -
 		CngClass(btn_id, 'signal_w')			// highlight this button
-		if(!(current_butt_id == btn_id)) {	
+		if(!(current_butt_id == btn_id)) {
 			do_off_signal (current_butt_id);	// clear any prior one if different
 			}
-		current_butt_id = btn_id;				// 
+		current_butt_id = btn_id;				//
 		}				// end function light_butt()
 
 	function go_there (where, the_id) {		//
 		CngClass(the_id, 'signal_w')			// highlight this button
-		if(!(current_butt_id == the_id)) {	
+		if(!(current_butt_id == the_id)) {
 			do_off_signal (current_butt_id);	// clear any prior one if different
 			}
 		current_butt_id = the_id;				// 8/21/10
@@ -579,11 +738,10 @@ if(file_exists("./incs/modules.inc.php")) {
 		document.go.submit();
 		}				// end function go there ()
 
-	function show_msg (msg) {	
-		$('msg_span').innerHTML = msg;			
+	function show_msg (msg) {
+		$('msg_span').innerHTML = msg;
 		setTimeout("$('msg_span').innerHTML =''", 3000);	// show for 3 seconds
 		}
-	
 	function logged_in() {								// returns boolean
 		var temp = $("whom").innerHTML==NOT_STR;
 		return !temp;
@@ -601,10 +759,9 @@ if(file_exists("./incs/modules.inc.php")) {
 		msgs_interval = null;	//	10/23/12
 		clearInterval(emsgs_interval);	//	10/23/12
 		emsgs_interval = null;	//	10/23/12
-		$('whom').innerHTML=NOT_STR; 
+		$('whom').innerHTML=NOT_STR;
 		is_initialized = false;
 		nmis_initialized = false;	//	10/23/12
-		
 		if(ticker_active == 1) {
 			clearInterval(ticker_interval);
 			var ticker_interval = null;
@@ -648,9 +805,8 @@ if(file_exists("./incs/modules.inc.php")) {
 <?php } ?>
 
 		$('gout').style.display = 'none';		// hide the logout button
-		document.gout_form.submit();			// send logout 
+		document.gout_form.submit();			// send logout
 		}
-	
 	function hide_butts() {						// 10/27/08, 3/15/11
 		setTimeout(" $('buttons').style.display = 'none';" , 500);
 		$("daynight").style.display = "none";				// 5/2/11
@@ -679,20 +835,24 @@ if(file_exists("./incs/modules.inc.php")) {
 		$("daynight").style.display = "inline";
 		$("has_form_row").style.display = "none";		// 5/26/2013
 		$("has_message_row").style.display = "none";
-		
 		}
-
 //	============== module window openers ===========================================
+
+	function open_FWindow(theFilename) {										// 9/10/13
+		var url = theFilename;
+		var ofWindow = window.open(url, 'ViewFileWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
+		setTimeout(function() { ofWindow.focus(); }, 1);
+		}
 
 	var newwindow_sl = null;
 	var starting;
-	
+
 	function do_sta_log() {				// 1/19/09
 		light_butt('log') ;
-		if ((newwindow_sl) && (!(newwindow_sl.closed))) {newwindow_sl.focus(); return;}		// 7/28/10	
+		if ((newwindow_sl) && (!(newwindow_sl.closed))) {newwindow_sl.focus(); return;}		// 7/28/10
 		if (logged_in()) {
 			if(starting) {return;}						// 6/6/08
-			starting=true;	
+			starting=true;
 			do_set_sess_exp();		// session expiration update
 			newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 			if (isNull(newwindow_sl)) {
@@ -703,15 +863,13 @@ if(file_exists("./incs/modules.inc.php")) {
 			starting = false;
 			}
 		}		// end function do sta_log()
-	
-	var newwindow_msg = null;		
-		
+	var newwindow_msg = null;
 	function do_mess() {				// 10/23/12
 		light_butt('msg') ;
 		if ((newwindow_msg) && (!(newwindow_msg.closed))) {newwindow_msg.focus(); return;}		// 10/23/12
 		if (logged_in()) {
 			if(starting) {return;}
-			starting=true;	
+			starting=true;
 			do_set_sess_exp();		// session expiration update
 			newwindow_msg=window.open("messages.php", "messages",  "titlebar, location=0, resizable=1, scrollbars=no, height=600,width=950,status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300");
 			if (isNull(newwindow_msg)) {
@@ -721,10 +879,8 @@ if(file_exists("./incs/modules.inc.php")) {
 			newwindow_msg.focus();
 			starting = false;
 			}
-		}		// end function do sta_log()		
-	
+		}		// end function do sta_log()
 	var newwindow_cb = null;
-	
 	function do_callBoard() {
 		light_butt('call');
 		if ((newwindow_cb) && (!(newwindow_cb.closed))) {newwindow_cb.focus(); return;}		// 7/28/10
@@ -745,17 +901,14 @@ if(file_exists("./incs/modules.inc.php")) {
 			starting = false;
 			}
 		}		// end function do callBoard()
-	
 	var newwindow_c = null;
 
 	function chat_win_close() {				// called from chat.pgp
 		newwindow_c = null;
 		}
-		
 	function do_chat() {
 		light_butt('chat') ;
 		if ((newwindow_c) && (!(newwindow_c.closed))) {newwindow_c.focus(); return;}		// 7/28/10
-	
 		if (logged_in()) {
 			if(starting) {return;}					// 6/6/08
 			starting=true;
@@ -777,24 +930,19 @@ if(file_exists("./incs/modules.inc.php")) {
 
 			}
 		}
-	
 	var newwindow_fs = null;
-	
 	function do_full_scr() {                            //9/7/09
 		light_butt('full');
 		if ((newwindow_fs) && (!(newwindow_fs.closed))) {newwindow_fs.focus(); return;}		// 7/28/10
-	
 		if (logged_in()) {
 			if(starting) {return;}                        // 4/15/10 fullscreen=no
 			do_set_sess_exp();		// session expiration update
-	
 			if(window.focus() && newwindow_fs) {newwindow_fs.focus()}    // if already exists
 			starting=true;
-	
 			params  = 'width='+screen.width;
 			params += ', height='+screen.height;
 			params += ', top=0, left=0', scrollbars = 1
-			params += ', fullscreen=no';
+			params += ', resizable=1';
 			newwindow_fs=window.open("full_scr.php", "full_scr", params);
 			if (isNull(newwindow_fs)) {
 				alert ("This operation requires popups to be enabled. Please adjust your browser options.");
@@ -825,13 +973,14 @@ if(file_exists("./incs/modules.inc.php")) {
 		}
 
 <?php
-$start_up_str = 	(array_key_exists('user', $_SESSION))? "": " mu_init();"; 
-$the_whom = 		(array_key_exists('user', $_SESSION))? $_SESSION['user']: NOT_STR; 
-$the_level = 		(array_key_exists('level', $_SESSION))? get_level_text($_SESSION['level']):"na"; 
+$start_up_str = 	(array_key_exists('user', $_SESSION))? "": " mu_init();";
+$the_userid = 		(array_key_exists('user_id', $_SESSION))? $_SESSION['user_id'] : "na"; 	//	7/16/13
+$the_whom = 		(array_key_exists('user', $_SESSION))? $_SESSION['user']: NOT_STR;
+$the_level = 		(array_key_exists('level', $_SESSION))? get_level_text($_SESSION['level']):"na";
 
 $day_night = (array_key_exists('day_night', $_SESSION)) ? $_SESSION['day_night'] : 'Day';
 print "\n\t var the_whom = '{$the_whom}'\n";
-print "\t var the_level ='{$the_level}'\n"; 
+print "\t var the_level ='{$the_level}'\n";
 
 function get_daynight() {
 	$day_night = ((array_key_exists('day_night', $_SESSION)) && ($_SESSION['day_night'])) ? $_SESSION['day_night'] : 'Day';
@@ -852,9 +1001,6 @@ function get_daynight() {
 				}				// end if (type=='radio')
 			}
 		}		// end function do_day_night()
-	
-
-
 	function top_init() {					// initialize display
 		CngClass('main', 'signal_w');		// light up 'sit' button - 8/21/10
 		$("whom").innerHTML  =	the_whom;
@@ -866,7 +1012,7 @@ function get_daynight() {
 			$day_disabled = $night_disabled= "DISABLED";
 			}
 		else {				// logged-in
-			if (($_SESSION['day_night']) == 'Day') {	
+			if ($start_up_str == 'Day') {	//	7/16/13	Revised to fix error on initial startup
 				$day_checked = "CHECKED";			// allow only 'night'
 				$day_disabled = "DISABLED";
 				$night_checked = "";
@@ -877,24 +1023,19 @@ function get_daynight() {
 				$day_disabled = "";
 				$night_checked = "CHECKED";
 				$night_disabled = "DISABLED";
-				}	
+				}
 ?>
+		var current_user_id = "<?php print $the_userid;?>";
 			show_butts();														// navigation buttons
 			$("gout").style.display  = "inline";								// logout button
-			$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";	
-			$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";			// user name
-			$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
-			var is_messaging = <?php print get_variable('use_messaging');?>;
-			if(((is_messaging == 1) || (is_messaging == 2) || (is_messaging == 3)) && (internet == true)) {
-				nm_init();
-				
-				}
+			$("user_id").innerHTML  = "<?php print $the_userid;?>";		//	7/16/13
+			$("whom").innerHTML  = "<?php print $the_whom;?>";			// user name, 7/1613
+			$("level").innerHTML = "<?php print $the_level;?>";		//	7/16/13
 			mu_init();			// start polling
-//			get_msgs();		//	Get messages from SMS Gateway and Email;
 <?php
 			}				// end if/else (empty($_SESSION))
-?>		
-		}		// end function top_init() 
+?>
+		}		// end function top_init()
 
 	function do_log (instr) {
 		$('log_div').innerHTML += instr + "<br />";
@@ -905,9 +1046,9 @@ function get_daynight() {
 		}
 
 	function set_day_night(which) {			// 5/2/11
-		sendRequest ('./ajax/do_day_night_swap.php', day_night_callback, "");			
+		sendRequest ('./ajax/do_day_night_swap.php', day_night_callback, "");
 			function day_night_callback(req) {
-				var the_ret_val = req.responseText;	
+				var the_ret_val = req.responseText;
 				try {
 					parent.frames["main"].get_new_colors();			// reloads main frame
 					}
@@ -917,8 +1058,8 @@ function get_daynight() {
 				window.clearInterval(nm_interval);	//	10/23/12
 				window.clearInterval(msgs_interval);	//	10/23/12
 				window.clearInterval(emsgs_interval);	//	10/23/12
-				get_new_colors();								// reloads top				
-				}									// end function day_night_callback()				
+				get_new_colors();								// reloads top
+				}									// end function day_night_callback()
 		}
 
 	function do_manual(filename){							// launches Tickets manual page -  5/27/11
@@ -933,49 +1074,48 @@ function get_daynight() {
 		catch (e) {
 			}
 		}		// end do_manual()
-		
 		function can_has () {							// cancel HAS function - return to normal display
 			$("has_form_row").style.display = "none";
-			show_butts();								// show buttons		
+			show_butts();								// show buttons
 			}
-			
 		function end_message_show() {
 			setTimeout(function(){
 				$("has_message_row").style.display = $("has_form_row").style.display = "none";
 				$("has_form_row").style.display = "none";
-				show_butts();								// show buttons			
+				show_butts();								// show buttons
 				}, 1000);			// end setTimeout()
 			}					// end function
 
-		function do_broadcast () {
-			hide_butts();								// hide buttons
+<?php				// 7/2/2013
+		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		//
+?>
+		function do_broadcast() {
+
 			$("has_form_row").style.display = "inline-block";
 			$("has_message_row").style.display = "none";
 			document.has_form.has_text.focus()
 			}
-
 		function has_check(inStr) {
 			if (inStr.trim().length == 0) { alert("Value required - try again."); return;}
-			else { 
+			else {
 				var msg =  $("whom").innerHTML + " sends: " + inStr.trim(); // identify sender
-				
 				broadcast(msg); 				// send it
 				setTimeout(function(){
 					CngClass("has_text", "heading");
 					document.has_form.has_text.value = "              Sent!";		// note spaces
-					setTimeout(function(){ 
+					setTimeout(function(){
 						document.has_form.has_text.value = "";
 						$("has_form_row").style.display = "none";		// hide the form row
 						CngClass("has_text", "");
 						show_butts();								// back to normal
-						}, 3000);				
+						}, 3000);
 					}, 1000);
 				}		// end else{}
-			}		// end function has_check()		
+			}		// end function has_check()
 
 		function hide_has_message_row() {
 			$("msg_span").style.display = "none";
-			show_butts();								// show buttons		
+			show_butts();								// show buttons
 			}
 
 		function show_has_message(in_message) {
@@ -985,12 +1125,15 @@ function get_daynight() {
 			$("has_message_row").style.display = "inline-block";	// include button
 			}
 
-
-	</SCRIPT>
 <?php
-	require_once('./incs/socket2me.inc.php');		// 5/24/2013
+		}			// end if (broadcast && internet )
 ?>
-	
+	</SCRIPT>
+<?php							// 7/2/2013
+	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) {
+		require_once('./incs/socket2me.inc.php');		// 5/24/2013
+		}
+?>
 </HEAD>
 <BODY ID="main_body" onLoad = "top_init();">	<!-- 3/15/11, 10/23/12 -->
 <DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>
@@ -1017,12 +1160,10 @@ function get_daynight() {
 				<SPAN ID="logged_in_txt" STYLE = 'margin-left: 8px;' CLASS="titlebar_text"><?php print get_text("Logged in"); ?>:</SPAN>	<!-- 3/15/11 -->
 				<SPAN ID="whom" CLASS="titlebar_text"><?php print NOT_STR ; ?></SPAN>
 				<SPAN ID="perms_txt" CLASS="titlebar_text">:<SPAN ID="level" CLASS="titlebar_text">na</SPAN>&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
-						
 <?php
 	$temp = get_variable('auto_poll');
 
 	$dir = "./emd_cards";
-	
 	if (file_exists ($dir)) {
 		$dh  = opendir($dir);
 		while (false !== ($filename = readdir($dh))) {
@@ -1031,10 +1172,8 @@ function get_daynight() {
 			    break;
 			    }
 			}
-	
 		$card_addr=(!empty($card_file))? $dir . "/" . $filename  : "";
-		}	
-		
+		}
 ?>
 				<SPAN ID='user_id' STYLE="display:none" CLASS="titlebar_text">0</SPAN><!-- default value - 5/29/10, 3/15/11 -->
 				<SPAN ID='unit_id' STYLE="display:none" CLASS="titlebar_text"></SPAN><!-- unit that has just moved - 4/7/10, 3/15/11 -->
@@ -1044,13 +1183,11 @@ function get_daynight() {
 											<!-- set in  above -->
 					<INPUT TYPE="radio" NAME="frm_daynight" VALUE="Day" <?php print "{$day_disabled} {$day_checked}" ;?> 		onclick = ' set_day_night(this.value);'>Day&nbsp;&nbsp;&nbsp;&nbsp;
 					<INPUT TYPE="radio" NAME="frm_daynight" value="Night" <?php print "{$night_disabled}  {$night_checked}" ;?> onclick = 'set_day_night(this.value);' >Night&nbsp;&nbsp;&nbsp;&nbsp;
-					
 					</FORM>
 				</SPAN>
 				<SPAN ID='time_txt' CLASS="titlebar_text"><?php print get_text("Time"); ?>: </SPAN><b><SPAN ID="time_of_day" CLASS="titlebar_text"></SPAN></b></FONT>&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
 <?php				// 5/26/11
 	$dir = "./manual";
-	
 	if (file_exists ($dir)) {
 		$dh  = opendir($dir);
 		while (false !== ($filename = readdir($dh))) {
@@ -1059,10 +1196,8 @@ function get_daynight() {
 			    break;
 			    }
 			}
-	
 		$manual_addr=(!empty($manual_file))? $dir . "/" . $filename  : "";
-		}	
-		
+		}
 	if (!(empty($manual_addr))) {
 ?>
 
@@ -1070,11 +1205,10 @@ function get_daynight() {
 <?php
 			}
 ?>
-				<SPAN ID = 'gout' CLASS = 'hover_lo' onClick = "do_logout()" STYLE="display:none;" ><?php print get_text("Logout"); ?></SPAN> <!-- 7/28/10 -->
-				
+				<SPAN ID = 'gout' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_logout()" STYLE="display:none; float: none;" ><?php print get_text("Logout"); ?></SPAN> <!-- 7/28/10 -->
 <?php
 		if ($_SERVER['HTTP_HOST'] == "127.0.0.1") { print "&nbsp;&nbsp;&nbsp;&nbsp;DB:&nbsp;{$mysql_db}&nbsp;&nbsp;&nbsp;&nbsp;";}
-?>	
+?>
 
 				<SPAN ID='msg_span' CLASS = 'message'></SPAN>
 				<br />
@@ -1082,17 +1216,19 @@ function get_daynight() {
 		<TR><TD ID = 'buttons' STYLE = "display:none">
 			<SPAN ID = 'main'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick ="go_there('main.php', this.id);"><?php print get_text("Situation"); ?></SPAN>
+<!--		<SPAN ID = 'mi'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick ="go_there('maj_inc.php', this.id);">Maj Incs</SPAN> -->
 			<SPAN ID = 'add'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('add.php', this.id);"><?php print get_text("New"); ?></SPAN>
 			<SPAN ID = 'resp'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('units.php', this.id);"><?php print get_text("Units"); ?></SPAN>
 			<SPAN ID = 'facy'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('facilities.php', this.id);"><?php print get_text("Fac's"); ?></SPAN>
-<?php				
+<?php
 if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {		//	10/23/12
-?>			
+?>
 			<SPAN ID = 'msg'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "starting=false; do_mess();"><?php print get_text("Msgs"); ?></SPAN>				
+				onClick = "starting=false; do_mess();"><?php print get_text("Msgs"); ?></SPAN>
 <?php
 	}
 ?>
@@ -1109,78 +1245,80 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) 
 				onClick = "starting = false; do_emd_card('<?php print $card_addr; ?>')"><?php print get_text("SOP's"); ?></SPAN>	<!-- 7/3/10 -->
 <?php
 			}
-		if (!intval(get_variable('chat_time')==0)) { 		
+		if (!intval(get_variable('chat_time')==0)) {
 ?>
 			<SPAN ID = 'chat'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false; do_chat();"><?php print get_text("Chat"); ?></SPAN>
 <?php
 			}
-		$call_disp_attr = (get_variable('call_board')==1)?  "inline" : "none"; 
-?>			
+		$call_disp_attr = (get_variable('call_board')==1)?  "inline" : "none";
+?>
 			<SPAN ID = 'help'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('help.php', this.id);"><?php print get_text("Help"); ?></SPAN>
 			<SPAN ID = 'log'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "do_sta_log()"><?php print get_text("Log"); ?></SPAN>
+			<SPAN ID = 'rc'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('rc_redirect.php', this.id)">Road Cond</SPAN>
 			<SPAN ID = 'full'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "starting=false; do_full_scr()"><?php print get_text("Full scr"); ?></SPAN>			
+				onClick = "starting=false; do_full_scr()"><?php print get_text("Full scr"); ?></SPAN>
 			<SPAN ID = 'links'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "light_butt('links'); parent.main.$('links').style.display='inline';"><?php print get_text("Links"); ?></SPAN>
 			<SPAN ID = 'call'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false;do_callBoard()" STYLE = 'display:<?php print $call_disp_attr; ?>'><?php print get_text("Board"); ?></SPAN> <!-- 5/12/10 -->
 <!-- ================== -->
-			<SPAN ID = 'term'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'term' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('mobile.php', this.id);"><?php print get_text("Mobile"); ?></SPAN>	<!-- 7/27/10 -->
 <!-- ================== -->
-			<SPAN ID = 'reqs'  CLASS = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'reqs'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('./portal/requests.php', this.id);"></SPAN>	<!-- 10/23/12 -->
-
 <?php
 		if (intval(get_variable('ics_top')==1)) { 		// 5/21/2013
 ?>
 
-<!-- ================== -->			<!-- 5/13/2013 -->				
+<!-- ================== -->			<!-- 5/13/2013 -->
 			<SPAN ID = 'ics'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "starting=false;window.open('ics213.php', 'ics213')"><?php print get_text("ICS-213"); ?></SPAN> <!-- 5/13/2013 -->
+				onClick = "starting=false;window.open('ics213.php', 'ics213')"><?php print get_text("ICS-FORMS"); ?></SPAN> <!-- 5/13/2013 -->
 <?php
 			}		// end if (ics_top)
 
-		if (intval(get_variable('broadcast')==1)) { 		// 6/3/2013
+		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		// 6/3/2013 -7/2/2013
 ?>
 			<SPAN ID = 'has_button' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "do_broadcast();"><?php echo get_text("HAS"); ?></SPAN> <!-- 5/24/2013 -->
 <?php
-	}			// end if (broadcast)
-?>				
+	}			// end if (broadcast && internet )
+?>
 			</TD>
 			</TR>
 		<TR ID = 'has_form_row' STYLE = "display:none;">
-			<TD ALIGN=CENTER>				
+			<TD ALIGN=CENTER>
 				<SPAN ID = "has_span" >
 				<FORM NAME = 'has_form' METHOD = post ACTION = "javascript: void(0)">
 				<INPUT TYPE = 'text' NAME = 'has_text' ID = 'has_text' CLASS = '' size=90 value = "" STYLE = "margin-left:6px;" placeholder="enter your broadcast message" />
 				<BUTTON VALUE="Send" onclick = "has_check ( this.form.has_text.value.trim() )" STYLE = "margin-left:16px;">Send</BUTTON>
 				<BUTTON VALUE="Cancel" onclick = "can_has ();" STYLE = "margin-left:24px;">Cancel</BUTTON>
 				</FORM>
-				</SPAN>			
+				</SPAN>
 			</TD>
 			</TR>
 
 		<TR ID = 'has_message_row' STYLE = "display: none;">
-			<TD ALIGN=CENTER>				
+			<TD ALIGN=CENTER>
 				<SPAN ID = "msg_span" STYLE = "margin-left:50px; " >
 					<SPAN ID = "has_message_text"></SPAN>
 					<BUTTON VALUE="OK" onclick = "end_message_show();"  STYLE = "margin-left:20px">OK</BUTTON>
-				</SPAN>			
+				</SPAN>
 			</TD>
-			</TR>		
+			</TR>
 
-			
+<!-- ================== -->
 	</TABLE>
+	<TABLE ALIGN='center'>
 	<FORM NAME="go" action="#" TARGET = "main"></FORM>
-	
 	<FORM NAME="gout_form" action="main.php" TARGET = "main">
 	<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />
 	</FORM>
+
 	<P>
 		<DIV ID = "log_div"></DIV>
 <!-- <button onclick = 'alert(getElementById("user_id"))'>Test</button> -->
@@ -1189,7 +1327,7 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) 
 	$the_mp3_file = get_variable('sound_mp3');
 
 	$temp = explode (" ", $browser);
-	switch (trim($temp[0])) {		
+	switch (trim($temp[0])) {
 	    case "firefox" :
 			print (empty($the_wav_file))? "\n": "\t\t<audio src=\"./sounds/{$the_wav_file}\" preload></audio>\n";
 			break;

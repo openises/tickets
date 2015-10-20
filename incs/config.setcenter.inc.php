@@ -9,7 +9,8 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 		<STYLE> label, input[type="radio"]{font-size:10px; vertical-align:bottom;} 
 		</STYLE> 
 		</HEAD> 
-		<BODY onLoad = "ck_frames()" > 		<!-- <?php echo __LINE__;?> -->
+		
+		<BODY onLoad = "ck_frames();" >  		<!-- <?php echo __LINE__;?> -->
 <?php
 		if (array_key_exists ( 'update', $_GET )) {
 			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_lat]' WHERE `name`='def_lat';";
@@ -26,48 +27,31 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 			$top_notice = "Settings saved to database.";
 			}
 		else {
-
-	switch(intval(trim(get_variable('maptype')))) { 
-		case 2: 	$maptype = "SATELLITE"; 	break;	
-		case 3: 	$maptype = "HYBRID"; 		break;	
-		case 4: 	$maptype = "TERRAIN";		break;		
-		default:	$maptype = "ROADMAP";
-		}		// end switch()
 ?>
-		<SCRIPT TYPE="text/javascript" SRC="http://maps.google.com/maps/api/js?sensor=false"></SCRIPT>
-		<SCRIPT TYPE="text/javascript" SRC="./js/usng.js"></SCRIPT> 
-		<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-		<SCRIPT TYPE="text/javascript" SRC="./js/gmaps_v3_init.js"></SCRIPT>
-		<SCRIPT TYPE="text/javascript">
+		<script>
 //										some globals		
-		var map_obj = null;				// the map object - note GLOBAL
-		var myMarker;					// the marker object
-		var lat_var;					// see init.js
-		var lng_var;
-		var zoom_var;
+	var map = null;				// the map object - note GLOBAL
+	var myMarker;					// the marker object
+	var lat_var;					// see init.js
+	var lng_var;
+	var zoom;
+	var bounds;
+	
+	function do_point_stuff(lat, lng) {
+		if(myMarker) {map.removeLayer(myMarker);}			// destroy predecessor
+		lat_var = lat;
+		lng_var = lng;
+		do_lat (lat_var);
+		do_lng (lng_var);
+		do_grids(document.cen_Form);			// 9/16/08
 
-		function do_point_stuff(in_array) {
-			myMarker.setMap(null);			// 
-			lat_var = in_array[0].geometry.location.lat();
-			lng_var = in_array[0].geometry.location.lng();
-			do_lat (in_array[0].geometry.location.lat());
-			do_lng (in_array[0].geometry.location.lng());
-			do_grids(document.cen_Form);			// 9/16/08
+		var dp_latlng = new L.LatLng(lat_var, lng_var);
+		map.setView(dp_latlng, <?php echo get_variable('def_zoom'); ?>);		
 
-			var dp_latlng = new google.maps.LatLng(lat_var, lng_var);
-			map_obj.setCenter(dp_latlng, <?php echo get_variable('def_zoom'); ?>);		
-
-			var iconImg = new Image();														// obtain icon dimensions
-			iconImg.src ='./markers/crosshair.png';
-		    myIcon.anchor= new google.maps.Point(iconImg.width/2, iconImg.height/2);		// 8/11/12 - center offset = half icon width and height
-			myMarker = new google.maps.Marker({
-				position: dp_latlng,
-				icon: myIcon, 
-				draggable: true,
-				map: map_obj
-				});
-			myMarker.setMap(map_obj);		// add marker with icon
-			}				// end function do point stuff()
+		var iconurl = "./markers/crosshair.png";
+		icon = new baseIcon({iconUrl: iconurl});	
+		myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
+		}				// end function do point stuff()
 	
 	function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
 		var d = new Number(Math.abs(inval));
@@ -118,56 +102,60 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 	function usng_to_map(){			// usng to LL array			- 5/4/09
 		tolatlng = new Array();
 		USNGtoLL(document.cen_Form.frm_ngs.value, tolatlng);
-		var point = new google.maps.LatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
-
-		map.setCenter(point, <?php echo get_variable('def_zoom'); ?>);
-		var marker = new GMarker(point);
-		map.addOverlay(new GMarker(point, cross));
-		
-		do_lat (point.lat());
-		do_lng (point.lng());
+		var point = new L.LatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
+		var theLat = tolatlng[0].toFixed(6);
+		var theLng = tolatlng[1].toFixed(6)
+		map.setView([theLat, theLng], <?php echo get_variable('def_zoom'); ?>);
+		var iconurl = "./markers/crosshair.png";
+		icon = new baseIcon({iconUrl: iconurl});	
+		myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
+		do_lat (theLat);
+		do_lng (theLng);
 		}				// end function
 
 
-	function map_cen_reset() {	initialize(); }			// reset map center icon
+	function map_cen_reset() {	do_map(); }			// reset map center icon
 
 	var markersArray = [];
-	var geocoder = new google.maps.Geocoder();
 	
 	function addrlkup() {
-		var myAddress = document.forms[0].frm_city.value + " "  +document.forms[0].frm_st.value; 
-		geocoder.geocode( { 'address': myAddress}, function(results, status) {		
-			if (status == google.maps.GeocoderStatus.OK)	{ do_point_stuff (results)}					
-			else 											{ alert("Geocode lookup failed: " + status);}
-			});				// end geocoder.geocode()
-		}		// end function addr lkup()
-
-	function call_back (in_obj){				// callback function - called from gmaps_v3_init()
-		do_lat (in_obj.lat.toFixed(6));
-		do_lng (in_obj.lng.toFixed(6));
-		do_zoom (in_obj.zoom);	
-		do_grids(document.cen_Form);			// 9/16/08
-		var cbLatLng = new google.maps.LatLng(lat_var, lng_var);
-		map_obj.setCenter(cbLatLng);	// now center it		
-		}		
-		
-	var icon_file = "./markers/crosshair.png";
-
-	DomReady.ready(function() {										// instantiate the map and API
-		map_obj = gmaps_v3_init(call_back, 'map_canvas', 
-			<?php echo get_variable('def_lat');?>, 
-			<?php echo get_variable('def_lng');?>, 
-			<?php echo get_variable('def_zoom');?>, 
-			icon_file, 
-			<?php echo get_variable('maptype');?>, 
-			false);		
+		var myAddress = document.forms[0].frm_city.value.trim() + " " + document.forms[0].frm_st.value.trim();
+		control.options.geocoder.geocode(myAddress, function(results) {
+			var r = results[0]['center'];
+			var theLat = r.lat;
+			var theLng = r.lng;
+			do_point_stuff (theLat, theLng);
 			});
-
-//		alert("165 " + typeof map_obj);
-    </SCRIPT>
+		}				// end function addrlkup()
 		
-		</HEAD> 
-		<BODY onLoad = "ck_frames()" >  		<!-- <?php echo __LINE__;?> -->
+	function GetAddress(latlng) {
+		var popup = L.popup();	
+		control.options.geocoder.reverse(latlng, map.options.crs.scale(map.getZoom()), function(results) {
+			var r = results[0];
+			if (r) {
+				if(r.city) {
+					var theCity = r.city; 
+					} else if(r.town) { 
+					theCity = r.town;
+					} else {
+					theCity = "";
+					}
+	//			alert(r.house + ", " + r.road + ", " + r.village + ", " + r.town + ", " + r.city + ", " + r.county + ", " + r.postcode + ", " + r.country + ", " + r.country_code);
+				document.cen_Form.frm_city.value = theCity;
+				document.cen_Form.frm_st.value = r.state;
+				document.cen_Form.show_lat.value = latlng.lat; 
+				document.cen_Form.show_lng.value = latlng.lng; 
+				var theContent = r.name;	
+				popup
+					.setLatLng(latlng)
+					.setContent(theContent)
+					.openOn(map);
+				}
+			});
+		}
+
+
+    </SCRIPT>
 <?php
 		
 			$lat = get_variable('def_lat');
@@ -223,10 +211,61 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 				<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
 			</FORM></TABLE>
 			</TD><TD><DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
-			<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Drag/Zoom to new default position</SPAN></FONT></CENTER>
+			<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT></CENTER>
 			</TD></TR>
 			</TABLE>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
+<SCRIPT>
+			var baseIcon = L.Icon.extend({options: {iconSize: [32, 32],	iconAnchor: [16, 16], popupAnchor: [6, -5]
+				}
+				});
+			var iconurl = "./markers/crosshair.png";	
+			function do_map(lat, lng, zoom) {
+				var in_local_bool = 0;
+				var my_Path = "http://localhost/_osm/tiles/";
+				var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+				var	cmAttr = '';
+				var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
+				if(!map) { map = L.map('map_canvas',
+					{
+					maxZoom: 20,
+					zoom: zoom,
+					layers: [OSM],
+					zoomControl: false,
+					attributionControl: false,
+					},
+					geocoders = {
+						'Nominatim': L.Control.Geocoder.nominatim(),
+						'Bing': L.Control.Geocoder.bing('AoArA0sD6eBGZyt5PluxhuN7N7X1vloSEIhzaKVkBBGL37akEVbrr0wn17hoYAMy'),
+						'MapQuest': L.Control.Geocoder.mapQuest('Fmjtd%7Cluur2l6825%2Crn%3Do5-90125r')
+					},
+					control = new L.Control.Geocoder()
+					);
+					}	
+	
+				icon = new baseIcon({iconUrl: iconurl});	
+				myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);					
+				return map;
+				}
+				
+			function onMapClick(e) {
+				if(myMarker) {map.removeLayer(myMarker); }
+				icon = new baseIcon({iconUrl: iconurl});	
+				myMarker = new L.marker(e.latlng, {id:1, icon:icon});
+				myMarker.addTo(map);
+				GetAddress(e.latlng);
+				var zoom = map.getZoom();
+				document.cen_Form.frm_zoom.value = zoom;
+				};
+			
+			do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10);
+			map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 10);
+			map.on('click', onMapClick);
+			var bounds = map.getBounds();	
+			var zoom = map.getZoom();
+			
+
+</SCRIPT>
 			</BODY>
 			</HTML> <!-- <?php echo __LINE__;?>  -->
 <?php		

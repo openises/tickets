@@ -246,36 +246,49 @@ function get_bound_name($value) {
 	$bnd_name = $row['line_name'];
 	return $bnd_name;
 	}
+
+function test_boundary($id) {
+	$ret_val = true;
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`= " . $id;
+	$result = mysql_query($query);
+	if(!$result) {
+		$ret_val = false;
+		}
+	return $ret_val;
+	}
 	
 function get_sess_boundaries() {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	//	6/10/11
 	$result = mysql_query($query);	//	6/10/11
 	$a_all_boundaries = array();
 	$all_boundaries = array();
-	$al_groups = array();
-	if(isset($_SESSION['viewed_groups'])) {
+	$al_groups = $_SESSION['user_groups'];
+	if(array_key_exists('viewed_groups', $_SESSION)) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 		
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	6/10/11
-		$al_groups[] = $row['group'];
 		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	//	6/10/11
 		$result2 = mysql_query($query2);	// 4/18/11
 		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	//	//	6/10/11	
 			if($row2['boundary'] != 0) {
-				$a_all_boundaries[] = $row2['boundary'];
+				if(test_boundary($row2['boundary'])) {
+					$a_all_boundaries[] = $row2['boundary'];
+					}
 				}
+			}
 		}
-	}
 
-	if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
+	if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		foreach(explode(",",$_SESSION['viewed_groups']) as $val_vg) {
 			$query3 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$val_vg';";
 			$result3 = mysql_query($query3);	//	6/10/11		
 			while ($row3 = stripslashes_deep(mysql_fetch_assoc($result3))) 	{
-					if($row3['boundary'] != 0) {
+				if($row3['boundary'] != 0) {
+					if(test_boundary($row3['boundary'])) {
 						$all_boundaries[] = $row3['boundary'];
 						}
+					}
 				}
 			}
 		} else {
@@ -336,24 +349,22 @@ function get_bnd_session() {
 	$boundaries = array();
 	$boundaries = get_sess_boundaries();
 	$bnds_sess = array();
-	$bn=0;
 	if(!empty($boundaries)) {
 		foreach($boundaries as $key => $value) {	
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`='{$value}'";	
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id` = " . $value;
 			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
-			$boundary_names[$bn] = $row['line_name'];
-			$bn++;
+			if(mysql_num_rows($result) != 0) {
+				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				$boundary_names[$row['id']] = $row['line_name'];
+				}
 			}	
-		$i = 0;
 		foreach($boundary_names as $key => $value) {
 			$bnd_key = "show_hide_bnds_" . $value;
 			if(isset($_SESSION[$bnd_key])) {
-				$bnds_sess[$i] = ($_SESSION[$bnd_key]);
+				$bnds_sess[$key] = ($_SESSION[$bnd_key]);
 			} else {
-				$bnds_sess[$i] = "s";
+				$bnds_sess[$key] = "s";
 			}		
-			$i++;
 			}
 			return $bnds_sess;
 		} else {
@@ -362,16 +373,16 @@ function get_bnd_session() {
 	}	//	end function get_bnd_session()
 	
 function get_bnd_session_names() {
-	$bn=0;
 	$tmp = array();
 	$tmp = get_sess_boundaries();
 	if(!empty($tmp)) {
 		foreach($tmp as $key => $value) {	
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`='{$value}'";	
 			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
-			$boundary_names[$bn] = $row['line_name'];
-			$bn++;
+			if(mysql_num_rows($result) != 0) {
+				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				$boundary_names[$row['id']] = $row['line_name'];
+				}
 			}
 		return $boundary_names;
 		} else {
@@ -426,7 +437,7 @@ function get_fac_session_status() {
 		if(isset($_SESSION[$fac_cat_key])) {
 			$fac_category_stat[$i] = ($_SESSION[$fac_cat_key]);
 		} else {
-			$fac_category_stat[$i] = "h";
+			$fac_category_stat[$i] = "s";
 		}		
 		$i++;
 		}

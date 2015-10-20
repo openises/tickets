@@ -9,20 +9,21 @@
 12/18/10 set signals added
 3/15/11 changed stylesheet.php to stylesheet.php
 4/20/11 corrections re military time false
+10/24/13 Added Auto Dispatch status to close incident script
 */
 error_reporting(E_ALL);
 @session_start();
+session_write_close();
 require_once('incs/functions.inc.php');		//7/28/10
 
 if($istest) {
-//	dump(basename(__FILE__));
 	print "GET<br />\n";
 	dump($_GET);
 	print "POST<br />\n";
 	dump($_POST);
 	}
 $disposition = get_text("Disposition");				// 12/1/10
-
+$mode = (array_key_exists ("mode", $_GET)) ? array_key_exists ("mode", $_GET) : 0;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -57,29 +58,45 @@ if (empty($_POST)) { 		// pass # 1
 		}		// end if (empty($_POST))		
 		
 else {			// not empty then is finished
+	$mode = $_POST['frm_mode'];
 	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
 //	dump($quick);
 	if ($quick) {
 		do_is_finished();
+		if($mode == 0) {
+			
 ?>
-<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!');opener.location.href = 'main.php'; window.close();"> <!-- 4/5/10 -->
-</BODY></HTML>
+			<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!');opener.location.href = 'main.php'; window.close();"> <!-- 4/5/10 -->
+			</BODY></HTML>
 <?php
-		}
-	else{
+			} else {
 ?>
-<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
+			<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!'); opener.location.reload(); window.close();"> <!-- 4/5/10 -->
+			</BODY></HTML>
+<?php
+			}
+		} else {
+?>
+		<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
 <?php
 		$scope = do_is_finished();		// 2/15/10
+		if($mode == 0) {
 ?>
-<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
-<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.location.href = 'main.php'; window.close();">
-</BODY>
-</HTML>
-
+			<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
+			<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.do_incident_refresh(); window.close();">
+			</BODY>
+			</HTML>
 <?php
+			} else {
+?>
+			<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
+			<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.location.reload(); window.close();">
+			</BODY>
+			</HTML>
+<?php
+			}
 		}				 // end if/else quick
-	
+	exit();
 	}		// end if/else
 
 function do_is_closed() {
@@ -94,7 +111,7 @@ function do_is_closed() {
 	}				// end function do_is_closed()
 	
 function do_is_start($in_row) {				// 3/22/10
-	global $disposition;
+	global $disposition, $mode;
 ?>
 <SCRIPT>
 	String.prototype.trim = function () {
@@ -167,7 +184,7 @@ function do_is_start($in_row) {				// 3/22/10
 			
 			
 	<TR CLASS='even'><TD ALIGN='right' CLASS='td_label' ><?php print $disposition;?>:&nbsp;</TD>
-		<TD><TEXTAREA NAME='frm_disp' COLS=56 ROWS = 2><?php print $in_row['comments'];?></TEXTAREA>
+		<TD><TEXTAREA NAME='frm_disp' COLS=56 ROWS = 2><?php print str_replace("<BR />", "\n", $in_row['comments']);?></TEXTAREA>
 			</TD></TR>
 		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
 			<TD></TD><TD CLASS="td_label">Signal &raquo; 
@@ -236,6 +253,8 @@ function do_is_start($in_row) {				// 3/22/10
 	</TD></TR>
 	</TABLE>
 	<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print $_GET['ticket_id']; ?>' />
+	<INPUT TYPE = 'hidden' NAME = 'frm_scope' VALUE='<?php print $short_descr;?>' />
+	<INPUT TYPE = 'hidden' NAME = 'frm_mode' VALUE='<?php print $mode; ?>' />
 	</FORM>
 	</BODY>
 	</HTML>
@@ -243,6 +262,7 @@ function do_is_start($in_row) {				// 3/22/10
 	}		//end function do_is_start()
 
 	function do_is_finished(){
+		$use_status_update = get_variable("use_disp_autostat");		//	10/24/13
 		if (!get_variable('military_time'))	{			//put together date from the dropdown box and textbox values
 			if ((array_key_exists('frm_meridiem_problemstart', $_POST)) && ($_POST['frm_meridiem_problemstart'] == 'pm')){		// 4/20/11
 				$_POST['frm_hour_problemstart'] = ($_POST['frm_hour_problemstart'] + 12) % 24;
@@ -272,27 +292,46 @@ function do_is_start($in_row) {				// 3/22/10
 			WHERE `id` = {$the_id} LIMIT 1";
 			
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		
+		$query  = "UPDATE `$GLOBALS[mysql_prefix]allocates` SET `al_status` = 0, `al_as_of` = '{$now}' WHERE `type` = 1 AND `resource_id` = {$the_id}";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 										
 		foreach ($_POST as $VarName=>$VarValue) {			// set clear time each assign record - 8/10/10
-			if (substr($VarName, 0, 8) == "frm_ckbx" ) {			
-		
+			if (substr($VarName, 0, 8) == "frm_ckbx" ) {		
+				//	Get Responder ID for auto dispatch status
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `id` = {$VarValue} LIMIT 1";	//	10/24/13
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	//	10/24/13
+				$row = mysql_fetch_assoc($result);	//	10/24/13
+				$un_id = $row['responder_id'];	//	10/24/13
+				//	Clear assigns entry
 				$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET 
 					`clear` = '{$now}',
 					`as_of` = '{$now}'
 					WHERE `id` = {$VarValue} LIMIT 1;";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 				$work_ary = explode("_", $VarName);			// see checkbox name construct above
-				$assign_id = $work_ary[2];								
+				$assign_id = $work_ary[2];	
+				//	Do auto dispatch status if switched on.
+				if($use_status_update == "1") {	//	10/24/13
+					auto_disp_status(6, $un_id);
+					}					
 				do_log($GLOBALS['LOG_CALL_CLR'], $_POST['frm_ticket_id'], $assign_id);				// write log record					
 				}
 			}		// end foreach () ...
-		
 
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . quote_smart($_POST['frm_ticket_id'])  ." LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$row = mysql_fetch_assoc($result);
 
 		do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])	;
+		$addrs = notify_user($the_id, $GLOBALS['NOTIFY_TICKET_CHG']);		// returns array of adddr's for notification, or FALSE
+			// any addresses?	8/28/13
+		if ($addrs) {
+			$id = $_POST['frm_ticket_id'];
+			$theTo = implode("|", array_unique($addrs));
+			$theText = get_text("Incident") . " " . $row['scope'] . " has been closed";
+			mail_it ($theTo, "", $theText, $id, 1 );
+			}				// end if ($addrs)
 		unset($result);
 		return $row['scope'];				// 2/15/10
 

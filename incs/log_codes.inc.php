@@ -6,7 +6,7 @@
 5/25/11 intrusion detection added
 6/19/11 add LOG_CALL_EDIT
 3/11/12 add to_quarters
-3/22/12 add ICS message code
+4/7/2014 ICS message code revised
 */
 error_reporting(E_ALL);
 $patient = get_text("Patient");
@@ -31,6 +31,7 @@ $types = array();
 	$types[$GLOBALS['LOG_UNIT_COMPLETE']]					="{$unit} completed";
 	$types[$GLOBALS['LOG_UNIT_CHANGE']]						="{$unit} updated";
 	$types[$GLOBALS['LOG_UNIT_TO_QUARTERS']]				="{$unit} {$to_quarters}";		// 3/11/12
+	$types[$GLOBALS['LOG_UNIT_COMMENT']] 					="{$unit} comment";
 
 	$types[$GLOBALS['LOG_CALL_EDIT']]						="Call edit";					// 6/19/11
 	$types[$GLOBALS['LOG_CALL_DISP']]						="{$unit} dispatched";
@@ -60,7 +61,7 @@ $types = array();
 	$types[$GLOBALS['LOG_FACILITY_CLR']]					="{$facility} cleared";
 	$types[$GLOBALS['LOG_FACILITY_RESET']]					="{$facility} reset";
 
-	$types[$GLOBALS['LOG_ICS213_MESSAGE_SEND']]				="ICS213 message sent";				// 3/22/12
+	$types[$GLOBALS['LOG_ICS_MESSAGE_SEND']]				="ICS message sent";				// 4/7/2014
 	$types[$GLOBALS['LOG_ERROR']]							="Error";					
 	$types[$GLOBALS['LOG_INTRUSION']]						="Security alert: intrusion detected";				
 
@@ -71,5 +72,18 @@ $types = array();
 	$types[$GLOBALS['LOG_EMAIL_CONNECT']]					="Email Connection Error";
 	$types[$GLOBALS['LOG_EMAIL_SEND']]						="Email Send Error";
 	$types[$GLOBALS['LOG_EMAIL_RECEIVE']]					="Email Receive Error";
+	
+	$types[$GLOBALS['LOG_NEW_REQUEST']]						="New Request from Portal";				// 10/24/13
+	$types[$GLOBALS['LOG_EDIT_REQUEST']]					="Edited Portal Request";				// 10/24/13
+	$types[$GLOBALS['LOG_CANCEL_REQUEST']]					="Cancelled Request from Portal";		// 10/24/13
+	$types[$GLOBALS['LOG_ACCEPT_REQUEST']]					="Portal Request accepted";				// 10/24/13
+	$types[$GLOBALS['LOG_TENTATIVE_REQUEST']]				="Portal Request Tenatively accepted";	// 10/24/13
+	$types[$GLOBALS['LOG_DECLINE_REQUEST']]					="Portal Request Declined";				// 10/24/13
+
+	$types[$GLOBALS['LOG_WARNLOCATION_ADD']]				="Location Warning Added";				// 10/24/13
+	$types[$GLOBALS['LOG_WARNLOCATION_CHANGE']]				="Location Warning Changed";			// 10/24/13
+	$types[$GLOBALS['LOG_WARNLOCATION_DELETE']]				="Location Warning Deleted";			// 10/24/13
+	
+	$types[$GLOBALS['LOG_SPURIOUS']]						="Logged incorrectly - Ignore";			//	10/24/13
 
 ?>

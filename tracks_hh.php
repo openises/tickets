@@ -20,7 +20,7 @@
 */
 
 @session_start();
-@session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
@@ -556,8 +556,15 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 		}
 ?>	
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
-	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-
+<?php
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		} else {
+		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		}
+?>
+	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 <?php
 	print "<SCRIPT>\n";
 	print "var user = '";

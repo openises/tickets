@@ -26,6 +26,9 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
 			`r`.`state` AS `state`,
 			`r`.`the_name` AS `customer`,
 			`r`.`phone` AS `phone`,
+			`r`.`to_address` AS `to_address`,
+			`r`.`pickup` AS `pickup`,
+			`r`.`arrival` AS `arrival`,
 			`r`.`rec_facility` AS `rec_facility`,
 			`r`.`scope` AS `title`,
 			`r`.`description` AS `description`,
@@ -58,10 +61,17 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
 		$output[$z][] = $row['city'];
 		$output[$z][] = $row['state'];		
 		$output[$z][] = $row['phone'];
+		$theToAddress = explode(',',$row['to_address']);
+		if($theToAddress[0] == "") {
+			$output[$z][] = "";
+			} else {
+			$output[$z][] = $row['to_address'];
+			}
+		$output[$z][] = ($row['pickup'] != 0) ? $row['pickup']: "";	
+		$output[$z][] = ($row['arrival'] != 0) ? $row['arrival']: "";	
 		$output[$z][] = ($row['rec_facility'] != 0) ? get_facilityname($row['rec_facility']): "Not Set";	
 		$output[$z][] = $row['title'];
 		$output[$z][] = $row['description'];	
-		$output[$z][] = $row['comments'];	
 		$output[$z][] = $row['status'];	
 		$output[$z][] = format_date($row['request_date']);		
 		$output[$z][] = format_date($row['accepted_date']);	
@@ -74,7 +84,7 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
 	$fields_cnt = count($output[1]);
 	$rows_cnt = count($output);
 	
-	$headers = array('Customer','Street','City','State','Phone','Receiving Facility','Title','Description','Comments','Status','Request Date','Accepted Date','Declined Date','Resourced Date','Completed Date','Closed Date');
+	$headers = array('Customer','Street','City','State','Phone','To Address','Pickup Time','Arrival Time','Receiving Facility','Title','Description','Status','Request Date','Accepted Date','Declined Date','Resourced Date','Completed Date','Closed Date');
 	
 	$headers_cnt = count($headers);
  

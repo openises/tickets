@@ -11,11 +11,11 @@ $units_side_bar_height = .6;		// max height of units sidebar as decimal fraction
 
 require_once('./incs/functions.inc.php');
 require_once($_SESSION['fmp']);		//8/25/10
-
+$locale = get_variable('locale');
+$routesUnits = (($locale == 0) || ($locale == 1)) ? 'imperial' : 'metric';
 $sidebar_width = round( .5 * $_SESSION['scr_width']);		// pixels - 3/6/11
 
 $from_top = 50;				// buttons alignment, user-reviseable as needed
-//$from_left =  $sidebar_width + (get_variable('map_width')/2);
 $from_left =  intval(floor( 0.4 * $_SESSION['scr_width']));		// 5/22/11
 
 
@@ -89,10 +89,12 @@ $show_tick_left = FALSE;	// controls left-side vs. right-side appearance of inci
 3/13/12 corrected log record written re dispatch
 6/20/12 applied get_text() to "Units"
 3/29/2013 conform to 20C
+12/13/2013 correction to drawCirle
 */
 
 do_login(basename(__FILE__));		// 
 if ((isset($_REQUEST['ticket_id'])) && (!(strval(intval($_REQUEST['ticket_id']))===$_REQUEST['ticket_id']))) {	shut_down();}	// 5/28/11
+
 //$istest = TRUE;
 if($istest) {
 	print "GET<br />\n";
@@ -118,6 +120,8 @@ function get_ticket_id () {				// 5/4/11
 
 $_GET = stripslashes_deep($_GET);
 $eol = "< br />\n";
+$the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
+$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
@@ -153,6 +157,13 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/> 
 	
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+	<!--[if lte IE 8]>
+		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+	<![endif]-->
+    <link rel="stylesheet" href=".js/leaflet/leaflet-routing-machine.css" />
+	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
+	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
     <STYLE TYPE="text/css">
 		body 				{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
 		table 				{border-collapse: collapse; }
@@ -174,8 +185,8 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		.bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
 		.content { padding: 1em; text-align: center; }		
 	</STYLE>
-
-<SCRIPT>
+	<SCRIPT SRC="./js/misc_functions.js"></SCRIPT>
+	<SCRIPT>
 	try {	
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
@@ -183,26 +194,6 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		}
 	catch(e) {
 		}
-	
-	function syncAjax(strURL) {							// synchronous ajax function
-		if (window.XMLHttpRequest) {						 
-			AJAX=new XMLHttpRequest();						 
-			} 
-		else {																 
-			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
-			}
-		if (AJAX) {
-			AJAX.open("GET", strURL, false);														 
-			AJAX.send(null);							// form name
-//			alert ("332 " + AJAX.responseText);
-			return AJAX.responseText;																				 
-			} 
-		else {
-//			alert ("158: failed");
-			alert("failed at line <?php print __LINE__;?>");
-			return false;
-			}																						 
-		}		// end function sync Ajax(strURL)
 
 	function get_new_colors() {								// 5/4/11
 		window.location.href = '<?php print basename(__FILE__);?>';
@@ -217,6 +208,8 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	function isNull(arg) {
 		return arg===null;
 		}
+		
+	var routesUnits = '<?php print $routesUnits;?>';
 
 	function $() {									// 2/11/09
 		var elements = new Array();
@@ -249,125 +242,10 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
 
-	function drawCircle(lat, lng, radius, strokeColor, strokeWidth, strokeOpacity, fillColor, fillOpacity) {		// 8/19/09
-
-		var circle = new google.maps.Circle({
-				center: new google.maps.LatLng(lat,lng),
-				map: map,
-				fillColor: fillColor,
-				fillOpacity: fillOpacity,
-				strokeColor: strokeColor,
-				strokeOpacity: strokeOpacity,
-				strokeWeight: strokeWidth
-			});
-		circle.setRadius(radius*5000); 
-
-		}		// end drawCircle 
-		
-	function drawBanner(point, html, text, font_size, color, name) {        // Create the banner - 6/5/2013
-		var invisibleIcon = new google.maps.MarkerImage("./markers/markerTransparent.png");
-		map.setCenter(point, 8);
-		var the_color = (typeof color == 'undefined')? "#000000" : color ;	// default to black
-		var label = new ELabel({
-			latlng: point, 
-			label: html, 
-			classname: "label", 
-			offset: new google.maps.Size(-8, 4), 
-			opacity: 100,
-			theSize: font_size + "px",		
-			theColor:add_hash(the_color),
-			overlap: true,
-			clicktarget: false
-			});	
-		label.setMap(map);		
-		var marker = new google.maps.Marker(point,invisibleIcon);	        // Create an invisible google.maps.Marker
-		marker.setMap(map);				
-		}				// end function draw Banner()
-
 	function add_hash(in_str) { // prepend # if absent
 		return (in_str.substr(0,1)=="#")? in_str : "#" + in_str;
 		}			
 			
-//	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND (`use_with_bm` = 1 OR `use_with_r` = 1)";
-
-	function do_landb() {				// JS function - 8/1/11
-//		alert(347);
-		var points = new Array();
-<?php
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND (`use_with_bm` = 1 OR `use_with_r` = 1)";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
-			$empty = FALSE;
-			extract ($row);
-			$name = $row['line_name'];
-			switch ($row['line_type']) {
-				case "p":				// poly
-					$points = explode (";", $line_data);
-
-					$sep = "";
-					echo "\n\t var points = [\n";
-					for ($i = 0; $i<count($points); $i++) {
-						$coords = explode (",", $points[$i]);
-						echo	"{$sep}\n\t\tnew google.maps.LatLng({$coords[0]}, {$coords[1]})";
-						$sep = ",";					
-						}			// end for ($i = 0 ... )
-					echo "];\n";
-
-			 	if ((intval($filled) == 1) && (count($points) > 2)) {
-?>
-//					446
-					  polyline = new google.maps.Polygon({
-					    paths: 			 points,
-					    strokeColor: 	 add_hash("<?php echo $line_color;?>"),
-					    strokeOpacity: 	 <?php echo $line_opacity;?>,
-					    strokeWeight: 	 <?php echo $line_width;?>,
-					    fillColor: 		 add_hash("<?php echo $fill_color;?>"),
-					    fillOpacity: 	 <?php echo $fill_opacity;?>
-						});
-
-<?php			} else {
-?>
-//					457
-//				    var polyline = new google.maps.Polyline(points, add_hash("<?php print $line_color;?>"), <?php print $line_width;?>, <?php print $line_opacity;?>);
-					  polyline = new google.maps.Polygon({
-					    paths: 			points,
-					    strokeColor: 	add_hash("<?php echo $line_color;?>"),
-					    strokeOpacity: 	<?php echo $line_opacity;?>,
-					    strokeWeight: 	<?php echo $line_width;?>,
-					    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-					    fillOpacity: 	<?php echo $fill_opacity;?>
-						});
-<?php			} ?>				        
-					polyline.setMap(map);		
-<?php				
-					break;
-			
-				case "c":		// circle
-					$temp = explode (";", $line_data);
-					$radius = $temp[1];
-					$coords = explode (",", $temp[0]);
-					$lat = $coords[0];
-					$lng = $coords[1];
-					$fill_opacity = (intval($filled) == 0)?  0 : $fill_opacity;
-					
-					echo "\n drawCircle({$lat}, {$lng}, {$radius}, add_hash('{$line_color}'), {$line_width}, {$line_opacity}, add_hash('{$fill_color}'), {$fill_opacity}, {$name}); // 513\n";
-					break;
-				case "t":		// text banner
-
-					$temp = explode (";", $line_data);
-					$banner = $temp[1];
-					$coords = explode (",", $temp[0]);
-					echo "\n var point = new google.maps.LatLng(parseFloat({$coords[0]}) , parseFloat({$coords[1]}));\n";
-					$the_banner = htmlentities($banner, ENT_QUOTES);
-					$the_width = intval( trim($line_width), 10);		// font size
-					echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width}, add_hash('{$line_color}'));\n";
-					break;
-				}	// end switch
-		}			// end while ()
-		unset($query, $result);
-?>
-		}		// end function do landb()
-
 	var to_visible = "visible";
 	var to_hidden = "hidden";
 	function show_butts(strValue) {								// 3/15/11
@@ -571,7 +449,13 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 //										remove placeholder inserted by 'add'		
 		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-
+		
+							//	Automatic Status Update by Dispatch Status
+		$use_status_update = get_variable('use_disp_autostat');		//	9/10/13
+		if($use_status_update == "1") {		//	9/10/13
+			auto_disp_status(1, $assigns[$i]);
+			}
+		
 							// apply status update to unit status
 
 		$query = "SELECT `id`, `contact_via`, `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";		// 10/7/08
@@ -594,7 +478,6 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -713,20 +596,40 @@ else {
 	require_once ('./incs/routes_inc.php');		// 7/8/10
 
 	$the_ticket_id = get_ticket_id ();
-	$api_key = trim(get_variable('gmaps_api_key'));
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 ?>
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>sensor=false"></SCRIPT>
-
-<SCRIPT SRC="./js/usng.js"></SCRIPT>		<!-- 10/14/08 -->
-<SCRIPT SRC="./js/graticule_V3.js"></SCRIPT>
-<SCRIPT SRC="./js/elabel_v3.js" TYPE="text/javascript"></SCRIPT><!-- 8/1/11 -->	
-<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></script>	<!-- 1/29/2013 -->
-<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>
-
+	<SCRIPT SRC="./js/usng.js"></SCRIPT>		<!-- 10/14/08 -->
+	<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+	<script src="./js/proj4js.js"></script>
+	<script src="./js/proj4-compressed.js"></script>
+	<script src="./js/leaflet/leaflet.js"></script>
+	<script src="./js/leaflet/leaflet-routing-machine.js"></script>
+	<script src="./js/proj4leaflet.js"></script>
+	<script src="./js/leaflet/KML.js"></script>
+	<script src="./js/leaflet/gpx.js"></script>
+	<script src="./js/leaflet-openweathermap.js"></script>
+	<script src="./js/esri-leaflet.js"></script>
+	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/Control.Geocoder.js"></script>
+	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+	<script src="./js/Google.js"></script>
+	<SCRIPT SRC="./js/misc_functions.js"></SCRIPT>
+	<script type="text/javascript" src="./js/L.Graticule.js"></script>
+	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
-
-
+	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
+		iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
+		}
+		});
+	var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
+		}
+		});
+	var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
+		}
+		});
+	var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
+		}
+		});	
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
@@ -837,8 +740,8 @@ function doReset() {
 	
 //										8/10/09, 10/6/09, 1/7/10, 8/9/10
 	$query = "SELECT *,
-		UNIX_TIMESTAMP(problemstart) AS problemstart,
-		UNIX_TIMESTAMP(problemend) AS problemend,
+		`problemstart` AS `problemstart`,
+		`problemend` AS `problemend`,
 		UNIX_TIMESTAMP(booked_date) AS booked_date,		
 		UNIX_TIMESTAMP(date) AS date,
 		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`updated`) AS updated,
@@ -887,141 +790,140 @@ function doReset() {
 	if(empty($_SESSION)) {session_start();}		// 
 
 ?>
-var the_position;
-function get_position () {
-	var myDiv = document.getElementById('side_bar');
-	var side_bar_width = myDiv.offsetWidth; 		
-	var myDiv = document.getElementById('map_canvas');
-	var map_width = myDiv.offsetWidth; 		
-	the_position = side_bar_width + map_width + 10;
-	}
-
-
-function filterSubmit() {		//	11/18/10
-	document.filter_Form.submit();
-	}
-
-function filterReset() {		//	11/18/10
-	document.filter_Form.capabilities.value="";
-	document.filter_Form.submit();
-	}
-
-function checkArray(form, arrayName)	{	//	5/3/11
-	var retval = new Array();
-	for(var i=0; i < form.elements.length; i++) {
-		var el = form.elements[i];
-		if(el.type == "checkbox" && el.name == arrayName && el.checked) {
-			retval.push(el.value);
+	var the_position;
+	function get_position () {
+		var myDiv = document.getElementById('side_bar');
+		var side_bar_width = myDiv.offsetWidth; 		
+		var myDiv = document.getElementById('map_canvas');
+		var map_width = myDiv.offsetWidth; 		
+		the_position = side_bar_width + map_width + 10;
 		}
-	}
-return retval;
-}	
-	
-function checkForm(form)	{	//	6/10/11
-	var errmsg="";
-	var itemsChecked = checkArray(form, "frm_group[]");
-	if(itemsChecked.length > 0) {
-		var params = "f_n=viewed_groups&v_n=" +itemsChecked+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
-		var url = "persist3.php";	//	3/15/11	
-		sendRequest (url, fvg_handleResult, params);				
-//			form.submit();
-	} else {
-		errmsg+= "\tYou cannot Hide all the regions\n";
-		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
-			return false;
+
+
+	function filterSubmit() {		//	11/18/10
+		document.filter_Form.submit();
 		}
-	}
-}
 
-function fvg_handleResult(req) {	// 6/10/11	The persist callback function for viewed groups.
-	document.region_form.submit();
-	}
-	
-function form_validate(theForm) {	//	6/10/11
-//		alert("Validating");
-	checkForm(theForm);
-	}				// end function validate(theForm)
+	function filterReset() {		//	11/18/10
+		document.filter_Form.capabilities.value="";
+		document.filter_Form.submit();
+		}
 
-function sendRequest(url,callback,postData) {	//	6/10/11
-	var req = createXMLHTTPObject();
-	if (!req) return;
-	var method = (postData) ? "POST" : "GET";
-	req.open(method,url,true);
-	req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-	if (postData)
-		req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-	req.onreadystatechange = function () {
-		if (req.readyState != 4) return;
-		if (req.status != 200 && req.status != 304) {
-			return;
+	function checkArray(form, arrayName)	{	//	5/3/11
+		var retval = new Array();
+		for(var i=0; i < form.elements.length; i++) {
+			var el = form.elements[i];
+			if(el.type == "checkbox" && el.name == arrayName && el.checked) {
+				retval.push(el.value);
 			}
-		callback(req);
 		}
-	if (req.readyState == 4) return;
-	req.send(postData);
-	}
-
-var XMLHttpFactories = [
-	function () {return new XMLHttpRequest()	},
-	function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-	function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-	function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-	];
-
-function createXMLHTTPObject() {
-	var xmlhttp = false;
-	for (var i=0;i<XMLHttpFactories.length;i++) {
-		try {
-			xmlhttp = XMLHttpFactories[i]();
-			}
-		catch (e) {
-			continue;
-			}
-		break;
-		}
-	return xmlhttp;
+	return retval;
 	}	
-
-function toggle_div(theDiv, theButton, theText) {
-	if($(theDiv).style.display == 'block') {
-			$(theDiv).style.display = 'none';
-			$(theButton).innerHTML = "Show " + theText; 
+		
+	function checkForm(form)	{	//	6/10/11
+		var errmsg="";
+		var itemsChecked = checkArray(form, "frm_group[]");
+		if(itemsChecked.length > 0) {
+			var params = "f_n=viewed_groups&v_n=" +itemsChecked+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
+			var url = "persist3.php";	//	3/15/11	
+			sendRequest (url, fvg_handleResult, params);				
+	//			form.submit();
 		} else {
-		if(theButton == "toggle_dirs") {
-			$('the_ticket').style.display = 'none';
-			$('disp_details').style.display = 'none';	
-			$('the_messages').style.display = 'none';				
-			$('toggle_tkt').innerHTML = "Show Ticket";	
-			$('toggle_dispatch').innerHTML = "Show Disp Details";
-			$('toggle_msgs').innerHTML = "Show Messages";			
-			} else if(theButton == "toggle_tkt") {
-			$('directions').style.display = 'none';
-			$('disp_details').style.display = 'none';
-			$('the_messages').style.display = 'none';				
-			$('toggle_dirs').innerHTML = "Show Directions";	
-			$('toggle_dispatch').innerHTML = "Show Disp Details";
-			$('toggle_msgs').innerHTML = "Show Messages";				
-			} else if(theButton == "toggle_dispatch") {
-			$('directions').style.display = 'none';
-			$('disp_details').style.display = 'none';	
-			$('the_messages').style.display = 'none';	
-			$('toggle_dirs').innerHTML = "Show Directions";	
-			$('toggle_dispatch').innerHTML = "Show Disp Details";
-			$('toggle_msgs').innerHTML = "Show Messages";				
-			} else if(theButton == "toggle_msgs") {
-			$('the_ticket').style.display = 'none';			
-			$('directions').style.display = 'none';
-			$('disp_details').style.display = 'none';	
-			$('toggle_tkt').innerHTML = "Show Ticket";				
-			$('toggle_dirs').innerHTML = "Show Directions";	
-			$('toggle_dispatch').innerHTML = "Show Disp Details";
+			errmsg+= "\tYou cannot Hide all the regions\n";
+			if (errmsg!="") {
+				alert ("Please correct the following and re-submit:\n\n" + errmsg);
+				return false;
 			}
-		$(theButton).innerHTML = "Hide " + theText;				
-		$(theDiv).style.display = 'block';
-		$(theButton).innerHTML = "Hide " + theText;
 		}
 	}
+
+	function fvg_handleResult(req) {	// 6/10/11	The persist callback function for viewed groups.
+		document.region_form.submit();
+		}
+		
+	function form_validate(theForm) {	//	6/10/11
+	//		alert("Validating");
+		checkForm(theForm);
+		}				// end function validate(theForm)
+
+	function sendRequest(url,callback,postData) {	//	6/10/11
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}	
+
+	function toggle_div(theDiv, theButton, theText) {
+		if($(theDiv).style.display == 'block') {
+				$(theDiv).style.display = 'none';
+				$(theButton).innerHTML = "Show " + theText; 
+			} else {
+			if(theButton == "toggle_dirs") {
+				$('the_ticket').style.display = 'none';
+				$('disp_details').style.display = 'none';	
+				$('the_messages').style.display = 'none';				
+				$('toggle_tkt').innerHTML = "Show Ticket";	
+				$('toggle_dispatch').innerHTML = "Show Disp Details";
+				$('toggle_msgs').innerHTML = "Show Messages";			
+				} else if(theButton == "toggle_tkt") {
+				$('directions').style.display = 'none';
+				$('disp_details').style.display = 'none';
+				$('the_messages').style.display = 'none';				
+				$('toggle_dirs').innerHTML = "Show Directions";	
+				$('toggle_dispatch').innerHTML = "Show Disp Details";
+				$('toggle_msgs').innerHTML = "Show Messages";				
+				} else if(theButton == "toggle_dispatch") {
+				$('directions').style.display = 'none';
+				$('disp_details').style.display = 'none';	
+				$('the_messages').style.display = 'none';	
+				$('toggle_dirs').innerHTML = "Show Directions";	
+				$('toggle_dispatch').innerHTML = "Show Disp Details";
+				$('toggle_msgs').innerHTML = "Show Messages";				
+				} else if(theButton == "toggle_msgs") {
+				$('the_ticket').style.display = 'none';			
+				$('directions').style.display = 'none';
+				$('disp_details').style.display = 'none';	
+				$('toggle_tkt').innerHTML = "Show Ticket";				
+				$('toggle_dirs').innerHTML = "Show Directions";	
+				$('toggle_dispatch').innerHTML = "Show Disp Details";
+				}
+			$(theButton).innerHTML = "Hide " + theText;				
+			$(theDiv).style.display = 'block';
+			$(theButton).innerHTML = "Hide " + theText;
+			}
+		}
 		
 
 </SCRIPT>
@@ -1073,37 +975,22 @@ function toggle_div(theDiv, theButton, theText) {
 		}
 ?>
 		</TD>
-		<TD VALIGN="top" ALIGN='center'>
-			<DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset; display: inline-block;'></DIV>
-			<span id='toggle_dirs' class='plain' style='position: fixed; top: 0px; right: 0px; width: 100px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('directions', 'toggle_dirs', 'Directions')">Show Directions</span><BR />
-			<span id='toggle_tkt' class='plain' style='position: fixed; top: 25px; right: 0px; width: 100px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_ticket', 'toggle_tkt', 'Ticket')">Show Ticket</span><BR />
-			<span id='toggle_msgs' class='plain' style='position: fixed; top: 50px; right: 0px; width: 100px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_messages', 'toggle_msgs', 'Messages')">Show Messages</span><BR />
-			<span id='toggle_dispatch' class='plain' style='position: fixed; top: 75px; right: 0px; width: 100px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('disp_details', 'toggle_dispatch', 'Disp details')">Show Disp Details</span><BR />
-			<DIV ID="directions" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width') * .35;?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: auto; overflow-x: auto;"></DIV>
-			<DIV ID="disp_details" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll;">
-			<?php print do_ticket_extras($row_ticket, $the_width, FALSE, FALSE);?>
+		<TD VALIGN="top">
+			<DIV ID='map_canvas' style='border-style: outset; display: inline-block; z-index: 1;'></DIV>
+			<span id='toggle_dirs' class='plain' style='position: fixed; top: 0px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('directions', 'toggle_dirs', 'Directions')">Show Directions</span><BR />
+			<span id='toggle_tkt' class='plain' style='position: fixed; top: 25px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_ticket', 'toggle_tkt', 'Ticket')">Show Ticket</span><BR />
+			<span id='toggle_msgs' class='plain' style='position: fixed; top: 50px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_messages', 'toggle_msgs', 'Messages')">Show Messages</span><BR />
+			<span id='toggle_dispatch' class='plain' style='position: fixed; top: 75px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('disp_details', 'toggle_dispatch', 'Disp details')">Show Disp Details</span><BR />
+			<DIV ID="directions" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width') * .50;?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: auto; overflow-x: auto; z-index: 9999;">No Directions Available</DIV>
+			<DIV ID="disp_details" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; z-index: 9999;">
+				<?php print do_ticket_extras($row_ticket, $the_width, FALSE, FALSE);?>
 			</DIV>
-			<DIV ID="the_messages" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden;">
-			<?php print	do_ticket_messages($row_ticket, $the_width, FALSE, FALSE);?>
+			<DIV ID="the_messages" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden; z-index: 9999;">
+				<?php print	do_ticket_messages($row_ticket, $the_width, FALSE, FALSE);?>
 			</DIV>			
 			<BR />
-			<SPAN CLASS = "span_link" onClick ='toglGrid()'>Grid</SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
-			<SPAN CLASS = "span_link" onClick ='doTraffic()'>Traffic</SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
-			<SPAN CLASS = "span_link" onClick = "sv_win('<?php print $row_ticket['lat'];?>','<?php print $row_ticket['lng'];?>' );">Street view</SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <!-- 8/17/09, 3/15/11 -->
-			<SPAN CLASS = "warn" ID = "loading_2">Loading Directions, Please wait........</SPAN>
-			<SPAN CLASS = "even" ID = "directions_ok_no">&nbsp;
-			<SPAN CLASS = "other_1">Directions&nbsp;&raquo;</SPAN>
-			<SPAN CLASS = "other_2">
-<?php
-		$checked_ok = ($_SESSION['allow_dirs'] =='true')? " CHECKED ": "";
-		$checked_no = ($_SESSION['allow_dirs'] =='true')? "": " CHECKED ";
-?>
-				OK: <INPUT TYPE='radio' name='frm_dir' VALUE = true  <?php print $checked_ok; ?> onClick = "docheck(this.value);" />&nbsp;&nbsp;
-				No: <INPUT TYPE='radio' name='frm_dir' VALUE = false <?php print $checked_no; ?> onClick = "docheck(this.value);" /></SPAN>
-				&nbsp;</SPAN>
 			<BR />
-			<BR />
-			<SPAN CLASS="legend" STYLE="text-align: center; vertical-align: middle;"><?php print get_text("Units");?> Legend:</SPAN><BR /><BR /><DIV CLASS="legend" ALIGN='center' VALIGN='middle' style='padding: 20px; text-align: center; vertical-align: middle; width: <?php print get_variable('map_width');?>px;'>	<!-- 3/15/11 -->
+			<DIV CLASS="legend" STYLE="text-align: center; vertical-align: middle;"><?php print get_text("Units");?> Legend:</DIV><BR /><BR /><DIV CLASS="legend" ALIGN='center' VALIGN='middle' style='padding: 20px; text-align: center; vertical-align: middle; width: <?php print get_variable('map_width');?>px;'>	<!-- 3/15/11 -->
 <?php
 		print get_icon_legend ();
 ?>
@@ -1112,7 +999,7 @@ function toggle_div(theDiv, theButton, theText) {
 			<BR /><BR />
 <?php
 	if (!($show_tick_left)) {				// 11/27/09
-		print "\n<DIV ID='the_ticket' STYLE=\"position: fixed; top: 125px; right: 0px; width: " . get_variable('map_width') . "px; height: " . get_variable('map_height') . "px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden;\">\n";	
+		print "\n<DIV ID='the_ticket' STYLE=\"position: fixed; top: 125px; right: 0px; width: " . get_variable('map_width') . "px; height: " . get_variable('map_height') . "px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden; z-index: 9999;\">\n";	
 		print do_ticket_only($row_ticket, $the_width, FALSE, FALSE); 
 		print "\n</DIV>\n";		
 		}
@@ -1157,33 +1044,28 @@ function toggle_div(theDiv, theButton, theText) {
 			$nr_units = 1;
 			$addr = get_addr();
 ?>
-		<div id='boxB' class='box' style='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed;' > <!-- 9/23/10 -->
-		<div class="bar" STYLE="width:12em; color:red; background-color : transparent; text-align: center "
+		<div id='boxB' class='box' style='left:<?php print $from_left;?>px; top:<?php print $from_top;?>px; position:fixed; background-color : rgba(0, 0, 0, 0.2);' > <!-- 9/23/10 -->
+		<div class="bar" STYLE="color:red; background-color: #FFFFFF; text-align: center "
 			 onmousedown="dragStart(event, 'boxB')"><I>Drag me</I></div><!-- drag bar - 2/5/11 -->
 		<div style = "margin-top:10px;">
-		<IMG SRC="markers/down.png" BORDER=0  onclick = "location.href = '#page_bottom';" STYLE = 'margin-left:2px;' />		
-		<IMG SRC="markers/up.png" BORDER=0  onclick = "location.href = '#page_top';" STYLE = 'margin-left:40px;'/><br />
 		</div>
-		 <div style = 'height:10px;'/>&nbsp;</div>
-			 
-
 <?php
 			print "<SPAN ID='mail_button' STYLE='display: none'>";	//10/6/09
 			print "<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);'>";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />";	//10/6/09
 			print "<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />";	//10/6/09
+			print "<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />";	//10/6/09
 			print "<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident' />";	//10/6/09
 			print "<INPUT TYPE='hidden' NAME='frm_scope' VALUE='' />"; // 10/29/09
 			print "<INPUT TYPE='hidden' NAME='frm_tick_id' VALUE='" . get_ticket_id() . "' />"; // 3/29/2013	
 			print "<INPUT TYPE='submit' value='Mail Direcs' ID = 'mail_dir_but' STYLE = 'visibility: hidden;' />";	//10/6/09
 			print "</FORM>";	
 			print "<INPUT TYPE='button' VALUE='Reset' onClick = 'show_butts(to_hidden) ; doReset()' ID = 'reset_but' STYLE = 'visibility: hidden;'  />";
-			print "</SPAN>";			
+			print "</SPAN>";
 			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'  ID = 'can_but'  STYLE = 'visibility: hidden;' />";
 			if ($nr_units>0) {			
 				print "<BR /><INPUT TYPE='button' value='DISPATCH\nUNITS' onClick = '" . $thefunc . "' ID = 'disp_but'  STYLE = 'visibility: hidden;' />\n";	// 6/14/09
 				}
-			print "<BR /><BR /><SPAN STYLE='display: 'inline-block' class='normal_text'><NOBR><H3>to:<BR /><I>{$addr}</I></H3></NOBR></SPAN>\n";
+			print "<BR /><BR /><SPAN STYLE='display: inline-block; padding: 15px;' class='normal_text'><H3>to:<BR /><SPAN style='width: 200px; height: 200px;'><I>{$addr}</I></DIV></H3></SPAN>\n";
 ?>
 		</div>	 <!-- end of outer -->
 <?php
@@ -1199,40 +1081,62 @@ function toggle_div(theDiv, theButton, theText) {
 		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
 		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
-		$result = mysql_query($query);	// 4/13/11
-		$al_groups = array();
-		$al_names = "";	
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
-			$al_groups[] = $row['group'];
-			if(!(is_super())) {
-				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
-				$result2 = mysql_query($query2);	// 4/13/11
-				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
-					$al_names .= $row2['group_name'] . ", ";
-					}
-				} else {
-					$al_names = "ALL. Superadmin Level";
-				}
-			}
+		$al_groups = $_SESSION['user_groups'];
 ?>				
 		<A NAME="page_bottom" /> <!-- 5/13/10 -->	
 		<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
 		<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print get_ticket_id (); ?>' />	<!-- 10/25/08 -->
 		</FORM>
+		
+<SCRIPT>
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	var map;				// make globally visible
+	var minimap;
+	var thelevel = '<?php print $the_level;?>';
+	var tmarkers =  new Array();	//	Incident markers array
+	var rmarkers = new Array();			//	Responder Markers array
+	var fmarkers = new Array();			//	Facility markers array
+	var cmarkers = new Array();			//	conditions markers array
+	var rss_markers = new Array();		//	RSS markers array
+
+	var latLng;
+	var in_local_bool = "0";
+	var mapWidth = viewportwidth * .45;
+	var mapHeight = viewportheight * .75;
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	var theLocale = <?php print get_variable('locale');?>;
+	var useOSMAP = <?php print get_variable('use_osmap');?>;
+	init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "br");
+	map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+	var bounds = map.getBounds();	
+	var zoom = map.getZoom();
+	var got_points = false;	// map is empty of points
+</SCRIPT>
+		
 	</BODY>
 
 <?php
 			if ($addrs) {				// 10/21/08
 ?>			
 <SCRIPT>
+
+
+			
 	function do_notify() {
 //		alert(352);
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "ATTENTION - New Ticket: ";
 		var theId = '<?php print get_ticket_id ();?>';
-		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
 		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
 		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 		}			// end function do notify()
@@ -1245,7 +1149,6 @@ function toggle_div(theDiv, theButton, theText) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

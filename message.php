@@ -1,6 +1,7 @@
 <?php 
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');
 require_once('./incs/messaging.inc.php');
 $nature = get_text("Nature");
@@ -72,7 +73,6 @@ foreach($the_contacts as $val) {
 	$z++;
 	}
 $the_addressbook .= "</SELECT>";
-$folder = strip_tags($_GET['folder']);
 
 function the_ticket($theRow, $theWidth=500, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10
 	global $iw_width, $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
@@ -325,10 +325,12 @@ if(!empty($_POST)) {
 		} else {
 		$the_separator = "\n\n------------------Original Message  ------------------\n\n";
 		if((isset($_POST['frm_use_smsg'])) && ($_POST['frm_use_smsg'] == 1)) {
-			do_send ("", $_POST['frm_addrs'], "Tickets CAD",  $_POST['frm_reply'] . $the_separator . $_POST['frm_message'], $_POST['frm_ticket_id'], $_POST['frm_resp_id'] );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
+			$the_messageid = (!isset($_POST['frm_messageid'])) ? NULL : $_POST['frm_messageid'];
+			$the_server = (!isset($_POST['frm_server'])) ? NULL: $_POST['frm_server'];
+			do_send ("", $_POST['frm_addrs'], "Tickets CAD",  $_POST['frm_reply'] . $the_separator . $_POST['frm_message'], $_POST['frm_ticket_id'], $_POST['frm_resp_id'], $the_messageid, $the_server );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 			} else {
 			$the_addresses = (!empty($_POST['frm_theothers'])) ? $_POST['frm_addrs'] . "|" . $_POST['frm_theothers'] : $_POST['frm_addrs'];
-			do_send ($the_addresses, "", "Tickets CAD",  $_POST['frm_reply'] . $the_separator . $_POST['frm_message'], $_POST['frm_ticket_id'], $_POST['frm_resp_id'] );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
+			do_send ($the_addresses, "", "Tickets CAD",  $_POST['frm_reply'] . $the_separator . $_POST['frm_message'], $_POST['frm_ticket_id'], $_POST['frm_resp_id'], $the_messageid, $the_server );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 			}
 ?>
 		<BODY>
@@ -373,6 +375,8 @@ $fromAddress = $row['from_address'];
 $theothers = "";
 $tick_id = $row['ticket_id'];
 $responder_id = $row['resp_id'];
+$message_id = $row['message_id'];
+$server = $row['server_number'];
 $the_sep = "";
 $the_readers = array();
 $the_readers = explode("," , $row['readby']);
@@ -497,6 +501,7 @@ if(empty($_POST)) {
 
 	$tick_row = stripslashes_deep(mysql_fetch_array($tick_result));
 	$opener = strip_tags($_GET['screen']);
+	$folder = (array_key_exists('foder', $_GET)) ? strip_tags($_GET['folder']) : "inbox";
 	$the_refresh =  (isset($_GET['wastebasket'])) ? "refresh_waste(\"" . $opener . "\");" : "refresh_opener(\"" . $opener . "\", \"" . $folder . "\");";
 ?>
 	<BODY onLoad='<?php print $the_refresh;?>;'>
@@ -562,7 +567,9 @@ if(empty($_POST)) {
 						<FORM NAME="disp_frm" METHOD="post" ACTION = "<?php print basename( __FILE__); ?>">
 							<INPUT TYPE="hidden" NAME = 'frm_ticket_id' VALUE="<?php print $tick_id;?>"/>	
 							<INPUT TYPE="hidden" NAME = 'frm_resp_id' VALUE="<?php print $responder_id;?>"/>
-							<INPUT TYPE="hidden" NAME = 'frm_disp' VALUE=1/>							
+							<INPUT TYPE="hidden" NAME = 'frm_disp' VALUE=1/>
+							<INPUT TYPE="hidden" NAME = 'frm_messageid' VALUE="<?php print $message_id;?>"/>
+							<INPUT TYPE="hidden" NAME = 'frm_server' VALUE="<?php print $server;?>"/>									
 						</FORM>
 					</DIV>
 			</DIV>
@@ -612,7 +619,9 @@ if(empty($_POST)) {
 ?>
 					<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $theothers;?>"/>			
 					<INPUT TYPE="hidden" NAME = 'frm_ticket_id' VALUE="<?php print $tick_id;?>"/>	
-					<INPUT TYPE="hidden" NAME = 'frm_resp_id' VALUE="<?php print $responder_id;?>"/>						
+					<INPUT TYPE="hidden" NAME = 'frm_resp_id' VALUE="<?php print $responder_id;?>"/>
+					<INPUT TYPE="hidden" NAME = 'frm_messageid' VALUE="<?php print $message_id;?>"/>
+					<INPUT TYPE="hidden" NAME = 'frm_server' VALUE="<?php print $server;?>"/>					
 					</FORM>
 				</table>
 			</DIV>
@@ -662,7 +671,9 @@ if(empty($_POST)) {
 ?>		
 					<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $theothers;?>"/>		
 					<INPUT TYPE="hidden" NAME = 'frm_ticket_id' VALUE="<?php print $tick_id;?>"/>
-					<INPUT TYPE="hidden" NAME = 'frm_resp_id' VALUE="<?php print $responder_id;?>"/>						
+					<INPUT TYPE="hidden" NAME = 'frm_resp_id' VALUE="<?php print $responder_id;?>"/>
+					<INPUT TYPE="hidden" NAME = 'frm_messageid' VALUE="<?php print $message_id;?>"/>
+					<INPUT TYPE="hidden" NAME = 'frm_server' VALUE="<?php print $server;?>"/>							
 					</FORM>
 				</table>
 			</DIV>

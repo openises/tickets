@@ -21,11 +21,13 @@
 4/22/11 addslashes() added for embedded apostrophes
 6/10/11 Added regional capability - restrictions to shown responders by groups allocated
 6/11/12 Moved javascript functions do_unlock, do_lock and do_asof from main JS section to line 742, spurious do notify() removed
+7/3/2013 - socket2me conditioned on internet and broadcast settings
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
 error_reporting (E_ALL  ^ E_DEPRECATED);
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);		// 8/27/10
@@ -62,15 +64,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#000000; border: 1px inset #FFFFFF;
   				  padding: 4px 0.5em;text-decoration: none; float: left; background-color: #DEE3E7;font-weight: bolder;}		
 	</STYLE>	
-<?php
-	if ($gmaps) {
-?>	
-<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
-<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>	<!-- 6/10/11 -->
-<?php
-		}
-?>
+		<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>	<!-- 6/10/11 -->
 <SCRIPT>
 	function ck_frames() {		//  onLoad = "ck_frames()"
 		if(self.location.href==parent.location.href) {
@@ -201,7 +195,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 			}
 		else {
 <?php
-		if (intval(get_variable('broadcast')==1)) { 
+		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		// 7/2/2013
 ?>
 								/*	5/22/2013 */
 			var theMessage = "New  <?php print get_text('Action');?> record by <?php echo $_SESSION['user'];?>";
@@ -253,7 +247,6 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -303,12 +296,14 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		return true;
 		}			
 	</SCRIPT>
-<?php
-require_once('./incs/socket2me.inc.php');		// 5/22/2013
+<?php				// 7/3/2013
+	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 	
+		require_once('./incs/socket2me.inc.php');		// 5/22/2013
+		}
 ?>
 	</HEAD>
 <?php 
-	print (($get_action == "add")||($get_action == "update"))? "<BODY onLoad = 'do_notify(); ck_frames();' onUnload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
+	print "<BODY onLoad = 'ck_frames();'>\n";
 
 	$do_yr_asof = false;		// js year housekeeping
 
@@ -367,92 +362,24 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 				}		// end insert process
 				
 			add_header($_GET['ticket_id']);
+			$id = $_GET['ticket_id'];
 			print '<br /><FONT CLASS="header">Action record has been added.</FONT><BR /><BR />';
-
-			print "<A HREF='main.php?id=" . $_GET['ticket_id'] . "'><U>Continue</U></A>";
-			show_ticket($_GET['ticket_id']);
-//________________________________________________________________
-			print "</BODY>";				// 10/19/08
-			
+			print "<A HREF='main.php'><U>Continue</U></A>";
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
 
 			if ($addrs) {
-?>			
-<SCRIPT>
-
-	function do_notify() {
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET - ACTION: ";
-		var theId = '<?php print $_POST['frm_ticket_id'];?>';
-		
-//		mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE)
-
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId +"&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
+				$theTo = implode("|", array_unique($addrs));
+				$theText = "TICKET - ACTION: ";
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if/else ($addrs)
+			if($_SESSION['internet']) {
+				require_once('./forms/ticket_view_screen.php');
+				} else {
+				require_once('./forms/ticket_view_screen_NM.php');
 				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-</SCRIPT>
-<?php
-
-			}		// end if($addrs) 
-		else {
-?>		
-<SCRIPT>
-	function do_notify() {
-		return;
-		}			// end function do notify()
-</SCRIPT>
-<?php		
-			}
-			
-		print "</HTML>";				// 10/19/08
-		}		// end else ...
+			print "</BODY>";				// 10/19/08		
+			print "</HTML>";				// 10/19/08
+			}		// end else ...
 // ____________________________________________________
 		exit();
 
@@ -586,24 +513,9 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
 		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
-		$result = mysql_query($query);	// 4/13/11
-		$al_groups = array();
-		$al_names = "";	
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
-			$al_groups[] = $row['group'];
-			if(!(is_super())) {
-				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
-				$result2 = mysql_query($query2);	// 4/13/11
-				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
-					$al_names .= $row2['group_name'] . ", ";
-					}
-				} else {
-					$al_names = "ALL. Superadmin Level";
-				}
-			}
+		$al_groups = $_SESSION['user_groups'];
 			
-		if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
+		if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 			$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 			} else {
 			$curr_viewed = $al_groups;
@@ -654,26 +566,35 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 //						generate dropdown menu of responders
 
 	if(!isset($curr_viewed)) {	
-		$x=0;	//	6/10/11
-		$where = "WHERE (";	//	6/10/11
-		foreach($al_groups as $grp) {	//	6/10/11
-			$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-			$where .= "`a`.`group` = '{$grp}'";
-			$where .= $where2;
-			$x++;
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where = "WHERE `a`.`type` = 2";
+			} else {
+			$x=0;	//	6/10/11
+			$where = "WHERE (";	//	6/10/11
+			foreach($al_groups as $grp) {	//	6/10/11
+				$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+				$where .= "`a`.`group` = '{$grp}'";
+				$where .= $where2;
+				$x++;
+				}
+			$where .= "AND `a`.`type` = 2";	//	6/10/11					
 			}
-	} else {
-		$x=0;	//	6/10/11
-		$where = "WHERE (";	//	6/10/11
-		foreach($curr_viewed as $grp) {	//	6/10/11
-			$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
-			$where .= "`a`.`group` = '{$grp}'";
-			$where .= $where2;
-			$x++;
+		} else {
+		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where = "WHERE `a`.`type` = 2";
+			} else {				
+			$x=0;	//	6/10/11
+			$where = "WHERE (";	//	6/10/11
+			foreach($curr_viewed as $grp) {	//	6/10/11
+				$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+				$where .= "`a`.`group` = '{$grp}'";
+				$where .= $where2;
+				$x++;
+				}
+			$where .= "AND `a`.`type` = 2";	//	6/10/11						
 			}
-	}
-	$where .= "AND `a`.`type` = 2";	//	6/10/11		
-
+		}	
+	
 
 		$query = "SELECT *, 
 			`updated` AS `updated`,

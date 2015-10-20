@@ -2,7 +2,6 @@
 /*
 9/16/08 initial release
 */
-//	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08	
 
 	function IncludeJavaScript(jsFile) {
 		document.write('<script type="text/javascript" src="' + jsFile + '"></scr' + 'ipt>'); 

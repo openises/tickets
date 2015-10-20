@@ -1,6 +1,7 @@
 <?php 
 
 @session_start();
+session_write_close();
 require_once('../incs/functions.inc.php');
 require_once('../incs/messaging.inc.php');
 include('../incs/html2text.php');
@@ -165,4 +166,5 @@ $ret_arr[12] = $theothers;
 $ret_arr[13] = $msg_row['resp_id'];
 $ret_arr[14] = $numrows;
 print json_encode($ret_arr);
+exit();
 ?>

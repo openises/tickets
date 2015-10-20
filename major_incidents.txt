@@ -1,0 +1,17 @@
+Major Incidents
+
+Tix now provides a Major Incident management capability. This is still in it's infancy and is there to promote discussion and development. Currently working as part of the Major Incident functionality is the following:
+
+    1.  Access to Major Incidents is through the config screen.
+
+    2.  AInitial screen shows existing Major incidents or the ability to add a major incident.
+
+    3.  A Major Incident can be added with an associated type and boundary. Select Menus exist to select MI Management Hierarchy from users registered on the syste. This currently uses the UK/European Gold / Silver / Bronze structure.
+	
+	4.  Fields exist to add description and notes throughout the lifetime of the MI
+	
+	5.  Lists exist to add existing incidents to be managed as part of the MI
+	
+	6.  For the future, reporting will be added and the ability to add a new Incident direct from the MI screen and automatically associate with the MI.
+
+AH - April '15

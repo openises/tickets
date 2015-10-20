@@ -1,0 +1,44 @@
+twitter.txt:	Information about using and configuring Twitter on Tickets 3.08+
+
+About Twitter Integration with Tickets.
+
+Twitter as a social media platform is potentially for some organisations a useful tool
+for getting messages out to team members as well as the public in general. Information
+about incidents, resources and other useful stuff can be made available in a concise and
+timely manner. Tweets can be made from Tickets either as an ad-hoc tweet by clicking the
+"More" button in the sidebar (the one with three dots) or from the infowindows shown
+on the maps for Incidents and facilities. Furthermore if a responder is set with their
+Twitter screen name (including the @ symbol) in the "contact via" box, you can use other 
+Tickets messaging tasks to send a direct tweet to their Twitter account.
+
+Setup.
+
+To setup Twitter within Tickets you first need to create a Twitter App - when logged into
+Twitter, navigate to https://apps.twitter.com/ and add a new App. Give the App a recognisable
+name such as "Tickets CAD", fill out the Description, website (your own Tickets URL), 
+Callback URL (your own Tickets URL), accept the terms and your App will be created. Now you 
+need to click on the created App and then click on the "modify app permisions" link and
+set the app to "Read, Write and Access Direct Messages". After clicking Update settings
+go back to the App details and click the "manage keys and access tokens" link. Form this page
+you then need to copy the following into Tickets settings (Config / edit settings) into the
+appropriate fields.
+
+Consumer Key
+Consumer Secret
+Access Token
+Access Token Secret
+
+Once you have added these to Tickets settings and submitted the changes Twitter will now
+be available on Tickets and you will see the appropriate buttons appear on the
+infowindows and the "More" tab.
+
+When sending a Tweet (except when using Twitter to contact responders) you have the opportunity
+to add a Twitter Screen Name (without the preceding @), a Twitter User ID (helps if there are
+people with similar screen names) and a message. If sending from an Incident or Facility 
+infowindow, as well as sending the Incident summary or Facility summary you can add extra
+information which shows in Twitter before the other details. If you don't specify a
+Twitter user direct (Screen Name or User ID), the Tweet will be added to the Twitter user 
+public status. If you do specify a Screen Name or User ID the Tweet will be sent as a Direct
+Message.
+
+August 15

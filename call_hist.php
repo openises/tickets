@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 9/30/10 require_once FMP added, address information added
 3/15/11 changed stylesheet.php to stylesheet.php
+7/16/2013 corrected to mysql_affected_rows(), unix_timestamp() removed
 */
 /*
 NAME
@@ -18,6 +19,7 @@ DISPOSITION
 */
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 require_once($_SESSION['fmp']);					// 9/30/10
 
@@ -46,13 +48,9 @@ $the_width = 600;
 </SCRIPT>
 </HEAD>
 <BODY>
-<?php
+<?php				// 7/16/2013
 //$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE phone = {$the_phone} ORDER BY `problemstart`";		// 
-	$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,
-		UNIX_TIMESTAMP(problemend) AS problemend,
-		UNIX_TIMESTAMP(booked_date) AS booked_date,
-		UNIX_TIMESTAMP(date) AS date,
-		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`updated`) AS updated, 
+	$query = "SELECT *,
 		`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`, 
 		`$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`, 
 		`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
@@ -72,15 +70,15 @@ $the_width = 600;
 		WHERE `$GLOBALS[mysql_prefix]ticket`.`phone`='{$the_phone}' 
 		ORDER BY `$GLOBALS[mysql_prefix]ticket`.`problemstart` ASC";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
-// dump ($query);
+//dump ($query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$count = (mysql_affected_rows()==0)? "": " <I>(" .mysql_affected_rows() . ")</I>";
+$count = (mysql_num_rows($result)==0)? "": " <I>(" .mysql_affected_rows() . ")</I>";
 ?>
 <TABLE ALIGN='center' ID = 'outer'>
 <TR><TH><BR /><BR />Calls for <?php print format_phone ($the_phone) . $count; ?></TH></TR>
 <TR><TD>
 <?php
-if (mysql_affected_rows()==0) {
+if (mysql_affected_rows()==0) {						// 7/16/2013
 ?>
 </TD></TR>
 <TR CLASS='even'><TH ALIGN='center'>None</TD></TR>

@@ -17,8 +17,9 @@
 3/1/12 Changed level['MEMBER'] to level['UNIT']
 6/1/12 Hide Guest loging notice if guest account doesn't exist.
 10/23/12 Added Level 'Service User' with redirection
-12/1/2012 include browser identification in log entry
-6/1/2013 revised 'contact us' addr to user addr if available
+12/1/12 include browser identification in log entry
+6/1/13 revised 'contact us' addr to user addr if available
+10/29/13 revised do_login to cure errors in user choice of maps when using internet = 3
 */
 
 function do_logout($return=FALSE){						/* logout - destroy session data */
@@ -50,68 +51,79 @@ function do_logout($return=FALSE){						/* logout - destroy session data */
 	do_login('main.php', TRUE);				// wait for login
 	}
 // ==========================================================================
-	function check_conn () {				// returns TRUE/FALSE
-		$url = "http://maps.google.com/";
-		$response="";
-		$parts=parse_url($url);
-		if(!$parts) return false; /* the URL was seriously wrong */
-		
-		if (function_exists("curl_init")) {
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)');
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-			@curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);				// 8/11/10
-			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
-			curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-			curl_setopt($ch, CURLOPT_NOBODY, true);
-			curl_setopt($ch, CURLOPT_HEADER, true);
-		
-			if($parts['scheme']=='https'){
-				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  1);
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			}
-		
-			$response = curl_exec($ch);
-			curl_close($ch);
-			if(preg_match('/HTTP\/1\.\d+\s+(\d+)/', $response, $matches)){
-				$code=intval($matches[1]);
-			} else {
-				$code=0;
-			}
-		
-			if(($code>=200) && ($code<400)) {
-				return TRUE;
-			} else {
-				return FALSE;
-			}		
-		} else {				// not CURL
-			if ($fp = @fopen($url, "r")) {
-				while (!feof($fp) && (strlen($response)<9000)) $response .= fgets($fp, 128);
-				fclose($fp);
-				return TRUE;
-				}		
-			else {
-				return FALSE;
-				}
-			}
-			
-		}	// end function check_conn ()
-
-	function set_filenames($internet) {
-		$normal = (($internet == 1) || (($internet == 3) && (check_conn ())));		// check_conn()  returns TRUE/FALSE = 8/31/10			
+function check_conn () {				// returns TRUE/FALSE
+	$url = "http://www.yahoo.com/";
+	$response="";
+	$parts=parse_url($url);
+	if(!$parts) return false; /* the URL was seriously wrong */
 	
-		$_SESSION['internet'] = $normal;                        
-//		$_SESSION['fip'] =($normal)? "./incs/functions.inc.php":	"./incs/functions_nm.inc.php";                        
-		$_SESSION['fip'] ="./incs/functions.inc.php";                        // 8/27/10
-		$_SESSION['fmp'] = ($normal)? "./incs/functions_major.inc.php": "./incs/functions_major_nm.inc.php";                              
-		$_SESSION['addfile'] = ($normal)? "add.php": "add.php";											
-		$_SESSION['editfile'] = ($normal)? "edit.php":	"edit.php";										  
-		$_SESSION['unitsfile'] = ($normal)? "units.php": "units_nm.php";								     
-		$_SESSION['facilitiesfile'] = ($normal)?	"facilities.php": "facilities_nm.php";		                    
-		$_SESSION['routesfile'] = ($normal)?	"routes.php": "routes_nm.php";						        
-		$_SESSION['facroutesfile'] = ($normal)? "fac_routes.php": "fac_routes_nm.php";
+	if (function_exists("curl_init")) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+		@curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);				// 8/11/10
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+		curl_setopt($ch, CURLOPT_NOBODY, true);
+		curl_setopt($ch, CURLOPT_HEADER, true);
+	
+		if($parts['scheme']=='https'){
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  1);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		}
+	
+		$response = curl_exec($ch);
+		curl_close($ch);
+		if(preg_match('/HTTP\/1\.\d+\s+(\d+)/', $response, $matches)){
+			$code=intval($matches[1]);
+		} else {
+			$code=0;
+		}
+
+		if(($code>=200) && ($code<400)) {
+			return TRUE;
+		} else {
+			return FALSE;
+		}		
+	} else {				// not CURL
+		if ($fp = @fopen($url, "r")) {
+			while (!feof($fp) && (strlen($response)<9000)) $response .= fgets($fp, 128);
+			fclose($fp);
+			return TRUE;
+			}		
+		else {
+			return FALSE;
+			}
+		}
+	}	// end function check_conn ()
+
+function set_filenames($internet, $userchoice) {
+	$localmaps = get_variable('local_maps');
+	$internet_good = (($internet == 1) || (($internet == 3) && (check_conn()))) ? true: false;		// check_conn()  returns TRUE/FALSE = 8/31/10
+	if(($internet_good) && ($userchoice == "Show")) {	//	10/29/13
+		$normal = true;
+		} elseif(($internet_good) && ($userchoice == "Hide")) {
+		$normal = false;
+		} elseif(!$internet_good) {
+		$normal = false;
+		} elseif($localmaps == "1") {
+		$normal = true;
+		} else {
+		$normal = false;
+		}
+	$_SESSION['internet'] = $normal;   
+	$_SESSION['good_internet'] = $internet_good;
+	$_SESSION['fip'] ="./incs/functions.inc.php";                        // 8/27/10
+	$_SESSION['fmp'] = ($normal)? "./incs/functions_major.inc.php": "./incs/functions_major_nm.inc.php";                              
+	$_SESSION['addfile'] = ($normal)? "add.php": "add.php";											
+	$_SESSION['editfile'] = ($normal)? "edit.php":	"edit.php";										  
+	$_SESSION['unitsfile'] = ($normal)? "units.php": "units_nm.php";								     
+	$_SESSION['facilitiesfile'] = ($normal)?	"facilities.php": "facilities_nm.php";		                    
+	$_SESSION['routesfile'] = ($normal)?	"routes.php": "routes_nm.php";						        
+	$_SESSION['facroutesfile'] = ($normal)? "fac_routes.php": "fac_routes_nm.php";
+	$_SESSION['warnlocationsfile'] = ($normal)? "warn_locations.php": "warn_locations_nm.php";
+	}
 
 // ==========================================================================
 
@@ -126,37 +138,49 @@ function is_expired($id) {		// returns boolean
 function redir($url, $time = 0) {
 	echo '<meta http-equiv="refresh" content="', $time, ';URL=', $url, '">';
 	die; 
-	} 
+	}
+	
+function dupe_user($id, $ip) {
+	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user` = " . $id . " AND `_from` != '" . $ip . "' LIMIT 1";
+	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_num_rows($result) == 1) {
+		return true;
+		} else {
+		return false;
+		}
+	}
 
-function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09
+function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09,	1/30/14
 	global $hide_dispatched, $hide_status_groups;
 	@session_start();
 	global $expiry, $istest;
+	$allow_accessRequests = get_variable("access_requests");
+	$no_autoforward = ($na) ? 1 : 0;	//	1/30/14
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-
 	$the_sid = (isset($_SESSION['id']))? $_SESSION['id'] : null;
 //																			7/3/11
 	$warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
 	
-	$internet = get_variable("internet");				// 8/22/10
-	$temp = implode(";",  $_SESSION);
-	
+	$internet = intval(get_variable("internet"));				// 8/22/10
 	if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
-
+		if(dupe_user($_SESSION['user_id'], $_SERVER['REMOTE_ADDR'])) {
+			do_logout();
+			}
 		$the_date = mysql_format_date($expiry) ;
 		$sess_key = session_id();										// not expired
 		$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `expires`= '{$the_date}' WHERE `sid` = '{$sess_key}' LIMIT 1";
 		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$_SESSION['expires'] = $expiry;
+		$userchoice = $_SESSION['maps_sh'];
 		$warn = "";
-		if($internet==3) {set_filenames($internet);}			// possible change to filenames based on connect status - 8/31/10
+		if($internet==3) {set_filenames($internet, $userchoice);}			// possible change to filenames based on connect status - 8/31/10
 		}				// end if((!(empty($_SESSION)))  && ...)
 
 	else { 				// not logged in; now either get form data or db check form entries 	
 		if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
-																														// 6/25/10
+																						// 6/25/10
+			$userchoice = $_POST['frm_maps'];
 			$categories = array();													// 3/15/11
-
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";	// 3/15/11
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$num_disp = mysql_num_rows($result);	//
@@ -194,7 +218,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 				LIMIT 1";
 			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			if (mysql_affected_rows()==1) {
-
+				
 				$row = stripslashes_deep(mysql_fetch_assoc($result));
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
@@ -212,7 +236,15 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 					WHERE `id` = {$row['id']} LIMIT 1";
 					
 				$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				
+				$query_gp = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = {$row['id']} ORDER BY `id` ASC;";
+				$result_gp = mysql_query($query_gp);
+				while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
+					$al_groups[] = $row_gp['group'];
+					}
 
+				$_SESSION['user_groups'] = $al_groups;
+				$_SESSION['noautoforward'] = ($_POST['no_autoforward']==1) ? TRUE : FALSE;	//	1/30/14
 				$_SESSION['id'] = 			$sid;
 				$_SESSION['expires'] = 		time();
 				$_SESSION['user_id'] = 		$row['id'];
@@ -228,7 +260,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 				$_SESSION['ticket_per_page'] = 0;
 				$_SESSION['show_hide_unit'] =  "s";		// show/hide units
 				$_SESSION['show_hide_unav'] = "s";		// show/hide unavailable units - 4/27/10
-				$_SESSION['show_hide_fac']  = "h";		// show/hide facilities - 3/8/10
+				$_SESSION['show_hide_fac']  = "s";		// show/hide facilities - 3/8/10
 				$_SESSION['unit_flag_1'] = "";		// unit id where status or position change
 				$_SESSION['unit_flag_2'] = "";		// usage tbd 4/7/10
 				$_SESSION['tick_flag_1'] = "";		// usage tbd 4/7/10
@@ -237,6 +269,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 				$_SESSION['list_type'] = 0;		// 12/2/10			
 				$_SESSION['show_hide_Deployed'] = "s";	// Show all deployed tickets 3/15/11
 				$_SESSION['day_night'] = $_POST['frm_daynight'];	// 01/20/11 Set Day or Night Colors
+				$_SESSION['maps_sh'] = $_POST['frm_maps'];	// 9/10/13 Show or Hide Maps
 				$_SESSION['hide_controls'] = "s";		// 3/15/11
 				$_SESSION['incs_list'] = "s";		// 3/15/11
 				$_SESSION['resp_list'] = "s";		// 3/15/11
@@ -244,7 +277,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 				$_SESSION['regions_boxes'] = "s";		// 6/10/11				
 				$_SESSION['user_unit_id'] = $row['responder_id'];		//3/19/11
 				$_SESSION['show_hide_upper'] = "Show Menu";		//6/10/11
-				
+				$_SESSION['sh_cond'] = "s";
+				$initLayer = intval(get_variable('default_map_layer'));
+				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");	
+				$_SESSION['layer_inuse'] = $baseLayerNamesArr[$initLayer];
 				foreach($categories as $key => $value) {				// 3/15/11
 					$sess_flag = "show_hide_" . $value;
 					$_SESSION[$sess_flag] = "s";
@@ -252,11 +288,11 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 
 				foreach($fac_categories as $key => $value) {				// 3/15/11
 					$fac_sess_flag = "show_hide_fac_" . $value;
-					$_SESSION[$fac_sess_flag] = "h";
+					$_SESSION[$fac_sess_flag] = "s";
 					}
-				$temp = implode(";",  $_SESSION);
+//				$temp = implode(";",  $_SESSION);
 
-				set_filenames($internet);			// 8/31/10
+				set_filenames($internet, $userchoice);			// 8/31/10
 	
 				do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");		// log it - 12/1/2012
 																		
@@ -292,11 +328,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 					} else {
 					$extra = 'main.php?log_in=1';
 					}
-//				$extra = (($row['level']== $GLOBALS['LEVEL_UNIT']) ||($unit_id))? 'mobile.php' : 'main.php?log_in=1';				// 8/29/10
 
 				$url = "http://" . $host . $uri . "/" . $extra;
 				redir($url);
-//				header("Location: http://$host$uri/$extra");								// to top of calling script
 				exit();				
 				
 				}			// end if (mysql_affected_rows()==1)
@@ -320,7 +354,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		<STYLE type="text/css">
 		input		{background-color:transparent;}		/* Benefit IE radio buttons */
 	  	</STYLE>
-
+		<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 		<SCRIPT defer="defer">	<!-- 11/18/10 -->
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
@@ -467,16 +501,68 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		
 // End of code to check for guest account existence
 ?>
-		<TR CLASS='even'><TD ROWSPAN=6 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png' <?php print $my_click; ?>><BR /><BR />
-		&nbsp;&nbsp;<img src="php.png" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label"><?php print get_text("User"); ?>:</TD>
-			<TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE=""></TD></TR>
-		<TR CLASS='odd'><TD CLASS="td_label"><?php print get_text("Password"); ?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"  VALUE=""></TD></TR>
-		<TR CLASS="even"><TD COLSPAN=2>&nbsp;&nbsp;</TD></TR>
-			<TR CLASS='odd'><TD CLASS="td_label">Colors: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE="radio" NAME="frm_daynight" VALUE="Day" checked>Day&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="radio" NAME="frm_daynight" value="Night">Night</TD></TR>
-		<TR CLASS="even"><TD COLSPAN=2>&nbsp;&nbsp;</TD></TR>
-		<TR CLASS='even'><TD></TD><TD><INPUT TYPE="submit" VALUE="<?php print get_text("Log In"); ?>"></TD></TR>
+		<TR CLASS='even'>
+			<TD ROWSPAN=7 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png' <?php print $my_click; ?>><BR /><BR />
+			&nbsp;&nbsp;<img src="php.png" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label"><?php print get_text("User"); ?>:</TD>
+			<TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE=""></TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD CLASS="td_label"><?php print get_text("Password"); ?>: &nbsp;&nbsp;</TD>
+			<TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"  VALUE=""></TD>
+		</TR>
+		<TR CLASS="even">
+			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD CLASS="td_label">Colors: &nbsp;&nbsp;</TD>
+			<TD><INPUT TYPE="radio" NAME="frm_daynight" VALUE="Day" checked>Day&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="radio" NAME="frm_daynight" value="Night">Night</TD>
+		</TR>
+		<TR CLASS="even">
+			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
+		</TR>
+<?php
+	if(get_variable("internet") != 2) {
+?>
+		<TR CLASS='even'>
+			<TD CLASS="td_label">Maps: &nbsp;&nbsp;</TD>
+			<TD><INPUT TYPE="radio" NAME="frm_maps" VALUE="Show" checked>Show Maps&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="radio" NAME="frm_maps" value="Hide">Hide Maps</TD>
+		</TR>
+<?php
+		} else {
+?>
+			<INPUT type="hidden" NAME="frm_maps" VALUE="Show">
+<?php
+		}
+?>
+		<TR CLASS="even">
+			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD COLSPAN=3 ALIGN='center'>
+				<INPUT id='login_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' TYPE="submit" VALUE="<?php print get_text("Log In"); ?>">
+			</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD COLSPAN=3 ALIGN='center' style='height: 30px;'>
+				&nbsp;
+			</TD>
+		</TR>
+<?php
+		if($allow_accessRequests == "1") {
+?>
+			<TR CLASS='even'>
+				<TD CLASS='text_small' COLSPAN=99 ALIGN='CENTER'><BR />
+					<A ID='req_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF="contact.php">Request Access</A>
+				</TD>
+			</TR>
+<?php
+			}
+?>
+		<TR CLASS='even'>
+			<TD COLSPAN=3 ALIGN='center' style='height: 30px;'>
+				&nbsp;
+			</TD>
+		</TR>
 <?php
 		if($guest_exists) {	//	6/1/12
 ?>
@@ -493,6 +579,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		<INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
+		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE=<?php print $no_autoforward; ?>>
 		</FORM><BR /><BR />
 <!--		<a href="<?php echo get_contact_addr ();?>/"><SPAN CLASS='text_small'>Contact us</SPAN></a>	 6/1/2013 --> 
 		</CENTER></HTML>

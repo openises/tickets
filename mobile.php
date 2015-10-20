@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL);
+error_reporting(E_ALL);		// E_ALL
 $interval = 48;				// booked date limit - hide if date is > n hours ahead of 'now'
 $blink_duration = 5;		// blink for n (5, here) minutes after ticket was written
 $button_height = 50;		// height in pixels
@@ -33,11 +33,14 @@ $units_side_bar_height = .6;		// max height of units sidebar as decimal fraction
 2/27/12 blink logic added
 6/3/2013 reload() made conditional on setting value
 6/10/2013 corrections applied to to_refresh form
+8/30/2013 initialized variables, per Troy Thone email
 */
 
-session_start();	
+session_start();
+session_write_close();	
 require_once('incs/functions.inc.php');	
 do_login(basename(__FILE__));
+
 define("UNIT", 0);
 define("MINE", 1);
 define("ALL", 2);
@@ -58,6 +61,10 @@ if ($istest) {
 	
 $internet = $_SESSION['internet'];	
 require_once('incs/functions_major_nm.inc.php');				// 7/28/10
+
+$assign_id = (array_key_exists('assign_id', $_GET) ) ? $_GET['assign_id'] : "";		// 8/30/2013
+$ticket_id = (array_key_exists('ticket_id', $_GET) ) ? $_GET['ticket_id'] : "";
+
 $patient = get_text("Patient");									// 12/1/10
 
 // 0=>unit, 1=>my calls, 2=> all calls - 9/3/10 
@@ -88,12 +95,12 @@ function get_butts($ticket_id, $unit_id) {
 		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Edit' onClick = \"var newWindow = window.open('edit_nm.php?mode=1&id={$ticket_id}', 'editWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100'); newWindow.focus();\" />\n"; // 2/1/10
 
 		if (!is_closed($ticket_id)) {		// 10/5/09
-			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Close' onClick = \"var mailWindow = window.open('close_in.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=480, width=700, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\" />\n";  // 8/20/09
+			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Close' onClick = \"var mailWindow = window.open('close_in.php?ticket_id=$ticket_id&mode=1', 'cloWindow', 'resizable=1, scrollbars, height=480, width=700, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\" />\n";  // 8/20/09
 			}
 		} 		// end if ($can_edit())
 	if (is_administrator() || is_super() || is_unit()){
 		if (!is_closed($ticket_id)) {
-			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Action' onClick  = \"var actWindow = window.open('action_w.php?mode=1&ticket_id={$ticket_id}', 'ActWindow', 'resizable=1, scrollbars, height=480, width=900, left=250,top=50,screenX=250,screenY=50'); ActWindow.focus();\" />\n"; // 7/3/10
+			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Action' onClick  = \"var actWindow = window.open('action_w.php?mode=1&ticket_id={$ticket_id}', 'actWindow', 'resizable=1, scrollbars, height=480, width=900, left=250,top=50,screenX=250,screenY=50'); actWindow.focus();\" />\n"; // 7/3/10
 			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = '{$patient}' onClick  = \"var patWindow = window.open('patient_w.php?mode=1&ticket_id={$ticket_id}', 'patWindow', 'resizable=1, scrollbars, height=480,width=720, left=250,top=50,screenX=250,screenY=50'); patWindow.focus();\" />\n"; // 7/3/10
 			}
 		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Notify' onClick  = \"var notWindow = window.open('config.php?mode=1&func=notify&id={$ticket_id}', 'NotWindow', 'resizable=1, scrollbars, height=400, width=600, left=250,top=50,screenX=250,screenY=50'); notWindow.focus();\" />\n"; // 7/3/10
@@ -141,7 +148,12 @@ function adj_time($time_stamp) {
 	<SCRIPT TYPE="text/javascript" src="./js/misc_function.js"></SCRIPT>
 	<script language="JavaScript">
 	<!--
-	
+	function do_logout() {						// 10/27/08
+		show_topframe();
+		document.gout_form.submit();			// send logout 
+		}
+
+
 function do_save_handleResult(req) {			// the called-back function
 	}			// end function handle Result()
 
@@ -156,6 +168,19 @@ function do_save(in_val) {
 	rows_arr = frames_obj.rows.split(",", 4);
 	if (parseInt(rows_arr[0]) > 0) { 							// save as the normalizing string
 		row_str = window.top.document.getElementsByTagName("frameset")[0].rows;}
+		
+	function hide_topframe() {
+		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
+		rows_arr = frames_obj.rows.split(",", 4);	
+		rows_arr[0] = 0;
+		frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame	
+		}
+		
+	function show_topframe() {
+		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
+		rows_arr = frames_obj.rows.split(",", 4);	
+		frames_obj.rows = row_str;								// make top frame visible
+		}
 
 	function showhideFrame(btn) {
 		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
@@ -164,23 +189,23 @@ function do_save(in_val) {
 			rows_arr[0] = 0;
 			frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
 			do_save("h");
-			btn.value = "Show Menu";
-		} else {
+			if($(btn)) { btn.value = "Show Menu"; }
+			} else {
 			frames_obj.rows = row_str;								// make top frame visible
 			do_save("s");
-			btn.value = "Hide Menu";			
+			if($(btn)) { btn.value = "Hide Menu"; }		
+			}
 		}
-	}
 	
 	function checkUpper() {
 		var upperVis = "<?php print $_SESSION['show_hide_upper'];?>";
 		if (upperVis == "h") {
 			rows_arr[0] = 0;
 			frames_obj.rows = rows_arr.join(",");		// string to attribute - hide the top frame
-			$('b1').value = "Show Menu";
+			if($('b1')) { $('b1').value = "Show Menu"; }
 			} else {
 			frames_obj.rows = row_str;				// make top frame visible
-			$('b1').value = "Hide Menu";
+			if($('b1')) { $('b1').value = "Hide Menu"; }
 		}
 	}	
 
@@ -336,9 +361,7 @@ function replaceButtonText(buttonId, text) {
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
-//		req.open(method,url,true);
 		req.open(method,url,false);		// synchronous, 7/27/09
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -378,12 +401,6 @@ function replaceButtonText(buttonId, text) {
 
 	var announce = true;
 	function handleResult(req) {			// the called-back function
-		if (announce) {alert('<?php echo __LINE__; ?>');}
-		}			// end function handle Result(
-
-	
-	var announce = true;
-	function handleResult(req) {			// the called-back function
 		}			// end function handle Result()
 
 	function toss() {				// ignores button click
@@ -394,11 +411,10 @@ function replaceButtonText(buttonId, text) {
 
 	function start_watch() {							// get initial values from top
 		parent.frames['upper'].mu_init();				// start the polling
-		$("div_ticket_id").innerHTML = parent.frames["upper"].$("div_ticket_id").innerHTML;		// copy for monitoring
-		$("div_assign_id").innerHTML = parent.frames["upper"].$("div_assign_id").innerHTML;
-		$("div_action_id").innerHTML = parent.frames["upper"].$("div_action_id").innerHTML;	
-		$("div_patient_id").innerHTML = parent.frames["upper"].$("div_patient_id").innerHTML;
-		
+		if($("div_ticket_id")) { $("div_ticket_id").innerHTML = parent.frames["upper"].$("div_ticket_id").innerHTML;	}	// copy for monitoring
+		if($("div_assign_id")) { $("div_assign_id").innerHTML = parent.frames["upper"].$("div_assign_id").innerHTML; }
+		if($("div_action_id")) { $("div_action_id").innerHTML = parent.frames["upper"].$("div_action_id").innerHTML;	}
+		if($("div_patient_id")) { $("div_patient_id").innerHTML = parent.frames["upper"].$("div_patient_id").innerHTML; }
 		watch_val = window.setInterval("do_watch()",5000);		// 4/7/10 - 5 seconds
 		}				// end function start watch()
 
@@ -462,11 +478,13 @@ $query = "SELECT *,  `t`.`id` AS `tick_id`,
 			`t`.`updated` AS `tick_updated`,
 			`r`.`name` AS `unit_name`,
 			`r`.`handle` AS `unit_handle`,				
-			`a`.`id` AS `assign_id`				
+			`a`.`id` AS `assign_id`,
+			`i`.`type` AS `inc_type`
 		FROM  `$GLOBALS[mysql_prefix]ticket` `t`
 		LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a`  		ON (`a`.`ticket_id` = `t`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` 	ON (`a`.`responder_id` = `r`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `u`	ON (`r`.`type` = `u`.`id` )	
+		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `i`		ON (`i`.`id` = `t`.`in_types_id` )	
 		WHERE {$restrict}
 			((`t`.`status` = {$GLOBALS['STATUS_OPEN']})
 			OR ((`t`.`status` = {$GLOBALS['STATUS_SCHEDULED']} AND `t`.`booked_date` < (NOW() + INTERVAL {$interval} HOUR)))
@@ -482,28 +500,45 @@ if (mysql_affected_rows()==0) {
 
 	$caption = ($mode==MINE)? "All calls": $the_unit_name;
 	$frm_mode = ($mode==MINE)? ALL: MINE;
+	$hide_top = (($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) ? "hide_topframe();" : "";
 /*
 <BODY onLoad="checkUpper(); start_watch();" onUnload = "end_watch();"> 
 <BODY onLoad="checkUpper();" > <!-- 2/19/12 -->
 */
 ?>
-<BODY onLoad="checkUpper(); start_watch();" onUnload = "end_watch();"> <!-- <?php echo __LINE__;?> -->
+<BODY onLoad="checkUpper(); start_watch(); <?php print $hide_top;?>" onUnload = "end_watch();"> <!-- <?php echo __LINE__;?> -->
 	<DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>	
 	<DIV ID = "div_assign_id" STYLE="display:none;"></DIV>
-
+	<DIV ID = "div_action_id" STYLE="display:none;"></DIV>
+	<DIV ID = "div_patient_id" STYLE="display:none;"></DIV>
 <BR /><BR /><BR /><BR />
 <CENTER>
-<input id="b1" type="button" value="Hide Top Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"><BR /><BR /> 
+<?php
+if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {	//	2/24/14
+?>
+	<input id="logout_but" type="button" value="Logout" CLASS='hover_lo' onclick="do_logout()"><BR /><BR />
+<?php
+	} else {
+?>
+	<input id="b1" type="button" value="Hide Top Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"><BR /><BR />
+<?php
+	}
+?>
 <H2><?php print $for_str;?>: no current calls  as of <?php print substr($now, 11,5);?></H2>
 <?php
-	if (can_edit()) {
+if (can_edit()) {
 ?>
-			<FORM NAME = 'switch_form' METHOD = 'get' ACTION = '<?php print basename(__FILE__);?>'>
-			<INPUT TYPE='hidden' NAME = 'frm_mode' VALUE = '2' />	
-			<INPUT ID='chng_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE='All calls' onClick = 'document.switch_form.submit();' />
-			</FORM>
+	<input id="b_new" type="button" value="New Call" CLASS='btn_not_chkd' onclick="var newWindow = window.open('add.php?mode=1', 'addWindow', 'resizable=1, scrollbars, height=640, width=800, left=100,top=100,screenX=100,screenY=100'); newWindow.focus();"><BR /><BR />
 <?php
-		}
+	}
+if (can_edit()) {
+?>
+	<FORM NAME = 'switch_form' METHOD = 'get' ACTION = '<?php print basename(__FILE__);?>'>
+	<INPUT TYPE='hidden' NAME = 'frm_mode' VALUE = '2' />	
+	<INPUT ID='chng_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE='All calls' onClick = 'document.switch_form.submit();' />
+	</FORM>
+<?php
+	}
 ?>
 </CENTER>
 <?php
@@ -662,8 +697,9 @@ else {
 </SCRIPT>
 <?php
 $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch();";
+$hide_top = (($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) ? "hide_topframe();" : "";
 ?>
-<BODY onLoad="checkUpper(); start_watch(); start_blink();" onUnload = "end_watch(); end_blink();">  <!-- <?php echo __LINE__;?> -->
+<BODY onLoad="checkUpper(); start_watch(); start_blink(); <?php print $hide_top;?>" onUnload = "end_watch(); end_blink();">  <!-- <?php echo __LINE__;?> -->
 	<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 		
 	<DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>	<!-- 2/27/12 -->
@@ -697,7 +733,17 @@ $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch()
 	</TD>
 	<TD ID = 'ctr top' ALIGN='center'>
 		<TABLE BORDER=0 >
-		<TR><TD ALIGN='center'><input id="b1" type="button" value="Hide Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"></TD></TR>
+<?php
+		if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+?>
+			<TR><TD ALIGN='center'><input id="logout_but" type="button" value="Logout" CLASS='hover_lo' onclick="do_logout()"></TD></TR>
+<?php
+			} else {
+?>
+			<TR><TD ALIGN='center'><input id="b1" type="button" value="Hide Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"></TD></TR>
+<?php
+			}
+?>
 		<TR CLASS='spacer'><TD class='spacer'>&nbsp;</TD></TR>
 		<TR><TD ALIGN='left'>	<!-- 3/15/11 -->	
 <?php
@@ -769,8 +815,10 @@ $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch()
 					$the_date =$assigns_stack[$i]['problemstart'];					
 					$booked_symb = "";
 					}
+				$incType = $assigns_stack[$i]['inc_type'];
 				echo "<TD CLASS='{$severityclass}' >" .  format_date_time($the_date) . "</TD>\n";			// column 4 - date
-			echo "\t<TD>&nbsp;{$booked_symb}</TD>\n";						// column 7 - booked symb
+				echo "\t<TD>&nbsp;{$booked_symb}</TD>\n";						// column 7 - booked symb
+				echo "\t<TD CLASS='{$severityclass}' >&nbsp;{$incType}</TD>\n";						// column 7 - booked symb
 // --
 				echo "</TR>\n";
 				}			// end for ($i ...)
@@ -947,6 +995,9 @@ $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch()
 </p>
 -->
 <DIV ID='to_bottom' style="position:fixed; bottom:50px; left:150px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png" BORDER=0 /></div>
+<FORM NAME="gout_form" action="main.php" TARGET = "main">
+<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />
+</FORM>
 </BODY>
 
 </HTML>

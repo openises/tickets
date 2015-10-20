@@ -5,6 +5,7 @@
 error_reporting(E_ALL);		// 10/1/08
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 
 function do_my_instam($key) {				// 3/17/09

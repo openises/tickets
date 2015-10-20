@@ -6,6 +6,7 @@ header('Content-type: text/css');
 */
 require_once('incs/functions.inc.php');
 session_start();
+session_write_close();
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
 $alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 
 
@@ -42,6 +43,8 @@ TEXTAREA {
 	font-style: normal; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none; 
+	white-space: pre;
+	word-wrap: break-word;
 	}
 
 SELECT {
@@ -80,7 +83,8 @@ TD {
 	font-style: normal; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none; 
-	VERTICAL-ALIGN: top;  
+	vertical-align: top;
+	word-wrap: break-all;
 	}
 	
 .print_TD { 
@@ -134,6 +138,16 @@ TD {
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none; 
 	}
+	
+.td_data_wrap { 
+	word-wrap: break-all;
+	background-color: inherit;
+	font-size: 12px; 
+	color: #000000; 
+	font-style: normal; 
+	font-family: Verdana, Arial, Helvetica, sans-serif; 
+	text-decoration: none; 
+	}
 
 .emph { 
 	background-color: #99b2cc;
@@ -169,6 +183,10 @@ TD {
 	color: #000099; 
 	font-style: normal; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
+	}
+	
+.link { 
+	text-decoration: underline;
 	}
 	
 .header { 
@@ -354,45 +372,72 @@ TD {
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none; 
 	}
-	
+
 #detailmap, #mapDiv { 
 	font: normal 10px verdana; 
 	}
-	
+
 #detailmap {
 	width: 300px; 
 	height: 120px; 
 	border:1px solid gray; 
 	}
 
-#infowin {
-	width:	600px; 
-	overflow:auto; 
+.infowin {
+	width:	300px; 
+	height: 250px;
+	padding-right: 20px;
+	overflow-y: auto; 
+	overflow-x: hidden;
 	} 
-	
+
 tr.even { 
 	background-color: <?php print get_css("row_light", $day_night);?>;
 	color: <?php print get_css("row_light_text", $day_night);?>;
 	}
-	
+
 tr.odd { 
 	background-color: <?php print get_css("row_dark", $day_night);?>;
 	color: <?php print get_css("row_dark_text", $day_night);?>;
+	}
+	
+tr.fs_even { 
+	background-color: <?php print get_css("row_light", $day_night);?>;
+	color: #707070;
+	}
+
+tr.fs_odd { 
+	background-color: <?php print get_css("row_dark", $day_night);?>;
+	color: #000000;
 	}
 
 .even { 
 	background-color: <?php print get_css("row_light", $day_night);?>;
 	}
-	
+
 .odd { 
 	background-color: <?php print get_css("row_dark", $day_night);?>;
 	}	
+
+.fs_even { 
+	background-color: <?php print get_css("row_light", $day_night);?>;
+	}
+
+.fs_odd { 
+	background-color: <?php print get_css("row_dark", $day_night);?>;
+	}
 	
+.fs_td {
+	font-size: 12px;
+	font-weight: bold;
+	height: 25px;
+	}
+
 tr.plain { 
 	background-color: <?php print get_css("row_plain", $day_night);?>;
 	color: <?php print get_css("row_plain_text", $day_night);?>;
 	}
-	
+
 tr.heading { 
 	background-color: <?php print get_css("row_heading_background", $day_night);?>;
 	color: <?php print get_css("row_heading_text", $day_night);?>;	
@@ -407,14 +452,32 @@ tr.heading {
 	font-size: 14px; 
 	font-weight: bold; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 	
-	}	
-	
+	}
+
+.config_heading { 
+	background-color: #DEDEDE;
+	color: #000000;	
+	font-size: 12px; 
+	font-weight: bold; 
+	font-family: Verdana, Arial, Helvetica, sans-serif; 
+	padding: 4px;
+	}		
+
 tr.heading_2 { 
 	background-color: <?php print get_css("row_heading_background", $day_night);?>;
 	color: <?php print get_css("row_heading_text", $day_night);?>;	
 	font-size: 12px; 
 	font-weight: normal; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 	
+	}	
+	
+tr.heading_3 { 
+	background-color: #909090;
+	color: #FFFFFF;	
+	font-size: 12px; 
+	font-weight: normal; 
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-style: italic;
 	}	
 
 tr.spacer { 
@@ -722,6 +785,7 @@ select.sit {
 	background-color: #EFEFEF;
 	font-weight: bolder;
 	cursor: pointer;
+	border-radius:.2em;
 	}		
 	
 .hover 	{ 
@@ -735,6 +799,143 @@ select.sit {
 	background-color: #DEE3E7;
 	font-weight: bolder;
 	cursor: pointer;
+	border-radius:.2em;
+	}
+
+.signal_r { 
+	margin-left: 4px;  
+	font: normal 12px Arial, Helvetica, sans-serif; 
+	border: 1px outset #FF3366;
+	padding: 4px 0.5em;
+	text-decoration: none;
+	float: left;
+	color: #000000;
+	background-color: #FF3366;
+	font-weight: bolder; 
+	border-radius:.2em;
+	}
+	
+.signal_o {
+	margin-left: 4px;
+	font: normal 12px Arial, Helvetica, sans-serif;
+	border: 1px outset #FF3366;
+	padding: 4px 0.5em;
+	text-decoration: none;
+	float: left;
+	color: #000000;
+	background-color: #CC9900;
+	font-weight: bolder; 
+	border-radius:.2em;
+	}
+	
+.signal_b {
+	margin-left: 4px;
+	font: normal 12px Arial, Helvetica, sans-serif;
+	border: 1px outset #00CCFF;
+	padding: 4px 0.5em;
+	text-decoration: none;
+	float: left;
+	color: #FFFFFF;
+	background-color: #00CCFF;
+	font-weight: bolder; 
+	border-radius:.2em;
+	}
+
+.signal_w {
+	margin-left: 4px;
+	font: normal 12px Arial, Helvetica, sans-serif; 
+	border: 1px outset #3366FF;
+	padding: 5px 0.5em;
+	text-decoration: none;
+	float: left;
+	color: #FFFFFF;
+	background-color: #3366FF;
+	font-weight: bolder; 
+	border-radius:.2em;
+	}
+	
+.hover_lo 	{
+	margin-left: 4px;
+	font: normal 12px Arial, Helvetica, sans-serif;
+	color:#FF0000;
+	border: 1px outset #FFFFFF;
+	padding: 1px 0.5em;
+	text-decoration: none;
+	color: black;
+	background-color: #DEE3E7;
+	font-weight: bolder;
+	}
+	
+.plain_lo 	{
+	margin-left: 4px;
+	font: normal 12px Arial, Helvetica, sans-serif;
+	color:#000000;
+	border: 3px hidden #FFFFFF;
+	}
+
+.plain_listheader 	{
+	color:#000000; 
+	border: 1px outset #606060;
+	text-decoration: none; 
+	background-color: #EFEFEF;
+	font-weight: bolder;
+	cursor: pointer;
+	}
+	
+.plain_listheader_fs 	{ 
+	font-size: 1.2em;
+	color:#000000; 
+	border: 2px outset #606060;
+	text-decoration: none; 
+	background-color: #EFEFEF;
+	font-weight: bolder;
+	cursor: pointer;
+	}
+
+.plain_list 	{
+	white-space:nowrap; 
+	text-decoration: none; 
+	font-weight: bolder;
+	cursor: pointer;
+	}	
+	
+.hover_listheader 	{ 
+	color:#000000; 
+	border: 1px inset #606060;
+	text-decoration: none; 
+	background-color: #DEE3E7;
+	font-weight: bolder;
+	cursor: pointer;
+	}
+	
+.plain_vert { 
+	color:#000000; 
+	border: 1px outset #FFFFFF; 
+	padding: 4px 0.5em; 
+	background-color: #EFEFEF;	
+	font-weight: bolder; 
+	cursor: pointer; 
+	-webkit-transform: rotate(270deg); 
+	-moz-transform: rotate(270deg); 
+	-ms-transform: rotate(270deg); 
+	-o-transform: rotate(270deg); 
+	transform: rotate(270deg); 
+	filter: none;
+	}
+	
+.hover_vert { 
+	color:#000000; 
+	border: 1px inset #FFFFFF;	
+	padding: 4px 0.5em;	
+	background-color: #DEE3E7; 
+	font-weight: bolder;
+	cursor: pointer; 
+	-webkit-transform: rotate(270deg); 
+	-moz-transform: rotate(270deg); 
+	-ms-transform: rotate(270deg); 
+	-o-transform: rotate(270deg); 
+	transform: rotate(270deg); 
+	filter: none;
 	}
 
 .fence_warn {
@@ -824,4 +1025,9 @@ select.sit {
 	overflow-x: hidden; 
 	word-wrap: break-word; 
 	display: block;
+	}
+	
+.sev_infobar {
+	background-color: <?php print get_css("sev_background", $day_night);?>;
+	color: <?php print get_css("sev_text", $day_night);?>;
 	}

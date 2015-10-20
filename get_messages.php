@@ -6,6 +6,7 @@ require_once './lib/xpm/MIME.php';
 error_reporting(E_ALL);				// 9/13/08
 set_time_limit(0);
 @session_start();
+session_write_close();
 $the_result = "";
 if (empty($_SESSION)) {
 	header("Location: index.php");

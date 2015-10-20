@@ -43,6 +43,7 @@ improvements to datatype 'time' handling
 $gmap=TRUE;
 
 session_start();
+session_write_close();
 if (empty($_SESSION)) {				// 1/6/2013
 	header("Location: index.php");
 	}
@@ -291,8 +292,14 @@ unset ($result2);
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE"/>
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-</HEAD>
 <!--  onFocus="LL_showinfo(1)" onBlur="LL_hideallinfo()" -->
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+<!--[if lte IE 8]>
+	 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+<![endif]-->
+<link rel="stylesheet" href="./js/Control.Geocoder.css" />
+<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
 <STYLE>
 /* comment */
 A:hover 					{text-decoration: underline; color: red;}
@@ -310,7 +317,28 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 //	print "<SCRIPT type=\"text/javascript\" src=\"RegExpValidate.js\"></SCRIPT>";
 	}
 ?>
-
+<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<script src="./js/leaflet/leaflet.js"></script>
+<script src="./js/proj4js.js"></script>
+<script src="./js/proj4-compressed.js"></script>
+<script src="./js/proj4leaflet.js"></script>
+<script src="./js/leaflet/KML.js"></script>
+<script src="./js/leaflet/gpx.js"></script>  
+<script src="./js/osopenspace.js"></script>
+<script src="./js/leaflet-openweathermap.js"></script>
+<script src="./js/esri-leaflet.js"></script>
+<script src="./js/Control.Geocoder.js"></script>
+<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+<script src="./js/Google.js"></script>
+<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+<script type="text/javascript" src="./js/L.Graticule.js"></script>
+<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+<script type="text/javascript" src="./js/usng.js"></script>
+<script type="text/javascript" src="./js/osgb.js"></script>
+<script type="text/javascript" src="./js/geotools2.js"></script>
+</HEAD>
 <SCRIPT>
 	if(self.location.href==parent.location.href) {				// 1/6/2013
 		self.location.href = 'index.php';

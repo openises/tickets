@@ -2,6 +2,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
+session_write_close();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}
@@ -91,6 +92,7 @@ if($istest) {print "_POST"; dump($_POST);}
 1/1/11 Titles array added, scheduled incidents revised
 5/5/11 added get_new_colors()	
 6/4/2013 added broadcast()
+10/11/2013 - corrected auto incident numbering - relocated else {} closure
 */
 
 $api_key = get_variable('gmaps_api_key');
@@ -282,11 +284,10 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				if (((int) $inc_num_ary[0])>0) {		// step to next no. if scheme in use
 					$inc_num_ary[3]++;				// do the deed for next use
 					}
-				$out_str = serialize ($inc_num_ary);
-				$query = "UPDATE`$GLOBALS[mysql_prefix]settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-				}
-
+				}			// end if/else - 10/11/2013
+			$out_str = serialize ($inc_num_ary);
+			$query = "UPDATE`$GLOBALS[mysql_prefix]settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 			return $name_rev;
 			}				// end function updt ticket() 
 			
@@ -338,7 +339,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -454,9 +454,15 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css" />
 <?php
 	if ($gmaps) {
-?>	
-<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+		if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+			$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+			} else {
+			$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+			}
+?>
+		<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
+		<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
 <?php
 		}
 ?>	
@@ -943,7 +949,6 @@ $maptype = get_variable('maptype');	// 08/02/09
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -1197,7 +1202,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 			theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
 			return true;
 <?php						// 6/4/2013
-		if (intval(get_variable('broadcast')==1)) { 
+		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		// 7/2/2013
 ?>																						/*	5/22/2013 */
 			var theMessage = "New  <?php print get_text('Incident');?> (" + theForm.frm_scope.value + ") " + theAddr  + " by <?php echo $_SESSION['user'];?>";
 			broadcast(theMessage ) ;

@@ -6,9 +6,9 @@
 error_reporting(E_ALL);	
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 get_current();
-@session_start(); 	
 $me = $_SESSION['user_id'];
 //$me = 1;
 

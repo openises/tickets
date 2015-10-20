@@ -26,7 +26,7 @@ if($status == 'Tentative') {
 	} elseif($status == 'Declined') {
 	$query .= ", `declined_date` = " . quote_smart(mysql_format_date($now));
 	} elseif($status == 'Closed') {
-	$query .= ", `closed_date` = " . quote_smart(mysql_format_date($now));	
+	$query .= ", `closed` = " . quote_smart(mysql_format_date($now));	
 	}
 $query .= ", `_on` = " . quote_smart(mysql_format_date($now));
 $query .= ", `_by` = " . $_SESSION['user_id'];
@@ -39,4 +39,5 @@ $result = mysql_query($query) or do_error($query, "", mysql_error(), basename( _
 	
 set_sess_exp();				// update session time
 print date("H:i", $now) ;
+exit();
 ?>

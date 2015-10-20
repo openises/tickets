@@ -388,7 +388,7 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 			$query = "INSERT INTO `$GLOBALS[mysql_prefix]in_types` (`type`,`description`,`set_severity`,`group`) VALUES('$inc_type','$description',$severity,'$grouping')";
 			$result = mysql_query($query) or die("Incident types insertion failed, execution halted");	
 			if($result) {
-				$output_text .= "Incident Type " . $_POST['frm_name'] . " inserted<BR />";	
+				$output_text .= "Incident Type " . $inc_type . " inserted<BR />";	
 				}
 			$i++;
 			}
@@ -403,7 +403,7 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 			$query = "INSERT INTO `$GLOBALS[mysql_prefix]unit_types` (`name`,`description`,`icon`,`_on`,`_from`,`_by`) VALUES('$resp_type','$description','$icon','$now','$from',$user)";
 			$result = mysql_query($query) or die("Unit types insertion failed, execution halted");		
 			if($result) {
-				$output_text .= "Responder Type " . $_POST['frm_rtype_name'] . " inserted<BR />";	
+				$output_text .= "Responder Type " . $resp_type . " inserted<BR />";	
 				}			
 			$i++;
 			}
@@ -422,7 +422,7 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 			$query = "INSERT INTO `$GLOBALS[mysql_prefix]un_status` (`status_val`,`description`,`dispatch`,`hide`,`group`,`bg_color`,`text_color`) VALUES('$resp_stat','$description','$can_dispatch','$can_hide','$grouping','$bgcolor','$textcol')";
 			$result = mysql_query($query) or die("Unit Status Types insertion failed, execution halted");		
 			if($result) {
-				$output_text .= "Responder Status " . $_POST['frm_rstat_name'] . " inserted<BR />";	
+				$output_text .= "Responder Status " . $resp_stat . " inserted<BR />";	
 				}	
 			$i++;
 			}
@@ -433,8 +433,8 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 		$resp_prefix = (isset($_POST['frm_responder_prefix'])) ? $_POST['frm_responder_prefix'] : "Unit";
 		$description = "Auto entered";
 		$un_status = 1;
-		$lat = "0.999999";
-		$lng = "0.999999";
+		$lat = get_variable('def_lat');
+		$lng = get_variable('def_lng');
 		for ( $i = 1; $i <= $counter; $i++) {
 			$name = $resp_prefix . $i;
 			$handle = substr($resp_prefix, 0, 3) . $i; 

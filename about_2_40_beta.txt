@@ -679,6 +679,12 @@ Changes for Tickets 2.40C
 
 220.  Various fixes. No new functionality.
 
-June '13
+Changes for Tickets 2.40D
+
+221.  Added PHP native mail test script
+
+222.  Various fixes including messaging, auto unit status and some map functions.
+
+July '13
 Arnie Shore
 Andy Harvey, UK

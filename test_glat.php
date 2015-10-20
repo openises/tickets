@@ -43,6 +43,7 @@ if (empty($_POST)) {
 	else {
 		 
 		@session_start();
+		session_write_close();
 		require_once($_SESSION['fip']); 
 
 		function get_remote($url) {				// 8/9/09
@@ -120,10 +121,14 @@ $the_url = "http://www.google.com/latitude/apps/badge/api?user={$frm_badge}&type
 	$is_good = $results;
 	$api_key = get_variable('gmaps_api_key');
 	if ($is_good) {
-
-?>	
-    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php print $api_key;?>"
-            type="text/javascript"></script>
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+			if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+				$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+				} else {
+				$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+				}
+?>
+		<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
     <script type="text/javascript">
 
     function initialize() {

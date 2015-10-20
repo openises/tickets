@@ -8,6 +8,7 @@
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';	//	3/15/11
 $userid = (isset($_SESSION['user_id'])) ? $_SESSION['user_id'] : 0;
@@ -29,17 +30,6 @@ function found_user() {
 		$user_exists = FALSE;
 		}
 	return $user_exists;
-	}
-
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";
-$result = mysql_query($query);	//	6/10/11
-$al_names = "Showing " . get_text("Region") . "(s): ";	
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
-	$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";
-	$result2 = mysql_query($query2);	// 4/18/11
-	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{
-			$al_names .= $row2['group_name'] . ", ";
-		}
 	}
 
 	$do_mu_init = "mu_init();";	// start multi-user function
@@ -190,7 +180,6 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-//		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -385,7 +374,6 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 			print "<DIV class='stats_wrapper'>";
 				print "<DIV class='error_page'>The settings have been updated</DIV>";			
 			print "</DIV>";		
-			print "<DIV style='position: fixed; bottom: 10px;'>" . $al_names . "</DIV>";
 			print "</BODY></HTML>";		
 		}			
 	} else {
@@ -486,7 +474,6 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 			print "<DIV class='stats_wrapper'>";
 				print "<DIV class='error_page'>The settings have been inserted</DIV>";			
 			print "</DIV>";		
-			print "<DIV style='position: fixed; bottom: 10px;'>" . $al_names . "</DIV>";			
 			print "</BODY></HTML>";	
 			}
 		}
@@ -973,7 +960,6 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 		} 
 ?>		
 		</DIV>	
-		<DIV style='position: fixed; bottom: 10px;'><?php print $al_names;?></DIV>
 		<A NAME="bottom" />
 		</BODY>
 		</HTML>
@@ -1117,7 +1103,7 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 
 	<DIV class='header_wrapper'>
 		<DIV class='header_row'>
-			<DIV class='page_heading'>TICKETS CAD Statistics Module - Config</DIV><DIV class='page_heading_s'><?php print $al_names;?></DIV>
+			<DIV class='page_heading'>TICKETS CAD Statistics Module - Config</DIV>
 		</DIV>
 		<DIV class='header_row'>
 			<DIV id='stats8_inner' class='date_time'></DIV>
@@ -1421,7 +1407,6 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV> 
 
 	</DIV>
-	<DIV style='position: fixed; bottom: 10px;'><?php print $al_names;?></DIV>	
 	<A NAME="bottom" />
 	</BODY>
 	</HTML>	
@@ -1431,7 +1416,7 @@ if((!isset($_GET['stats'])) && (!isset($_GET['config'])) && (!isset($_GET['fm_su
 ?>
 	<DIV class='header_wrapper'>
 		<DIV class='header_row'>
-			<DIV class='page_heading'>TICKETS CAD Statistics Module</DIV><DIV class='page_heading_s'><?php print $al_names;?></DIV>
+			<DIV class='page_heading'>TICKETS CAD Statistics Module</DIV>
 		</DIV>
 		<DIV class='header_row'>
 			<DIV id='stats8_inner' class='date_time'></DIV>

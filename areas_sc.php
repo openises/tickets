@@ -2,6 +2,7 @@
 //	areas server-side create script
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 
 $istest=FALSE;

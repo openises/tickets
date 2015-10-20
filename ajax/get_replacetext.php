@@ -8,6 +8,7 @@ require_once('../incs/functions.inc.php');
 require_once('../incs/messaging.inc.php');
 
 @session_start();
+session_write_close();
 $the_result = "";
 if (empty($_SESSION)) {
 	header("Location: ../index.php");
@@ -22,6 +23,12 @@ $time = date("H:i", $timestamp);
 $date = date("d-m-Y", $timestamp);
 $start_tag = "|";
 $end_tag = "|";
+	
+function get_user_name($id){							//	get User Name from id , 1/8/14
+	$result	= mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`= '$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$row	= stripslashes_deep(mysql_fetch_assoc($result));
+	return (mysql_affected_rows()==0 )? "unk?" : $row['name_f'] . " " . $row['name_l'];
+	}
 
 function get_owner_unit($id){								/* get owner unit name from id */
 	$result	= mysql_query("SELECT responder_id FROM `$GLOBALS[mysql_prefix]user` WHERE `id`='$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -60,7 +67,7 @@ function get_coords($lat, $lng) {
 	}
 	
 function tkt_summary($id) {
-	$thetxt = "";
+	$the_text = "";
 	if($id != 0) {
 		$query	= "SELECT `t`.`scope` AS `scope`,
 					`t`.`id` AS `t_id`,
@@ -101,7 +108,8 @@ function tkt_summary($id) {
 		$recfac_add = $row['recfac_street'] . ", " . $row['recfac_city'];
 		$recfac_desc = $row['recfac_desc'];		
 		$recfac_coords = get_coords($row['recfac_lat'], $row['recfac_lng']);
-		$the_text = $row['scope'] . "\n";
+		$the_text = get_text('Controller') . ": " . get_user_name($_SESSION['user_id']) . "\r\n";
+		$the_text .= $row['scope'] . "\n";
 		$the_text .= $row['contact'] . ", " . $row['phone'] . "\n";
 		$the_text .= $row['street'] . ", " . $row['city'] . "\n";
 		$the_text .= $row['synopsis'] . "\n";
@@ -119,6 +127,43 @@ function tkt_summary($id) {
 	return $the_text;
 	}
 
+function tkt_shortSummary($id) {
+	$the_text = "";
+	if($id != 0) {
+		$query	= "SELECT `t`.`scope` AS `scope`,
+					`t`.`id` AS `t_id`,
+					`t`.`contact` AS `contact`,
+					`t`.`street` AS `street`,
+					`t`.`city` AS `city`,
+					`t`.`phone` AS `phone`
+					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
+					WHERE `t`.`id`='$id' LIMIT 1";
+		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$thestreet = ($row['street'] != "") ? $row['street'] . ", " : "";
+		$the_text = get_text('Controller') . ": " . get_user_name($_SESSION['user_id']) . "\r\n";
+		$the_text .= get_text('Scope') . ": " . $row['scope'] . "\n";
+		$the_text .= get_text('Patient') . ": " . $row['contact'] . ", " . $row['phone'] . "\n";
+		$the_text .= get_text('Address') . ": " . $thestreet . $row['city'] . "\n";
+		}
+	return $the_text;
+	}
+	
+function tkt_description($id) {
+	$the_text = "";
+	if($id != 0) {
+		$query	= "SELECT `t`.`scope` AS `scope`,
+					`t`.`id` AS `t_id`,
+					`t`.`description` AS `description`
+					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
+					WHERE `t`.`id`='$id' LIMIT 1";
+		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$the_text = get_text('Controller') . ": " . get_user_name($_SESSION['user_id']) . "\r\n";
+		$the_text .= get_text('Synopsis') . ": " . $row['description'] . "\n";
+		}
+	return $the_text;
+	}
 
 function get_replacement_text($val) {
 	$return = array();
@@ -132,8 +177,9 @@ function get_replacement_text($val) {
 		$return[] = $row['add_user_unit'];
 		$return[] = $row['add_time'];	
 		$return[] = $row['add_date'];
-		$return[] = $row['add_date'];
 		$return[] = $row['app_summ'];
+		$return[] = $row['app_shortsumm'];
+		$return[] = $row['app_desc'];
 		return $return;
 		} else {
 		return false;
@@ -154,13 +200,16 @@ if($rep_val) {
 	$the_replaced_text .= ($rep_val[3] == "Yes") ? " " . get_owner_unit_handle(get_owner_unit($user)) : "";
 	$the_replaced_text .= ($rep_val[4] == "Yes") ? " " . $time : "";	
 	$the_replaced_text .= ($rep_val[5] == "Yes") ? " " . $date : "";
-	$thesummary = ($rep_val[6] == "Yes") ? "TKT Summary\n" . tkt_summary($ticket) : "";	
-	$the_output = replace_content_inside_delimiters($start_tag, $end_tag, $the_replaced_text, $text_to_replace);
-	$ret_arr[0] = $the_output . "\n" . $thesummary;
+	$thesummary = ($rep_val[6] == "Yes") ? "TKT Summary\n" . tkt_summary($ticket) . "\n" : "";	
+	$theshortsummary = ($rep_val[7] == "Yes") ? "TKT Summary\n" . tkt_shortSummary($ticket) . "\n" : "";	
+	$thedescsumm = ($rep_val[8] == "Yes") ? "Job Requirements\n" . tkt_description($ticket) . "\n" : "";	
+	$the_output = replace_content_inside_delimiters($start_tag, $end_tag, $the_replaced_text, $text_to_replace) . "\n";
+	$ret_arr[0] = $the_output . $thesummary . $theshortsummary . $thedescsumm;
 	} else {
 	$ret_arr[0] = "";
 	}
 
 print json_encode($ret_arr);
-	
+exit();
+?>
 

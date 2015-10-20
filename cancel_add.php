@@ -14,7 +14,7 @@ if (strval(intval($ticket_id)) == $_POST['ticket_id']) {				// sanity check
 	$query = "DELETE FROM `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id` = '{$ticket_id}';";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 
-	$query = "DELETE FROM `$GLOBALS[mysql_prefix]patient` WHERE `id` = '{$ticket_id}' AND `status` = '{$GLOBALS['STATUS_RESERVED'}]' LIMIT 1;";
+	$query = "DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = '{$ticket_id}' AND `status` = '{$GLOBALS['STATUS_RESERVED']}' LIMIT 1;";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	}
 else {

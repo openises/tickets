@@ -19,6 +19,7 @@ $from_left = 400;
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 if ((isset($_REQUEST['ticket_id'])) && (!(strval(intval($_REQUEST['ticket_id']))===$_REQUEST['ticket_id']))) {	shut_down();}	// 5/28/11
 require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
@@ -33,7 +34,9 @@ if($istest) {
 function get_ticket_id () {				// 5/4/11
 
 	if (array_key_exists('ticket_id', ($_REQUEST))) {
+		@session_start();
 		$_SESSION['active_ticket'] = $_REQUEST['ticket_id'];
+		session_write_close();
 		return (integer) $_REQUEST['ticket_id'];
 		}
 	elseif (array_key_exists('active_ticket', $_SESSION)) {
@@ -310,7 +313,6 @@ if (!empty($_POST)) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -395,8 +397,14 @@ if (!empty($_POST)) {
 <?php		
 	}		// end if (!empty($_POST))
 else {		// 201-439
+$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+	$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	} else {
+	$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	}
 ?>
-<SCRIPT SRC="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 <SCRIPT SRC="./js/usng.js"></SCRIPT>		<!-- 10/14/08 -->
 <SCRIPT SRC="./js/graticule.js"></SCRIPT>
 	
@@ -581,23 +589,7 @@ require_once('./incs/links.inc.php');
 		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
 		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
-		$result = mysql_query($query);	// 4/13/11
-		$al_groups = array();
-		$al_names = "";	
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
-			$al_groups[] = $row['group'];
-			if(!(is_super())) {
-				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
-				$result2 = mysql_query($query2);	// 4/13/11
-				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
-					$al_names .= $row2['group_name'] . ", ";
-					}
-				} else {
-					$al_names = "ALL. Superadmin Level";
-				}
-			}
-	
+		$al_groups = $_SESSION['user_groups'];
 ?>				
 		<A NAME="page_bottom" /> <!-- 5/13/10 -->	
 		<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
@@ -629,7 +621,6 @@ require_once('./incs/links.inc.php');
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

@@ -8,24 +8,14 @@
 error_reporting(E_ALL);
 require_once('../incs/functions.inc.php');
 @session_start();
-
+session_write_close();
 $user_id = (isset($_GET['user'])) ? clean_string($_GET['user']) : "";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = $user_id ORDER BY `id` ASC;";	//	6/10/11
-$result = mysql_query($query);	//	6/10/11
-$al_groups = array();
+$al_groups = $_SESSION['user_groups'];
+
 $al_names = "";	
 $a_gp_bounds = array();	
 $gp_bounds = array();	
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	6/10/11
-	$al_groups[] = $row['group'];
-	$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	//	6/10/11
-	$result2 = mysql_query($query2);	// 4/18/11
-	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	//	//	6/10/11	
-			$al_names .= $row2['group_name'] . ", ";
-		}
-	}
-
 
 $x=0;	
 $where2 = "AND (";
@@ -568,5 +558,5 @@ $r9 = date("D M j Y G:i:s", time());
 //$ret_arr = array ($num_tick, $num_not_assigned, $num_ass_not_responding, $num_dis_resp_not_os, $num_on_scene, $avg_to_disp, $avg_time_disp2resp, $avg_time_disp2os);
 $ret_arr = array ($r1,$r2,$r3,$r4,$r5,$r6,$r7,$r8,$r9);
 print json_encode($ret_arr);				// 1/6/11
-
+exit();
 ?>

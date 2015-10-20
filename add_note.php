@@ -12,6 +12,7 @@
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 if($istest) {
 //	dump(basename(__FILE__));
@@ -94,14 +95,18 @@ Description &raquo; <INPUT TYPE = 'radio' NAME='frm_add_to' value='0' CHECKED />
 		}		// end if (empty($_POST))
 	else {
 		$field_name = array('description', 'comments');
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_POST['frm_ticket_id']} LIMIT 1";
+		$frm_ticket_id=(int)$_POST['frm_ticket_id'];	//	4/4/14
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$frm_ticket_id} LIMIT 1";	//	4/4/14
+		
+//		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_POST['frm_ticket_id']} LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 		$now = (time() - (get_variable('delta_mins')*60)); 
 		$format = get_variable('date_format');
 		$the_date = date($format, $now);
 		$the_in_str = ($_POST['frm_add_to']=="0")? $row['description'] : $row['comments'] ;
-		@session_start();		
+		@session_start();
+		session_write_close();		
 		$the_text = "{$the_in_str} [{$_SESSION['user']}:{$the_date}]" . strip_tags(trim($_POST['frm_text'])) . "\n";		// 1/7/2013
 	
 		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `{$field_name[$_POST['frm_add_to']]}`= " . quote_smart($the_text) . " WHERE `id` = " . quote_smart($_POST['frm_ticket_id'])  ." LIMIT 1";

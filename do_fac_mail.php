@@ -8,6 +8,7 @@
 error_reporting(E_ALL);		//
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 $evenodd = array ("even", "odd");
 
@@ -95,7 +96,7 @@ if (empty($_POST)) {
 	<BODY onLoad = "reSizeScr(<?php print mysql_affected_rows();?>)"><CENTER>		<!-- 1/12/09 -->
 
 	<CENTER>		<!-- 1/12/09 -->
-	<CENTER><H3>Facility Mail </H3>
+	<CENTER><H3>Mail Facilities </H3>
 <?PHP
 	if (mysql_affected_rows()>0) {
 		print "<FORM NAME='mail_form' METHOD='post' ACTION='" . basename(__FILE__) . "'>\n";

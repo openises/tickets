@@ -4,16 +4,24 @@ error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
 require_once($_SESSION['fmp']);
 
-$from_top = 20;				// buttons alignment, user-reviseable as needed
+
 $sidebar_width = 400;		// pixels
 //$from_left = $sidebar_width + get_variable('map_width') + 72;
 //$from_left =  get_left_margin ($sidebar_width);
-$from_left = round (0.75 * $_SESSION['scr_width']);
+if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
+	$inWin = true;
+	$from_left = round (0.3 * $_SESSION['scr_width']);
+	$from_top = round (0.3 * $_SESSION['scr_height']);
+	} else {
+	$inWin = false;
+	$from_left = round (0.4 * $_SESSION['scr_width']);
+	$from_top = round (0.3 * $_SESSION['scr_height']);
+	}
 
 $show_tick_left = FALSE;	// controls left-side vs. right-side appearance of incident details - 11/27/09
 $unit_ht_max = 	0.3;		// unit sidebar height maximum as a portion of screen height, a decimal fraction; default 0.3 ( = 30%)
 
-$units_side_bar_height = 0.9;		// height of units sidebar as decimal fraction - default is 0.9 (90%)
+$units_side_bar_height = 0.6;		// height of units sidebar as decimal fraction - default is 0.9 (90%)
 
 /*
 7/16/10 Initial Release for no internet operation - created from routes.php
@@ -383,7 +391,6 @@ if (!empty($_POST)) {				// 77-200
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -464,15 +471,13 @@ if (!empty($_POST)) {				// 77-200
 	</H3>
 	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php">
 <?php
-	if ((array_key_exists('frm_mode', $_POST)) && ($_POST['frm_mode']==1)) {
+	if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
 ?>	
-	<INPUT TYPE='button' VALUE='Finished' onClick = "window.close()">
+		<INPUT TYPE='button' VALUE='Finished' onClick = "window.close()">
 <?php
-		}
-	else {
+		} else {
 ?>
-	<INPUT TYPE='button' VALUE='Continue' onClick = "document.cont_form.submit()">
-
+		<INPUT TYPE='button' VALUE='Continue' onClick = "document.cont_form.submit()">
 <?php	
 		}
 ?>		
@@ -700,7 +705,6 @@ function sendRequest(url,callback,postData) {	//	5/4/11
 	if (!req) return;
 	var method = (postData) ? "POST" : "GET";
 	req.open(method,url,true);
-	req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 	if (postData)
 		req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 	req.onreadystatechange = function () {
@@ -777,7 +781,10 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>"/>	
 	</FORM>	
 
-	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print basename( __FILE__); ?>"> <!-- 7/9/10 -->
+<?php
+	$theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
+?>
+	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print $theAction;?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db' />
 	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />
 	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>" />
@@ -807,8 +814,8 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 			$nr_units = 1;
 			$addr = get_addr();
 ?>
-		<div id='boxB' class='box' style='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed;' > <!-- 9/23/10 -->
-		<div class="bar" style="width:12em;"
+		<div id='boxB' class='box' style='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed; background-color : rgba(0, 0, 0, 0.2);' > <!-- 9/23/10 -->
+		<div class="bar" style="width:12em; color: #000000;"
 			 onmousedown="dragStart(event, 'boxB')">Drag me</div><!-- drag bar -->
 		<div style = "margin-top:10px;">
 		<IMG SRC="markers/down.png" BORDER=0  onclick = "location.href = '#page_bottom';" STYLE = 'margin-left:2px;' />		
@@ -826,8 +833,12 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 			print "<INPUT TYPE='hidden' NAME='frm_scope' VALUE=''>"; // 10/29/09
 			print "</FORM>";	
 			print "<INPUT TYPE='button' VALUE='Reset' onClick = 'doReset()' />";
-			print "</SPAN>";			
-			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();' />";
+			print "</SPAN>";	
+			if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {			
+				print "<INPUT TYPE='button' VALUE='Cancel'  onClick='window.close();' />";
+				} else {
+				print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();' />";
+				}
 			if ($nr_units>0) {			
 				print "<BR /><INPUT TYPE='button' value='DISPATCH\nUNITS' onClick = '" . $thefunc . "' />\n";	// 6/14/09
 				}
@@ -843,22 +854,7 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 		$regions_inuse = get_regions_inuse($user_level);	//	5/4/11
 		$group = get_regions_inuse_numbers($user_level);	//	5/4/11		
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
-		$result = mysql_query($query);	// 4/13/11
-		$al_groups = array();
-		$al_names = "";	
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
-			$al_groups[] = $row['group'];
-			if(!(is_super())) {
-				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
-				$result2 = mysql_query($query2);	// 4/13/11
-				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
-					$al_names .= $row2['group_name'] . ", ";
-					}
-				} else {
-					$al_names = "ALL. Superadmin Level";
-				}
-			}
+		$al_groups = $_SESSION['user_groups'];
 ?>				
 		<A NAME="page_bottom" /> <!-- 5/13/10 -->	
 		<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
@@ -890,7 +886,6 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -1197,60 +1192,8 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 			$where2="";
 		}
 // ============================= Regions Stuff							
-// Allows Tickets to be dispatched to any responders in the same region as the current user.		
-	
-			// $query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/18/11
-			// $result = mysql_query($query);	// 5/4/11
-			// $al_groups = array();
-			// $al_names = "";	
-			// while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 5/4/11
-				// $al_groups[] = $row['group'];
-				// $query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 5/4/11
-				// $result2 = mysql_query($query2);	// 5/4/11
-				// while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 5/4/11		
-						// $al_names .= $row2['group_name'] . ", ";
-					// }
-				// }
-
-			// if(isset($_SESSION['viewed_groups'])) {
-				// $al_groups= explode(",",$_SESSION['viewed_groups']);
-				// }
-				
-			// if(!isset($_SESSION['viewed_groups'])) {	//	5/4/11
-			// $x=0;	
-			// $where3 = "AND (";
-			// foreach($al_groups as $grp) {
-				// $where4 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-				// $where3 .= "`a`.`group` = '{$grp}'";
-				// $where3 .= $where4;
-				// $x++;
-				// }
-			// } else {
-			// $x=0;	
-			// $where3 = "AND (";	
-			// foreach($al_groups as $grp) {
-				// $where4 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-				// $where3 .= "`a`.`group` = '{$grp}'";
-				// $where3 .= $where4;
-				// $x++;
-				// }
-			// }
-			// $where3 .= " AND `a`.`type` = 2";
 			
-// Replacement code - only allows Tickets to be dispatched to responders in the same region
-			
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 1 AND `resource_id` = " . quote_smart($_GET['ticket_id']) . " ORDER BY `id` ASC;";	// 4/18/11
-			$result = mysql_query($query);	// 5/4/11
-			$al_groups = array();
-			$al_names = "";	
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 5/4/11
-				$al_groups[] = $row['group'];
-				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 5/4/11
-				$result2 = mysql_query($query2);	// 5/4/11
-				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 5/4/11		
-						$al_names .= $row2['group_name'] . ", ";
-					}
-				}
+			$al_groups = $_SESSION['user_groups'];
 
 			$x=0;	
 			$where3 = "WHERE (";	

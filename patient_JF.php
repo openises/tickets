@@ -16,6 +16,7 @@
 error_reporting(E_ALL);			// 10/1/08
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);		// 8/27/10
@@ -223,7 +224,6 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

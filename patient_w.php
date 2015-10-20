@@ -15,10 +15,12 @@
 3/15/11 changed stylesheet.php to stylesheet.php
 5/26/11 added intrusion detection
 7/27/11	fix multiple selects per KB email
+4/8/2014 - insurance made non-mandatory
 */
 error_reporting(E_ALL);			// 10/1/08
 
 @session_start();
+session_write_close();
 require_once('incs/functions.inc.php');	
 do_login(basename(__FILE__));
 if ((isset($_REQUEST['ticket_id'])) && 	(strlen(trim($_REQUEST['ticket_id']))>6)) {	shut_down();}			// 5/26/11
@@ -131,11 +133,11 @@ $facilitycontact = 	get_text("Facility contact");
 		return (start.valueOf() <= end.valueOf());	
 		}
 
-	function validate(theForm) {
+	function validate(theForm) {		// 4/8/2014
 		var errmsg="";
 		if (theForm.frm_name.value == "")						{errmsg+= "\tName is required\n";}
 		if (theForm.frm_gender_val.value==0) 					{errmsg+= "\t<?php echo $gender;?> required\n";}
-		if (theForm.frm_ins_id.value==0) 						{errmsg+= "\t<?php echo $insurance;?> selection required\n";}
+//		if (theForm.frm_ins_id.value==0) 						{errmsg+= "\t<?php echo $insurance;?> selection required\n";}
 		if (theForm.frm_description.value == "")				{errmsg+= "\tDescription is required\n";}
 		do_unlock(theForm) ;
 		if (!chkval(theForm.frm_hour_asof.value, 0,23)) 		{errmsg+= "\tAs-of time error - Hours\n";}
@@ -197,9 +199,7 @@ $facilitycontact = 	get_text("Facility contact");
 	</SCRIPT>
 	</HEAD>
 <?php 
-	print (($get_action == "add")||($get_action == "update"))?
-		"<BODY onLoad = 'do_notify(); ck_window();' onUnload='GUnload();'>\n":
-		"<BODY onLoad = 'ck_window();'>\n";
+	print "<BODY onLoad = 'ck_window();'>\n";
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
@@ -229,8 +229,7 @@ $facilitycontact = 	get_text("Facility contact");
 						`fullname`	= " . 			quote_smart(addslashes(trim($_POST['frm_fullname']))) . ",
 						`dob`	= " .				quote_smart(addslashes(trim($_POST['frm_dob']))) . ",
 						`gender`	= " .			quote_smart(addslashes(trim($_POST['frm_gender_val']))) . ",
-						`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",
-						`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",";
+						`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",";
 					}
 				else { $ins_data = "";}
 					
@@ -241,7 +240,9 @@ $facilitycontact = 	get_text("Facility contact");
 	     			`date`= " .  		quote_smart(addslashes(trim($now))) . ",
 	     			`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
 	     			`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
-	     			`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ", 
+	     			`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ",
+					`facility_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",	
+					`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",
 	     			`updated` = " .  	quote_smart(addslashes(trim($frm_asof)));
 
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
@@ -255,89 +256,20 @@ $facilitycontact = 	get_text("Facility contact");
 			print "<BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();' STYLE = 'margin-left:280px' /><BR /><BR /><BR />\n";
 
 			print "</BODY>";				// 10/19/08
-			
+			$id = $_GET['ticket_id'];			
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_PERSON_CHG']);		// returns array or FALSE
 			if ($addrs) {
-?>			
-<SCRIPT>
-
-	function do_notify() {
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET - PATIENT: ";
-		var theId = '<?php print $_GET['ticket_id'];?>';
-//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
-		
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-</SCRIPT>
-<?php
-
+				$theTo = implode("|", array_unique($addrs));
+				$theText = "TICKET - PATIENT: ";
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if ($addrs)
 			}		// end if($addrs) 
-		else {
-?>		
-<SCRIPT>
-	function do_notify() {
-		return;
-		}			// end function do notify()
-</SCRIPT>
-<?php		
-			}
-			
 		print "</HTML>";				// 10/19/08
+		exit();
 		}		// end else ...
 // ________________________________________________________		
-			exit();
+
 			
-		}			// end if ($get_action == 'add')
-		
 	else if ($get_action == 'delete') {
 		if (array_key_exists('confirm', ($_GET))) {
 			do_log($GLOBALS['LOG_PATIENT_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 3/18/10
@@ -421,7 +353,7 @@ setTimeout("document.next_Form.submit()",1500);
 		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="<?php echo basename(__FILE__);?>?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update">
 		<TABLE BORDER="0" STYLE = 'margin-left:50px;'>
 
-		<TR CLASS='even' ><TD><B><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></B></TD>
+		<TR CLASS='even' ><TD CLASS='td_label'><B><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></B></TD>
 			<TD><INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32" <?php print $dis;?>></TD></TR>
 <?php
 	$checks = array("", "", "", "", "");		// gender checks
@@ -506,7 +438,7 @@ setTimeout("document.next_Form.submit()",1500);
 				$row = stripslashes_deep(mysql_fetch_assoc($result));		// proceed directly to edit
 ?>
 <SCRIPT>
-document.list_form.id.value = <?php echo $row['id'];
+document.list_form.id.value = <?php echo $row['id'];?>
 document.list_form.submit();
 </SCRIPT>
 <?php			
@@ -546,22 +478,83 @@ document.list_form.submit();
 		}	// end $get_action == 'list'
 		
 	else {				// $get_action - NOTA - default
+		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
+		$regions_inuse = get_regions_inuse($user_level);	//	5/4/11
+		$group = get_regions_inuse_numbers($user_level);	//	5/4/11		
+
+		$al_groups = $_SESSION['user_groups'];
+			
+		if(array_key_exists('viewed_groups', $_SESSION)) {	//	5/4/11
+			$curr_viewed= explode(",",$_SESSION['viewed_groups']);
+			} else {
+			$curr_viewed = $al_groups;
+			}
+
+		$curr_names="";	//	5/4/11
+		$z=0;	//	5/4/11
+		foreach($curr_viewed as $grp_id) {	//	5/4/11
+			$counter = (count($curr_viewed) > ($z+1)) ? ", " : "";
+			$curr_names .= get_groupname($grp_id);
+			$curr_names .= $counter;
+			$z++;
+			}	
+
+		$regs_string = "<FONT SIZE='-1'>Showing " . get_text("Regions") . ":&nbsp;&nbsp;" . $curr_names . "</FONT>";	//	5/4/11	
+		
+		if(!isset($curr_viewed)) {	
+			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+				} else {
+				$x=0;	//	6/10/11
+				$where2 = "WHERE (";	//	6/10/11
+				foreach($al_groups as $grp) {	//	6/10/11
+					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= $where3;
+					$x++;
+					}
+				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11					
+				}
+			} else {
+			if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+				} else {				
+				$x=0;	//	6/10/11
+				$where2 = "WHERE (";	//	6/10/11
+				foreach($curr_viewed as $grp) {	//	6/10/11
+					$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= $where3;
+					$x++;
+					}
+				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11						
+				}
+			}
+		
+		$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`
+			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )		
+			$where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";		
+		$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$pulldown = '<option value = 0 selected>Select</option>\n'; 	// 3/18/10
+			while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+				$pulldown .= "<option value=\"{$row_fc['id']}\">" . shorten($row_fc['name'], 20) . "</option>\n";
+				}		
 ?>
 		<BR /><BR /><FONT CLASS="header" STYLE = 'margin-left:50px'>Add <?php print $patient; ?> Record</FONT><BR /><BR />
 		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="<?php echo basename(__FILE__);?>?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
 		<TABLE BORDER="0" CELLSPACING=2 CELLPADDING=2 STYLE = 'margin-left:50px;'>
-		<TR CLASS='even' ><TD><B><?php print get_text("Patient ID");?>:</B> <font color='red' size='-1'>*</font></TD><TD><INPUT TYPE="text" NAME="frm_name" value="" size="32"></TD></TR>
+		<TR CLASS='even' ><TD CLASS='td_label'><B><?php print get_text("Patient ID");?>:</B> <font color='red' size='-1'>*</font></TD><TD><INPUT TYPE="text" NAME="frm_name" value="" size="32"></TD></TR>
 <?php
 
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
 	$result = mysql_query($query);
 	if(@mysql_num_rows($result) > 0) {
-		$ins_sel_str = "<SELECT CLASS='sit' name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
+		$ins_sel_str = "<SELECT name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
 		$ins_sel_str .= "\t\t\t<OPTION VALUE=0 SELECTED >Select</OPTION>\n";		// 7/27/11		
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			$ins_sel_str .= "\t\t\t<OPTION VALUE={$row['id']}>{$row['ins_value']}</OPTION>\n";		
 			}		// end while()
-		$ins_sel_str .= "</SELECT>\n";
+		$ins_sel_str .= "</SELECT>";
 		
 ?>
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $fullname;?>: &nbsp;&nbsp;</TD>
@@ -569,7 +562,7 @@ document.list_form.submit();
 		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
 			<TD><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='' SIZE = '24' /></TD></TR>
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  <font color='red' size='-1'>*</font></B>&nbsp;&nbsp;</TD>
-			<TD>			
+			<TD CLASS='td_data'>			
 				&nbsp;&nbsp;
 				M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' />
 				&nbsp;&nbsp;F&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 2 onClick = 'this.form.frm_gender_val.value=this.value;' />
@@ -577,9 +570,18 @@ document.list_form.submit();
 				&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' />
 			</TD></TR>
 		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
-			<TD><?php echo $ins_sel_str;?></TD></TR>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $facilitycontact;?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='' SIZE = '64' /></TD></TR>
+			<TD CLASS='td_data'><?php echo $ins_sel_str;?></TD></TR>
+		<TR CLASS='odd'>
+			<TD CLASS="td_label">Facility:</TD><TD COLSPAN='2' class='td_label'>
+				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>
+			</TD>
+		</TR>
+		<TR CLASS='odd'>
+			<TD CLASS="td_label"><?php echo $facilitycontact;?>:&nbsp;&nbsp;</TD>
+			<TD class='td_data'>
+				<INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='' SIZE = '64' />
+			</TD>
+		</TR>
 <?php
 		}		// end 	if($num_rows>0) 
 ?>		

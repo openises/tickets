@@ -11,6 +11,7 @@
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 require_once('./incs/messaging.inc.php');
 $tick_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != "")) ? $_GET['ticket_id'] : 0;
@@ -208,7 +209,7 @@ else {
 	foreach($the_emails as $val) {
 		$the_responders[] = get_resp_id2($val);
 		}
-	if($_POST['frm_use_smsg'] == 1) {
+	if(($_POST['frm_use_smsg']) && ($_POST['frm_use_smsg'] == 1)) {
 		foreach($the_sms as $val2) {
 			$the_responders[] = get_resp_id($val2);	
 			}

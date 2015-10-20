@@ -32,6 +32,7 @@ error_reporting(E_ALL);
 <?php
 	
 @session_start();
+session_write_close();
 require_once('incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 $mode = ((array_key_exists('mode',$_REQUEST)) && ($_REQUEST['mode'] ==1))? 1: 0;		// 9/8/10
@@ -196,17 +197,16 @@ function edit_ticket($id) {							/* post changes */
 			print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
 		}			// end switch ()
 
-	print '<FONT CLASS="header" STYLE = "margin-left:40px">Update complete</FONT><BR /><BR />';		/* show updated ticket */
-//	notify_user($id, $GLOBALS['NOTIFY_TICKET']);
 	if (!($mode==1)) {											// 9/8/10
 		add_header($id);
 		}
-	show_ticket($id);
 	$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
-
+	@session_start();
+	unset ($_SESSION['active_ticket']);								// 5/4/11
+	session_write_close();
+	return($addrs);	//	11/18/13
 	}				// end function edit ticket() 
 
-	$api_key = get_variable('gmaps_api_key');
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -312,7 +312,7 @@ function edit_ticket($id) {							/* post changes */
 //			theForm.frm_ngs.disabled=false;													// 9/13/08
 			theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
 <?php		/* 6/4/2013  */
-		if (intval(get_variable('broadcast')==1)) { 
+		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		// 7/2/2013
 ?>
 			var theMessage = "Updated  <?php print get_text('Incident');?> (" + theForm.frm_scope.value + ") by <?php echo $_SESSION['user'];?>";
 			broadcast(theMessage ) ;
@@ -436,7 +436,7 @@ function edit_ticket($id) {							/* post changes */
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php" TYPE="text/css" /> <!-- 3/15/11 -->
-	<BODY onLoad = "do_notify(); parent.frames['upper'].show_msg ('Edit applied!'); document.go_Form.submit();">
+	<BODY onLoad = "parent.frames['upper'].show_msg ('Edit applied!'); document.go_Form.submit();">
 		<FORM NAME='go_Form' METHOD = 'post' ACTION="main.php">
 		</FORM>	
 		</BODY></HTML>
@@ -444,7 +444,7 @@ function edit_ticket($id) {							/* post changes */
 		}
 		
 ?>		
-<BODY onLoad = "do_notify(); ck_frames()" >
+<BODY onLoad = "ck_frames()" >
 <?php
 require_once('./incs/links.inc.php');
  
@@ -453,10 +453,28 @@ require_once('./incs/links.inc.php');
 	if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {		/* update ticket */
 		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id' LIMIT 1")) {
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
+			} else {
+			$the_addrs = edit_ticket($id);	// post updated data	11/18/13
+
+			if ($addrs) {
+				$theTo = implode("|", array_unique($addrs));
+				$theText = "TICKET-Update: " . $_POST['frm_scope'];
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if ($addrs)
+			if($_SESSION['internet']) {
+				if($mode == 0) {
+					require_once('./forms/ticket_view_screen_NM.php');
+					} else {
+					$now = time() - (intval(get_variable('delta_mins')*60));		// 6/20/10
+					$ticket_name = $_POST['frm_scope'];
+					print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: " . $ticket_name . " Updated </FONT></CENTER><BR /><BR />";
+?>
+					<CENTER><SPAN id='cont_but' class='plain' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'>FINISH</SPAN></CENTER>
+<?php
+					}
+				}
 			}
-		else {
-			edit_ticket($id);									// post updated data
-			}
+		exit();
 		}
 
 	else if (isset($_GET['delete'])) {							//delete ticket
@@ -470,27 +488,15 @@ require_once('./incs/links.inc.php');
 		else {		//confirm deletion
 			print "<FONT CLASS='header'>Confirm ticket deletion</FONT><BR /><BR /><FORM METHOD='post' NAME = 'del_form' ACTION='{$this_file}?id=$id&delete=1&go=1'><INPUT TYPE='checkbox' NAME='frm_confirm' VALUE='1'>Delete ticket #$id &nbsp;<INPUT TYPE='Submit' VALUE='Confirm'></FORM>";	// 8/26/10
 			}
-		}
-	else {				// not ($_GET['delete'])
+		} else {				// not ($_GET['delete'])
 		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {		/* sanity check */
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT><BR />";
-			} 
-
-		else {				// OK, do form - 7/7/09
-//			$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id' LIMIT 1") or do_error('', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-/*
-			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,
-				UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]ticket` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
-				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
-*/
- 
+			} else {				// OK, do form - 7/7/09
  			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend, UNIX_TIMESTAMP(booked_date) AS booked_date, UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, 
  				`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` FROM `$GLOBALS[mysql_prefix]ticket` 
  				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
  				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
 
-//			dump($query);
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 	
 			$row = stripslashes_deep(mysql_fetch_array($result));
@@ -822,7 +828,6 @@ require_once('./incs/links.inc.php');
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -899,80 +904,4 @@ require_once('./incs/links.inc.php');
 </FORM>	
 
 </BODY>
-<?php
-			if ($addrs) {				// 10/21/08
-?>			
-<SCRIPT>
-	function do_notify() {
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET-Update: ";
-		var theId = '<?php print $_GET['id'];?>';
-//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
-		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-</SCRIPT>
-<?php
-
-			}		// end if($addrs) 
-		else {
-?>		
-<SCRIPT>
-	function do_notify() {
-		return;
-		}			// end function do notify()
-</SCRIPT>
-<?php		
-			}
-
-?>
 </HTML>

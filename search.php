@@ -1,6 +1,7 @@
 <?php
 
 /*
+SELECT DISTINCT year(`problemstart`) AS `the_year` FROM `$GLOBALS[mysql_prefix]ticket` WHERE (year(`problemstart`) != 0) ORDER BY `the_year` DESC
 8/28/08 mysql_fetch_array to  mysql_fetch_assoc
 9/19/08 add injection protection to query parameters
 1/21/09 added show butts - re button menu
@@ -11,21 +12,31 @@
 3/15/11 changed stylesheet.php to stylesheet.php
 4/5/11 get_new_colors() added
 1/6/2013 XSS check corrected
+9/25/2014 JC-specific functions added, GMaps references removed.
+1/1/2015 - added year as search argument
+4/12/2015 -  added actions and patients to ticket display
 */
 error_reporting(E_ALL);
 
 session_start();
-//require_once($_SESSION['fip']);				// 7/28/10
+session_write_close();
 require_once('./incs/functions.inc.php');		// 9/29/10
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);					// 9/29/10
-if ($istest) {
-	dump ($_POST);
-	dump ($_GET);
-	}
-$evenodd = array ("even", "odd");
+//if ($istest) {
+//	dump ($_POST);
+//	dump ($_GET);
+//	}
 
-?> 
+if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+	print "Not Authorized";
+	exit();
+	}
+
+$evenodd = array ("even", "odd");
+$jc_911 = mysql_table_exists("$GLOBALS[mysql_prefix]jc_911");
+
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <HEAD><TITLE>Tickets - Search Module</TITLE>
@@ -35,10 +46,7 @@ $evenodd = array ("even", "odd");
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>&libraries=geometry&sensor=false"></SCRIPT>	<!-- 4/23/13 -->
-<SCRIPT TYPE="text/javascript" src="./js/elabel_v3.js"></SCRIPT> 	<!-- 4/23/13 -->
-<SCRIPT TYPE="text/javascript" SRC="./js/gmaps_v3_init.js"></script>	<!-- 4/23/13 -->
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->
 <SCRIPT>
 
 function ck_frames() {		//  onLoad = "ck_frames()"
@@ -86,21 +94,69 @@ function validate(theForm) {
 	}				// end function validate(theForm)
 </SCRIPT>
 </HEAD>
+<?php
+$do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type'] == 'pa') ) ? "do_pa ()" : "" ; 	// special case
+?>
+<BODY onLoad = "ck_frames(); <?php echo $do_str; ?>">
+<?php
+	if ($jc_911){
+?>
+<script>
+function do_db () {
+	$("db").style.display = "inline";
+	$("pa").style.display = "none";
+	$("fa").style.display = "none";
+	$("po").style.display = "none";
+	document.queryForm.frm_query.focus();
+	}
 
-<BODY onLoad = "ck_frames()">
-<?php 
-	$post_frm_query = (array_key_exists('frm_query', $_POST)) ? strip_tags($_POST['frm_query']) : FALSE ;		// 1/6/2013
+function do_pa () {
+	$("db").style.display = "none";
+	$("pa").style.display = "inline";
+	$("fa").style.display = "none";
+	$("po").style.display = "none";
+	}
+
+function do_fa () {
+	$("db").style.display = "none";
+	$("pa").style.display = "none";
+	$("fa").style.display = "inline";
+	$("po").style.display = "none";
+	document.getElementById("addr_list").innerHTML = "";
+	document.fa_form.frm_street.value = "";
+	document.fa_form.frm_street.focus();
+	}
+
+function do_po () {				// not implemented
+	$("db").style.display = "inline";
+	$("pa").style.display = "inline";
+	$("fa").style.display = "inline";
+	$("po").style.display = "none";
+	}
+
+</script>
+	<span style = "margin-left:40px;"><b>Search &raquo;</b>
+	<button style = "margin-left:20px;margin-top:10px" onclick = "do_db()">Incidents</button>
+	<button style = "margin-left:20px;margin-top:10px" onclick = "do_pa()">Partial address</button>
+	<button style = "margin-left:20px;margin-top:10px" onclick = "do_fa()">Full address</button>
+	<button style = "display:none; margin-left:20px;margin-top:10px" onclick = "do_po()">Position</button>
+	</span>
+	<div id   = 'db' style = 'display:inline;'>
+	<?php
+		}		// end 	if ($jc_911)
+
+	$post_frm_query = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type'] == 'db') ) ? strip_tags($_POST['frm_query']) : FALSE ;		// 1/6/2013
 
 	if ($post_frm_query) {
 
-
 //		$query_str = quote_smart(trim($_POST['frm_query']));		// 7/20/10
+//		CAST(field AS CHAR) REGEXP 'search_term'.
 
-		print "<BR /><SPAN STYLE = 'margin-left:80px;'><FONT CLASS='header'>Search results for '$_POST[frm_query]'</FONT></SPAN><BR /><BR />\n";
-		$_POST['frm_query'] = ereg_replace(' ', '|', $_POST['frm_query']);
-		$query_str = quote_smart(trim(ereg_replace(' ', '|', $_POST['frm_query'])));
+		print "<BR /><BR /><BR /><BR /><SPAN STYLE = 'margin-left:80px;'><FONT CLASS='header'>Search results for '$_POST[frm_query]' in year $_POST[frm_year]</FONT></SPAN><BR /><BR />\n";
+		$_POST['frm_query'] = str_replace(' ', '|', $_POST['frm_query']);
+		$query_str = quote_smart(trim(str_replace(' ', '|', $_POST['frm_query'])));
 		if($_POST['frm_search_in'])	{								//what field are we searching?
-			$search_fields = "{$_POST['frm_search_in']} REGEXP '$_POST[frm_query]'";	//
+			$search_fields = "CAST({$_POST['frm_search_in']} AS CHAR) REGEXP '$_POST[frm_query]'";	//
 			}
 		else {							//list fields and form the query to search all of them
 			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`");
@@ -108,7 +164,7 @@ function validate(theForm) {
 			$ok_types = array("string", "blob");
 			for ($i = 0; $i < mysql_num_fields($result); $i++) {
 				if (in_array (mysql_field_type($result, $i), $ok_types )) {
-    				$search_fields .= mysql_field_name($result, $i) ." REGEXP {$query_str} OR ";
+    				$search_fields .= "CAST(`" . mysql_field_name($result, $i) ."` AS CHAR) REGEXP {$query_str} OR ";
     				}
     			}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);		// drop trailing OR
@@ -120,56 +176,70 @@ function validate(theForm) {
 			}
 		$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";		// 9/19/08
 
-// ___________________________________  NEW STUFF __________________	9/30/10	
 		$id_stack= array();
-		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]ticket`  WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} AND `status` LIKE " . quote_smart($_POST['frm_querytype']) . " AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;		// 9/19/08
+
+		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} AND `status` LIKE " . quote_smart($_POST['frm_querytype']) . " AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;		// 9/19/08
 		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
 
 		$tick_hits = mysql_affected_rows();
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			array_push($id_stack, $row['id']);
 			}
-		$query = "SELECT `ticket_id` FROM `$GLOBALS[mysql_prefix]patient` 
-			WHERE `description` REGEXP " . quote_smart($_POST['frm_query']) . " OR `name` REGEXP " . quote_smart($_POST['frm_query']) ;		
+		$query = "SELECT `ticket_id` FROM `$GLOBALS[mysql_prefix]patient`
+			WHERE CAST(`description` AS CHAR) REGEXP " . quote_smart($_POST['frm_query']) . " OR CAST(`name` AS CHAR) REGEXP " . quote_smart($_POST['frm_query']) ;
 		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
 		$per_hits = mysql_affected_rows();
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			array_push($id_stack, $row['ticket_id']);
 			}
 
-		$query = "SELECT `ticket_id` FROM `$GLOBALS[mysql_prefix]action` 
-			WHERE `description` REGEXP " . quote_smart($_POST['frm_query']);		// 9/19/08
+		$query = "SELECT `ticket_id` FROM `$GLOBALS[mysql_prefix]action`
+			WHERE CAST(`description` AS CHAR) REGEXP " . quote_smart($_POST['frm_query']);		// 9/19/08
 		$result = mysql_query($query) or do_error('','', mysql_error(),basename( __FILE__), __LINE__);
 		$act_hits = mysql_affected_rows();
-		
+
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			array_push($id_stack, $row['ticket_id']);
 			}
 
 		if (empty($id_stack )){
 			print "<SPAN STYLE = 'margin-left:80px'><B>No matches found</B></SPAN><BR /><BR />";
-			}		
+			}
 		else {
 			$id_stack = array_unique($id_stack);		// at least one
-	
 			$in_str = $sep = "";
 			for ($i=0; $i< count($id_stack); $i++) {
-				$in_str .= "{$sep}'{$id_stack[$i]}'";
-				$sep = ", ";
-				}			
-	
+				if (isset($id_stack[$i])) {				// 4/12/2015
+					$in_str .= "{$sep}'{$id_stack[$i]}'";
+					$sep = ", ";
+					}
+				}
+
+		$acts_ary = $pats_ary = array();				// 4/12/2015
+
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` WHERE year(`date`) = " . quote_smart($_POST["frm_year"] ) . " GROUP BY `ticket_id`";
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+			$acts_ary[$row['ticket_id']] = $row['the_count'];
+			}
+
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` WHERE year(`date`) = " . quote_smart($_POST["frm_year"] ) . "  GROUP BY `ticket_id`";
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+			$pats_ary[$row['ticket_id']] = $row['the_count'];
+			}
+
+//								1/1/2015
 			$query = "SELECT `id`, UNIX_TIMESTAMP(`problemstart`) AS `problemstart`, UNIX_TIMESTAMP(`updated`) AS `updated`, `scope`, `status`, `severity`,
 				CONCAT_WS(' ',`street`,`city`,`state`) AS `addr`
-				FROM `$GLOBALS[mysql_prefix]ticket` 
-				WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} 
+				FROM `$GLOBALS[mysql_prefix]ticket`
+				WHERE year(`problemstart`) = " . quote_smart($_POST["frm_year"] ) . " AND `status` <> {$GLOBALS['STATUS_RESERVED']}
 				AND `id` IN ({$in_str})
 				AND `status` LIKE " . quote_smart($_POST['frm_querytype']) . "
 				ORDER BY `severity` DESC, `problemstart` ASC";
-	//		dump ($query);
-	
+
 			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-			
-	// ___________________________________  END NEW STUFF __________________		
+
 //			dump(mysql_num_rows($result));
 
 			if(mysql_num_rows($result) == 1) {	//	revised to redirect to main.php rather than show ticket in search.php	4/29/13
@@ -178,7 +248,7 @@ function validate(theForm) {
 				header('Cache-Control: no-store, no-cache, must-revalidate');
 				header('Cache-Control: post-check=0, pre-check=0', FALSE);
 				header('Pragma: no-cache');
-	
+
 				$host  = $_SERVER['HTTP_HOST'];
 				$url = "main.php?id=" . $row['id'];
 				redir($url);
@@ -187,18 +257,21 @@ function validate(theForm) {
 				}
 			elseif (mysql_num_rows($result) == 0) {
 				print "<SPAN STYLE = 'margin-left:80px'><B>No matches found</B></SPAN><BR /><BR />";
-			
+
 				}
 			else {		//  more than one, list them
 				print "<SPAN STYLE = 'margin-left:80px'><B>Matches</B>: tickets {$tick_hits}, actions {$act_hits}, persons {$per_hits}</SPAN><BR /><BR />";
-			
-				print "<TABLE BORDER='0'><TR CLASS='even'>
+
+				print "<TABLE BORDER='0' style = 'margin-left:80px;'><TR CLASS='even'>
 					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:2px;'>Ticket</SPAN></TD>
 					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Opened</SPAN></TD>
 					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Description</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Location</SPAN></TD></TR>";
+					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Location</SPAN></TD>
+					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>A</SPAN></TD>
+					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>P</SPAN></TD>
+					</TR>";
 				$counter = 0;
-					
+
 				while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
 					if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
 						$strike = "<strike>"; $strikend = "</strike>";
@@ -209,55 +282,302 @@ function validate(theForm) {
 						case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
 						default: 				$severityclass='severity_normal'; break;
 						}
-	
+
+					$acts = (array_key_exists($row['id'], $acts_ary)) ? $acts_ary[$row['id']] : "";
+					$pats = (array_key_exists($row['id'], $pats_ary)) ? $pats_ary[$row['id']] : "";
 					print "<TR CLASS='{$evenodd[$counter%2]}' onClick = \"Javascript: self.location.href = 'main.php?id={$row['id']}';\">
 						<TD CLASS='$severityclass'>#{$row['id']}</TD>
 						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>" . format_date($row['problemstart'])."</SPAN></TD>
 						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['scope']), 120) . "{$strikend}</SPAN></TD>
 						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['addr']), 120) . "{$strikend}</SPAN></TD>
+						<TD >{$acts}</TD>
+						<TD >{$pats}</TD>
 						</TR>\n";				// 2/25/09
 					$counter++;
-					}			
+					}
 				print '</TABLE><BR /><BR />';
 				}			// end if/else
 			}			// end if/else (empty($id_stack ))
 		}				// end if ($_POST['frm_query'])
 	else {
-		print "<SPAN STYLE = 'margin-left:86px'><FONT CLASS='header'>Search</FONT></SPAN>";
+//		print "<SPAN STYLE = 'margin-left:86px'><FONT CLASS='header'>Search</FONT></SPAN>";
 		}
+
 ?>
 <BR /><BR />
-<FORM METHOD="post" NAME="queryForm" ACTION="search.php" onSubmit="return validate(document.queryForm)">
+
+<FORM METHOD="post" NAME="queryForm" ACTION="<?php echo basename(__FILE__); ?>" onSubmit="return validate(document.queryForm)">
+<input type = hidden name = "search_type" value = "db" />
 <TABLE CELLPADDING="2" BORDER="0" STYLE = 'margin-left:80px;'>
-<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Query: &nbsp;</TD><TD><INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print $post_frm_query;?>" NAME="frm_query"></TD></TR>
-<TR CLASS = "odd"><TD VALIGN="top" CLASS="td_label">Search in: &nbsp;</TD><TD>
-<SELECT NAME="frm_search_in">
-<OPTION VALUE="" checked>All</OPTION>
-<OPTION VALUE="contact">Reported by</OPTION>
-<OPTION VALUE="street">Address</OPTION>
-<OPTION VALUE="city">City</OPTION>
-<OPTION VALUE="state">State</OPTION>
-<OPTION VALUE="description">Description</OPTION>
-<OPTION VALUE="comments">Comments</OPTION>
-<OPTION VALUE="owner">Owner</OPTION>
-<OPTION VALUE="date">Issue Date</OPTION>
-<OPTION VALUE="problemstart">Problem Starts</OPTION>
-<OPTION VALUE="problemend">Problem Ends</OPTION>
-</SELECT></TD></TR>
-<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Order By: &nbsp;</TD><TD>
-<SELECT NAME="frm_ordertype">
-<OPTION VALUE="date">Issue Date</OPTION>
-<OPTION VALUE="problemstart">Problem Starts</OPTION>
-<OPTION VALUE="problemend">Problem Ends</OPTION>
-<OPTION VALUE="affected">Affected</OPTION>
-<OPTION VALUE="scope">Incident</OPTION>
-<OPTION VALUE="owner">Owner</OPTION>
-</SELECT>&nbsp;Descending: <INPUT TYPE="checkbox" NAME="frm_order_desc" VALUE="DESC" CHECKED></TD></TR>
-<TR CLASS = "odd"><TD VALIGN="top" CLASS="td_label">Status: &nbsp;</TD><TD>
-<INPUT TYPE="radio" NAME="frm_querytype" VALUE="%" CHECKED> All<BR />
-<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_OPEN;?>"> Open<BR />
-<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_CLOSED;?>"> Closed<BR />
-</TD></TR>
-<TR CLASS = "even"><TD></TD><TD ALIGN = "left"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back()" / ><INPUT TYPE="reset" VALUE="Reset" STYLE ="margin-left:20px" /><INPUT TYPE="submit" VALUE="Next"  STYLE ="margin-left:20px" /></TD></TR>
+<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Search for: &nbsp;</TD>
+<TD><INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print $post_frm_query;?>" NAME="frm_query"></TD></TR>
+<TR CLASS = "odd"><TD VALIGN="top" CLASS="td_label">In: &nbsp;</TD><TD>
+	<SELECT NAME="frm_search_in">
+	<OPTION VALUE="" checked>All fields</OPTION>
+	<OPTION VALUE="contact">Reported by</OPTION>
+	<OPTION VALUE="street">Address</OPTION>
+	<OPTION VALUE="city">City</OPTION>
+	<OPTION VALUE="state">State</OPTION>
+	<OPTION VALUE="description">Description</OPTION>
+	<OPTION VALUE="comments">Comments</OPTION>
+	<OPTION VALUE="owner">Owner</OPTION>
+	<OPTION VALUE="date">Issue Date</OPTION>
+	<OPTION VALUE="problemstart">Problem Starts</OPTION>
+	<OPTION VALUE="problemend">Problem Ends</OPTION>
+	</SELECT></TD></TR>
+<?php						// 1/1/2015
+	$query ="SELECT DISTINCT year(`problemstart`) AS `the_year` FROM `$GLOBALS[mysql_prefix]ticket` WHERE (year(`problemstart`) != 0) ORDER BY `the_year` DESC";
+	$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+	
+	$thisYear = date("Y");
+?>
+
+<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Year:</TD><TD>
+	<SELECT NAME="frm_year">
+<?php
+	if(mysql_num_rows($result) > 0) {
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			echo "\t<OPTION VALUE=\"{$row['the_year']}\">{$row['the_year']}</OPTION>\n";
+			}
+		} else {
+		echo "\t<OPTION VALUE=\"{$thisYear}\">{$thisYear}</OPTION>\n";
+		}
+?>
+	</SELECT></TD></TR>
+<TR CLASS = "odd"><TD VALIGN="top" CLASS="td_label">Order By: &nbsp;</TD><TD>
+	<SELECT NAME="frm_ordertype">
+	<OPTION VALUE="date">Issue Date</OPTION>
+	<OPTION VALUE="problemstart">Problem Starts</OPTION>
+	<OPTION VALUE="problemend">Problem Ends</OPTION>
+	<OPTION VALUE="affected">Affected</OPTION>
+	<OPTION VALUE="scope">Incident</OPTION>
+	<OPTION VALUE="owner">Owner</OPTION>
+	</SELECT>&nbsp;Descending: <INPUT TYPE="checkbox" NAME="frm_order_desc" VALUE="DESC" CHECKED></TD></TR>
+<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Status: &nbsp;</TD><TD>
+	<INPUT TYPE="radio" NAME="frm_querytype" VALUE="%" CHECKED> All<BR />
+	<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_OPEN;?>"> Open<BR />
+	<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_CLOSED;?>"> Closed<BR />
+	</TD></TR>
+<TR CLASS = "odd"><TD></TD><TD ALIGN = "left"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back()" / ><INPUT TYPE="reset" VALUE="Reset" STYLE ="margin-left:20px" /><INPUT TYPE="submit" VALUE="Next"  STYLE ="margin-left:20px" /></TD></TR>
 </TABLE></FORM>
+
+</div>		<!-- end 'db' -->
+<!-- new jc_911 stuff - 9/25/2014 -->
+
+<?php
+	if ($jc_911) {
+?>
+
+<script>
+
+	function sendRequest(url,callback,postData) {
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+
+				alert("error@ 330" );
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try { xmlhttp = XMLHttpFactories[i](); }
+			catch (e) { continue; }
+			break;
+			}
+		return xmlhttp;
+		}
+
+	char_lim = 4;
+
+	function do_selected_addr( theId ) {						// client-side js span 'onclick' function
+		var myWindow = window.open("show_jc_911.php?id=" +  theId, "myWindow", "top=100, left=250, width=250, height=640");
+		myWindow.focus();
+		}
+
+	function get_fa_list(inStr) {	     				// 8/10/2014
+			function fa_callback(req) {			// private callback function
+				document.getElementById("addr_list").innerHTML = req.responseText;
+				}
+		if (inStr.length < char_lim) { return;}			// revisit length check
+		else {
+			var params = "q=" + escape(inStr);			// post keyboarded string
+//						(url,  callback,  postData)
+			sendRequest ( './ajax/jc_addr_lookup_srch.php', fa_callback, params);	// url, return handler, data sent
+			}
+	 	}				// end function get_fa_list()
+// ______________________________________________________________
+
+</script>
+
+<div id = "pa" style = "display:none; margin-left:60px; margin-top:20px;">
+<form name = "pa_form" method = "post" action = "<?php echo basename(__FILE__) ;?>">
+<input type = hidden name = "search_type" value = "pa" />
+<h3 style = 'margin-left: 40px;'>Partial address:</h3>
+<span style = 'margin-left: 40px;'><i>Enter known information</i></span><br />
+
+<input name = "frm_first" type = "text" value = "" placeholder = "First name" style = "margin-left:40px;"/>
+<input name = "frm_last" type = "text" value = "" placeholder = "Last name" />
+<input name = "frm_addr" type = "text" value = "" placeholder = "Street or road" />
+
+<?php
+	echo "<SELECT NAME = 'frm_community'><option value = ''>Select Community</OPTION>n";
+	$query = "SELECT DISTINCT `community` FROM `$GLOBALS[mysql_prefix]jc_911` ORDER BY `community` ASC";
+	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename(__FILE__), __LINE__);
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		echo "<option value = '{$row['community']}'>{$row['community']}</option>\n";
+		}				// end while ()
+	echo "</SELECT>\n";
+?>
+<button style = "" onclick = "this.form.submit();">Next</button>
+<!--  <button style = "">Reset</button> -->
+</form>
+<div id = "pa_list">
+<?php
+
+	$post_frm_pa_query = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type'] == 'pa') ) ;		// 1/6/2013
+
+	if ($post_frm_pa_query) {
+	// _____________________________________________________________________________________
+
+
+	$js_func = "do_selected_addr";						// client-side js span 'onclick' function
+	$tablename = "jc_911";
+
+	function get_resident_phr() {		// returns get_resident query phrase - avoiding conditionals
+		$sw_val = (empty ($_POST['frm_first']) ) ?  0 : 1 ;
+		$sw_val += (empty ($_POST['frm_last']) ) ?  0 : 2 ;
+		switch ($sw_val) {
+			case 0:				// neither
+				return "";
+				break;
+
+			case 1:				// first only
+				return " (CAST(`resident`AS CHAR) REGEXP '{$_POST['frm_first']}') AND";
+				break;
+
+			case 2:				// last only
+				return " (CAST(`resident`AS CHAR) REGEXP '{$_POST['frm_last']}') AND"; ;
+				break;
+
+			case 3:				// both
+				return "( (CAST(`resident`AS CHAR) REGEXP '{$_POST['frm_first']}') OR (`resident` REGEXP '{$_POST['frm_last']}') ) AND";
+				break;
+
+			}		// end switch
+		}		// end function get_rd_name_phr()
+
+	$rd_name_lgth = 0;
+	function get_rd_name_phr() {		// returns rd_name query phrase
+		global $rd_name_lgth;
+		$rd_name_lgth = strlen ( $_POST['frm_addr']);
+		return (empty($_POST['frm_addr'] ) ) ?  ""  : " ( CAST(`rd_name`AS CHAR) REGEXP '{$_POST['frm_addr']}' OR CAST(`old_rd_name`AS CHAR) REGEXP '{$_POST['frm_addr']}' ) AND" ;
+		}
+
+	function get_community_phr() {		// returns community query phrase
+		return (empty($_POST['frm_community'] ) ) ?  ""  : " (CAST(`community`AS CHAR) REGEXP '{$_POST['frm_community']}' ) AND" ;
+		}
+
+	$query = "SELECT `id` AS `payload` ,
+			CONCAT_WS( ' ', `resident` , `house_num` , UPPER(`rd_name`) , UPPER(`community`) )	AS `address` ,
+			CONCAT_WS( ' ', `old_num` , UPPER(`old_rd_name`) ) 									AS `address_old`
+		FROM `$GLOBALS[mysql_prefix]{$tablename}` WHERE ";					// now build the WHERE clause
+
+	$rd_name_phr = get_rd_name_phr();
+	$resident_phr = get_resident_phr();
+	$community_phr = get_community_phr();
+	$query .= "{$rd_name_phr}";
+	$query .= "{$resident_phr}";
+	$query .= "{$community_phr}";
+	$query = substr($query, 0, (strlen($query) - 4));  		// drop terminal ' AND'
+	$query .= " ORDER BY `community` ASC, `rd_name` ASC, `house_num` ASC";
+
+	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename(__FILE__), __LINE__);
+	if (mysql_num_rows($result)> 0) {
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+			extract ($row);
+			echo "<span style = 'margin-left: 80px;'><input type = radio name = 'addr_rb' onclick = '{$js_func}(\"{$payload}\")'>{$address} / {$address_old}</span><br />\n";	// call client function
+			}		// end while ($row ...)
+		}		// end if ()
+	else {
+		echo "<h2 style = 'margin-left:360px;'>No matches!</h2><br />";
+		}
+	}		// end if ($post_frm_pa_query)
+
+// _____________________________________________________________________________________
+
+?>
+</div> <!-- / pa_list -->
+</div> <!-- / pa -->
+
+<div id = "fa" style = "display:none; margin-left:60px; margin-top:20px;">
+
+<form name = "fa_form" method = "post" action = "">
+<input type = hidden name = "search_type" value = "fa" />
+<h3 style = 'margin-left: 40px;'>Full address:</h3>
+<INPUT  style = "margin-left:40px;" NAME="frm_street" onkeyup="get_fa_list(this.value);"
+	SIZE="72" TYPE="text" VALUE="" MAXLENGTH="96" autocomplete="off" />
+
+<DIV ID="addr_list" style = "margin-left:40px; display:inline;"></DIV>	<!-- search results displayed here -->
+
+<!-- <button style = "" onclick = "chk_fa(this.form;)">Next</button>  -->
+</form>
+</div> <!-- end "fa" -->
+
+<div id = "po" style = "display:none; margin-left:60px; margin-top:20px;">
+<form name = "po_form" method = "post" action = "">
+<input type = hidden name = "search_type" value = "po" />
+<h3 style = 'margin-left: 40px;'>Position:</h3>
+<input name = "frm_lat" type = "text" value = "" placeholder = "Latitude" style= "margin-left:40px;"/>
+<input name = "frm_lng" type = "text" value = "" placeholder = "Longitude" />
+<button style = "" onclick = "chk_po(this.form;)">Next</button>
+</form>
+
+	<div id="map" style="width: 600px; height: 400px"></div>
+	<script src="./js/leaflet/leaflet.js"></script>
+	<script>
+		var map = L.map('map').setView([51.505, -0.09], 13);
+		L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			id: 'examples.map-i875mjb7'
+		}).addTo(map);
+		var popup = L.popup();
+		function onMapClick(e) {
+			popup
+				.setLatLng(e.latlng)
+				.setContent("You clicked the map at " + e.latlng.toString())
+				.openOn(map);
+		}
+		map.on('click', onMapClick);
+	</script>
+</body>
+</html>
+
+</div> <!-- end "po" -->
+<?php
+	}		// end if (jc_911)
+?>
+
 </BODY></HTML>

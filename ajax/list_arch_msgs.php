@@ -3,7 +3,6 @@
 list_arch_messages.php - gets archive messages from stored csv files for display in message window and ticket view and unit view
 10/23/12 - new file
 */
-@session_start();
 require_once('../incs/functions.inc.php');
 include('../incs/html2text.php');
 $filter = "";
@@ -62,15 +61,6 @@ $sort = (isset($_GET['sort'])) ? clean_string($_GET['sort']) : NULL;
 $columns = (isset($_GET['columns'])) ? explode("," ,clean_string($_GET['columns'])) : explode(",", get_msg_variable('columns')) ;
 $actr=0;
 
-$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder`";
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$responderlist = array();
-$responderlist[0] = "NA";	
-$caption = "Messages: ";	
-while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-	$responderlist[$act_row['id']] = $act_row['handle'];
-	}	
-	
 $the_user =  1;
 $errmsg = "";
 $i = 1;
@@ -180,10 +170,10 @@ foreach($the_result AS $msg_row) {
 		if($n == count($the_resp_ids)) {
 			$thesep = "";
 			}
-		$resp_names .= $responderlist[$val] . $thesep;
+		$resp_names .= get_respondername($val) . $thesep;
 		$n++;
 		}
-	$resp_name = (isset($responderlist[$the_responder])) ? $responderlist[$the_responder] : "INCOMING";	
+	$resp_name = get_respondername($the_responder);	
 	$the_message = ($msg_row['message'] != "") ? strip_tags($msg_row['message']) : "";
 	if($msg_row['recipients'] == NULL) {
 		$respstring = $resp_names;		
@@ -191,12 +181,7 @@ foreach($the_result AS $msg_row) {
 		$responders = explode (" ", trim($msg_row['recipients']));	// space-separated list to array
 		$sep = $respstring = "";
 		for ($k=0 ;$k < count($responders);$k++) {				// build string of responder names
-			if (in_array($responders[$k], $responderlist)) {
-				$respstring .= $sep . $responders[$k];
-				$sep = "<BR />";
-				} else {
-				$respstring .= $responders[$k];
-				}
+			$respstring .= $sep . $responders[$k];
 			}
 		}
 		
@@ -230,7 +215,7 @@ foreach($the_result AS $msg_row) {
 	$ret_arr[$i][3] = $fromname;
 	$ret_arr[$i][4] = $respstring;
 	$ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
-	$ret_arr[$i][6] = stripslashes_deep(shorten($the_message, 2000));
+	$ret_arr[$i][6] = htmlentities(shorten($the_message, 2000));
 	$ret_arr[$i][7] = $formatted_date;
 	$ret_arr[$i][8] = get_owner($msg_row['_by']);	
 	$ret_arr[$i][9] = $the_class;
@@ -241,4 +226,5 @@ foreach($the_result AS $msg_row) {
 	} // end while
 
 print json_encode($ret_arr);
+exit();
 ?>

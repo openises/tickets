@@ -7,6 +7,7 @@
 error_reporting(E_ALL);
 
 @session_start();
+session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">

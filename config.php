@@ -81,11 +81,15 @@
 3/29/2013 added include for GMaps V3 setcenter
 5/24/2013 ics 213 link made conditional on setting
 6/18/2013 added link for insurance table maint.
+7/5/13 Added link to native mail test script
+9/10/13 Added links for road conditions, local maps, personnel table for roster user and Warn locations
+
 */
 	$asterisk = FALSE;		// user: change to TRUE  in order to make the Pin Control table accessible.	
 	if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/7/09 
 	error_reporting (E_ALL  ^ E_DEPRECATED);
-	session_start();	
+	session_start();
+	session_write_close();
 	require_once('./incs/functions.inc.php');
 	do_login(basename(__FILE__));	// session_start()
 	require_once('./incs/config.inc.php');
@@ -175,6 +179,10 @@
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
+	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+	<!--[if lte IE 8]>
+		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+	<![endif]-->
 	<STYLE>
 	LI { margin-left: 20px;}
 	.spl { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
@@ -184,11 +192,26 @@
 #foo > #bar { position: fixed; top: 60px; right: 320px; }
 
 	</STYLE>
-	<SCRIPT SRC="./js/misc_function.js"></SCRIPT>	<!-- 1/25/13 JSON call-->
-	<SCRIPT SRC='./js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
-	<SCRIPT SRC='./js/jscoord.js'></SCRIPT>		<!-- coordinate conversion 12/4/10 -->	
-	<SCRIPT SRC="./js/jscolor/jscolor.js"></SCRIPT>				<!-- 01/24/11 -->
-
+	<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT SRC="./js/usng.js"></SCRIPT>
+	<SCRIPT SRC='./js/md5.js'></SCRIPT>
+	<SCRIPT SRC='./js/jscoord.js'></SCRIPT>	
+	<SCRIPT SRC="./js/jscolor/jscolor.js"></SCRIPT>
+	<script TYPE="text/javascript" SRC="./js/misc_function.js"></script>
+	<script TYPE="text/javascript" SRC="./js/domready.js"></script>
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+	<script src="./js/proj4js.js"></script>
+	<script src="./js/proj4-compressed.js"></script>
+	<script src="./js/leaflet/leaflet.js"></script>
+	<script src="./js/proj4leaflet.js"></script>
+	<script src="./js/leaflet/KML.js"></script>
+	<script src="./js/leaflet/gpx.js"></script>  
+	<script src="./js/leaflet-openweathermap.js"></script>
+	<script src="./js/esri-leaflet.js"></script>
+	<script src="./js/osopenspace.js"></script>
+	<script src="./js/Control.Geocoder.js"></script>
+	<script type="text/javascript" src="./js/L.Graticule.js"></script>
+	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 	<SCRIPT>
 // for messages
 	function get_msgs() {	//	10/23/12
@@ -223,6 +246,20 @@
 				}
 			}
 		}	
+		
+	function checkAll() {	//	9/10/13
+		var theField = document.user_add_Form.elements["frm_group[]"];
+		for (i = 0; i < theField.length; i++) {
+			theField[i].checked = true ;
+			}
+		}
+
+	function uncheckAll() {	//	9/10/13
+		var theField = document.user_add_Form.elements["frm_group[]"];
+		for (i = 0; i < theField.length; i++) {
+			theField[i].checked = false ;
+			}
+		}
 	
 	function $() {									// 7/11/10
 		var elements = new Array();
@@ -348,7 +385,21 @@
 			}
 		newwindow_t.focus();
 		}
-
+		
+	function file_window() {										// 9/10/13
+		var url = "file_upload.php";
+		var nfWindow = window.open(url, 'NewFileWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
+		setTimeout(function() { nfWindow.focus(); }, 1);
+		}
+		
+	function do_native() {				// 8/2/08 -	11/5/09
+		var newwindow_t=window.open("native.php", "Test_Native_Email",  "titlebar, resizable=1, scrollbars, height=600,width=900,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
+		if (isNull(newwindow_t)) {
+			alert ("Test operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_t.focus();
+		}
 	function do_instam() {				// 7/26/09	- 11/5/09
 		var newwindow_t=window.open("test_instam.php", "Test_InstaMapper",  "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50"); newwindow_t.focus();
 		if (isNull(newwindow_t)) {
@@ -517,7 +568,7 @@
 		showit('res_add_form'); 
 		hideit('tbl_responders');
 		hideIcons();			// hides responder icons
-		map.setCenter(new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);
+		map.setCenter(new L.LatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);
 		}
 		
 	function hideIcons() {
@@ -710,6 +761,17 @@ if (mysql_num_rows($result)>0) {
 
 	$i = 0;
 	while($row = stripslashes_deep(mysql_fetch_array($result))) {
+	
+		$mg_select = "<SELECT NAME='frm_mailgroup[$i]'>";
+		$mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";
+		$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
+		$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
+			$sel = ($row['mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
+			$mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
+			}
+		$mg_select .= "</SELECT>";
+	
 		if ($row['ticket_id']==0) {
 			print "\n<TR CLASS='{$colors[$i%2]}'><TD><B>All</B></TD>\n";
 			}
@@ -717,6 +779,7 @@ if (mysql_num_rows($result)>0) {
 			print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><A HREF='main.php?id=" .  $row['ticket_id'] . "'>#" . $row['ticket_id'] . "</A></TD>\n";	
 			}
 		print "<TD><INPUT MAXLENGTH=\"70\" SIZE=\"32\" VALUE=\"" . $row['email_address'] . "\" TYPE=\"text\" NAME=\"frm_email[$i]\" DISABLED /></TD>\n";
+		print "<TD>" . $mg_select . "</TD>\n";		
 		print "<TD><INPUT MAXLENGTH=\"150\" SIZE=\"40\" TYPE=\"text\" VALUE=\"" . $row['execute_path'] . "\" NAME=\"frm_execute[$i]\" DISABLED /></TD>\n";
 		print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_action[$i]'"; print $row['on_action'] ? " checked DISABLED /></TD>\n" : " DISABLED /></TD>\n";
 		print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_patient[$i]'"; print $row['on_patient'] ? " checked DISABLED /></TD>\n" : " DISABLED /></TD>\n";
@@ -730,11 +793,21 @@ if (mysql_num_rows($result)>0) {
 	}				// end if (mysql_num_rows($result)>0) 
 // _________________________________________
 		print "<SPAN STYLE = 'margin-left:80px;margin-top:40px'><FONT CLASS='header' >Add Notify</FONT><BR /><BR /></SPAN>";
+
+		$mg_select2 = "<SELECT NAME='frm_mailgroup'>";
+		$mg_select2 .= "<OPTION VALUE=0>Select Mail List</OPTION>";
+		$query_mg2 = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup`";		// 12/18/10
+		$result_mg2 = mysql_query($query_mg2) or do_error($query_mg2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		while ($row_mg2 = stripslashes_deep(mysql_fetch_assoc($result_mg2))) {
+			$mg_select2 .= "<OPTION VALUE=" . $row_mg2['id'] . ">" . $row_mg2['name'] . "</OPTION>";
+			}
+		$mg_select2 .= "</SELECT>";
 ?>
 				<TABLE BORDER="0"  STYLE = 'margin-left:80px'>
 				<FORM METHOD="POST" NAME="notify_form" ACTION="config.php?func=notify&add=true">
 				<TR CLASS='even'><TD CLASS="td_label">Ticket:</TD><TD ALIGN="left"><A HREF="main.php?id=<?php print $_GET['id'];?>"><?php print $the_ticket_name;?></A></TD></TR>
 				<TR CLASS='odd'><TD CLASS="td_label">Email Address:</TD><TD><INPUT MAXLENGTH="70" SIZE="40" TYPE="text" NAME="frm_email" VALUE=""></TD></TR>
+				<TR CLASS='odd'><TD CLASS="td_label">Mail list:</TD><TD><?php print $mg_select2;?></TD></TR>				
 <?php
 		$dis = (is_super())? "" : " DISABLED "; // 1/27/09
 ?>
@@ -752,7 +825,17 @@ if (mysql_num_rows($result)>0) {
 					<INPUT TYPE="hidden" NAME="mode" VALUE="<?php print $mode;?>" />
 					<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_GET['id'];?>" />
 				<TR CLASS='even'><TD COLSPAN=2 ALIGN="center"><BR />
-					<INPUT TYPE = 'button' VALUE = 'Cancel' onClick = 'document.can_Form.submit();' STYLE = 'margin-left:40px' />
+<?php
+					if($mode == 1) {
+?>
+						<INPUT TYPE = 'button' VALUE = 'Cancel' onClick = 'window.close();' STYLE = 'margin-left:40px' />
+<?php
+						} else {
+?>
+						<INPUT TYPE = 'button' VALUE = 'Cancel' onClick = 'document.can_Form.submit();' STYLE = 'margin-left:40px' />
+<?php
+						}
+?>
 					<INPUT TYPE="reset" VALUE="Reset"  STYLE = 'margin-left:40px' />
 					<INPUT TYPE="button" VALUE="Submit" onClick = "validate(this.form)"  STYLE = 'margin-left:40px' />
 					</TD></TR>
@@ -761,9 +844,9 @@ if (mysql_num_rows($result)>0) {
 				</BODY>
 	
 	<SCRIPT>
-		function validate(theForm) {			// notify record validate 10/23/08
+		function validate(theForm) {			// notify record validate 10/23/08, 8/28/13
 			var errmsg="";
-			if (!validate_email(theForm.frm_email.value.trim()))	{errmsg+="\tValid email address is required.\n";}
+			if ((!validate_email(theForm.frm_email.value.trim())) && (theForm.frm_mailgroup == 0))	{errmsg+="\tValid email address or mail list is required.\n";}
 			if ((!(theForm.frm_on_ticket.checked)) && (!(theForm.frm_on_action.checked)))
 																	{errmsg+="\tOne or both checkboxes is required.\n";}
 			if (errmsg!="") {
@@ -802,13 +885,14 @@ if (mysql_num_rows($result)>0) {
 	
 						$email = validate_email($_POST['frm_email'][$i]);
 						$email_address = $_POST['frm_email'][$i];
-						if (!$email['status']) {
+						if ((!$email['status']) && ($_POST['frm_mailgroup'][$i] == 0)) {
 							print "<FONT CLASS='warn'>Error: email validation failed for '$email_address', $email[msg]. Go back and check this email address.</FONT>";
 							exit();
 							}
 						$on_ticket_val  = empty($_POST['frm_on_ticket'][$i])? "":  "1";
 						$on_action_val  = empty($_POST['frm_on_action'][$i])? "":  "1";
 						$on_patient_val = empty($_POST['frm_on_patient'][$i])? "": "1";		// 5/23/11
+						$mailGroup = ($_POST['frm_mailgroup'][$i]) ? $_POST['frm_mailgroup'][$i] : 0;
 	
 	//					$query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET `execute_path`='".$_POST['frm_execute'][$i]."', `email_address`='".$_POST['frm_email'][$i]."', `on_action`='".$on_action_val."', `on_patient`='".$on_patient_val ."', `on_ticket`='".$on_ticket_val ."' WHERE `id`='".$_POST['frm_id'][$i]."'";
 						$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
@@ -816,6 +900,7 @@ if (mysql_num_rows($result)>0) {
 						$query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET
 							`execute_path`=".	quote_smart($_POST['frm_execute'][$i]) .",
 							`email_address`=".	quote_smart($_POST['frm_email'][$i]) .",
+							`mailgroup`=".		quote_smart($mailGroup) .",
 							`on_action`='".		$on_action_val ."', 
 							`on_patient`='".	$on_patient_val ."', 
 							`on_ticket`='".		$on_ticket_val ."',
@@ -836,7 +921,7 @@ if (mysql_num_rows($result)>0) {
 	
 			else if ((array_key_exists('add', ($_GET))) && ($_GET['add']== 'true')) {	//email validation check
 				$email = validate_email($_POST['frm_email']);
-				if (!$email['status']) {
+				if ((!$email['status']) && ($_POST['frm_mailgroup'] == 0)) {
 					print "<FONT CLASS='warn'>Error: email validation failed for '" . $_POST['frm_email'] . "', " . $email['msg'] . ". Go back and check this email address.</FONT>";
 					exit();
 					}
@@ -844,11 +929,13 @@ if (mysql_num_rows($result)>0) {
 				$on_ticket = (isset($_POST['frm_on_ticket']))? $_POST['frm_on_ticket']:0 ;
 				$on_action = (isset($_POST['frm_on_action']))? $_POST['frm_on_action']:0 ;
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));				// 1/22/11
-
+				$mailGroup = ($_POST['frm_mailgroup']) ? $_POST['frm_mailgroup'] : 0;
+				
 				$query = "INSERT INTO `$GLOBALS[mysql_prefix]notify` SET 
 					`ticket_id`=		'$_POST[frm_id]',
 					`user`=				'$_SESSION[user_id]',
 					`email_address`=	'$_POST[frm_email]',
+					`mailgroup`=		'$mailGroup',
 					`execute_path`=		'$_POST[frm_execute]',
 					`on_action`=		'$on_action',
 					`on_patient`=		'$on_action',
@@ -864,22 +951,29 @@ if (mysql_num_rows($result)>0) {
 				}			// end array_key_exists('add')
 	
 			else {
-				if ($_SESSION['user_id'])
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify` WHERE user='$_SESSION[user_id]'";
-				else
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify`";
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify`";
 					
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	
 				if (mysql_num_rows($result)) {
 					print "<FONT CLASS='header'>Update Notifies<BR /><BR />\n";
 					if (!get_variable('allow_notify')) print "<FONT CLASS=\"warn\">Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 					print '<TABLE BORDER="0"><FORM NAME = "frm_update" METHOD="post" ACTION="config.php?func=notify&save=true">';
-					print "<TR CLASS='even'><TD CLASS='td_label'>Ticket</TD><TD CLASS=\"td_label\">&nbsp;Email</TD>";
+					print "<TR CLASS='even'><TD CLASS='td_label'>Ticket</TD><TD CLASS=\"td_label\">&nbsp;Email</TD><TD CLASS=\"td_label\">Mail List</TD>";
 					print "<TD CLASS='td_label'>&nbsp;Execute</B></TD><TD CLASS='td_label'>&nbsp;On Action&nbsp;</TD><TD CLASS='td_label'>&nbsp;On {$patient}&nbsp;</TD><TD CLASS='td_label'>&nbsp;On Ticket Change&nbsp;</TD><TD CLASS='td_label'>Delete</TD></TR>\n";
 				
 					$i = 0;
 					while($row = stripslashes_deep(mysql_fetch_array($result))) {
+					
+						$mg_select = "<SELECT NAME='frm_mailgroup[$i]'>";
+						$mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";
+						$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
+						$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+						while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
+							$sel = ($row['mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
+							$mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
+							}
+						$mg_select .= "</SELECT>";					
+		
 						if ($row['ticket_id']==0) {
 							print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><B>All</B></TD>\n";
 							}
@@ -887,6 +981,7 @@ if (mysql_num_rows($result)>0) {
 							print "\n<TR CLASS='" .$colors[$i%2] . "'><TD><A HREF='main.php?id=" .  $row['ticket_id'] . "'>#" . $row['ticket_id'] . "</A></TD>\n";	
 							}
 						print "<TD><INPUT MAXLENGTH=\"70\" SIZE=\"32\" VALUE=\"" . $row['email_address'] . "\" TYPE=\"text\" NAME=\"frm_email[$i]\"></TD>\n";
+						print "<TD>" . $mg_select . "</TD>\n";
 						print "<TD><INPUT MAXLENGTH=\"150\" SIZE=\"40\" TYPE=\"text\" VALUE=\"" . $row['execute_path'] . "\" NAME=\"frm_execute[$i]\"></TD>\n";
 						print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_action[$i]'"; print $row['on_action'] ? " checked></TD>\n" : "></TD>\n";
 						print "<TD ALIGN='center'><INPUT TYPE='checkbox' VALUE='1' NAME='frm_on_patient[$i]'"; print $row['on_patient'] ? " checked></TD>\n" : "></TD>\n";
@@ -1480,8 +1575,6 @@ if (mysql_num_rows($result)>0) {
 							}
 						}
 					}
-	//			$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `user`='$_POST[frm_user]', `callsign`='$_POST[frm_callsign]'," . $pass . " `info`='$_POST[frm_info]',`level`='$_POST[frm_level]' WHERE `id`='$_POST[frm_id]'";
-	
 				print "<B>User <I>" .$_POST['frm_user'] . "</I> data has been updated.</B><BR /><BR />";
 				}
 			}		// end if ($_GET['edit']
@@ -1596,16 +1689,28 @@ if (mysql_num_rows($result)>0) {
 						</TD></TR>
 <?php
 					if(is_super()) {		//	6/10/11
-						print "<DIV style='display: none'>";	
+						print "<TR CLASS='odd' VALIGN='top'>";
+						print "<TD CLASS='td_label'>" . get_text('Group') . "</A>: ";
+						print "<SPAN id='expand_gps' onClick=\"$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
+						print "<SPAN id='collapse_gps' onClick=\"$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>";
+						print "</TD><TD COLSPAN = 3>";
+						print "<DIV id='checkButts' style='display: none;'>";
+						print "<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>";
+						print "<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>";	
+						print "</DIV>";							
 						$alloc_groups = implode(',', get_allocates(1, $_SESSION['user_id']));	//	6/10/11
 						print get_all_group_butts_chkd(get_allocates(4, $_SESSION['user_id']));	//	6/10/11	
-						print "</DIV";
+						print "</TD></TR>";	
 					} elseif (is_admin()) {
 						print "<TR CLASS='odd' VALIGN='top'>";
 						print "<TD CLASS='td_label'>" . get_text('Group') . "</A>: ";
-						print "<SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
-						print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>";
-						print "</TD><TD COLSPAN = 3>";	
+						print "<SPAN id='expand_gps' onClick=\"$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
+						print "<SPAN id='collapse_gps' onClick=\"$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>";
+						print "</TD><TD COLSPAN = 3>";
+						print "<DIV id='checkButts' style='display: none;'>";
+						print "<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>";
+						print "<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>";	
+						print "</DIV>";
 						$alloc_groups = implode(',', get_allocates(1, $_SESSION['user_id']));	//	6/10/11
 						print get_all_group_butts(get_allocates(4, $_SESSION['user_id']));	//	6/10/11	
 						print "</TD></TR>";					
@@ -1843,16 +1948,11 @@ if (mysql_num_rows($result)>0) {
 				}	
 			}
 
-		// for ($i=0;$i<$broj;$i++) {						//dump all tables:
-			// $table_name = $backup->tables[$i]; 			//get table name
-			// $backup->dump_table($table_name); 			//dump it to output (buffer)
-			// $_echo .=htmlspecialchars($backup->output); 	//write output
-			// }	
-
 		$_echo .="\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
-		echo "\n<FORM NAME='the_form'><TEXTAREA NAME ='the_dump' COLS=120 ROWS=20>{$_echo}</TEXTAREA>";
+		echo "\n<DIV style='width: 60%; position: absolute; left: 20%; top: 5%;'><FORM NAME='the_form'><TEXTAREA NAME ='the_dump' COLS=120 ROWS=20>{$_echo}</TEXTAREA>";
 		echo "<BR /><BR /><INPUT onclick='copyit()' type='button' value='Click to copy the dump' name='cpy'\>\n</FORM>\n";
-	
+		echo "<BR /><BR /><A id='cancel_but' CLASS='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='config.php'>Back to Config</A></DIV>\n";
+		exit();
 		break;
 	    
 	case 'delete' :	
@@ -1933,7 +2033,7 @@ if (mysql_num_rows($result)>0) {
 			    break;
 		
 			case 'do_del':	
-				$temp = explode(",", $_POST['idstr'], 20);
+				$temp = explode(",", $_POST['idstr']);
 				for ($i=0; $i<count($temp); $i++) {
 					$query = "DELETE from `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $temp[$i] . " LIMIT 1";
 					$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	// 6/4/08 - corrected table names
@@ -1942,6 +2042,8 @@ if (mysql_num_rows($result)>0) {
 					$query = "DELETE from `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id` = " . $temp[$i];
 					$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					$query = "DELETE from `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $temp[$i];
+					$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+					$query = "DELETE from `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 1 AND `resource_id` = " . $temp[$i];
 					$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					do_log($GLOBALS['LOG_INCIDENT_DELETE'],$temp[$i]);																// added 6/4/08 
 					
@@ -2333,272 +2435,291 @@ ul {
 	<BODY onLoad = 'ck_frames()'> <!-- 11/13/10 -->
 <?php if (isset($top_notice)) print "<SPAN STYLE='margin-left: 100px;' CLASS='header' >{$top_notice}</SPAN><BR /><BR />"; ?>
 <BR />
-		<LI><A HREF="#" onClick = "do_about();">About this version ...</A>		
+		<DIV id='mainmenu' style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-y: scroll;'>
+		<DIV class='config_heading' id='gen_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+			<DIV class='config_heading'>General</DIV>
+			<A id='about' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_about();">About this version ...</A>	
 <?php
-	if(!(is_guest())) {								// 6/9/08
+		if(!(is_guest())) {								// 6/9/08
 ?>
-		<LI CLASS='links'><A HREF="#" onClick = "do_mail_win()">Email users</A>	<!-- 6/30/09, 3/15/11 -->
-		<LI><A HREF="#" onClick = "do_Post('contacts');">Contacts</A>
-		<LI><A HREF="config.php?func=profile">Edit My Profile</A>			<!-- 12/1/08 -->
+			<A id='email_users' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_mail_win()">Email users</A>		<!-- 6/30/09, 3/15/11 -->
+			<A id='contacts' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('contacts');">Contacts</A>
+			<A id='my_profile' class='plain' style='clear: both; width: 150px;' HREF="config.php?func=profile" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'>Edit My Profile</A>				<!-- 12/1/08 -->
 <?php
-		}
-	if ( is_super()) { 	// SHOW MENU BASED ON USER LEVEL
+			}
+		if ( is_super()) { 	// SHOW MENU BASED ON USER LEVEL
 ?>
-		<LI><A HREF="config.php?func=user&add=true">Add user</A>
-		<LI><A HREF="config.php?func=settings">Edit Settings</A>
-		<LI><A HREF="config.php?func=notify">Add/Edit Notifies</A>	
-		<LI><A HREF="config.php?func=delete">Delete Closed Tickets</A>
-		<LI><A HREF="#" onClick = "do_audio_test();">Alarm audio test</A>		<!-- 6/22/10 -->
+			<A id='add_user' class='plain' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=user&add=true">Add user</A>	
+			<A id='edit_settings' class='plain' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=settings">Edit Settings</A>	
+			<A id='edit_notifies' class='plain' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=notify">Add/Edit Notifies</A>		
+			<A id='delete_closed' class='plain' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=delete">Delete Closed Tickets</A>	
+			<A id='alarm_test' class='plain' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="#" onClick = "do_audio_test();">Alarm audio test</A>			<!-- 6/22/10 -->
 <?php
-		if (!intval(get_variable('ics_top')==1)) { 		// 5/24/2013
+			if (!intval(get_variable('ics_top')==1)) { 		// 5/24/2013
 ?>		
-		<LI><A HREF="#" onClick = "window.open('ics213.php', 'ics213');">ICS 213</A>		<!-- 3/22/12 -->		
+			<A id='ics' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.open('ics213.php', 'ics213');">ICS FORMS</A>			<!-- 3/22/12 -->		
 <?php
-			}		// end if ( ... ics_top ...)
+				}		// end if ( ... ics_top ...)
 			
-		if (mysql_table_exists("$GLOBALS[mysql_prefix]evacuees")) {		// 6/4/09
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]evacuees")) {		// 6/4/09
 ?>	
-			<BR />
-			<LI><A HREF="#" onClick = "do_Post('evacuees');">Evacuees</A>
+				<A id='evacs' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('evacuees');">Evacuees</A>	
 <?php
-			}		// end if evacuees
-		if (mysql_table_exists("$GLOBALS[mysql_prefix]constituents")) {		// 6/4/09
+				}		// end if evacuees
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]constituents")) {		// 6/4/09
 ?>	
-			<BR />
-			<LI><A HREF="#" onClick = "do_Post('constituents');"><?php echo get_text ("Constituents");?></A> <!-- 6/18/2013 -->
+				<A id='const' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('constituents');"><?php echo get_text ("Constituents");?></A>	 <!-- 6/18/2013 -->
 <?php
-			}
-		if (mysql_table_exists("$GLOBALS[mysql_prefix]insurance")) {		// 6/4/09
+				}
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]insurance")) {		// 6/4/09
 ?>	
-			<BR />
-			<LI><A HREF="#" onClick = "do_Post('insurance');"><?php echo get_text ("Insurance");?></A> <!-- 6/18/2013 -->
+				<A id='insurance' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('insurance');"><?php echo get_text ("Insurance");?></A>	 <!-- 6/18/2013 -->
 <?php
-			}
-		if (($asterisk) && mysql_table_exists("$GLOBALS[mysql_prefix]pin_ctrl")) {		// 7/16
+				}
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]personnel")) {		// 9/10/13
 ?>	
-			<LI><A HREF="#" onClick = "do_Post('pin_ctrl');">PIN Control</A> <!-- 4/9/10 -->
+				<A id='personnel' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('personnel');"><?php echo get_text ("Personnel");?></A>	 <!-- 6/18/2013 -->
 <?php
-			}			// end 'pin_ctrl'	
-//		if (mysql_table_exists("$GLOBALS[mysql_prefix]organisations")) {
+				}
+			if (($asterisk) && mysql_table_exists("$GLOBALS[mysql_prefix]pin_ctrl")) {		// 7/16
+?>	
+				<A id='pin_cont' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('pin_ctrl');">PIN Control</A>	 <!-- 4/9/10 -->
+<?php
+				}			// end 'pin_ctrl'	
+//			if (mysql_table_exists("$GLOBALS[mysql_prefix]organisations")) {
 ?>	<!--
-			<BR />
-			<LI><A HREF="#" onClick = "do_Post('organisations');">Organisations</A> -->
+				<BR />
+				<LI><A HREF="#" onClick = "do_Post('organisations');">Organisations</A> -->
 <?php
-//			}
-		}
-		if(get_variable('use_messaging') != 0) {		//10/23/12		
-?>		
-			<BR /><BR />
-			<LI><B>Messaging</B><BR />
-			<TABLE BORDER=0><TR CLASS = 'odd'>				
-			<TD><LI><A HREF="config.php?func=msg_settings">Messaging Settings</A></TD>	<!-- 10/23/12 -->
-			<TD><LI><A HREF="msg_archive.php">Message Archiving</A></TD>				<!-- 10/23/12 -->	
-			<TD><LI><A HREF="#" onClick = "do_Post('known_sources');">Email White List</A></TD>			<!-- 10/23/12 -->			
-			<TD><LI><A HREF="#" onClick = "get_msgs();">Get all Messages</A></TD>			<!-- 10/23/12 -->		
-			<TD><LI><A HREF="#" onClick = "do_Post('std_msgs');">Edit Standard Messages</A></TD>			<!-- 10/23/12 -->
-			<TD><LI><A HREF="#" onClick = "do_Post('replacetext');">Message Text replacement</A></TD>			<!-- 10/23/12 -->			
-<?php
-			if(get_msg_variable('use_autostat') == 1) {		//10/23/12
+//				}
+			}
 ?>
-				<TD><LI><A HREF="auto_status.php" >Edit Auto Status Text</A></TD>		<!-- 10/23/12 -->
+		</DIV>
+		<DIV class='config_heading' id='files_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+			<DIV class='config_heading' style='display: block; clear: both;'>Files</DIV>
+			<A id='ul_file' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='file_window();'>Upload File</A>
+			<A id='fileman' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="fileman.php">File Manager</A>	
+		</DIV>
+		<DIV class='config_heading' id='serv_user_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+			<DIV class='config_heading' style='display: block; clear: both;'>Service User Portal</DIV>
+			<A id='su_req' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="./portal/requests.php">Service User Requests</A>	
+		</DIV>
+<?php
+			if(get_variable('use_messaging') != 0) {		//10/23/12		
+?>
+				<DIV class='config_heading' id='msg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Messaging</DIV>
+					<A id='msg_set' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=msg_settings">Messaging Settings</A>
+					<A id='msg_arch' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="msg_archive.php">Message Archiving</A>	
+					<A id='white_list' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('known_sources');">Email White List</A>		
+					<A id='get_msgs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "get_msgs();">Get all Messages</A>
+					<A id='std_msgs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('std_msgs');">Edit Std Messages</A>
+					<A id='msg_rtxt' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('replacetext');">Msg Text replacement</A>			
+<?php
+					if(get_msg_variable('use_autostat') == 1) {		//10/23/12
+?>
+						<A class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="auto_status.php" >Edit Auto Status Text</A>
+<?php
+						}
+?>
+				</DIV>
+<?php
+				}
+			if((is_administrator()) || (is_super())) {
+				if(get_variable('use_disp_autostat') == 1) {		//9/10/13
+?>
+				<DIV class='config_heading' id='ad_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Auto Dispatch Status</DIV>
+					<A id='auto_stat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="auto_disp_status.php" >Auto Status Values</A>
+				</DIV>
 <?php
 				}
 ?>
-			</TABLE><BR />
+				<DIV class='config_heading' id='eml_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Email Lists</DIV>
+					<A id='eml_list' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mailgroup');">Email Lists</A>
+					<A id='eml_list_mem' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="email_lists.php?func=list" >Email List Members</A>
+				</DIV>
+				<DIV class='config_heading' id='reg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Regions</DIV>
+					<A id='regs_cfg' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('region');"><?php print get_text("Regions");?></A>	
+					<A id='regs_type' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('region_type');"><?php print get_text("Region");?>Type</A>
+					<A id='rst_reg' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_regions.php">Reset <?php print get_text("Regions");?></A>
+					<A id='fix_reg' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="cleanse_regions.php?func=list">Fix <?php print get_text("Regions");?></A>	
+				</DIV>
+				<DIV class='config_heading' id='disc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Display Colors</DIV>
+					<A id='css_day' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=css_day">Edit Day Colors</A>
+					<A id='css_ngt' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=css_night">Edit Night Colors</A>
+				</DIV>
+				<DIV class='config_heading' id='maps_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Maps Configuration</DIV>
+					<A id='def_map' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=center">Set Default Map</A>
+					<A id='dl_maps' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "./get_tiles.php">Download Maps (OSM)</A>
+				</DIV>
+				<DIV class='config_heading' id='db_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Database Functions</DIV>
+					<A id='dump_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=dump">Dump DB to screen</A>
+					<A id='rst_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=reset">Reset Database</A>
+					<A id='opt_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=optimize">Optimize Database</A>
+					<A id='del_indx' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "show_tables_and_indexes.php">Delete Duplicate Indexes</A>	
+				</DIV>
+				<DIV class='config_heading' id='rc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Road Conditions</DIV>
+					<A id='rd_cond' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('conditions');">Conditions Table</A>
+					<A id='rd_alerts' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('roadinfo');">Published Alerts</A>
+				</DIV>
+				<DIV class='config_heading' id='mi' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'>Major Incidents<SPAN class='warn'>(Experimental, not fully implemented, for discussion)</SPAN></DIV>
+					<A id='mis' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="maj_inc.php">Major Incidents</A>
+					<A id='mi_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mi_types');">Major Incident Types</A>
+				</DIV>
 <?php
-			}
-		if((is_administrator()) || (is_super())) {
+			}								// end if (is_administrator()|| is_super() ) -- latitude.php
 ?>
-			<LI><B>Regions</B><BR />
-			<TABLE BORDER=0><TR CLASS = 'odd'>		
-			<TD><LI><A HREF="#" onClick = "do_Post('region');"><?php print get_text("Regions");?></A></TD>		
-			<TD><LI><A HREF="#" onClick = "do_Post('region_type');"><?php print get_text("Region");?> Type</A></TD>	
-			<TD><LI><A HREF="reset_regions.php">Reset <?php print get_text("Regions");?></A></TD>
-			<TD><LI><A HREF="cleanse_regions.php?func=list">List and Cleanse <?php print get_text("Region");?> Allocations</A></TD>	<!-- 3/11/11 -->	
-			</TR></TABLE><BR />
-			<LI><B>Display Colors</B><BR />
-			<TABLE BORDER=0>
-				<TR CLASS = 'odd'>		
-					<TD><LI><A HREF="config.php?func=css_day">Edit Day Colors</A></TD>	<!-- 3/15/11 -->
-					<TD><LI><A HREF="config.php?func=css_night">Edit Night Colors</A></TD><!-- 3/15/11 -->
-					<TD COLSPAN=2></TD>
-				</TR><!-- 3/15/11 -->
-			</TABLE>
-			<BR />
-			<LI><B>Maps Configuration</B><BR />
-			<TABLE BORDER=0>		
-				<TR CLASS = 'odd'><!-- 3/15/11 -->
-					<TD><LI><A HREF="config.php?func=center">Set Default Map</A></TD>
-					<TD><LI><A HREF="config.php?func=api_key">Set GMaps API key</A></TD>
-					<TD></TD>
-				</TR>
-			</TABLE>
-			<BR />
-			<LI><B>Database Functions</B><BR />
-			<TABLE BORDER=0>
-				<TR CLASS = 'odd'><!-- 3/15/11 -->
-					<TD><LI><A HREF="config.php?func=dump">Dump DB to screen</A></TD>
-					<TD><LI><A HREF="config.php?func=reset">Reset Database</A></TD>
-					<TD><LI><A HREF="config.php?func=optimize">Optimize Database</A> </TD>
-				</TR>
-			</TABLE>
-			<BR />
-<?php
-		}								// end if (is_administrator()|| is_super() ) -- latitude.php
-?>
-		<LI><B>Outgoing email and Unit Tracking Tests</B><BR />
-		<TABLE BORDER=0>
-			<TR CLASS = 'odd'><!-- 3/15/11 -->		
-				<TD><LI><A HREF="#" onClick = "do_test()"><U>APRS</U></A></TD>
-				<TD><LI><A HREF="#" onClick = "do_instam()"><U>Instamapper</U></A></TD>
+			<DIV class='config_heading' id='oet_tests' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Outgoing email and Unit Tracking Tests</DIV>
+				<A id='tst_aprs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_test()">APRS</A>
 <?php 				// 7/5/10
-		if (is_super()) {
-			print "\t\t<TD><LI><A HREF=\"#\" onClick = \"do_smtp()\"><U>SMTP Mail</U></A></TD>\n";
-			}
+				if (is_super()) {
+					print "\t\t<A id='tst_smtp' class='plain' style='width: 150px; float: left;' HREF=\"#\" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = \"do_smtp()\">SMTP Mail</A>\n";
+					print "\t\t<A id='tst_native' class='plain' style='width: 150px; float: left;' HREF=\"#\" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = \"do_native()\">Native PHP Mail</A>\n";
+					}
 ?>		
-				<TD><LI><A HREF="#" onClick = "do_glat()"><U>Google Latitude</U></A></TD>	<!-- 7/28/09 -->
-				<TD><LI><A HREF="#" onClick = "do_locatea()"><U>LocateA</U></A></TD>	<!-- 7/28/09 -->
-				<TD><LI><A HREF="#" onClick = "do_gtrack()"><U>Gtrack</U></A></TD>		<!-- 7/28/09 -->
-				<TD><LI><A HREF="#" onClick = "do_ogts()"><U>Open GTS</U></A></TD>		<!-- 7/5/11 -->
-				<TD><LI><A HREF="#" onClick = "do_t_tracker()"><U>Internal Tracker</U></A></TD>			<!-- 9/27/11 -->	
-			</TR>
-		</TABLE></BR>
+				<A id='tst_gl' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_glat()">Google Latitude</A>
+				<A id='tst_loca' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_locatea()">LocateA</A>
+				<A id='tst_gtrack' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_gtrack()">Gtrack</A>
+				<A id='tst_opengts' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_ogts()">Open GTS</A>
+				<A id='tst_tt' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_t_tracker()">Internal Tracker</A>
+			</DIV>
 <?php
-	if (is_super()) {									// super or admin - 9/24/08			
-?>		
-		<LI><B>Incident Numbering</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-			<TR CLASS = 'odd'><!-- 3/15/11 -->
-				<TD><LI><A HREF="config.php?func=in_nums">Incident Numbers</A></TD>
-				<TD><LI><A HREF="#" onClick = "do_Post('in_types');">Incident types</A> </TD>
-			</TR>
-		</TABLE><BR />
-		<LI><B><?php print get_text("Units");?> Configuration</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-			<TR CLASS = 'odd'><!-- 3/15/11 -->
-				<TD><LI><A HREF="#" onClick = "do_Post('unit_types');"><?php print get_text("Units");?> types</A></TD><!-- 10/8/08,  6/4/09 -->
-				<TD><LI><A HREF="#" onClick = "do_Post('un_status');"><?php print get_text("Units");?> status</A>&nbsp;&nbsp;</TD>
-				<TD><LI><A HREF="reset_responder_status.php" >Set <?php print get_text("Units");?> Status to a common setting </A></TD>		<!-- 10/23/12 -->
-			</TR>
-		</TABLE><BR />
+		if (is_super()) {									// super or admin - 9/24/08			
+?>
+			<DIV class='config_heading' id='inc_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'><?php print get_text("Incidents");?> Configuration</DIV>		
+				<A id='inc_num' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=in_nums">Incident Numbers</A>
+				<A id='inc_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('in_types');">Incident types</A>
+			</DIV>
+			<DIV class='config_heading' id='units_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'><?php print get_text("Units");?> Configuration</DIV>		
+				<A id='un_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('unit_types');"><?php print get_text("Units");?> types</A>
+				<A id='un_status' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('un_status');"><?php print get_text("Units");?> status</A>
+				<A id='rst_unstat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_responder_status.php" >Reset <?php print get_text("Units");?> status</A>
+			</DIV>
 <?php
-	}	// end if is super
+		}	// end if is super
 	
-		if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) 	{		// 10/5/09
-?>				
-			<LI><B>Facilities Configuration</B><BR />
-			<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-				<TR CLASS = 'odd'><!-- 3/15/11 -->
-					<TD><LI><A HREF="#" onClick = "do_Post('fac_status');">Facility Status</A></TD>
-					<TD><LI><A HREF="#" onClick = "do_Post('fac_types');">Facility Types</A></TD>
-					<TD>&nbsp;</TD>
-					<TD>&nbsp;</TD>
-				</TR>
-			</TABLE><BR />
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) 	{		// 10/5/09
+?>			
+				<DIV class='config_heading' id='facs_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading' style='display: block; clear: both;'><?php print get_text("Facilities");?> Configuration</DIV>			
+					<A id='fac_stat' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('fac_status');">Facility Status</A>
+					<A id='fac_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('fac_types');">Facility Types</A>
+				</DIV>
 <?php
-		}
+			}
 ?>
-
-		<LI><B>Captions, Signals, Hints and Places</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-			<TR CLASS = 'odd'><!-- 3/15/11 -->
-				<TD><LI><A HREF="capts.php">Captions</A></TD>
-				<TD><LI><A HREF="#" onClick = "do_Post('codes');">Signals</A></TD>
-				<TD><LI><A HREF="config.php?func=hints">Hints</A></TD>
-				<TD><LI><A HREF="#" onClick = "do_Post('places');">Places</A></TD>	<!-- 2/28/11 -->
-			</TR>
-		</TABLE><BR />
-		<LI><B>Map Markup</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>		
-			<TR CLASS = 'odd'><!-- 7/30/11 -->
-				<TD><LI><A HREF= "./landb.php">Map Markup</A></TD>
-				<TD><LI><A HREF="#" onClick = "do_Post('mmarkup_cats');">MM Categories</A></TD>
-			</TR>
-		</TABLE><BR />
-			
+			<DIV class='config_heading' id='warn_locs' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Warn Locations</DIV>		
+				<A id='warn_loc' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="warn_locations.php">Warn Locations</A>
+			</DIV>
+			<DIV class='config_heading' id='capts_etc' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Captions, Signals, Hints and Places</DIV>		
+				<A id='capt_set' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="capts.php">Captions</A></LI></TD>
+				<A id='sigs_set' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('codes');">Signals</A>
+				<A id='hints_set' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=hints">Hints</A>
+				<A id='places_set' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('places');">Places</A>
+			</DIV>
+			<DIV class='config_heading' id='map_mkup' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Map Markup</DIV>					
+				<A id='mm' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "./mmarkup.php">Map Markup</A>
+				<A id='mm_cat' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mmarkup_cats');">MM Categories</A>
+			</DIV>
 <?php						// 4/23/11
-	$query_update = "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE `user`= '_cloud' LIMIT 1;";
-	$result = mysql_query($query_update) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	5/4/11	
-	if ((mysql_num_rows($result) > 0) && (is_super())) {
-?>	
-		<LI><B>Cloud</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-			<TR  CLASS = 'odd'>
-				<TD><LI><A HREF="http://www.ticketscad.org/support" target="_blank">Support</A></TD>
-				<TD><LI><A HREF="http://www.ticketscad.org/dbadmin" target="_blank">DB Admin</A></TD>
-				<TD COLSPAN=2></TD>
-			</TR>
-		</TABLE
+		$query_update = "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE `user`= '_cloud' LIMIT 1;";
+		$result = mysql_query($query_update) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	5/4/11	
+		if ((mysql_num_rows($result) > 0) && (is_super())) {
+?>
+			<DIV class='config_heading' id='cloud_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Cloud</DIV>		
+				<A id='spt_link' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.org/support" target="_blank">Support</A>
+				<A id='dbadmin_link' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.org/dbadmin" target="_blank">DB Admin</A>
+			</DIV>
 <?php	
-		}	
-	$course_table = "$GLOBALS[mysql_prefix]courses_taken";		// 12/19/11 
-	if (mysql_table_exists($course_table)) {
-?>	
-		<LI><B>Courses</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-			<FORM NAME = 'course_form' METHOD = 'post' ACTION = 'course_report.php' TARGET = '_blank'>	
-			<INPUT TYPE = 'hidden' NAME = 'user_id' VALUE = ''>
-			</FORM>
-					<TR CLASS = 'odd'>		<!-- 12/10/11 -->
-					<TD><LI><A HREF="#" onClick = "do_Post('courses');">Update Courses</A></TD>
-					<TD><LI><A HREF="#" onClick = "do_Post('courses_taken');">Update Courses taken</A></TD>
-					<TD CLASS="td_label" ALIGN="left"><LI><A HREF='#'>Report</A> &raquo;</TD>
-					<TD><SELECT NAME='frm_user_id' onChange = "document.course_form.user_id.value=this.options[this.selectedIndex].value; document.course_form.submit();">
-						<OPTION VALUE='' selected>Select</OPTION>
-						<OPTION VALUE='0' >All users</OPTION>
+			}	
+		$course_table = "$GLOBALS[mysql_prefix]courses_taken";		// 12/19/11 
+		if (mysql_table_exists($course_table)) {
+?>
+			<DIV class='config_heading' id='courses_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Courses</DIV>		
+				<FORM NAME = 'course_form' METHOD = 'post' ACTION = 'course_report.php' TARGET = '_blank'>	
+				<INPUT TYPE = 'hidden' NAME = 'user_id' VALUE = ''>
+				</FORM>
+				<A id='upt_courses' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('courses');">Update Courses</A>
+				<A id='upt_taken' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('courses_taken');">Update Courses taken</A>
+				<A id='reports' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='#'>Report</A>&raquo;
+				<SELECT NAME='frm_user_id' onChange = "document.course_form.user_id.value=this.options[this.selectedIndex].value; document.course_form.submit();">
+					<OPTION VALUE='' selected>Select</OPTION>
+					<OPTION VALUE='0' >All users</OPTION>
 <?php
-	$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$the_opt = shorten("({$row['user']}) {$row['name_l']}, {$row['name_f']} {$row['name_mi']} ", 32);
-		echo "\t\t\t<OPTION VALUE='{$row['id']}'>{$the_opt}</OPTION>\n";
-		}				// end while()
-	echo "\n\t\t</SELECT></TD></TR>\n";
-		}			// if (mysql_table_exists())
-		
-	echo "\n\t\t</TABLE><BR />";
+		$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
+		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$the_opt = shorten("({$row['user']}) {$row['name_l']}, {$row['name_f']} {$row['name_mi']} ", 32);
+			echo "\t\t\t<OPTION VALUE='{$row['id']}'>{$the_opt}</OPTION>\n";
+			}				// end while()
+		echo "\n\t\t</SELECT>\n";
+		echo "\n</DIV>";
+			}			// if (mysql_table_exists())
 			
-	if (is_super()) {									// super or admin - 10/28/10			
-?>	
-		<LI><B>Modules</B><BR />
-		<TABLE BORDER=0 STYLE = 'margin-left:0px'>
-		<TR CLASS = 'odd'><!-- 3/15/11 -->		
-<?php
-		if (mysql_table_exists("$GLOBALS[mysql_prefix]modules")) 	{		// 10/28/10
+		if (is_super()) {									// super or admin - 10/28/10			
 ?>
-
-			<TD><LI><A HREF="#" onClick = "do_Post('modules');">Modules Configuration</A></TD>
-			<TD><LI><A HREF="delete_module.php">Delete Tickets Module</A></TD>		
+			<DIV class='config_heading' id='modules_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Modules</DIV>	
 <?php
-		}	//	end if modules table exists
+				if (mysql_table_exists("$GLOBALS[mysql_prefix]modules")) 	{
+?>
+					<A id='mods_cfg' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('modules');">Modules Configuration</A>
+					<A id='mods_del' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="delete_module.php">Delete Tickets Module</A>		
+<?php
+					}	//	end if modules table exists
 ?>		
-			<TD><LI><A HREF="install_module.php">Add Tickets Module</A></TD></TR></TABLE>
+				<A id='mods_add' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="install_module.php">Add Tickets Module</A>
+			</DIV>
 <?php
-		if ($istest) {
+			if ($istest) {
 ?>
-			<LI><A HREF="#" onClick = "do_Post('log');">Log</A>
-			<LI><A HREF="#" onClick = "do_Post('settings');">Settings</A>
-			<LI><A HREF="#" onClick = "do_Post('ticket');">Tickets</A>
-			<LI><A HREF="#" onClick = "do_Post('responder');"><?php print get_text("Units");?></A>
-			<LI><A HREF="#" onClick = "do_Post('action');">Actions</A>
-			<LI><A HREF="#" onClick = "do_Post('patient');">Patients</A>	
-			<LI><A HREF="tables.php">Tables</A>
+				<DIV class='config_heading' id='istest_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>	
+					<DIV class='config_heading' style='display: block; clear: both;'>Testing</DIV>	
+					<A id='test_log' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('log');">Log</A>
+					<A id='test_set' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('settings');">Settings</A>
+					<A id='test_ticks' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('ticket');">Tickets</A>
+					<A id='test_resp' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('responder');"><?php print get_text("Units");?></A>
+					<A id='test_act' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('action');">Actions</A>
+					<A id='test_pat' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('patient');">Patients</A>	
+					<A id='test_tabs' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="tables.php">Tables</A>
+				</DIV>
 
 <?php
-			}		// end if ($istest)
-		}
+				}		// end if ($istest)
+			}
 ?>
 
 <?php
-//		}		// if (is_administrator() || is_super())
+//			}		// if (is_administrator() || is_super())
 
-//-		
-	print "<BR /><BR />\n";
+//-	
+?>
+		</DIV>
+	</DIV>
+	<DIV style='position: fixed; right: 20px; top: 50px; max-height: 85%; width: 45%; overflow-y: scroll;'>
+<?php
 	list_users();		// 9/24/08
 
 	print "<BR /><BR />";
-	show_stats();	
+	show_stats();
 ?>
+	</DIV>
 	<FORM NAME='tables' METHOD = 'post' ACTION='tables.php'>
 	<INPUT TYPE='hidden' NAME='func' VALUE='r'>
 	<INPUT TYPE='hidden' NAME='tablename' VALUE=''>

@@ -13,7 +13,7 @@ require_once('incs/functions.inc.php');
 $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";		// 7/30/11
 
 @session_start();
-
+session_write_close();
 do_login(basename(__FILE__));
 extract ($_POST);
 $_type = "c";
@@ -63,8 +63,13 @@ tr.front 					{height: 18px; }
 <?php
 	$api_key = trim(get_variable('gmaps_api_key'));
 	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		} else {
+		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		}
 ?>
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>sensor=false"></SCRIPT>
+<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 <SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
 <SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 <SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->

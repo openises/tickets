@@ -2,6 +2,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
+session_write_close();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}
@@ -14,7 +15,7 @@ if($istest) {print "_GET"; dump($_GET);}
 if($istest) {print "_POST"; dump($_POST);}
 
 $zoom_tight = FALSE;		// default is FALSE (no tight zoom); replace with a decimal zoom value to over-ride the standard default zoom setting - 3/27/10
-
+$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 /*
 11/3/07 added frame jump prevention
 5/29/08 - added do_kml() call
@@ -88,171 +89,338 @@ $zoom_tight = FALSE;		// default is FALSE (no tight zoom); replace with a decima
 1/17/2013 GMaps V3 conversions made 
 5/22/2013 added broadcast call
 6/2/2013 reverse_geo operation added.
+7/3/2013 - socket2me conditioned on internet and broadcast settings, reverse geo field size limits corrected
+9/10/13 - Added "Address About" and "To Address" fields and File storage
+11/18/13 - Fix for notifies on edit.
 */
 	$addrs = FALSE;										// notifies address array doesn't exist
-
+	
 	function edit_ticket($id) {							/* post changes */
-		global $addrs, $NOTIFY_TICKET;
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $id;
+		$result = mysql_query($query);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$theScope = $row['scope'];
+		unset($result);
+		global $addrs, $NOTIFY_TICKET;	//	8/28/13
 
 		$post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
 		$post_frm_meridiem_booked_date = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_booked_date'])))) ) ? "" : $_POST['frm_meridiem_booked_date'] ;	//10/1/09
 		$post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
 
-		$_POST['frm_description'] 	= strip_html($_POST['frm_description']);		//clean up HTML tags
-		$post_frm_affected 	 		= strip_html($post_frm_affected);
-		$_POST['frm_scope']			= strip_html($_POST['frm_scope']);
+		if(empty($_POST['frm_scope'])) {	//	catch for refresh of tickets view screen.
+			add_header($id, FALSE, TRUE);
+			print '<FONT CLASS="header">Ticket <I>' . $theScope . '</I> has not changed</FONT><BR /><BR />';
+			require_once('./forms/ticket_view_screen.php');
+			exit();
+			} else {
+			$_POST['frm_description'] 	= strip_html($_POST['frm_description']);		//clean up HTML tags
+			$post_frm_affected 	 		= strip_html($post_frm_affected);
+			$_POST['frm_scope']			= strip_html($_POST['frm_scope']);
 
-/*		if (get_variable('reporting')) {		// if any change do automatic action reporting
+/*			if (get_variable('reporting')) {		// if any change do automatic action reporting
 		
-//			if ($_POST[frm_affected] != $_POST[frm_affected_default]) report_action($GLOBALS[ACTION_AFFECTED],$_POST[frm_affected],0,$id);
-			if ($_POST[frm_severity] != $_POST[frm_severity_default]) report_action($GLOBALS[ACTION_SEVERITY],get_severity($_POST[frm_severity_default]),get_severity($_POST[frm_severity]),$id);
-			if ($_POST[frm_scope] != $_POST[frm_scope_default]) report_action($GLOBALS[ACTION_SCOPE],$_POST[frm_scope_default],0,$id);
-			} 
+//				if ($_POST[frm_affected] != $_POST[frm_affected_default]) report_action($GLOBALS[ACTION_AFFECTED],$_POST[frm_affected],0,$id);
+				if ($_POST[frm_severity] != $_POST[frm_severity_default]) report_action($GLOBALS[ACTION_SEVERITY],get_severity($_POST[frm_severity_default]),get_severity($_POST[frm_severity]),$id);
+				if ($_POST[frm_scope] != $_POST[frm_scope_default]) report_action($GLOBALS[ACTION_SCOPE],$_POST[frm_scope_default],0,$id);
+				} 
 */
-		if (!get_variable('military_time'))	{		//put together date from the dropdown box and textbox values
-			if ($post_frm_meridiem_problemstart == 'pm'){
-				$post_frm_meridiem_problemstart	= ($post_frm_meridiem_problemstart + 12) % 24;
-				}
-			if (isset($_POST['frm_meridiem_booked_date'])) {	//10/1/09
-				if ($_POST['frm_meridiem_booked_date'] == 'pm'){
-					$_POST['frm_hour_booked_date'] = ($_POST['frm_hour_booked_date'] + 12) % 24;
+			if (!get_variable('military_time'))	{		//put together date from the dropdown box and textbox values
+				if ($post_frm_meridiem_problemstart == 'pm'){
+					$post_frm_meridiem_problemstart	= ($post_frm_meridiem_problemstart + 12) % 24;
 					}
-				}
-
-//			if ($_POST['frm_meridiem_problemend'] == 'pm') 	$_POST['frm_hour_problemend'] 	= ($_POST['frm_hour_problemend'] + 12) % 24;
-			}
-
-		if(empty($post_frm_owner)) {$post_frm_owner=0;}
-		$frm_problemstart = "$_POST[frm_year_problemstart]-$_POST[frm_month_problemstart]-$_POST[frm_day_problemstart] $_POST[frm_hour_problemstart]:$_POST[frm_minute_problemstart]:00$post_frm_meridiem_problemstart";
-
-		$curr_groups = $_POST['frm_exist_groups']; 	//	6/10/11
-		$groups = isset($_POST['frm_group']) ? ", " . implode(',', $_POST['frm_group']) . "," : $_POST['frm_exist_groups'];	//	3/28/12 - fixes error when accessed from view ticket screen..	
-		if (!get_variable('military_time'))	{			//put together date from the dropdown box and textbox values
-			if ($post_frm_meridiem_problemstart == 'pm'){
-				$_POST['frm_hour_problemstart'] = ($_POST['frm_hour_problemstart'] + 12) % 24;
-				}
-			if (isset($_POST['frm_meridiem_problemend'])) {
-				if ($_POST['frm_meridiem_problemend'] == 'pm'){
-					$_POST['frm_hour_problemend'] = ($_POST['frm_hour_problemend'] + 12) % 24;
+				if (isset($_POST['frm_meridiem_booked_date'])) {	//10/1/09
+					if ($_POST['frm_meridiem_booked_date'] == 'pm'){
+						$_POST['frm_hour_booked_date'] = ($_POST['frm_hour_booked_date'] + 12) % 24;
+						}
 					}
-				}
-			if (isset($_POST['frm_meridiem_booked_date'])) {	//10/1/09
-				if ($_POST['frm_meridiem_booked_date'] == 'pm'){
-					$_POST['frm_hour_booked_date'] = ($_POST['frm_hour_booked_date'] + 12) % 24;
-					}
-				}
-			}
-		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart("$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00") : "NULL";
-		$frm_booked_date  = (isset($_POST['frm_year_booked_date'])) ?  quote_smart("$_POST[frm_year_booked_date]-$_POST[frm_month_booked_date]-$_POST[frm_day_booked_date] $_POST[frm_hour_booked_date]:$_POST[frm_minute_booked_date]:00") : "NULL";	//10/1/09
 
-		if($_POST['frm_status'] != 1) {
-			$frm_problemend = "NULL";
-			}
-	
-		// perform db update
-		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-		$by = $_SESSION['user_id'];			// 12/7/10
-		if(empty($post_frm_owner)) {$post_frm_owner=0;}
-								// 8/23/08, 9/20/08, 9/22/09 (Facility), 10/1/09 (receiving facility), 6/26/10 (911), 6/10/11
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
-			`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
-			`street`= " . 		quote_smart(trim($_POST['frm_street'])) .",
-			`city`= " . 		quote_smart(trim($_POST['frm_city'])) .",
-			`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
-			`phone`= " . 		quote_smart(trim($_POST['frm_phone'])) . ",
-			`facility`= " . 	quote_smart(trim($_POST['frm_facility_id'])) . ",
-			`rec_facility`= " . quote_smart(trim($_POST['frm_rec_facility_id'])) . ",
-			`lat`= " . 			quote_smart(trim($_POST['frm_lat'])) . ",
-			`lng`= " . 			quote_smart(trim($_POST['frm_lng'])) . ",
-			`scope`= " . 		quote_smart(trim($_POST['frm_scope'])) . ",
-			`owner`= " . 		quote_smart(trim($post_frm_owner)) . ",
-			`severity`= " . 	quote_smart(trim($_POST['frm_severity'])) . ",
-			`in_types_id`= " . 	quote_smart(trim($_POST['frm_in_types_id'])) . ",
-			`status`=" . 		quote_smart(trim($_POST['frm_status'])) . ",
-			`problemstart`=".	quote_smart(trim($frm_problemstart)) . ",
-			`problemend`=".		$frm_problemend . ",
-			`description`= " .	quote_smart(trim($_POST['frm_description'])) .",
-			`comments`= " . 	quote_smart(trim($_POST['frm_comments'])) .",
-			`nine_one_one`= " . quote_smart(trim($_POST['frm_nine_one_one'])) .",
-			`booked_date`= 		{$frm_booked_date},
-			`_by` = 			{$by}, 
-			`updated`='{$now}'
-			WHERE ID='$id'";
-
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		
-		$list = $_POST['frm_exist_groups']; 	//	6/10/11
-		$ex_grps = explode(',', $list); 	//	6/10/11 
-		
-		if($curr_groups != $groups) { 	//	6/10/11
-			foreach($_POST['frm_group'] as $posted_grp) { 	//	6/10/11
-				if(!(in_array($posted_grp, $ex_grps))) {
-					$tick_stat = $_POST['frm_status'];
-					$query  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-							($posted_grp, 1, '$now', $tick_stat, $id, 'Allocated to Group' , $by)";
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
-					}
+//				if ($_POST['frm_meridiem_problemend'] == 'pm') 	$_POST['frm_hour_problemend'] 	= ($_POST['frm_hour_problemend'] + 12) % 24;
 				}
-			foreach($ex_grps as $existing_grp) { 	//	6/10/11
-//				print $existing_grp;				//  4/1/2013
-				if(in_array($existing_grp, get_allocates(4, $id))) {
-					if(!(in_array($existing_grp, $_POST['frm_group']))) {
-						$query  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 1 AND `group` = '$existing_grp' AND `resource_id` = {$id}";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+
+			if(empty($post_frm_owner)) {$post_frm_owner=0;}
+			$frm_problemstart = "$_POST[frm_year_problemstart]-$_POST[frm_month_problemstart]-$_POST[frm_day_problemstart] $_POST[frm_hour_problemstart]:$_POST[frm_minute_problemstart]:00$post_frm_meridiem_problemstart";
+
+			$curr_groups = $_POST['frm_exist_groups']; 	//	6/10/11
+			$groups = isset($_POST['frm_group']) ? ", " . implode(',', $_POST['frm_group']) . "," : $_POST['frm_exist_groups'];	//	3/28/12 - fixes error when accessed from view ticket screen..	
+			if (!get_variable('military_time'))	{			//put together date from the dropdown box and textbox values
+				if ($post_frm_meridiem_problemstart == 'pm'){
+					$_POST['frm_hour_problemstart'] = ($_POST['frm_hour_problemstart'] + 12) % 24;
+					}
+				if (isset($_POST['frm_meridiem_problemend'])) {
+					if ($_POST['frm_meridiem_problemend'] == 'pm'){
+						$_POST['frm_hour_problemend'] = ($_POST['frm_hour_problemend'] + 12) % 24;
+						}
+					}
+				if (isset($_POST['frm_meridiem_booked_date'])) {	//10/1/09
+					if ($_POST['frm_meridiem_booked_date'] == 'pm'){
+						$_POST['frm_hour_booked_date'] = ($_POST['frm_hour_booked_date'] + 12) % 24;
 						}
 					}
 				}
+			$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart("$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00") : "NULL";
+			$frm_booked_date  = (isset($_POST['frm_year_booked_date'])) ?  quote_smart("$_POST[frm_year_booked_date]-$_POST[frm_month_booked_date]-$_POST[frm_day_booked_date] $_POST[frm_hour_booked_date]:$_POST[frm_minute_booked_date]:00") : "NULL";	//10/1/09
+			$portal_user = 		empty($_POST['frm_portal_user'])?	NULL:  trim($_POST['frm_portal_user']);				// 9/10/13
+			if($_POST['frm_status'] != 1) {
+				$frm_problemend = "NULL";
+				}
+		
+			// perform db update
+			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+			$datetime = format_date_2(strtotime($now));
+			$by = $_SESSION['user_id'];			// 12/7/10
+			if(empty($post_frm_owner)) {$post_frm_owner=0;}
+			if(!empty($_POST['frm_comments'])) {
+				if($_POST['frm_notes'] == "") {
+					$disp = $datetime . ": " . $_POST['frm_comments'];					
+					} else {
+					$disp = $_POST['frm_notes'] . "<BR />" . $datetime . ": " . $_POST['frm_comments'];
+					}
+				} else {
+				$disp = $_POST['frm_notes'];
+				}
+									// 8/23/08, 9/20/08, 9/22/09 (Facility), 10/1/09 (receiving facility), 6/26/10 (911), 6/10/11
+			$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
+				`portal_user`= " .  quote_smart(trim($_POST['frm_portal_user'])) .",
+				`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
+				`street`= " . 		quote_smart(trim($_POST['frm_street'])) .",
+				`address_about`= " . 		quote_smart(trim($_POST['frm_address_about'])) . ",
+				`city`= " . 		quote_smart(trim($_POST['frm_city'])) .",
+				`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
+				`phone`= " . 		quote_smart(trim($_POST['frm_phone'])) . ",
+				`to_address`= " . 		quote_smart(trim($_POST['frm_to_address'])) . ",
+				`facility`= " . 	quote_smart(trim($_POST['frm_facility_id'])) . ",
+				`rec_facility`= " . quote_smart(trim($_POST['frm_rec_facility_id'])) . ",
+				`lat`= " . 			quote_smart(trim($_POST['frm_lat'])) . ",
+				`lng`= " . 			quote_smart(trim($_POST['frm_lng'])) . ",
+				`scope`= " . 		quote_smart(trim($_POST['frm_scope'])) . ",
+				`owner`= " . 		quote_smart(trim($post_frm_owner)) . ",
+				`severity`= " . 	quote_smart(trim($_POST['frm_severity'])) . ",
+				`in_types_id`= " . 	quote_smart(trim($_POST['frm_in_types_id'])) . ",
+				`status`=" . 		quote_smart(trim($_POST['frm_status'])) . ",
+				`problemstart`=".	quote_smart(trim($frm_problemstart)) . ",
+				`problemend`=".		$frm_problemend . ",
+				`description`= " .	quote_smart(trim($_POST['frm_description'])) .",
+				`comments`= " . 	quote_smart(trim($disp)) .",
+				`nine_one_one`= " . quote_smart(trim($_POST['frm_nine_one_one'])) .",
+				`booked_date`= 		{$frm_booked_date},
+				`_by` = 			{$by}, 
+				`updated`='{$now}'
+				WHERE ID='$id'";
+
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			if(quote_smart(trim($_POST['frm_status'])) == "1" || quote_smart(trim($_POST['frm_status'])) == "0") {
+				$al_status = 0;
+				} else {
+				$al_status = 1;				
+				}
+//	If portal user is set, insert an associated request if one does not already exist for this Ticket	9/10/13		
+
+			$where = $_SERVER['REMOTE_ADDR'];		//	9/10/13	
+			if(($portal_user != NULL) && ($portal_user != 0)) {		//	9/10/13	
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `ticket_id` = " . $id;		//	9/10/13	
+				$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);			//	9/10/13	
+				if(mysql_affected_rows() == 0) {		//	9/10/13	
+					$query = "INSERT INTO `$GLOBALS[mysql_prefix]requests` (
+					`org`,
+					`contact`, 
+					`street`, 
+					`city`, 
+					`state`, 
+					`the_name`, 
+					`phone`, 
+					`to_address`,
+					`orig_facility`,
+					`rec_facility`, 
+					`scope`, 
+					`description`, 
+					`comments`, 
+					`lat`,
+					`lng`,
+					`request_date`, 
+					`status`, 
+					`accepted_date`,
+					`declined_date`, 
+					`resourced_date`, 
+					`completed_date`, 
+					`closed`, 
+					`requester`, 
+					`ticket_id`,
+					`_by`, 
+					`_on`, 
+					`_from` 
+					) VALUES (
+					" . 0 . ",
+					'" . get_owner($_POST['frm_portal_user']) . "',
+					" . quote_smart(trim($_POST['frm_street'])) . ",	
+					" . quote_smart(trim($_POST['frm_city'])) . ",	
+					" . quote_smart(trim($_POST['frm_state'])) . ",	
+					" . quote_smart(trim($_POST['frm_contact'])) . ",
+					" . quote_smart(trim($_POST['frm_phone'])) . ",
+					" . quote_smart(trim($_POST['frm_to_address'])) . ",	
+					" . quote_smart(trim($_POST['frm_facility_id'])) . ",					
+					" . quote_smart(trim($_POST['frm_rec_facility_id'])) . ",	
+					" . quote_smart(trim($_POST['frm_scope'])) . ",	
+					" . quote_smart(trim($_POST['frm_description'])) . ",					
+					" . quote_smart(trim($_POST['frm_comments'])) . ",		
+					" . quote_smart(trim($_POST['frm_lat'])) . ",		
+					" . quote_smart(trim($_POST['frm_lng'])) . ",				
+					" . quote_smart(trim($frm_problemstart)) . ",
+					'Accepted',
+					'" . $now . "',
+					NULL,
+					NULL,
+					NULL,
+					NULL,
+					" . $portal_user . ",
+						" . $id . ",	
+					" . $_SESSION['user_id'] . ",				
+					'" . $now . "',
+					'" . $where . "')";
+					$result	= mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);		//	9/10/13	
+				}
 			}
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = '$id' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')"; 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$num_assigns = mysql_num_rows($result);
+//	end of insert request associated with Ticket
 
-		if($num_assigns !=0) {	//	4/4/11 - added to update any existing assigns record with any ticket changes.
-		$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET 
-			`as_of`='{$now}',
-			`status_id`= " . 	quote_smart(trim($_POST['frm_status'])) . ",
-			`user_id`= " . 		quote_smart(trim($post_frm_owner)) . ",
-			`facility_id`= " . 	quote_smart(trim($_POST['frm_facility_id'])) . ",
-			`rec_facility_id`= " . quote_smart(trim($_POST['frm_rec_facility_id'])) . "
-			WHERE ticket_id='$id'";		
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		}
-	do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id, 0);	// report change - 3/25/10
+//	9/10/13 File Upload support
+			$print = "";
+			if ((isset($_FILES['frm_file'])) && ($_FILES['frm_file']['name'] != "")){
+				$nogoodFile = false;	
+				$blacklist = array(".php", ".phtml", ".php3", ".php4", ".js", ".shtml", ".pl" ,".py"); 
+				foreach ($blacklist as $file) { 
+					if(preg_match("/$file\$/i", $_FILES['frm_file']['name'])) { 
+						$nogoodFile = true;
+						}
+					}
+				if(!$nogoodFile) {
+					$exists = false;
+					$existing_file = "";
+					$upload_directory = "./files/";
+					if (!(file_exists($upload_directory))) {				
+						mkdir ($upload_directory, 0770);
+						}
+					chmod($upload_directory, 0770);	
+					$filename = rand(1,999999);
+					$realfilename = $_FILES["frm_file"]["name"];
+					$file = $upload_directory . $filename;
+				
+//	Does the file already exist in the files table		
 
-	if($_POST['frm_status'] == $GLOBALS['STATUS_CLOSED']) {		// log incident complete - repeats possible
-		do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $id, 0);		
-		}
-		
-	switch ($_POST['frm_fac_chng']) {				// log facility changes - 3/25/10
-		case "0":					// no change
-			break;
-		case "1":
-			do_log($GLOBALS['LOG_FACILITY_INCIDENT_CHANGE'], $id, 0);	//10/1/09
-			break;
-		case "2":
-			do_log($GLOBALS['LOG_CALL_REC_FAC_CHANGE'], $id);	//10/7/09			
-			break;
-		case "3":
-			do_log($GLOBALS['LOG_FACILITY_INCIDENT_CHANGE'], $id, 0);	//10/1/09
-			do_log($GLOBALS['LOG_CALL_REC_FAC_CHANGE'], $id);	//10/7/09	
-			break;
-		default:																	// 8/10/09
-//			dump($_POST['frm_fac_chng']);
-			print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
-		}			// end switch ()
+					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
+					$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
+					if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+						if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
+							if (strlen(filesize($file)) < 20000000) {
+								$print .= "";
+								} else {
+								$print .= "Attached file is too large!";
+								}
+							} else {
+							$print .= "Error uploading file";
+							}
+						} else {
+						$row = stripslashes_deep(mysql_fetch_assoc($result));			
+						$exists = true;
+						$existing_file = $row['filename'];	//	get existing file name
+						}
+						
+					$from = $_SERVER['REMOTE_ADDR'];	
+					$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
+					$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+							`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
+						) VALUES (
+							'" . $_POST['frm_file_title'] . "', '" . $filename . "', '" . $realfilename . "', " . $id . ", 0,
+							0, 0, '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
+						)";
+					$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+					if($result_insert) {	//	is the database insert successful
+						$dbUpdated = true;
+						} else {	//	problem with the database insert
+						$dbUpdated = false;				
+						}
+					}
+				} else {	// Problem with the file upload
+				$fileUploaded = false;
+				}	
 
-	print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
-//	notify_user($id, $GLOBALS['NOTIFY_TICKET']);
-	add_header($id);
-	show_ticket($id);
-	$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
+//	End of file upload				
 
-	unset ($_SESSION['active_ticket']);								// 5/4/11
 
-	}				// end function edit ticket() 
+			$list = $_POST['frm_exist_groups']; 	//	6/10/11
+			$ex_grps = explode(',', $list); 	//	6/10/11
+			
+			if($al_status == 0) {
+				$query  = "UPDATE `$GLOBALS[mysql_prefix]allocates` SET `al_status` = 0, `al_as_of` = '{$now}' WHERE `type` = 1 AND `resource_id` = '$id'";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				}
+			
+			$tick_stat = $al_status;	//	set allocates status to 1 if open or scheduled, 0 if ticket closed or reserved
+			
+			if($curr_groups != $groups) { 	//	6/10/11
+				foreach($_POST['frm_group'] as $posted_grp) { 	//	6/10/11
+					if(!(in_array($posted_grp, $ex_grps))) {
+						$tick_stat = $al_status;
+						$query  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+								($posted_grp, 1, '$now', $tick_stat, $id, 'Allocated to Group' , $by)";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+						}
+					}
+				foreach($ex_grps as $existing_grp) { 	//	6/10/11
+					if(in_array($existing_grp, get_allocates(4, $id))) {
+						if(!(in_array($existing_grp, $_POST['frm_group']))) {
+							$query  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 1 AND `group` = '$existing_grp' AND `resource_id` = {$id}";
+							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+							}
+						}
+					}
+				}
+			
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = '$id' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')"; 
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+			$num_assigns = mysql_num_rows($result);
 
-$api_key = get_variable('gmaps_api_key');
+			if($num_assigns !=0) {	//	4/4/11 - added to update any existing assigns record with any ticket changes.
+			$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET 
+				`as_of`='{$now}',
+				`status_id`= " . 	quote_smart(trim($_POST['frm_status'])) . ",
+				`user_id`= " . 		quote_smart(trim($post_frm_owner)) . ",
+				`facility_id`= " . 	quote_smart(trim($_POST['frm_facility_id'])) . ",
+				`rec_facility_id`= " . quote_smart(trim($_POST['frm_rec_facility_id'])) . "
+				WHERE ticket_id='$id'";		
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+			}
+			do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id, 0);	// report change - 3/25/10
+
+			if($_POST['frm_status'] == $GLOBALS['STATUS_CLOSED']) {		// log incident complete - repeats possible
+				do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $id, 0);		
+				}
+			
+			switch ($_POST['frm_fac_chng']) {				// log facility changes - 3/25/10
+				case "0":					// no change
+					break;
+				case "1":
+					do_log($GLOBALS['LOG_FACILITY_INCIDENT_CHANGE'], $id, 0);	//10/1/09
+					break;
+				case "2":
+					do_log($GLOBALS['LOG_CALL_REC_FAC_CHANGE'], $id);	//10/7/09			
+					break;
+				case "3":
+					do_log($GLOBALS['LOG_FACILITY_INCIDENT_CHANGE'], $id, 0);	//10/1/09
+					do_log($GLOBALS['LOG_CALL_REC_FAC_CHANGE'], $id);	//10/7/09	
+					break;
+				default:																	// 8/10/09
+//					dump($_POST['frm_fac_chng']);
+					print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+				}			// end switch ()
+
+			add_header($id, FALSE, TRUE);
+			print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
+			$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
+			unset ($_SESSION['active_ticket']);								// 5/4/11
+			return($addrs);	//	11/18/13
+			}
+		}				// end function edit ticket() 
+
 $nature = get_text("Nature");				// 12/1/10	{$nature} 
 $disposition = get_text("Disposition");		// 	{$disposition} 
 $patient = get_text("Patient");				// 	{$patient} 
@@ -280,24 +448,145 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">		<!-- 3/15/11 -->
-<?php
-	if ($gmaps) {		// 1/1/11
-?>
-	<SCRIPT TYPE="text/javascript" SRC="http://maps.google.com/maps/api/js?sensor=false"></SCRIPT>
-	<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></SCRIPT>
-	<SCRIPT SRC="./js/graticule_V3.js" type="text/javascript"></SCRIPT>
-	
-<?php
-		}
-	?>
-	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>		<!-- 8/23/08 -->
-	<SCRIPT SRC='./js/jscoord.js'></SCRIPT>		<!-- coordinate conversion 12/11/10 -->	
-	<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-	<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-	<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->		
-
+	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+	<!--[if lte IE 8]>
+		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+	<![endif]-->
+	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
+	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
+	<STYLE TYPE="text/css">
+	#suggest{background:#fff; width:150px;	}
+	#suggest div{ background:#ddd; color:#000; padding-left:4px; cursor:hand; text-align:left;position:relative;	}
+	#suggest div.over{ color:#000; background:#fff;	}
+	.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+	table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+	table.cruises td {overflow: hidden; }
+	div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
+	div.scrollableContainer2 { position: relative; padding-top: 2em; }
+	div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+	div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
+	table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
+	table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+	.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
+	.box {background-color: transparent; border: none; color: #000000; padding: 0px; position: absolute;}
+	.bar {background-color: #DEE3E7; color: transparent; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;}
+	.content {padding: 1em;}
+	</STYLE>	
+<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<script src="./js/proj4js.js"></script>
+<script src="./js/proj4-compressed.js"></script>
+<script src="./js/leaflet/leaflet.js"></script>
+<script src="./js/proj4leaflet.js"></script>
+<script src="./js/leaflet/KML.js"></script>
+<script src="./js/leaflet/gpx.js"></script>  
+<script src="./js/leaflet-openweathermap.js"></script>
+<script src="./js/esri-leaflet.js"></script>
+<script src="./js/osopenspace.js"></script>
+<script src="./js/Control.Geocoder.js"></script>
+<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+<script src="./js/Google.js"></script>
+<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
+<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
+<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+<script type="text/javascript" src="./js/L.Graticule.js"></script>
+<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
+window.onresize=function(){set_size();}
 
+window.onload = function(){set_size();}
+
+var layercontrol;
+var mapWidth;
+var mapHeight;
+var listHeight;
+var colwidth;
+var listwidth;
+var inner_listwidth;
+var celwidth;
+var res_celwidth;
+var fac_celwidth;
+var viewportwidth;
+var viewportheight;
+var colheight;
+var outerwidth;
+var outerheight;
+var r_interval = null;
+var latest_responder = 0;
+var do_resp_update = true;
+var responders_updated = new Array();
+var inc_sortby = "tick_id";		//	options tick_id, scope, ticket_street, type, updated
+var inc_sortdir = "ASC";		// Initial sort direction ascending
+var inc_sortbyfield = "";
+var inc_sortvalue = "";
+var inc_period = 0;
+var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
+	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
+	}
+	});
+var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
+	}
+	});
+var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
+	}
+	});
+			
+/* Initial period selection - current tickets, 
+	options available 0 (current tickets), 
+	1 - Closed today
+	2 - Closed Yesterday+
+	3 - Closed this week
+	4 - Closed last week
+	5 - Closed last week+
+	6 - Closed this month
+	7 - Closed last month
+	8 - Closed this year
+	9 - Closed last year
+*/
+var colors = new Array ('odd', 'even');
+
+function set_size() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	mapWidth = viewportwidth * .40;
+	mapHeight = viewportheight * .55;
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	colwidth = outerwidth * .42;
+	colheight = outerheight * .95;
+	listHeight = viewportheight * .7;
+	listwidth = colwidth * .95;
+	inner_listwidth = listwidth *.9;
+	celwidth = listwidth * .20;
+	res_celwidth = listwidth * .15;
+	fac_celwidth = listwidth * .15;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	$('leftcol').style.width = colwidth + "px";
+	$('leftcol').style.height = colheight + "px";	
+	$('rightcol').style.width = colwidth + "px";
+	$('rightcol').style.height = colheight + "px";	
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	load_regions();
+	load_files();
+	get_mainmessages();
+	update_regions_text();
+	}
+	
 	try {
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
@@ -328,148 +617,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 		alert("dump: " + r);
 		}	
 	
-
-	function $() {									// 2/11/09
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
-
-	String.prototype.trim = function () {									// 1/19/09
-		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-		};
-
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08
-
-	var starting = false;
-	function sv_win(theForm) {				// 2/11/09
-		if(starting) {return;}				// dbl-click proof
-		starting = true;					
-
-		var thelat = theForm.frm_lat.value;
-		var thelng = theForm.frm_lng.value;
-		var url = "street_view.php?thelat=" + thelat + "&thelng=" + thelng;
-		newwindow_sl=window.open(url, "sta_log",  "titlebar=no, location=0, resizable=1, scrollbars, height=450,width=640,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-		if (!(newwindow_sl)) {
-			alert ("Street view operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
-			return;
-			}
-		newwindow_sl.focus();
-		starting = false;
-		}		// end function sv win()
-
-	function do_usng() {														// 5/2/09
-		alert(279);
-		if (document.edit.frm_ngs.value.trim().length>6) {do_usng_conv();}
-		}
-
-	function do_usng_conv(){			// usng to LL array			- 12/4/08
-		tolatlng = new Array();
-		USNGtoLL(document.edit.frm_ngs.value, tolatlng);
-		var point = new GLatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
-		map.setCenter(point, <?php echo get_variable('def_zoom'); ?>);
-		var marker = new GMarker(point);
-		document.edit.frm_lat.value = point.lat(); document.edit.frm_lng.value = point.lng(); 	
-		do_lat (point.lat());
-		do_lng (point.lng());
-		do_grids(document.edit);
-		pt_to_map (document.edit, point.lat(), point.lng())
-
-		}				// end function
-		
-
-	function do_coords(inlat, inlng) { 										 //9/14/08
-		if(inlat.toString().length==0) return;								// 10/15/08
-		var str = inlat + ", " + inlng + "\n";
-		str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
-		str += lat2ddm(inlat) + ", " +lng2ddm(inlng);		
-		alert(str);
-		}
-
-	function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
-		var d = new Number(inval);
-		d  = (inval>0)?  Math.floor(d):Math.round(d);
-		var mi = (inval-d)*60;
-		var m = Math.floor(mi)				// min's
-		var si = (mi-m)*60;
-		var s = si.toFixed(1);
-		return d + '\260 ' + Math.abs(m) +"' " + Math.abs(s) + '"';
-		}
-
-	function lat2ddm(inlat) {				// lat to degr, dec min's  9/7/08
-		var x = new Number(inlat);
-		var y  = (inlat>0)?  Math.floor(x):Math.round(x);
-		var z = ((Math.abs(x-y)*60).toFixed(1));
-		var nors = (inlat>0.0)? " N":" S";
-		return Math.abs(y) + '\260 ' + z +"'" + nors;
-		}
-	
-	function lng2ddm(inlng) {				// lng to degr, dec min's 
-		var x = new Number(inlng);
-		var y  = (inlng>0)?  Math.floor(x):Math.round(x);
-		var z = ((Math.abs(x-y)*60).toFixed(1));
-		var eorw = (inlng>0.0)? " E":" W";
-		return Math.abs(y) + '\260 ' + z +"'" + eorw;
-		}
-	
-	function do_lat_fmt(inlat) {				// 9/9/08
-		switch(lat_lng_frmt) {
-		case 0:
-			return inlat;
-		  	break;
-		case 1:
-			return ll2dms(inlat);
-		  	break;
-		case 2:
-			return lat2ddm(inlat);
-		 	break;
-		default:
-			alert ("invalid LL format selector");
-			}	
-		}
-
-	function do_lng_fmt(inlng) {
-		switch(lat_lng_frmt) {
-		case 0:
-			return inlng;
-		  	break;
-		case 1:
-			return ll2dms(inlng);
-		  	break;
-		case 2:
-			return lng2ddm(inlng);
-		 	break;
-		default:
-			alert ("invalid LL format selector");
-			}	
-		}
-
-	function ck_frames() {		// onLoad = "ck_frames()"
-		if(self.location.href==parent.location.href) {
-			self.location.href = 'index.php';
-			}
-		else {
-			parent.upper.show_butts();										// 1/21/09
-			}
-		}		// end function ck_frames()
-
-	function capWords(str){ 
-		var words = str.split(" "); 
-		for (var i=0 ; i < words.length ; i++){ 
-			var testwd = words[i]; 
-			var firLet = testwd.substr(0,1); 
-			var rest = testwd.substr(1, testwd.length -1) 
-			words[i] = firLet.toUpperCase() + rest 
-	  	 	} 
-		return( words.join(" ")); 
-		} 
 
 	function validate(theForm) {
 //		alert (theForm);
@@ -490,7 +638,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 			theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
 								
 <?php				/* 5/22/2013 */
-		if (intval(get_variable('broadcast')==1)) { 
+		if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) { 		// 7/2/2013
 ?>
 			var theMessage = "Updated  <?php print get_text('Incident');?> (" + theForm.frm_scope.value + ") by <?php echo $_SESSION['user'];?>";
 			broadcast(theMessage ) ;
@@ -502,12 +650,13 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 		}				// end function validate(theForm)
 
 	function do_fac_to_loc(text, index){													// 9/22/09
-			var curr_lat = fac_lat[index];
-			var curr_lng = fac_lng[index];
-			do_lat(curr_lat);
-			do_lng(curr_lng);
-			pt_to_map (document.edit, curr_lat, curr_lng)
-	}					// end function do_fac_to_loc
+		var curr_lat = fac_lat[index];
+		var curr_lng = fac_lng[index];
+		do_lat(curr_lat);
+		do_lng(curr_lng);
+		pt_to_map (document.edit, curr_lat, curr_lng)
+		find_warnings(curr_lat, curr_lng);	//	9/10/13
+		}					// end function do_fac_to_loc
 
 	function do_end(theForm) {				// make run-end date/time inputs available for posting		
 		elem = document.getElementById("runend1");
@@ -600,9 +749,91 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 		alert("You can't change this value");
 		return false;
 	}	
+	
+	function file_window(id) {										// 9/10/13
+		var url = "file_upload.php?ticket_id="+ id;
+		var nfWindow = window.open(url, 'NewFileWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
+		setTimeout(function() { nfWindow.focus(); }, 1);
+		}
+		
+	function get_files() {										// 9/10/13
+		$('the_file_list').innerHTML = "Please Wait, loading files";
+		randomnumber=Math.floor(Math.random()*99999999);
+		var url ="./ajax/file_list.php?ticket_id=<?php print $_GET['id'];?>&version=" + randomnumber;
+		theRequest (url, filelist_cb, "");	//	11/14/13
+		function filelist_cb(req) {
+			var theFiles=req.responseText;
+			$('the_file_list').innerHTML = theFiles;		
+			}
+		}
+		
+	function theRequest(url,callback,postData) {	// 9/10/13, 11/14/13
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+		
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+
+	function createXMLHTTPObject() {	//	11/18/13
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try { xmlhttp = XMLHttpFactories[i](); }
+			catch (e) { continue; }
+			break;
+			}
+		return xmlhttp;
+		}
+		
+	function find_warnings(tick_lat, tick_lng) {	//	9/10/13
+		randomnumber=Math.floor(Math.random()*99999999);
+		var theurl ="./ajax/loc_warn_list.php?version=" + randomnumber + "&lat=" + tick_lat + "&lng=" + tick_lng;
+		theRequest(theurl, loc_w, "");	//	11/14/13
+		function loc_w(req) {
+			var the_warnings=JSON.decode(req.responseText);
+			var the_count = the_warnings[0];
+			if(the_count != 0) {
+				$('loc_warnings').innerHTML = the_warnings[1];
+				$('loc_warnings').style.display = 'block';
+				}
+			}			
+		}
+		
+	var start_wl = false;
+	function wl_win(the_Id) {				// 2/11/09
+		if(start_wl) {return;}				// dbl-click proof
+		start_wl = true;					
+		var url = "warnloc_popup.php?id=" + the_Id;
+		newwindow_wl=window.open(url, "sta_log",  "titlebar=no, location=0, resizable=1, scrollbars, height=600,width=750,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		if (!(newwindow_wl)) {
+			alert ("Locations warning operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
+			return;
+			}
+		newwindow_wl.focus();
+		start_wl = false;
+		}		// end function sv win()
 </SCRIPT>
-<?php
-require_once('./incs/socket2me.inc.php');		// 5/22/2013
+<?php				// 7/3/2013
+	if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) { 	
+		require_once('./incs/socket2me.inc.php');		// 5/22/2013
+		}
 ?>
 </HEAD>
 
@@ -617,34 +848,11 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 	
 <?php
 		}
-?>		
-<STYLE>
-		.box {
-			background-color: transparent;
-			border: none;
-			color: #000000;
-			padding: 0px;
-			position: absolute;
-			}
-		.bar {
-			background-color: #DEE3E7;
-			color: transparent;
-			cursor: move;
-			font-weight: bold;
-			padding: 2px 1em 2px 1em;
-			}
-		.content {
-			padding: 1em;
-			}
-</STYLE>
-<BODY onLoad = "do_notify(); ck_frames()">	<!-- 628 -->
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
-<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
-<?php
 	require_once('./incs/links.inc.php');
-
+	@session_start();
 	if (array_key_exists('id', ($_GET))) {				// 5/4/11
 		$_SESSION['active_ticket'] = $_GET['id'];
+		session_write_close();
 		$id = $_GET['id'];
 		}
 	elseif (array_key_exists('id', ($_SESSION))){
@@ -657,10 +865,21 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 	if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {		/* update ticket */
 		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id' LIMIT 1")) {
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
+			} else {
+			$the_addrs = edit_ticket($id);	// post updated data	11/18/13
+
+			if ($addrs) {
+				$theTo = implode("|", array_unique($addrs));
+				$theText = "TICKET-Update: " . $_POST['frm_scope'];
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if ($addrs)
+			if($_SESSION['internet']) {
+				require_once('./forms/ticket_view_screen.php');
+				} else {
+				require_once('./forms/ticket_view_screen_NM.php');
+				}
 			}
-		else {
-			edit_ticket($id);									// post updated data
-			}
+		exit();
 		}
 	else if (isset($_GET['delete'])) {							//delete ticket
 		if ($_POST['frm_confirm']) {
@@ -680,21 +899,30 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			} 
 
 		else {				// OK, do form - 7/7/09, 4/1/11
- 
+			$tick_id = $_GET['id'];
  			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,
  				UNIX_TIMESTAMP(problemend) AS problemend, 
  				UNIX_TIMESTAMP(booked_date) AS booked_date, 
  				UNIX_TIMESTAMP(date) AS date,
  				UNIX_TIMESTAMP(updated) AS updated, 
  				`t`.`description` AS `tick_descr`,
+				`t`.`status` AS `in_status`,
  				`u`.`user` AS `tick_user`
  				FROM `$GLOBALS[mysql_prefix]ticket` `t`
  				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`t`.`in_types_id` = `ty`.`id`)
  				LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` ON (`t`.`_by` = `u`.`id`)
- 				WHERE `t`.`id`='$id' LIMIT 1";
+ 				WHERE `t`.`id`='$tick_id' LIMIT 1";
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 			
 			$row = stripslashes_deep(mysql_fetch_array($result));
+?>
+			<BODY onLoad = "ck_frames(); find_warnings(<?php print $row['lat'];?>, <?php print $row['lng'];?>);">	<!-- 628, 11/18/13 -->
+
+			<div id = "bldg_info" class = "even" style = "display: none; position:fixed; left:500px; top:70px; z-index: 998; width:300px; height:auto;"></div> <!-- 4/1/2014  -->
+			
+			<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+			<SCRIPT SRC="./js/misc_function.js"></SCRIPT>				
+<?php				
 			if (good_date($row['problemend'])) {
 ?>
 				<SCRIPT>
@@ -707,60 +935,72 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			$theClass = $priorities[$row['severity']];
 			$exist_rec_fac = $row['rec_facility'];
 
-			$query_al = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 6/10/11
-			$result_al = mysql_query($query_al);	// 6/10/11
-			$al_groups = array();
-			$al_names = "";	
-			while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	// 6/10/11
-				$al_groups[] = $row_al['group'];
-				$query_al2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row_al[group]';";	// 6/10/11
-				$result_al2 = mysql_query($query_al2);	// 6/10/11
-				while ($row_al2 = stripslashes_deep(mysql_fetch_assoc($result_al2))) 	{	// 6/10/11		
-						$al_names .= $row_al2['group_name'] . ", ";
-					}
-				}
-			if(is_super()) {
-				$al_names .= "&nbsp;&nbsp;Superadmin Level";
-			}	
+			$heading = "Edit Ticket - " . get_variable('map_caption');	//	6/10/11		
 			
-			if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11		
-				$heading = "Edit Ticket - " . get_variable('map_caption') . "&nbsp;-----------&nbsp;Groups:&nbsp;&nbsp; " . $al_names;	//	6/10/11		
-			} else {
-				$heading = "Edit Ticket - " . get_variable('map_caption');	//	6/10/11		
-			}			
-				
-				
-				
-			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' CLASS = 'BGCOLOR'>\n";
+			echo "\n<SCRIPT>\n";
+			$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
+			$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			if (mysql_num_rows($result_bldg) > 0) {
+				$i = 0;
+				$sel_str = "<select name='bldg' onChange = 'do_bldg(this.options[this.selectedIndex].value); '>\n";
+				$sel_str .= "\t<option value = '' selected>Select building</option>\n";
+				echo "\n\t var bldg_arr = new Array();\n";
+				while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
+					extract ($row_bldg);
+					$sel_str .= "\t<option value = {$i} >{$name}</option>\n";		
+					echo "\t var bldg={ bldg_name:\"{$name}\", bldg_street:\"{$street}\", bldg_city:\"{$city}\", bldg_state:\"{$state}\", bldg_lat:\"{$lat}\", bldg_lon:\"{$lon}\", bldg_info:\"{$information}\"};\n";
+					echo "\t bldg_arr.push(bldg);\n";		// object onto array
+					$i++;
+					}		// end while ()
+			
+				$sel_str .= "\t</SELECT>\n";
+				}		// end if (mysql... )
+			echo "\n</SCRIPT>\n";
+
+			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left'>\n";
 			if($gmaps) {	//	6/10/11		
 				print "<TR CLASS='header'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'>" . $heading . "</FONT></TD></TR>";	//	6/10/11	
-				print "<TR CLASS='spacer'><TD CLASS='spacer' COLSPAN=99 ALIGN='center'>&nbsp;</TD></TR><TR><TD>";	//	6/10/11					
-				print "<TR CLASS='odd'><TD ALIGN='left' COLSPAN='2'>";
+				print "<TR CLASS='spacer'><TD CLASS='spacer' COLSPAN=99 ALIGN='center'>&nbsp;</TD></TR>";	//	6/10/11					
+				print "<TR CLASS='odd'><TD ALIGN='left' COLSPAN=99>";
 				} else {
 				print "<TR CLASS='header'><TD ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'>" . $heading . "</FONT></TD></TR>";	//	6/10/11	
-				print "<TR CLASS='spacer'><TD CLASS='spacer' ALIGN='center'>&nbsp;</TD></TR><TR><TD>";	//	6/10/11						
-				print "<TR CLASS='odd'><TD ALIGN='left'>";	
+				print "<TR CLASS='spacer'><TD CLASS='spacer' ALIGN='center'>&nbsp;</TD></TR>";	//	6/10/11						
+				print "<TR CLASS='odd'><TD COLSPAN=99 ALIGN='left'>";	
 				}
-			print add_header($id, TRUE);
+			print add_header($tick_id, TRUE);
 			print "</TD></TR>\n";
-			print "<TR CLASS='odd'><TD>&nbsp;</TD></TR>\n";	
+			print "<TR CLASS='odd'><TD COLSPAN=99>&nbsp;</TD></TR>\n";	
 			if($gmaps) {	//	6/10/11
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left'>";
 			} else {
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left' style='width: 100%;' COLSPAN=99>";
 			}
 	
-			print "<FORM NAME='edit' METHOD='post' onSubmit='return validate(document.edit)' ACTION='" . basename(__FILE__) . "?id=$id&action=update'>";
+			print "<FORM NAME='edit' METHOD='post' ENCTYPE='multipart/form-data' onSubmit='return validate(document.edit)' ACTION='" . basename(__FILE__) . "?id=$tick_id&action=update'>";
 			if($gmaps) {	//	6/10/11
 				print "<TABLE BORDER='0' ID='data'>\n";
 				} else {
 				print "<TABLE BORDER='0' ID='data' WIDTH='100%'>\n";
 				}
-			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=3><FONT CLASS='$theClass'><B>Edit Run Ticket</FONT> (#{$id})</B></TD></TR>";
+			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=3><FONT CLASS='$theClass'><B>Edit Run Ticket</FONT> (#{$tick_id})</B></TD></TR>";
 			print "<TR CLASS='odd'><TD ALIGN='center' COLSPAN=3><FONT CLASS='header'><FONT SIZE='-2'>(mouseover caption for help information)</FONT></FONT><BR /><BR /></TD></TR>";
+
+			if (mysql_num_rows($result_bldg) > 0) {			// 4/7/2014
+?>
+		<TR CLASS='odd'>
+			<TD CLASS="td_label" ><?php print get_text("Building"); ?></A>:</TD>
+			<TD></TD>
+			<TD><?php echo $sel_str;?></TD>
+			</TR>
+<?php
+				}		// end if()
 
 			print "<TR CLASS='even'>
 					<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_loca']}');\">" . get_text("Location") . ": </TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_street' VALUE=\"{$row['street']}\" MAXLENGTH='48' {$dis}></TD></TR>\n";
+			print "<TR CLASS='odd'><TD CLASS='td_label' onmouseout='UnTip()' onmouseover='Tip(\"About Address, for instance round the back or building number\");'>" . get_text('Address About') . "</A>:</TD>
+					<TD></TD>
+					<TD><INPUT NAME='frm_address_about' tabindex=1 SIZE='72' TYPE='text' VALUE=\"{$row['address_about']}\" MAXLENGTH='512'></TD>
+					</TR>";	//	9/10/13
 			print "<TR CLASS='odd'>
 					<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_city']}');\">" . get_text("City") . ":</TD>";
 			print 		"<TD>";
@@ -777,6 +1017,7 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			if ($gmaps) {						// 6/4/2013
 				print "<BUTTON type='button' onClick='Javascript:do_nearby(this.form); return false;'>Nearby?</BUTTON>";
 				}		// end if ($gmaps)
+			print 		"<DIV id='loc_warnings' style='z-index: 1000; display: none; height: 100px; width: 300px; font-size: 1.5em; font-weight: bold; border: 2px outset #707070;'></DIV>";		
 			print 		"</TD></TR>\n";
 
 			print "<TR CLASS='even'>
@@ -794,8 +1035,12 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 						<TD CLASS='td_label'>{$row_cons['miscellaneous']}</TD></TR>\n";		// 3/13/10
 					}
 				unset($result_cons);
-				}				
-			print "<TR CLASS='odd'>
+				}	
+			print "<TR CLASS='odd'><TD CLASS='td_label' onmouseout='UnTip()' onmouseover='Tip(\"To Address, Not plotted on map, for information only\");'>" . get_text('To Address') . "</A>:</TD>
+					<TD></TD>
+					<TD><INPUT NAME='frm_to_address' tabindex=1 SIZE='72' TYPE='text' VALUE=\"{$row['to_address']}\" MAXLENGTH='512'></TD>
+					</TR>";	//	9/10/13		
+			print "<TR CLASS='even'>
 				<TD CLASS='td_label' COLSPAN=2 >";
 			print "<SPAN CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_nature']}');\">{$nature}:</SPAN>\n";
 			print "</TD><TD>";
@@ -824,7 +1069,9 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 					}			
 				print "<OPTION VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
 				if (!(empty($row2['protocol']))) {				// 7/7/09 - note string key
-					print "\n<SCRIPT>protocols[{$row2['id']}] = '{$row2['protocol']}';</SCRIPT>\n";		// 5/6/10
+					$temp = preg_replace("/[\n\r]/"," ",$temp_row['protocol']); 
+					$temp = addslashes($temp);
+					print "\n<SCRIPT>protocols[{$row2['id']}] = '" . $temp . "';</SCRIPT>\n";		// 5/6/10
 					}
 				$i++;
 				}
@@ -848,32 +1095,32 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			if(get_num_groups()) {	//	3/28/12 - fixes incorrect display of Regions.		
 			if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {		//	6/10/11
 					print "<TR CLASS='even' VALIGN='top'>";
-					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets groups that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Group') . "</A>: </TD>";
+					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets regions that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Regions') . "</A>: </TD>";
 					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
 					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>";
 					print "<TD>";
-					$alloc_groups = implode(',', get_allocates(1, $id));	//	6/10/11
-					print get_sub_group_butts(($_SESSION['user_id']), 1, $id) ;	//	6/10/11		
+					$alloc_groups = implode(',', get_allocates(1, $tick_id));	//	6/10/11
+					print get_sub_group_butts(($_SESSION['user_id']), 1, $tick_id) ;	//	6/10/11		
 					print "</DIV></TD></TR>";		// 6/10/11
 					
 				} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {	//	6/10/11	
 					print "<TR CLASS='even' VALIGN='top'>";
-					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets groups that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Group') . "</A>: </TD>";
+					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets regions that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Regions') . "</A>: </TD>";
 					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
 					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>";
 					print "<TD>";
-					$alloc_groups = implode(',', get_allocates(1, $id));	//	6/10/11
-					print get_sub_group_butts(($_SESSION['user_id']), 1, $id) ;	//	6/10/11			
+					$alloc_groups = implode(',', get_allocates(1, $tick_id));	//	6/10/11
+					print get_sub_group_butts(($_SESSION['user_id']), 1, $tick_id) ;	//	6/10/11			
 					print "</DIV></TD></TR>";		// 6/10/11	
 					
 				} else {
 					print "<TR CLASS='even' VALIGN='top'>";
-					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets groups that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Group') . "</A>: </TD>";
+					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets regions that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Regions') . "</A>: </TD>";
 					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
 					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>";
 					print "<TD>";
-					$alloc_groups = implode(',', get_allocates(1, $id));	//	6/10/11
-					print get_sub_group_butts_readonly(($_SESSION['user_id']), 1, $id) ;	//	6/10/11			
+					$alloc_groups = implode(',', get_allocates(1, $tick_id));	//	6/10/11
+					print get_sub_group_butts_readonly(($_SESSION['user_id']), 1, $tick_id) ;	//	6/10/11			
 					print "</DIV></TD></TR>";		// 6/10/11	
 				}
 			} else {
@@ -882,7 +1129,7 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			
 			print "<TR CLASS='odd' VALIGN='top'>
 					<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_synop']}');\">" . get_text("Synopsis") . ":</TD>";
-			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='2' {$dis} >" . $row['tick_descr'] . "</TEXTAREA></TD></TR>\n";		// 8/8/09
+			print 	"<TD CLASS='td_label'><TEXTAREA NAME='frm_description' COLS='45' ROWS='8' {$dis} >" . $row['tick_descr'] . "</TEXTAREA></TD></TR>\n";		// 8/8/09
 														// 2/11/11
 			$query_sigs = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
 			$result_sigs = mysql_query($query_sigs) or do_error($query_sigs, 'mysql query_sigs failed', mysql_error(),basename( __FILE__), __LINE__);
@@ -928,15 +1175,41 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 				<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_caller']}');\">" . get_text("Reported by") . ":</TD>
 				<TD><INPUT SIZE='48' TYPE='text' NAME='frm_contact' VALUE=\"{$row['contact']}\" MAXLENGTH='48' {$dis}/></TD></TR>\n";
 
+			$portal_user_control = "<SELECT NAME='frm_portal_user'>";
+			$query_pu = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `level` = " . $GLOBALS['LEVEL_SERVICE_USER'] . " ORDER BY `name_l` ASC";
+			$result_pu = mysql_query($query_pu) or do_error($query_pu, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			if(mysql_affected_rows() > 0) {
+				$has_portal = 1;
+				$portal_user_control .= "<OPTION VALUE = 0 SELECTED>Select User</OPTION>\n";
+					while ($row_pu = mysql_fetch_array($result_pu, MYSQL_ASSOC)) {
+						$sel = $row_pu['id'] == $row['portal_user'] ? "SELECTED": "";
+						$theName = $row_pu['name_f'] . " " . $row_pu['name_l'] . " (" . $row_pu['user'] . ")";
+						$portal_user_control .= "<OPTION VALUE=" . $row_pu['id'] . " " . $sel . ">" . $theName . "</OPTION>\n";
+						}
+				$portal_user_control .= "</SELECT>\n";	
+				} else {
+				$has_portal = 0;
+				}
+			
+			if($has_portal == 1) {	
+				print "<TR CLASS='odd'>
+					<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('Associated Portal User - this user can see this ticket as a request');\">" . get_text("Portal User") . ":</TD>
+					<TD>";
+
+				print $portal_user_control;
+				print "</TD></TR>\n";
+				} else {
+				print "<INPUT TYPE='hidden' NAME='frm_portal_user' VALUE=0>";
+				}
+
 			print "<TR CLASS='even'>
 				<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_name']}');\">" . get_text("Incident name") . ":</TD>
 				<TD><INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE='{$row['scope']}' MAXLENGTH='48' {$dis} /></TD></TR>\n"; 
 
 			print "<TR CLASS='odd'><TD COLSPAN='2'>&nbsp;</TD></TR>";
-
-			$selO = ($row['status']==$GLOBALS['STATUS_OPEN'])?   "SELECTED" :"";
-			$selC = ($row['status']==$GLOBALS['STATUS_CLOSED'])? "SELECTED" :"" ;
-			$selP = ($row['status']==$GLOBALS['STATUS_SCHEDULED'])? "SELECTED" :"" ;
+			$selO = ($row['in_status']==$GLOBALS['STATUS_OPEN'])?   "SELECTED" :"";
+			$selC = ($row['in_status']==$GLOBALS['STATUS_CLOSED'])? "SELECTED" :"" ;
+			$selP = ($row['in_status']==$GLOBALS['STATUS_SCHEDULED'])? "SELECTED" :"" ;
 
 			$end_date = (intval($row['problemend'])> 1)? $row['problemend']:  (time() - (get_variable('delta_mins')*60));
 			$elapsed = my_date_diff($row['problemstart'], $end_date);		// 5/13/10
@@ -948,14 +1221,9 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 
 //	facility handling  - 3/25/10
 
-			$query_al = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
-			$result_al = mysql_query($query_al);	// 4/13/11
-			$al_groups = array();
-			while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	//	6/10/11
-				$al_groups[] = $row_al['group'];
-				}
+			$al_groups = $_SESSION['user_groups'];
 				
-			if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
+			if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 				$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 				}
 
@@ -1099,13 +1367,16 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 
 			print "<TR CLASS='even' VALIGN='top'>
 				<TD CLASS='td_label' COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_disp']}');\">{$disposition}:</TD>";				// 10/21/08, 8/8/09
-			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' {$dis} >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
+			print 	"<TD style='background-color: #DEDEDE; color: #000000; border: 1px inset #707070;'>" . $row['comments'] . "</TD></TR>\n";
+			print "<TR CLASS='even' VALIGN='top'>
+				<TD CLASS='td_label' COLSPAN=2>&nbsp;</TD>";				// 10/21/08, 8/8/09
+			print 	"<TD><TEXTAREA style='width: 98%;' NAME='frm_comments' {$dis} ></TEXTAREA></TD></TR>\n";			
 			$query_sigs = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
 			$result_sigs = mysql_query($query_sigs) or do_error($query_sigs, 'mysql query_sigs failed', mysql_error(),basename( __FILE__), __LINE__);
 
 			if (mysql_num_rows($result_sigs)>0) {				// 2/11/11			
 ?>
-		<TR VALIGN = 'TOP' CLASS='even'>		<!-- 12/18/10 -->
+		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 12/18/10 -->
 			<TD COLSPAN=2 ></TD><TD CLASS="td_label">Signal &raquo; 
 
 				<SELECT NAME='signals' <?php print $dis; ?> onChange = 'set_signal2(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
@@ -1120,7 +1391,7 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 <?php
 				}						// end if (mysql_num_rows($result_sigs)>0)
 
-			print "<TR CLASS='odd'>
+			print "<TR CLASS='even'>
 				<TD CLASS='td_label' COLSPAN=2 onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U><A HREF=\"#\" TITLE=\"Position - Lat and Lng for Incident position. Click to show all position data.\">Position</A></U>:</TD><TD>";
 			print	 "<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print 	 "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
@@ -1146,8 +1417,16 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 
 			print "</TD></TR>\n";
 			$by_str = "&nbsp;&nbsp;&nbsp;by '{$row['tick_user']}'";				// 4/1/11
-			print "<TR CLASS='even'>
+			print "<TR CLASS='odd'>
 				<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_asof']}');\">Updated:</TD><TD>" . format_date($row['updated']) . "{$by_str}</TD></TR>\n";		// 10/21/08
+			print "<TR class='spacer'><TD COLSPAN='3' class='spacer'>&nbsp;</TD></TR>";
+			print "<TR class='heading'><TD COLSPAN='3' class='heading' style='text-align: center;'>File Upload</TD></TR>";
+			print "<TR class='odd'><TD class='td_label' COLSPAN='2' style='text-align: left;'>Choose a file to upload:</TD>
+				<TD class='td_data' style='text-align: left;'><INPUT NAME='frm_file' TYPE='file' /></TD></TR>";
+			print "<TR class='odd'><TD class='td_label' COLSPAN='2' style='text-align: left;'>File Name</TD>
+				<TD class='td_data' style='text-align: left;'><INPUT NAME='frm_file_title' TYPE='text' SIZE='48' MAXLENGTH='128' VALUE=''></TD></TR>";
+			print "<TR class='even'><TD COLSPAN='3'>&nbsp;</TD></TR>";
+			print "<TR class='spacer'><TD COLSPAN='3' class='spacer'>&nbsp;</TD></TR>";
 			$lat = $row['lat']; $lng = $row['lng'];	
 			if(($lat==$GLOBALS['NM_LAT_VAL']) && ($lng==$GLOBALS['NM_LAT_VAL'])) {	// check ticket entered in "no maps" Mode 7/28/10
 				$lat=get_variable('def_lat');
@@ -1157,7 +1436,7 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $row['lat'];?>">				<!-- // 8/9/08 -->
 			<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $row['lng'];?>">
-			<INPUT TYPE="hidden" NAME="frm_status_default" VALUE="<?php print $row['status'];?>">
+			<INPUT TYPE="hidden" NAME="frm_status_default" VALUE="<?php print $row['in_status'];?>">
 			<INPUT TYPE="hidden" NAME="frm_affected_default" VALUE="<?php print $row['affected'];?>">
 			<INPUT TYPE="hidden" NAME="frm_scope_default" VALUE="<?php print $row['scope'];?>">
 			<INPUT TYPE="hidden" NAME="frm_owner_default" VALUE="<?php print $row['owner'];?>">
@@ -1166,102 +1445,53 @@ require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			<INPUT TYPE="hidden" NAME="frm_exist_rec_fac" VALUE="<?php print $exist_rec_fac;?>">
 			<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">			
 			<INPUT TYPE="hidden" NAME="frm_fac_chng" VALUE="0">		<!-- 3/25/10 -->
+			<INPUT TYPE="hidden" NAME="frm_notes" VALUE="<?php print $row['comments'];?>">
 <?php
 			print "<TR CLASS='even'>
 				<TD COLSPAN='10' ALIGN='center'><BR /><B><U><A HREF='#' TITLE='List of all actions and patients atached to this Incident'>Actions and Patients</A></U></B><BR /></TD></TR>";	//8/7/09
 			print "<TR CLASS='odd'><TD COLSPAN='10' ALIGN='center'>";										//8/7/09
-//			$temp = (!((is_user()) && (intval(get_variable('oper_can_edit')) != 1)));					// 4/1/11
 			print show_actions($row[0], "date", !$disallow, TRUE);											//8/7/09
 			print "<BR /><BR /></TD></TR>";																//8/7/09
 			print "</TABLE>";		// end data 8/7/09
 															//8/7/09
-			if ($gmaps) {		// 1/1/11, 6/10/11
-				print "</TD><TD>";		
-				print "<TABLE ID='mymap' border = 0><TR><TD ALIGN='center'><DIV ID='map_canvas' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX'></DIV>
-					<BR /><SPAN ID='do_grid' onClick='toglGrid()'><U>Grid</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
-					<SPAN ID='do_sv' onClick = 'sv_win(document.edit)'><U>Street view</U></SPAN>";
+			print "</TD>";
+			if($gmaps) {
+				print "<TD style='background-color: transparent;'>";		
+				print "<TABLE ID='mymap' border = 0><TR class='odd'><TD><DIV ID='map_canvas' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX;  z-index: 1;'></DIV>";
 				print ($zoom_tight)? "<SPAN  onClick= 'zoom_in({$lat}, {$lng}, {$zoom_tight});' STYLE = 'margin-left:20px'><U>Zoom</U></SPAN>\n" : "";	// 3/27/10
 					
-				print "</TD></TR></TABLE ID='mymap'>\n";
+				print "</TD></TR></TABLE>\n";
+				print "</TD>";
 				}
-			
-			print "</TD></TR>";
-			print "<TR><TD CLASS='print_TD' COLSPAN='2'>";
+			print "</TR>";
 			print "</FORM>";
-			print "</TD></TR></TABLE>";		// bottom of outer
+			print "</TABLE>";		// bottom of outer
 			
-			$from_left = $gmaps ? 450: 650;	//	6/10/11
-			$from_top = 220;				// 11/22/2012
+			$from_left = 450;
+			$from_top = 220;
+			$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
+			print add_sidebar(FALSE, TRUE, TRUE, FALSE, $allow_filedelete, $tick_id, 0, 0, 0);
 ?>			
 			<FORM NAME='can_Form' ACTION="main.php">
 			<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
 			</FORM>	
-					<DIV id='boxB' class='box' STYLE='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed;' > <!-- 9/23/10 -->
-					<DIV class="bar" STYLE="width:12em; color:red; background-color : transparent;"
+					<DIV id='boxB' class='box' STYLE='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed; z-index: 2;' > <!-- 9/23/10 -->
+					<DIV class="bar" STYLE="width:12em; color:red; background-color : transparent; z-index: 2;"
 						 onmousedown="dragStart(event, 'boxB')">&nbsp;&nbsp;&nbsp;&nbsp;<I>Drag me</I></DIV><!-- drag bar - 2/5/11 -->
-						 <DIV STYLE = 'height:10px;'/>&nbsp;</DIV>
-							<INPUT TYPE='button' VALUE='<?php print get_text("Cancel");?>' onClick='history.back();'  STYLE = 'margin-left:20px;' /><BR />
+						 <DIV STYLE = 'height:10px;'/>
+							<INPUT id='hist_but' TYPE='button' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE='<?php print get_text("Cancel");?>' onClick='history.back();'  STYLE = 'margin-left:20px;' /><BR />
 <?php
 if (!$disallow) {
 ?>
-							<INPUT TYPE='button' VALUE='<?php print get_text("Reset");?>' onClick= 'st_unlk_res(document.edit); reset_end(document.edit); document.edit.reset(); resetmap(<?php print $lat;?>, <?php print $lng;?>);'  STYLE = 'margin-left:20px; margin-top:10px' /><BR />
-							<INPUT TYPE='button' VALUE='<?php print get_text("Next");?>'  onClick='validate(document.edit);' STYLE = 'margin-left:20px; margin-top:10px' />
+							<INPUT id='reset_but' TYPE='button' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE='<?php print get_text("Reset");?>' onClick= 'st_unlk_res(document.edit); reset_end(document.edit); document.edit.reset(); resetmap(<?php print $lat;?>, <?php print $lng;?>);'  STYLE = 'margin-left:20px; margin-top:10px' /><BR />
+							<INPUT id='sub_but' TYPE='button' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE='<?php print get_text("Next");?>'  onClick='validate(document.edit);' STYLE = 'margin-left:20px; margin-top:10px' />
 <?php
 		}
 ?>		
-					</DIV>				
-<?php
-	if ($gmaps) {				// 1/1/11
-?>
+					</DIV>
+<div id = "bldg_info" class = "even" style = "display: none; position:fixed; left:500px; top:70px; z-index: 998; width:300px; height:auto;"></div> <!-- 4/1/2014  -->
+					
 	<SCRIPT>
-	var grid_bool = false;		
-	function toglGrid() {						// toggle
-		grid_bool = !grid_bool;
-		if (grid_bool)	{ grid = new Graticule(map_obj); }
-		else 			{ grid.setMap(null); }
-		}		// end function toglGrid()
-	
-		var map;												// <?php print __LINE__;?>
-
-		var icons=[];						// note globals
-		icons[<?php print $GLOBALS['SEVERITY_NORMAL'];?>] = "./our_icons/blue.png";		// normal
-		icons[<?php print $GLOBALS['SEVERITY_MEDIUM'];?>] = "./our_icons/green.png";	// green
-		icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>] =  "./our_icons/red.png";		// red	
-		icons[<?php print $GLOBALS['SEVERITY_HIGH']; ?>+1] =  "./our_icons/white.png";	// white - not in use
-//										some globals		
-		var map_obj = null;				// the map object - note GLOBAL
-		var myMarker;					// the marker object
-		var lat_var;					// see init.js
-		var lng_var;
-		var zoom_var;
-
-	function call_back (in_obj){				// callback function - from gmaps_v3_init()
-		do_lat(in_obj.lat);			// set form values
-		do_lng(in_obj.lng);
-		do_ngs();	
-<?php								// 6/2/2013
-	if (intval(get_variable('reverse_geo'))==1) {
-?>
-		codeLatLng (in_obj.lat, in_obj.lng);				// 6/2/2013 do reverse geo
-
-<?php
-		}	// end 'reverse_geo'?
-?>
-		}
-//				1225 - 1/17/2013
-
-<?php
-		$the_icon_file = ($lat == $GLOBALS['NM_LAT_VAL'])? "./our_icons/question1.png" : "./markers/crosshair.png";
-?>
-		map_obj = gmaps_v3_init(call_back, 'map_canvas', 
-			<?php echo $lat;?>, 
-			<?php echo $lng;?>, 
-			<?php echo (get_variable('def_zoom')*2);?>, 
-			'<?php echo $the_icon_file;?>', 			 
-			<?php echo get_variable('maptype');?>, 
-			false);		
-
-
 	function do_lat (lat) {
 		document.edit.frm_lat.value=parseFloat(lat).toFixed(6);			// 9/9/08, 5/2/09
 		document.edit.show_lat.disabled=false;							// permit read/write
@@ -1277,18 +1507,17 @@ if (!$disallow) {
 
 	function do_ngs() {											// LL to USNG
 		var loc = <?php print get_variable('locale');?>;
-		document.forms[0].frm_ngs.disabled=false;
-		if(loc == 0) { document.forms[0].frm_ngs.value = LLtoUSNG(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value, 5);			}
-		if(loc == 1) { document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value);			}
-		if(loc == 2) { document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value);			}			
-		document.forms[0].frm_ngs.disabled=true;
+		if(loc == 0) { document.forms[0].frm_ngs.disabled=false; document.forms[0].frm_ngs.value = LLtoUSNG(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value, 5); document.forms[0].frm_ngs.disabled=true;}
+		if(loc == 1) { document.forms[0].frm_osgb.disabled=false; document.forms[0].frm_osgb.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value); document.forms[0].frm_osgb.disabled=true; }
+		if(loc == 2) { document.forms[0].frm_utm.disabled=false; document.forms[0].frm_utm.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value); document.forms[0].frm_utm.disabled=true; }			
 		}
 
 	function do_grids(theForm) {								//12/13/10
-//		if (theForm.frm_ngs.value) {do_usng(theForm) ;}
+		if (theForm.frm_ngs) {do_usng(theForm) ;}
 		if (theForm.frm_utm) {do_utm (theForm);}
 		if (theForm.frm_osgb) {do_osgb (theForm);}
 		}
+		
 	function do_usng(theForm) {								// 8/23/08, 12/5/10
 		theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);	// US NG
 		}
@@ -1306,106 +1535,16 @@ if (!$disallow) {
 		theForm.frm_osgb.value = osgb_out.toSixFigureString();
 		}
 
-</SCRIPT>
-<?php
-		}		// end if ($gmaps) 
-?>
-
-<SCRIPT>
 	function resetmap(lat, lng) {						// restore original marker and center
-<?php
-		if (!($gmaps)) {print "\n\t return;\n";}		// 1/1/11
-?>
-		map.clearOverlays();
-		var point = new GLatLng(lat, lng);	
-		icon.image = icons[<?php print $row['severity'];?>];		
-		map.addOverlay(new GMarker(point, icon));
-		map.setCenter(new GLatLng(lat, lng),<?php echo get_variable('def_zoom'); ?>);
+		var theLocale = <?php print get_variable('locale');?>;
+		var useOSMAP = <?php print get_variable('use_osmap');?>;
+		init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
 		do_lat (lat);
 		do_lng (lng);
 		do_ngs(document.edit);								// 8/23/08
-//		if (grid) {map.addOverlay(new LatLonGraticule());}	// restore grid
 		}
 
 // *********************************************************************
-	function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
-		var SAFECHARS = "0123456789" +					// Numeric
-						"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +	// Alphabetic
-						"abcdefghijklmnopqrstuvwxyz" +	// guess
-						"-_.!~*'()";					// RFC2396 Mark characters
-		var HEX = "0123456789ABCDEF";
-	
-		var encoded = "";
-		for (var i = 0; i < plaintext.length; i++ ) {
-			var ch = plaintext.charAt(i);
-		    if (ch == " ") {
-			    encoded += "+";				// x-www-urlencoded, rather than %20
-			} else if (SAFECHARS.indexOf(ch) != -1) {
-			    encoded += ch;
-			} else {
-			    var charCode = ch.charCodeAt(0);
-				if (charCode > 255) {
-				    alert( "Unicode Character '"
-	                        + ch
-	                        + "' cannot be encoded using standard URL encoding.\n" +
-					          "(URL encoding only supports 8-bit characters.)\n" +
-							  "A space (+) will be substituted." );
-					encoded += "+";
-				} else {
-					encoded += "%";
-					encoded += HEX.charAt((charCode >> 4) & 0xF);
-					encoded += HEX.charAt(charCode & 0xF);
-					}
-				}
-			} 			// end for(...)
-		return encoded;
-		};			// end function
-
-	var the_form;
-	function sendRequest(my_form, url,callback,postData) {		// ajax function set - 1/17/09
-		the_form = my_form;
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-
 	function handleResult(req) {			// the called-back function 9/29/09 added frequent fliers
 		if (req.responseText.substring(0,1)=="-") {
 			alert("lookup failed");
@@ -1419,8 +1558,6 @@ if (!$disallow) {
 			the_form.frm_street.value=result[3].trim();		// street
 			the_form.frm_city.value=result[4].trim();		// city
 			the_form.frm_state.value=result[5].trim();		// state 
-//			the_form.frm_zip.value=result[6].trim();		// frm_zip - unused
-
 			pt_to_map (the_form, result[7].trim(), result[8].trim());				// 1/19/09
 			
 			}		// end else ...			
@@ -1436,105 +1573,86 @@ if (!$disallow) {
 		}
 		
 // *********************************************************************
-<?php
-	if ($gmaps) {				// 6/4/2013
-?>
 // *********************************************************************
-	function pt_to_map (my_form, lat, lng) {						// 7/5/10
-		myMarker.setMap(null);			// destroy predecessor
-		my_form.frm_lat.value=lat;	
-		my_form.frm_lng.value=lng;		
-			
-		my_form.show_lat.value=do_lat_fmt(lat);
-		my_form.show_lng.value=do_lng_fmt(lng);
-			
-		var loc = <?php print get_variable('locale');?>;
-		if(loc == 0) { my_form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
-		if(loc == 1) { my_form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-		if(loc == 2) { my_form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
+
+	function contains(array, item) {
+		for (var i = 0, I = array.length; i < I; ++i) {
+			if (array[i] == item) return true;
+			}
+		return false;
+		}
+		
+	function do_bldg(in_val) {							// called with zero-based array index - 3/29/2014				
+		if (myMarker) {myMarker.setMap(null);}			// clear existing/default icon 
 	
-		map_obj.setCenter(new google.maps.LatLng(lat, lng), <?php print get_variable('def_zoom');?>);
-
-		var iconImg = new Image();														// obtain icon dimensions
-		iconImg.src ='./markers/crosshair.png';
-		myIcon.anchor= new google.maps.Point(iconImg.width/2, iconImg.height/2);		// 8/11/12 - center offset = half icon width and height
-		var dp_latlng = new google.maps.LatLng(lat, lng);
-
-		myMarker = new google.maps.Marker({
-			position: dp_latlng,
-			icon: myIcon, 
-			draggable: true,
-			map: map_obj
-			});
-		myMarker.setMap(map_obj);		// add marker with icon
-
-		}				// end function pt_to_map ()
+		var obj_bldg = bldg_arr[in_val];						// nth object
+		document.edit.frm_street.value = obj_bldg.bldg_street;
+		document.edit.frm_city.value = obj_bldg.bldg_city;
+		document.edit.frm_state.value = obj_bldg.bldg_state;
+		document.edit.frm_address_about.value = obj_bldg.bldg_name;
+		if (document.edit.frm_lat) {
+			document.edit.frm_lat.value = document.edit.show_lat.value = obj_bldg.bldg_lat.toString();		// parseFloat() - .toFixed(2); 
+			document.edit.frm_lng.value = document.edit.show_lng.value = obj_bldg.bldg_lon.toString();
+			}
+		if (obj_bldg.bldg_info.length > 0 ) {
+			var close_str = "<span onclick = \"$('bldg_info').style = 'display:none';\"><b><center><u>X</u></center></b></span>";
+			$('bldg_info').innerHTML = obj_bldg.bldg_info + close_str;		// 
+			$('bldg_info').style.display = "inline";	
+			}
+		loc_lkup(document.edit) ;			// to map
+		}		// end function do_bldg()
 
 	function loc_lkup(my_form) {		   						// 7/5/10
 		if ((my_form.frm_city.value.trim()==""  || my_form.frm_state.value.trim()=="")) {
 			alert ("City and State are required for location lookup.");
 			return false;
 			}
-		var geocoder = new google.maps.Geocoder();
 		var myAddress = my_form.frm_street.value.trim() + ", " +my_form.frm_city.value.trim() + " "  +my_form.frm_state.value.trim();
+		control.options.geocoder.geocode(myAddress, function(results) {
+			var r = results[0]['center'];
+			var theLat = parseFloat(r.lat.toFixed(6));
+			var theLng = parseFloat(r.lng.toFixed(6));
+			pt_to_map (my_form, theLat, theLng);
+			if((theLat) && (theLng)) {		//	8/14/13
+				find_warnings(theLat, theLng)					
+				}	
+			});
+		}				// end function loc_lkup()
 
-		geocoder.geocode( { 'address': myAddress}, function(results, status) {		
-			if (status == google.maps.GeocoderStatus.OK)	{ pt_to_map (my_form, results[0].geometry.location.lat(), results[0].geometry.location.lng());}					
-			else 											{ alert("Geocode lookup failed: " + status);}
-			});				// end geocoder.geocode()
-
-		}				// end function loc lkup()
-
-
-// ****************************************************Reverse Geocoder 10/13/09, 7/5/10
-	var geocoder = new google.maps.Geocoder();
-	var address;
-	var rev_coding_on = '<?php print get_variable('reverse_geo');?>';		// 7/5/10	
-		
-	function codeLatLng(lat, lng) {
-		var latlng = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
-		geocoder.geocode({'latLng': latlng}, function(results, status) {
-			if (status == google.maps.GeocoderStatus.OK) {
-				if (results[1]) {
-				var addr_pieces = results[0].formatted_address.split(",");				
-				switch (addr_pieces.length) {
-					case 1:
-						document.edit.frm_street.value = document.edit.frm_city.value = "";				// state or country
-						document.edit.frm_state.value=addr_pieces[0].substring(0,5).trim() ;			// state or country
-						break;
-				
-					case 2:
-						document.edit.frm_street.value = "";					
-						document.edit.frm_city.value=addr_pieces[0].substring(0,33).trim() ;			// city
-						var temp = addr_pieces[1].substring(0,5).trim().split(" ");					// zipcode
-						document.edit.frm_state.value=temp[0].substring(0,5).trim() ;				// state or country	
-						break;
-				
-					case 3:
-						document.edit.frm_street.value=addr_pieces[0].substring(0,97).trim() ;		// street
-						document.edit.frm_city.value=addr_pieces[1].substring(0,33).trim() ;			// city
-						var temp = addr_pieces[2].substring(0,5).trim().split(" ");					// zipcode
-						document.edit.frm_state.value=temp[0].substring(0,5).trim() ;				// state or country
-						break;
-				
-					default:
-						document.edit.frm_street.value=addr_pieces[0].substring(0,97).trim() ;							// street
-						document.edit.frm_city.value=addr_pieces[(addr_pieces.length-3)].substring(0,33).trim() ;		// city
-						var temp = addr_pieces[(addr_pieces.length-2)].substring(0,5).trim().split(" ");				// zipcode
-						if (temp.length == 2) {
-							document.edit.frm_city.value=addr_pieces[(addr_pieces.length-3)].substring(0,33).trim() ;	// city						
-							document.edit.frm_state.value=temp[0].substring(0,5).trim() ;								// US state							
-							}
-						else {
-							var the_city = addr_pieces[(addr_pieces.length-3)] + ", " + addr_pieces[(addr_pieces.length-2)] ;
-							document.edit.frm_city.value=the_city.substring(0,33).trim() ;								// city						
-							document.edit.frm_state.value=addr_pieces[(addr_pieces.length-1)].substring(0,5).trim()		// country							
-							}
-					}				// end switch
+	function theRequest(url,callback,postData) {
+		var req = docreateXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				return;
 				}
-			} else { alert("Geocoder lookup failed due to: " + status); }
-		});
-	}				// end function
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+
+	var doXMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+
+	function docreateXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try { xmlhttp = doXMLHttpFactories[i](); }
+			catch (e) { continue; }
+			break;
+			}
+		return xmlhttp;
+		}
 
 // *****************************************************************************
 
@@ -1552,97 +1670,44 @@ if (!$disallow) {
 		newwindow.focus();
 		}		// end do_nearby()
 		
-<?php
-	}				// end if ($gmaps)
-?>
-
 	</SCRIPT>
 
 
 <?php
 			}			// end  sanity check 
 		}
-
+if($gmaps) {
 ?>
+	<SCRIPT>
+	var latLng;
+	var in_local_bool = "0";
+	var mapWidth = <?php print get_variable('map_width');?>+20;
+	var mapHeight = <?php print get_variable('map_height');?>+20;
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	var theLocale = <?php print get_variable('locale');?>;
+	var useOSMAP = <?php print get_variable('use_osmap');?>;
+	init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
+	map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+	var bounds = map.getBounds();	
+	var zoom = map.getZoom();
 
+	function onMapClick(e) {
+		if(marker) {map.removeLayer(marker); }
+		var iconurl = "./our_icons/yellow.png";
+		icon = new baseIcon({iconUrl: iconurl});	
+		marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
+		marker.addTo(map);
+		newGetAddress(e.latlng, "ei");
+		};
+
+	map.on('click', onMapClick);
+<?php
+	do_kml();
+?>
+	</SCRIPT>
+<?php
+	}
+?>
 </BODY>
-<?php
-
-
-			if ($addrs) {				// 10/21/08
-?>			
-<SCRIPT>
-	function do_notify() {
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET-Update: ";
-		var theId = '<?php print $_GET['id'];?>';
-
-//			 		 ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
-// 12/10/2012
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-</SCRIPT>
-<?php
-
-			}		// end if($addrs) 
-		else {
-?>		
-<SCRIPT>
-	function do_notify() {
-		return;
-		}			// end function do notify()
-</SCRIPT>
-<?php		
-			}
-
-?>
 </HTML>

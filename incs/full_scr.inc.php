@@ -18,6 +18,7 @@
 7/3/11 added lines data, do_landb() - 
 6/22/12 set def_zoom as zoom limit
 5/30/13 Implement catch for when there are no allocated regions for current user. 
+8/28/13 Fixed no show of KML files
 */
 error_reporting(E_ALL);
 $curr_cats = get_category_butts();	//	get current categories.
@@ -88,18 +89,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			$num_scheduled = mysql_num_rows($result_scheduled); 
 			unset($result_scheduled);
 			
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 6/10/11
-		$result = mysql_query($query);	// 6/10/11
-		$al_groups = array();
-		$al_names = "";	
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 6/10/11
-			$al_groups[] = $row['group'];
-			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 6/10/11
-			$result2 = mysql_query($query2);	// 6/10/11
-			while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 6/10/11		
-					$al_names .= $row2['group_name'] . ", ";
-				}
-			}			
+		$al_groups = $_SESSION['user_groups'];		
 	
 ?>
 <!-- 3/29/11 DIVS Incident List & Assignments List -->
@@ -155,11 +145,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	</DIV>
 
 	<DIV ID = 'bottom_bar' class='td_fs_buttons' style='display: table-cell; position: fixed; bottom: 0%; left: 0%; width: 100%; z-index: 3; height: 5%; text-align: center; vertical-align: middle; padding-top: 5px; border-top: 4px outset #CECECE;'>
-
-	<DIV ID = 'msg_span' STYLE = "display:none;">
-		<SPAN ID = "has_message_text" CLASS = "heading"></SPAN>
-		<BUTTON VALUE="OK" onclick = "end_message_show();"  STYLE = "margin-left:20px">OK</BUTTON>
-	</DIV> <!-- new -->
 	<DIV ID = "links" STYLE = "display:inline;">
 	<B><NOBR>	<!-- 2/16/11 Change CSS classes -->
 	<FORM>		
@@ -225,29 +210,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	document.write (div_style_str);
 
 	var user_id = <?php echo $_SESSION['user_id'];?>;		// 5/27/2013
-
-	var socket = new EasyWebSocket('ws://<?php echo "{$host}{$uri}"?>/');		// instantiate
-
-	socket.onmessage = function(event) {					// on incoming - 
-//	alert(232);
-	var ourArr = event.data.split("/");
-	if (ourArr[0] != user_id ) {							// is this mine?
-		var payload = ourArr.slice(1);						// no, drop user_id segment before showing it
-		payload = payload.join ("/");						// array back to string
-		$("has_message_text").innerHTML = payload;
-		$("links").style.display = "none"
-		$("msg_span").style.display = "inline-block"
-
-		window.opener.parent.frames["upper"].do_audible(); 	// sound off!
-
-		}				// end mine?
-	}				// end incoming
-
-	function end_message_show() {
-		$("has_message_text").innerHTML = "";
-		$("links").style.display = "inline";
-		$("msg_span").style.display = "none";	
-		}
 </script>
 		</TD></TR>
 		</TABLE></DIV>
@@ -416,9 +378,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 					    paths: 			points,
 					    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 					    strokeOpacity: 	<?php echo $line_opacity;?>,
-					    strokeWeight: 	<?php echo $line_width;?>,
-					    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-					    fillOpacity: 	<?php echo $fill_opacity;?>
+					    strokeWeight: 	<?php echo $line_width;?>
 						});
 <?php			} ?>				        
 					polyline.setMap(map);		
@@ -722,10 +682,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				var url = "persist2.php";
 				sendRequest (url, gb_handleResult, params);
 				$(category).checked = true;				
-				for (var j = 0; j < gmarkers.length; j++) {
-					if((gmarkers[j]) && (gmarkers[j].category!="Incident")) {				
-//					gmarkers[j].show();
-					gmarkers[j].setMap(map);
+				for (var j = 0; j < rmarkers.length; j++) {
+					if((rmarkers[j]) && (rmarkers[j].category!="Incident")) {				
+					rmarkers[j].setMap(map);
 					}
 					}
 				}
@@ -744,10 +703,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				var url = "persist2.php";
 				sendRequest (url, gb_handleResult, params);	
 				$(category).checked = false;				
-				for (var j = 0; j < gmarkers.length; j++) {
-					if((gmarkers[j]) && (gmarkers[j].category!="Incident")) {
-//						gmarkers[j].hide();
-						gmarkers[j].setMap(null);
+				for (var j = 0; j < rmarkers.length; j++) {
+					if((rmarkers[j]) && (rmarkers[j].category!="Incident")) {
+						rmarkers[j].setMap(null);
 					}
 					}
 				}
@@ -770,11 +728,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 						var url = "persist2.php";
 						sendRequest (url, gb_handleResult, params);
 						$(category).checked = true;			
-						for (var j = 0; j < gmarkers.length; j++) {
-							if ((gmarkers[j]) && (gmarkers[j].category) && (gmarkers[j].category == category)) {	
-//								alert("Showing gmarker " + j + " in Category " + category);
-//								gmarkers[j].show();
-								gmarkers[j].setMap(map);
+						for (var j = 0; j < rmarkers.length; j++) {
+							if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {	
+								rmarkers[j].setMap(map);
 								}
 							}
 						}
@@ -790,11 +746,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 						sendRequest (url, gb_handleResult, params);
 						$(category).checked = false;
 						var y=0;
-						for (var j = 0; j < gmarkers.length; j++) {
-							if ((gmarkers[j]) && (gmarkers[j].category) && (gmarkers[j].category == category)) {
-//								alert("Hiding gmarker " + j + " in Category " + category);							
-//								gmarkers[j].hide();
-								gmarkers[j].setMap(null);
+						for (var j = 0; j < rmarkers.length; j++) {
+							if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {
+								rmarkers[j].setMap(null);
 								}
 							}
 						}	
@@ -1128,6 +1082,37 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		return marker;
 		}				// end function create Marker()
 
+	function createUnitMarker(point, tabs, color, stat, id, sym, category, region, tip) {		// 12/23/13
+		var group = category || 0;			// if absent from call
+		var region = region || 0;
+		var tip_val = tip || "";		// if absent from call
+		got_points = true;				// 6/21/12
+		
+		var origin = ((sym.length)>3)? (sym.length)-3: 0;			// pick low-order three chars 3/22/11
+		var iconStr = sym.substring(origin);						// icon string
+		var image_file = "./our_icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + iconStr;
+		var marker = new google.maps.Marker({position: point, map: map, icon: image_file});		
+		marker.id = color;				// for hide/unhide
+		marker.category = category;		// 12/03/10 for show / hide by status
+		marker.region = region;			// 12/03/10 for show / hide by status		
+		marker.stat = stat;				// 10/21/09
+
+		google.maps.event.addListener(marker, "click", function() {		// 1811 - here for both side bar and icon click
+			try  {open_iw.close()} catch (e) {;}
+//			if (open_iw) {open_iw.close();} 							// another IW possibly open
+			map.setCenter(point, 8);
+
+			var infowindow = new google.maps.InfoWindow({ content: tabs, maxWidth: 400});	 
+			infowindow.open(map, marker);
+			open_iw = infowindow;
+			which = id;
+			});							// end add Listener( ... function())
+		rmarkers[id] = marker;							// marker to array for side_bar click function
+		rmarkers[id]['x'] = "y";							// ????
+		rinfoTabs[id] = tabs;							// tabs to array
+		bounds.extend(point);
+		return marker;
+		}				// end function create Marker()
 			
 	function createdummyMarker(point, tabs, color, id, unit_id) {
 		got_points = true;											// 6/18/12
@@ -1210,20 +1195,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	print "\tvar map_is_fixed = ";
 	print (($dzf==1) || ($dzf==3))? "true;\n":"false;\n";
 	
-//	$kml_olays = array();
-//	$dir = "./kml_files";
-//	$dh  = opendir($dir);
-//	$i = 1;
-//	$temp = explode ("/", $_SERVER['REQUEST_URI']);
-//	$temp[count($temp)-1] = "kml_files";				//
-//	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp) . "/";
-//	while (false !== ($filename = readdir($dh))) {
-//		if (!is_dir($filename)) {
-//		    echo "\tvar kml_" . $i . " = new GGeoXml(\"" . $server_str . $filename . "\");\n";
-//		    $kml_olays[] = "map.addOverlay(kml_". $i . ");";
-//		    $i++;
-//		    }
-//		}
 ?>
 	
 	function do_mail_win() {			// 6/13/09
@@ -1289,10 +1260,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	//	}				// end function do popup()
 	
 		var ticket_ids = [];
-		var gmarkers = [];
-		var fmarkers = [];
-		var infoTabs = [];
-		var facinfoTabs = [];
+		var gmarkers = new Array();
+		var rmarkers = new Array();
+		var fmarkers = new Array();
+		var infoTabs = new Array();
+		var rinfoTabs = new Array();
+		var facinfoTabs = new Array();
 		var which;
 		var i = 0;			// sidebar/icon index
 	
@@ -1495,7 +1468,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				$street = empty($row['tick_street'])? "" : $row['tick_street'] . "<BR/>" . $row['tick_city'] . " " . $row['state'] ;
 				$todisp = (is_guest())? "": "&nbsp;<A HREF='routes.php?ticket_id=" . $the_id . "'><U>Dispatch</U></A>";	// 8/2/08
 				$now = now(); 					
-
+				$now_ts = now_ts();		// timestamp format - 12/13/2014
 				if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
 					$strike = "<strike>"; $strikend = "</strike>";
 					}
@@ -1511,7 +1484,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				sidebar_line += "<DIV CLASS='in_type <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print $row['type'];?>')\"><?php print $strike;?>&nbsp;<?php print shorten($row['type'], $shorten_length);?><?php print $strikend;?></DIV></DIV>";
 				sidebar_line += "<DIV CLASS='in_1 <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print $row['tick_street']  . " " . $row['tick_city'] . " " . $row['tick_state'];?>')\"><?php print $strike;?>&nbsp;<?php print shorten(($row['tick_street'] . ' ' . $row['tick_city'] . " " . $row['tick_state']), $shorten_length);?>&nbsp;<?php print $strikend;?></DIV></DIV>";
 				sidebar_line += "<DIV CLASS='in_date <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print format_date($row['problemstart']);?>')\"><?php print $strike;?>&nbsp;<?php print shorten(format_date($row['problemstart']), $shorten_length);?><?php print $strikend;?></DIV></DIV>";
-				sidebar_line += "<DIV CLASS='in_dur <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print my_date_diff($row['problemstart'], $now);?>')\"><?php print $strike;?>&nbsp;<?php print shorten(my_date_diff($row['problemstart'], $now), $shorten_length);?><?php print $strikend;?></DIV></DIV></BR>";
+				sidebar_line += "<DIV CLASS='in_dur <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print my_date_diff(mysql_format_date($row['problemstart']), $now_ts);?>')\"><?php print $strike;?>&nbsp;<?php print shorten(my_date_diff(mysql_format_date($row['problemstart']), $now_ts), $shorten_length);?><?php print $strikend;?></DIV></DIV></BR>";
 
 <?php
 				$rand = ($istest)? "&rand=" . chr(rand(65,90)) : "";													// 10/21/08
@@ -1629,7 +1602,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 <?php
 	// ========================================== 3/29/11 ASSIGNMENTS start    ================================================
 
-	if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
+	if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
@@ -1878,12 +1851,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			}
 		unset($result_st);
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	// 6/10/11
-		$result = mysql_query($query);	// 6/10/11
-		$al_groups = array();
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 6/10/11
-			$al_groups[] = $row['group'];
-			}	
+		$al_groups = $_SESSION['user_groups'];
+		
 		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 .= " WHERE `a`.`type` = 2";
 			} else {
@@ -1951,9 +1920,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			    paths: 			points,
 			    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 			    strokeOpacity: 	<?php echo $line_opacity;?>,
-			    strokeWeight: 	<?php echo $line_width;?>,
-			    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-			    fillOpacity: 	<?php echo $fill_opacity;?>
+			    strokeWeight: 	<?php echo $line_width;?>
 				});
 <?php	} ?>				        
 
@@ -2004,9 +1971,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			    paths: 			points,
 			    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 			    strokeOpacity: 	<?php echo $line_opacity;?>,
-			    strokeWeight: 	<?php echo $line_width;?>,
-			    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-			    fillOpacity: 	<?php echo $fill_opacity;?>
+			    strokeWeight: 	<?php echo $line_width;?>
 				});
 <?php	} ?>				        
 
@@ -2409,9 +2374,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			} else {
 ?>
 				var the_group = '<?php print $the_group;?>';
-				
-				var marker = createMarker(point, myinfoTabs, <?php print $the_color;?>, <?php print $hide_unit;?>,  <?php print $sb_indx; ?>, sym, the_group); // 7/28/10
-//				map.addOverlay(marker);
+				var marker = createUnitMarker(point, myinfoTabs, <?php print $the_color;?>, <?php print $hide_unit;?>,  <?php print $row['unit_id']; ?>, sym, the_group); // 7/28/10, 3/15/11, 12/23/13
 				marker.setMap(map);
 
 <?php
@@ -2519,12 +2482,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 
 <?php
 	
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	5/4/11
-		$result = mysql_query($query);	//	5/4/11
-		$al_groups = array();
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	5/4/11
-			$al_groups[] = $row['group'];
-			}	
+		$al_groups = $_SESSION['user_groups'];
+		
 		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
@@ -2672,7 +2631,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 	//}
 	// =====================================End of functions to show facilities========================================================================
-	
+	do_kml();	//	8/28/13	
 //		for ($i = 0; $i<count($kml_olays); $i++) {				// emit kml overlay calls
 //			echo "\t\t" . $kml_olays[$i] . "\n";
 //			}
@@ -2683,7 +2642,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 
 	function do_landb_f() {				// JS function - 8/1/11
 //		alert(2629);
-		return true;
+//		return true;
 		var points = new Array();
 <?php
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND (`use_with_bm` = 1 OR `use_with_r` = 1)";
@@ -2723,9 +2682,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 							paths: 			points,
 							strokeColor: 	add_hash("<?php echo $line_color;?>"),
 							strokeOpacity: 	<?php echo $line_opacity;?>,
-							strokeWeight: 	<?php echo $line_width;?>,
-							fillColor: 		add_hash("<?php echo $fill_color;?>"),
-							fillOpacity: 	<?php echo $fill_opacity;?>
+							strokeWeight: 	<?php echo $line_width;?>
 							});
 <?php				
 					} 
@@ -2843,6 +2800,5 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	</SCRIPT>	
 	
 <?php
-	
 	}				// end function full_scr() ===========================================================
 
