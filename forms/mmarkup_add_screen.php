@@ -341,8 +341,8 @@ function draw_banner() {
 								<TD CLASS="td_label" ALIGN="left">Description:</TD>
 								<TD><INPUT MAXLENGTH="32" SIZE="32" type="text" NAME="frm_name" VALUE="" onChange = "this.value.trim();" />
 									<SPAN STYLE = 'margin-left:20px' CLASS="td_label" >Visible&nbsp;&raquo;&nbsp;</SPAN>
-									<SPAN STYLE = 'margin-left:10px'>Yes&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_is_vis' onClick = "document.c.rb_line_not_vis.checked = false;document.c.frm_line_status.value=0" CHECKED /></SPAN>
-									<SPAN STYLE = 'margin-left:20px'>No&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_not_vis' onClick = "document.c.rb_line_is_vis.checked = false;document.c.frm_line_status.value=1" /></SPAN>
+									<SPAN STYLE = 'margin-left:10px'>Yes&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_is_vis' onClick = "document.mkup_Add_form.rb_line_not_vis.checked = false;document.c.frm_line_status.value=0" CHECKED /></SPAN>
+									<SPAN STYLE = 'margin-left:20px'>No&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_not_vis' onClick = "document.mkup_Add_form.rb_line_is_vis.checked = false;document.c.frm_line_status.value=1" /></SPAN>
 								
 								</TD>
 							</TR>
@@ -455,6 +455,8 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, $allow_filedelete, 0, 0, 0, 0);
 		var locale = <?php print get_variable('locale');?>;
 		var my_Local = <?php print get_variable('local_maps');?>;
 		var latLng;
+		var boundary = [];			//	exclusion zones array
+		var bound_names = [];
 		var mapWidth = <?php print get_variable('map_width');?>+20;
 		var mapHeight = <?php print get_variable('map_height');?>+20;;
 		$('map_canvas').style.width = mapWidth + "px";
@@ -462,7 +464,6 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, $allow_filedelete, 0, 0, 0, 0);
 		var theLocale = <?php print get_variable('locale');?>;
 		var useOSMAP = <?php print get_variable('use_osmap');?>;
 		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points

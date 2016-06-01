@@ -109,7 +109,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		var tick_name = "<?php print $row_ticket['scope'];?>";	// 3/15/11
 	
 		var colors = new Array ('odd', 'even');
-		
+		var direcs = "";
 		var Direcs = null;			// global
 		var Now;
 		var mystart;
@@ -120,12 +120,10 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		var current_unit;
 		
 		function setDirections(fromLat, fromLng, toLat, toLng, recLat, recLng, locale, unit_id, lineCalled) {
-//			alert(fromLat + ", " + fromLng + ", " + toLat + ", " + toLng + ", " + recLat + ", " + recLng + ", " + locale + ", " + unit_id + ", " + lineCalled);
 			$('mail_dir_but').style.visibility = "hiddent";			// 11/12/09	
 			$("mail_button").style.display = "none";	//10/6/09
-			if(window.theDirections) { window.theDirections.removeFrom(map); $('directions').innerHTML = "";}
+			if(window.theDirections) { window.theDirections.removeFrom(map);}
 			window.current_unit = unit_id;
-		
 			window.theDirections = L.Routing.control({
 				waypoints: [
 					L.latLng(fromLat,fromLng),
@@ -144,12 +142,12 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			});
 			window.theDirections.addTo(map);
 			setTimeout(function() {
-			document.email_form.frm_direcs.value = $('directions').innerHTML;
+			direcs = $('directions').innerHTML;
+			document.email_form.frm_direcs.value = textDirections;
 			document.email_form.frm_u_id.value = current_unit;	
 			$('mail_dir_but').style.visibility = "visible";			// 11/12/09	
 			$("mail_button").style.display = "inline-block";	//10/6/09
 			},3000);
-//			document.email_form.frm_direcs.value = $('directions').innerHTML;
 			}
 
 		function mail_direcs(f) {	//10/6/09
@@ -214,7 +212,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				$('mail_dir_but').style.visibility = "hidden";			// 11/12/09	 -	
 				}
 
-			$("directions").innerHTML= "";								// prior directions no longer apply - 11/21/09
+			$("directions").innerHTML = "";								// prior directions no longer apply - 11/21/09
 			}					// end function my click(id)	
 
 		var starting = false;

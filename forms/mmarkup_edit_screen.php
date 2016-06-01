@@ -28,7 +28,7 @@ $checked_ringfences = ($row['use_with_u_rf'] == 1) ? "CHECKED": "";
 $checked_filled = ($row['filled'] == 1) ? "CHECKED": "";
 $checked_unfilled = ($row['filled'] == 0) ? "CHECKED": "";
 $temp = preg_split("/;/", $row['line_data']);
-$banner_text = (($row['line_type'] == "t") && (($temp[1]) && ($temp[1] !=""))) ? $temp[1] : "";
+$banner_text = (($row['line_type'] == "b") && (($temp[1]) && ($temp[1] !=""))) ? $temp[1] : "";
 $theRadius = (($row['line_type'] == "c") && (($temp[1]) && ($temp[1] != 0))) ? $temp[1] : 0;
 $query_cats = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
 $result_cats = mysql_query($query_cats) or do_error($query_cats, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
@@ -150,12 +150,7 @@ var centeredIcon = L.Icon.extend({options: {iconSize: [25, 25], iconAnchor: [12,
 
 var colors = new Array ('odd', 'even');
 
-function set_theselect() {
-	document.getElementById('selectType').selectedIndex = parseInt(typeInt);
-	}
-
-function change_type(id) {
-	set_theselect();
+function set_type(id) {
 	if(id=="p") {
 		$('radius').style.display='none';
 		$('ban_text').style.display='none';
@@ -177,12 +172,12 @@ function change_type(id) {
 		$('line_width').style.display='inline';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Circle";
 		type = "c";
-		} else if(id=="t") {
+		} else if(id=="b") {
 		$('radius').style.display='none';
 		$('ban_text').style.display='inline';
 		$('font_size').style.display='inline';
 		$('line_width').style.display='none';
-//		$('line_width2').style.display='none';
+		$('line_width2').style.display='none';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Banner";
 		type = "b";
 		} else {
@@ -194,7 +189,7 @@ function change_type(id) {
 		type = "e";
 		}
 	}
-	
+
 function set_fieldview() {
 	var filled = <?php print $filled;?>;
 	if(filled == 1) {
@@ -203,7 +198,6 @@ function set_fieldview() {
 		$('fill_tr').style.display = 'none';
 		}
 	}
-
 
 function set_size() {
 	if (typeof window.innerWidth != 'undefined') {
@@ -236,7 +230,7 @@ function set_size() {
 	$('rightcol').style.height = colheight + "px";	
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
-	change_type(theType);
+	set_type(theType);
 	set_fieldview();
 	}
 	
@@ -336,7 +330,7 @@ function do_reset() {
 	<DIV id='outer' style='position: absolute; left: 0px;'>
 		<DIV id='leftcol' style='position: absolute; left: 10px;'>
 			<A NAME='top'>	
-			<FORM ID='mkup_Add_form' NAME="mkup_edit" METHOD="post" ACTION="mmarkup.php?goedit=true">		
+			<FORM ID='mkup_Edit_form' NAME="mkup_edit" METHOD="post" ACTION="mmarkup.php?goedit=true">		
 			<TABLE id='markup_form_table' BORDER="0" ALIGN="center" width='100%'>
 				<TR CLASS="even" VALIGN="top" >
 					<TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Edit <SPAN id='type_flag'></SPAN></FONT><BR /><BR />
@@ -346,26 +340,12 @@ function do_reset() {
 				<TR CLASS="spacer" VALIGN="top" >
 					<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
 				</TR>
-				<TR CLASS="even" VALIGN="top" >
-					<TD COLSPAN="2" ALIGN="CENTER">
-						<SELECT ID="selectType" NAME='markup_type' onChange = "change_type(this.value)">
-							<OPTION VALUE=0>Select Type</OPTION>
-							<OPTION VALUE=1>Polygon</OPTION>
-							<OPTION VALUE=2>Line</OPTION>							
-							<OPTION VALUE=3>Circle</OPTION>
-							<OPTION VALUE=4>Banner</OPTION>	
-						</SELECT>
-					</TD>
-				</TR>
-				<TR CLASS="spacer" VALIGN="top" >
-					<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
-				</TR>
 				<TR VALIGN="baseline" CLASS="odd">
 					<TD CLASS="td_label" ALIGN="left">Description:</TD>
 					<TD><INPUT MAXLENGTH="32" SIZE="32" type="text" NAME="frm_name" VALUE="<?php print $row['line_name'];?>" onChange = "this.value.trim();" />
 						<SPAN STYLE = 'margin-left:20px' CLASS="td_label" >Visible&nbsp;&raquo;&nbsp;</SPAN>
-						<SPAN STYLE = 'margin-left:10px'>Yes&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_is_vis' onClick = "document.c.rb_line_not_vis.checked = false;document.c.frm_line_status.value=0" <?php print $checked_visible;?> /></SPAN>
-						<SPAN STYLE = 'margin-left:20px'>No&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_not_vis' onClick = "document.c.rb_line_is_vis.checked = false;document.c.frm_line_status.value=1" <?php print $checked_hidden;?> /></SPAN>
+						<SPAN STYLE = 'margin-left:10px'>Yes&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_is_vis' onClick = "document.mkup_Edit_form.rb_line_not_vis.checked = false;document.c.frm_line_status.value=0" <?php print $checked_visible;?> /></SPAN>
+						<SPAN STYLE = 'margin-left:20px'>No&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_not_vis' onClick = "document.mkup_Edit_form.rb_line_is_vis.checked = false;document.c.frm_line_status.value=1" <?php print $checked_hidden;?> /></SPAN>
 					
 					</TD>
 				</TR>
@@ -440,7 +420,7 @@ function do_reset() {
 						<INPUT TYPE='hidden' NAME = 'frm_line_status' VALUE='<?php print $row['line_status'];?>' />	
 						<INPUT TYPE='hidden' NAME = 'frm_line_cat_id' VALUE='<?php print $row['line_cat_id'];?>' />	
 						<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='<?php print $row['line_type'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='' />
+						<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='<?php print $row['line_data'];?>' />
 						<INPUT TYPE='hidden' NAME = 'frm_filled' VALUE='<?php print $filled;?>' />
 						<INPUT TYPE='hidden' NAME = 'frm_use_with_bm' VALUE='<?php print $row['use_with_bm'];?>' />
 						<INPUT TYPE='hidden' NAME = 'frm_use_with_r' VALUE='<?php print $row['use_with_r'];?>' />
@@ -486,14 +466,16 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		var locale = <?php print get_variable('locale');?>;
 		var my_Local = <?php print get_variable('local_maps');?>;
 		var latLng;
+		var boundary = [];			//	exclusion zones array
+		var bound_names = [];
 		var mapWidth = <?php print get_variable('map_width');?>+20;
 		var mapHeight = <?php print get_variable('map_height');?>+20;;
 		$('map_canvas').style.width = mapWidth + "px";
 		$('map_canvas').style.height = mapHeight + "px";
 		var theLocale = <?php print get_variable('locale');?>;
 		var useOSMAP = <?php print get_variable('use_osmap');?>;
-		init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+		var initZoom = <?php print get_variable('def_zoom');?>;
+		init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points
@@ -525,7 +507,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 					<?php print $row['line_width'];?>, 
 					"<?php print $row['line_data'];?>",
 					<?php print $row['id'];?>);	
-			} else if(theType == 't') {
+			} else if(theType == 'b') {
 			draw_banner("<?php print $row['line_name'];?>", 
 					"<?php print $row['line_data'];?>", 
 					<?php print $row['line_width'];?>,
@@ -583,7 +565,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 				marker.addTo(map);
 				markers.push(marker);
 				}
-			polyline = L.polyline([path],{
+			polyline = L.polyline(path,{
 			color: color,
 			weight: width,
 			opacity: opacity,
@@ -712,7 +694,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 					stroke: true
 					}).addTo(map);					
 					}
-				} else if((type == "c") || (type == "t")) {
+				} else if((type == "c") || (type == "b")) {
 				var iconurl = "./our_icons/circle_dot.png";
 				var icon = new centeredIcon({iconUrl: iconurl});
 				if(circle || banner) {
@@ -738,7 +720,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 									<?php print $row['id'];?>);
 							}
 						}
-					if(type == "t") {
+					if(type == "b") {
 						map.removeLayer(banner);
 						map.removeLayer(myMarker);
 						points.length=0;
@@ -774,7 +756,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 									<?php print $row['id'];?>);
 							}
 						}
-					if(type == "t") {
+					if(type == "b") {
 						points.push(e.latlng);	
 						var thelat = points[0].lat.toFixed(6);
 						var thelng = points[0].lng.toFixed(6);

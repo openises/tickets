@@ -229,7 +229,7 @@ $strike = $strike_ary[0];
 $updated = format_sb_date_2 ( $row['updated'] );
 
 $the_time = $row['r_updated'];
-$tofac = (is_guest())? 													"" : "<A id='tofac_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='fac_routes.php?stage=1&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
+$tofac = (is_guest())? 													"" : "<A id='tofac_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&dispfac=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
 $todisp = ((is_guest()) || (!(can_do_dispatch($row))))?					"" : "<A id='disp_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&disp=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";
 $toedit = (!(can_edit()))?				 								"" : "<A id='edit_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&edit=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
 $the_callsign = ($track_type == 8) ? "999_" . $row['unit_id']: $row['callsign'];	//	9/6/13

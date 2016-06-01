@@ -254,6 +254,8 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, $allow_filedelete, 0, 0, 0, 0);
 	<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 	<SCRIPT>
 	var latLng;
+	var boundary = [];			//	exclusion zones array
+	var bound_names = [];
 	var mapWidth = <?php print get_variable('map_width');?>+20;
 	var mapHeight = <?php print get_variable('map_height');?>+20;;
 	$('map_canvas').style.width = mapWidth + "px";
@@ -261,7 +263,6 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, $allow_filedelete, 0, 0, 0, 0);
 	var theLocale = <?php print get_variable('locale');?>;
 	var useOSMAP = <?php print get_variable('use_osmap');?>;
 	init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-	map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
 	var bounds = map.getBounds();	
 	var zoom = map.getZoom();
 	var got_points = false;	// map is empty of points

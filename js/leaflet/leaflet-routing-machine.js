@@ -616,7 +616,6 @@
 			for (i = 0; i < this._routes.length; i++) {
 				alt = this._routes[i];
 				altDiv = this._createAlternative(alt, i);
-//				this._container.appendChild(altDiv);
 				$('directions').appendChild(altDiv);
 				window.textDirections = altDiv;
 				this._altElements.push(altDiv);
@@ -635,18 +634,17 @@
 		},
 
 		_createAlternative: function(alt, i) {
+			var theRouteNum = i + 1;
 			var altDiv = L.DomUtil.create('div', 'leaflet-routing-alt ' +
 				this.options.alternativeClassName +
 				(i > 0 ? ' leaflet-routing-alt-minimized ' + this.options.minimizedClassName : ''));
 			altDiv.innerHTML = L.Util.template(this.options.summaryTemplate, {
-				name: alt.name,
+				name: "Route " + theRouteNum + " - " + alt.name,
 				distance: this._formatDistance(alt.summary.totalDistance),
 				time: this._formatTime(alt.summary.totalTime)
 			});
 			L.DomEvent.addListener(altDiv, 'click', this._onAltClicked, this);
-
 			altDiv.appendChild(this._createItineraryTable(alt));
-//			$('directions').appendChild(this._createItineraryTable(alt));
 			return altDiv;
 		},
 
@@ -671,16 +669,25 @@
 			    i,
 			    instr,
 			    row,
+				theTemp,
 			    td;
+			row = L.DomUtil.create('tr', '', body);
+			td = L.DomUtil.create('td', '', row);
 
+			var theClass = 'even';
 			for (i = 0; i < r.instructions.length; i++) {
+				var theStep = i + 1;
 				instr = r.instructions[i];
 				row = L.DomUtil.create('tr', '', body);
+				row.className = theClass;
 				td = L.DomUtil.create('td', '', row);
-				td.appendChild(document.createTextNode(this._instruction(instr, i)));
+				td.appendChild(document.createTextNode(theStep + " " + this._instruction(instr, i)));
+				td.className = 'stagelink';
 				td = L.DomUtil.create('td', '', row);
 				td.appendChild(document.createTextNode(this._formatDistance(instr.distance)));
+				td.className = 'stagedistance';
 				this._addRowListeners(row, r.coordinates[instr.index]);
+				theClass = (theClass == 'even') ? 'odd' : 'even';
 			}
 			return table;
 		},

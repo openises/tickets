@@ -168,7 +168,7 @@ function get_building($theName, $id = NULL) {
 			$theLat = "frm_level5_lat";
 			$theLng = "frm_level5_lng";
 			$theDiv = "level5_loc";
-			} elseif($theName == "frmlevel6_loc") {
+			} elseif($theName == "frm_level6_loc") {
 			$theType = 'level6';
 			$theStreet = "frm_level6_street";
 			$theCity = "frm_level6_city";
@@ -188,10 +188,65 @@ function get_building($theName, $id = NULL) {
 	}
 	
 function get_building_edit($theName, $id = NULL) {
+	if($theName == "frm_gold_loc") {
+		$theType = 'gold';
+		$theStreet = "frm_gold_street";
+		$theCity = "frm_gold_city";
+		$theState = "frm_gold_state";
+		$theLat = "frm_gold_lat";
+		$theLng = "frm_gold_lng";
+		$theDiv = "gold_address_data";
+		$theButton = "gold_loc_button";
+		} elseif($theName == "frm_silver_loc") {
+		$theType = 'silver';
+		$theStreet = "frm_silver_street";
+		$theCity = "frm_silver_city";
+		$theState = "frm_silver_state";
+		$theLat = "frm_silver_lat";
+		$theLng = "frm_silver_lng";
+		$theDiv = "silver_address_data";
+		$theButton = "silver_loc_button";
+		} elseif($theName == "frm_bronze_loc") {
+		$theType = 'bronze';
+		$theStreet = "frm_bronze_street";
+		$theCity = "frm_bronze_city";
+		$theState = "frm_bronze_state";
+		$theLat = "frm_bronze_lat";
+		$theLng = "frm_bronze_lng";
+		$theDiv = "bronze_address_data";
+		$theButton = "bronze_loc_button";
+		} elseif($theName == "frm_level4_loc") {
+		$theType = 'level4';
+		$theStreet = "frm_level4_street";
+		$theCity = "frm_level4_city";
+		$theState = "frm_level4_state";
+		$theLat = "frm_level4_lat";
+		$theLng = "frm_level4_lng";
+		$theDiv = "level4_address_data";
+		$theButton = "level4_loc_button";
+		} elseif($theName == "frm_level5_loc") {
+		$theType = 'level5';
+		$theStreet = "frm_level5_street";
+		$theCity = "frm_level5_city";
+		$theState = "frm_level5_state";
+		$theLat = "frm_level5_lat";
+		$theLng = "frm_level5_lng";
+		$theDiv = "level5_address_data";
+		$theButton = "level5_loc_button";
+		} elseif($theName == "frm_level6_loc") {
+		$theType = 'level6';
+		$theStreet = "frm_level6_street";
+		$theCity = "frm_level6_city";
+		$theState = "frm_level6_state";
+		$theLat = "frm_level6_lat";
+		$theLng = "frm_level6_lng";
+		$theDiv = "level6_address_data";
+		$theButton = "level6_loc_button";
+		}
 	$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
 	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_num_rows($result_bldg) > 0) {
-		$sel_str = "<select name='" . $theName . "'>\n";
+		$sel_str = "<select name='" . $theName . "' onChange='get_building(this.options[selectedIndex].value, \"" . $theType . "\", document.mi_edit_Form); tidyDiv(\"" . $theDiv . "\", this.options[selectedIndex].value, \"" . $theButton . "\");'>\n";
 		$sel_str .= "\t<option value = 0 selected>Select building</option>\n";
 		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
 			if($id) {
@@ -203,111 +258,19 @@ function get_building_edit($theName, $id = NULL) {
 			}		// end while ()
 
 		$sel_str .= "\t</SELECT>\n";
-		if($theName == "frm_gold_loc") {
-			$theType = 'frm_gold_loc';
-			$theStreet = "frm_gold_street";
-			$theCity = "frm_gold_city";
-			$theState = "frm_gold_state";
-			$theLat = "frm_gold_lat";
-			$theLng = "frm_gold_lng";
-			} elseif($theName == "frm_silver_loc") {
-			$theType = 'frm_silver_loc';
-			$theStreet = "frm_silver_street";
-			$theCity = "frm_silver_city";
-			$theState = "frm_silver_state";
-			$theLat = "frm_silver_lat";
-			$theLng = "frm_silver_lng";
-			} elseif($theName == "frm_bronze_loc") {
-			$theType = 'frm_bronze_loc';
-			$theStreet = "frm_bronze_street";
-			$theCity = "frm_bronze_city";
-			$theState = "frm_bronze_state";
-			$theLat = "frm_bronze_lat";
-			$theLng = "frm_bronze_lng";			
-			} elseif($theName == "frm_level4_loc") {
-			$theType = 'level4';
-			$theStreet = "frm_level4_street";
-			$theCity = "frm_level4_city";
-			$theState = "frm_level4_state";
-			$theLat = "frm_level4_lat";
-			$theLng = "frm_level4_lng";
-			$theDiv = "bronze_loc";
-			} elseif($theName == "frm_level5_loc") {
-			$theType = 'level5';
-			$theStreet = "frm_level5_street";
-			$theCity = "frm_level5_city";
-			$theState = "frm_level5_state";
-			$theLat = "frm_level5_lat";
-			$theLng = "frm_level5_lng";
-			$theDiv = "level5_loc";
-			} elseif($theName == "frmlevel6_loc") {
-			$theType = 'level6';
-			$theStreet = "frm_level6_street";
-			$theCity = "frm_level6_city";
-			$theState = "frm_level6_state";
-			$theLat = "frm_level6_lat";
-			$theLng = "frm_level6_lng";
-			$theDiv = "level6_loc";
-			}
-		$sel_str = "<BUTTON type='button' onClick='mi_loc_lkup(document.mi_edit_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
+		$sel_str .= "<BR /><DIV id='" . $theDiv . "' style='display: none;'><BUTTON type='button' onClick='mi_loc_lkup(document.mi_edit_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
 		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /><BR />";
 		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></BR>";
 		$sel_str .= "<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' />";	
 		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLat . "' VALUE=''>";
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''>";
+		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''></DIV>";
 		} else {
-		if($theName == "frm_gold_loc") {
-			$theType = 'frm_gold_loc';
-			$theStreet = "frm_gold_street";
-			$theCity = "frm_gold_city";
-			$theState = "frm_gold_state";
-			$theLat = "frm_gold_lat";
-			$theLng = "frm_gold_lng";
-			} elseif($theName == "frm_silver_loc") {
-			$theType = 'frm_silver_loc';
-			$theStreet = "frm_silver_street";
-			$theCity = "frm_silver_city";
-			$theState = "frm_silver_state";
-			$theLat = "frm_silver_lat";
-			$theLng = "frm_silver_lng";
-			} elseif($theName == "frm_bronze_loc") {
-			$theType = 'frm_bronze_loc';
-			$theStreet = "frm_bronze_street";
-			$theCity = "frm_bronze_city";
-			$theState = "frm_bronze_state";
-			$theLat = "frm_bronze_lat";
-			$theLng = "frm_bronze_lng";			
-			} elseif($theName == "frm_level4_loc") {
-			$theType = 'level4';
-			$theStreet = "frm_level4_street";
-			$theCity = "frm_level4_city";
-			$theState = "frm_level4_state";
-			$theLat = "frm_level4_lat";
-			$theLng = "frm_level4_lng";
-			$theDiv = "bronze_loc";
-			} elseif($theName == "frm_level5_loc") {
-			$theType = 'level5';
-			$theStreet = "frm_level5_street";
-			$theCity = "frm_level5_city";
-			$theState = "frm_level5_state";
-			$theLat = "frm_level5_lat";
-			$theLng = "frm_level5_lng";
-			$theDiv = "level5_loc";
-			} elseif($theName == "frmlevel6_loc") {
-			$theType = 'level6';
-			$theStreet = "frm_level6_street";
-			$theCity = "frm_level6_city";
-			$theState = "frm_level6_state";
-			$theLat = "frm_level6_lat";
-			$theLng = "frm_level6_lng";
-			$theDiv = "level6_loc";
-			}
-		$sel_str = "<BUTTON type='button' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
+		$sel_str .= "<BR /><DIV id='" . $theDiv . "'><BUTTON type='button' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
 		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /><BR />";
 		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></BR>";
 		$sel_str .= "<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' />";	
 		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLat . "' VALUE=''>";
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''>";
+		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''></DIV>";
 		}
 	return $sel_str;
 	}
@@ -317,7 +280,7 @@ function get_building_only($theName) {
 	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_num_rows($result_bldg) > 0) {
 		$sel_str = "<select name='" . $theName . "' onChange='clear_data(document.mi_edit_Form, \"" . $theName . "\", this.options[selectedIndex].value);'>\n";
-		$sel_str .= "\t<option value = '' selected>Select building</option>\n";
+		$sel_str .= "\t<option value = 0 selected>Select building</option>\n";
 		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
 			$sel_str .= "\t<option value = " . $row_bldg['id'] . ">" . $row_bldg['name'] . "</option>\n";
 			}		// end while ()
@@ -484,43 +447,80 @@ function get_loc_name($id) {
 		}
 		
 	function clear_data(my_form, commandType, theID) {
+		var theType;
 		if(theID != "") {
 			if(commandType == "frm_gold_loc") {
-				my_form.frm_gold_street.value = "";
-				my_form.frm_gold_city.value = "";
-				my_form.frm_gold_state.value = "";
-				$('gold_loc_button').style.visibility = 'hidden';
-				my_form.frm_gold_street.style.visibility = my_form.frm_gold_city.style.visibility = my_form.frm_gold_state.style.visibility = 'hidden';
+				theType = "gold";
+				if(goldmarker) {map.removeLayer(goldmarker);}			
+				if(theID == 0) {
+					my_form.frm_gold_street.style.visibility = my_form.frm_gold_city.style.visibility = my_form.frm_gold_state.style.visibility = $('gold_loc_button').style.visibility = 'visible';
+					} else {
+					my_form.frm_gold_street.value = "";
+					my_form.frm_gold_city.value = "";
+					my_form.frm_gold_state.value = "";
+					$('gold_loc_button').style.visibility = 'hidden';
+					my_form.frm_gold_street.style.visibility = my_form.frm_gold_city.style.visibility = my_form.frm_gold_state.style.visibility = 'hidden';
+					}
 				} else if(commandType == "frm_silver_loc") {
-				my_form.frm_silver_street.value = "";
-				my_form.frm_silver_city.value = "";
-				my_form.frm_silver_state.value = "";
-				$('silver_loc_button').style.visibility = 'hidden';
-				my_form.frm_silver_street.style.visibility = my_form.frm_silver_city.style.visibility = my_form.frm_silver_state.style.visibility = 'hidden';
+				theType = "silver";
+				if(silvermarker) {map.removeLayer(silvermarker);}		
+				if(theID == 0) {
+					my_form.frm_silver_street.style.visibility = my_form.frm_silver_city.style.visibility = my_form.frm_silver_state.style.visibility = $('silver_loc_button').style.visibility = 'visible';
+					} else {					
+					my_form.frm_silver_street.value = "";
+					my_form.frm_silver_city.value = "";
+					my_form.frm_silver_state.value = "";
+					$('silver_loc_button').style.visibility = 'hidden';
+					my_form.frm_silver_street.style.visibility = my_form.frm_silver_city.style.visibility = my_form.frm_silver_state.style.visibility = 'hidden';
+					}
 				} else if(commandType == "frm_bronze_loc") {
-				my_form.frm_bronze_street.value = "";
-				my_form.frm_bronze_city.value = "";
-				my_form.frm_bronze_state.value = "";
-				$('bronze_loc_button').style.visibility = 'hidden';
-				my_form.frm_bronze_street.style.visibility = my_form.frm_bronze_city.style.visibility = my_form.frm_bronze_state.style.visibility = 'hidden';
+				theType = "bronze";
+				if(bronzemarker) {map.removeLayer(bronzemarker);}		
+				if(theID == 0) {
+					my_form.frm_bronze_street.style.visibility = my_form.frm_bronze_city.style.visibility = my_form.frm_bronze_state.style.visibility = $('bronze_loc_button').style.visibility = 'visible';
+					} else {						
+					my_form.frm_bronze_street.value = "";
+					my_form.frm_bronze_city.value = "";
+					my_form.frm_bronze_state.value = "";
+					$('bronze_loc_button').style.visibility = 'hidden';
+					my_form.frm_bronze_street.style.visibility = my_form.frm_bronze_city.style.visibility = my_form.frm_bronze_state.style.visibility = 'hidden';
+					}
 				} else if(commandType == "frm_level4_loc") {
-				my_form.frm_level4_street.value = "";
-				my_form.frm_level4_city.value = "";
-				my_form.frm_level4_state.value = "";
-				$('level4_loc_button').style.visibility = 'hidden';
-				my_form.frm_level4_street.style.visibility = my_form.frm_level4_city.style.visibility = my_form.frm_level4_state.style.visibility = 'hidden';
+				theType = "level4";
+				if(level4marker) {map.removeLayer(level4marker);}		
+				if(theID == 0) {
+					my_form.frm_level4_street.style.visibility = my_form.frm_level4_city.style.visibility = my_form.frm_level4_state.style.visibility = $('level4_loc_button').style.visibility = 'visible';
+					} else {						
+					my_form.frm_level4_street.value = "";
+					my_form.frm_level4_city.value = "";
+					my_form.frm_level4_state.value = "";
+					$('level4_loc_button').style.visibility = 'hidden';
+					my_form.frm_level4_street.style.visibility = my_form.frm_level4_city.style.visibility = my_form.frm_level4_state.style.visibility = 'hidden';
+					}
 				} else if(commandType == "frm_level5_loc") {
-				my_form.frm_level5_street.value = "";
-				my_form.frm_level5_city.value = "";
-				my_form.frm_level5_state.value = "";
-				$('level5_loc_button').style.visibility = 'hidden';
-				my_form.frm_level5_street.style.visibility = my_form.frm_level5_city.style.visibility = my_form.frm_level5_state.style.visibility = 'hidden';
+				theType = "level5";
+				if(level5marker) {map.removeLayer(level5marker);}		
+				if(theID == 0) {
+					my_form.frm_level5_street.style.visibility = my_form.frm_level5_city.style.visibility = my_form.frm_level5_state.style.visibility = $('level5_loc_button').style.visibility = 'visible';
+					} else {		
+					my_form.frm_level5_street.value = "";
+					my_form.frm_level5_city.value = "";
+					my_form.frm_level5_state.value = "";
+					$('level5_loc_button').style.visibility = 'hidden';
+					my_form.frm_level5_street.style.visibility = my_form.frm_level5_city.style.visibility = my_form.frm_level5_state.style.visibility = 'hidden';
+					}
 				} else if(commandType == "frm_level6_loc") {
-				my_form.frm_level6_street.value = "";
-				my_form.frm_level6_city.value = "";
-				my_form.frm_level6_state.value = "";
-				$('level6_loc_button').style.visibility = 'hidden';
-				my_form.frm_level6_street.style.visibility = my_form.frm_level6_city.style.visibility = my_form.frm_level6_state.style.visibility = 'hidden';
+				theType = "level6";
+				if(level6marker) {map.removeLayer(level6marker);}		
+				if(theID == 0) {
+					my_form.frm_level6_street.style.visibility = my_form.frm_level6_city.style.visibility = my_form.frm_level6_state.style.visibility = $('level6_loc_button').style.visibility = 'visible';
+					} else {		
+					my_form.frm_level6_street.value = "";
+					my_form.frm_level6_city.value = "";
+					my_form.frm_level6_state.value = "";
+					$('level6_loc_button').style.visibility = 'hidden';
+					my_form.frm_level6_street.style.visibility = my_form.frm_level6_city.style.visibility = my_form.frm_level6_state.style.visibility = 'hidden';
+					}
 				}
 			} else {
 			$('gold_loc_button').style.visibility = 'visible';
@@ -536,31 +536,32 @@ function get_loc_name($id) {
 			my_form.frm_level5_street.style.visibility = my_form.frm_level5_city.style.visibility = my_form.frm_level5_state.style.visibility = 'visible';	
 			my_form.frm_level6_street.style.visibility = my_form.frm_level6_city.style.visibility = my_form.frm_level6_state.style.visibility = 'visible';				
 			}
+		get_building(theID, theType, my_form);
 		}
 		
 	function mi_loc_lkup(my_form, commandType) {		   						// 7/5/10
 		var streetInput, cityInput, stateInput;
-		if(commandType == "frm_gold_loc") {
+		if(commandType == "gold") {
 			streetInput = my_form.frm_gold_street;
 			cityInput = my_form.frm_gold_city;
 			stateInput = my_form.frm_gold_state;
-			} else if(commandType == "frm_silver_loc") {
+			} else if(commandType == "silver") {
 			streetInput = my_form.frm_silver_street;
 			cityInput = my_form.frm_silver_city;
 			stateInput = my_form.frm_silver_state;
-			} else if(commandType == "frm_bronze_loc") {
+			} else if(commandType == "bronze") {
 			streetInput = my_form.frm_bronze_street;
 			cityInput = my_form.frm_bronze_city;
 			stateInput = my_form.frm_bronze_state;
-			} else if(commandType == "frm_level4_loc") {
+			} else if(commandType == "level4") {
 			streetInput = my_form.frm_level4_street;
 			cityInput = my_form.frm_level4_city;
 			stateInput = my_form.frm_level4_state;
-			} else if(commandType == "frm_level5_loc") {
+			} else if(commandType == "level5") {
 			streetInput = my_form.frm_level5_street;
 			cityInput = my_form.frm_level5_city;
 			stateInput = my_form.frm_level5_state;
-			} else if(commandType == "frm_level6_loc") {
+			} else if(commandType == "level6") {
 			streetInput = my_form.frm_level6_street;
 			cityInput = my_form.frm_level6_city;
 			stateInput = my_form.frm_level6_state;
@@ -588,68 +589,135 @@ function get_loc_name($id) {
 			});
 		}				// end function mi_loc_lkup()
 		
+	function get_building(id, theType, myForm) {
+		var randomnumber=Math.floor(Math.random()*99999999);
+		var sessID = "<?php print $_SESSION['id'];?>";
+		var url = './ajax/get_bldg_details.php?id='+id+'&version='+randomnumber+'&q='+sessID;
+		sendRequest (url,bldgdetails_cb, "");		
+		function bldgdetails_cb(req) {
+			var bldg_arr = JSON.decode(req.responseText);
+			var theName = bldg_arr[0];
+			var theStreet = bldg_arr[1];
+			var theCity = bldg_arr[2];
+			var theState = bldg_arr[3];
+			var theLat = bldg_arr[4];
+			var theLng = bldg_arr[5];
+			var theAddress = theStreet + ", " + theCity + ", " + theState;
+			plot_bldg (myForm, theType, theLat, theLng, theAddress);
+			return false;
+			}
+		}
+		
+	function plot_bldg(my_form, commandType, lat, lng, theAddress) {
+		if(commandType == "gold") {
+			iconNumber = 0;
+			theSym = "G";
+			theTitle = "<?php print get_text('Gold Command');?>";
+			if(goldmarker) {map.removeLayer(goldmarker);}
+			goldmarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
+			goldmarker.addTo(map);
+			} else if(commandType == "silver") {
+			iconNumber = 1;
+			theSym = "S";
+			theTitle = "<?php print get_text('Silver Command');?>";
+			if(silvermarker) {map.removeLayer(silvermarker);}
+			silvermarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
+			silvermarker.addTo(map);
+			} else if(commandType == "bronze") {
+			iconNumber = 2;
+			theSym = "B";
+			theTitle = "<?php print get_text('Bronze Command');?>";
+			if(bronzemarker) {map.removeLayer(bronzemarker);}
+			bronzemarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
+			bronzemarker.addTo(map);
+			} else if(commandType == "level4") {
+			iconNumber = 2;
+			theSym = "L4";
+			theTitle = "<?php print get_text('Level 4 Command');?>";
+			if(level4marker) {map.removeLayer(level4marker);}
+			level4marker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
+			level4marker.addTo(map);
+			} else if(commandType == "level5") {
+			iconNumber = 2;
+			theSym = "L5";
+			theTitle = "<?php print get_text('Level 5 Command');?>";
+			if(level5marker) {map.removeLayer(level5marker);}
+			level5marker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
+			level5marker.addTo(map);
+			} else if(commandType == "level6") {
+			iconNumber = 2;
+			theSym = "L6";
+			theTitle = "<?php print get_text('Level 6 Command');?>";
+			if(level6marker) {map.removeLayer(level6marker);}
+			level6marker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
+			level6marker.addTo(map);
+			}
+		map.setView([lat, lng], 16);
+		}
+		
 	function pt_to_map (my_form, commandType, lat, lng, theAddress) {
 		if(!$('map_canvas')) {return; }
 		var latInput, lngInput, iconNumber, theTitle, theSym;
 		if(marker) {map.removeLayer(marker);}
-		if(commandType == "frm_gold_loc") {
-			my_form.frm_gold_lat=lat.toFixed(6);
-			my_form.frm_gold_lng=lng.toFixed(6);
+		if(commandType == "gold") {
+			my_form.frm_gold_lat.value=lat.toFixed(6);
+			my_form.frm_gold_lng.value=lng.toFixed(6);
 			iconNumber = 0;
 			theTitle = "<?php print get_text('Gold Command');?>";
 			theSym = "G";
-			} else if(commandType == "frm_silver_loc") {
-			my_form.frm_silver_lat=lat.toFixed(6);
-			my_form.frm_silver_lng=lng.toFixed(6);
+			} else if(commandType == "silver") {
+			my_form.frm_silver_lat.value=lat.toFixed(6);
+			my_form.frm_silver_lng.value=lng.toFixed(6);
 			iconNumber = 1;
 			theSym = "S";
 			theTitle = "<?php print get_text('Silver Command');?>";
-			} else if(commandType == "frm_bronze_loc") {
-			my_form.frm_bronze_lat=lat.toFixed(6);
-			my_form.frm_bronze_lng=lng.toFixed(6);
+			} else if(commandType == "bronze") {
+			my_form.frm_bronze_lat.value=lat.toFixed(6);
+			my_form.frm_bronze_lng.value=lng.toFixed(6);
 			iconNumber = 2;
 			theTitle = "<?php print get_text('Bronze Command');?>";
 			theSym = "B";
-			} else if(commandType == "frm_level4_loc") {
-			my_form.frm_level4_lat=lat.toFixed(6);
-			my_form.frm_level4_lng=lng.toFixed(6);
+			} else if(commandType == "level4") {
+			my_form.frm_level4_lat.value=lat.toFixed(6);
+			my_form.frm_level4_lng.value=lng.toFixed(6);
 			iconNumber = 2;
 			theTitle = "<?php print get_text('Level 4 Command');?>";
 			theSym = "L4";
-			} else if(commandType == "frm_level5_loc") {
-			my_form.frm_level5_lat=lat.toFixed(6);
-			my_form.frm_level5_lng=lng.toFixed(6);
+			} else if(commandType == "level5") {
+			my_form.frm_level5_lat.value=lat.toFixed(6);
+			my_form.frm_level5_lng.value=lng.toFixed(6);
 			iconNumber = 2;
 			theTitle = "<?php print get_text('Level 5 Command');?>";
 			theSym = "L5";
-			} else if(commandType == "frm_level6_loc") {
-			my_form.frm_level6_lat=lat.toFixed(6);
-			my_form.frm_level6_lng=lng.toFixed(6);
+			} else if(commandType == "level6") {
+			my_form.frm_level6_lat.value=lat.toFixed(6);
+			my_form.frm_level6_lng.value=lng.toFixed(6);
 			iconNumber = 2;
 			theTitle = "<?php print get_text('Level 6 Command');?>";
 			theSym = "L6";
 			}
-		if(commandType == "frm_gold_loc") {
+		if(commandType == "gold") {
+			alert("Gold Marker");
 			if(goldmarker) {map.removeLayer(goldmarker);}
 			goldmarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			goldmarker.addTo(map);
-			} else if(commandType == "frm_silver_loc") {
+			} else if(commandType == "silver") {
 			if(silvermarker) {map.removeLayer(silvermarker);}
 			silvermarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			silvermarker.addTo(map);
-			} else if(commandType == "frm_bronze_loc") {
+			} else if(commandType == "bronze") {
 			if(bronzemarker) {map.removeLayer(bronzemarker);}
 			bronzemarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			bronzemarker.addTo(map);
-			} else if(commandType == "frm_level4_loc") {
+			} else if(commandType == "level4") {
 			if(level4marker) {map.removeLayer(level4marker);}
 			level4marker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			level4marker.addTo(map);
-			} else if(commandType == "frm_level5_loc") {
+			} else if(commandType == "level5") {
 			if(level5marker) {map.removeLayer(level5marker);}
 			level5marker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			level5marker.addTo(map);
-			} else if(commandType == "frm_level6_loc") {
+			} else if(commandType == "level6") {
 			if(level6marker) {map.removeLayer(level6marker);}
 			level6marker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			level6marker.addTo(map);
@@ -663,12 +731,26 @@ function get_loc_name($id) {
 		document.mi_form.action='maj_inc.php';
 		document.mi_form.submit();
 		}
+		
+	function showtheDiv(theDiv) {
+		$(theDiv).style.display = "block";
+		}
+		
+	function tidyDiv(theDiv, id, theButton) {
+		if(id == 0) {
+			$(theDiv).style.display = "block";
+			$(theButton).style.visibility = 'visible';
+			} else {
+			$(theDiv).style.display = "none";
+			$(theButton).style.visibility = 'hidden';			
+			}
+		}
 	
 	function set_command_info(id, theDiv) {
-		var email1 = comm_arr[id][4];
-		var email2 = comm_arr[id][5];
-		var phone1 = comm_arr[id][6];
-		var phone2 = comm_arr[id][7];
+		var email1 = (comm_arr[id]) ? comm_arr[id][4] : "";
+		var email2 = (comm_arr[id]) ? comm_arr[id][5] : "";
+		var phone1 = (comm_arr[id]) ? comm_arr[id][6] : "";
+		var phone2 = (comm_arr[id]) ? comm_arr[id][7] : "";
 		var theHTML = "<TABLE>";
 		theHTML += "<TR>";
 		theHTML += "<TD class='td_label'>Email 1</TD>";
@@ -682,8 +764,9 @@ function get_loc_name($id) {
 		theHTML += "</TR><TR>";
 		theHTML += "<TD class='td_label'>Phone 1</TD>";
 		theHTML += "<TD class='td_data'>" + phone2 + "</TD>";
-		theHTML += "</TR><TR></TABLE>";		
+		theHTML += "</TR><TR></TABLE>";	
 		$(theDiv).innerHTML = theHTML;
+		$(theDiv).style.display = "block";
 		}
 
 	function get_new_colors() {
@@ -1141,10 +1224,8 @@ function get_loc_name($id) {
 		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		} else {
 		if ($_getgoedit == 'true') {
-
 			$frm_mistart = "$_POST[frm_year_inc_startime]-$_POST[frm_month_inc_startime]-$_POST[frm_day_inc_startime] $_POST[frm_hour_inc_startime]:$_POST[frm_minute_inc_startime]:00";
-			$frm_miend  = (isset($_POST['frm_year_inc_endtime'])) ? quote_smart("$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00") : "NULL";
-
+			$frm_miend  = (array_key_exists('frm_year_inc_endtime', $_POST)) ? "$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00" : "NULL";
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
 			$mi_id = $_POST['frm_id'];
 			$by = $_SESSION['user_id'];
@@ -1158,6 +1239,33 @@ function get_loc_name($id) {
 				}
 			if(quote_smart(trim($_POST['frm_bronze_loc'])) != 0) {
 				$_POST['frm_bronze_street'] = $_POST['frm_bronze_city'] = $_POST['frm_bronze_state'] = $_POST['frm_bronze_lat'] = $_POST['frm_bronze_lng'] = "";
+				}
+			if(quote_smart(trim($_POST['frm_level4_loc'])) != 0) {
+				$_POST['frm_level4_street'] = $_POST['frm_level4_city'] = $_POST['frm_level4_state'] = $_POST['frm_level4_lat'] = $_POST['frm_level4_lng'] = "";
+				}
+			if(quote_smart(trim($_POST['frm_level5_loc'])) != 0) {
+				$_POST['frm_level5_street'] = $_POST['frm_level5_city'] = $_POST['frm_level5_state'] = $_POST['frm_level5_lat'] = $_POST['frm_level5_lng'] = "";
+				}
+			if(quote_smart(trim($_POST['frm_level6_loc'])) != 0) {
+				$_POST['frm_level6_street'] = $_POST['frm_level6_city'] = $_POST['frm_level6_state'] = $_POST['frm_level6_lat'] = $_POST['frm_level6_lng'] = "";
+				}
+			if($_POST['frm_gold_street'] == "") {
+				$_POST['frm_gold_city'] = $_POST['frm_gold_state'] = $_POST['frm_gold_lat'] = $_POST['frm_gold_lng'] = "";
+				}
+			if($_POST['frm_silver_street'] == "") {
+				$_POST['frm_silver_city'] = $_POST['frm_silver_state'] = $_POST['frm_silver_lat'] = $_POST['frm_silver_lng'] = "";
+				}
+			if($_POST['frm_bronze_street'] == "") {
+				$_POST['frm_bronze_city'] = $_POST['frm_bronze_state'] = $_POST['frm_bronze_lat'] = $_POST['frm_bronze_lng'] = "";
+				}
+			if($_POST['frm_level4_street'] == "") {
+				$_POST['frm_level4_city'] = $_POST['frm_level4_state'] = $_POST['frm_level4_lat'] = $_POST['frm_level4_lng'] = "";
+				}
+			if($_POST['frm_level5_street'] == "") {
+				$_POST['frm_level5_city'] = $_POST['frm_level5_state'] = $_POST['frm_level5_lat'] = $_POST['frm_level5_lng'] = "";
+				}
+			if($_POST['frm_level6_street'] == "") {
+				$_POST['frm_level6_city'] = $_POST['frm_level6_state'] = $_POST['frm_level6_lat'] = $_POST['frm_level6_lng'] = "";
 				}
 			$query = "UPDATE `$GLOBALS[mysql_prefix]major_incidents` SET
 				`name`= " . 			quote_smart(trim($_POST['frm_name'])) . ",
@@ -1324,7 +1432,7 @@ function get_loc_name($id) {
 
 	if ($_getgoadd == 'true') {
 		$frm_mistart = "$_POST[frm_year_inc_startime]-$_POST[frm_month_inc_startime]-$_POST[frm_day_inc_startime] $_POST[frm_hour_inc_startime]:$_POST[frm_minute_inc_startime]:00";
-		$frm_miend  = (isset($_POST['frm_year_inc_endtime'])) ? quote_smart("$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00") : "NULL";
+		$frm_miend  = (array_key_exists('frm_year_inc_endtime', $_POST)) ? quote_smart("$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00") : "NULL";
 		$by = $_SESSION['user_id'];
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$from = $_SERVER['REMOTE_ADDR'];	
@@ -1365,6 +1473,24 @@ function get_loc_name($id) {
 		$level6State = ($level6_loc == 0) ? $_POST['frm_level6_state'] : "";
 		$level6Lat = ($level6_loc == 0) ? $_POST['frm_level6_lat'] : "";
 		$level6Lng = ($level6_loc == 0) ? $_POST['frm_level6_lng'] : "";
+		if($goldStreet == "") {
+			$goldCity = $goldState = $goldLat = $goldLng = "";
+			}
+		if($silverStreet == "") {
+			$silverCity = $silverState = $silverLat = $silverLng = "";
+			}
+		if($bronzeStreet == "") {
+			$bronzeCity = $bronzeState = $bronzeLat = $bronzeLng = "";
+			}
+		if($level4Street == "") {
+			$level4City = $level4State = $level4Lat = $level4Lng = "";
+			}
+		if($level5Street == "") {
+			$level5City = $level5State = $level5Lat = $level5Lng = "";
+			}
+		if($level6Street == "") {
+			$level6City = $level6State = $level6Lat = $level6Lng = "";
+			}
 		
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]major_incidents` 
 				(`name`, 

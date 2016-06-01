@@ -50,7 +50,7 @@ function set_size() {
 		}
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
-	colwidth = outerwidth * .65;
+	colwidth = outerwidth;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .7;
 	listwidth = colwidth * .95
@@ -72,18 +72,13 @@ function do_disp(){												// show incidents for dispatch - added 6/7/08
 	$('view_unit').style.display='none';
 	}
 
-function do_dispfac(){												// show incidents for dispatch - added 6/7/08
-	$('facilities').style.display='block';
-	$('view_unit').style.display='none';
-	}
-	
 function to_routes(id) {
 	document.routes_Form.ticket_id.value=id;			// 10/16/08, 10/25/08
 	document.routes_Form.submit();
 	}
 
 function to_fac_routes(id) {
-	document.fac_routes_Form.fac_id.value=id;			// 10/6/09
+	document.fac_routes_Form.id.value=id;			// 10/6/09
 	document.fac_routes_Form.submit();
 	}
 </SCRIPT>
@@ -176,7 +171,7 @@ $the_type = $temp[0];			// name of type
 ?>
 
 <DIV ID='outer'>
-	<DIV id='leftcol' style='position: absolute; left: 10px;'>
+	<DIV id='leftcol' style='position: absolute; left: 30px;'>
 		<FONT CLASS="header">Unit&nbsp;'<?php print $row['name'] ;?>'</FONT> (#<?php print $row['id'];?>) <BR /><BR />
 		<DIV id = 'fence_flag'></DIV>
 		<FORM METHOD="POST" NAME= "res_view_Form" ACTION="<?php print basename(__FILE__);?>?func=responder">
@@ -273,18 +268,22 @@ $the_type = $temp[0];			// name of type
 				<TD><?php print $row['capab'];?></TD>
 			</TR>
 			<TR CLASS = "odd">
+				<TD CLASS="td_label">Located at Facility: </TD>	
+				<TD><?php print get_facilityname($row['at_facility']);?></TD>
+			</TR>
+			<TR CLASS = "even">
 				<TD CLASS="td_label">Contact name:</TD>	
 				<TD><?php print $row['contact_name'] ;?></TD>
 			</TR>
-			<TR CLASS = "even">
+			<TR CLASS = "odd">
 				<TD CLASS="td_label">Contact via:</TD>	
 				<TD><?php print $row['contact_via'] ;?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR CLASS = "even">
 				<TD CLASS="td_label"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID:</TD>	
 				<TD><?php print $row['smsg_id'] ;?></TD>
 			</TR>
-			<TR CLASS = 'even'>
+			<TR CLASS = 'odd'>
 				<TD CLASS="td_label">As of:</TD>	
 				<TD><?php print format_date($row['updated']); ?></TD>
 			</TR>
@@ -327,29 +326,30 @@ $the_type = $temp[0];			// name of type
 				</TD>
 			</TR>
 <?php
-if (isset($rowtr)) {																	// got tracks?
-	print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>TRACKING</B></TD></TR>";
-	print "<TR CLASS='even'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
-	print "<TR CLASS='odd'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
-	print "<TR CLASS='even'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
-	print "<TR CLASS='odd'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
-	$lat = $rowtr['latitude'];
-	$lng = $rowtr['longitude'];
-	}
+			if (isset($rowtr)) {																	// got tracks?
+				print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>TRACKING</B></TD></TR>";
+				print "<TR CLASS='even'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
+				print "<TR CLASS='odd'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
+				print "<TR CLASS='even'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
+				print "<TR CLASS='odd'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
+				$lat = $rowtr['latitude'];
+				$lng = $rowtr['longitude'];
+				}
 
 ?>
-			<TR>
-				<TD>&nbsp;</TD>
+			<TR class='spacer'>
+				<TD class='spacer' COLSPAN=2>&nbsp;</TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD COLSPAN=2 ALIGN='center'>
 					<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>" onClick="document.can_Form.submit();" >
 <?php
-					print (is_administrator() || is_super())? 	"&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=\"button\" VALUE=\"to Edit\" onClick= \"to_edit_Form.submit();\">\n": "" ;
-					$disp_allowed = ($row_st['dispatch']==3)?  "disabled='disabled'" : "";				// 5/30/10
+					print (is_administrator() || is_super())? 	"<INPUT TYPE=\"button\" VALUE=\"to Edit\" onClick= \"to_edit_Form.submit();\">\n": "" ;
+					$disp_allowed = ($row_st['dispatch']==3)?  "disabled='disabled'" : "";
 					if(!is_guest()) {
 ?>
-						&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Dispatch" onClick="$('incidents').style.display='block'; $('view_unit').style.display='none';" />
+						<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Dispatch" onClick="$('incidents').style.display='block'; $('view_unit').style.display='none';" />
+						<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Facility" onClick="to_fac_routes(<?php print $id;?>);">
 <?php
 						}
 ?>
@@ -357,7 +357,6 @@ if (isset($rowtr)) {																	// got tracks?
 			</TR>
 			<TR class='even'>
 				<TD COLSPAN=2>
-
 					<TABLE WIDTH='100%'>
 						<TR>
 							<TD WIDTH='100%'>
@@ -467,37 +466,6 @@ if (isset($rowtr)) {																	// got tracks?
 				</TD>
 			</TR>
 		</TABLE>
-		<TABLE BORDER=0 ID = 'facilities' STYLE = 'display:none' >
-			<TR CLASS='odd'>
-				<TH COLSPAN=99 CLASS='header'> Click Facility to route '<?php print $row['handle'] ;?>'</TH>
-			</TR>
-			<TR>
-				<TD></TD>
-			</TR>
-
-<?php																								// 6/1/08 - added
-			$query_fa = "SELECT * FROM $GLOBALS[mysql_prefix]facilities ORDER BY `type`";
-			$result_fa = mysql_query($query_fa) or do_error($query_fa, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-							// major while ... starts here
-			$ff=0;
-			while ($row_fa = stripslashes_deep(mysql_fetch_array($result_fa))) 	{
-				print "\t<TR CLASS ='" .  $evenodd[($ff+1)%2] . "' onClick = 'to_fac_routes(\"" . $row_fa['id'] . "\")'>\n";
-				print "\t\t<TD>" . $row_fa['id'] . "</TD>\n";
-				print "\t\t<TD TITLE ='{$row_fa['name']}'>" . shorten($row_fa['name'], 24) . "</TD>\n";
-				print "\t\t<TD TITLE ='{$row_fa['description']}'>" . shorten($row_fa['description'], 40) . "</TD>\n";
-				print "\t\t</TR>\n";
-				$ff++;
-				}
-?>
-
-			<TR>
-				<TD ALIGN="center" COLSPAN=99><BR /><BR />
-					<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>" onClick = "$('facilities').style.display='none'; $('view_unit').style.display='block';">
-				</TD>
-			</TR>
-		</TABLE>
-	</DIV>
-	<DIV id='rightcol' style='position: absolute; right: 170px; z-index: 1;'>
 	</DIV>
 </DIV>
 <?php
@@ -511,8 +479,9 @@ print add_sidebar(FALSE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, $id, 0, 0
 <INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
 </FORM>
 <FORM NAME="fac_routes_Form" METHOD="get" ACTION = "<?php print $_SESSION['facroutesfile'];?>">
-<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">						<!-- 10/16/08 -->
-<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
+<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">
+<INPUT TYPE="hidden" NAME="stage" VALUE=1>
+<INPUT TYPE="hidden" NAME="id" 	VALUE="<?php print $id; ?>">
 </FORM>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>

@@ -12,6 +12,19 @@ $cat_sess_stat = get_session_status($curr_cats);	//	get session current status c
 $hidden = find_hidden($curr_cats);
 $shown = find_showing($curr_cats);
 $un_stat_cats = get_all_categories();
+$guest = (is_guest()) ? 1 : 0;
+$mapzooms = array();
+$dir = '../_osm/tiles';
+$mapdir = scandir($dir);
+foreach($mapdir as $val) {
+	if($val <> "." && $val <> "..") {
+		if(is_dir('../_osm/tiles/' . $val)) {
+			$mapzooms[] = intval($val);
+			}
+		}
+	}
+if(count($mapzooms) > 0 && get_variable('local_maps') == "1") {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 20;}
+$setZoom = (get_variable('local_maps') == "1") ? $localZoomMin : get_variable('def_zoom');
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
 $result	= mysql_query($query);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
@@ -19,6 +32,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 	}
 ?>
 var doDebug = false;
+var guest = <?php print $guest;?>;
 function isIE() { 
 	if((navigator.appName == 'Microsoft Internet Explorer') || ((navigator.appName == 'Netscape') && (new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})").exec(navigator.userAgent) != null))) {
 		return true;
@@ -554,7 +568,8 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 		} else {
 			for (var j = 1; j < rmarkers.length; j++) {
 				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
-					map.removeLayer(rmarkers[j]);		
+					map.removeLayer(rmarkers[j]);
+					if(j == 131) { alert(catname + "131");}
 					var catid = catname + j;
 					if($(catid)) {
 						$(catid).style.display = "none";
@@ -1090,8 +1105,8 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 				var url = "persist2.php";	//	3/15/11
 				sendRequest (url, gbb_handleResult, params);
 				$(bnds).checked = false;
-				if(bound_names[key]) {			
-					map.removeLayer(boundary[key]);		
+				if(bound_names[key]) {
+					map.removeLayer(boundary[key]);	
 					}
 				}
 			}	
@@ -1371,13 +1386,11 @@ function newGetAddress(latlng, currform) {
 	var loc = <?php print get_variable('locale');?>;
 	control.options.geocoder.reverse(latlng, 20, function(results) {
 		if(window.geo_provider == 0){
-			var r1 = results[0];
-			var r = r1['properties']['address'];
+			if(results) {var r1 = results[0]; var r = r1['properties']['address'];} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
 			} else if(window.geo_provider == 1) {
-			var r = results[0];
+			if(results) {var r = results[0];} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
 			} else if(window.geo_provider == 2) {
-			var r1 = results[0];
-			var r = {city: r1.city, house_number: "", road: r1.street, properState: r1.state};
+			if(results) {var r1 = results[0]; var r = {city: r1.city, house_number: "", road: r1.street, properState: r1.state};} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
 			}
 		var lat = parseFloat(latlng.lat.toFixed(6));
 		var lng = parseFloat(latlng.lng.toFixed(6));
@@ -1777,6 +1790,8 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 				map_is_fixed = true;
 				} else if((theScreen == "responders") && ((dzf == 2) || (dzf == 3))) {
 				map_is_fixed = true;
+				} else if((theScreen == "fullscreen") && ((dzf == 2) || (dzf == 3))) {
+				map_is_fixed = true;
 				} else {
 				map_is_fixed = false;
 				}
@@ -1831,6 +1846,8 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 				map_is_fixed = true;
 				} else if((theScreen == "responders") && ((dzf == 2) || (dzf == 3))) {
 				map_is_fixed = true;
+				} else if((theScreen == "fullscreen") && ((dzf == 2) || (dzf == 3))) {
+				map_is_fixed = true;
 				} else {
 				map_is_fixed = false;
 				}
@@ -1857,7 +1874,7 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 			map.setView(mapCenter, mapZoom);
 			});
 		marker.on('click', function(e) {
-			if($('screenname').innerHTML == "fullscreen") {
+			if($('screenname') && $('screenname').innerHTML == "fullscreen") {
 				get_fs_facspopup(theid);
 				} else {
 				get_facspopup(theid);
@@ -1878,12 +1895,16 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 				map_is_fixed = true;
 				} else if((theScreen == "responders") && ((dzf == 2) || (dzf == 3))) {
 				map_is_fixed = true;
+				} else if((theScreen == "fullscreen") && ((dzf == 2) || (dzf == 3))) {
+				map_is_fixed = true;
 				} else {
 				map_is_fixed = false;
 				}
 			if(!map_is_fixed) {
 				map.fitBounds(bounds);
 				}
+			} else {
+			map.fitBounds(bounds);				
 			}
 		window.faczindexno++;
 		return marker;
@@ -1915,6 +1936,8 @@ function createWlocationMarker(lat, lon, info, color, stat, theid, sym, category
 			if((theScreen == "situation") && ((dzf == 1) || (dzf == 3))) {
 				map_is_fixed = true;
 				} else if((theScreen == "responders") && ((dzf == 2) || (dzf == 3))) {
+				map_is_fixed = true;
+				} else if((theScreen == "fullscreen") && ((dzf == 2) || (dzf == 3))) {
 				map_is_fixed = true;
 				} else {
 				map_is_fixed = false;
@@ -2006,6 +2029,18 @@ function createdummyFacMarker(lat, lon, info, icon, title, theid){
 function destroy_unitmarkers() {
 	for(var key in rmarkers) {
 		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+		}
+	}
+	
+function sendInfo(theText) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var theURL = base64_encode(theText);
+	var url = './ajax/do_error.php?the_error=' + theURL + '&version=' + randomnumber;
+	sendRequest (url,errCB, "");
+	function errCB(req) {
+		var theResponse = JSON.decode(req.responseText);
+		theResult = theResponse[0];
 		}
 	}
 	
@@ -2118,9 +2153,17 @@ function myrclick(id) {					// Responds to sidebar click, then triggers listener
 	if((quick) || (!rmarkers[id]) || (internet == 0)) {
 		document.resp_form.id.value=id;
 		document.resp_form.func.value='responder';
-		document.resp_form.edit.value='true';
+		document.resp_form.edit.value='false';
+		document.resp_form.view.value='true';
 		document.resp_form.action='units.php';
 		document.resp_form.submit();
+		} else if(guest) {
+		document.resp_form.id.value=id;
+		document.resp_form.func.value='responder';
+		document.resp_form.view.value='true';
+		document.resp_form.edit.value='false';
+		document.resp_form.action='units.php';
+		document.resp_form.submit();			
 		} else {
 		if($('screenname').innerHTML == "fullscreen") {
 			get_fs_resppopup(id);
@@ -2136,8 +2179,16 @@ function myfclick(id) {					// Responds to sidebar click, then triggers listener
 		document.fac_form.id.value=id;
 		document.fac_form.func.value='responder';
 		document.fac_form.edit.value='true';
+		document.fac_form.view.value='false';
 		document.fac_form.action='facilities.php';
 		document.fac_form.submit();
+		} else if(guest) {
+		document.fac_form.id.value=id;
+		document.fac_form.func.value='responder';
+		document.fac_form.view.value='true';
+		document.fac_form.edit.value='false';
+		document.fac_form.action='units.php';
+		document.fac_form.submit();			
 		} else {
 		if($('screenname').innerHTML == "fullscreen") {
 			get_fs_facspopup(id);
@@ -2310,16 +2361,19 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 		var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial"];	
 		var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark,aerial];
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
-		theLayer = baseLayerVarArr[a];
-		
+		theLayer = (in_local_bool != "1") ? baseLayerVarArr[a]: OSM;	// Load OSM if using local maps
+		var setZoom = <?php print $setZoom;?>;
+		var theZoom = <?php print $localZoomMin;?>;
+		var max_zoom = <?php print $localZoomMax;?>;
 		if(window.geo_provider == 1) {
 			if(window.GoogleKey.length > 0 && window.GoogleKey.length < 39) {
 				alert("Google set as Geo-coding provider but invalid Google Maps API Key");
 				}
 			if(!map) { map = L.map('map_canvas',
 				{
-				maxZoom: 20,
-				zoom: theZoom,
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
 				layers: [theLayer],
 				zoomControl: false,
 				}
@@ -2343,8 +2397,9 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 				}
 			if(!map) { map = L.map('map_canvas',
 				{
-				maxZoom: 20,
-				zoom: theZoom,
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
 				layers: [theLayer],
 				zoomControl: false,
 				}
@@ -2363,14 +2418,15 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 					control.addTo(map);
 					}			
 			} else {
-			if(!map) {
-				map = L.map('map_canvas',{
-					maxZoom: 20,
-					zoom: theZoom,
-					layers: [theLayer],
-					zoomControl: false,
-					}
-					)};
+			if(!map) {map = L.map('map_canvas',
+				{
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
+				layers: [theLayer],
+				zoomControl: false,
+				}
+				)};
 				geocoder = L.Control.Geocoder.nominatim(), 
 				control = L.Control.geocoder({
 					showResultIcons: false,
@@ -2386,39 +2442,50 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 					}
 			}
 
-		var baseLayers = {
-			"Open Streetmaps": OSM,
-			"Google": ggl,
-			"Google Terrain": ggl1,
-			"Google Satellite": ggl2,
-			"Google Hybrid": ggl3,
-			"USGS Topo": usgstopo,
-			"Dark": dark,
-			"Aerial": aerial,		
-		};
-		
-		var overlays = {
-			"Clouds": cloudscls,
-			"Precipitation": precipitationcls,
-			"Rain": raincls,
-			"Pressure": pressurecntr,
-			"Temperature": temp,
-			"Wind": wind,
-			"Snow": snow,
-			"Radar": nexrad,
-			"Grid": grid,
-		};
-		if(control_position == "tl") {
-			ctrlPos = 'topleft';
-			} else if(control_position == "tr") {
-			ctrlPos = 'topright';
-			} else if(control_position == "bl") {
-			ctrlPos = 'bottomleft';
-			} else if(control_position == "br") {
-			ctrlPos = 'bottomright';
+		if(in_local_bool != "1") {	//	remove all but OSM if using local maps
+			var baseLayers = {
+				"Open Streetmaps": OSM,
+				"Google": ggl,
+				"Google Terrain": ggl1,
+				"Google Satellite": ggl2,
+				"Google Hybrid": ggl3,
+				"USGS Topo": usgstopo,
+				"Dark": dark,
+				"Aerial": aerial,		
+			};
+			
+			var overlays = {
+				"Clouds": cloudscls,
+				"Precipitation": precipitationcls,
+				"Rain": raincls,
+				"Pressure": pressurecntr,
+				"Temperature": temp,
+				"Wind": wind,
+				"Snow": snow,
+				"Radar": nexrad,
+				"Grid": grid,
+			};
+
 			} else {
-			ctrlPos = 'none';
+			var baseLayers = {
+				"Open Streetmaps": OSM,
+			};
+			
+			var overlays = {};				
 			}
+			
+			if(control_position == "tl") {
+				ctrlPos = 'topleft';
+				} else if(control_position == "tr") {
+				ctrlPos = 'topright';
+				} else if(control_position == "bl") {
+				ctrlPos = 'bottomleft';
+				} else if(control_position == "br") {
+				ctrlPos = 'bottomright';
+				} else {
+				ctrlPos = 'none';
+				}
+			
 		if(ctrlPos != "none") {
 			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
 			map.addLayer(roadalerts);
@@ -2432,7 +2499,7 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 		if(theType ==3) {
 			createstdMarker(lat, lng);
 			}
-		map.setView([lat, lng], 13);
+		map.setView([lat, lng], setZoom);
 		bounds = map.getBounds();	
 		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
@@ -2656,6 +2723,7 @@ function do_inc_sort(id, field, header_text) {
 	}
 
 function load_incidentlist(sort, dir) {
+	window.counter++;
 	window.incFin = false;
 	if(sort != window.inc_field) {
 		window.inc_field = sort;
@@ -2668,11 +2736,11 @@ function load_incidentlist(sort, dir) {
 		}
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var sessID = "<?php print $_SESSION['id'];?>";
-	var url = './ajax/sit_incidents.php?sort='+window.inc_field+'&dir='+ window.inc_direct+'&func='+inc_period+'&version='+randomnumber+'&q='+sessID;
+	var url = './ajax/sit_incidents.php?sort='+window.inc_field+'&dir='+ window.inc_direct+'&func='+window.inc_period+'&version='+randomnumber+'&q='+sessID;
 	sendRequest (url,incidentlist_cb, "");
 	function incidentlist_cb(req) {
 		var inc_arr = JSON.decode(req.responseText);
-		if(!inc_arr && doDebug) { alert(req.responseText); }
+		if(!inc_arr && doDebug) { alert(req.responseText); sendInfo(url);}
 		if(window.inc_period_changed == 1) {
 			for(var key in tmarkers) {
 				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
@@ -2873,7 +2941,7 @@ function load_incidentlist(sort, dir) {
 			window.incFin = true;
 			pageLoaded();
 			window.do_inc_refresh = false;
-//			incidentlist_get();
+			incidentlist_get();
 			},500);
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
@@ -2957,11 +3025,11 @@ function incidentlist_setwidths() {
 function incidentlist_get() {								// set cycle
 	if (i_interval!=null) {return;}
 	i_interval = window.setInterval('incidentlist_loop()', 60000);
-	}			// end function mu get()
+	}			// end function incidentlist_get()
 
 function incidentlist_loop() {
-	load_incidentlist(inc_field, inc_direct);
-	}			// end function do_loop()
+	load_incidentlist(window.inc_field, window.inc_direct);
+	}			// end function incidentlist_loop()
 
 function isInteger(s) {
 	return (s.toString().search(/^-?[0-9]+$/) == 0);
@@ -3136,7 +3204,7 @@ function load_responderlist(sort, dir) {
 							 }
 						var bg_color = resp_arr[key][7];
 						var fg_color = resp_arr[key][8];
-						outputtext += "<TR id='" + resp_arr[key][20] + i +"' CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;'>";
+						outputtext += "<TR id='" + resp_arr[key][20] + unit_no +"' CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;'>";
 						outputtext += "<TD style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myrclick(" + unit_no + ");'>" + unit_id + "</TD>";
 						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" + pad(10, htmlentities(resp_arr[key][1], 'ENT_QUOTES'), "\u00a0") + "</TD>";
 						outputtext += "<TD>" + theMailBut + "</TD>";
@@ -3203,16 +3271,16 @@ function load_responderlist(sort, dir) {
 			setTimeout(function() {
 				if(window.resp_last_display == 0) {
 					$('the_rlist').innerHTML = outputtext;
-					$('boxes').innerHTML = resp_arr[0][21];
+					if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 					window.latest_responder = responder_number;
-					set_categories();
+					if($('boxes')) {set_categories();}
 					} else {
 					if((responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true) || (window.do_resp_refresh == true)) {
 						$('the_rlist').innerHTML = "";
 						$('the_rlist').innerHTML = outputtext;
-						$('boxes').innerHTML = resp_arr[0][21];
+						if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 						window.latest_responder = responder_number;
-						set_categories();
+						if($('boxes')) {set_categories();}
 						}
 					}
 				for(var key in resp_arr) {
@@ -3279,7 +3347,7 @@ function load_responderlist(sort, dir) {
 				pageLoaded();
 				window.do_resp_refresh = false;
 				responderlist_get();
-				},500);
+				},3000);
 			}
 		}				// end function responderlist_cb()
 	}				// end function load_responderlist()
@@ -3509,7 +3577,7 @@ function load_responderlist2(sort, dir) {
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
-			$('boxes').innerHTML = resp_arr[0][19];
+			if($('boxes')) {$('boxes').innerHTML = resp_arr[0][19];}
 			window.latest_responder = 0;
 			} else {
 			var outputtext = "<TABLE id='respondertable' class='cruises scrollable' style='width: " + window.leftlistwidth + "px;'>";
@@ -3548,7 +3616,7 @@ function load_responderlist2(sort, dir) {
 							 }
 						var bg_color = resp_arr[key][7];
 						var fg_color = resp_arr[key][8];
-						outputtext += "<TR id='" + resp_arr[key][20] + i +"' CLASS='" + colors[i%2] +"' style='width: " + window.leftlistwidth + "px;'>";
+						outputtext += "<TR id='" + resp_arr[key][20] + unit_no +"' CLASS='" + colors[i%2] +"' style='width: " + window.leftlistwidth + "px;'>";
 						outputtext += "<TD style='background-color: " + bg_color + "; color: " + fg_color + ";' onClick='myrclick(" + unit_no + ");'>" + pad(6, unit_id, "\u00a0") + "</TD>";
 						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "</TD>";
 						outputtext += "<TD style='text-align: center;'>" + theMailBut + "</TD>";
@@ -3620,16 +3688,16 @@ function load_responderlist2(sort, dir) {
 			setTimeout(function() {
 				if(window.resp_last_display == 0) {
 					$('the_rlist').innerHTML = outputtext;
-					$('boxes').innerHTML = resp_arr[0][21];
+					if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 					window.latest_responder = responder_number;
-					set_categories();
+					if($('boxes')) {set_categories();}
 					} else {
 					if((responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true)) {
 						$('the_rlist').innerHTML = "";
 						$('the_rlist').innerHTML = outputtext;
-						$('boxes').innerHTML = resp_arr[0][21];
+						if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 						window.latest_responder = responder_number;
-						set_categories();
+						if($('boxes')) {set_categories();}
 						}
 					}
 				for(var key in resp_arr) {
@@ -3893,7 +3961,7 @@ function load_facilitylist(sort, dir) {
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Facilities to view.........</marquee>";
 			$('the_flist').innerHTML = outputtext;
-			$('fac_boxes').innerHTML = fac_arr[0][12];
+			if($('fac_boxes')) {$('fac_boxes').innerHTML = fac_arr[0][12];}
 			window.latest_facility = 0;
 			} else {
 			var outputtext = "<TABLE id='facilitiestable' class='cruises scrollable' style='width: " + window.listwidth + "px;'>";
@@ -3923,7 +3991,7 @@ function load_facilitylist(sort, dir) {
 						 } else {
 						 var theTip = "";
 						 }
-					outputtext += "<TR id='" + fac_arr[key][15] + i +"' CLASS='" + colors[i%2] + "' style='width: " + window.listwidth + "px;'>";
+					outputtext += "<TR id='" + fac_arr[key][15] + fac_id +"' CLASS='" + colors[i%2] + "' style='width: " + window.listwidth + "px;'>";
 					outputtext += "<TD style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][2] + "</TD>";
 					outputtext += "<TD style=\"text-align: left;\" onClick='myfclick(" + fac_id + ");'>" + htmlentities(fac_arr[key][0], 'ENT_QUOTES') + "</TD>";
 					outputtext += "<TD>" + theMailBut + "</TD>";
@@ -3981,13 +4049,13 @@ function load_facilitylist(sort, dir) {
 			setTimeout(function() {	
 				if(window.fac_last_display == 0) {
 					$('the_flist').innerHTML = outputtext;
-					$('fac_boxes').innerHTML = fac_arr[0][12];
+					if($('fac_boxes')) {$('fac_boxes').innerHTML = fac_arr[0][12];}
 					set_fac_categories();
 					window.latest_facility = facility_number;
 					} else {
 					if((facility_number != window.latest_facility) || (window.do_fac_update == true) || (window.changed_fac_sort == true)) {
 						$('the_flist').innerHTML = outputtext;
-						$('fac_boxes').innerHTML = fac_arr[0][12];
+						if($('fac_boxes')) {$('fac_boxes').innerHTML = fac_arr[0][12];}
 						window.latest_facility = facility_number;
 						set_fac_categories();
 						}
@@ -4513,12 +4581,12 @@ function load_fs_responders() {
 				if(window.resp_last_display == 0) {
 					$('boxes').innerHTML = resp_arr[0][21];
 					window.latest_responder = responder_number;
-					set_categories();
+					if($('boxes')) {set_categories();}
 					} else {
 					if((ticket_number != window.latest_ticket) || (window.do_update == true) || (window.changed_resp_sort == true)) {
 						$('boxes').innerHTML = resp_arr[0][21];
 						window.latest_responder = responder_number;
-						set_categories();
+						if($('boxes')) {set_categories();}
 						}
 					}
 				},500);			
@@ -4633,13 +4701,42 @@ function draw_poly(linename, category, color, opacity, width, filled, fillcolor,
 		fillColor: fillcolor,
 		fillOpacity: fillopacity,
 		stroke: true
-		}).addTo(map);
-		boundary[theID] = polygon;
-		if(linename) {
-			bound_names[theID] = linename;
+		});
+		if(!boundary[theID]) {
+			polygon.addTo(map);
+			boundary[theID] = polygon;
+			if(linename && !bound_names[theID]) {
+				bound_names[theID] = linename;
+				}		
 			}
 		}
 	return polygon;
+	}
+	
+function draw_polyline(linename, color, opacity, width, linedata, theID) {
+	if(!linedata) {return;}
+	var path = new Array();
+	var thelineData = linedata.split(';');
+	for (i = 0; i < thelineData.length; i++) { 
+		var theCoords = thelineData[i].split(',');
+		var theLatLng = new L.LatLng(theCoords[0], theCoords[1]);
+		path[i] = theLatLng;
+		}
+	polyline = L.polyline(path,{
+	clickable: false,
+	color: color,
+	weight: width,
+	opacity: opacity,
+	stroke: true
+	});
+	if(!boundary[theID]) {
+		polyline.addTo(map);
+		boundary[theID] = polyline;
+		if(linename && !bound_names[theID]) {
+			bound_names[theID] = linename;
+			}		
+		}
+	return polyline;
 	}
 	
 function drawCircle(linename, linedata, strokeColor, strokeWidth, strokeOpacity, filled, fillColor, fillOpacity, theType, theID) {
@@ -4655,11 +4752,14 @@ function drawCircle(linename, linedata, strokeColor, strokeWidth, strokeOpacity,
 			fill: filled,
 			fillColor: fillColor,
 			fillOpacity: fillOpacity
-			}).addTo(map);
-		draw_circle.bindPopup(linename);
-		boundary[theID] = draw_circle;		
-		if(linename) {
-			bound_names[theID] = linename;
+			});
+		if(!boundary[theID]) {
+			draw_circle.addTo(map);
+			draw_circle.bindPopup(linename);
+			boundary[theID] = draw_circle;
+			if(linename && !bound_names[theID]) {
+				bound_names[theID] = linename;
+				}		
 			}
 		}
 	}
@@ -4681,9 +4781,12 @@ function drawBanner(linename, linedata, width, color, category, theID) {        
 		draggable: false
 	});
 	myTextLabel.addTo(map);
-	boundary[theID] = myTextLabel;
-	if(linename) {
-		bound_names[theID] = linename;
+	if(!boundary[theID]) {
+		myTextLabel.addTo(map);
+		boundary[theID] = myTextLabel;
+		if(linename && !bound_names[theID]) {
+			bound_names[theID] = linename;
+			}		
 		}
 	}				// end function draw Banner()
 	
@@ -4736,10 +4839,12 @@ function load_basemarkup() {
 			var theType = base_arr[0][key]['type'];
 			if(theType == "p") {
 				var polygon = draw_poly(theLinename, theCategory, theColor, theOpacity, theWidth, theFilled, theFillcolor, theFillopacity, theData, "basemarkup", theID);
+				} else if(theType == "l") {
+				var polyline = draw_polyline(theLinename, theColor, theOpacity, theWidth, theData, theID);
 				} else if(theType == "c") {
 				var circle = drawCircle(theLinename, theData, theColor, theWidth, theOpacity, theFilled, theFillcolor, theFillopacity, "basemarkup", theID);
-				} else if(theType == "t") {
-				var banner = drawBanner(theLinename, theData, theWidth, theColor, "basemarkup", theID);
+				} else if(theType == "b") {
+				var banner = drawBanner(theLinename, theData, theWidth, theColor, "basemarkup", theID);				
 				}
 			}
 		}				// end function basemarkup_cb()
@@ -6040,14 +6145,14 @@ function doTweet(myForm) {
 		}
 	$('theFlag').innerHTML = "<marquee direction='left'>Sending Message</marquee>";
 	var tUserid = (myForm.frm_userid.value.trim() != "") ? "&userid=" + myForm.frm_userid.value.trim() : "";
-	var screenName = (myForm.frm_screenname.value.trim() != "") ? "&screenname=" + myForm.frm_screenname.value.trim() : "";
-	var message = URLEncode(myForm.frm_message.value.trim());
+	var tScreenname = (myForm.frm_screenname.value.trim() != "") ? "&screenname=" + myForm.frm_screenname.value.trim() : "";
+	var tMessage = URLEncode(myForm.frm_message.value.trim());
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var sessID = "<?php print $_SESSION['id'];?>";
-	if(tUserid == "" && screenName == ""){
-		var url = './ajax/twitter_send.php?message=' + message + '&version=' + randomnumber + '&q=' + sessID;
+	if(tUserid == "" && tScreenname == ""){
+		var url = './ajax/twitter_send.php?message=' + tMessage + '&version=' + randomnumber + '&q=' + sessID;
 		} else {
-		var url = './ajax/twitter_direct_send.php?message=' + message + tUserid + screenName + '&version=' + randomnumber + '&q=' + sessID;		
+		var url = './ajax/twitter_direct_send.php?message=' + tMessage + tUserid + tScreenname + '&version=' + randomnumber + '&q=' + sessID;		
 		}
 	sendRequest (url, theCB, "");
 	function theCB(req) {
@@ -6058,7 +6163,6 @@ function doTweet(myForm) {
 				theOutput += "Tweet Sent";
 				} else {
 				theOutput += theResult[0];
-				slert(theOutput);
 				}
 			} else {
 			theOutput += "Tweet Failed";
@@ -6078,23 +6182,15 @@ function doTweet(myForm) {
 function tweetInfo(message) {
 	if(!confirm("Are you sure you want to Tweet this Information?")) {
 		return;
-		}
-	var screenName = prompt("User Name?", "");
-	var twitterID = prompt("Twitter ID?", "");
-	twitterID = "&userid=" + twitterID.trim();
-	screenName = "&screenname=" + screenName.trim();
+	}
 	var extra = prompt("Any extra information?", "");
 	if(extra) {
 		message = extra + " " + message;
 		}
-	message = URLEncode(message);
+	var tMessage = message;
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var sessID = "<?php print $_SESSION['id'];?>";
-	if(twitterID == "" && screenName == ""){
-		var url = './ajax/twitter_send.php?message=' + message + '&version=' + randomnumber + '&q=' + sessID;
-		} else {
-		var url = './ajax/twitter_direct_send.php?message=' + message + twitterID + screenName + '&version=' + randomnumber + '&q=' + sessID;		
-		}
+	var url = './ajax/twitter_send.php?message=' + tMessage + '&version=' + randomnumber + '&q=' + sessID;
 	sendRequest(url, theCB2, "");
 	function theCB2(req) {
 		var theResult2 = JSON.decode(req.responseText);
@@ -6103,7 +6199,7 @@ function tweetInfo(message) {
 			if(theResult2[0] == 1) {
 				theOutput2 += "Tweet Sent";
 				} else {
-				theOutput2 += theResult2[0];
+				theOutput2 += "Tweet Failed";
 				}
 			} else {
 			theOutput2 += "Tweet Failed";

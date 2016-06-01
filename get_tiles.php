@@ -49,6 +49,7 @@ function directory_empty($path) {
 <script src="./js/leaflet/leaflet.js"></script>
 <script type="text/javascript" src="./js/L.Graticule.js"></script>
 <SCRIPT>
+	var theTiles = [];
 	window.onload = function() {
 		if($('map_canvas')) { initialise(); }
 		};
@@ -65,6 +66,13 @@ function directory_empty($path) {
 	function lat2tile(lat,zoom2)  { 
 		return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom2))); 
 		}
+		
+	function pausecomp(millis) {
+		var date = new Date();
+		var curDate = null;
+		do { curDate = new Date(); } 
+		while(curDate-date < millis);
+		} 
 
 	function calc_tile_name(zoom, lat, lon) {
 		var xtile = long2tile(lon,zoom);
@@ -74,9 +82,8 @@ function directory_empty($path) {
 		ret_arr[1] = ytile;
 		return ret_arr;
 		}				// end function calc_tile_name ()
-
 		
-	function get_tiles_required() {
+	function get_tile_list() {
 		$('help4').innerHTML = "<BR /><BR /><BR /><BR />";
 		$('file_list_header').style.display='block';
 		$('file_list').style.display='block';
@@ -84,45 +91,60 @@ function directory_empty($path) {
 		$('waiting').style.display='block';
 		$('waiting').innerHTML = "Please Wait, Downloading Tiles<BR /><IMG style='vertical-align: middle;' src='./images/progressbar3.gif'/>";
 		var zoom_top = parseInt(document.map_tiles_form.zoom_top.value);
-		var zoom_btm = parseInt(document.map_tiles_form.zoom_bot.value) + 1;
+		var zoom_btm = parseInt(document.map_tiles_form.zoom_bot.value);
 		var top_left_lat = document.map_tiles_form.tl_lat.value;
 		var top_left_lon = document.map_tiles_form.tl_lon.value;	
 		var btm_rt_lat = document.map_tiles_form.br_lat.value;
 		var btm_rt_lon = document.map_tiles_form.br_lon.value;
-		for (var z = zoom_top; z < zoom_btm;  z++) {
+		var limit1 = zoom_btm + 1;
+		for (var z = zoom_top; z<limit1;  z++) {
+			theTiles[z] = [];
 			var temp = calc_tile_name(z, top_left_lat, top_left_lon) ;		// get tile names for each zoom level
 			var col_first = temp[0];
 			var row_first = temp[1];
 			var temp2 = calc_tile_name (z, btm_rt_lat, btm_rt_lon) ;
 			col_last = temp2[0];
 			row_last = temp2[1];
-			for (var col = col_first; col<col_last;  col++) {	
-				for (var row = row_first; row<row_last;  row++) {
-					if((z==zoom_btm) && (col==col_last-1) && (row==row_last-1)) { lastfile="yes"; } else { lastfile = "no"; }
-					var url = "./ajax/gettiles.php?dir=" + z + "&subdir=" + col + "&file=" + row + "&lastfile=" + lastfile;
-					sendRequest (url ,tile_cb, "");			
+			var limit2 = col_last + 1;
+			var limit3 = row_last + 1;
+			for (var col = col_first; col<limit2;  col++) {
+				theTiles[z][col] = [];
+				for (var row = row_first; row<limit3;  row++) {
+					if((z == zoom_btm) && (col == col_last) && (row == row_last)) { lastfile = "yes";} else { lastfile = "no"; }
+					theTiles[z][col][row] = [];
+					get_tiles_required(z,col,row,lastfile);
+					pausecomp(1500);
 					}
 				}
 			}
-
-		}	
-
-	function tile_cb(req) {
-		var the_ret_file=JSON.decode(req.responseText);
+		}
+		
+	function get_tiles_required(z,col,row,lastfile) {
+		var url = "./ajax/gettiles.php?dir=" + z + "&subdir=" + col + "&file=" + row + "&lastfile=" + lastfile;
+		var payload = syncAjax(url);
+		var the_ret_file=JSON.decode(payload);
 		var finish_but = "<SPAN id='b6' class = 'plain' style='display: none; z-index: 999; float: none; width: 120px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'document.forms[\"to_config_Form\"].submit();'>Back to Config</SPAN>";
-		if(the_ret_file[0] == "Completed") {
+		if((the_ret_file[0] == "Completed") && (the_ret_file[2] == "no")){
+			if($('file_list').innerHTML.length > 5000) {
+				$('file_list').innerHTML = the_ret_file[1];
+				$('file_list').innerHTML += "<BR />";				
+				} else {
+				$('file_list').innerHTML += the_ret_file[1];
+				$('file_list').innerHTML += "<BR />";
+				}
+			$('file_list').scrollTop = $('file_list').scrollHeight;
+			} else if(the_ret_file[2] == "yes") {
 			$('file_list').innerHTML += the_ret_file[1];
 			$('file_list').innerHTML += "<BR />";
-			$('file_list').scrollTop = $('file_list').scrollHeight;
-			} else if(the_ret_file[2] == "yes") { 
+			$('file_list').innerHTML += "Last Tile Downloaded<BR />";
 			$('waiting').style.display='block'; 
 			$('waiting').innerHTML = "<CENTER>Complete<BR /><BR />" + finish_but + "</CENTER>";
 			$('b6').style.display='block'; 
 			$('b6').style.zindex = 999;
 			} else {
 			alert("Failed");
-			}		
-		}				// end function tile_cb()	
+			}				
+		}	
 		
 	function get_bounds() {
 		var theBounds = map.getBounds();
@@ -297,7 +319,7 @@ if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 			<SPAN id='b1' class = 'plain' style='display: inline;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "get_bounds(); $('b2').style.display='block'; $('b1').style.display='none'; $('help1').style.display='none'; $('help2').style.display='block'; $('b5').style.display='block';">Get Bounds</SPAN>
 			<SPAN id='b2' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "get_zoom_min(); $('b3').style.display='block'; $('b2').style.display='none'; $('help2').style.display='none'; $('help3').style.display='block';">Get Zoom Out</SPAN>
 			<SPAN id='b3' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "get_zoom_max(); $('b4').style.display='block'; $('b3').style.display='none'; $('help3').style.display='none'; $('help4').style.display='block';">Get Zoom In</SPAN>
-			<SPAN id='b4' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "$('b4').style.display='none'; get_tiles_required();">Next</SPAN>
+			<SPAN id='b4' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "$('b4').style.display='none'; get_tile_list();">Next</SPAN>
 		</DIV>
 		<DIV style='width: 100%;'>
 			<FORM METHOD="POST" NAME= "map_tiles_form" ACTION="get_tiles.php?func=get_tiles">

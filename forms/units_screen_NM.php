@@ -230,7 +230,7 @@ function pageLoaded() {
 			<SPAN id='tracks_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.tracks_Form.submit();'><?php print get_text("Unit");?> Tracks</SPAN>
 <?php
 			if (!(is_guest())) {
-				if ((!(is_user())) && (!(is_unit()))) {
+				if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
 ?>
 					<SPAN id='add_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.add_Form.submit();'>Add a <?php print get_text("Unit");?></SPAN>
 <?php
@@ -251,24 +251,12 @@ print add_sidebar(TRUE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, 0, 0, 0);	
 ?>
 </DIV>
 <SCRIPT>
-var controlsHTML = "<TABLE id='controlstable' ALIGN='center'>";
-controlsHTML += "<SPAN class='heading' style='width: 100%; text-align: center; display: inline-block;'>Map Controls</SPAN></BR>";
-controlsHTML +=	"<TR class='even'><TD><CENTER><TABLE ID='buttons_sh' style='display: <?php print $show_controls;?>;'><TR CLASS='odd'><TD>";
-controlsHTML +=	"<DIV ID = 'boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
-controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'fac_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR></TABLE></CENTER></TD></TR></TABLE>";
-
-var sortby = '`date`';
-var sort = "DESC";
-var columns = "<?php print get_msg_variable('columns');?>";
-var the_columns = new Array(<?php print get_msg_variable('columns');?>);
-var thescreen = 'ticket';
 var thelevel = '<?php print $the_level;?>';
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
 var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var theLocale = <?php print get_variable('locale');?>;
-$('controls').innerHTML = controlsHTML;
 </SCRIPT>
 
 <FORM NAME='view_form' METHOD='get' ACTION='units.php'>
@@ -285,9 +273,10 @@ $('controls').innerHTML = controlsHTML;
 <FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__);?>?func=responder"></FORM>
 <FORM NAME='tracks_Form' METHOD="get" ACTION = "tracks.php"></FORM>
 
-<FORM NAME='resp_form' METHOD='get' ACTION='units.php?func=responder&edit=true'>
+<FORM NAME='resp_form' METHOD='get' ACTION='units_nm.php?'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 

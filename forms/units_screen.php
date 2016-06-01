@@ -298,7 +298,7 @@ function do_tab(tabid, suffix, lat, lng) {
 			<SPAN id='tracks_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.tracks_Form.submit();'><?php print get_text("Unit");?> Tracks</SPAN>
 <?php
 			if (!(is_guest())) {
-				if ((!(is_user())) && (!(is_unit()))) {
+				if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
 ?>
 					<SPAN id='add_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.add_Form.submit();'>Add a <?php print get_text("Unit");?></SPAN>
 <?php
@@ -347,6 +347,7 @@ var thescreen = 'ticket';
 var thelevel = '<?php print $the_level;?>';
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
+var cmarkers = [];			//	Responder Markers array
 var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var latLng;
@@ -366,8 +367,9 @@ $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 var got_points = false;	// map is empty of points
@@ -395,6 +397,7 @@ do_kml();
 <FORM NAME='resp_form' METHOD='get' ACTION='units.php?func=responder&edit=true'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 

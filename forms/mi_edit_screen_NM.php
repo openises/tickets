@@ -126,6 +126,24 @@ function validate(theForm) {						// Responder form contents validation	8/11/09
 		}
 	}				// end function validate(theForm)
 
+function do_end(theForm) {
+	elem = $("enddate1");
+	if(elem.style.visibility == "visible") {
+		elem.style.visibility = "hidden";
+		theForm.frm_year_inc_endtime.disabled = true;
+		theForm.frm_month_inc_endtime.disabled = true;
+		theForm.frm_day_inc_endtime.disabled = true;
+		theForm.frm_hour_inc_endtime.disabled = true;
+		theForm.frm_minute_inc_endtime.disabled = true;		
+		} else {
+		elem.style.visibility = "visible";
+		theForm.frm_year_inc_endtime.disabled = false;
+		theForm.frm_month_inc_endtime.disabled = false;
+		theForm.frm_day_inc_endtime.disabled = false;
+		theForm.frm_hour_inc_endtime.disabled = false;
+		theForm.frm_minute_inc_endtime.disabled = false;		
+		}
+	}
 </SCRIPT>
 </HEAD>
 <?php
@@ -177,8 +195,20 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_startime', strtotime($row['inc_startime']), FALSE);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident End Time / Date">End Date/Time</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
-				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_endtime', strtotime($row['inc_endtime']), FALSE);?></TD>
+				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident Name">End Date/Time</A>:&nbsp;<input type="checkbox" name="end_but" onClick ="do_end(this.form);" />&nbsp;</TD>
+				<TD COLSPAN=3 >
+<?php
+				if(is_date($row['inc_endtime'])) {
+?>
+					<SPAN style = "visibility:visible" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', strtotime($row['inc_endtime']), FALSE);?></SPAN></TD>
+<?php
+				} else {
+?>
+					<SPAN style = "visibility:hidden" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', 0, TRUE);?></SPAN></TD>
+<?php
+				}
+?>
+				</TD>
 			</TR>
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Type of Major Incident"><?php print get_text("MI Type");?></A>:</TD>
@@ -418,7 +448,211 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						</TR>
 					</TABLE>						
 				</TD>
-			</TR>						
+			</TR>
+			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
+				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level4 Command");?>"><?php print get_text("Level4 Command");?></A>:</TD>
+				<TD>
+					<SPAN style='width: 100%; display: block;'>		
+						<SELECT NAME="frm_level4" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level4_command_data');">	<!--  11/17/10 -->
+							<OPTION VALUE=0>Select Level4 Command</OPTION>
+<?php
+							$query_level4 = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
+							$result_level4 = mysql_query($query_level4) or do_error($query_level4, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+							while ($row_level4 = stripslashes_deep(mysql_fetch_assoc($result_level4))) {
+								$sel = ($row['level4'] == $row_level4['id']) ? "SELECTED" : "";
+								print "\t<OPTION VALUE='" . $row_level4['id'] . "' " . $sel . ">" . $row_level4['user'] . " - "  . $row_level4['name_f'] . " " . $row_level4['name_l'] . "</OPTION>\n";
+								}
+?>
+						</SELECT>
+					</SPAN>
+					<DIV id='level4_command_data'>
+						<TABLE>
+							<TR>
+								<TD class='td_label'>Email 1</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level4']])) {
+										print $comm_arr[$row['level4']][4];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Email 2</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level4']])) {
+										print $comm_arr[$row['level4']][5];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Phone 1</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level4']])) {
+										print $comm_arr[$row['level4']][6];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Phone 2</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level4']])) {
+										print $comm_arr[$row['level4']][7];
+										}
+?>
+								</TD>
+							</TR>
+						</TABLE>
+					</DIV>
+					<TABLE>
+						<TR>
+							<TD class='td_label'>Location</TD>
+							<TD class='td_data'><?php print get_building("frm_level4_loc", $row['level4_loc']);?></TD>
+						</TR>
+					</TABLE>						
+				</TD>
+			</TR>
+			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
+				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level5 Command");?>"><?php print get_text("Level5 Command");?></A>:</TD>
+				<TD>
+					<SPAN style='width: 100%; display: block;'>		
+						<SELECT NAME="frm_level5" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level5_command_data');">	<!--  11/17/10 -->
+							<OPTION VALUE=0>Select Level5 Command</OPTION>
+<?php
+							$query_level5 = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
+							$result_level5 = mysql_query($query_level5) or do_error($query_level5, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+							while ($row_level5 = stripslashes_deep(mysql_fetch_assoc($result_level4))) {
+								$sel = ($row['level5'] == $row_level5['id']) ? "SELECTED" : "";
+								print "\t<OPTION VALUE='" . $row_level5['id'] . "' " . $sel . ">" . $row_level5['user'] . " - "  . $row_level5['name_f'] . " " . $row_level5['name_l'] . "</OPTION>\n";
+								}
+?>
+						</SELECT>
+					</SPAN>
+					<DIV id='level5_command_data'>
+						<TABLE>
+							<TR>
+								<TD class='td_label'>Email 1</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level5']])) {
+										print $comm_arr[$row['level5']][4];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Email 2</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level5']])) {
+										print $comm_arr[$row['level5']][5];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Phone 1</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level5']])) {
+										print $comm_arr[$row['level5']][6];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Phone 2</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level5']])) {
+										print $comm_arr[$row['level5']][7];
+										}
+?>
+								</TD>
+							</TR>
+						</TABLE>
+					</DIV>
+					<TABLE>
+						<TR>
+							<TD class='td_label'>Location</TD>
+							<TD class='td_data'><?php print get_building("frm_level5_loc", $row['level5_loc']);?></TD>
+						</TR>
+					</TABLE>						
+				</TD>
+			</TR>
+			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
+				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level6 Command");?>"><?php print get_text("Level6 Command");?></A>:</TD>
+				<TD>
+					<SPAN style='width: 100%; display: block;'>		
+						<SELECT NAME="frm_level6" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level6_command_data');">	<!--  11/17/10 -->
+							<OPTION VALUE=0>Select Level5 Command</OPTION>
+<?php
+							$query_level6 = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
+							$result_level6 = mysql_query($query_level6) or do_error($query_level6, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+							while ($row_level6 = stripslashes_deep(mysql_fetch_assoc($result_level6))) {
+								$sel = ($row['level6'] == $row_level6['id']) ? "SELECTED" : "";
+								print "\t<OPTION VALUE='" . $row_level6['id'] . "' " . $sel . ">" . $row_level6['user'] . " - "  . $row_level6['name_f'] . " " . $row_level6['name_l'] . "</OPTION>\n";
+								}
+?>
+						</SELECT>
+					</SPAN>
+					<DIV id='level5_command_data'>
+						<TABLE>
+							<TR>
+								<TD class='td_label'>Email 1</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level6']])) {
+										print $comm_arr[$row['level6']][4];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Email 2</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level6']])) {
+										print $comm_arr[$row['level6']][5];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Phone 1</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level6']])) {
+										print $comm_arr[$row['level6']][6];
+										}
+?>
+								</TD>
+							</TR>
+							<TR>
+								<TD class='td_label'>Phone 2</TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['level6']])) {
+										print $comm_arr[$row['level6']][7];
+										}
+?>
+								</TD>
+							</TR>
+						</TABLE>
+					</DIV>
+					<TABLE>
+						<TR>
+							<TD class='td_label'>Location</TD>
+							<TD class='td_data'><?php print get_building("frm_level6_loc", $row['level6_loc']);?></TD>
+						</TR>
+					</TABLE>						
+				</TD>
+			</TR>
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 			</TR>		

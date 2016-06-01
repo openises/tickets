@@ -738,9 +738,10 @@ var pageLoadTime = "<?php print $total_time;?>";
 <FORM NAME='tick_form' METHOD='get' ACTION='edit.php'>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
-<FORM NAME='resp_form' METHOD='get' ACTION='units.php?func=responder&edit=true'>
+<FORM NAME='resp_form' METHOD='get' ACTION='units_nm.php?'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 <FORM NAME='fac_form' METHOD='get' ACTION='facilities.php'>

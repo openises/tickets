@@ -334,7 +334,7 @@ extract($_POST);
 						var theTypecolor = "white";
 						var theTypebg = "blue";
 						break;
-					case "t":
+					case "b":
 						var theTypename = "Banner";
 						var theTypecolor = "white";
 						var theTypebg = "green";
@@ -363,7 +363,15 @@ extract($_POST);
 					if(!boundary[theID]) {
 						var circle = drawCircle(theLinename, theData, theColor, theWidth, theOpacity, theFilled, theFillcolor, theFillopacity, "catchment", theID);
 						}
-					}
+					} else if(theType == "l") {
+					if(!boundary[theID]) {
+						var polyline = draw_polyline(theLinename, theColor, theOpacity, theWidth, theData, theID);;
+						}
+					} else if(theType == "b") {
+					if(!boundary[theID]) {
+						var banner = drawBanner(theLinename, theData, theWidth, theColor, "banner", theID);
+						}
+					}					
 				outputtext += "<TR CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;' onMouseover=\"Tip('" + theLinename + " - " + theCategory + "')\" onMouseout='UnTip();' onClick='mymclick(" + theID + ");'>";
 				outputtext += "<TD style='font-weight: bold; color: " + theTypecolor + "; background-color: " + theTypebg + ";'>" + theID + "</TD>";
 				outputtext += "<TD style='font-weight: bold;'>" + theCategory + "</TD>";
@@ -402,6 +410,8 @@ extract($_POST);
 	$_getadd = 			($func == "add")? 								$_GET['add']:  "";
 	$_getview = 		($func == "view")? 								$_GET['view']: "";
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+	$by = $_SESSION['user_id'];
+	$from = $_SERVER['REMOTE_ADDR'];	
 	$caption = "";
 
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
@@ -411,8 +421,8 @@ extract($_POST);
 		}
 	else {
 		if ($_getgoedit == 'true') {
-			$line_status = (trim($_POST['frm_line_is_vis'])=='on')?  0: 1;
-
+			$line_status = (trim($_POST['rb_line_is_vis'])=='on')?  0: 1;
+			$line_width = ($_POST['frm_line_type']=="b") ? $_POST['frm_font_size'] : $_POST['frm_line_width'];
 			$query = "UPDATE `{$tablename}` SET 
 				`line_name` = " . 		quote_smart(trim($_POST['frm_name'])) .",
 				`line_ident` = " . 		quote_smart(trim($_POST['frm_ident'])) .",
@@ -430,7 +440,7 @@ extract($_POST);
 				`filled` = " .  		quote_smart(trim($_POST['frm_filled'])) .",
 				`fill_color` = " .  	quote_smart(trim($_POST['frm_fill_color'])) .",
 				`fill_opacity` = " .  	quote_smart(trim($_POST['frm_fill_opacity'])) .",
-				`line_width` = " .  	quote_smart(trim($_POST['frm_line_width'])) .",
+				`line_width` = " .  	quote_smart(trim($line_width)) .",
 				`_by` =   				'{$by}' ,
 				`_from` =	 			'{$from}' ,
 				`_on` =   				'{$now}'
@@ -441,6 +451,7 @@ extract($_POST);
 		}				// end else {}
 
 	if ($_getgoadd == 'true') {
+		$line_width = ($_POST['frm_line_type']=="b") ? $_POST['frm_font_size'] : $_POST['frm_line_width'];
 		$filled =		(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_filled'])) ; 
 		$fill_color =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_color'])) ; 
 		$fill_opacity =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_opacity'])) ; 
@@ -463,7 +474,7 @@ extract($_POST);
 			 $filled ."," .
 			 $fill_color ."," .
 			 $fill_opacity ."," .
-			 quote_smart(trim($_POST['frm_line_width'])) ."," .
+			 quote_smart(trim($line_width)) ."," .
 			 quote_smart($by) ."," .
 			 quote_smart($from) ."," .
 			 quote_smart(trim($now)) . ")" ;

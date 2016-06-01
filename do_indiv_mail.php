@@ -100,7 +100,7 @@ if (empty($_POST)) {
 
 	else {
 
-			do_send ($_POST['frm_addr'], $_POST['frm_subj'], $_POST['frm_text'], 0, quote_smart(trim($_GET['the_id'])));	// ($to_str, $subject_str, $text_str )
+			do_send ($_POST['frm_addr'], "", $_POST['frm_subj'], $_POST['frm_text'], 0, quote_smart(trim($_GET['the_id'])));	// ($to_str, $subject_str, $text_str )
 ?>
 	<BODY><CENTER>		
 	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3>

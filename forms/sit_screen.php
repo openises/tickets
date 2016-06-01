@@ -11,6 +11,7 @@ $patient = get_text("Patient");
 $incident = get_text("Incident");
 $incidents = get_text("Incidents");
 $gt_status = get_text("Status");
+$isGuest = (is_guest()) ? 1 : 0;
 	
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -118,6 +119,7 @@ var showTicker = <?php print $use_ticker;?>;
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
+var counter = 0;
 var pagetimerStart = new Date();
 var pagetimerEnd = 0;
 var doTime = false;
@@ -162,6 +164,7 @@ var inc_period = 0;
 var last_disp = 0;
 var mapCenter;
 var mapZoom;
+var isGuest = <?php print $isGuest;?>;
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 	}
@@ -360,8 +363,6 @@ function set_size() {
 	$('rightcol').style.height = colheight + "px";	
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
-	$('logheading').style.width = mapWidth + "px";
-	$('loglist').style.width = mapWidth + "px";
 	$('ticketlist').style.maxHeight = listHeight + "px";
 	$('ticketlist').style.width = listwidth + "px";
 	$('ticketheading').style.width = listwidth + "px";
@@ -375,8 +376,6 @@ function set_size() {
 	$('the_flist').style.maxHeight = listHeight + "px";
 	$('the_flist').style.width = listwidth + "px";
 	$('facilitiesheading').style.width = listwidth + "px";
-	$('stats_wrapper').style.width = mapWidth + "px";
-	$('stats_heading').style.width = mapWidth + "px";
 	load_status_control();
 	load_fac_status_control();
 	load_exclusions();
@@ -387,10 +386,16 @@ function set_size() {
 	load_incidentlist(window.inc_field, window.inc_direct);
 	do_conditions();
 	load_regions();
-	load_log(window.log_field, window.log_direct);
 	set_initial_pri_disp();
 	load_poly_controls();
-	do_statistics();
+	if(!isGuest) {
+		$('logheading').style.width = mapWidth + "px";
+		$('loglist').style.width = mapWidth + "px";
+		$('stats_wrapper').style.width = mapWidth + "px";
+		$('stats_heading').style.width = mapWidth + "px";
+		load_log(window.log_field, window.log_direct);
+		do_statistics();
+		}
 	get_scheduled_number();
 	map.invalidateSize();
 	}
@@ -406,10 +411,12 @@ function loadData() {
 	load_incidentlist(window.inc_field, window.inc_direct);
 	do_conditions();
 	load_regions();
-	load_log(window.log_field, window.log_direct);
 	set_initial_pri_disp();
 	load_poly_controls();
-	do_statistics();
+	if(!isGuest) {
+		load_log(window.log_field, window.log_direct);
+		do_statistics();
+		}
 	get_scheduled_number();
 	map.invalidateSize();
 	}
@@ -603,12 +610,12 @@ if (is_guest()) {
 	$gunload = "pageUnload();";
 	$from_right = 20;
 	$from_top = 10;
-	$temp = intval(trim(get_variable('situ_refr')));
-	$refresh =  ($temp < 15)? 15000: $temp * 1000;
-	$set_to = (intval(trim(get_variable('situ_refr')))>0)? "setTimeout('location.reload(true);', {$refresh});": "";
+//	$temp = intval(trim(get_variable('situ_refr')));
+//	$refresh =  ($temp < 15)? 15000: $temp * 1000;
+//	$set_to = (intval(trim(get_variable('situ_refr')))>0)? "setTimeout('location.reload(true);', {$refresh});": "";
 	$the_api_key = trim(get_variable('gmaps_api_key'));	
 	$set_map = "";	// 1/16/2013
-	$set_regions_control = ((!($get_id)) && ((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))) ? "set_regions_control();" : "";
+//	$set_regions_control = ((!($get_id)) && ((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))) ? "set_regions_control();" : "";
 	$get_messages = ($get_id) ? "get_mainmessages(" . $get_id . " ,'',sortby, sort, '', 'ticket');" : "";
 ?>
 <BODY onLoad = "loadData(); ck_frames(); <?php print $ld_ticker;?> parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
@@ -705,6 +712,9 @@ if (is_guest()) {
 		<DIV id = 'map_canvas' style = 'border: 1px outset #707070;'></DIV>
 		<CENTER><SPAN style='width: 100%; text-align: center;''><?php print get_variable('map_caption');?></SPAN></CENTER><BR />
 		<BR />
+<?php
+	if(!is_guest()) {
+?>
 		<DIV id='logheading' class = 'heading'>
 			<DIV style='text-align: center;'>Recent Events
 				<SPAN id='collapse_log' onClick="hideDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
@@ -740,6 +750,9 @@ if (is_guest()) {
 				</TR>
 			</TABLE>
 		</DIV>
+<?php
+		}
+?>
 	</DIV><BR /><BR />
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
@@ -809,8 +822,6 @@ $('rightcol').style.width = colwidth + "px";
 $('rightcol').style.height = colheight + "px";	
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
-$('logheading').style.width = mapWidth + "px";
-$('loglist').style.width = mapWidth + "px";
 $('ticketlist').style.maxHeight = listHeight + "px";
 $('ticketlist').style.width = listwidth + "px";
 $('ticketheading').style.width = listwidth + "px";
@@ -824,8 +835,12 @@ $('facilitylist').style.width = listwidth + "px";
 $('the_flist').style.maxHeight = listHeight + "px";
 $('the_flist').style.width = listwidth + "px";
 $('facilitiesheading').style.width = listwidth + "px";
-$('stats_wrapper').style.width = mapWidth + "px";
-$('stats_heading').style.width = mapWidth + "px";
+if(!isGuest) {
+	$('logheading').style.width = mapWidth + "px";
+	$('loglist').style.width = mapWidth + "px";	
+	$('stats_wrapper').style.width = mapWidth + "px";
+	$('stats_heading').style.width = mapWidth + "px";
+	}
 // end of set widths
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
@@ -900,6 +915,7 @@ var pageLoadTime = "<?php print $total_time;?>";
 <FORM NAME='resp_form' METHOD='get' ACTION='units.php?func=responder&edit=true'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 <FORM NAME='fac_form' METHOD='get' ACTION='facilities.php'>

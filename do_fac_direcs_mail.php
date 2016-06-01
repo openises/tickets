@@ -26,37 +26,12 @@ require_once($_SESSION['fip']);		//7/28/10
 #.plain 	{ background-color: #FFFFFF;}
 </STYLE>
 <?php
-
 if (empty($_POST['frm_u_id']) && empty($_GET['unit_id'])) {
 	print "<CENTER>You must select a Unit first</BR></BR>";
 	print "<A href='javascript: self.close ()'>Close</A></CENTER>";
 	exit();
 	}
 
-if(!array_key_exists('direcs', $_GET)) {
-	$direcs = ($_POST['frm_direcs'] == "") ? $_POST['frm_text'] : $_POST['frm_direcs'];
-	$tick_name = (isset($_POST['frm_scope'])) ? $_POST['frm_scope'] : "";	//10/29/09
-	$the_sms = ((array_key_exists('frm_smsgaddrs', $_POST)) && ($_POST['frm_smsgaddrs'] != "") && ((array_key_exists('frm_use_smsg', $_POST)) && $_POST['frm_use_smsg'] == 1)) ? $_POST['frm_smsgaddrs'] : "";
-	$the_tick = ((isset($_POST['frm_tick_id'])) && ($_POST['frm_tick_id'] != "")) ? $_POST['frm_tick_id'] : 0;	
-	$unit_id = ((isset($_POST['frm_u_id'])) && ($_POST['frm_u_id'] != "")) ? $_POST['frm_u_id'] : 0;
-	$the_addrs = ((isset($_POST['frm_addr'])) && ($_POST['frm_addr'] != "")) ? $_POST['frm_addr'] : "";		
-	$smsg_id = "";
-	$mail_subject = $_POST['frm_mail_subject'];
-	$direcs = str_replace("&nbsp;",' ',$direcs); 
-	$direcs = str_replace("</tr>",'NEWLINE',$direcs);
-	$direcs = str_replace("</td>",' ',$direcs);
-	$direcs = strip_tags($direcs);
-	$direcs = str_replace("NEWLINE",'&#13;&#10;',$direcs);
-	//$direcs = stripslashes($direcs);
-	//$direcs = html_entity_decode($direcs);
-	unset($_POST['frm_direcs']);
-	unset($_POST['frm_u_id']);
-	unset($_POST['frm_tick_id']);
-	unset($_POST['frm_smsgaddrs']);
-	unset($_POST['frm_mail_subject']);
-	unset($_POST['frm_scope']);	//10/29/09
-	$display_form = (array_key_exists('showform', $_POST)) ? true : false;
-}
 if (empty($_POST) || $display_form) {	
 	if(array_key_exists('unit_id', $_GET)) {
 		$unit_id = $_GET['unit_id'];
@@ -82,7 +57,7 @@ if (empty($_POST) || $display_form) {
 ?>
 
 <SCRIPT>
- 	var direcs = "";
+	var direcs = "";
 	
 	function strip_tags(input, allowed) {
 		allowed = (((allowed || '') + '')
@@ -108,7 +83,7 @@ if (empty($_POST) || $display_form) {
 		direcs = strip_tags(direcs);
 		document.mail_form.frm_text.value = direcs;
 		}
-		
+ 
 	String.prototype.trim = function () {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
@@ -177,12 +152,11 @@ if (empty($_POST) || $display_form) {
 <?php
 			}	
 ?>
-		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=2><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60 VALUE = '<?php print $mail_subject;?> - <?php print $tick_name;?>'></TD></TR>		<!-- 10/29/09 -->
+		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=2><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60 VALUE = '<?php print $mail_subject;?>'></TD></TR>		<!-- 10/29/09 -->
 		<TR CLASS='odd'><TD ALIGN='right'>Message:</TD><TD COLSPAN=2> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
 		<TR CLASS='even'><TD ALIGN='center' COLSPAN=3><BR /><BR />
 		<INPUT TYPE="hidden" NAME="frm_direcs" VALUE="">
 		<INPUT TYPE="hidden" NAME="frm_u_id" VALUE='<?php print $unit_id;?>'>
-		<INPUT TYPE="hidden" NAME="frm_tick_id" VALUE='<?php print $the_tick;?>'>		
 		<INPUT TYPE="hidden" NAME="frm_mail_subject" VALUE="">
 		<INPUT TYPE="hidden" NAME="frm_scope" VALUE="">		<!-- 10/29/09 -->
 			<INPUT TYPE='button' 	VALUE='Send' onClick = "validate()">&nbsp;&nbsp;&nbsp;&nbsp;
@@ -194,14 +168,20 @@ if (empty($_POST) || $display_form) {
 		}		// end if (empty($_POST)) {
 
 	else {
-		$theCount = do_send ($the_addrs, $the_sms, $mail_subject, $direcs, $the_tick, $unit_id);	// ($to_str, $subject_str, $text_str )
+		$tick_name = (isset($_POST['frm_scope'])) ? $_POST['frm_scope'] : "";
+		$display_form = (array_key_exists('showform', $_POST)) ? true : false;
+		$the_addrs = ((isset($_POST['frm_addr'])) && ($_POST['frm_addr'] != "")) ? $_POST['frm_addr'] : "";
+		$the_sms = ((array_key_exists('frm_smsgaddrs', $_POST)) && ($_POST['frm_smsgaddrs'] != "") && ((array_key_exists('frm_use_smsg', $_POST)) && $_POST['frm_use_smsg'] == 1)) ? $_POST['frm_smsgaddrs'] : "";
+		$unit_id = ((isset($_POST['frm_u_id'])) && ($_POST['frm_u_id'] != "")) ? $_POST['frm_u_id'] : 0;
+		$smsg_id = "";
+		$mail_subject = $_POST['frm_subj'];
+		$direcs = $_POST['frm_direcs'];
+		$theCount = do_send ($the_addrs, $the_sms, $mail_subject, $direcs, 0, $unit_id);	// ($to_str, $subject_str, $text_str )
 ?>
 	<BODY><CENTER>		
 	<CENTER><BR /><BR /><BR /><H3><?php print $theCount;?> Mail sent</H3>
 	<BR /><BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();'><BR /><BR />
-
 <?php
-
 	}		// end else
 ?> </BODY>
 </HTML>

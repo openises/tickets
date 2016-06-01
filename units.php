@@ -285,9 +285,6 @@ function get_user_details($rosterID) {	//	9/6/13
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
 	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
-<?php 
-if ($_SESSION['internet']) {				// 8/22/10
-?>
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -306,9 +303,6 @@ if ($_SESSION['internet']) {				// 8/22/10
 	<script type="text/javascript" src="./js/usng.js"></script>
 	<script type="text/javascript" src="./js/osgb.js"></script>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
-<?php 
-	} 
-?>
 	<SCRIPT>
 	var sortby = '`date`';	//	11/18/13
 	var sort = "DESC";	//	11/18/13
@@ -474,14 +468,14 @@ if ($_SESSION['internet']) {				// 8/22/10
 			$resp_id = $_POST['frm_id'];
 			$resp_stat = $_POST['frm_un_status_id'];
 			$by = $_SESSION['user_id'];
-		
+			$theFac = 0;
 //			if (($_POST['frm_clr_pos'])=='on') {$the_lat = $the_lng = "NULL";}			// 11/15/09
 
 			if ($_postmap_clear=='on') {$the_lat = $the_lng = "NULL";}					// 11/19/09
 			else {
 				if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
+					$theFac = $_POST['frm_facility_sel'];
 					$query_fac = "SELECT `lat`, `lng`, `id` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
-//					dump($query_fac);
 					$result_fac = mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 					if (mysql_num_rows($result_fac) ==1) {
 						$row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac));
@@ -526,6 +520,7 @@ if ($_SESSION['internet']) {				// 8/22/10
 				`smsg_id`= " . 		quote_smart(trim($_POST['frm_smsg_id'])) . ",				
 				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
 				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
+				`at_facility`= " . 	$theFac . ",
 				`updated`= " . 		quote_smart(trim($now)) . ",
 				`status_updated`= '" . $status_updated . "'
 				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	5/11/11 added internal Tickets tracker, 6/21/13 added field status_updated for auto status function. 9/6/13, 11/18/13, 1/30/14 added xastir tracker
@@ -581,10 +576,21 @@ if ($_SESSION['internet']) {				// 8/22/10
 		$mob_tracker = 	(empty($_POST['frm_mob_tracker']))? 		0: quote_smart(trim($_POST['frm_mob_tracker'])) ;	//	9/6/13
 		$xastir_tracker = 	(empty($_POST['frm_xastir_tracker']))? 		0: quote_smart(trim($_POST['frm_xastir_tracker'])) ;	//	1/30/14
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
+		$theFac = 0;
+		if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
+			$theFac = $_POST['frm_facility_sel'];
+			$query_fac = "SELECT `lat`, `lng`, `id` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
+			$result_fac = mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			if (mysql_num_rows($result_fac) ==1) {
+				$row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac));
+				$the_lat = doubleval($row_fac['lat']);							// apply to unit location
+				$the_lng = doubleval($row_fac['lng']);
+				}	
+			}
 
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`, `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, 
-			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `updated`, `status_updated` )
+			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `at_facility`, `updated`, `status_updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_roster_id'])) . "," .
 				quote_smart(trim($_POST['frm_name'])) . "," .
@@ -620,6 +626,7 @@ if ($_SESSION['internet']) {				// 8/22/10
 				$frm_lng . "," .
 				quote_smart(trim($_POST['frm_type'])) . "," .
 				quote_smart(trim($_SESSION['user_id'])) . "," .
+				$theFac . "," .
 				quote_smart(trim($now)) . "," .
 				quote_smart(trim($now)) . ");";								// 8/23/08, 5/11/11, 6/21/13, 9/6/13, 11/18/13
 

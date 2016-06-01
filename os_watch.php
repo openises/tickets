@@ -1,72 +1,42 @@
 <?php
 /*
-ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `watch` INT(2) NOT NULL DEFAULT '0' COMMENT 'Used in on-scene-watch' AFTER `set_severity`;
-alert (<?php echo __LINE__;?>);
-<!-- <?php echo __LINE__;?> -->
-$_SESSION['osw_ntrupt_ok'] = TRUE;
 2/15/2015 - initial release
-
-	$guest = is_guest();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]{$status_table}` ORDER BY `group` ASC, `sort` ASC, `{$status_field}` ASC";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$dis = ($guest)? " DISABLED": "";								// 9/17/08
-	$the_grp = strval(rand());			//  force initial OPTGROUP value
-	$i = 0;
-	$outstr = ($tbl_in == "u") ? "\t\t<SELECT CLASS='sit' id='frm_status_id_u_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color};' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update({$unit_in}, this.value)' >" :
-	"\t\t<SELECT CLASS='sit' id='frm_status_id_f_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color}; width: 90%;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update_fac({$unit_in}, this.value)' >";	// 12/19/09, 1/1/10. 3/15/11
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_st))) {
-		if ($the_grp != $row['group']) {
-			$outstr .= ($i == 0)? "": "\t</OPTGROUP>";
-			$the_grp = $row['group'];
-			$outstr .= "\t\t<OPTGROUP LABEL='$the_grp'>";
-			}
-		$sel = ($row['id']==$status_val_in)? " SELECTED": "";
-		$outstr .= "\t\t\t<OPTION VALUE=" . $row['id'] . $sel ." STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};'  onMouseover = 'style.backgroundColor = this.backgroundColor;'>$row[$status_field] </OPTION>";
-		$i++;
-		}		// end while()
-	$outstr .= "\t\t</OPTGROUP>\t\t</SELECT>";
-	return $outstr;
-	}
-
-
+9/25/2015 - important correction to base schedule increment on original
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED', 8192 );}		//
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
 require_once('./incs/functions.inc.php');
 
-/*
-snap(basename(__FILE__), __LINE__);
-$_SESSION['osw_ntrupt_ok'] = TRUE;				// false if form is active
-snap(__LINE__, $_SESSION['osw_ntrupt_ok']);
-*/
 if (!array_key_exists ("user_id", $_SESSION)) {$_POST['mode'] = 0;}		//3/6/2015 - close this window
 
 //$GLOBALS['LOG_UNIT_COMMENT']	=24;		// 2/24/2015 - add to log_codes.inc.php!!!!
 
 $evenodd = array ("even", "odd");
 $handle = 		get_text("Handle");
-$contact_via = 	get_text("Contact_via");
+$contact_via = 	get_text("Contact-via");
 $callsign = 	get_text("Callsign");
-$on_scene = 	get_text("On_scene");
+$on_scene = 	get_text("On-scene");
 $nature = 		get_text("Nature");
 $units = 		get_text("Units");
 $unit = 		get_text("Unit");
-$on_scene = 	get_text("On_scene");
 $incident = 	get_text("Incident");
 $contact = 		get_text("Contact-via");
+$addr = 		get_text("Addr");
+$as_of = 		get_text("As-of");
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
-<META HTTP-EQUIV="Expires" CONTENT="0" />
-<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
-<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
-<META http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="content-script-type"	content="text/javascript" />
+<meta http-equiv="script-date" content="<?php print date("n/j/y g:i", filemtime(basename(__file__)));?>" />
+<meta http-equiv="x-ua-compatible" content="ie=emulateie7"/>
+<link rel=stylesheet href="stylesheet.php?version=<?php print time();?>" type="text/css">
 <style>
 td: 		font-size: 1.0em;
 th:			font-weight: 100;  text-align: center;
@@ -80,21 +50,17 @@ var do_NOTE 	 = 12;
 var do_NOTE_DB 	 = 13;
 var do_MAIL 	 = 14;
 var do_MAIL_SEND = 15;
+var do_REFRESH	 = 99;
 
 function reSizeScr() {				// 244			-- 5/23/09
-	var the_height = (document.getElementById('data_tbl').offsetHeight) +200;	// 3/21/2015
-//	alert("55 " + the_height);
+	var the_height = (document.getElementById('data_tbl').offsetHeight) + 120;	// 3/21/2015
+//	alert("57 " + the_height);
 	window.resizeTo((0.60)* screen.width, the_height);		// 10/31/09 - derived via trial/error (more of the latter, mostly)
 	}		// end function re SizeScr()
 
 String.prototype.trim = function () {
 	return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 	};
-function set_orig() {
-<?php
-	if ( array_key_exists ("mode", $_GET) ) { echo "\t document.osw_form.mode_orig.value = {$_GET['mode']};\n";  }
-?>
-	}		// end function set orig()
 
 function do_log (the_unit) {
 	document.osw_form.ref.value = the_unit;
@@ -112,26 +78,18 @@ function do_mail (the_unit) {
 	document.osw_form.submit();
 	}
 function do_can () {					// cancel
-	document.osw_form.mode.value = document.osw_form.mode_orig.value;		// back to normal
+	document.osw_form.mode.value = do_REFRESH;		// force refresh
 	document.osw_form.submit();
 	}
 
 </script>
-</HEAD>
+</head>
 <?php
 //dump($_POST);
-$mode = ( array_key_exists ("mode", $_GET) ) ? $_GET['mode'] : $_POST['mode'];
+//	$mode = ( array_key_exists ("mode", $_GET) ) ? $_GET['mode'] : $_POST['mode'];
+	$mode = ( empty($_POST) ) ? 1 : $_POST['mode'];		// 9/14/2015
 
 @session_start();
-
-	$query_core = "SELECT `t`.`severity`, `t`.`scope`, `t`.`status` AS `tickstatus`, CONCAT_WS(' ', `t`.`street`, `t`.`city`, `t`.`state`) AS `tickaddr`, `y`.`type`, `on_scene`, `handle`, `contact_via`, `r`.`callsign` AS `unit_call`, `r`.`id` AS `unitid`, `t`.`id` AS `tickid`, `u`.`expires`
-			FROM `$GLOBALS[mysql_prefix]assigns` `a`
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	`t` 	ON (`a`.`ticket_id` 	= `t`.`id`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	`r` 	ON (`a`.`responder_id` 	= `r`.`id`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]user`		`u` 	ON (`u`.`responder_id` 	= `a`.`responder_id`)
-			WHERE ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
-			AND ((`on_scene` IS  NOT NULL) AND  (DATE_FORMAT(`on_scene`,'%y') <> '00')) ";
 
 $severities = array();
 $severities[$GLOBALS['SEVERITY_NORMAL']] 	= "severity_normal";
@@ -142,155 +100,178 @@ $os_w_setting = get_variable('os_watch');
 $os_w_arr = explode ("/", $os_w_setting);			// p, n, r
 
 switch ($mode) {
-    case 0:		// close window
+    case 0:		// force close window
 ?>
 <BODY onload = "setTimeout(function(){ window.close(); }, 2500);">		<!-- window.resizeBy(-200, -100); window.resizeTo(aWidth, aHeight) -->
 <br /><br /><br /><br /><br /><br /><center><h2>Window closing</h2></center>
 </body>
+
 <?php
 		break;		// end case 0
 
-    case 1:		// show data
-    case 2:
-//        $_SESSION['osw_ntrupt_ok'] = TRUE;		// on-scene watch interrupt allowed (monitored by get_latest_id)
+  case 1:		// show data
+
+		// 		following sql is cloned from os_watch.php - differentiated by $limit value
+
+		function qc () {		//	 `a`.`as_of` AS `the_asof`, un_status status_val
+			return "SELECT '0' AS `mode`,
+				`t`.`severity`,
+				`t`.`scope`,
+				`t`.`status` AS `tickstatus`,
+				CONCAT_WS(' ', `t`.`street`, `t`.`city`, `t`.`state`) AS `tickaddr`,
+				`y`.`type`,
+				`a`.`on_scene`,
+				`r`.`handle`,
+				`r`.`contact_via`,
+				`r`.`callsign` AS `unit_call`,
+				`r`.`id` AS `unitid`,
+				`t`.`id` AS `tickid`,
+				`u`.`expires`,
+				`a`.`as_of` AS `the_asof`,
+				`s`.`status_val` AS `unit_status`
+					FROM `$GLOBALS[mysql_prefix]assigns` `a`
+					LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	`t` 	ON (`a`.`ticket_id` 	= `t`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	`r` 	ON (`a`.`responder_id` 	= `r`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]user`		`u` 	ON (`u`.`responder_id` 	= `a`.`responder_id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	`s` 	ON (`r`.`un_status_id` 	= `s`.`id`)
+					WHERE ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
+					AND ((`on_scene` IS NOT NULL) AND (DATE_FORMAT(`on_scene`,'%y') <> '00')) ";
+					}		// end function
+
+		function q0 ($lim) {	//	PRIORITIES medium and high on-scene:
+			return qc () . " AND `severity` <> {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$lim}";
+			}		// end function
+
+		function q1 ($lim) {	//	PRIORITY normal on-scene:
+			return qc () . " AND `severity` = {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$lim}";
+			}		// end function
+
+		function q2 ($lim) { return	"SELECT
+					'1' AS `mode`,
+					`t`.`id` AS `tickid`,
+					CONCAT_WS(' ', `t`.`street`, `t`.`city`, `t`.`state`) AS `tickaddr`,
+					`t`.`severity`,
+					`t`.`scope`,
+					`t`.`status` AS `tickstatus`,
+					`t`.`updated` AS `the_asof`,
+					`y`.`type`
+						FROM `$GLOBALS[mysql_prefix]ticket` `t`
+						LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `y` ON (`t`.`in_types_id` = `y`.`id`)
+						LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a` ON (`a`.`ticket_id` = `t`.`id`)
+					WHERE ( `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']} )
+					AND ( (`a`.`on_scene` IS NULL ) OR ( DATE_FORMAT(`a`.`on_scene`,'%y') = '00') )
+					AND `y`.`watch` = 1
+					ORDER BY `t`.`severity` DESC, `t`.`scope` ASC LIMIT {$lim} ";
+					}		// end function
+
+
+		function do_row($row) {
+			global $severities, $now, $i, $incs_shown, $evenodd ;
+			$closed = ($row['tickstatus'] == $GLOBALS['STATUS_CLOSED'] ) ? " closed" : "";				// line-through 4/9/2015
+			$the_addr = addslashes(shorten($row['tickaddr'], 24) );
+			if ( $row ['mode'] == 0) {										// responder on-scene
+				$sev_cls = $severities[$row['severity']];					// severity class
+				$date = date(get_variable("date_format"), strtotime($row['on_scene']) );
+				$the_asof = date(get_variable("date_format"), strtotime($row['the_asof']) );
+				$the_status = shorten ($row['unit_status'], 10);
+				$mail_onclick = (is_email($row['contact_via'])) ? "onclick = 'do_mail({$row['unitid']});'" : "" ;
+				$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
+				echo "<tr class = '{$evenodd[($i%2)]}'>
+					<td class = '{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['handle']}</td>
+					<td class = '{$sev_cls}' align = 'center'>{$online}</td>
+					<td class = '{$sev_cls}'>{$date} ({$the_status})</td>
+					<td class = '{$sev_cls}' {$mail_onclick}>{$row['contact_via']}</td>
+					<td class = '{$sev_cls} {$closed}' onclick = 'do_note({$row['tickid']})' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$the_addr}');\" >{$row['type']} ({$row['scope']})</td>
+					<td class = '{$sev_cls}'>{$the_addr}</td>
+					<td class = '{$sev_cls}'>{$the_asof}</td>
+					</tr>\n";
+				}
+			else {				// mode = 1, watch this incident
+ 				if ( ! ( in_array (  $row['tickid'] ,  $incs_shown ) ) ) {  		// show incident exactly once
+					array_push ( $incs_shown , $row['tickid'] );
+					$sev_cls = $severities[$row['severity']];					// severity class
+					$the_asof = date(get_variable("date_format"), strtotime($row['the_asof']) );
+					$the_scope = shorten ("{$row['scope']}/{$row['tickaddr']}", 48);
+
+					echo "<tr class = '{$evenodd[($i%2)]}'>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td class = '{$sev_cls} {$closed}' onclick = 'do_note({$row['tickid']})'>{$row['type']} ({$row['scope']})</td>
+						<td class = '{$sev_cls} {$closed}' >{$the_addr}</td>
+						<td class = '{$sev_cls}'>{$the_asof}</td>
+						</tr>\n";
+					}				// end if ( ! ( in_array ... ) )
+
+				}		// end if/else
+			}		// end function
+
+			function do_tbl_header($val){
+				global $handle, $units, $on_scene, $contact_via, $addr, $nature, $watch_val, $as_of;
+				echo "<center><table id='data_tbl' border = 1 cellpadding = 2 cellspacing = 2 style = 'border-collapse: collapse; overflow: auto;'>";
+				echo "<tr class = 'even header'><th colspan=99 align = center>{$units} Watch ({$val} min. cycle)</th></tr>\n";
+				echo "<tr><th>{$handle}</th><th><img src= 'images/online.png' /></th><th >{$on_scene} (Status)</th><th >{$contact_via}</th><th>{$nature}</th><th>{$addr}</th><th>{$as_of}</th></tr>\n";
+				}
+			function do_tbl_footer() {
+				global $handle, $unit, $contact, $nature, $incident;
+				echo "<tr class = 'even header'><td colspan = 99 align = 'center'><i>Click <b>{$handle}</b> to add {$unit} log entry -- click <b>{$contact}</b> to send text/email -- click <b>{$nature}</b> to add {$incident} note</i></td></tr>";
+				echo "</table>\n";
+				}
+
+		$osw_str = get_variable('os_watch');
+		$osw_arr = explode ("/", $osw_str);			// p, n, r
+
+		$do_audible = ( (count($osw_arr) > 4 ) && ( intval ( $osw_arr[4] ) == 1 ) ) ? "window.opener.parent.frames['upper'].do_audible(); " : "";		// audible notification
+
 ?>
-<BODY onload = "reSizeScr()set_orig();">			<!-- window.resizeBy(-200, -100); window.resizeTo(aWidth, aHeight) -->
+<BODY onload = "reSizeScr(); document.getElementById('data_tbl').style.overflow = 'auto'; <?php echo $do_audible; ?> ">			<!-- window.resizeBy(-200, -100); window.resizeTo(aWidth, aHeight) -->
 <SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <form name = "osw_form" method = post action = "<?php echo basename(__FILE__) ;?>" >
 <input type = hidden name = "mode" value = "<?php echo $mode;?>" />
-<?php
-	$mode_orig = (array_key_exists( "mode_orig", $_POST)) ? $_POST['mode_orig'] : "" ;
-?>
-<input type = hidden name = "mode_orig" value = "<?php echo $mode_orig;?>" />
 <input type = hidden name = "ref" value = "" />
 </form>
 <center>
 <?php
+//			dump ( $_SESSION['osw_run_at'] );
+			$now = ( time() - 30 );								// seconds
+			if ( ! (array_key_exists ( "osw_run_at", $_SESSION ) ) ) { $_SESSION['osw_run_at'] = array ( $now-1, $now-1, $now-1 ) ; }		// initialize routines, normals, priorities
 
-	$mode_cl = ($mode == 2) ? "": " AND `severity` <> {$GLOBALS['SEVERITY_NORMAL']} ";		// 1 = med and high, 2 = all
-	$query = "{$query_core}
-			{$mode_cl}
-			ORDER BY `severity` DESC, `scope` ASC, `handle` ASC ;";
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	echo "<table id='data_tbl' border = 1 cellpadding = 2 cellspacing = 2 style = 'border-collapse: collapse;'>";
-	echo "<tr class = 'even header'><th colspan=99 align = center>{$units} Watch - ({$os_w_arr[($mode-1)]} min. cycle)</th></tr>\n";
-	echo "<tr><th>{$handle}</th><th><img src= 'images/online.png' /></th><th >{$on_scene}</th><th >{$contact_via}</th><th >{$callsign}</th><th>{$nature}</th></tr>\n";
-	$i = 0;
-	$id_arr = array();
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		if ( ! ( in_array ( $row['unitid'] , $id_arr ) ) ) {				// enforce singleton
-			array_push ( $id_arr , $row['unitid']);
-//			dump($id_arr);
-			$sev_cls = $severities[$row['severity']];					// severity class
-		 	$date = date(get_variable("date_format"), strtotime($row['on_scene']) );
-			$mail_onclick = (is_email($row['contact_via'])) ? "onclick = 'do_mail({$row['unitid']});'" : "" ;
-			$now = now_ts();
-			$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
-			$closed = ($row['tickstatus'] == $GLOBALS['STATUS_CLOSED'] ) ? " closed" : "";				// line-through 4/9/2015
-			$addr = addslashes($row['tickaddr']);
-			echo "<tr class = '{$evenodd[($i%2)]}'>
-				<td class = '{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['handle']}</td>
-				<td class='{$sev_cls}' align = 'center'>{$online}</td>
-				<td class='{$sev_cls}'>{$date}</td>
-				<td class='{$sev_cls}' {$mail_onclick}>{$row['contact_via']}</td>
-				<td class='{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['unit_call']}</td>
-				<td class='{$sev_cls} {$closed}' onclick = 'do_note({$row['tickid']})' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$addr}');\" >{$row['type']} ({$row['scope']})</td>
-				</tr>\n";
-			$i++;
-			}			// end if ( ! ( in_array ... ) )
-		}			// end while ( ... )
-	echo "<tr class = '{$evenodd[($i%2)]}'><td colspan = 99 align = 'center'><i>Click <b>{$handle}</b> to add {$unit} log entry -- click <b>{$contact}</b> to send text/email  -- click <b>{$nature}</b> to add {$incident} note</i></td></tr>";
-	echo "</table>\n";
-?>
-<button onclick = "window.close();" class='plain text_small' style='float: none; margin-top: 12px;'>Close</button>
-<?php
-        break;
+			$watch_val = "";
+			$q_arr = array( q0 (1) , q1 (1) , q2 (1) );			// first, probe
 
-    case 3:			// 3/28/2015
-        $_SESSION['osw_ntrupt_ok'] = TRUE;		// on-scene watch interrupt allowed (monitored by get_latest_id)
-?>
-<BODY onload = "reSizeScr(); set_orig();">									<!-- window.resizeBy(-200, -100); window.resizeTo(aWidth, aHeight) -->
-<form name = "osw_form" method = post action = "<?php echo basename(__FILE__) ;?>" >
-<input type = hidden name = "mode" value = "<?php echo $mode;?>" />
-<?php
-	$mode_orig = (array_key_exists( "mode_orig", $_POST)) ? $_POST['mode_orig'] : "" ;
-?>
-<input type = hidden name = "mode_orig" value = "<?php echo $mode_orig;?>" />
-<input type = hidden name = "ref" value = "" />
-</form>
-<center>
-<?php
+			for ($j=0; $j< 3; $j++) {
+				if ($now >= $_SESSION['osw_run_at'][$j]) {						// seconds
+					$result = mysql_query($q_arr[$j]) or do_error($q_arr[$j], 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					if (mysql_num_rows($result)> 0) {
+						$watch_val = $osw_arr[$j];								// time slice for display purposes
+						}
+					}						// end if ($now ... )
+				}						// end for ()
 
-	$mode_cl = ($mode == 2) ? "": " AND `severity` <> {$GLOBALS['SEVERITY_NORMAL']} ";		// 1 = med and high, 2 = all
-	$query = "{$query_core}
-			{$mode_cl}
-			ORDER BY `severity` DESC, `scope` ASC, `handle` ASC ;";
-	snap(__LINE__, $query);
+			do_tbl_header($watch_val);
+			$incs_shown = array();											// empty
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	echo "<table id='data_tbl' border = 1 cellpadding = 2 cellspacing = 2 style = 'border-collapse: collapse;'>";
-	echo "<tr class = 'even header'><th colspan=99 align = center>{$units} Watch - ({$os_w_arr[($mode-1)]} min. cycle)</th></tr>\n";
-	echo "<tr><th >{$handle}</th><th><img src= 'images/online.png' /></th><th >{$on_scene}</th><th >{$contact_via}</th><th >{$callsign}</th><th>{$nature}</th></tr>\n";
-	$i = 0;
+			$q_arr = array( q0 (9999) , q1 (9999) , q2 (9999) );			// then, pull n/j/y H:i
+			for ($j=0; $j< 3; $j++) {
+				if ($now >= $_SESSION['osw_run_at'][$j]) {					// seconds
+					$_SESSION['osw_run_at'][$j] +=  ( $osw_arr[$j] * 60 ) ;				// set next - nth entry to seconds - 9/25/2015
 
-	$id_arr = array();
-	$now = now_ts();
+					$result_x = mysql_query($q_arr[$j]) or do_error($q_arr[$j], 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					if (mysql_num_rows($result_x) > 0) {
+						while ( $row = mysql_fetch_array ( $result_x, MYSQL_ASSOC)) {
+							do_row ( $row );
+							}
+						}				// end if (mysql_num_rows ... )
+					}				// end if ($now >= ... )
+				}				// end for ()
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		if ( ! ( in_array ( $row['unitid'] , $id_arr ) ) ) {			// ensure singleton
-			array_push ( $id_arr , $row['unitid']);
-//			dump($id_arr);
-			$sev_cls = $severities[$row['severity']];					// severity class
-		 	$date = date(get_variable("date_format"), strtotime($row['on_scene']) );
-			$mail_onclick = (is_email($row['contact_via'])) ? "onclick = 'do_mail({$row['unitid']});'" : "" ;
-			$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
-			echo "<tr class = '{$evenodd[($i%2)]}'>
-				<td class = '{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['handle']}</td>
-				<td class='{$sev_cls}' align = 'center'>{$online}</td>
-				<td class='{$sev_cls}'>{$date}</td>
-				<td class='{$sev_cls}' {$mail_onclick}>{$row['contact_via']}</td>
-				<td class='{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['unit_call']}</td>
-				<td class='{$sev_cls}' onclick = 'do_note({$row['tickid']})'>{$row['type']} ({$row['scope']})</td>
-				</tr>\n";
-			$i++;
-			}		// end if ( ! ( in_array ... ) )
-		}		// end while()
+			do_tbl_footer();
+		  	echo "<button onclick = 'window.close();' class='plain text_small' style = 'float: none; margin-top: 12px;'>Close</button>\n";
 
-	$query = "SELECT `r`.`handle`, `r`.`contact_via`, `r`.`callsign` AS `unit_call`, `r`.`id` AS `unitid`, `s`.`status_val`, NULL AS `expires`
-		FROM `$GLOBALS[mysql_prefix]responder` `r`
-		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`r`.`un_status_id` = `s`.`id`)
-		WHERE `s`.`watch` > 0
-		ORDER BY `handle` ASC;";															// routine
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$sev_cls = "severity_normal";
-	$gt_status = get_text("Status");
-
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		if ( ! ( in_array ( $row['unitid'] , $id_arr ) ) ) {			// ensure singleton
-			array_push ( $id_arr , $row['unitid']);
-//			dump($id_arr);
-			$mail_onclick = (is_email($row['contact_via'])) ? "onclick = 'do_mail({$row['unitid']});'" : "" ;
-			$online =  "";
-			echo "<tr class = '{$evenodd[($i%2)]}'>
-				<td class = '{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['handle']}</td>
-				<td class='{$sev_cls}' align = 'center'>{$online}</td>
-				<td class='{$sev_cls}'>{$gt_status}: {$row['status_val']}</td>
-				<td class='{$sev_cls}' {$mail_onclick}>{$row['contact_via']}</td>
-				<td class='{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['unit_call']}</td>
-				<td class='{$sev_cls}'></td>
-				</tr>\n";
-			$i++;
-			}				// end if ()
-		}				// end while()
-
-	echo "<tr class = '{$evenodd[($i%2)]}'><td colspan = 99 align = 'center'><i>Click <b>{$handle}</b> to add {$unit} log entry -- click <b>{$contact}</b> to send text/email  -- click <b>{$nature}</b> to add {$incident} note</i></td></tr>";
-	echo "</table>\n";
-?>
-<button onclick = "window.close();"  class='plain text_small' style = 'float: none; margin-top: 12px;'>Close</button>
-<?php
-		break;		// end case 3 - 3/28/2015
-
+			break;		// end case 1
     case 10:		// log entry
 
     	$query = "SELECT `handle` FROM `$GLOBALS[mysql_prefix]responder` `r` WHERE `id` = {$_POST['ref']} LIMIT 1";
@@ -302,15 +283,14 @@ switch ($mode) {
 <center><table border = 0 style = 'margin-top:40px;'>
 <tr class = 'even'><th colspan=2><?php echo $row['handle']; ?> Log entry</th></tr>
 <tr class = 'odd'><td><textarea name="frm_comment" cols="72" rows="1" wrap="virtual" placeholder="Log entry here ..."></textarea></td></tr>
-<tr class = 'even'><td><span style ='display: table; margin: 0 auto;'>
-	<input type = 'button' value='Next' 	class='plain text_small' onClick="document.osw_form.submit()" />
-	<input type = 'button' value='Reset'  	class='plain text_small' style = "margin-left:20px;" onClick="document.osw_form.reset()" />
-	<input type = 'button' value='Cancel'  	class='plain text_small' style = "margin-left:20px;" onClick = 'document.osw_form.mode.value = document.osw_form.mode_orig.value; document.osw_form.submit()' />
+<tr class = 'even'><td align='center'><span style ='text-align: center; margin: 0 auto;'>
+	<input type = 'button' value='Next' 	class='plain text_small' onClick= 'this.form.submit();' style = 'margin-left:100px;'/>
+	<input type = 'button' value='Reset'  	class='plain text_small' style = "margin-left:20px;" onClick = 'document.osw_form.reset();' />
+	<input type = 'button' value='Cancel'  	class='plain text_small' style = "margin-left:20px;" onClick = 'do_can ();' />
 	</span></td></tr>
 </table>
-<input type = hidden name = "mode" 		value = 11 /> <!-- do_LOG_DB  -->
-<input type = hidden name = "mode_orig" value = "<?php echo $_POST['mode_orig'];?>" />
-<input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
+<input type = hidden name = "mode"	value = 11 /> <!-- do_LOG_DB  -->
+<input type = hidden name = "ref" 	value = "<?php echo $_POST['ref'];?>" />
 </form>
 
 </body>
@@ -320,24 +300,17 @@ switch ($mode) {
     case 11:		// log entry db
         $_SESSION['osw_ntrupt_ok'] = TRUE;		// on-scene watch interrupt allowed (monitored by get_latest_id)
 		$comment = shorten (htmlentities(strip_tags($_POST['frm_comment']), ENT_QUOTES), 2040 );
-	    do_log($GLOBALS['LOG_UNIT_COMMENT'], 0, $_POST['ref'], $comment);	//
+	    do_log($GLOBALS['LOG_COMMENT'], 0, $_POST['ref'], $comment);	//
 ?>
-<script>
-function do_cont() {
-	document.osw_form.submit());
-	}
-
-</script>
-<body onload = "setTimeout(function(){ osw_form.submit(); }, 2500);">			<!-- <?php echo __LINE__;?> -->
-<form name="osw_form" method = "post" 	action="<?php echo basename(__FILE__);?>">
-<input type = hidden name = "mode" 		value = "<?php echo $_POST['mode_orig'];?>" />
-<input type = hidden name = "mode_orig" value = "<?php echo $_POST['mode_orig'];?>" />
-<input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
+<body onload = "setTimeout(function(){ do_can();}, 1500);">			<!-- <?php echo __LINE__;?> -->
+<center><span style = "margin-top:60px"><br /><br /><h3>Log entry written</h3></span>
+<form name="osw_form" method = "post" action="<?php echo basename(__FILE__);?>">
+<input type = hidden name = "mode" value = "" /> <!-- do_LOG_DB  -->
 </form>
-<center><span style = "margin-top:60px"><br /><<br /><h2>Log entry complete</h2></span>
-</body>
 <?php
+
         break;
+
     case 12:		// add note
     	$query = "SELECT  `t`.`scope`, `y`.`type` FROM `$GLOBALS[mysql_prefix]ticket` `t`
 			LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
@@ -358,7 +331,6 @@ function do_cont() {
 ?>
 <script>
 	function validate () {
-//		alert(335);
 		if(document.osw_form.frm_text.value.trim().length==0) {
 			alert("Enter text - or Cancel");
 			return false;
@@ -369,7 +341,6 @@ function do_cont() {
 		}
 
 	function set_signal(inval) {
-//		alert("346 " + inval );
 		var temp_ary = inval.split("|", 2);		// inserted separator
 		document.osw_form.frm_text.value+=" " + temp_ary[1] + ' ';		// text only
 		document.osw_form.frm_text.focus();
@@ -379,12 +350,11 @@ function do_cont() {
 <center>
 <br /><br />
 
-<h3><?php echo "{$incident}: {$row['type']} ({$row['scope']})";?>
+<h3><?php echo "{$incident}: {$row['type']} ({$row['scope']})";?></h3>
 <br /><br />
 
 <form name='osw_form' method='post' action = '<?php echo basename(__FILE__) ;?>'>
 <input type = hidden name = "mode" 			value = "13" />									<!-- do_NOTE_DB -->
-<input type = hidden name = "mode_orig" 	value = "<?php echo $_POST['mode_orig'];?>" />
 <input type = hidden name = "ref" 			value = "<?php echo $_POST['ref'];?>" />
 <input type = hidden name = 'frm_type' 		value='' />
 <textarea name='frm_text' cols=70 rows = 2 placeholder = "Enter note text"></textarea>
@@ -406,9 +376,9 @@ Signal &raquo;
 Description &raquo; <input type = 'radio' name='frm_add_to' value='0' checked />&nbsp;&nbsp;&nbsp;&nbsp;
 Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><br />
 <span style ='display: table; margin: 0 auto;'>
-<input type = 'button' value = 'Next' 		class='plain text_small' onClick = 'validate();' />
+<input type = 'button' value = 'Next' 		class='plain text_small' style = "margin-left:250px;" onClick = 'validate();' />
 <input type = 'button' value = 'Reset' 		class='plain text_small' style = "margin-left:20px;" onClick = 'this.form.reset()' />
-<input type = 'button' value = 'Cancel'  	class='plain text_small' style = "margin-left:20px;" onClick = 'document.osw_form.mode.value = document.osw_form.mode_orig.value; document.osw_form.submit()' />
+<input type = 'button' value = 'Cancel'  	class='plain text_small' style = "margin-left:20px;" onClick = 'do_can ();' />
 </span>
 </form>
 <?php
@@ -431,7 +401,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 ?>
-<body onload = "setTimeout(function(){ osw_form.submit(); }, 2500);" >			<!-- <?php echo __LINE__;?> -->
+<BODY onload = "setTimeout(function(){ do_can(); }, 1500);">		<!-- 1/14/10 -->
 <form name = "osw_form" method = "post" 	action = "<?php echo basename(__FILE__); ?>">
 <input type = hidden name = "mode" 		value = "<?php echo $_POST['mode_orig'];?>" /> <!-- original entry  -->
 <input type = hidden name = "mode_orig" value = "<?php echo $_POST['mode_orig'];?>" />
@@ -443,7 +413,6 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 <span style = "margin-top:150px;">
 <h3>Note added to <?php echo $incident . ": '" . $row['type'] . "'"; ?> </h3><br /><br />
 </span>
-</body>
 <?php
         break;
 
@@ -462,23 +431,20 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 <script>
 	var set_text = true;		// default: apply signal to msg text vs. subject
 	function set_signal(inval) {
-//		alert("438 " + inval);
 		var temp_ary = inval.split("|", 2);		// inserted separator
 		if (set_text) {
-			var sep = (document.mail_form.frm_text.value=="")? "" : " ";
-			document.mail_form.frm_text.value+=sep + temp_ary[1] + ' ';
-			document.mail_form.frm_text.focus();
+			var sep = (document.osw_form.frm_text.value=="")? "" : " ";
+			document.osw_form.frm_text.value+=sep + temp_ary[1] + ' ';
+			document.osw_form.frm_text.focus();
 			}
 		else {
-			var sep = (document.mail_form.frm_subj.value=="")? "" : " ";
-			document.mail_form.frm_subj.value+= sep + temp_ary[1] + ' ';
-			document.mail_form.frm_subj.focus();
+			var sep = (document.osw_form.frm_subj.value=="")? "" : " ";
+			document.osw_form.frm_subj.value+= sep + temp_ary[1] + ' ';
+			document.osw_form.frm_subj.focus();
 			}
 		}		// end function set_signal()
 
 	function set_message(message) {	//	10/23/12
-		alert("453 " + message);
-
 		var randomnumber=Math.floor(Math.random()*99999999);
 		var tick_id = <?php print $tik_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
@@ -490,7 +456,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 					} else {
 					var replacement_text = the_text[0];
 					}
-				document.mail_form.frm_text.value += replacement_text;
+				document.osw_form.frm_text.value += replacement_text;
 				}			// end function replacetext_cb()
 		}		// end function set_message(message)
 
@@ -546,7 +512,6 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 
 <form name = 'osw_form' method = post 	action = "<?php echo basename(__FILE__); ?>">
 <input type = hidden name = "mode" 		value = 15 /> 	<!-- do_MAIL_SEND -->
-<input type = hidden name = "mode_orig" value = "<?php echo $_POST['mode_orig'];?>" />
 <input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
 <center>
 			<TABLE ALIGN='center' BORDER = 0 style = 'margin-top:20px;'>
@@ -554,13 +519,13 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 
 				<INPUT TYPE='hidden' NAME='frm_step' VALUE='3'>
 				<TR VALIGN = 'TOP' CLASS='even'><TD ALIGN='right'  CLASS="td_label">To: </TD>
-					<TD><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $row['contact_via']; ?>' SIZE = 36></TD></TR>
+					<TD ALIGN = 'left'><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $row['contact_via']; ?>' SIZE = 36></TD></TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>
-					<TD ALIGN='right' CLASS="td_label">Subject: </TD><TD><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
+					<TD ALIGN='right' CLASS="td_label">Subject: </TD><TD ALIGN = 'left'><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
 				<TR VALIGN = 'TOP' CLASS='even'>
-					<TD ALIGN='right' CLASS="td_label">Message: </TD><TD><TEXTAREA NAME='frm_text' COLS=60 ROWS=2></TEXTAREA></TD></TR>
+					<TD ALIGN='right' CLASS="td_label">Message: </TD><TD ALIGN = 'left'><TEXTAREA NAME='frm_text' COLS=60 ROWS=2></TEXTAREA></TD></TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
-					<TD ALIGN='right' CLASS="td_label">Signal: </TD><TD>
+					<TD></TD><TD ALIGN = 'left'><SPAN  CLASS="td_label">Signal: </SPAN>
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
@@ -571,10 +536,13 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 							}
 ?>
 					</SELECT>
-						<SPAN STYLE='margin-left:20px;'><span style = 'font-weight: bold;'>Apply to:</span>&nbsp;&nbsp; Subject &raquo;<INPUT TYPE='radio' NAME='frm_set_where' VALUE='0' CHECKED onClick = 'set_text = false;'></SPAN>
-						<SPAN STYLE='margin-left:20px;'>Text &raquo;<INPUT TYPE='radio' NAME='frm_set_where' VALUE='1' CHECKED onClick = 'set_text = true;'>&nbsp;&nbsp;</SPAN>
 					</TD>
 				</TR>
+				<TR><TD></TD>
+					<TD ALIGN = 'center'>
+						<SPAN STYLE='margin-left:20px;'><span style = 'font-weight: bold;'>Apply Signal to:</span>&nbsp;&nbsp; Subject &raquo;<INPUT TYPE='radio' NAME='frm_set_where' VALUE='0' CHECKED onClick = 'set_text = false;'></SPAN>
+						<SPAN STYLE='margin-left:20px;'>Text &raquo;<INPUT TYPE='radio' NAME='frm_set_where' VALUE='1' CHECKED onClick = 'set_text = true;'>&nbsp;&nbsp;</SPAN>
+						</TD></TR>
 				<TR VALIGN = 'TOP' CLASS='even' style = 'display: none;'>
 					<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD>
 
@@ -593,10 +561,10 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 					</TD>
 				</TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>
-					<TD ALIGN='center' COLSPAN=2><BR /><BR /><span style ='display: table; margin: 0 auto;'>
-						<input type='button' 	value='Next'   class='plain text_small' onClick = "validate();">
+					<TD></TD><TD ALIGN='center' ><BR /><BR /><span style ='display: table; margin: 0 auto;'>
+						<input type='button' 	value='Next'   class='plain text_small' onClick = "validate();" style = 'margin-left:10px;'>
 						<input type='reset' 	value='Reset'  class='plain text_small' style = 'margin-left:40px;'>
-						<input type='button'	value='Cancel' class='plain text_small' style = "margin-left:40px;" onClick = 'document.osw_form.mode.value = document.osw_form.mode_orig.value; document.osw_form.submit()' />
+						<input type='button'	value='Cancel' class='plain text_small' style = "margin-left:40px;" onClick = 'do_can ();' />
 						</span>
 					</TD>
 				</TR>
@@ -605,48 +573,39 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 				<INPUT type='hidden' NAME='frm_resp_ids' VALUE=''>
 				<INPUT type='hidden' NAME='frm_smsg_ids' VALUE='<?php print $smsg_ids;?>'>
 				<INPUT TYPE='hidden' NAME="use_smsg" VALUE='0'> 		<!-- see do_unit_mail -->
-		</form>
+		</form>	<!-- <?php echo __LINE__ ;?> -->
 
-</body>
 <?php
         break;
 
     case 15:		// var do_MAIL_SEND = 15;
-	        $_SESSION['osw_ntrupt_ok'] = TRUE;		// on-scene watch interrupt allowed (monitored by get_latest_id)
-/*
-//			$smsg_ids = ((isset($_POST['use_smsg'])) && ($_POST['use_smsg'] == 1)) ? $_POST['frm_smsg_ids'] : "";
-			$smsg_ids = ((array_key_exists('use_smsg', $_POST)) && ($_POST['use_smsg'] == 1)) ? $_POST['frm_smsg_ids'] : "";
-			$address_str = $_POST['frm_add_str'];
-			$resp_ids = ((isset($_POST['frm_resp_ods'])) && ($_POST['frm_resp_ids'] != "") && ($_POST['frm_resp_ids'] != 0)) ? $_POST['frm_resp_ids'] : 0;
-			$count = 0;
-			$tik_id = ((isset($_POST['frm_ticket_id'])) && ($_POST['frm_ticket_id'] != 0)) ? $_POST['frm_ticket_id'] : 0;
-//			$count = do_send ($address_str, $smsg_ids, $_POST['frm_subj'], $_POST['frm_text'], $tik_id, $_POST['frm_resp_ids']);	// ($to_str, $to_smsr, $subject_str, $text_str, $ticket_id, $responder_id )
-*/
-			$headers = "";
 			$email_from =   	filter_var(get_variable('email_from'), FILTER_VALIDATE_EMAIL) ;
 			$email_reply_to = 	filter_var(get_variable('email_reply_to'), FILTER_VALIDATE_EMAIL) ;
 			$headers = ($email_from)? 	"From: {$email_from}\r\n" : "";
 			$headers .= ($email_reply_to)? 	"Reply-To: {$email_reply_to}\r\n" : "";
 
-			mail ( $address_str , $_POST['frm_subj'] , $_POST['frm_text'] , $headers );		// pending do_send() working
+			mail ( $_POST['frm_add_str'] , $_POST['frm_subj'] , $_POST['frm_text'] , $headers );		// pending do_send() working
+			@session_start();
+			unset ( $_SESSION['osw_run_at']);		// force refresh
 ?>
-<BODY onload = "setTimeout(function(){ osw_form.submit(); }, 2500);"><CENTER>		<!-- 1/14/10 -->
-<CENTER><BR /><BR /><BR /><H3><?php print "Messages sent: {$count}";?></H3>
-<BR /><BR /><BR /><INPUT TYPE='button' VALUE='Continue' class='plain text_small' onClick = 'do_can();'><BR /><BR />
-
-<?php
-
-
-?>
-<body >			<!-- <?php echo __LINE__;?> -->
+<BODY onload = "setTimeout(function(){ do_can(); }, 1500);"><CENTER>		<!-- 1/14/10 -->
+<CENTER><BR /><BR /><BR /><H3>Message sent - window closing</H3>
 <form name = 'osw_form' method = post 	action = "<?php echo basename(__FILE__); ?>">
-<input type = hidden name = "mode" 		value = "<?php echo $_POST['mode_orig'];?>" /> <!-- original entry  -->
-<input type = hidden name = "mode_orig" value = "<?php echo $_POST['mode_orig'];?>" />
+<input type = hidden name = "mode" 		value = "" />
 <input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
 </form>
-<center>
 
+<?php
+        break;
 
+    case 99:		// refresh
+		@session_start();
+		unset ( $_SESSION['osw_run_at']);		// force refresh
+?>
+<body onload = "document.osw_form.submit();">		<!-- refresh  <?php echo __LINE__;?> -->
+<form name="osw_form" method = "post" action="<?php echo basename(__FILE__);?>">
+<input type = hidden name = "mode" 		value = 1 />
+</form>
 </body>
 <?php
         break;

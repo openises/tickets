@@ -911,10 +911,32 @@ Changes for 3.08A - Additional features and maintenance release
 284.  Addition of Twitter as a message destination. See <A HREF='twitter.txt'>Here</A> for more details.
 
 285.  Revision to sidebar to use pictorial buttons as being more space efficient.
+
+Changes for 3.09A - Maintenance release
+
+286.  Fixes to mobile screen.
+
+287.  Fixes to Map download and default map setting.
+
+288.  Revision to OS Watch.
+	  
+289.  Fix to Phone number lookup in new incident screen.
+
+290.  Fix to Full screen.
+
+291.  Fix to situation screen incident period selection.
+
+292.  Revisions to access level permissions.
+
+293.  Fix to Callboard and removal of callboard from mobile screen.
+
+294.  Revisions to location lookup scripts to increase accuracy.
+
+295.  Fixed Route to facility function. Ability to move responder to that facility.
 	 
 <A NAME = 'bottom'></A>
 
-June '15
+October '15
 Arnie Shore
 Andy Harvey, UK
 

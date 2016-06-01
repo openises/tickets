@@ -1119,7 +1119,7 @@ function do_filelist() {
 function markers_cb2(req) {
 	var the_markers=JSON.decode(req.responseText);
 	if(the_markers[1]) {
-		for (var key = 0; key < the_markers[1].length; key++) { 
+		for (var key = 0; key < the_markers[1].length; key++) {
 			if(key == 0 && the_markers[1][key] == "-1") {
 				return;
 				}
@@ -1171,8 +1171,9 @@ function markers_cb2(req) {
 			}
 		}
 	if(the_markers[0]) {
-		for (var key2 = 0; key2 < the_markers[0].length; key2++) {			
-			var req_id = the_markers[0][key2].id;				
+		for (var key2 = 0; key2 < the_markers[0].length; key2++) {
+			var req_id = parseInt(the_markers[0][key2].id);
+			var theSym = the_markers[0][key2].id;
 			var req_lat = the_markers[0][key2].lat;
 			var req_lng = the_markers[0][key2].lng;	
 			var req_scope = the_markers[0][key2].scope;
@@ -1186,7 +1187,7 @@ function markers_cb2(req) {
 			info_req += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + req_description + "</TD></TR>";
 			info_req += "</TABLE></CENTER><BR />";
 			info_req += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_window(" + req_id + "); reqmarkers[" + req_id + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
-			var reqmarker = createMarker(req_lat, req_lng, theStatus, req_id, info_req, "Request " + req_scope);
+			var reqmarker = createMarker(req_lat, req_lng, theStatus, theSym, info_req, "Request " + req_scope);
 			if(reqmarker) {
 				reqmarker.addTo(map);
 				reqmarkers[req_id] = reqmarker;
@@ -1271,8 +1272,8 @@ function get_the_markers() {
 			}
 		if(the_markers[0]) {
 			for (var key2 = 0; key2 < the_markers[0].length; key2++) {
-				var req_id = parseInt(the_markers[0][0].id);
-				var theSym = the_markers[0][0].id;
+				var req_id = parseInt(the_markers[0][key2].id);
+				var theSym = the_markers[0][key2].id;
 				var req_lat = the_markers[0][key2].lat;
 				var req_lng = the_markers[0][key2].lng;	
 				var req_scope = the_markers[0][key2].scope;

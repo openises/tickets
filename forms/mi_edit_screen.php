@@ -148,6 +148,25 @@ function validate(theForm) {						// Responder form contents validation	8/11/09
 		theForm.submit();													// 7/21/09
 		}
 	}				// end function validate(theForm)
+	
+function do_end(theForm) {
+	elem = $("enddate1");
+	if(elem.style.visibility == "visible") {
+		elem.style.visibility = "hidden";
+		theForm.frm_year_inc_endtime.disabled = true;
+		theForm.frm_month_inc_endtime.disabled = true;
+		theForm.frm_day_inc_endtime.disabled = true;
+		theForm.frm_hour_inc_endtime.disabled = true;
+		theForm.frm_minute_inc_endtime.disabled = true;		
+		} else {
+		elem.style.visibility = "visible";
+		theForm.frm_year_inc_endtime.disabled = false;
+		theForm.frm_month_inc_endtime.disabled = false;
+		theForm.frm_day_inc_endtime.disabled = false;
+		theForm.frm_hour_inc_endtime.disabled = false;
+		theForm.frm_minute_inc_endtime.disabled = false;		
+		}
+	}
 
 </SCRIPT>
 </HEAD>
@@ -170,13 +189,13 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 	$existing_incs[] = $row_x['ticket_id'];
 	}
 	
-$gold_command = ($row['gold_loc'] != 0) ? get_building_details($row['gold_lat']) : null;
-$silver_command = ($row['silver_loc'] != 0) ? get_building_details($row['silver_lat']) : null;
-$bronze_command = ($row['bronze_loc'] != 0) ? get_building_details($row['bronze_lat']) : null;
+$gold_command = ($row['gold_loc'] != 0) ? get_building_details($row['gold_loc']) : null;
+$silver_command = ($row['silver_loc'] != 0) ? get_building_details($row['silver_loc']) : null;
+$bronze_command = ($row['bronze_loc'] != 0) ? get_building_details($row['bronze_loc']) : null;
 
-if($gold_command) {$gold_name = $gold_command[0]; $gold_address = $gold_command[1]; $gold_city = $gold_command[2]; $gold_state = $gold_command[3]; $gold_lat = $gold_command[4]; $gold_lng = $gold_command[5]; }
-if($silver_command) {$silver_name = $silver_command[0]; $silver_address = $silver_command[1]; $silver_city = $silver_command[2]; $silver_state = $silver_command[3]; $silver_lat = $silver_command[4]; $silver_lng = $silver_command[5]; }
-if($bronze_command) {$bronze_name = $bronze_command[0]; $bronze_address = $bronze_command[1]; $bronze_city = $bronze_command[2]; $bronze_state = $bronze_command[3]; $bronze_lat = $bronze_command[4]; $bronze_lng = $bronze_command[5]; }
+if($gold_command) {$gold_name = $gold_command[0]; $gold_address = $gold_command[1]; $gold_city = $gold_command[2]; $gold_state = $gold_command[3]; $gold_lat = floatval($gold_command[4]); $gold_lng = floatval($gold_command[5]); }
+if($silver_command) {$silver_name = $silver_command[0]; $silver_address = $silver_command[1]; $silver_city = $silver_command[2]; $silver_state = $silver_command[3]; $silver_lat = floatval($silver_command[4]); $silver_lng = floatval($silver_command[5]); }
+if($bronze_command) {$bronze_name = $bronze_command[0]; $bronze_address = $bronze_command[1]; $bronze_city = $bronze_command[2]; $bronze_state = $bronze_command[3]; $bronze_lat = floatval($bronze_command[4]); $bronze_lng = floatval($bronze_command[5]); }
 
 if(!$gold_command) {
 	$gold_name = $row['gold_street'] . " " . $row['gold_city'] . " " . $row['gold_state'];
@@ -204,7 +223,6 @@ if(!$bronze_command) {
 	$bronze_lat = floatval($row['bronze_lat']);
 	$bronze_lng = floatval($row['bronze_lng']);
 	}
-	
 ?>
 <BODY>
 <SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
@@ -234,8 +252,20 @@ if(!$bronze_command) {
 				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_startime', strtotime($row['inc_startime']), FALSE);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident End Time / Date">End Date/Time</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
-				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_endtime', strtotime($row['inc_endtime']), FALSE);?></TD>
+				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident Name">End Date/Time</A>:&nbsp;<input type="checkbox" name="end_but" onClick ="do_end(this.form);" />&nbsp;</TD>
+				<TD COLSPAN=3 >
+<?php
+				if(is_date($row['inc_endtime'])) {
+?>
+					<SPAN style = "visibility:visible" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', strtotime($row['inc_endtime']), FALSE);?></SPAN></TD>
+<?php
+				} else {
+?>
+					<SPAN style = "visibility:hidden" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', 0, TRUE);?></SPAN></TD>
+<?php
+				}
+?>
+				</TD>
 			</TR>
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Type of Major Incident"><?php print get_text("MI Type");?></A>:</TD>
@@ -276,7 +306,7 @@ if(!$bronze_command) {
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Gold Command");?>"><?php print get_text("Gold Command");?></A>:</TD>
 				<TD>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_gold" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'gold_command_data');">	<!--  11/17/10 -->
+						<SELECT NAME="frm_gold" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'gold_command_data'); showtheDiv('gold_location_data');">	<!--  11/17/10 -->
 							<OPTION VALUE=0>Select Gold Command</OPTION>
 <?php
 							$query_gold = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
@@ -288,13 +318,23 @@ if(!$bronze_command) {
 ?>
 						</SELECT>
 					</SPAN>
-					<DIV id='gold_command_data'>
+<?php
+					if($row['gold'] != 0) {
+?>
+					<DIV id='gold_command_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='gold_command_data' style='display: none;'>
+<?php
+					}
+?>
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][4];
 										}
 ?>
@@ -304,7 +344,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Email 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][5];
 										}
 ?>
@@ -314,7 +354,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][6];
 										}
 ?>
@@ -324,7 +364,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][7];
 										}
 ?>
@@ -332,6 +372,17 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>
 					</DIV>
+<?php
+					if($row['gold'] != 0) {
+?>
+					<DIV id='gold_location_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='gold_location_data' style='display: none;'>
+<?php
+					}
+?>
 					<TABLE>
 						<TR>
 							<TD class='td_label'>Location</TD>
@@ -342,6 +393,9 @@ if(!$bronze_command) {
 <?php
 								} else {
 								$temp = get_building_only("frm_gold_loc");
+								$gold_street = "";
+								$gold_city = get_variable('def_city');
+								$gold_state = get_variable('def_st');
 								if($temp){
 ?>
 									<TD class='td_data'><?php print $temp;?><BR />
@@ -349,14 +403,23 @@ if(!$bronze_command) {
 									} else {
 ?>
 									<TD class='td_data'>
-<?php										
+<?php
+									if($row['gold_street'] == "") {
+										$gold_street = "";
+										$gold_city = get_variable('def_city');
+										$gold_state = get_variable('def_st');
+										} else {
+										$gold_street = $row['gold_street'];
+										$gold_city = $row['gold_city'];
+										$gold_state = $row['gold_state'];											
+										}
 									}
 ?>
-								<BUTTON type='button' id='gold_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "frm_gold_loc");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
+								<BUTTON type='button' id='gold_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "gold");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
 								<DIV style='width: 100%; display: inline-block; vertical-align: top;'>
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_gold_street' VALUE='<?php print $row['gold_street'];?>' /><BR />
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_gold_city' VALUE='<?php print $row['gold_city'];?>' /></BR>
-									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_gold_state' VALUE='<?php print $row['gold_state'];?>' />							
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_gold_street' VALUE='<?php print $gold_street;?>' /><BR />
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_gold_city' VALUE='<?php print $gold_city;?>' /></BR>
+									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_gold_state' VALUE='<?php print $gold_state;?>' />							
 									<INPUT TYPE='hidden' NAME='frm_gold_lat' VALUE='<?php print $row['gold_lat'];?>'>
 									<INPUT TYPE='hidden' NAME='frm_gold_lng' VALUE='<?php print $row['gold_lng'];?>'>
 								</DIV>
@@ -366,13 +429,14 @@ if(!$bronze_command) {
 ?>
 						</TR>
 					</TABLE>
+					</DIV>
 				</TD>
 			</TR>
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Silver Command");?>"><?php print get_text("Silver Command");?></A>:</TD>
 				<TD>
 					<SPAN style='width: 100%; display: block;'>					
-						<SELECT NAME="frm_silver" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'silver_command_data');">	<!--  11/17/10 -->
+						<SELECT NAME="frm_silver" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'silver_command_data'); showtheDiv('silver_location_data');">	<!--  11/17/10 -->
 							<OPTION VALUE=0>Select Silver Command</OPTION>
 <?php
 							$query_silver = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -384,13 +448,23 @@ if(!$bronze_command) {
 ?>
 						</SELECT>
 					</SPAN>
-					<DIV id='silver_command_data'>
+<?php
+					if($row['silver'] != 0) {
+?>
+					<DIV id='silver_command_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='silver_command_data' style='display: none;'>
+<?php
+					}
+?>
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][4];
 										}
 ?>
@@ -400,7 +474,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Email 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][5];
 										}
 ?>
@@ -410,7 +484,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][6];
 										}
 ?>
@@ -420,7 +494,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][7];
 										}
 ?>
@@ -428,6 +502,17 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>
 					</DIV>
+<?php
+					if($row['silver'] != 0) {
+?>
+					<DIV id='silver_location_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='silver_location_data' style='display: none;'>
+<?php
+					}
+?>
 					<TABLE>
 						<TR>
 							<TD class='td_label'>Location</TD>
@@ -438,6 +523,9 @@ if(!$bronze_command) {
 <?php
 								} else {
 								$temp = get_building_only("frm_silver_loc");
+								$silver_street = "";
+								$silver_city = get_variable('def_city');
+								$silver_state = get_variable('def_st');
 								if($temp){
 ?>
 									<TD class='td_data'><?php print $temp;?><BR />
@@ -445,14 +533,23 @@ if(!$bronze_command) {
 									} else {
 ?>
 									<TD class='td_data'>
-<?php										
+<?php
+									if($row['silver_street'] == "") {
+										$silver_street = "";
+										$silver_city = get_variable('def_city');
+										$silver_state = get_variable('def_st');
+										} else {
+										$silver_street = $row['silver_street'];
+										$silver_city = $row['silver_city'];
+										$silver_state = $row['silver_state'];											
+										}
 									}
 ?>
-								<BUTTON type='button' id='silver_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "frm_silver_loc");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
+								<BUTTON type='button' id='silver_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "silver");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
 								<DIV style='width: 100%; display: inline-block; vertical-align: top;'>
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_silver_street' VALUE='<?php print $row['silver_street'];?>' /><BR />
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_silver_city' VALUE='<?php print $row['silver_city'];?>' /></BR>
-									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_silver_state' VALUE='<?php print $row['silver_state'];?>' />							
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_silver_street' VALUE='<?php print $silver_street;?>' /><BR />
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_silver_city' VALUE='<?php print $silver_city;?>' /></BR>
+									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_silver_state' VALUE='<?php print $silver_state;?>' />							
 									<INPUT TYPE='hidden' NAME='frm_silver_lat' VALUE='<?php print $row['silver_lat'];?>'>
 									<INPUT TYPE='hidden' NAME='frm_silver_lng' VALUE='<?php print $row['silver_lng'];?>'>
 								</DIV>
@@ -461,14 +558,15 @@ if(!$bronze_command) {
 								}
 ?>
 						</TR>
-					</TABLE>					
+					</TABLE>
+					</DIV>
 				</TD>
 			</TR>
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Bronze Command");?>"><?php print get_text("Bronze Command");?></A>:</TD>
 				<TD>
 					<SPAN style='width: 100%; display: block;'>		
-						<SELECT NAME="frm_bronze" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'bronze_command_data');">	<!--  11/17/10 -->
+						<SELECT NAME="frm_bronze" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'bronze_command_data'); showtheDiv('bronze_location_data');">	<!--  11/17/10 -->
 							<OPTION VALUE=0>Select Bronze Command</OPTION>
 <?php
 							$query_bronze = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
@@ -480,7 +578,17 @@ if(!$bronze_command) {
 ?>
 						</SELECT>
 					</SPAN>
-					<DIV id='bronze_command_data'>
+<?php
+					if($row['bronze'] != 0) {
+?>
+					<DIV id='bronze_command_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='bronze_command_data' style='display: none;'>
+<?php
+					}
+?>
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
@@ -524,6 +632,17 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>
 					</DIV>
+<?php
+					if($row['bronze'] != 0) {
+?>
+					<DIV id='bronze_location_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='bronze_location_data' style='display: none;'>
+<?php
+					}
+?>
 					<TABLE>
 						<TR>
 							<TD class='td_label'>Location</TD>
@@ -534,6 +653,9 @@ if(!$bronze_command) {
 <?php
 								} else {
 								$temp = get_building_only("frm_bronze_loc");
+								$bronze_street = "";
+								$bronze_city = get_variable('def_city');
+								$bronze_state = get_variable('def_st');
 								if($temp){
 ?>
 									<TD class='td_data'><?php print $temp;?><BR />
@@ -541,14 +663,23 @@ if(!$bronze_command) {
 									} else {
 ?>
 									<TD class='td_data'>
-<?php										
+<?php
+									if($row['bronze_street'] == "") {
+										$bronze_street = "";
+										$bronze_city = get_variable('def_city');
+										$bronze_state = get_variable('def_st');
+										} else {
+										$bronze_street = $row['bronze_street'];
+										$bronze_city = $row['bronze_city'];
+										$bronze_state = $row['bronze_state'];											
+										}
 									}
 ?>
-								<BUTTON type='button' id='bronze_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "frm_bronze_loc");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
+								<BUTTON type='button' id='bronze_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "bronze");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
 								<DIV style='width: 100%; display: inline-block; vertical-align: top;'>
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_bronze_street' VALUE='<?php print $row['bronze_street'];?>' /><BR />
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_bronze_city' VALUE='<?php print $row['bronze_city'];?>' /></BR>
-									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_bronze_state' VALUE='<?php print $row['bronze_state'];?>' />							
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_bronze_street' VALUE='<?php print $bronze_street;?>' /><BR />
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_bronze_city' VALUE='<?php print $bronze_city;?>' /></BR>
+									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_bronze_state' VALUE='<?php print $bronze_state;?>' />							
 									<INPUT TYPE='hidden' NAME='frm_bronze_lat' VALUE='<?php print $row['bronze_lat'];?>'>
 									<INPUT TYPE='hidden' NAME='frm_bronze_lng' VALUE='<?php print $row['bronze_lng'];?>'>
 								</DIV>
@@ -557,14 +688,15 @@ if(!$bronze_command) {
 								}
 ?>
 						</TR>
-					</TABLE>					
+					</TABLE>
+					</DIV>
 				</TD>
 			</TR>
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 4 Command");?>"><?php print get_text("Level 4 Command");?></A>:</TD>
 				<TD>
 					<SPAN style='width: 100%; display: block;'>		
-						<SELECT NAME="frm_level4" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level4_command_data');">	<!--  11/17/10 -->
+						<SELECT NAME="frm_level4" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level4_command_data'); showtheDiv('level4_location_data');">	<!--  11/17/10 -->
 							<OPTION VALUE=0>Select Level 4 Command</OPTION>
 <?php
 							$query_row_level4 = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
@@ -576,7 +708,17 @@ if(!$bronze_command) {
 ?>
 						</SELECT>
 					</SPAN>
-					<DIV id='level4_command_data'>
+<?php
+					if($row['level4'] != 0) {
+?>
+					<DIV id='level4_command_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='level4_command_data' style='display: none;'>
+<?php
+					}
+?>
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
@@ -620,6 +762,17 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>
 					</DIV>
+<?php
+					if($row['level4'] != 0) {
+?>
+					<DIV id='level4_location_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='level4_location_data' style='display: none;'>
+<?php
+					}
+?>
 					<TABLE>
 						<TR>
 							<TD class='td_label'>Location</TD>
@@ -630,6 +783,9 @@ if(!$bronze_command) {
 <?php
 								} else {
 								$temp = get_building_only("frm_level4_loc");
+								$level4_street = "";
+								$level4_city = get_variable('def_city');
+								$level4_state = get_variable('def_st');
 								if($temp){
 ?>
 									<TD class='td_data'><?php print $temp;?><BR />
@@ -637,30 +793,40 @@ if(!$bronze_command) {
 									} else {
 ?>
 									<TD class='td_data'>
-<?php										
+<?php
+									if($row['level4_street'] == "") {
+										$level4_street = "";
+										$level4_city = get_variable('def_city');
+										$level4_state = get_variable('def_st');
+										} else {
+										$level4_street = $row['level4_street'];
+										$level4_city = $row['level4_city'];
+										$level4_state = $row['level4_state'];											
+										}
 									}
 ?>
-								<BUTTON type='button' id='level4_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "frm_level4_loc");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
+								<BUTTON type='button' id='level4_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "level4");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
 								<DIV style='width: 100%; display: inline-block; vertical-align: top;'>
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level4_street' VALUE='<?php print $row['level4_street'];?>' /><BR />
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level4_city' VALUE='<?php print $row['level4_city'];?>' /></BR>
-									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_level4_state' VALUE='<?php print $row['level4_state'];?>' />							
-									<INPUT TYPE='hidden' NAME='frm_bronze_lat' VALUE='<?php print $row['level4_lat'];?>'>
-									<INPUT TYPE='hidden' NAME='frm_bronze_lng' VALUE='<?php print $row['level4_lng'];?>'>
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level4_street' VALUE='<?php print $level4_street;?>' /><BR />
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level4_city' VALUE='<?php print $level4_city;?>' /></BR>
+									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_level4_state' VALUE='<?php print $level4_state;?>' />							
+									<INPUT TYPE='hidden' NAME='frm_level4_lat' VALUE='<?php print $row['level4_lat'];?>'>
+									<INPUT TYPE='hidden' NAME='frm_level4_lng' VALUE='<?php print $row['level4_lng'];?>'>
 								</DIV>
 								</TD>						
 <?php							
 								}
 ?>
 						</TR>
-					</TABLE>					
+					</TABLE>
+					</DIV>
 				</TD>
 			</TR>
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 5 Command");?>"><?php print get_text("Level 5 Command");?></A>:</TD>
 				<TD>
 					<SPAN style='width: 100%; display: block;'>		
-						<SELECT NAME="frm_level5" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level5_command_data');">	<!--  11/17/10 -->
+						<SELECT NAME="frm_level5" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level5_command_data'); showtheDiv('level5_location_data');">	<!--  11/17/10 -->
 							<OPTION VALUE=0>Select Level 5 Command</OPTION>
 <?php
 							$query_level5 = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
@@ -672,7 +838,17 @@ if(!$bronze_command) {
 ?>
 						</SELECT>
 					</SPAN>
-					<DIV id='level5_command_data'>
+<?php
+					if($row['level5'] != 0) {
+?>
+					<DIV id='level5_command_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='level5_command_data' style='display: none;'>
+<?php
+					}
+?>
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
@@ -716,6 +892,17 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>
 					</DIV>
+<?php
+					if($row['level5'] != 0) {
+?>
+					<DIV id='level5_location_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='level5_location_data' style='display: none;'>
+<?php
+					}
+?>
 					<TABLE>
 						<TR>
 							<TD class='td_label'>Location</TD>
@@ -726,6 +913,9 @@ if(!$bronze_command) {
 <?php
 								} else {
 								$temp = get_building_only("frm_level5_loc");
+								$level5_street = "";
+								$level5_city = get_variable('def_city');
+								$level5_state = get_variable('def_st');
 								if($temp){
 ?>
 									<TD class='td_data'><?php print $temp;?><BR />
@@ -733,14 +923,23 @@ if(!$bronze_command) {
 									} else {
 ?>
 									<TD class='td_data'>
-<?php										
+<?php
+									if($row['level5_street'] == "") {
+										$level5_street = "";
+										$level5_city = get_variable('def_city');
+										$level5_state = get_variable('def_st');
+										} else {
+										$level5_street = $row['level5_street'];
+										$level5_city = $row['level5_city'];
+										$level5_state = $row['level5_state'];											
+										}
 									}
 ?>
-								<BUTTON type='button' id='level5_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "frm_level5_loc");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
+								<BUTTON type='button' id='level5_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "level5");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
 								<DIV style='width: 100%; display: inline-block; vertical-align: top;'>
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level5_street' VALUE='<?php print $row['level5_street'];?>' /><BR />
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level5_city' VALUE='<?php print $row['level5_city'];?>' /></BR>
-									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_level5_state' VALUE='<?php print $row['level5_state'];?>' />							
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level5_street' VALUE='<?php print $level5_street;?>' /><BR />
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level5_city' VALUE='<?php print $level5_city;?>' /></BR>
+									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_level5_state' VALUE='<?php print $level5_state;?>' />							
 									<INPUT TYPE='hidden' NAME='frm_level5_lat' VALUE='<?php print $row['level5_lat'];?>'>
 									<INPUT TYPE='hidden' NAME='frm_level5_lng' VALUE='<?php print $row['level5_lng'];?>'>
 								</DIV>
@@ -749,14 +948,15 @@ if(!$bronze_command) {
 								}
 ?>
 						</TR>
-					</TABLE>					
+					</TABLE>
+					</DIV>
 				</TD>
 			</TR>
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 6 Command");?>"><?php print get_text("Level 6 Command");?></A>:</TD>
 				<TD>
 					<SPAN style='width: 100%; display: block;'>		
-						<SELECT NAME="frm_level6" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level6_command_data');">	<!--  11/17/10 -->
+						<SELECT NAME="frm_level6" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level6_command_data'); showtheDiv('level6_location_data');">	<!--  11/17/10 -->
 							<OPTION VALUE=0>Select Level 6 Command</OPTION>
 <?php
 							$query_level6 = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";		// 12/18/10
@@ -768,7 +968,17 @@ if(!$bronze_command) {
 ?>
 						</SELECT>
 					</SPAN>
-					<DIV id='level6_command_data'>
+<?php
+					if($row['level6'] != 0) {
+?>
+					<DIV id='level6_command_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='level6_command_data' style='display: none;'>
+<?php
+					}
+?>
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
@@ -812,6 +1022,17 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>
 					</DIV>
+<?php
+					if($row['level6'] != 0) {
+?>
+					<DIV id='level6_location_data' style='display: block;'>
+<?php
+					} else {
+?>
+					<DIV id='level6_location_data' style='display: none;'>
+<?php
+					}
+?>
 					<TABLE>
 						<TR>
 							<TD class='td_label'>Location</TD>
@@ -822,6 +1043,9 @@ if(!$bronze_command) {
 <?php
 								} else {
 								$temp = get_building_only("frm_level6_loc");
+								$level6_street = "";
+								$level6_city = get_variable('def_city');
+								$level6_state = get_variable('def_state');
 								if($temp){
 ?>
 									<TD class='td_data'><?php print $temp;?><BR />
@@ -829,14 +1053,23 @@ if(!$bronze_command) {
 									} else {
 ?>
 									<TD class='td_data'>
-<?php										
+<?php
+									if($row['level6_street'] == "") {
+										$level6_street = "";
+										$level6_city = get_variable('def_city');
+										$level6_state = get_variable('def_state');
+										} else {
+										$level6_street = $row['level6_street'];
+										$level6_city = $row['level6_city'];
+										$level6_state = $row['level6_state'];											
+										}
 									}
 ?>
-								<BUTTON type='button' id='level6_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "frm_level6_loc");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
+								<BUTTON type='button' id='level6_loc_button' onClick='mi_loc_lkup(document.mi_edit_Form, "level6");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;
 								<DIV style='width: 100%; display: inline-block; vertical-align: top;'>
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level6_street' VALUE='<?php print $row['level6_street'];?>' /><BR />
-									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level6_city' VALUE='<?php print $row['level6_city'];?>' /></BR>
-									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_level6_state' VALUE='<?php print $row['level6_state'];?>' />							
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level6_street' VALUE='<?php print $level6_street;?>' /><BR />
+									<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='frm_level6_city' VALUE='<?php print $level6_city;?>' /></BR>
+									<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='frm_level6_state' VALUE='<?php print $level6_state;?>' />							
 									<INPUT TYPE='hidden' NAME='frm_level6_lat' VALUE='<?php print $row['level6_lat'];?>'>
 									<INPUT TYPE='hidden' NAME='frm_level6_lng' VALUE='<?php print $row['level6_lng'];?>'>
 								</DIV>
@@ -845,7 +1078,8 @@ if(!$bronze_command) {
 								}
 ?>
 						</TR>
-					</TABLE>					
+					</TABLE>
+					</DIV>
 				</TD>
 			</TR>			
 			<TR class='spacer'>
@@ -954,8 +1188,8 @@ var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 <?php
@@ -963,29 +1197,29 @@ do_kml();
 ?>
 </SCRIPT>
 <?php
-if(is_float($gold_lat) && is_float($gold_lng)) {
+if((is_float($gold_lat) && $gold_lat != "" && $gold_lat != NULL) && (is_float($gold_lng) && $gold_lng != "" && $gold_lng != NULL)) {
 ?>
 <SCRIPT>
-	var g_lmarker = createLocMarker(<?php print $gold_lat;?>, <?php print $gold_lng;?>, "<?php print $gold_name;?>", 0, 1, "G", "<?php print get_text('Gold Command');?>");
-	g_lmarker.addTo(map);
+	var goldmarker = createLocMarker(<?php print $gold_lat;?>, <?php print $gold_lng;?>, "<?php print $gold_name;?>", 0, 1, "G", "<?php print get_text('Gold Command');?>");
+	goldmarker.addTo(map);
 </SCRIPT>
 <?php
 	}
 	
-if(is_float($silver_lat) && is_float($silver_lng)) {
+if((is_float($silver_lat) && $silver_lat != "" && $silver_lat != NULL) && (is_float($silver_lng) && $silver_lng != "" && $silver_lng != NULL)) {
 ?>
 <SCRIPT>
-	var s_lmarker = createLocMarker(<?php print $silver_lat;?>, <?php print $silver_lng;?>, "<?php print $silver_name;?>", 1, 1, "S", "<?php print get_text('Silver Command');?>");
-	s_lmarker.addTo(map);
+	var silvermarker = createLocMarker(<?php print $silver_lat;?>, <?php print $silver_lng;?>, "<?php print $silver_name;?>", 1, 1, "S", "<?php print get_text('Silver Command');?>");
+	silvermarker.addTo(map);
 </SCRIPT>
 <?php
 	}
 
-if(is_float($bronze_lat) && is_float($bronze_lng)) {
+if((is_float($bronze_lat) && $bronze_lat != "" && $bronze_lat != NULL) && (is_float($bronze_lng) && $bronze_lng != "" && $bronze_lng != NULL)) {
 ?>
 <SCRIPT>
-	var b_lmarker = createLocMarker(<?php print $bronze_lat;?>, <?php print $bronze_lng;?>, "<?php print $bronze_name;?>", 2, 1, "B", "<?php print get_text('Bronze Command');?>");
-	b_lmarker.addTo(map);
+	var bronzemarker = createLocMarker(<?php print $bronze_lat;?>, <?php print $bronze_lng;?>, "<?php print $bronze_name;?>", 2, 1, "B", "<?php print get_text('Bronze Command');?>");
+	bronzemarker.addTo(map);
 </SCRIPT>
 <?php
 	}

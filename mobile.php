@@ -173,13 +173,16 @@ function do_save(in_val) {
 		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
 		rows_arr = frames_obj.rows.split(",", 4);	
 		rows_arr[0] = 0;
-		frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame	
+		frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
+		do_save("h");
+		$('logout_but').style.display = "inline-block";
 		}
 		
 	function show_topframe() {
 		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
 		rows_arr = frames_obj.rows.split(",", 4);	
 		frames_obj.rows = row_str;								// make top frame visible
+		$('logout_but').style.display = "none";
 		}
 
 	function showhideFrame(btn) {
@@ -190,10 +193,12 @@ function do_save(in_val) {
 			frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
 			do_save("h");
 			if($(btn)) { btn.value = "Show Menu"; }
+			$('logout_but').style.display = "inline-block";
 			} else {
 			frames_obj.rows = row_str;								// make top frame visible
 			do_save("s");
-			if($(btn)) { btn.value = "Hide Menu"; }		
+			if($(btn)) { btn.value = "Hide Menu"; }
+			$('logout_but').style.display = "none";
 			}
 		}
 	
@@ -214,7 +219,7 @@ function do_save(in_val) {
 	</script>	
 	<SCRIPT>
 <?php
-if ( get_variable('call_board') == 2) {		// 3/19/11
+if (get_variable('call_board') == 2) {		// 3/19/11
 	$cb_per_line = 22;						// adjust as needed
 	$cb_fixed_part = 60;
 	$cb_min = 96;
@@ -228,14 +233,26 @@ if ( get_variable('call_board') == 2) {		// 3/19/11
 	$height = ($height<$cb_min)? $cb_min: $height;		// vs min
 	$height = ($height>$cb_max)? $cb_max: $height;		// vs max
 ?>
-frame_rows = parent.document.getElementById('the_frames').getAttribute('rows');	// get current configuration
-var rows = frame_rows.split(",", 4);
-rows[1] = <?php print $height ;?>;						// new cb frame height, re-use top
-frame_rows = rows.join(",");
-parent.document.getElementById('the_frames').setAttribute('rows', frame_rows);
-parent.calls.location.href = 'board.php';							// 7/21/10
+	frame_rows = parent.document.getElementById('the_frames').getAttribute('rows');	// get current configuration
+	var rows = frame_rows.split(",", 4);
+	rows[1] = <?php print $height ;?>;						// new cb frame height, re-use top
+	frame_rows = rows.join(",");
+	parent.document.getElementById('the_frames').setAttribute('rows', frame_rows);
+	parent.calls.location.href = 'board.php';							// 7/21/10
 
 <?php
+	} else {
+?>
+	frame_rows = parent.document.getElementById('the_frames').getAttribute('rows');	// get current configuration
+	var rows = frame_rows.split(",", 4);
+	rows[1] = 0;						// new cb frame height, re-use top
+	frame_rows = rows.join(",");
+	parent.document.getElementById('the_frames').setAttribute('rows', frame_rows);
+	if (parent.frames.length == 3) {										// 1/20/09, 4/10/09
+		parent.calls.location.href = 'board.php';							// 1/11/09
+		}
+
+<?php		
 	}		// end if ( get_variable('call_board') == 2) 
 ?>	
 //	- 3/19/11	
@@ -259,6 +276,7 @@ parent.calls.location.href = 'board.php';							// 7/21/10
 		if (parent.frames.length == 3) {										// 1/20/09, 4/10/09
 			parent.calls.location.href = 'board.php';							// 1/11/09
 			}
+			parent.upper.show_butts();
 <?php
 		}		// end unit login
 
@@ -501,6 +519,7 @@ if (mysql_affected_rows()==0) {
 	$caption = ($mode==MINE)? "All calls": $the_unit_name;
 	$frm_mode = ($mode==MINE)? ALL: MINE;
 	$hide_top = (($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) ? "hide_topframe();" : "";
+
 /*
 <BODY onLoad="checkUpper(); start_watch();" onUnload = "end_watch();"> 
 <BODY onLoad="checkUpper();" > <!-- 2/19/12 -->
@@ -514,9 +533,9 @@ if (mysql_affected_rows()==0) {
 <BR /><BR /><BR /><BR />
 <CENTER>
 <?php
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {	//	2/24/14
+if($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) {	//	2/24/14
 ?>
-	<input id="logout_but" type="button" value="Logout" CLASS='hover_lo' onclick="do_logout()"><BR /><BR />
+	<input id="logout_but" style='display: none; float: none' type="btn_not_chkd" value="Logout" CLASS='hover_lo' onclick="do_logout()"><BR /><BR />
 <?php
 	} else {
 ?>
@@ -734,11 +753,12 @@ $hide_top = (($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_varia
 	<TD ID = 'ctr top' ALIGN='center'>
 		<TABLE BORDER=0 >
 <?php
-		if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+		if($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) {
 ?>
-			<TR><TD ALIGN='center'><input id="logout_but" type="button" value="Logout" CLASS='hover_lo' onclick="do_logout()"></TD></TR>
+			<TR><TD ALIGN='center'><input id="logout_but" style='display: none;' type="button" value="Logout" CLASS='btn_not_chkd' onclick="do_logout()"></TD></TR>
 <?php
-			} else {
+			}
+		if($_SESSION['level'] == $GLOBALS['LEVEL_UNIT'] && get_variable('restrict_units') == "0") {
 ?>
 			<TR><TD ALIGN='center'><input id="b1" type="button" value="Hide Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"></TD></TR>
 <?php

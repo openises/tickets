@@ -105,7 +105,7 @@ $the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??
 // AS-OF - 11/3/2012
 $updated = format_sb_date_2 ( $row_fac['updated'] );
 
-if(is_guest()) {
+if(is_guest() || is_unit()) {
 	$toedit = $tomail = "";
 	}
 else {
@@ -191,10 +191,10 @@ if (my_is_float($row_fac['lat'])) {										// position data of any type?
 		$tab_1 .= "<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row_fac['fac_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"facility\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A></TD></TR>";
 			}
 	if ($use_twitter) {							//7/23/15
-		$theInformation = $row_fac['facility_name'] . " at " . $address . ", " . $description . ". <small>Latitude: " . $lat . ", Longitude: " . $lng . "</small>";
+		$theInformation = $row_fac['facility_name'] . " at " . $address . ", " . $description . ". <small>Latitude: " . $row_fac['lat'] . ", Longitude: " . $row_fac['lng'] . "</small>";
 		$tab_1 .= 	"<TR style='height: 25px;'>
 			<TD style='text-align: center;'>
-				<IMG id='twit_" . $the_id . "' class='plain' SRC='./buttons/tweetbutton.png' style='float: none; margin: 0px; padding: 0px; vertical-align: middle;' 
+				<IMG id='twit_" . $fac_id . "' class='plain' SRC='./buttons/tweetbutton.png' style='float: none; margin: 0px; padding: 0px; vertical-align: middle;' 
 				onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'tweetInfo(\"" . $theInformation . "\");'>";
 			}
 	$tab_1 .= "</TD></TR>";

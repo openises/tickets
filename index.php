@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.08A Beta - 08/21/15";	
+$version = "3.09A Beta - 10/17/15";	
 
 /*
 10/1/08 added error reporting
@@ -324,16 +324,53 @@ if (!table_exists("css_night")) {			//	3/15/11
 	do_insert_night_colors('select_menu_text', '151716');			//	3/15/11
 	do_insert_night_colors('label_text', '000000');			//	3/15/11
 	} // end if !table_exists css_night
+	
+function cleanup_captions() {	//	detects and deletes dupe captions, leaves customised ones in place.
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions`;";	// 11/30/10
+	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
+	$num_rows = mysql_num_rows($result);
+	if($num_rows > 0) {
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$caption = quote_smart($row['capt']);
+			$repl = quote_smart($row['repl']);
+			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = " . $caption . ";";
+			$result2 = mysql_query($query2) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$num_rows2 = mysql_num_rows($result2);
+			if($num_rows2 > 1) {
+				$query3 = "DELETE FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = " . $caption . ";";
+				$result3 = mysql_query($query3) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				if($caption != $repl) {
+					$query4 = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES (" . $caption . ", " . $repl . ");";
+					$result4 = mysql_query($query4) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
+					} else {
+					$query4 = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES (" . $caption . ", " . $caption . ");";
+					$result4 = mysql_query($query4) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					}
+				}
+			}
+		}
+	}
 
-function do_caption ($temp, $repl="") { 				// adds a 'captions' table entry - 12/4/10
+function do_caption ($temp, $repl="") { 				// adds a 'captions' table entry - 12/4/10, 01/14/15 added de-dupe function.
 	if($repl == "") { $repl = $temp; }
 	$caption = quote_smart($temp);
 	$repl = quote_smart($repl);	
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = $caption LIMIT 1;";	// 11/30/10
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = " . $caption . ";";	// 11/30/10
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
-	if (mysql_num_rows($result)==0) {	
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES ( $caption, $repl);";
+	$num_rows = mysql_num_rows($result);
+	if ($num_rows==0) {	//	if no current entries for that caption insert a new one
+		$query = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES (" . $caption . ", " . $repl . ");";
 		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
+		}
+	if($num_rows > 1) {	//	if multiple entries exist (an error) delete all where the caption = the replacement value and only leave in custom one
+		$query = "DELETE FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = " . $caption . " AND `repl` = " . $caption . ";";
+		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = " . $caption . ";";	// 11/30/10
+		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		if(mysql_num_rows($result)==0) {	//	if above operation deletes everything insert a new entry where caption = replacement value
+			$query = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES (" . $caption . ", " . $repl . ");";
+			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 		
+			}
 		}
 	return;
 	}
@@ -2064,7 +2101,60 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 			do_setting ('twitter_accesstoken','');        // needs to be setup on twitter account
 			do_setting ('twitter_accesstokensecret','');	//	needs to be setup on twitter account
 			do_setting('unit_can_edit','0');				//	to allow Units to edit Ticket or add actions and notes.
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]major_incidents` ADD `level4_loc` INT(6) NOT NULL DEFAULT '0' AFTER `bronze_lng`, 
+					ADD `level5_loc` INT(6) NOT NULL DEFAULT '0' AFTER `level4_loc`, 
+					ADD `level6_loc` INT(6) NOT NULL DEFAULT '0' AFTER `level5_loc`;";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]major_incidents`
+					ADD `level4` INT(4) NOT NULL AFTER `bronze`,
+					ADD `level5` INT(4) NOT NULL AFTER `level4`,
+					ADD `level6` INT(4) NOT NULL AFTER `level5`,
+					ADD `level4_street` VARCHAR(64) NULL AFTER `level4_loc`,
+					ADD `level4_city` VARCHAR(48) NULL AFTER `level4_street`, 
+					ADD `level4_state` VARCHAR(4) NULL AFTER `level4_city`, 
+					ADD `level4_lat` VARCHAR(16) NULL AFTER `level4_state`, 
+					ADD `level4_lng` VARCHAR(16) NULL AFTER `level4_lat`;";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]major_incidents`
+					ADD `level5_street` VARCHAR(64) NULL AFTER `level5_loc`,
+					ADD `level5_city` VARCHAR(48) NULL AFTER `level5_street`, 
+					ADD `level5_state` VARCHAR(4) NULL AFTER `level5_city`, 
+					ADD `level5_lat` VARCHAR(16) NULL AFTER `level5_state`, 
+					ADD `level5_lng` VARCHAR(16) NULL AFTER `level5_lat`;";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]major_incidents`
+					ADD `level4_street` VARCHAR(64) NULL AFTER `level4_loc`,
+					ADD `level4_city` VARCHAR(48) NULL AFTER `level4_street`, 
+					ADD `level4_state` VARCHAR(4) NULL AFTER `level4_city`, 
+					ADD `level4_lat` VARCHAR(16) NULL AFTER `level4_state`, 
+					ADD `level4_lng` VARCHAR(16) NULL AFTER `level4_lat`;";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]major_incidents`
+					ADD `level6_street` VARCHAR(64) NULL AFTER `level6_loc`,
+					ADD `level6_city` VARCHAR(48) NULL AFTER `level6_street`, 
+					ADD `level6_state` VARCHAR(4) NULL AFTER `level6_city`, 
+					ADD `level6_lat` VARCHAR(16) NULL AFTER `level6_state`, 
+					ADD `level6_lng` VARCHAR(16) NULL AFTER `level6_lat`;";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `at_facility` INT(6) NOT NULL DEFAULT '0' AFTER `type`;";
+			$result = mysql_query($query);
 
+			if (!table_exists("ajax_log")) {
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]ajax_log` (
+					`id` int(6) NOT NULL auto_increment,
+					`info` text NOT NULL,
+					`_when` datetime NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";	
+				$result = mysql_query($query);
+				}
+			cleanup_captions();
 		}		// end (!($version ==...) ==================================================			
 
 //	check_ai("major_incidents");

@@ -276,7 +276,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['facs_list'] = "s";		// 3/15/11
 				$_SESSION['regions_boxes'] = "s";		// 6/10/11				
 				$_SESSION['user_unit_id'] = $row['responder_id'];		//3/19/11
-				$_SESSION['show_hide_upper'] = "Show Menu";		//6/10/11
+				$_SESSION['show_hide_upper'] = "s";		//6/10/11
 				$_SESSION['sh_cond'] = "s";
 				$initLayer = intval(get_variable('default_map_layer'));
 				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");	
@@ -325,6 +325,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					$extra = 'stats_scr.php?stats=stats';
 					} else if($level == $GLOBALS['LEVEL_SERVICE_USER']) {	//	10/11/12
 					$extra = 'portal.php';	
+					} else if($level == $GLOBALS['LEVEL_MEMBER']){
+					$_SESSION = array();
+					@session_destroy();
+					$extra = 'main.php?logout=1';
 					} else {
 					$extra = 'main.php?log_in=1';
 					}

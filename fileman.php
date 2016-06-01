@@ -8,6 +8,10 @@ error_reporting(E_ALL);
 session_write_close();
 require_once($_SESSION['fip']);
 do_login(basename(__FILE__));
+if(!is_administrator() && !is_user()) {
+	print "Not Authorised";
+	exit();
+	}
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

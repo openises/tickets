@@ -59,7 +59,7 @@ if ($istest) {
 	dump($_POST);
 	}
 do_login(basename(__FILE__));	// 9/18/08
-if(is_administrator()) {
+if(is_administrator() || (get_variable('oper_can_edit') == "1")) {
 
 $key_str			= "_id";			// FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier 
 
@@ -94,7 +94,7 @@ if (($mysql_db=="")||($mysql_user=="")) {print "<br><br><br><br>" ; die(" - - - 
 $FK_id = strtolower($key_str);			// set for case independence
 $id_lg = strlen($FK_id);				// lgth of foreign key id string
 $custom	= FALSE;						// custom processor in use
-$can_edit = ((is_super()) || (is_administrator()));										// 3/19/11
+$can_edit = ((is_super()) || (is_administrator()) || (get_variable('oper_can_edit') == "1"));										// 3/19/11
 
 if (!array_key_exists('func', $_POST)) {
 	$func = "l";					// Select table, of C R U D or Select
@@ -1940,5 +1940,6 @@ if ($calstuff!="") {
 </HTML>
 <?php
 } else {
+Print "Not Authorised";
 exit();		//	Exit gracefully with no view of DB if not admin.
 }

@@ -19,7 +19,7 @@ $fill_color = ($row['fill_color'] == null) ? "": $row['fill_color'];
 $fill_opacity = ($row['fill_opacity'] == null) ? "0": $row['fill_opacity'];
 $line_opacity = ($row['line_opacity'] == null) ? 5: $row['line_opacity'];
 switch($row['line_type']) {
-	case "t":
+	case "b":
 		$theType = "Banner";
         break;
 	case "p":
@@ -52,7 +52,7 @@ $row_cat = stripslashes_deep(mysql_fetch_assoc($result_cat));
 $cat_name = $row_cat['category'];
 
 $temp = preg_split("/;/", $row['line_data']);
-$banner_text = (($row['line_type'] == "t") && (($temp[1]) && ($temp[1] !=""))) ? $temp[1] : "";
+$banner_text = (($row['line_type'] == "b") && (($temp[1]) && ($temp[1] !=""))) ? $temp[1] : "";
 $theRadius = (($row['line_type'] == "c") && (($temp[1]) && ($temp[1] != 0))) ? $temp[1] : 0;
 	
 ?>
@@ -106,6 +106,7 @@ function change_type(id) {
 		$('radius').style.display='none';
 		$('ban_text').style.display='none';
 		$('font_size').style.display='none';
+		$('font_size2').style.display='none';
 		$('line_width').style.display='inline';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Polygon";
 		type = "p";
@@ -113,6 +114,7 @@ function change_type(id) {
 		$('radius').style.display='none';
 		$('ban_text').style.display='none';
 		$('font_size').style.display='none';
+		$('font_size2').style.display='none';
 		$('line_width').style.display='inline';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Line";
 		type = "l";
@@ -120,13 +122,15 @@ function change_type(id) {
 		$('radius').style.display='inline';
 		$('ban_text').style.display='none';
 		$('font_size').style.display='none';
+		$('font_size2').style.display='none';
 		$('line_width').style.display='inline';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Circle";
 		type = "c";
-		} else if(id=="t") {
+		} else if(id=="b") {
 		$('radius').style.display='none';
 		$('ban_text').style.display='inline';
 		$('font_size').style.display='inline';
+		$('font_size2').style.display='inline';
 		$('line_width').style.display='none';
 		$('line_width2').style.display='none';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Banner";
@@ -135,6 +139,7 @@ function change_type(id) {
 		$('radius').style.display='none';
 		$('ban_text').style.display='none';
 		$('font_size').style.display='none';
+		$('font_size2').style.display='none';
 		$('line_width').style.display='none';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Error";
 		type = "e";
@@ -144,7 +149,7 @@ function change_type(id) {
 function set_fieldview() {
 	var filled = <?php print $filled;?>;
 	if(filled == 1) {
-		$('fill_cb_tr').style.display = '';
+		$('fill_cb_tr').style.display = 'inline-block';
 		} else {
 		$('fill_cb_tr').style.display = 'none';
 		}
@@ -228,14 +233,14 @@ function set_size() {
 						<SPAN CLASS="td_label">Color &raquo;&nbsp;</SPAN>
 						<SPAN style='background-color: #<?php print $row['line_color'];?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
 						<SPAN CLASS="td_label" id='line_opacity'>&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
-						<SPAN CLASS='td_data'><?php print $row['line_opacity'];?>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+						<SPAN CLASS='td_data' id='line_opacity2'><?php print $row['line_opacity'];?>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
 						<SPAN id='line_width' CLASS="td_label" style='display: none;'>Width &raquo;&nbsp;</SPAN>
 						<SPAN id='line_width2' CLASS='td_data'><?php print $row['line_width'];?>(px)</SPAN>
 						<SPAN CLASS='td_label' id='font_size' style='display: none;'>Font Size &raquo;&nbsp;</SPAN>
-						<SPAN CLASS='td_data'><?php print $row['line_width'];?>(px)</SPAN>
+						<SPAN CLASS='td_data' id='font_size2' style='display: none;'><?php print $row['line_width'];?>(px)</SPAN>
 					</TD>
 				</TR>
-				<TR VALIGN="baseline" CLASS="odd" ID = 'fill_cb_tr'  >
+				<TR VALIGN="baseline" CLASS="odd" ID='fill_cb_tr' style='display: none;'>
 					<TD CLASS="td_label" ALIGN="left">Fill:&nbsp;&nbsp;&nbsp;</TD>
 					<TD CLASS='td_data'>
 						<SPAN ID='fill_details'>
@@ -333,7 +338,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 					<?php print $row['line_width'];?>, 
 					"<?php print $row['line_data'];?>",
 					<?php print $row['id'];?>);	
-			} else if(theType == 't') {
+			} else if(theType == 'b') {
 			draw_banner("<?php print $row['line_name'];?>", 
 					"<?php print $row['line_data'];?>", 
 					<?php print $row['line_width'];?>,
@@ -375,7 +380,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 				var theLatLng = new L.LatLng(theCoords[0], theCoords[1]);
 				path[i] = theLatLng;
 				}
-			polyline = L.polyline([path],{
+			polyline = L.polyline(path,{
 			color: color,
 			weight: width,
 			opacity: opacity,

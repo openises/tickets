@@ -19,18 +19,16 @@ $base = "http://tile.openstreetmap.org";
 $local = "../_osm/tiles";
 $url = "";
 
-function change_osm_permissions() {
-	global $local;
-	$dp = opendir($local);
-	while($file = readdir($dp)) {
-		if (($file == ".") || ($file == ".."))
-			continue;
-		$fullPath = $local."/".$file;
-		if(is_dir($fullPath)) {
-			chmod($fullPath, 0777);
-			chmod_r($fullPath, 0777, 0777);
-			} else {
-			chmod($fullPath, 0777);
+function chmod_r($Path) {
+	$dp = opendir($Path);
+	while($File = readdir($dp)) {
+		if($File != "." AND $File != "..") {
+			if(is_dir($File)){
+				chmod($File, 0750);
+				chmod_r($Path."/".$File);
+				} else {
+				chmod($Path."/".$File, 0644);
+				}
 			}
 		}
 	closedir($dp);
@@ -84,7 +82,7 @@ function do_file ($dir, $subdir, $file) {
 
 do_file($dir, $subdir, $file);
 if($_GET['lastfile'] == "yes") {
-	change_osm_permissions();
+	chmod_r($local);
 	}
 $completed[0] = "Completed";
 $completed[2] = $_GET['lastfile'];

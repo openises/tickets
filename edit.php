@@ -1687,8 +1687,8 @@ if($gmaps) {
 	$('map_canvas').style.height = mapHeight + "px";
 	var theLocale = <?php print get_variable('locale');?>;
 	var useOSMAP = <?php print get_variable('use_osmap');?>;
-	init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-	map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+	var initZoom = <?php print get_variable('def_zoom');?>;
+	init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 	var bounds = map.getBounds();	
 	var zoom = map.getZoom();
 

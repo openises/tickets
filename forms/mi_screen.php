@@ -269,7 +269,7 @@ function do_tab(tabid, suffix, lat, lng) {
 		<DIV style='z-index: 1; position: relative; text-align: center;'>
 <?php
 			if (!(is_guest())) {
-				if ((!(is_user())) && (!(is_unit()))) {
+				if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
 ?>
 					<SPAN id='add_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.add_Form.submit();'>Add new <?php print get_text("Major Incident");?></SPAN>
 <?php

@@ -1123,8 +1123,12 @@ function get_user_group_butts_no_regions($user_id) {		//	6/10/11
 function get_groupname($groupid) {		//	6/10/11
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$groupid'";		//	6/10/11
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$groupname = $row['group_name'];
+	if(mysql_num_rows($result) > 0) {
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$groupname = $row['group_name'];
+			}
+		} else {
+			$groupname = "N/A";
 		}
 	return $groupname;
 	}
@@ -2372,7 +2376,7 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
 		$the_responders = "";
 	}
 
-	$count_cells = $count_ll = $count_smsg = 0; 				// counters	
+	$count_cells = $count_ll = $count_smsg = $count_tweets = 0;; 				// counters	
 	$theaddresses = "";
 	global $istest;
 	require_once('smtp.inc.php');     									// defer load until required - 8/2/10
@@ -2458,7 +2462,6 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
 					$i++;
 					}				// end while (substr($cell_text_...))
 				}		// end if (count($ary_cell_addrs)>0)
-			$count_tweets = 0;
 			if (count($ary_twitter_addrs)>0) {
 				for ($t = 0; $t < count($ary_twitter_addrs); $t++) {
 					$theRet = send_tweet_direct($text_str, NULL, $ary_twitter_addrs[$t]);
@@ -3438,7 +3441,8 @@ function get_facilityname($id) {
 		$ret_val = "NA";
 		} else {
 		$row = stripslashes_deep(mysql_fetch_array($result));
-		$ret_val = $row['handle'];
+		$temp = explode("/", $row['name']);
+		$ret_val = $temp[0];
 		}
 	return $ret_val;
 	}
@@ -3600,7 +3604,7 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 	$theHeight3 = $theHeight * .65;
 	$use_twitter = (get_variable('twitter_consumerkey') != "" && get_variable('twitter_consumersecret') != "" && get_variable('twitter_accesstoken') != "" && get_variable('twitter_accesstokensecret') != "") ? true : false;
 	$print = "<DIV id='window_sidebar' style='position: fixed; top: 30px; right: 0px; width: auto; height: " . $theHeight . "px; font-size: 1.2em; z-index: 50000; background-color: #000000;'>";
-	if($regions) {
+	if((!(is_guest())) && $regions) {
 		if(get_num_groups()) {
 			$print .= "<DIV id='regions_control_outer' style='position: fixed; top: 30px; right: 0px; height: 400px; font-size: 1.2em; z-index: 9999;'>
 				<SPAN id='s_rc' class='plain' TITLE='Regions' style='position: fixed; top: 30px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
@@ -3615,7 +3619,7 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			</DIV>";
 			}
 		}
-	if($files) {
+	if((!(is_guest())) && $files) {
 		$print .= "<DIV id='file_list_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
 			<SPAN id='s_fl' class='plain' TITLE='Files' style='position: fixed; top: 100px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
@@ -3638,7 +3642,7 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			</DIV>
 		</DIV>";
 		}
-	if($messages) {
+	if((!(is_guest())) && $messages) {
 		$print .= "<DIV id='msgs_list_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
 			<SPAN id='s_ms' class='plain' TITLE='Messages' style='position: fixed; top: 170px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;'
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
@@ -3675,7 +3679,7 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			<DIV class='even' id='controls' style='padding: 3px; border: 1px outset #707070; height: " . $theHeight . "px; width: 250px; display: none; font-size: 0.8em; float: right; overflow-y: scroll;'></DIV>
 		</DIV>";
 		}
-	if($more) {
+	if((!(is_guest())) && $more) {
 		$print .= "<DIV id='more_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
 			<SPAN id='s_mo' class='plain' TITLE='More Controls' style='position: fixed; top: 310px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 

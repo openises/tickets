@@ -76,8 +76,10 @@ var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20
 var latLng;
 var in_local_bool = "<?php print get_variable('local_maps');?>";
 var theLocale = <?php print get_variable('locale');?>;
-init_map(3, <?php print $row['lat'];?>, <?php print $row['lng'];?>, "", 13, theLocale, 1);
-map.setView([<?php print $row['lat'];?>, <?php print $row['lng'];?>], 13);
+var useOSMAP = <?php print get_variable('use_osmap');?>;
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(3, <?php print $row['lat'];?>, <?php print $row['lng'];?>, "", parseInt(initZoom), theLocale, useOSMAP, "");
+map.setView([<?php print $row['lat'];?>, <?php print $row['lng'];?>], parseInt(initZoom));
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 

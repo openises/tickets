@@ -92,7 +92,10 @@ if ($istest) {
 	}
 
 if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
-	print "Not Authorized";
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+	$extra = 'mobile.php';
+	header("Location: http://$host$uri/$extra");
 	exit();
 	}
 	

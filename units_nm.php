@@ -99,6 +99,7 @@ function get_user_details($rosterID) {	//	9/6/13
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
 	<SCRIPT  SRC='./js/misc_function.js' type='text/javascript'></SCRIPT>  <!-- 4/14/10 -->
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<SCRIPT >
 
 	try {
@@ -1769,9 +1770,10 @@ if(get_num_groups()) {
 				<INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
 <?php		// 1/2/10
-			print (is_administrator() || is_super())? 	"<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>\n": "" ;
-			print (is_guest())? "" : 					"<INPUT TYPE='button' VALUE='to Dispatch' onClick= \"$('incidents').style.display='block'; $('view_unit').style.display='none';\" STYLE = 'margin-left:12px;'>"; //  8/1/09
-			print (is_guest())? "" : 					"<INPUT TYPE='button' VALUE='Log' onclick = 'unit_log({$row['unit_id']});'>";	//	9/10/13
+			print (is_administrator() || is_super())? 	"<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'>&nbsp;\n": "" ;
+			print (is_guest())? "" : 					"<INPUT TYPE='button' VALUE='to Dispatch' onClick= \"$('incidents').style.display='block'; $('view_unit').style.display='none'; $('theLog').style.display='none';\" STYLE = 'margin-left:12px;'>&nbsp;"; //  8/1/09
+			print (is_guest())? "" : 					"<INPUT TYPE='button' VALUE='to Facility' onClick = 'to_fac_routes(\"" . $row['id'] . "\")' STYLE = 'margin-left:12px;'>&nbsp;"; //  8/1/09
+			print (is_guest())? "" : 					"<INPUT TYPE='button' VALUE='Log' onclick = 'unit_log({$row['id']});'>";	//	9/10/13
 
 ?>
 			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>" />
@@ -1780,8 +1782,10 @@ if(get_num_groups()) {
 			</TD></TR>
 <?php
 			print "</FORM></TABLE>\n";
+			print "<DIV ID='theLog'>";
 			print "\n" . show_assigns(1,$row['id'] ) . "\n";
 			print "\n" . show_unit_log($row['id']) . "\n";	//	9/10/13
+			print "</DIV>";
 ?>
 			<BR /><BR /><BR />
 			<TABLE BORDER=0 ID = 'incidents' STYLE = 'display:none' >
@@ -1842,7 +1846,7 @@ if(get_num_groups()) {
 				}
 			}
 		
-		$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` 
+		$query_t = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id` FROM `$GLOBALS[mysql_prefix]ticket` 
 					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`	
 			WHERE `status` IN ({$GLOBALS['STATUS_OPEN']}, {$GLOBALS['STATUS_SCHEDULED']}) {$instr} {$where2}
 			GROUP BY `$GLOBALS[mysql_prefix]ticket`.`id`";	//	6/10/11
@@ -1855,7 +1859,7 @@ if(get_num_groups()) {
 				default: 							$severityclass='severity_normal'; break;
 				}
 
-			print "\t<TR CLASS ='" .  $evenodd[($i+1)%2] . "' onClick = 'to_routes(\"" . $row_t['id'] . "\")'>\n";
+			print "\t<TR CLASS ='" .  $evenodd[($i+1)%2] . "' onClick = 'to_routes(\"" . $row_t['tick_id'] . "\")'>\n";
 			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['scope']}'>" . 						shorten($row_t['scope'], 24) . "</TD>\n";
 			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['description']}'>" . 				shorten($row_t['description'], 24) . "</TD>\n";
 			print "\t\t<TD CLASS='{$severityclass}' TITLE ='{$row_t['street']} {$row_t['city']}'>" . 	shorten($row_t['street'], 24) . "</TD>\n";
@@ -1903,8 +1907,9 @@ if(get_num_groups()) {
 			<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
 			</FORM>
 			<FORM NAME="fac_routes_Form" METHOD="get" ACTION = "fac_routes_nm.php">
-			<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">						<!-- 10/16/08 -->
-			<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
+			<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">
+			<INPUT TYPE="hidden" NAME="stage" 	VALUE=1>
+			<INPUT TYPE="hidden" NAME="id" 	VALUE="<?php print $id; ?>">
 			</FORM>
 
 							<!-- END UNIT VIEW -->

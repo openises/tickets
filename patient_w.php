@@ -374,7 +374,15 @@ setTimeout("document.next_Form.submit()",1500);
 			<TD><INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='<?php print $row['fullname'];?>' SIZE = '64' <?php print $dis;?> /></TD></TR>
 		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
 			<TD><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='<?php print $row['dob'];?>' SIZE = '24' /></TD></TR>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  <font color='red' size='-1'>*</font></B>&nbsp;&nbsp;</TD>
+		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  
+<?php
+		if(get_variable('locale') != 1) {
+?>
+			<font color='red' size='-1'>*</font>
+<?php
+			}
+?>
+			</B>&nbsp;&nbsp;</TD>
 			<TD>			
 				&nbsp;&nbsp;
 				M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[1];?> <?php print $dis;?> />
@@ -382,8 +390,14 @@ setTimeout("document.next_Form.submit()",1500);
 				&nbsp;&nbsp;T&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 3 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[3];?> <?php print $dis;?>/>
 				&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[4];?> <?php print $dis;?>/>
 			</TD></TR>
-		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
-			<TD><?php echo $ins_sel_str;?></TD></TR>
+<?php
+		if(get_variable('locale') != 1) {
+?>
+			<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
+				<TD><?php echo $ins_sel_str;?></TD></TR>
+<?php
+			}
+?>
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $facilitycontact;?>: &nbsp;&nbsp;</TD>
 			<TD><INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='<?php print $row['facility_contact'];?>' SIZE = '64' <?php print $dis;?>/></TD></TR>
 <?php
@@ -561,7 +575,15 @@ document.list_form.submit();
 			<TD><INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='' SIZE = '64' /></TD></TR>
 		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
 			<TD><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='' SIZE = '24' /></TD></TR>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  <font color='red' size='-1'>*</font></B>&nbsp;&nbsp;</TD>
+		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  
+<?php
+		if(get_variable('locale') != 1) {
+?>		
+			<font color='red' size='-1'>*</font>
+<?php
+			}
+?>
+			</B>&nbsp;&nbsp;</TD>
 			<TD CLASS='td_data'>			
 				&nbsp;&nbsp;
 				M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' />
@@ -569,8 +591,14 @@ document.list_form.submit();
 				&nbsp;&nbsp;T&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 3 onClick = 'this.form.frm_gender_val.value=this.value;' />
 				&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' />
 			</TD></TR>
-		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
-			<TD CLASS='td_data'><?php echo $ins_sel_str;?></TD></TR>
+<?php
+		if(get_variable('locale') != 1) {
+?>
+			<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
+				<TD CLASS='td_data'><?php echo $ins_sel_str;?></TD></TR>
+<?php
+			}
+?>
 		<TR CLASS='odd'>
 			<TD CLASS="td_label">Facility:</TD><TD COLSPAN='2' class='td_label'>
 				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>

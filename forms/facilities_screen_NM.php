@@ -235,13 +235,12 @@ function pageLoaded() {
 			<DIV style='width: 100%; font-size: 12px;'><?php print get_facilities_legend();?></DIV>
 			<BR />
 <?php
-			if ((!(is_user())) && (!(is_unit()))) {
+			if (!(is_guest())) {
+				if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
 ?>
-				<SPAN id='add_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.add_Form.submit();'>Add a <?php print get_text("Facility");?></SPAN>
+					<SPAN id='add_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.add_Form.submit();'>Add a <?php print get_text("Facility");?></SPAN>
 <?php
-				}
-
-			if(may_email()) {
+					}
 ?>
 				<SPAN id='mail_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='do_fac_mail_win();'>Email <?php print get_text("Facilities");?></SPAN>
 <?php

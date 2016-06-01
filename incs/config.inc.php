@@ -275,6 +275,7 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$rsvd_str $ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db - $ticket_rsvd_in_db)." closed, $ticket_in_db total</TD></TR>";
 
 	$type_color=array();												// 1/28/09
+	$type_color[0] = "Error";
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
@@ -498,7 +499,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "hide_booked": 			return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 5/21/2013
 		case "use_responder_mobile": 	return "Use Responder Mobile (rm) page - provides for auto redirect to mobile page for smartphone devices";	 break;	// 9/10/13
 		case "responder_mobile_tracking": 	return "Use inbuilt tracking from Responder Mobile (rm) page. 0 is switched off, a positive whole number is the number of minutes between updates.";	 break;	// 9/10/13
-		case "local_maps": 				return "Use local maps (OSM) for Responder Mobile (rm) page. Requires download of map tiles from config page";	 break;	// 9/10/13
+		case "local_maps": 				return "Use local maps (OSM). Requires download of map tiles from config page";	 break;	// 10/12/15
 		case "cloudmade_api": 			return "Cloudmade API code. Used to provide night mode on Responder Mobile (rm) page.";	 break;	// 9/10/13
 		case "responder_mobile_forcelogin": return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 9/10/13
 		case "use_disp_autostat": 		return "Use Automatic Status updates for Responder status based on changes in dispatch status - Needs setup through config page.";	 break;	// 9/10/13

@@ -610,11 +610,15 @@ function doReset() {
 		`$GLOBALS[mysql_prefix]ticket`.`street` AS `tick_street`,
 		`$GLOBALS[mysql_prefix]ticket`.`city` AS `tick_city`,
 		`$GLOBALS[mysql_prefix]ticket`.`state` AS `tick_state`,		 
-		 `$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
-		 `rf`.`name` AS `rec_fac_name`,
-		 `rf`.`lat` AS `rf_lat`,
-		 `rf`.`lng` AS `rf_lng`,
-		 `$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,
+		`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
+		`rf`.`name` AS `rec_fac_name`,
+		`rf`.`lat` AS `rf_lat`,
+		`rf`.`lng` AS `rf_lng`,
+		`rf`.`name` AS `rec_fac_name`,
+		`rf`.`street` AS `rec_fac_street`,
+		`rf`.`city` AS `rec_fac_city`,
+		`rf`.`state` AS `rec_fac_state`,
+		`$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,
 		 `$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng` 
 		 FROM `$GLOBALS[mysql_prefix]ticket`  
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		

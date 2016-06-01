@@ -655,6 +655,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 
 		<SCRIPT>
 		var latLng;
+		var boundary = [];			//	exclusion zones array
+		var bound_names = [];
 		var mapWidth = <?php print get_variable('map_width');?>+20;
 		var mapHeight = <?php print get_variable('map_height');?>+20;;
 		$('map_canvas').style.width = mapWidth + "px";
@@ -663,7 +665,6 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 		var theLocale = <?php print get_variable('locale');?>;
 		var useOSMAP = <?php print get_variable('use_osmap');?>;
 		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points

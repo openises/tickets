@@ -137,7 +137,7 @@ if((isset($_SESSION['level'])) && ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT'])
 	print "Not Authorized";
 	exit();
 	}
-
+	
 function show_top() {				// generates the document introduction
 ?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -348,7 +348,24 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 
 <?php
 		}				// end if(empty($_SESSION))
-	else {
+	elseif(is_guest()) {
+?>
+</HEAD>
+<SCRIPT>
+	function reSizeFrame(lines) {
+		frame_rows = parent.document.getElementById('the_frames').getAttribute('rows');	// get current configuration
+		var rows = frame_rows.split(",", 4);
+		rows[1] = 0;				// new cb frame height if no assigns; re-use top
+		frame_rows = rows.join(",");
+		parent.document.getElementById('the_frames').setAttribute('rows', frame_rows);		// this does the work
+		}		// end function re SizeScr()
+</SCRIPT>
+<BODY onLoad="reSizeFrame(0);">
+<CENTER><BR><SPAN ID='isguest' ><H3>Call board not provided for guest access</H3></span>
+</BODY>
+</HTML>
+<?php		
+	} else {
 		@session_start();
 		set_sess_exp();				// update session time
 		extract($_POST);

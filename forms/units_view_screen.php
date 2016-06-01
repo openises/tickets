@@ -109,7 +109,7 @@ function to_routes(id) {
 	}
 
 function to_fac_routes(id) {
-	document.fac_routes_Form.fac_id.value=id;			// 10/6/09
+	document.fac_routes_Form.id.value=id;			// 10/6/09
 	document.fac_routes_Form.submit();
 	}
 </SCRIPT>
@@ -178,10 +178,6 @@ $get_messages = ((get_variable('use_messaging') == 1) || (get_variable('use_mess
 <?php
 		if ($_dodisp == 'true') {				// dispatch
 			print "\t<BODY onLoad = 'set_size(); ck_frames(); do_disp();'> <!-- 3281 do_disp -->\n";
-			require_once('./incs/links.inc.php');
-			}
-		if ($_dodispfac == 'true') {				// dispatch to facility
-			print "\t<BODY onLoad = 'set_size(); ck_frames(); do_dispfac();' ><!-- 3285 _dodispfac -->\n";
 			require_once('./incs/links.inc.php');
 			}
 		else {
@@ -297,18 +293,22 @@ $the_type = $temp[0];			// name of type
 				<TD><?php print $row['capab'];?></TD>
 			</TR>
 			<TR CLASS = "odd">
+				<TD CLASS="td_label">Located at Facility: </TD>	
+				<TD><?php print get_facilityname($row['at_facility']);?></TD>
+			</TR>
+			<TR CLASS = "even">
 				<TD CLASS="td_label">Contact name:</TD>	
 				<TD><?php print $row['contact_name'] ;?></TD>
 			</TR>
-			<TR CLASS = "even">
+			<TR CLASS = "odd">
 				<TD CLASS="td_label">Contact via:</TD>	
 				<TD><?php print $row['contact_via'] ;?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR CLASS = "even">
 				<TD CLASS="td_label"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID:</TD>	
 				<TD><?php print $row['smsg_id'] ;?></TD>
 			</TR>
-			<TR CLASS = 'even'>
+			<TR CLASS = 'odd'>
 				<TD CLASS="td_label">As of:</TD>	
 				<TD><?php print format_date($row['updated']); ?></TD>
 			</TR>
@@ -372,7 +372,7 @@ if (isset($rowtr)) {																	// got tracks?
 					print (is_administrator() || is_super())? 	"<INPUT TYPE='button' VALUE='to Edit' onClick= 'to_edit_Form.submit();'  STYLE = 'margin-left: 40px'>\n": "" ;
 					$disp_allowed = ($row_st['dispatch']==2)?  "DISABLED" : "";				// 5/30/10
 					print (is_guest())? "" : 					"<INPUT {$disp_allowed} TYPE='button' VALUE='to Dispatch' STYLE = 'margin-left: 40px' onClick= \"$('incidents').style.display='block'; $('view_unit').style.display='none';\" STYLE = 'margin-left:12px;'>"; //  8/1/09
-					print (is_guest())? "" : 					"<INPUT {$disp_allowed} TYPE='button' VALUE='to Facility' STYLE = 'margin-left: 40px' onClick= \"$('facilities').style.display='block'; $('view_unit').style.display='none';\" STYLE = 'margin-left:12px;'>"; //  8/1/09
+					print (is_guest())? "" : 					"<INPUT {$disp_allowed} TYPE='button' VALUE='to Facility' STYLE = 'margin-left: 40px' onClick= \"to_fac_routes(" . $row['id'] . ")\" STYLE = 'margin-left:12px;'>"; //  8/1/09
 ?>
 				</TD>
 			</TR>
@@ -489,44 +489,13 @@ if (isset($rowtr)) {																	// got tracks?
 			</TR>
 		</TABLE>
 		<BR><BR>
-
-		<BR /><BR />
-		<TABLE BORDER=0 ID = 'facilities' STYLE = 'display:none' >
-			<TR CLASS='odd'>
-				<TH COLSPAN=99 CLASS='header'> Click Facility to route '<?php print $row['handle'] ;?>'</TH>
-			</TR>
-			<TR>
-				<TD></TD>
-			</TR>
-
-<?php																								// 6/1/08 - added
-			$query_fa = "SELECT * FROM $GLOBALS[mysql_prefix]facilities ORDER BY `type`";
-			$result_fa = mysql_query($query_fa) or do_error($query_fa, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-							// major while ... starts here
-			$ff=0;
-			while ($row_fa = stripslashes_deep(mysql_fetch_array($result_fa))) 	{
-				print "\t<TR CLASS ='" .  $evenodd[($ff+1)%2] . "' onClick = 'to_fac_routes(\"" . $row_fa['id'] . "\")'>\n";
-				print "\t\t<TD>" . $row_fa['id'] . "</TD>\n";
-				print "\t\t<TD TITLE ='{$row_fa['name']}'>" . shorten($row_fa['name'], 24) . "</TD>\n";
-				print "\t\t<TD TITLE ='{$row_fa['description']}'>" . shorten($row_fa['description'], 40) . "</TD>\n";
-				print "\t\t</TR>\n";
-				$ff++;
-				}
-?>
-
-			<TR>
-				<TD ALIGN="center" COLSPAN=99><BR /><BR />
-					<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>" onClick = "$('facilities').style.display='none'; $('view_unit').style.display='block';">
-				</TD>
-			</TR>
-		</TABLE>
 	</DIV>
 	<DIV id='rightcol' style='position: absolute; right: 170px; z-index: 1;'>
 		<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
 <SCRIPT>
 		var controlsHTML = "<TABLE id='controlstable' ALIGN='center'>";
 		controlsHTML += "<SPAN class='heading' style='width: 100%; text-align: center; display: inline-block;'>Map Controls</SPAN></BR>";
-		controlsHTML +=	"<TR class='even'><TD><CENTER><TABLE ID='buttons_sh' style='display: <?php print $show_controls;?>;'>";
+		controlsHTML +=	"<TR class='even'><TD><CENTER><TABLE ID='buttons_sh' style='display: inline-block;'>";
 		controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'poly_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR></TABLE></CENTER></TD></TR></TABLE>";
 </SCRIPT>
 			<?php print get_variable('map_caption'); ?>
@@ -542,9 +511,10 @@ print add_sidebar(FALSE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, $id, 0, 0
 <INPUT TYPE="hidden" NAME="ticket_id" 	VALUE="">						<!-- 10/16/08 -->
 <INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
 </FORM>
-<FORM NAME="fac_routes_Form" METHOD="get" ACTION = "<?php print $_SESSION['facroutesfile'];?>">
-<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">						<!-- 10/16/08 -->
-<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
+<FORM NAME="fac_routes_Form" METHOD="get" ACTION = "fac_routes.php">
+<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">
+<INPUT TYPE="hidden" NAME="stage" VALUE=1>
+<INPUT TYPE="hidden" NAME="id" 	VALUE="">
 </FORM>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>

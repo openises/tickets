@@ -26,6 +26,20 @@ $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 require_once($the_inc);
 print do_calls();		// call signs to JS array for validation
+
+function can_do_dispatch($the_row) {
+	if (intval($the_row['multi'])==1) return TRUE;
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";	// all dispatches this unit
+	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
+		if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
+			unset ($result_temp, $row_temp); 
+			return FALSE;
+			}
+		}		// end while ($row_temp ...)
+	unset ($result_temp, $row_temp); 
+	return TRUE;					// none found, can dispatch
+	}		// end function can do_dispatch()
 ?>
 <SCRIPT>
 window.onresize=function(){set_size();}
@@ -432,7 +446,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 				</TR>
 <?php
-				$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` `f`
+				$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `f`.`name` AS `fac_name`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` `f`
 					LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` `t` ON `f`.type = `t`.id 
 					ORDER BY `handle`";
 				$result_fac	= mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -442,10 +456,20 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Unit is located at the selected facility as a home base">Locate at Facility:&nbsp;</A></TD>
 						<TD ALIGN='left'><FONT SIZE='-2'>
 							<SELECT NAME='frm_facility_sel'>
+<?php
+							if($row['at_facility'] != 0) {
+?>
+								<OPTION VALUE=0>Select</OPTION>
+<?php
+								} else {
+?>
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
+								}
 								while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac))) {
-									echo "\t\t<OPTION VALUE = {$row_fac['fac_id']} CLASS = ''>{$row_fac['handle']}</OPTION>\n";
+									$temp = explode("/", $row_fac['fac_name']);
+									$sel = ($row['at_facility'] == $row_fac['fac_id']) ? "SELECTED" : "";
+									echo "\t\t<OPTION VALUE = {$row_fac['fac_id']} CLASS = '' {$sel}>{$temp[0]}</OPTION>\n";
 									}
 ?>
 							</SELECT>
@@ -579,11 +603,17 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					<?php print $cbtext; ?>
 					</TD>
 				</TR>
+<?php
+$tofac = (is_guest())? "" : "<A id='tofac_" . $row['id'] . "' CLASS='plain' style='float: none; color: #000000; width: 100px; display: inline-block;' HREF='fac_routes_nm.php?stage=1&id=" . $row['id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
+$todisp = ((is_guest()) || (!(can_do_dispatch($row))))?					"" : "<A id='disp_" . $row['id'] . "' CLASS='plain' style='float: none; color: #000000; width: 100px; display: inline-block;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&disp=true&id=" . $row['id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";
+?>
 				<TR CLASS="odd" style='height: 30px; vertical-align: middle;'>
 					<TD COLSPAN="2" ALIGN="center" style='vertical-align: middle;'>
 						<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Cancel</SPAN>
 						<SPAN id='reset_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='track_reset(this.form); map_reset();'>Reset</SPAN>
 						<SPAN id='sub_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate(document.res_edit_Form);'>Submit</SPAN>
+						<?php print $todisp;?>
+						<?php print $tofac;?>
 					</TD>
 				</TR>
 			</TABLE>

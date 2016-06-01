@@ -309,7 +309,7 @@ function check_days(id) {
 <?php
 						} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {
 ?>
-						<TR CLASS='even' VALIGN='top'>;
+						<TR CLASS='even' VALIGN='top'>
 							<TD CLASS='td_label'><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?></A>:
 								<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
@@ -738,6 +738,8 @@ print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, $id, 
 		<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>	
 <SCRIPT>
 var latLng;
+var boundary = [];			//	exclusion zones array
+var bound_names = [];
 var in_local_bool = "0";
 var mapWidth = <?php print get_variable('map_width');?>+20;
 var mapHeight = <?php print get_variable('map_height');?>+20;
@@ -745,8 +747,8 @@ $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 

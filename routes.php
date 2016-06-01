@@ -161,13 +161,17 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 	<![endif]-->
-    <link rel="stylesheet" href=".js/leaflet/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href=".js/leaflet/leaflet-routing-machine_2.css" />
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
     <STYLE TYPE="text/css">
 		body 				{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
 		table 				{border-collapse: collapse; }
-		table.directions th {background-color:#EEEEEE;}	  
+		table.directions	{width: 100%;}
+		table.directions th {background-color:#EEEEEE;}
+		table.directions tr {background-color:#EEEEEE;}
+		.stagelink {color: blue; text-decoration: underline; white-space: nowrap;}
+		.stagedistance {color: black; font-weight: bold; white-space: nowrap;}		
 		img 				{color: #000000;}
 		span.even 			{background-color: #DEE3E7;}
 		span.warn			{display:none; background-color: #FF0000; color: #FFFFFF; font-weight: bold; font-family: Verdana, Arial, sans serif; }
@@ -597,25 +601,25 @@ else {
 
 	$the_ticket_id = get_ticket_id ();
 ?>
-	<SCRIPT SRC="./js/usng.js"></SCRIPT>		<!-- 10/14/08 -->
-	<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/leaflet/leaflet-routing-machine.js"></script>
 	<script src="./js/proj4leaflet.js"></script>
 	<script src="./js/leaflet/KML.js"></script>
-	<script src="./js/leaflet/gpx.js"></script>
+	<script src="./js/leaflet/gpx.js"></script>  
+	<script src="./js/osopenspace.js"></script>
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/OSOpenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
 	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
 	<script src="./js/Google.js"></script>
-	<SCRIPT SRC="./js/misc_functions.js"></SCRIPT>
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<script type="text/javascript" src="./js/usng.js"></script>
+	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="text/javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 		iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
@@ -977,11 +981,14 @@ function doReset() {
 		</TD>
 		<TD VALIGN="top">
 			<DIV ID='map_canvas' style='border-style: outset; display: inline-block; z-index: 1;'></DIV>
-			<span id='toggle_dirs' class='plain' style='position: fixed; top: 0px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('directions', 'toggle_dirs', 'Directions')">Show Directions</span><BR />
+			<span id='toggle_dirs' class='plain' style='position: fixed; top: 0px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('directions_outer', 'toggle_dirs', 'Directions')">Show Directions</span><BR />
 			<span id='toggle_tkt' class='plain' style='position: fixed; top: 25px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_ticket', 'toggle_tkt', 'Ticket')">Show Ticket</span><BR />
 			<span id='toggle_msgs' class='plain' style='position: fixed; top: 50px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_messages', 'toggle_msgs', 'Messages')">Show Messages</span><BR />
 			<span id='toggle_dispatch' class='plain' style='position: fixed; top: 75px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('disp_details', 'toggle_dispatch', 'Disp details')">Show Disp Details</span><BR />
-			<DIV ID="directions" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width') * .50;?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: auto; overflow-x: auto; z-index: 9999;">No Directions Available</DIV>
+			<DIV id='directions_outer' class='even' STYLE="position: fixed; top: 125px; right: 0px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; padding: 20px; z-index: 9999;">
+				<SPAN class='heading' style='height: 60px; width: 100%; display: block; font-size: 12px;'>Click stage to show on map, Click title to show alternative route</SPAN><BR />
+				<DIV ID="directions" style=' width: <?php print get_variable('map_width') * .55;?>px; height: <?php print get_variable('map_height');?>px;overflow-y: auto; overflow-x: auto;'>No Directions Available</DIV>
+			</DIV>
 			<DIV ID="disp_details" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; z-index: 9999;">
 				<?php print do_ticket_extras($row_ticket, $the_width, FALSE, FALSE);?>
 			</DIV>

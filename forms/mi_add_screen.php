@@ -222,6 +222,25 @@ function bldg_change(id, theName) {
 		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);			
 		}
 	}
+
+function do_end(theForm) {
+	elem = $("enddate1");
+	if(elem.style.visibility == "visible") {
+		elem.style.visibility = "hidden";
+		theForm.frm_year_inc_endtime.disabled = true;
+		theForm.frm_month_inc_endtime.disabled = true;
+		theForm.frm_day_inc_endtime.disabled = true;
+		theForm.frm_hour_inc_endtime.disabled = true;
+		theForm.frm_minute_inc_endtime.disabled = true;		
+		} else {
+		elem.style.visibility = "visible";
+		theForm.frm_year_inc_endtime.disabled = false;
+		theForm.frm_month_inc_endtime.disabled = false;
+		theForm.frm_day_inc_endtime.disabled = false;
+		theForm.frm_hour_inc_endtime.disabled = false;
+		theForm.frm_minute_inc_endtime.disabled = false;		
+		}
+	}
 </SCRIPT>
 </HEAD>
 <BODY>
@@ -250,8 +269,8 @@ function bldg_change(id, theName) {
 				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_startime', 0, FALSE);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident Name">End Date/Time</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
-				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_endtime', 0, FALSE);?></TD>
+				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident Name">End Date/Time</A>:&nbsp;<input type="checkbox" name="end_but" onClick ="do_end(this.form);" />&nbsp;</TD>
+				<TD COLSPAN=3 ><SPAN style = "visibility:hidden" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', 0, FALSE);?></SPAN></TD>
 			</TR>
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Type of Major Incident"><?php print get_text("MI Type");?></A>:</TD>
@@ -294,7 +313,7 @@ function bldg_change(id, theName) {
 				</TD>
 				<TD COLSPAN='3'>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_gold" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'gold_command_data');">
+						<SELECT NAME="frm_gold" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'gold_command_data'); showtheDiv('gold_location_data');">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -306,31 +325,15 @@ function bldg_change(id, theName) {
 						</SELECT>
 					</SPAN>
 					<DIV id='gold_command_data'>
+					</DIV>
+					<DIV id='gold_location_data' style='display: none;'>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD id='gold_e1' class='td_data'></TD>
+								<TD class='td_label'>Location</TD>
+								<TD class='td_data'><?php print get_building("frm_gold_loc");?></TD>
 							</TR>
-							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD id='gold_e2' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD id='gold_p1' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD id='gold_p2' class='td_data'></TD>
-							</TR>
-						</TABLE>					
+						</TABLE>
 					</DIV>
-					<TABLE>
-						<TR>
-							<TD class='td_label'>Location</TD>
-							<TD class='td_data'><?php print get_building("frm_gold_loc");?></TD>
-						</TR>
-					</TABLE>
 				</TD>
 			</TR>	
 			<TR CLASS='odd' VALIGN="top">
@@ -339,7 +342,7 @@ function bldg_change(id, theName) {
 				</TD>
 				<TD COLSPAN='3'>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_silver" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'silver_command_data');">
+						<SELECT NAME="frm_silver" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'silver_command_data'); showtheDiv('silver_location_data');">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -351,31 +354,15 @@ function bldg_change(id, theName) {
 						</SELECT>
 					</SPAN>
 					<DIV id='silver_command_data'>
+					</DIV>
+					<DIV id='silver_location_data' style='display: none;'>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD id='silver_e1' class='td_data'></TD>
+								<TD class='td_label'>Location</TD>
+								<TD class='td_data'><?php print get_building("frm_silver_loc");?></TD>
 							</TR>
-							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD id='silver_e2' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD id='silver_p1' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD id='silver_p2' class='td_data'></TD>
-							</TR>
-						</TABLE>					
+						</TABLE>
 					</DIV>
-					<TABLE>
-						<TR>
-							<TD class='td_label'>Location</TD>
-							<TD class='td_data'><?php print get_building("frm_silver_loc");?></TD>
-						</TR>
-					</TABLE>					
 				</TD>
 			</TR>	
 			<TR CLASS='even' VALIGN="top">
@@ -384,7 +371,7 @@ function bldg_change(id, theName) {
 				</TD>
 				<TD COLSPAN='3'>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_bronze" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'bronze_command_data');">
+						<SELECT NAME="frm_bronze" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'bronze_command_data'); showtheDiv('bronze_location_data');">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -396,31 +383,15 @@ function bldg_change(id, theName) {
 						</SELECT>
 					</SPAN>
 					<DIV id='bronze_command_data'>
+					</DIV>
+					<DIV id='bronze_location_data' style='display: none;'>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD id='bronze_e1' class='td_data'></TD>
+								<TD class='td_label'>Location</TD>
+								<TD class='td_data'><?php print get_building("frm_bronze_loc");?></TD>
 							</TR>
-							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD id='bronze_e2' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD id='bronze_p1' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD id='bronze_p2' class='td_data'></TD>
-							</TR>
-						</TABLE>					
+						</TABLE>
 					</DIV>
-					<TABLE>
-						<TR>
-							<TD class='td_label'>Location</TD>
-							<TD class='td_data'><?php print get_building("frm_bronze_loc");?></TD>
-						</TR>
-					</TABLE>					
 				</TD>
 			</TR>	
 			<TR class='spacer'>
@@ -432,7 +403,7 @@ function bldg_change(id, theName) {
 				</TD>
 				<TD COLSPAN='3'>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_level4" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level4_command_data');">
+						<SELECT NAME="frm_level4" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level4_command_data'); showtheDiv('level4_location_data');">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -444,31 +415,15 @@ function bldg_change(id, theName) {
 						</SELECT>
 					</SPAN>
 					<DIV id='level4_command_data'>
+					</DIV>
+					<DIV id='level4_location_data' style='display: none;'>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD id='level4_e1' class='td_data'></TD>
+								<TD class='td_label'>Location</TD>
+								<TD class='td_data'><?php print get_building("frm_level4_loc");?></TD>
 							</TR>
-							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD id='level4_e2' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD id='level4_p1' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD id='level4_p2' class='td_data'></TD>
-							</TR>
-						</TABLE>					
+						</TABLE>
 					</DIV>
-					<TABLE>
-						<TR>
-							<TD class='td_label'>Location</TD>
-							<TD class='td_data'><?php print get_building("frm_level4_loc");?></TD>
-						</TR>
-					</TABLE>					
 				</TD>
 			</TR>	
 			<TR class='spacer'>
@@ -480,7 +435,7 @@ function bldg_change(id, theName) {
 				</TD>
 				<TD COLSPAN='3'>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_level5" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level5_command_data');">
+						<SELECT NAME="frm_level5" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level5_command_data'); showtheDiv('level5_location_data');">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -492,31 +447,15 @@ function bldg_change(id, theName) {
 						</SELECT>
 					</SPAN>
 					<DIV id='level5_command_data'>
+					</DIV>
+					<DIV id='level5_location_data' style='display: none;'>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD id='level5_e1' class='td_data'></TD>
+								<TD class='td_label'>Location</TD>
+								<TD class='td_data'><?php print get_building("frm_level5_loc");?></TD>
 							</TR>
-							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD id='level5_e2' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD id='level5_p1' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD id='level5_p2' class='td_data'></TD>
-							</TR>
-						</TABLE>					
-					</DIV>
-					<TABLE>
-						<TR>
-							<TD class='td_label'>Location</TD>
-							<TD class='td_data'><?php print get_building("frm_level5_loc");?></TD>
-						</TR>
-					</TABLE>					
+						</TABLE>
+					</DIV
 				</TD>
 			</TR>	
 			<TR class='spacer'>
@@ -528,7 +467,7 @@ function bldg_change(id, theName) {
 				</TD>
 				<TD COLSPAN='3'>
 					<SPAN style='width: 100%; display: block;'>
-						<SELECT NAME="frm_level6" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level6_command_data');">
+						<SELECT NAME="frm_level6" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level6_command_data'); showtheDiv('level6_location_data');">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
@@ -540,31 +479,15 @@ function bldg_change(id, theName) {
 						</SELECT>
 					</SPAN>
 					<DIV id='level6_command_data'>
+					</DIV>
+					<DIV id='level6_location_data' style='display: none;'>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD id='level6_e1' class='td_data'></TD>
+								<TD class='td_label'>Location</TD>
+								<TD class='td_data'><?php print get_building("frm_level6_loc");?></TD>
 							</TR>
-							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD id='level6_e2' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD id='level6_p1' class='td_data'></TD>
-							</TR>
-							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD id='level6_p2' class='td_data'></TD>
-							</TR>
-						</TABLE>					
+						</TABLE>
 					</DIV>
-					<TABLE>
-						<TR>
-							<TD class='td_label'>Location</TD>
-							<TD class='td_data'><?php print get_building("frm_level6_loc");?></TD>
-						</TR>
-					</TABLE>					
 				</TD>
 			</TR>	
 			<TR class='spacer'>
@@ -650,6 +573,8 @@ function bldg_change(id, theName) {
 
 		<SCRIPT>
 		var latLng;
+		var boundary = [];			//	exclusion zones array
+		var bound_names = [];
 		var mapWidth = <?php print get_variable('map_width');?>;
 		var mapHeight = <?php print get_variable('map_height');?>;
 		var lmarkers = [];	//	Control locations markers array
@@ -659,7 +584,6 @@ function bldg_change(id, theName) {
 		var theLocale = <?php print get_variable('locale');?>;
 		var useOSMAP = <?php print get_variable('use_osmap');?>;
 		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points

@@ -183,6 +183,7 @@
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 	<![endif]-->
+	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<STYLE>
 	LI { margin-left: 20px;}
 	.spl { FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
@@ -1262,11 +1263,16 @@ if (mysql_num_rows($result)>0) {
 			$counter = 0;
 			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 			while($row = stripslashes_deep(mysql_fetch_array($result))) {
-				if (($row['name']{0} <> "_" ) && (($row['name'] <> "columns") && ($row['name'] <> "smsg_provider"))) {								// hide these
+				if (($row['name']{0} <> "_" ) && (($row['name'] <> "columns") && ($row['name'] <> "smsg_provider") && ($row['name'] <> "email_password"))) {								// hide these
 					$capt = str_replace ( "_", " ", $row['name']);
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_msg_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
 					print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
-	
+					$counter++;
+					}
+				if (($row['name']{0} <> "_" ) && ($row['name'] == "email_password")) {		//	hide password characters
+					$capt = str_replace ( "_", " ", $row['name']);
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_msg_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
+					print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='password' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
 					$counter++;
 					}
 				if (($row['name']{0} <> "_" ) && ($row['name'] == "columns")) {								// hide these
@@ -1290,7 +1296,6 @@ if (mysql_num_rows($result)>0) {
 					print "<INPUT TYPE=CHECKBOX NAME='columns[]' VALUE=7 " . $chkd7 . ">Date";
 					print "<INPUT TYPE=CHECKBOX NAME='columns[]' VALUE=8 " . $chkd8 . ">Owner";					
 					print "</TD></TR>\n";
-	
 					$counter++;
 					}
 				if (($row['name']{0} <> "_" ) && ($row['name'] == "smsg_provider")) {								// hide these
@@ -2435,17 +2440,23 @@ ul {
 	<BODY onLoad = 'ck_frames()'> <!-- 11/13/10 -->
 <?php if (isset($top_notice)) print "<SPAN STYLE='margin-left: 100px;' CLASS='header' >{$top_notice}</SPAN><BR /><BR />"; ?>
 <BR />
-		<DIV id='mainmenu' style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-y: scroll;'>
+		<DIV id='mainmenu' style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-x: hidden; overflow-y: auto;'>
 		<DIV class='config_heading' id='gen_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 			<DIV class='config_heading'>General</DIV>
 			<A id='about' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_about();">About this version ...</A>	
 <?php
-		if(!(is_guest())) {								// 6/9/08
+		if(!(is_guest())) {
+			if(is_administrator() || is_user() || (get_variable('oper_can_edit') == "1")) {
 ?>
-			<A id='email_users' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_mail_win()">Email users</A>		<!-- 6/30/09, 3/15/11 -->
-			<A id='contacts' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('contacts');">Contacts</A>
-			<A id='my_profile' class='plain' style='clear: both; width: 150px;' HREF="config.php?func=profile" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'>Edit My Profile</A>				<!-- 12/1/08 -->
+				<A id='email_users' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_mail_win()">Email users</A>		<!-- 6/30/09, 3/15/11 -->
+				<A id='contacts' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('contacts');">Contacts</A>
 <?php
+				}
+			if(!is_unit()) {
+?>
+				<A id='my_profile' class='plain' style='clear: both; width: 150px;' HREF="config.php?func=profile" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'>Edit My Profile</A>				<!-- 12/1/08 -->
+<?php
+				}
 			}
 		if ( is_super()) { 	// SHOW MENU BASED ON USER LEVEL
 ?>
@@ -2495,104 +2506,116 @@ ul {
 			}
 ?>
 		</DIV>
-		<DIV class='config_heading' id='files_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-			<DIV class='config_heading' style='display: block; clear: both;'>Files</DIV>
-			<A id='ul_file' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='file_window();'>Upload File</A>
-			<A id='fileman' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="fileman.php">File Manager</A>	
-		</DIV>
-		<DIV class='config_heading' id='serv_user_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-			<DIV class='config_heading' style='display: block; clear: both;'>Service User Portal</DIV>
-			<A id='su_req' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="./portal/requests.php">Service User Requests</A>	
-		</DIV>
 <?php
-			if(get_variable('use_messaging') != 0) {		//10/23/12		
+		if(is_administrator()) {
 ?>
-				<DIV class='config_heading' id='msg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Messaging</DIV>
-					<A id='msg_set' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=msg_settings">Messaging Settings</A>
-					<A id='msg_arch' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="msg_archive.php">Message Archiving</A>	
-					<A id='white_list' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('known_sources');">Email White List</A>		
-					<A id='get_msgs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "get_msgs();">Get all Messages</A>
-					<A id='std_msgs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('std_msgs');">Edit Std Messages</A>
-					<A id='msg_rtxt' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('replacetext');">Msg Text replacement</A>			
-<?php
-					if(get_msg_variable('use_autostat') == 1) {		//10/23/12
-?>
-						<A class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="auto_status.php" >Edit Auto Status Text</A>
-<?php
-						}
-?>
-				</DIV>
-<?php
-				}
-			if((is_administrator()) || (is_super())) {
-				if(get_variable('use_disp_autostat') == 1) {		//9/10/13
-?>
-				<DIV class='config_heading' id='ad_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Auto Dispatch Status</DIV>
-					<A id='auto_stat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="auto_disp_status.php" >Auto Status Values</A>
-				</DIV>
-<?php
-				}
-?>
-				<DIV class='config_heading' id='eml_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Email Lists</DIV>
-					<A id='eml_list' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mailgroup');">Email Lists</A>
-					<A id='eml_list_mem' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="email_lists.php?func=list" >Email List Members</A>
-				</DIV>
-				<DIV class='config_heading' id='reg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Regions</DIV>
-					<A id='regs_cfg' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('region');"><?php print get_text("Regions");?></A>	
-					<A id='regs_type' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('region_type');"><?php print get_text("Region");?>Type</A>
-					<A id='rst_reg' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_regions.php">Reset <?php print get_text("Regions");?></A>
-					<A id='fix_reg' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="cleanse_regions.php?func=list">Fix <?php print get_text("Regions");?></A>	
-				</DIV>
-				<DIV class='config_heading' id='disc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Display Colors</DIV>
-					<A id='css_day' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=css_day">Edit Day Colors</A>
-					<A id='css_ngt' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=css_night">Edit Night Colors</A>
-				</DIV>
-				<DIV class='config_heading' id='maps_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Maps Configuration</DIV>
-					<A id='def_map' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=center">Set Default Map</A>
-					<A id='dl_maps' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "./get_tiles.php">Download Maps (OSM)</A>
-				</DIV>
-				<DIV class='config_heading' id='db_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Database Functions</DIV>
-					<A id='dump_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=dump">Dump DB to screen</A>
-					<A id='rst_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=reset">Reset Database</A>
-					<A id='opt_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=optimize">Optimize Database</A>
-					<A id='del_indx' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "show_tables_and_indexes.php">Delete Duplicate Indexes</A>	
-				</DIV>
-				<DIV class='config_heading' id='rc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Road Conditions</DIV>
-					<A id='rd_cond' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('conditions');">Conditions Table</A>
-					<A id='rd_alerts' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('roadinfo');">Published Alerts</A>
-				</DIV>
-				<DIV class='config_heading' id='mi' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-					<DIV class='config_heading' style='display: block; clear: both;'>Major Incidents<SPAN class='warn'>(Experimental, not fully implemented, for discussion)</SPAN></DIV>
-					<A id='mis' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="maj_inc.php">Major Incidents</A>
-					<A id='mi_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mi_types');">Major Incident Types</A>
-				</DIV>
-<?php
-			}								// end if (is_administrator()|| is_super() ) -- latitude.php
-?>
-			<DIV class='config_heading' id='oet_tests' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-				<DIV class='config_heading' style='display: block; clear: both;'>Outgoing email and Unit Tracking Tests</DIV>
-				<A id='tst_aprs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_test()">APRS</A>
-<?php 				// 7/5/10
-				if (is_super()) {
-					print "\t\t<A id='tst_smtp' class='plain' style='width: 150px; float: left;' HREF=\"#\" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = \"do_smtp()\">SMTP Mail</A>\n";
-					print "\t\t<A id='tst_native' class='plain' style='width: 150px; float: left;' HREF=\"#\" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = \"do_native()\">Native PHP Mail</A>\n";
-					}
-?>		
-				<A id='tst_gl' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_glat()">Google Latitude</A>
-				<A id='tst_loca' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_locatea()">LocateA</A>
-				<A id='tst_gtrack' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_gtrack()">Gtrack</A>
-				<A id='tst_opengts' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_ogts()">Open GTS</A>
-				<A id='tst_tt' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_t_tracker()">Internal Tracker</A>
+			<DIV class='config_heading' id='files_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Files</DIV>
+				<A id='ul_file' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='file_window();'>Upload File</A>
+				<A id='fileman' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="fileman.php">File Manager</A>	
+			</DIV>
+			<DIV class='config_heading' id='serv_user_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Service User Portal</DIV>
+				<A id='su_req' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="./portal/requests.php">Service User Requests</A>	
 			</DIV>
 <?php
+			}
+		if(!(is_guest()) && (get_variable('use_messaging') != 0)) {		//10/23/12		
+?>
+			<DIV class='config_heading' id='msg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Messaging</DIV>
+				<A id='msg_set' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=msg_settings">Messaging Settings</A>
+				<A id='msg_arch' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="msg_archive.php">Message Archiving</A>	
+				<A id='white_list' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('known_sources');">Email White List</A>		
+				<A id='get_msgs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "get_msgs();">Get all Messages</A>
+				<A id='std_msgs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('std_msgs');">Edit Std Messages</A>
+				<A id='msg_rtxt' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('replacetext');">Msg Text replacement</A>			
+<?php
+				if(get_msg_variable('use_autostat') == 1) {		//10/23/12
+?>
+					<A class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="auto_status.php" >Edit Auto Status Text</A>
+<?php
+					}
+?>
+			</DIV>
+<?php
+			}
+		if((is_administrator()) || (is_super())) {
+			if(get_variable('use_disp_autostat') == 1) {		//9/10/13
+?>
+				<DIV class='config_heading' id='ad_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Auto Dispatch Status</DIV>
+				<A id='auto_stat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="auto_disp_status.php" >Auto Status Values</A>
+				</DIV>
+<?php
+				}
+?>
+			<DIV class='config_heading' id='eml_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Email Lists</DIV>
+				<A id='eml_list' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mailgroup');">Email Lists</A>
+				<A id='eml_list_mem' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="email_lists.php?func=list" >Email List Members</A>
+			</DIV>
+			<DIV class='config_heading' id='reg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Regions</DIV>
+				<A id='regs_cfg' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('region');"><?php print get_text("Regions");?></A>	
+				<A id='regs_type' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('region_type');"><?php print get_text("Region");?>Type</A>
+				<A id='rst_reg' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_regions.php">Reset <?php print get_text("Regions");?></A>
+				<A id='fix_reg' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="cleanse_regions.php?func=list">Fix <?php print get_text("Regions");?></A>	
+			</DIV>
+			<DIV class='config_heading' id='disc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Display Colors</DIV>
+				<A id='css_day' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=css_day">Edit Day Colors</A>
+				<A id='css_ngt' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=css_night">Edit Night Colors</A>
+			</DIV>
+			<DIV class='config_heading' id='maps_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Maps Configuration</DIV>
+				<A id='def_map' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=center">Set Default Map</A>
+				<A id='dl_maps' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "./get_tiles.php">Download Maps (OSM)</A>
+			</DIV>
+			<DIV class='config_heading' id='db_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Database Functions</DIV>
+				<A id='dump_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=dump">Dump DB to screen</A>
+				<A id='rst_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=reset">Reset Database</A>
+				<A id='opt_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=optimize">Optimize Database</A>
+				<A id='del_indx' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "show_tables_and_indexes.php">Delete Duplicate Indexes</A>	
+			</DIV>
+<?php
+			}
+			
+		if(is_administrator() || is_user()) {
+?>
+			<DIV class='config_heading' id='rc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Road Conditions</DIV>
+				<A id='rd_cond' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('conditions');">Conditions Table</A>
+				<A id='rd_alerts' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('roadinfo');">Published Alerts</A>
+			</DIV>
+<?php
+			}
+		if((is_administrator()) || (is_super()) || (get_variable('oper_can_edit') == "1")) {
+?>
+			<DIV class='config_heading' id='mi' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Major Incidents<SPAN class='warn'>(Experimental, not fully implemented, for discussion)</SPAN></DIV>
+				<A id='mis' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="maj_inc.php">Major Incidents</A>
+				<A id='mi_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mi_types');">Major Incident Types</A>
+			</DIV>
+<?php
+			}
+		if((is_administrator()) || (is_super())) {
+?>
+			<DIV class='config_heading' id='oet_tests' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Outgoing email Tests</DIV>
+				<A id='tst_aprs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_test();">APRS</A>
+				<A id='tst_smtp' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_smtp();">SMTP Mail</A>
+				<A id='tst_native' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_native();">Native PHP Mail</A>
+				<DIV class='config_heading' style='display: block; clear: both;'>Unit Tracking Tests</DIV>
+				<A id='tst_gl' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_glat();">Google Latitude</A>
+				<A id='tst_loca' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_locatea();">LocateA</A>
+				<A id='tst_gtrack' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_gtrack();">Gtrack</A>
+				<A id='tst_opengts' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_ogts();">Open GTS</A>
+				<A id='tst_tt' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_t_tracker();">Internal Tracker</A>
+			</DIV>
+<?php
+			}								// end if (is_administrator()|| is_super() ) -- latitude.php
 		if (is_super()) {									// super or admin - 9/24/08			
 ?>
 			<DIV class='config_heading' id='inc_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
@@ -2607,7 +2630,7 @@ ul {
 				<A id='rst_unstat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_responder_status.php" >Reset <?php print get_text("Units");?> status</A>
 			</DIV>
 <?php
-		}	// end if is super
+
 	
 			if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) 	{		// 10/5/09
 ?>			
@@ -2617,7 +2640,10 @@ ul {
 					<A id='fac_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('fac_types');">Facility Types</A>
 				</DIV>
 <?php
-			}
+
+				}
+			}	// end if is super
+		if(is_administrator() || is_user()) {
 ?>
 			<DIV class='config_heading' id='warn_locs' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading' style='display: block; clear: both;'>Warn Locations</DIV>		
@@ -2630,12 +2656,17 @@ ul {
 				<A id='hints_set' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=hints">Hints</A>
 				<A id='places_set' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('places');">Places</A>
 			</DIV>
+<?php
+			}
+		if(is_administrator()) {
+?>
 			<DIV class='config_heading' id='map_mkup' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading' style='display: block; clear: both;'>Map Markup</DIV>					
 				<A id='mm' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "./mmarkup.php">Map Markup</A>
 				<A id='mm_cat' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mmarkup_cats');">MM Categories</A>
 			</DIV>
-<?php						// 4/23/11
+<?php
+			}
 		$query_update = "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE `user`= '_cloud' LIMIT 1;";
 		$result = mysql_query($query_update) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	5/4/11	
 		if ((mysql_num_rows($result) > 0) && (is_super())) {

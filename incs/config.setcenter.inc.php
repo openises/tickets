@@ -4,6 +4,22 @@
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}	
 error_reporting (E_ALL  ^ E_DEPRECATED);
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
+$result	= mysql_query($query);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+	$states[$row['name']] = $row['code'];
+	}
+$mapzooms = array();
+$dir = './_osm/tiles';
+$mapdir = scandir($dir);
+foreach($mapdir as $val) {
+	if($val <> "." && $val <> "..") {
+		if(is_dir('./_osm/tiles/' . $val)) {
+			$mapzooms[] = intval($val);
+			}
+		}
+	}
+if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 0;}
 ?>
 
 		<STYLE> label, input[type="radio"]{font-size:10px; vertical-align:bottom;} 
@@ -31,11 +47,19 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 		<script>
 //										some globals		
 	var map = null;				// the map object - note GLOBAL
+	var OSM;
+	var localMap
 	var myMarker;					// the marker object
 	var lat_var;					// see init.js
 	var lng_var;
 	var zoom;
 	var bounds;
+	var states_arr = <?php echo json_encode($states); ?>;
+	var geo_provider = <?php print get_variable('geocoding_provider');?>;
+	var BingKey = "<?php print get_variable('bing_api_key');?>";
+	var GoogleKey = "<?php print get_variable('gmaps_api_key');?>";
+	var localZoomMin = <?php print $localZoomMin;?>;
+	var localZoomMax = <?php print $localZoomMax;?>;
 	
 	function do_point_stuff(lat, lng) {
 		if(myMarker) {map.removeLayer(myMarker);}			// destroy predecessor
@@ -114,7 +138,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 		}				// end function
 
 
-	function map_cen_reset() {	do_map(); }			// reset map center icon
+	function map_cen_reset() {	do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, theSource); }			// reset map center icon
 
 	var markersArray = [];
 	
@@ -129,29 +153,77 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 		}				// end function addrlkup()
 		
 	function GetAddress(latlng) {
-		var popup = L.popup();	
-		control.options.geocoder.reverse(latlng, map.options.crs.scale(map.getZoom()), function(results) {
+		var popup = L.popup();
+		var loc = <?php print get_variable('locale');?>;
+		control.options.geocoder.reverse(latlng, 20, function(results) {
+		if(window.geo_provider == 0){
+			var r1 = results[0];
+			var r = r1['properties']['address'];
+			if(loc == "1") { r.state = "UK";}
+			} else if(window.geo_provider == 1) {
 			var r = results[0];
-			if (r) {
-				if(r.city) {
-					var theCity = r.city; 
-					} else if(r.town) { 
-					theCity = r.town;
-					} else {
-					theCity = "";
-					}
-	//			alert(r.house + ", " + r.road + ", " + r.village + ", " + r.town + ", " + r.city + ", " + r.county + ", " + r.postcode + ", " + r.country + ", " + r.country_code);
-				document.cen_Form.frm_city.value = theCity;
-				document.cen_Form.frm_st.value = r.state;
-				document.cen_Form.show_lat.value = latlng.lat; 
-				document.cen_Form.show_lng.value = latlng.lng; 
-				var theContent = r.name;	
-				popup
-					.setLatLng(latlng)
-					.setContent(theContent)
-					.openOn(map);
+			if(loc == "1") { r.state = "UK";}
+			} else if(window.geo_provider == 2) {
+			var r1 = results[0];
+			var r = {city: r1.city, house_number: "", road: r1.street, state: r1.state};
+			if(loc == "1") { r.state = "UK";}
+			}
+
+		var lat = parseFloat(latlng.lat.toFixed(6));
+		var lng = parseFloat(latlng.lng.toFixed(6));
+		var theCity = "";
+		if(!r.city) {
+			if(r.suburb && (r.suburb != "")) {
+				theCity = r.suburb;
+				} else if(r.locality && (r.locality != "")) {
+				theCity = r.locality;
+				} else {
+				theCity = "";
 				}
+			} else {
+			theCity = r.city;
+			}
+		if(!r.state || r.state == "") {
+			if(r.county) {
+				var state = r.county;
+				} else {
+				var state = "";
+				}
+			} else {
+			var state = r.state;
+			}
+
+		if (r) {
+			document.cen_Form.frm_city.value = theCity;
+			if(states_arr[state]){
+				document.cen_Form.frm_st.value = states_arr[state];
+				var theState = states_arr[state];
+				} else {
+				document.cen_Form.frm_st.value = r.state;
+				var theState = r.state;
+				}
+			document.cen_Form.show_lat.value = lat; 
+			document.cen_Form.show_lng.value = lng; 
+			if(theCity != "" && theCity != "Unknown" && theState != "") {
+				var theContent = theCity + ", " + theState;
+				popup.setLatLng(latlng).setContent(theContent).openOn(map);
+				}
+			}
 			});
+		}
+		
+	function swap_source(the_source) {
+		if(the_source == 1) {
+			map.removeLayer(OSM);
+			map.addLayer(localMap);
+			map.options.maxZoom = localZoomMax;
+			map.options.minZoom = localZoomMin;			
+			} else {
+			map.removeLayer(localMap);
+			map.addLayer(OSM);
+			map.options.maxZoom = 20;
+			map.options.minZoom = 1;						
+			}
 		}
 
 
@@ -169,6 +241,13 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 			<TR><TD>
 			<TABLE BORDER="0">
 			<FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
+			<TR class='odd' VALIGN='baseline'>
+				<TD CLASS="td_label" ALIGN='right'>Use Network or Local Maps:</TD>
+				<TD ALIGN='center' COLSPAN=2>
+					&nbsp;&nbsp;Network &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick = "swap_source(0);">
+					&nbsp;&nbsp;Local &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' onClick = "swap_source(1);">
+				</TD>
+			</TR>
 			<TR CLASS = "even"><TD CLASS="td_label">Lookup:</TD><TD COLSPAN=3>&nbsp;&nbsp;City:&nbsp;<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_city" VALUE="" />
 			&nbsp;&nbsp;&nbsp;&nbsp;State:&nbsp;<INPUT MAXLENGTH="2" SIZE="2" TYPE="text" NAME="frm_st" VALUE="" /></TD></TR>
 			<TR CLASS = "odd"><TD COLSPAN=4 ALIGN="center"><button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></TD></TR> <!-- 1/21/09 -->
@@ -210,7 +289,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 				<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
 				<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
 			</FORM></TABLE>
-			</TD><TD><DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
+			</TD><TD><DIV id='map_outer'><DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV></DIV>
 			<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT></CENTER>
 			</TD></TR>
 			</TABLE>
@@ -220,18 +299,20 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 				}
 				});
 			var iconurl = "./markers/crosshair.png";	
-			function do_map(lat, lng, zoom) {
-				var in_local_bool = 0;
-				var my_Path = "http://localhost/_osm/tiles/";
-				var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+			function do_map(lat, lng, zoom, sourcemap) {
+				var osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+				var localUrl = "./_osm/tiles/{z}/{x}/{y}.png";
 				var	cmAttr = '';
-				var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
-				if(!map) { map = L.map('map_canvas',
+				OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
+				localMap = L.tileLayer(localUrl, {attribution: cmAttr});
+				if (map) { map.remove(); map = null;} 
+				map = L.map('map_canvas',
 					{
 					maxZoom: 20,
+					minZoom: 1,
 					zoom: zoom,
 					layers: [OSM],
-					zoomControl: false,
+					zoomControl: true,
 					attributionControl: false,
 					},
 					geocoders = {
@@ -241,7 +322,44 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 					},
 					control = new L.Control.Geocoder()
 					);
-					}	
+
+				if(window.geo_provider == 1) {
+					geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+					control = L.Control.geocoder({
+						showResultIcons: false,
+						collapsed: true,
+						expand: 'click',
+						position: 'topleft',
+						placeholder: 'Search...',
+						errorMessage: 'Nothing found.',
+						geocoder: geocoder
+						});
+					} else if(window.geo_provider == 2) {
+					geocoder = L.Control.Geocoder.bing(window.BingKey), 
+					control = L.Control.geocoder({
+						showResultIcons: false,
+						collapsed: true,
+						expand: 'click',
+						position: 'topleft',
+						placeholder: 'Search...',
+						errorMessage: 'Nothing found.',
+						geocoder: geocoder
+						});				
+					} else {
+					geocoder = L.Control.Geocoder.nominatim(), 
+					control = L.Control.geocoder({
+						showResultIcons: false,
+						collapsed: true,
+						expand: 'click',
+						position: 'topleft',
+						placeholder: 'Search...',
+						errorMessage: 'Nothing found.',
+						geocoder: geocoder
+						});
+					}
+				if(!isIE()) {
+					control.addTo(map);
+					}
 	
 				icon = new baseIcon({iconUrl: iconurl});	
 				myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);					
@@ -258,7 +376,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 				document.cen_Form.frm_zoom.value = zoom;
 				};
 			
-			do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10);
+			do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, 0);
 			map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 10);
 			map.on('click', onMapClick);
 			var bounds = map.getBounds();	

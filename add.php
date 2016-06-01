@@ -125,6 +125,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 4/7/2014 - revised per nm operation
 4/27/2014 - correction re bldg per YG email, also do_reset() kml re-arrangement
 5/23/2015 - revised to handle new 'addr_source' functions
+10/3/2015 - revised to accommodate V3 map functions (AS)
 */
 
 if (empty($_GET)) {
@@ -745,12 +746,19 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 		}			// end function handleResult_can(req)
 
 // *********************************************************************
-	var the_form;
 
 // "Juan Wzzzzz;(123) 456-9876;1689 Abcd St;Abcdefghi;MD;16701;99.013297;-88.544775;"
 //  1           2              3            4         5  6     7         8
 
+	 function isOKCoord (theVal) {									// 10/3/2015
+	 	return (
+	 		( ! ( isNaN ( parseFloat ( theVal ) ) ) ) &&
+	 		( theVal != "<?php echo $GLOBALS['NM_LAT_VAL'];?>" )
+	 		);
+	 	}		// end function
+
 	function handleResult(req) {									// the called-back phone lookup function
+//		alert(754);
 		var result=req.responseText.split(";");						// parse semic-separated return string
 		$('repeats').innerHTML = "(" + result[0].trim() + ")";		// prior calls this phone no. - 9/29/09
 		if (!(result.length>2)) {
@@ -762,26 +770,30 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 		}
 ?>
 			}
-		else {
-			the_form.frm_contact.value=result[1].trim();	// name
-			the_form.frm_phone.value=result[2].trim();		// phone
-			the_form.frm_street.value=result[3].trim();		// street
-			the_form.frm_city.value=result[4].trim();		// city
-			the_form.frm_state.value=result[5].trim();		// state
-//			the_form.frm_zip.value=result[6].trim();		// frm_zip - unused
+		else {				// 10/2/2015
+			document.add.frm_contact.value=result[1].trim();	// name
+			document.add.frm_phone.value=result[2].trim();		// phone
+			document.add.frm_street.value=result[3].trim();		// street
+			document.add.frm_city.value=result[4].trim();		// city
+			document.add.frm_state.value=result[5].trim();		// state
+//			document.add.frm_zip.value=result[6].trim();		// frm_zip - unused
 			if (result[9].length > 0) {								// misc constituents information - 3/13/10
 				$('td_misc').innerHTML = '&nbsp;' + result[9].trim();
 				$('tr_misc').style.display='';
-				pt_to_map (the_form, result[7].trim(), result[8].trim());				// 1/19/09
+				pt_to_map (document.add, result[7].trim(), result[8].trim());				// 1/19/09
 				}
-			else if ((result[3].length>0) && (result[4].length>0) && (result[5].length>0)) {		// 4/27/10
-				loc_lkup(the_form);
+//			else if ((result[3].length>0) && (result[4].length>0) && (result[5].length>0)) {		// 4/27/10
+			else if ( isOKCoord ( result[7].trim() ) && ( isOKCoord ( result[8].trim() ) ) ) {			// 10/3/2015
+
+				pt_to_map (document.add, result[7].trim(), result[8].trim());	// (my_form, lat, lng) - 10/2/2015
+
 				}
 			}		// end else ...
 		}		// end function handleResult()
 
 	function phone_lkup(){
 		var goodno = document.add.frm_phone.value.replace(/\D/g, "" );		// strip all non-digits - 1/18/09
+//		alert(goodno);
 <?php
 	if (get_variable("locale") ==0) {				// USA only
 ?>
@@ -791,8 +803,10 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 <?php
 		}		// end locale check
 ?>
-		var params = "phone=" + URLEncode(goodno)
-		sendRequest (document.add, 'wp_lkup.php',handleResult, params);		//1/17/09
+		var params = "phone=" + URLEncode(goodno);
+//		alert(800);
+//		sendRequest (document.add, 'wp_lkup.php',handleResult, params);		//1/17/09 - (url,callback,postData)
+		sendRequest ( 'wp_lkup.php', handleResult, params);					// 10/1/2015 - (url,callback,postData)
 		}
 
 // *********************************************************************
@@ -2110,8 +2124,8 @@ if ($gmaps) {
 	$('map_canvas').style.height = mapHeight + "px";
 	var theLocale = <?php print get_variable('locale');?>;
 	var useOSMAP = <?php print get_variable('use_osmap');?>;
-	init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-	map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+	var initZoom = <?php print get_variable('def_zoom');?>;
+	init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 	var bounds = map.getBounds();
 	var zoom = map.getZoom();
 	var got_points = false;	// map is empty of points

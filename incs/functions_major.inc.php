@@ -1191,8 +1191,10 @@ mapHeight = viewportheight * .60;
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 var theLocale = <?php print get_variable('locale');?>;
-init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", 12, theLocale, 1);
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 12);
+var useOSMAP = <?php print get_variable('use_osmap');?>;
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "");
+map.setView([<?php print $lat;?>, <?php print $lng;?>], parseInt(initZoom));
 var bounds = map.getBounds();
 var zoom = map.getZoom();
 </SCRIPT>

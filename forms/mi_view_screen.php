@@ -172,13 +172,13 @@ if($result) {
 		}
 	}
 	
-$gold_command = ($row['gold_loc'] != 0) ? get_building_details($row['gold_lat']) : null;
-$silver_command = ($row['silver_loc'] != 0) ? get_building_details($row['silver_lat']) : null;
-$bronze_command = ($row['bronze_loc'] != 0) ? get_building_details($row['bronze_lat']) : null;
+$gold_command = ($row['gold_loc'] != 0) ? get_building_details($row['gold_loc']) : null;
+$silver_command = ($row['silver_loc'] != 0) ? get_building_details($row['silver_loc']) : null;
+$bronze_command = ($row['bronze_loc'] != 0) ? get_building_details($row['bronze_loc']) : null;
 
-if($gold_command) {$gold_name = $gold_command[0]; $gold_address = $gold_command[1]; $gold_city = $gold_command[2]; $gold_state = $gold_command[3]; $gold_lat = $gold_command[4]; $gold_lng = $gold_command[5]; }
-if($silver_command) {$silver_name = $silver_command[0]; $silver_address = $silver_command[1]; $silver_city = $silver_command[2]; $silver_state = $silver_command[3]; $silver_lat = $silver_command[4]; $silver_lng = $silver_command[5]; }
-if($bronze_command) {$bronze_name = $bronze_command[0]; $bronze_address = $bronze_command[1]; $bronze_city = $bronze_command[2]; $bronze_state = $bronze_command[3]; $bronze_lat = $bronze_command[4]; $bronze_lng = $bronze_command[5]; }
+if($gold_command) {$gold_name = $gold_command[0]; $gold_address = $gold_command[1]; $gold_city = $gold_command[2]; $gold_state = $gold_command[3]; $gold_lat = floatval($gold_command[4]); $gold_lng = floatval($gold_command[5]); }
+if($silver_command) {$silver_name = $silver_command[0]; $silver_address = $silver_command[1]; $silver_city = $silver_command[2]; $silver_state = $silver_command[3]; $silver_lat = floatval($silver_command[4]); $silver_lng = floatval($silver_command[5]); }
+if($bronze_command) {$bronze_name = $bronze_command[0]; $bronze_address = $bronze_command[1]; $bronze_city = $bronze_command[2]; $bronze_state = $bronze_command[3]; $bronze_lat = floatval($bronze_command[4]); $bronze_lng = floatval($bronze_command[5]); }
 
 if(!$gold_command) {
 	$gold_name = $row['gold_street'] . " " . $row['gold_city'] . " " . $row['gold_state'];
@@ -264,6 +264,9 @@ if(!$bronze_command) {
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 				</TR>
+<?php
+				if($row['gold'] != 0) {
+?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Gold Command");?>"><?php print get_text("Gold Command");?></A>:</TD>
 					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['gold']);?></SPAN>
@@ -272,7 +275,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Email 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][4];
 										}
 ?>
@@ -282,7 +285,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Email 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][5];
 										}
 ?>
@@ -292,7 +295,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][6];
 										}
 ?>
@@ -302,7 +305,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['gold']]) {
+									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][7];
 										}
 ?>
@@ -326,6 +329,10 @@ if(!$bronze_command) {
 						</TABLE>
 					</TD>
 				</TR>
+<?php
+				}
+				if($row['silver'] != 0) {
+?>
 				<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Silver Command");?>"><?php print get_text("Silver Command");?></A>:</TD>
 					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['silver']);?></SPAN>
@@ -334,7 +341,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Email 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][4];
 										}
 ?>
@@ -344,7 +351,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Email 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][5];
 										}
 ?>
@@ -354,7 +361,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 1</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][6];
 										}
 ?>
@@ -364,7 +371,7 @@ if(!$bronze_command) {
 								<TD class='td_label'>Phone 2</TD>
 								<TD class='td_data'>
 <?php 
-									if($comm_arr[$row['silver']]) {
+									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][7];
 										}
 ?>
@@ -388,6 +395,10 @@ if(!$bronze_command) {
 						</TABLE>
 					</TD>
 				</TR>
+<?php
+				}
+				if($row['bronze'] != 0) {
+?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Bronze Command");?>"><?php print get_text("Bronze Command");?></A>:</TD>
 					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['bronze']);?></SPAN>
@@ -450,6 +461,10 @@ if(!$bronze_command) {
 						</TABLE>				
 					</TD>
 				</TR>
+<?php
+				}
+				if($row['level4'] != 0) {
+?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 4 Command");?>"><?php print get_text("Level 4 Command");?></A>:</TD>
 					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['level4']);?></SPAN>
@@ -512,6 +527,10 @@ if(!$bronze_command) {
 						</TABLE>				
 					</TD>
 				</TR>
+<?php
+				}
+				if($row['level5'] != 0) {
+?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 5 Command");?>"><?php print get_text("Level 5 Command");?></A>:</TD>
 					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['level5']);?></SPAN>
@@ -574,6 +593,10 @@ if(!$bronze_command) {
 						</TABLE>				
 					</TD>
 				</TR>
+<?php
+				}
+				if($row['level6'] != 0) {
+?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 6 Command");?>"><?php print get_text("Level 6 Command");?></A>:</TD>
 					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['level6']);?></SPAN>
@@ -635,7 +658,10 @@ if(!$bronze_command) {
 							</TR>
 						</TABLE>				
 					</TD>
-				</TR>									
+				</TR>
+<?php
+				}
+?>				
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 				</TR>		
@@ -731,28 +757,28 @@ do_kml();
 ?>
 </SCRIPT>
 <?php
-if(is_float($gold_lat) && is_float($gold_lng)) {
+if((is_float($gold_lat) && $gold_lat != "" && $gold_lat != NULL) && ($gold_lng != "" && $gold_lng != NULL)) {
 ?>
 <SCRIPT>
-	var g_lmarker = createLocMarker(<?php print $gold_lat;?>, <?php print $gold_lng;?>, "<?php print $gold_name;?>", 0, 1, "G", "<?php print get_text('Gold Command');?>");
-	g_lmarker.addTo(map);
+	var goldmarker = createLocMarker(<?php print $gold_lat;?>, <?php print $gold_lng;?>, "<?php print $gold_name;?>", 0, 1, "G", "<?php print get_text('Gold Command');?>");
+	goldmarker.addTo(map);
 </SCRIPT>
 <?php
 	}
 	
-if(is_float($silver_lat) && is_float($silver_lng)) {
+if((is_float($silver_lat) && $silver_lat != "" && $silver_lat != NULL) && (is_float($silver_lng) && $silver_lng != "" && $silver_lng != NULL)) {
 ?>
 <SCRIPT>
-	var s_lmarker = createLocMarker(<?php print $silver_lat;?>, <?php print $silver_lng;?>, "<?php print $silver_name;?>", 1, 1, "S", "<?php print get_text('Silver Command');?>");
-	s_lmarker.addTo(map);
+	var silvermarker = createLocMarker(<?php print $silver_lat;?>, <?php print $silver_lng;?>, "<?php print $silver_name;?>", 1, 1, "S", "<?php print get_text('Silver Command');?>");
+	silvermarker.addTo(map);
 </SCRIPT>
 <?php
 	}
 
-if(is_float($bronze_lat) && is_float($bronze_lng)) {
+if((is_float($bronze_lat) && $bronze_lat != "" && $bronze_lat != NULL) && (is_float($bronze_lng) && $bronze_lng != "" && $bronze_lng != NULL)) {
 ?>
 <SCRIPT>
-	var b_lmarker = createLocMarker(<?php print $bronze_lat;?>, <?php print $bronze_lng;?>, "<?php print $bronze_name;?>", 2, 1, "B", "<?php print get_text('Bronze Command');?>");
+	var bronzemarker = createLocMarker(<?php print $bronze_lat;?>, <?php print $bronze_lng;?>, "<?php print $bronze_name;?>", 2, 1, "B", "<?php print get_text('Bronze Command');?>");
 	b_lmarker.addTo(map);
 </SCRIPT>
 <?php

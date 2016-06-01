@@ -148,7 +148,7 @@ if (empty($_POST)) {
 				$sep = "|";
 				}				// end if
 			}		// end foreach
-		do_send ($addr_str, $_POST['frm_subj'], $_POST['frm_text'], 0, 0);	// ($to_str, $subject_str, $text_str ) - | separator
+		do_send ($addr_str, "", $_POST['frm_subj'], $_POST['frm_text'], 0, 0);	// ($to_str, $subject_str, $text_str ) - | separator
 ?>
 	<BODY>
 	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3>

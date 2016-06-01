@@ -31,6 +31,18 @@ if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
 $use_ticker = (($_SESSION['good_internet']) && (module_active("Ticker")==1) && (!($not_sit))) ? 1 : 0;
+$mapzooms = array();
+$dir = './_osm/tiles';
+$mapdir = scandir($dir);
+foreach($mapdir as $val) {
+	if($val <> "." && $val <> "..") {
+		if(is_dir('./_osm/tiles/' . $val)) {
+			$mapzooms[] = intval($val);
+			}
+		}
+	}
+if(count($mapzooms) > 0 && get_variable('local_maps') == "1") {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 20;}
+$setZoom = (get_variable('local_maps') == "1") ? $localZoomMin : get_variable('def_zoom');
 /*
 
 */
@@ -282,7 +294,25 @@ function set_size() {
 	load_poly_controls();
 	mapCenter = map.getCenter();
 	mapZoom = map.getZoom();
-//	document.getElementById('layerControls').appendChild( );
+	map.invalidateSize();
+	}
+	
+function loadData() {
+	load_exclusions();
+	load_ringfences();
+	load_catchments();
+	load_basemarkup();
+	load_groupbounds();	
+	load_fs_incidentlist();
+	load_fs_responders();
+	load_fs_facilities();
+	full_scr_ass();
+	load_regions();
+	set_initial_pri_disp();
+	load_poly_controls();
+	mapCenter = map.getCenter();
+	mapZoom = map.getZoom();
+	map.invalidateSize();
 	setTimeout(function() {$('leftcol').style.display = "none"; $('showlists').style.display='inline-block';},10000);
 	}
 
@@ -297,7 +327,6 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 		var baseLayerVarArr = [openspaceLayer];
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
 		theLayer = baseLayerVarArr[a];
-
 		map = new L.Map('map_canvas', {
 			crs: L.OSOpenSpace.getCRS(),
 			continuousWorld: true,
@@ -377,8 +406,7 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 		if(theType ==3) {
 			createstdMarker(lat, lng);
 			}
-		map.setView([lat, lng], 13);
-		bounds = map.getBounds();	
+		map.setView([lat, lng], theZoom);
 		bounds = map.getBounds();	
 		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
@@ -429,18 +457,21 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 		});
 		var grid = L.graticule({ interval: .5 })
 		roadalerts = new L.LayerGroup();
-		
 		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
 		var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial"];	
 		var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark,aerial];
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
-		theLayer = baseLayerVarArr[a];
+		theLayer = (in_local_bool != "1") ? baseLayerVarArr[a]: OSM;	// Load OSM if using local maps
+		var setZoom = <?php print $setZoom;?>;
+		var theZoom = <?php print $localZoomMin;?>;
+		var max_zoom = <?php print $localZoomMax;?>;
 		
 		if(window.geo_provider == 1) {
 			if(!map) { map = L.map('map_canvas',
 				{
-				maxZoom: 20,
-				zoom: theZoom,
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
 				layers: [theLayer],
 				zoomControl: false,
 				}
@@ -459,10 +490,10 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 					control.addTo(map);
 					}
 			} else if(window.geo_provider == 2){
-			if(!map) { map = L.map('map_canvas',
-				{
-				maxZoom: 20,
-				zoom: theZoom,
+			if(!map) { map = L.map('map_canvas',{
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
 				layers: [theLayer],
 				zoomControl: false,
 				}
@@ -481,14 +512,14 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 					control.addTo(map);
 					}			
 			} else {
-			if(!map) {
-				map = L.map('map_canvas',{
-					maxZoom: 20,
-					zoom: theZoom,
-					layers: [theLayer],
-					zoomControl: false,
-					}
-					)};
+			if(!map) {map = L.map('map_canvas',{
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
+				layers: [theLayer],
+				zoomControl: false,
+				}
+				)};
 				geocoder = L.Control.Geocoder.nominatim(), 
 				control = L.Control.geocoder({
 					showResultIcons: false,
@@ -504,44 +535,64 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 					}
 			}
 
-		var baseLayers = {
-			"Open Streetmaps": OSM,
-			"Google": ggl,
-			"Google Terrain": ggl1,
-			"Google Satellite": ggl2,
-			"Google Hybrid": ggl3,
-			"USGS Topo": usgstopo,
-			"Dark": dark,
-			"Aerial": aerial,		
-		};
+		if(in_local_bool != "1") {	//	remove all but OSM if using local maps
+			var baseLayers = {
+				"Open Streetmaps": OSM,
+				"Google": ggl,
+				"Google Terrain": ggl1,
+				"Google Satellite": ggl2,
+				"Google Hybrid": ggl3,
+				"USGS Topo": usgstopo,
+				"Dark": dark,
+				"Aerial": aerial,		
+			};
+			
+			var overlays = {
+				"Clouds": cloudscls,
+				"Precipitation": precipitationcls,
+				"Rain": raincls,
+				"Pressure": pressurecntr,
+				"Temperature": temp,
+				"Wind": wind,
+				"Snow": snow,
+				"Radar": nexrad,
+				"Grid": grid,
+			};
+
+			} else {
+			var baseLayers = {
+				"Open Streetmaps": OSM,
+			};
+			
+			var overlays = {};				
+			}
 		
-		var overlays = {
-			"Clouds": cloudscls,
-			"Precipitation": precipitationcls,
-			"Rain": raincls,
-			"Pressure": pressurecntr,
-			"Temperature": temp,
-			"Wind": wind,
-			"Snow": snow,
-			"Radar": nexrad,
-			"Grid": grid,
-		};
+		if(control_position == "tl") {
+			ctrlPos = 'topleft';
+			} else if(control_position == "tr") {
+			ctrlPos = 'topright';
+			} else if(control_position == "bl") {
+			ctrlPos = 'bottomleft';
+			} else if(control_position == "br") {
+			ctrlPos = 'bottomright';
+			} else {
+			ctrlPos = 'none';
+			}
 
-		layercontrol = L.control.layers(baseLayers, overlays, {position: control_position, collapsed: false});
-		layercontrol._map = map;
-		controlDiv = layercontrol.onAdd(map);
-
-		map.addLayer(roadalerts);
-		layercontrol.addOverlay(roadalerts, "Road Conditions");
-		L.control.scale().addTo(map);
-		L.control.zoom({position: control_position}).addTo(map);
+		if(ctrlPos != "none") {
+			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
+			map.addLayer(roadalerts);
+			layercontrol.addOverlay(roadalerts, "Road Conditions");
+			L.control.scale().addTo(map);
+			L.control.zoom({position: ctrlPos}).addTo(map);
+			}
 		if(theType ==2) {
 			createcrossMarker(lat, lng);
 			}
 		if(theType ==3) {
 			createstdMarker(lat, lng);
 			}
-		map.setView([lat, lng], 13);
+		map.setView([lat, lng], setZoom);
 		bounds = map.getBounds();	
 		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
@@ -618,14 +669,6 @@ function do_tab(tabid, suffix, lat, lng) {
 			}
 		}
 
-	$al_groups = $_SESSION['user_groups'];
-
-	if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	
-		$regions_string = "Viewing Regions:&nbsp;&nbsp; " . $al_names;
-		} else {
-		$regions_string = "";
-		}
-
 ?>	
 <STYLE TYPE="text/css">
 .box { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:1000; width: 180px; }
@@ -660,7 +703,7 @@ function do_tab(tabid, suffix, lat, lng) {
 	$set_regions_control = ((!($get_id)) && ((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))) ? "set_regions_control();" : "";
 	$get_messages = ($get_id) ? "get_mainmessages(" . $get_id . " ,'',sortby, sort, '', 'ticket');" : "";
 ?>
-<BODY onLoad = "set_size(); <?php print $ld_ticker;?> location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
+<BODY onLoad = "loadData(); <?php print $ld_ticker;?> location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
 <?php
 	include("./incs/links.inc.php");
 ?>
@@ -677,7 +720,7 @@ function do_tab(tabid, suffix, lat, lng) {
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
 	<DIV CLASS='header' style = "height:32px; width: 100%; float: none; text-align: center;">
 		<SPAN ID='theHeading' CLASS='header' STYLE='background-color: inherit;'></SPAN>
-		<SPAN ID='theRegions' CLASS='heading' STYLE='background-color: #707070;' onMouseover='Tip("<?php print $regions_string;?>", WIDTH, 300);' onmouseout='UnTip();'>Viewing Regions (mouse over to view)</SPAN>
+		<SPAN ID='theRegions' CLASS='heading' STYLE='background-color: #707070;' onmouseout='UnTip();'>Viewing Regions (mouse over to view)</SPAN>
 		<SPAN ID='sev_counts' CLASS='sev_counts'></SPAN>
 	</DIV>
 	<DIV id='left_sidebar' style='position: fixed; top: 30px; left: 0px; height: 500px; font-size: 1.2em; z-index: 9999; background-color: #FFFFFF;'>
@@ -761,6 +804,20 @@ print add_sidebar(TRUE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 <SCRIPT>
 
 //	setup map-----------------------------------//
+var map;
+var minimap;
+var thelevel = '<?php print $the_level;?>';
+var tmarkers = [];	//	Incident markers array
+var rmarkers = [];			//	Responder Markers array
+var fmarkers = [];			//	Responder Markers array
+var cmarkers = [];			//	conditions markers array
+var rss_markers = [];		//	RSS markers array
+var boundary = [];			//	exclusion zones array
+var bound_names = [];
+var bounds;
+var zoom;
+var got_points = false;
+var latLng;
 var viewportwidth;
 var viewportheight;
 var colheight;
@@ -777,33 +834,49 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-var theMapHeight = viewportheight-10;
-$('map_canvas').style.width = viewportwidth + "px";
-$('map_canvas').style.height = theMapHeight + "px";
-$('controls_bar').style.height = "50px";
-var map;
-var minimap;
-var sortby = '`date`';
-var sort = "DESC";
-var columns = "<?php print get_msg_variable('columns');?>";
-var the_columns = new Array(<?php print get_msg_variable('columns');?>);
-var thelevel = '<?php print $the_level;?>';
-var tmarkers = [];	//	Incident markers array
-var rmarkers = [];			//	Responder Markers array
-var fmarkers = [];			//	Responder Markers array
-var cmarkers = [];			//	conditions markers array
-var rss_markers = [];		//	RSS markers array
-var boundary = [];			//	exclusion zones array
-var bound_names = [];
-var latLng;
-var in_local_bool = "0";
+mapWidth = viewportwidth;
+mapHeight = viewportheight - 10;
+outerwidth = viewportwidth;
+outerheight = viewportheight - 10;
+listHeight = viewportheight * .25;
+colwidth = outerwidth * .42;
+colheight = outerheight * .7;
+listHeight = viewportheight * .5;
+listwidth = colwidth * .95
+celwidth = listwidth * .20;
+res_celwidth = listwidth * .15;
+fac_celwidth = listwidth * .15;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+$('leftcol').style.width = colwidth + "px";
+$('leftcol').style.height = mapHeight + "px";
+$('listheading').style.width = listwidth + "px";
+$('ticketlist').style.maxHeight = listHeight + "px";
+$('ticketlist').style.width = listwidth + "px";
+$('ticketheader').style.width = listwidth + "px";
+$('assignmentslist').style.maxHeight = listHeight + "px";	
+$('assignmentslist').style.width = listwidth + "px";
+$('assignments_list').style.maxHeight = listHeight + "px";
+$('assignments_list').style.width = listwidth + "px";
+$('assignmentsheader').style.width = listwidth + "px";
+$("hidelists").style.position = "absolute";	
+$("hidelists").style.top = "0px";
+$("hidelists").style.left = colwidth + "px";
+if(isTicker == 1) {
+	$('controls_bar').style.position = "fixed";
+	$("controls_bar").style.bottom = "40px";
+	}
+
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_fsmap(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", <?php print get_variable('def_zoom');?>, theLocale, useOSMAP, "br");
-map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], <?php print get_variable('def_zoom');?>);
-var bounds = map.getBounds();	
-var zoom = map.getZoom();
-var got_points = false;
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_fsmap(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "br");
+map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
+bounds = map.getBounds();	
+zoom = map.getZoom();
+got_points = false;
 $('controls').innerHTML = controlsHTML;
 $('theHeading').innerHTML = heading;
 <?php

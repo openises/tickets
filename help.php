@@ -211,14 +211,18 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'osw')) {
 ?>
 		<blockquote>
-		<FONT CLASS="header"><BR />On-scene Watch</FONT> (Spring '15)<BR /><BR />
+		<FONT CLASS="header"><BR />On-scene Watch</FONT> (September '15)<BR /><BR />
 		This feature provides a 'reminder' capability by periodically notifying the Super-Admin operator of units requiring special
 		attention.  Tickets (V3 and <BR />later) does this by opening a pop-up window listing qualifying units by handle.<BR /><BR />
 		Units with dispatch status <B>On-scene</B> are included, as are units with <B>Watch</B> checked in the 'Unit Status' form, and/or dispatched
 		to an incident  <BR />similarly identified in the 'Incident Type' form.<BR /><BR />
 		Timing cycles are controlled via an <B>OS-Watch</B> Config/setting value of - as example - <B><I>5/15/60</I></B>, which reports on-scene units on
 		high-priority calls <BR />every 5 minutes, on normal-priority calls every 15 minutes, and the others every 60 minutes.  A value of zero denotes
-		non-use of that timer.  <BR />Thus, 0/0/0, which is the initial value, disables OS-Watch for each time slice. Or, completely.
+		non-use of that timer.  <BR />Thus, 0/0/0, which is the initial value, disables OS-Watch for each time slice. Or, completely.<BR /><BR />
+		Admin operators will also receive this notification if a <b>4th</b> value of 1 is added to the setting, an example of this being <B><I>5/15/60/1</I></B> .<BR /><BR />
+		An audible alarm will be sounded if a <b>5th</b> value of 1 is added to the setting string, an example being <B><I>5/15/60/1/1</I></B> .  (An example of this sans <BR />
+		Admin operator inclusion would be <I><B>5/15/60//1</I></B> .)
+
 		</blockquote>
 <?php
 		}

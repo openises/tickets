@@ -454,7 +454,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 				</TR>
 <?php
-				$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` `f`
+				$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `f`.`name` AS `fac_name`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` `f`
 					LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` `t` ON `f`.type = `t`.id 
 					ORDER BY `handle`";
 				$result_fac	= mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -464,10 +464,20 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Unit is located at the selected facility as a home base">Locate at Facility:&nbsp;</A></TD>
 						<TD ALIGN='left'><FONT SIZE='-2'>
 							<SELECT NAME='frm_facility_sel'>
+<?php
+							if($row['at_facility'] != 0) {
+?>
+								<OPTION VALUE=0>Select</OPTION>
+<?php
+								} else {
+?>
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
+								}
 								while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac))) {
-									echo "\t\t<OPTION VALUE = {$row_fac['fac_id']} CLASS = ''>{$row_fac['handle']}</OPTION>\n";
+									$temp = explode("/", $row_fac['fac_name']);
+									$sel = ($row['at_facility'] == $row_fac['fac_id']) ? "SELECTED" : "";
+									echo "\t\t<OPTION VALUE = {$row_fac['fac_id']} CLASS = '' {$sel}>{$temp[0]}</OPTION>\n";
 									}
 ?>
 							</SELECT>
@@ -660,8 +670,8 @@ var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 
