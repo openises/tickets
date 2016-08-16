@@ -40,7 +40,7 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 
-	<HEAD><TITLE>Tickets - Main Module</TITLE>
+	<HEAD><TITLE>Tickets - Facilities</TITLE>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
@@ -147,9 +147,13 @@ function set_size() {
 	outerheight = viewportheight * .95;
 	listHeight = viewportheight * .25;
 	colwidth = outerwidth * .42;
+	leftcolwidth = colwidth * 1.2;
+	rightcolwidth = colwidth * .8;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .5;
-	listwidth = colwidth * .95
+	listwidth = leftcolwidth * .99
+	leftlistwidth = leftcolwidth * .99;
+	rightlistwidth = rightcolwidth * .99;
 	celwidth = listwidth * .20;
 	res_celwidth = listwidth * .15;
 	fac_celwidth = listwidth * .15;
@@ -160,10 +164,10 @@ function set_size() {
 	$('rightcol').style.width = colwidth + "px";
 	$('rightcol').style.height = colheight + "px";	
 	$('facilitylist').style.maxHeight = listHeight + "px";	
-	$('facilitylist').style.width = listwidth + "px";
+	$('facilitylist').style.width = leftlistwidth + "px";
 	$('the_flist').style.maxHeight = listHeight + "px";
-	$('the_flist').style.width = listwidth + "px";
-	$('facilitiesheading').style.width = listwidth + "px";
+	$('the_flist').style.width = leftlistwidth + "px";
+	$('facilitiesheading').style.width = leftlistwidth + "px";
 	load_regions();
 	}
 
@@ -222,10 +226,7 @@ function pageLoaded() {
 <DIV id='outer' style='position: absolute; left: 0px;'>
 	<DIV id='leftcol' style='position: absolute; left: 10px;'>
 		<DIV id='facilitiesheading' class = 'heading'>
-			<DIV style='text-align: center;'>Facilities
-				<SPAN id='collapse_facs' onClick="hideDiv('facilitylist', 'collapse_facs', 'expand_facs')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
-				<SPAN id='expand_facs' onClick="showDiv('facilitylist', 'collapse_facs', 'expand_facs')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
-			</DIV>
+			<DIV style='text-align: center;'>Facilities</DIV>
 		</DIV>
 		<DIV class="scrollableContainer" id='facilitylist' style='border: 1px outset #707070;'>
 			<DIV class="scrollingArea" id='the_flist'><CENTER><IMG src='./images/owmloading.gif'></DIV>				

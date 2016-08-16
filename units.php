@@ -1,11 +1,14 @@
 <?php
 error_reporting(E_ALL);
-
+@session_start();
+session_write_close();
 $units_side_bar_height = .5;		// max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)
 $zoom_tight = FALSE;				// replace with a decimal number to over-ride the standard default zoom setting
 $iw_width= "300px";					// map infowindow with
 $groupname = isset($_SESSION['group_name']) ? $_SESSION['group_name'] : "";	//	4/11/11
-
+$in_win = array_key_exists ("mode", $_GET);             // in
+$from_mi = array_key_exists ("mi", $_GET);
+$gmaps = $_SESSION['internet'];
 $the_resp_id = (isset($_GET['id']))? $_GET['id']: 0;	//	11/18/13
 /*
 5/23/08	added check for associated assign records before allowing deletions line 843 area
@@ -295,7 +298,13 @@ function get_user_details($rosterID) {	//	9/6/13
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
+<?php 
+if ($_SESSION['internet']) {				// 8/22/10
+?>
 	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+<?php 
+	} 
+?>
 	<script src="./js/Google.js"></script>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -510,6 +519,7 @@ function get_user_details($rosterID) {	//	9/6/13
 				`ogts`= " . 		quote_smart(trim($_POST['frm_ogts'])) . ",
 				`mob_tracker`= " . 	quote_smart(trim($_POST['frm_mob_tracker'])) . ",
 				`xastir_tracker`= " . 	quote_smart(trim($_POST['frm_xastir_tracker'])) . ",
+				`followmee_tracker`= " . 	quote_smart(trim($_POST['frm_followmee_tracker'])) . ",
 				`ring_fence`= " . 	quote_smart(trim($_POST['frm_ringfence'])) . ",		
 				`excl_zone`= " . 	quote_smart(trim($_POST['frm_excl_zone'])) . ",						
 				`direcs`= " . 		quote_smart(trim($_POST['frm_direcs'])) . ",
@@ -575,6 +585,7 @@ function get_user_details($rosterID) {	//	9/6/13
 		$ogts = 	(empty($_POST['frm_ogts']))? 		0: quote_smart(trim($_POST['frm_ogts'])) ;
 		$mob_tracker = 	(empty($_POST['frm_mob_tracker']))? 		0: quote_smart(trim($_POST['frm_mob_tracker'])) ;	//	9/6/13
 		$xastir_tracker = 	(empty($_POST['frm_xastir_tracker']))? 		0: quote_smart(trim($_POST['frm_xastir_tracker'])) ;	//	1/30/14
+		$followmee_tracker = 	(empty($_POST['frm_followmee_tracker']))? 		0: quote_smart(trim($_POST['frm_followmee_tracker'])) ;	//	1/30/14
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
 		$theFac = 0;
 		if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
@@ -590,7 +601,7 @@ function get_user_details($rosterID) {	//	9/6/13
 
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`, `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, 
-			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `at_facility`, `updated`, `status_updated` )
+			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `followmee_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `at_facility`, `updated`, `status_updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_roster_id'])) . "," .
 				quote_smart(trim($_POST['frm_name'])) . "," .
@@ -616,6 +627,7 @@ function get_user_details($rosterID) {	//	9/6/13
 				quote_smart(trim($_POST['frm_ogts'])) . "," .
 				quote_smart(trim($_POST['frm_mob_tracker'])) . "," .
 				quote_smart(trim($_POST['frm_xastir_tracker'])) . "," .
+				quote_smart(trim($_POST['frm_followmee_tracker'])) . "," .
 				quote_smart(trim($_POST['frm_ringfence'])) . "," .	
 				quote_smart(trim($_POST['frm_excl_zone'])) . "," .					
 				quote_smart(trim($_POST['frm_direcs'])) . "," .
@@ -782,5 +794,4 @@ function get_user_details($rosterID) {	//	9/6/13
 			}
 		}					
 	exit();
-    break;
 ?>

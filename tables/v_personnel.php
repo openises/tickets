@@ -16,7 +16,7 @@ function validate_form(myform) {	// reject empty form elements
 		<INPUT TYPE="hidden" NAME="id" 			VALUE="<?php print $row['id'];?>" />
 	
 		<TABLE BORDER="0" ALIGN="center">
-		<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table 'Conditions' - View Entry</FONT></TD></TR>
+		<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table 'Personnel' - View Entry</FONT></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Surname:</TD>
 			<TD><?php print $row['surname'];?></TD></TR>

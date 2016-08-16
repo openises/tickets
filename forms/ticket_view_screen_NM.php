@@ -249,7 +249,7 @@ function set_size() {
 <?php
 
 	print do_ticket($row, $col_width, FALSE) ;				// 2/25/09
-	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
+	print show_actions($row['id'], "date", FALSE, TRUE, 0);		/* lists actions and patient data belonging to ticket */
 	print "</TD></TR></TABLE>\n";	
 	$lat = $row['lat']; $lng = $row['lng'];
 ?>

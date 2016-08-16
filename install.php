@@ -51,6 +51,9 @@
 */
 
 error_reporting(E_ALL);				// 2/3/09
+if( !extension_loaded('mysql') ){
+	require_once('./incs/mysql2i.class.php');
+	}
 
 $version = "2.20 A base beta";				// see usage below 8/5/10
 

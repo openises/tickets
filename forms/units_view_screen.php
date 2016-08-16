@@ -373,6 +373,7 @@ if (isset($rowtr)) {																	// got tracks?
 					$disp_allowed = ($row_st['dispatch']==2)?  "DISABLED" : "";				// 5/30/10
 					print (is_guest())? "" : 					"<INPUT {$disp_allowed} TYPE='button' VALUE='to Dispatch' STYLE = 'margin-left: 40px' onClick= \"$('incidents').style.display='block'; $('view_unit').style.display='none';\" STYLE = 'margin-left:12px;'>"; //  8/1/09
 					print (is_guest())? "" : 					"<INPUT {$disp_allowed} TYPE='button' VALUE='to Facility' STYLE = 'margin-left: 40px' onClick= \"to_fac_routes(" . $row['id'] . ")\" STYLE = 'margin-left:12px;'>"; //  8/1/09
+					print (is_guest())? "" : 					"<INPUT TYPE='button' VALUE='Log' STYLE = 'margin-left: 40px' onClick= \"unit_log(" . $row['id'] . ")\" STYLE = 'margin-left:12px;'>";
 ?>
 				</TD>
 			</TR>

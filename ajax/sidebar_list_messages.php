@@ -5,6 +5,9 @@ list messages.php - gets messages from messages table for display in message win
 */
 @session_start();
 session_write_close();
+if($_GET['q'] != $_SESSION['id']) {
+	exit();
+	}
 require_once('../incs/functions.inc.php');
 include('../incs/html2text.php');
 $ret_arr = array();
@@ -84,7 +87,7 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`subject` AS `subject`	
 		FROM `$GLOBALS[mysql_prefix]messages` `m` 
 		{$where} {$order} {$order2}";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = mysql_query($query);
 $num=mysql_num_rows($result);
 if (mysql_num_rows($result) == 0) { 				// 8/6/08
 	$ret_arr[$i][0] = "No Messages";
@@ -108,7 +111,11 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 			if($n == count($the_resp_ids)) {
 				$thesep = "";
 				}
-			$resp_names .= get_respondername($val) . $thesep;
+			if($val != "") {
+				$resp_names .= get_respondername($val) . $thesep;
+				} else {
+				$resp_names .= "Unk" . $thesep;
+				}
 			$n++;
 			}
 //		$resp_name = get_respondername($the_responder);	

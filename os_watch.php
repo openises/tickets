@@ -165,6 +165,20 @@ switch ($mode) {
 					ORDER BY `t`.`severity` DESC, `t`.`scope` ASC LIMIT {$lim} ";
 					}		// end function
 
+		function q3($lim) {
+			$bits = explode('/', get_variable('status_watch'));
+			if(count($bits) == 2) {
+		        $watch_group = $bits[0];
+        		$watch_interval = $bits[1];
+
+			return "SELECT 'N/A' as tickstatus, '$watch_group' as tickaddr, 0 as severity, status_updated as on_scene, status_updated as the_asof,
+						'Overdue - $watch_group' as unit_status, '' as contact_via, unix_timestamp(now()) as expires, handle as handle, 'Overdue $watch_group' as scope FROM `$GLOBALS[mysql_prefix]responder` 
+						left join $GLOBALS[mysql_prefix]un_status on 
+		$GLOBALS[mysql_prefix]responder.un_status_id = $GLOBALS[mysql_prefix]un_status.id where $GLOBALS[mysql_prefix]un_status.group = '$watch_group' and status_updated < (now() - interval $watch_interval minute)";
+			} else {
+				return "select 1 from dual where false";
+			}
+		}
 
 		function do_row($row) {
 			global $severities, $now, $i, $incs_shown, $evenodd ;
@@ -240,7 +254,7 @@ switch ($mode) {
 
 
 			$watch_val = "";
-			$q_arr = array( q0 (1) , q1 (1) , q2 (1) );			// first, probe
+			$q_arr = array( q0 (1) , q1 (1) , q2 (1), q3(1));			// first, probe
 
 			for ($j=0; $j< 3; $j++) {
 				if ($now >= $_SESSION['osw_run_at'][$j]) {						// seconds
@@ -254,7 +268,7 @@ switch ($mode) {
 			do_tbl_header($watch_val);
 			$incs_shown = array();											// empty
 
-			$q_arr = array( q0 (9999) , q1 (9999) , q2 (9999) );			// then, pull n/j/y H:i
+			$q_arr = array( q0 (9999) , q1 (9999) , q2 (9999) , q3(9999));			// then, pull n/j/y H:i
 			for ($j=0; $j< 3; $j++) {
 				if ($now >= $_SESSION['osw_run_at'][$j]) {					// seconds
 					$_SESSION['osw_run_at'][$j] +=  ( $osw_arr[$j] * 60 ) ;				// set next - nth entry to seconds - 9/25/2015

@@ -141,7 +141,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 	var lit_r = new Array();
 	var lit_o = new Array();
 	var unread_messages = 0;
-
+	var hasUsercount = 0;
 	var chat_id = 0;				// new chat invite - 8/25/10
 	var ticket_id = 0;				// new ticket
 	var unit_id;					// 'moved' unit
@@ -154,7 +154,36 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 
 	var d = new Date();				// millisecs since 1970/01/01
 	var chk_osw_at = d.getTime(); 	// when to check OSW
-
+	var ws_server_started = false;
+	var mu = false;
+	
+	function start_server() {
+		var randomnumber=Math.floor(Math.random()*99999999);
+		var url ="./socketserver/server.php?version=" + randomnumber;
+		var obj; 
+		obj = new XMLHttpRequest();
+		obj.onreadystatechange = function() {
+			if(typeof parent.frames["main"].Socket_startup == 'function') {
+				setTimeout(function(){parent.frames["main"].Socket_startup(); }, 5000);
+				}
+			if(typeof Socket_startup == 'function') {
+				setTimeout(function(){Socket_startup(); }, 5000);
+				}
+			}
+		obj.open("POST", url, true);
+		obj.send(null);
+		}
+	
+	function end_server() {
+		var randomnumber=Math.floor(Math.random()*99999999);
+		var url = './socketserver/deletefile.php';
+		sendRequest (url,server2_cb, "");
+		function server2_cb(req) {
+			}
+		}
+		
+	window.addEventListener("unload", end_server(), false); 
+	
 	function do_msgs_loop() {		//	10/23/12
 		var randomnumber=Math.floor(Math.random()*99999999);
 		if (window.XMLHttpRequest) {
@@ -236,7 +265,6 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 //			do_logout();				// 2/10/12
 			}
-
 		var temp = parseInt(the_id_arr[0]);				// new chat invite?
 		if (temp != chat_id) {
 			chat_id = temp;
@@ -247,6 +275,9 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		if (temp != ticket_id) {
 			ticket_id = temp;
 			tick_signal();								// light the ticket button
+			if(typeof parent.frames["main"].load_incidentlist == 'function') {
+				parent.frames["main"].load_incidentlist();
+				}
 			}
 		var temp =  parseInt(the_id_arr[2]);			// unit?
 		var temp1 =  the_id_arr[3].trim();				// unit timestamp?
@@ -255,6 +286,12 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			updated =  temp1;							// timestamp this unit
 			$('unit_id').innerHTML = unit_id;			// unit id
 			unit_signal();								// light the unit button
+			if(typeof parent.frames["main"].load_responderlist == 'function') {
+				parent.frames["main"].load_responderlist();
+				}
+			if(typeof parent.frames["main"].load_responderlist2 == 'function') {
+				parent.frames["main"].load_responderlist2();
+				}
 			}
 
 		$("div_assign_id").innerHTML = the_id_arr[4].trim();			// 2/19/12
@@ -302,10 +339,8 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		var d = new Date();
 		var rightNow = d.getTime(); 									// millisecs since 1970/01/01
 		if ( rightNow > chk_osw_at ) {
-//			alert(305);
 			chk_osw_at = rightNow + ( 60000 );							// set next check at one minute from rightNow
 			if ( the_id_arr[12] == 1 ) {								// run on-scene watch?
-//				alert(308);
 				var rand = Math.floor(Math.random() * 10000);			// cache buster
 				var window_addr = "os_watch.php?rand=" + rand;
 				newwindow_co=window.open( window_addr, "On-Scene Watch",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
@@ -350,17 +385,20 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		if (msgs_interval!=null) {return;}			// ????
 		msgs_interval = window.setInterval('do_msgs_loop()', 30000);
 		}			// end function mu get()
-
+		
 	function mu_init() {								// get initial values from server -  4/7/10
+		if(mu) {return;}
+		mu = true;
+		var theBroadcast =  <?php print get_variable('broadcast');?>;
+		if(parseInt(theBroadcast) == 1) {
+			start_server();
+			}
 		var randomnumber=Math.floor(Math.random()*99999999);
 		if (is_initialized) { return; }
 		is_initialized = true;
-
 		sendRequest ('get_latest_id.php?version=' + randomnumber,init_cb, "");
 			function init_cb(req) {
-//				the_id_str = syncAjax("get_latest_id.php");			// note synch call
 				var the_id_arr=JSON.decode(req.responseText);				// 1/7/11
-//				alert("359 " + the_id_arr.length );
 				if (the_id_arr.length != arr_lgth_good)  {						// 2/25/12, 10/23/12
 					alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 					}
@@ -571,21 +609,27 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			}
 		}		// end function sync Ajax()
 
-	function do_audible() {	// 6/12/10
-		try 		{document.getElementsByTagName('audio')[0].play();}
-		catch (e) 	{}		// ignore
+	function do_audible(element) {	// 6/12/10
+		a = typeof a !== 'undefined' ? a : 'incident';
+		try 		{
+		document.getElementById(element + '_alert').currentTime=0;
+		document.getElementById(element + '_alert').play();}
+		catch (e) 	{console.log(e);}		// ignore
 		}				// end function do_audible()
+
 	function get_line_count() {							// 4/5/10
 		var url = "do_get_line_ct.php";
 		var payload = syncAjax(url);						// does the work
 		return payload;
 		}		// end function get line_count()
+
 	function chat_signal() {									// light the button
 		CngClass("chat", "signal_r");
 		lit["chat"] = true;
-		do_audible();				// 6/12/10
+		do_audible('chat');				// 6/12/10
 		}
 	function unit_signal() {										// light the units button and - if not already lit red - the situation button
+		do_audible('unit');
 		if (lit["main"]) {return; }									// already lit - possibly red
 		CngClass("main", "signal_b");
 		lit["main"] = true;
@@ -644,7 +688,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 	function tick_signal() {										// red light the button
 		CngClass("main", "signal_r");
 		lit["main"] = true;
-		do_audible();				// 6/12/10
+		do_audible('incident');				// 6/12/10
 		}
 																	// 2/25/12
 	function misc_signal() {										// blue light to situation button if not already lit
@@ -706,6 +750,16 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		document.go.action = where;
 		document.go.submit();
 		}				// end function go there ()
+
+	function go_there_win(where, the_id) {
+		CngClass(the_id, 'signal_w')                    // highlight this button
+                if(!(current_butt_id == the_id)) {
+                        do_off_signal (current_butt_id);        // clear any prior one if different
+                        }
+                current_butt_id = the_id;                               // 8/21/10
+                lit[the_id] = false;
+		newwindow_c=window.open(where, "New Ticket",  "titlebar, resizable=1, scrollbars, height=480,width=800,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+		}
 
 	function show_msg (msg) {
 		$('msg_span').innerHTML = msg;
@@ -899,6 +953,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 
 			}
 		}
+		
 	var newwindow_fs = null;
 	function do_full_scr() {                            //9/7/09
 		light_butt('full');
@@ -910,7 +965,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			starting=true;
 			params  = 'width='+screen.width;
 			params += ', height='+screen.height;
-			params += ', top=0, left=0', scrollbars = 1
+			params += ', top=0, left=0, scrollbars = 1';
 			params += ', resizable=1';
 			newwindow_fs=window.open("full_scr.php", "full_scr", params);
 			if (isNull(newwindow_fs)) {
@@ -918,6 +973,28 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 				return;
 				}
 			newwindow_fs.focus();
+			starting = false;
+			}
+		}        // end function do full_scr()
+		
+	var newwindow_wsm = null;
+	function do_wsm_scr() {                            //9/7/09
+		if ((newwindow_wsm) && (!(newwindow_wsm.closed))) {newwindow_wsm.focus(); return;}		// 7/28/10
+		if (logged_in()) {
+			if(starting) {return;}                        // 4/15/10 fullscreen=no
+			do_set_sess_exp();		// session expiration update
+			if(window.focus() && newwindow_wsm) {newwindow_wsm.focus()}    // if already exists
+			starting=true;
+			params  = 'width=500';
+			params += ', height=400';
+			params += ', top=100, left=100, scrollbars = 0';
+			params += ', resizable=1';
+			newwindow_wsm=window.open("ws_monitor.php", "Websocket_Monitor", params);
+			if (isNull(newwindow_wsm)) {
+				alert ("This operation requires popups to be enabled. Please adjust your browser options.");
+				return;
+				}
+			newwindow_wsm.focus();
 			starting = false;
 			}
 		}        // end function do full_scr()
@@ -971,8 +1048,9 @@ function get_daynight() {
 			}
 		}		// end function do_day_night()
 
-	function guest_hide_buttons() {
-		if(the_level == "Guest") {
+	function guest_hide_buttons(level) {
+		if((level == "Guest") || (level == 1)) {
+			window.guest = 1;
 			if($("msg")) {$("msg").style.display  = "none";}
 			if($("reps")) {$("reps").style.display  = "none";}
 			if($("conf")) {$("conf").style.display  = "none";}
@@ -1022,7 +1100,7 @@ function get_daynight() {
 ?>
 		var current_user_id = "<?php print $the_userid;?>";
 			guest_hide_buttons();
-			show_butts();														// navigation buttons
+			show_butts();	// navigation buttons
 			$("gout").style.display  = "inline";								// logout button
 			$("user_id").innerHTML  = "<?php print $the_userid;?>";		//	7/16/13
 			$("whom").innerHTML  = "<?php print $the_whom;?>";			// user name, 7/1613
@@ -1070,6 +1148,7 @@ function get_daynight() {
 		catch (e) {
 			}
 		}		// end do_manual()
+
 		function can_has () {							// cancel HAS function - return to normal display
 			$("has_form_row").style.display = "none";
 			show_butts();								// show buttons
@@ -1083,53 +1162,54 @@ function get_daynight() {
 			}					// end function
 
 <?php				// 7/2/2013
-		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		//
+		if ((intval( get_variable ('broadcast')==1)) &&  (intval(get_variable ('internet')==1))) { 		//
 ?>
-		function do_broadcast() {
-
-			$("has_form_row").style.display = "inline-block";
-			$("has_message_row").style.display = "none";
-			document.has_form.has_text.focus()
-			}
-		function has_check(inStr) {
-			if (inStr.trim().length == 0) { alert("Value required - try again."); return;}
-			else {
-				var msg =  $("whom").innerHTML + " sends: " + inStr.trim(); // identify sender
-				broadcast(msg); 				// send it
-				setTimeout(function(){
-					CngClass("has_text", "heading");
-					document.has_form.has_text.value = "              Sent!";		// note spaces
+			function do_broadcast() {
+				if(hasUsercount > 1) {
+					$("has_form_row").style.display = "inline-block";
+					$("has_message_row").style.display = "none";
+					document.has_form.has_text.focus()
+					} else {
+					hide_butts();
+					$("has_form_row").style.display = "none";
+					$("has_message_text").innerHTML = "There are no other users connected, messages will not be sent";
+					CngClass("has_message_text", "heading");
+					$("has_message_row").style.display = "block";	// include button		
+					}
+				}
+			function has_check(inStr) {
+				if (inStr.trim().length == 0) { alert("Value required - try again."); return;}
+				else {
+					var msg =  $("whom").innerHTML + " sends: " + inStr.trim(); // identify sender
+					broadcast(msg, 1); 				// send it
 					setTimeout(function(){
-						document.has_form.has_text.value = "";
-						$("has_form_row").style.display = "none";		// hide the form row
-						CngClass("has_text", "");
-						show_butts();								// back to normal
-						}, 3000);
-					}, 1000);
-				}		// end else{}
-			}		// end function has_check()
+						CngClass("has_text", "heading");
+						document.has_form.has_text.value = "              Sent!";		// note spaces
+						setTimeout(function(){
+							document.has_form.has_text.value = "";
+							$("has_form_row").style.display = "none";		// hide the form row
+							CngClass("has_text", "");
+							show_butts();								// back to normal
+							}, 3000);
+						}, 1000);
+					}		// end else{}
+				}		// end function has_check()
 
-		function hide_has_message_row() {
-			$("msg_span").style.display = "none";
-			show_butts();								// show buttons
-			}
+			function hide_has_message_row() {
+				$("msg_span").style.display = "none";
+				show_butts();								// show buttons
+				}
 
-		function show_has_message(in_message) {
-			hide_butts();											// make room
-			$("has_message_text").innerHTML = in_message;			// the message text
-			CngClass("has_message_text", "heading");
-			$("has_message_row").style.display = "inline-block";	// include button
-			}
-
+			function show_has_message(in_message) {
+				hide_butts();											// make room
+				$("has_message_text").innerHTML = in_message;			// the message text
+				CngClass("has_message_text", "heading");
+				$("has_message_row").style.display = "block";	// include button
+				}
 <?php
-		}			// end if (broadcast && internet )
+			}			// end if (broadcast && internet )
 ?>
 	</SCRIPT>
-<?php							// 7/2/2013
-	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) {
-		require_once('./incs/socket2me.inc.php');		// 5/24/2013
-		}
-?>
 </HEAD>
 <BODY ID="main_body" onLoad = "top_init();">	<!-- 3/15/11, 10/23/12 -->
 <DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>
@@ -1139,7 +1219,7 @@ function get_daynight() {
 <DIV ID = "div_requests_id" STYLE="display:none;"></DIV>	<!-- 10/23/12 -->
 
 	<TABLE ALIGN='left'>
-		<TR VALIGN='top'>
+		<TR VALIGN='top' style='height: 30px;'>
 			<TD ROWSPAN=4><IMG SRC="<?php print get_variable('logo');?>" BORDER=0 /></TD>
 			<TD>
 <?php
@@ -1201,15 +1281,21 @@ function get_daynight() {
 <?php
 			}
 ?>
-				<SPAN ID = 'gout' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_logout()" STYLE="display:none; float: none;" ><?php print get_text("Logout"); ?></SPAN> <!-- 7/28/10 -->
+				<SPAN ID = 'gout' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_logout()" STYLE="display:none; float: none;"><?php print get_text("Logout"); ?></SPAN> <!-- 7/28/10 -->
 <?php
 		if ($_SERVER['HTTP_HOST'] == "127.0.0.1") { print "&nbsp;&nbsp;&nbsp;&nbsp;DB:&nbsp;{$mysql_db}&nbsp;&nbsp;&nbsp;&nbsp;";}
 ?>
 
 				<SPAN ID='msg_span' CLASS = 'message'></SPAN>
+				<DIV id='broadcastWrapper' class='plain' TITLE='Click to Open Websocket Server Monitor' style='display: none; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_wsm_scr();'>
+					<SPAN ID = 'usercount' CLASS="titlebar_text" style='float: right; font-weight: bold; padding-right: 20px;'></SPAN>
+					<SPAN ID = 'timeText' CLASS="titlebar_text" style='float: right; font-weight: bold; padding-right: 20px;'></SPAN>
+				</DIV>
 				<br />
-			</TD></TR>
-		<TR><TD ID = 'buttons' STYLE = "display:none">
+			</TD>
+		</TR>
+		<TR>
+			<TD ID = 'buttons' STYLE = "display:none">
 			<SPAN ID = 'main'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick ="go_there('main.php', this.id);"><?php print get_text("Situation"); ?></SPAN>
 <!--		<SPAN ID = 'mi'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
@@ -1285,7 +1371,7 @@ function get_daynight() {
 				onClick = "go_there('mobile.php', this.id);"><?php print get_text("Mobile"); ?></SPAN>	<!-- 7/27/10 -->
 <!-- ================== -->
 			<SPAN ID = 'reqs'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "go_there('./portal/requests.php', this.id);"></SPAN>	<!-- 10/23/12 -->
+				onClick = "go_there('./portal/requests.php', this.id);">Requests</SPAN>	<!-- 10/23/12 -->
 <?php
 			}
 		if ((!(is_guest())) && (intval(get_variable('ics_top')==1))) { 		// 5/21/2013
@@ -1305,7 +1391,7 @@ function get_daynight() {
 	}			// end if (broadcast && internet )
 ?>
 			</TD>
-			</TR>
+		</TR>
 		<TR ID = 'has_form_row' STYLE = "display:none;">
 			<TD ALIGN=CENTER>
 				<SPAN ID = "has_span" >
@@ -1316,7 +1402,7 @@ function get_daynight() {
 				</FORM>
 				</SPAN>
 			</TD>
-			</TR>
+		</TR>
 
 		<TR ID = 'has_message_row' STYLE = "display: none;">
 			<TD ALIGN=CENTER>
@@ -1325,7 +1411,7 @@ function get_daynight() {
 					<BUTTON VALUE="OK" onclick = "end_message_show();"  STYLE = "margin-left:20px">OK</BUTTON>
 				</SPAN>
 			</TD>
-			</TR>
+		</TR>
 
 <!-- ================== -->
 	</TABLE>
@@ -1345,11 +1431,14 @@ function get_daynight() {
 	$temp = explode (" ", $browser);
 	switch (trim($temp[0])) {
 	    case "firefox" :
-			print (empty($the_wav_file))? "\n": "\t\t<audio src=\"./sounds/{$the_wav_file}\" preload></audio>\n";
+			print (empty($the_wav_file))? "\n": "\t\t<audio id=\"incident\" src=\"./sounds/{$the_wav_file}\" preload></audio>\n";
 			break;
 	    case "chrome" :
 	    case "safari" :
-			print (empty($the_mp3_file))? "\n":  "\t\t<audio src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"incident_alert\" src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"chat_alert\" src=\"./sounds/chat-alert.mp3\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"message_alert\" src=\"./sounds/chat-alert.mp3\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"unit_alert\" src=\"./sounds/unit-alert.mp3\" preload></audio>\n";
 			break;
 	    default:
 		}	// end switch
@@ -1361,6 +1450,10 @@ function get_daynight() {
 <DIV ID='test' style="position: fixed; top: 20px; left: 20px; height: 20px; width: 100px;" onclick = "location.href = '#bottom';">
 	<h3></h3></DIV>
 <!-- <button onclick = "show_has_message('asasasasas ERERERERER ')">Test</button> -->
-
+<?php							// 7/2/2013
+	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) {
+		require_once('./incs/socket2me.inc.php');		// 5/24/2013
+		}
+?>
 </BODY>
 </HTML>

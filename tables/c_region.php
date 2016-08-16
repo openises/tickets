@@ -25,15 +25,15 @@
 			</SELECT>
 			</TD></TR>		
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Description:</TD>
-		<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="60" SIZE="48" type="text" NAME="frm_description" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >Integer</SPAN></TD></TR>
+		<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="60" SIZE="48" type="text" NAME="frm_description" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Def Area Code:</TD>
 		<TD><INPUT ID="ID3" CLASS="dirty" MAXLENGTH="4" SIZE="4" type="text" NAME="frm_def_area_code" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >Integer</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Def City:</TD>
 		<TD><INPUT ID="ID4" CLASS="dirty" MAXLENGTH="20" SIZE="20" type="text" NAME="frm_def_city" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Def Latitude:</TD>
-		<TD><INPUT ID="ID5" CLASS="dirty" MAXLENGTH="10" SIZE="10" type="text" NAME="frm_def_lat" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >Double</SPAN></TD></TR>
+		<TD><INPUT ID="ID5" CLASS="dirty" MAXLENGTH="10" SIZE="12" type="double" NAME="frm_def_lat" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >Double</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Def Longitude:</TD>
-		<TD><INPUT ID="ID6" CLASS="dirty" MAXLENGTH="10" SIZE="10" type="text" NAME="frm_def_lng" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >Double</SPAN></TD></TR>
+		<TD><INPUT ID="ID6" CLASS="dirty" MAXLENGTH="10" SIZE="12" type="double" NAME="frm_def_lng" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >Double</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Def State:</TD>
 		<TD><INPUT ID="ID7" CLASS="dirty" MAXLENGTH="20" SIZE="20" type="text" NAME="frm_def_st" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Def Zoom:</TD>

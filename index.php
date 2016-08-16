@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.09A Beta - 10/17/15";	
+$version = "3.10A Beta - 05/31/16";	
 
 /*
 10/1/08 added error reporting
@@ -439,7 +439,11 @@ function do_index($table, $theindex) {
 $old_version = get_variable('_version');
 
 if (!($version == $old_version)) {		// current? - 6/6/2013  ==================================================	
-										// not yet 		
+										// not yet 	
+
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]hints` CHANGE `hint` `hint` VARCHAR(512) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;";
+		$result = mysql_query($query);
+										
 		do_setting ('smtp_acct','');			// 7/7/09  
 		do_setting ('email_from','');			// 7/7/09
 		do_setting ('gtrack_url','');			// 7/7/09
@@ -2155,7 +2159,96 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 				$result = mysql_query($query);
 				}
 			cleanup_captions();
-		}		// end (!($version ==...) ==================================================			
+			
+			do_setting ('mob_show_cleared','1');	// sets default show on mobile screen to include cleared assignments where the Ticket is still open
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities` 
+					ADD `notify_when` INT(1) NOT NULL DEFAULT '1' COMMENT 'Sets when to notify facility, 1,2 or 3 for all, open or close' AFTER `notify_email`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]in_types` 
+					ADD `notify_when` INT(1) NOT NULL DEFAULT '1' COMMENT 'When Notifies are sent, 1,2 or 3 for all, open or close' AFTER `notify_email`";
+			$result = mysql_query($query);
+			
+			do_setting ('socketserver_url','');	// sets URL for Websocket server_number - default empty is local server. Set to 127.0.0.1 by runtime code
+			do_setting ('socketserver_port','');	// sets port for Websocket server_number - default empty is local server. Set to 1337 by runtime code
+
+			do_msg_setting ('mototrbo_cai_id','12');
+			do_msg_setting ('smsbroadcast_username','');
+			do_msg_setting ('smsbroadcast_password','');
+			do_msg_setting ('smsbroadcast_api_url','https://api.smsbroadcast.com.au/api-adv.php');
+			do_msg_setting ('mototrbo_python_path','');
+			do_msg_setting ('mototrbopy_path','');
+			do_msg_setting ('smsbroadcast_maxsplit','2');
+			
+			$query_check = "select count(*) as cnt from information_schema.columns where table_schema = database() and column_name = 'followmee_tracker' and table_name = '$GLOBALS[mysql_prefix]responder'";
+			$result_check = mysql_query($query_check);
+			$row = mysql_fetch_assoc($result_check);
+			if($row['cnt'] == 0) {
+				$query_alter = mysql_query("ALTER TABLE $GLOBALS[mysql_prefix]responder ADD COLUMN `followmee_tracker` tinyint(2) NOT NULL DEFAULT '0' COMMENT 'Tracking using FollowMee'");
+				}
+				
+			do_setting ('custom_situation','1/1');			// 04/07/16
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]user` ADD `facility_id` INT( 7 ) NOT NULL DEFAULT '0' COMMENT 'For level = facility' AFTER `responder_id` ";		// 04/07/16
+			$result = mysql_query($query);			// 04/07/16
+			
+			if (!table_exists("facnotes")) {
+				$query = "CREATE TABLE `$GLOBALS[mysql_prefix]facnotes` (
+					`id` int(10) NOT NULL auto_increment,
+					`ticket_id` int(10) NOT NULL,
+					`origin` varchar(64) DEFAULT NULL,
+					`destination` varchar(64) DEFAULT NULL,
+					`type` varchar(64) NOT NULL,
+					`notes` longtext,
+					`_by` int(7) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+				$result = mysql_query($query);			// 04/07/16
+				}
+	
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facnotes` ADD `patient` VARCHAR( 64 ) NOT NULL AFTER `type`";
+			$result = mysql_query($query);			// 04/07/16
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facnotes` ADD `ETA` VARCHAR( 16 ) NOT NULL AFTER `patient`";
+			$result = mysql_query($query);			// 04/07/16
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facnotes` CHANGE `type` `type` INT(7) NOT NULL";
+			$result = mysql_query($query);			// 04/07/16	
+
+			if (!table_exists("fac_case_cat")) {
+				$query = "CREATE TABLE `$GLOBALS[mysql_prefix]fac_case_cat` (
+					`id` int(6) NOT NULL auto_increment,
+					`category` varchar(64) NOT NULL,
+					`description` longtext,
+					`color` varchar(7) DEFAULT NULL,
+					`bgcolor` varchar(7) DEFAULT NULL,
+					`facility` int(7) NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+				$result = mysql_query($query);			// 04/07/16
+				}			
+				
+			if (!table_exists("patient_x")) {	
+				$query = "CREATE TABLE `$GLOBALS[mysql_prefix]patient_x` (
+					`id` int(7) NOT NULL auto_increment,
+					`patient_id` int(7) NOT NULL,
+					`assign_id` int(7) NOT NULL,
+					`_by` int(7) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					PRIMARY KEY  (`id`)
+				) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+				$result = mysql_query($query);			// 04/18/16
+				}
+				
+			do_setting ('facboard_hide_patient','0');			// 04/20/16	Allows hiding of Patient Name from Facility Board
+			do_setting ('debug','0');			// 04/22/16	For debug purposes
+			do_setting ('log_days','3');			// 04/22/16	For debug purposes
+			update_setting ('reverse_geo','1');
+			}		// end (!($version ==...) ==================================================			
 
 //	check_ai("major_incidents");
 	

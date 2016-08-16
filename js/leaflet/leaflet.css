@@ -299,11 +299,13 @@
 	position: relative;
 	}
 .leaflet-control-layers-expanded {
-	padding: 6px 10px 6px 6px;
+	padding: 6px 10px 16px 6px;
+	top: 0px;
+	margin: 10px;
 	color: #333;
 	background: #fff;
 	width: 200px;
-	height: 350px;
+	height: 250px;
 	overflow-y: auto;
 	}
 .leaflet-control-layers-selector {

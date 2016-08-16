@@ -161,7 +161,7 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 	<![endif]-->
-    <link rel="stylesheet" href=".js/leaflet/leaflet-routing-machine_2.css" />
+    <link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine_2.css" />
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
     <STYLE TYPE="text/css">
@@ -189,7 +189,7 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		.bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
 		.content { padding: 1em; text-align: center; }		
 	</STYLE>
-	<SCRIPT SRC="./js/misc_functions.js"></SCRIPT>
+	<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT>
 	try {	
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
@@ -563,7 +563,7 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 								// 7/29/10
 	$addr_str = urlencode( implode("|", array_unique($addrs)));
 	$smsg_add_str = urlencode( implode(",", array_unique($smsgaddrs)));
-	$mail_str = (empty($addr_str))? "" :  "do_mail_win('{$addr_str}', '{$smsg_add_str}', '{$_REQUEST['frm_ticket_id']}');";
+	$mail_str = (empty($addr_str) || empty($smsg_add_str))? "" :  "do_mail_win('{$addr_str}', '{$smsg_add_str}', '{$_REQUEST['frm_ticket_id']}');";
 	$quick_str = ((get_variable('quick'))==1)? "document.more_form.submit();" : "";
 	$extra =  (((empty($mail_str)) && (empty($quick_str))))? "" : " onLoad = \"{$mail_str}{$quick_str}\"";
 

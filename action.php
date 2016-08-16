@@ -604,7 +604,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 			`s`.`description` AS `stat_descr`,  
 			`r`.`description` AS `unit_descr`, 
 			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
+				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id`  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
 				AS `nr_assigned` 
 			FROM `$GLOBALS[mysql_prefix]responder` `r` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )					

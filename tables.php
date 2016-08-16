@@ -174,15 +174,10 @@ $secondaries = array();				// table names
 $arDate_formats = array(array ("-",0, 1, 2), array ("/", 2, 0, 1));
 $disallow = FALSE;										// 2/25/10
 if ((isset($tablename)) && (!isset($indexname))) {
-	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
+	$query ="SHOW KEYS FROM `$mysql_prefix$tablename` WHERE Key_name = 'PRIMARY'";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	while ($property = mysql_fetch_field($result)) {		// through each field this table
-		if (($property->primary_key) == 1){
-			$indexname = $property->name;					// IMPORTANT!
-			unset ($result);
-			break;
-			}
-		}
+	$r = mysql_fetch_assoc($result); 
+	$indexname = $r['Column_name']; 
 	unset($result);
 	}
 
@@ -678,14 +673,15 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 		
 			print "\n\t\tmands = new Array();\t\t\t// array of mandatory fieldnames\n ";			
 			print "\t\ttypes = new Array();\t\t\t// array of fieldname types\n ";			
-			$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";			// check value where possible - by mysql_field_type
+			$query ="SHOW COLUMNS FROM `$mysql_prefix$tablename`";			// check value where possible - by mysql_field_type			
+//			$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";			// check value where possible - by mysql_field_type
 			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);		// check presence/absence
-			while ($property = mysql_fetch_field($result)) {
-				$thename = $property->name;
-				$thetype = $property->type; 
-				print "\t\ttypes['frm_' + '$thename'] = '$thetype';\n";
-				if (($property->not_null) !=0) {								//
-					print "\t\tmands['frm_' + '$thename'] = '$thetype';\n";
+			while ($row = mysql_fetch_assoc($result)) {
+				$thename = $row['Field'];
+				$thetype = $row['Type']; 
+				print "\t\ttypes['frm_' + '$thename'] = \"$thetype\";\n";
+				if (($row['Null']) !=0) {								//
+					print "\t\tmands['frm_' + '$thename'] = \"$thetype\";\n";
 					}		// end if ... 
 				}				// end while ... 
 			print "\n";
@@ -708,27 +704,47 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 					}															// end else ... (all other types)
 				}																// end mandatory
 			if ((myform.elements[i].value.length>0) && (types[myform.elements[i].name])) {			// non-empty and defined in types array?
-				switch (types[myform.elements[i].name]){						// name to types array
+				var theTemp = types[myform.elements[i].name].split("(");
+				var fieldtype = theTemp[0];
+				switch (fieldtype){						// name to types array
+					case "varchar":
+					case "char":
+						if (!ck_string(myform.elements[i].value))	{JSfnAddError();}
+						break;					
 					case "blob":
+					case "BLOB":
 						if (!ck_blob(myform.elements[i].value))		{JSfnAddError();}
 						break;
 					case "string":
+					case "VAR_STRING":
+					case "STRING":
+					case "text":
+					case "longtext":
+					case "enum":
 						if (!ck_string(myform.elements[i].value))	{JSfnAddError();}
 						break;
 					case "real":
 						if (!ck_real(myform.elements[i].value))		{JSfnAddError();}
 						break;
 					case "int":
+					case "INTEGER":
+					case "bigint":
+					case "DOUBLE":
+					case "double":
 						if (!ck_int(myform.elements[i].value))		{JSfnAddError();}
 						break;
 					case "timestamp":
+					case "TIMESTAMP":
 						if (!ck_blob(myform.elements[i].value))		{JSfnAddError();}
 						break;
 					case "date":
+					case "DATE":
 					case "datetime":
+					case "DATETIME":
 						if (!ck_date(myform.elements[i].value))		{JSfnAddError();}
 						break;
 					case "time":
+					case "TIME":
 						if (!ck_time(myform.elements[i].value))		{JSfnAddError();}
 						break;	
 				
@@ -842,7 +858,8 @@ switch ($func) {		// ================================== case "c" ===============
 		$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 		$lineno = 0;
-	
+		$thetemp = get_defined_constants(true);
+//		dump($thetemp);
 		for ($i = 0; $i < mysql_num_fields($result); $i++) {
 			if ((!is_null($row)) && ($fill_from_last)) 	{$last_data = $row[$i]; $class="clean";}
 			else 										{$last_data = ""; 		$class="dirty";}
@@ -873,9 +890,12 @@ switch ($func) {		// ================================== case "c" ===============
 					print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
 					print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
 					switch (mysql_field_type($result, $i)) {
+						case "DATETIME":
+						case "DATE":
+						case "TIMESTAMP":
 						case "datetime":
 						case "date":
-						case "timestamp":
+						case "timestamp":						
 							fnDoCal($i);				// generates JS Calendar stuff
 							$max = 16;
 							$value = date($date_out_format);
@@ -886,6 +906,7 @@ switch ($func) {		// ================================== case "c" ===============
 							print "{$hint_str}</TD></TR>\n\t"; 
 							break;
 							
+						case "TIME":
 						case "time":
 							$value = date ("H:i");
 							$max = 5;
@@ -896,6 +917,12 @@ switch ($func) {		// ================================== case "c" ===============
 							break;
 				
 						case "int":
+						case "bigint":
+						case "INTEGER":
+						case "BIGINT":
+						case "INT":
+						case "LONGLONG":
+						case "LONG":
 							$gotit = FALSE;
 							if (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id) {			// maybe dropdown
 								$lgth = strlen(mysql_field_name($result, $i));
@@ -927,8 +954,14 @@ switch ($func) {		// ================================== case "c" ===============
 								}				// end if (!$gotit)
 							break;
 				
+						case "BLOB":
 						case "blob":
+						case "VAR_STRING":
+						case "STRING":
+						case "str":
 						case "string":
+						case "text":
+						case "longtext":
 							if (substr($arrayattr[$i][1], 0, 4) == "enum") {				// yes, parse enums
 								$temp = substr($arrayattr[$i][1], 4);
 								$temparray = explode( ",", $temp);
@@ -957,6 +990,8 @@ switch ($func) {		// ================================== case "c" ===============
 							break;
 				
 						case "real":
+						case "DOUBLE":
+						case "double":
 							$max = 12;
 							print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
@@ -1252,7 +1287,8 @@ case "u":	// =======================================  Update 	==================
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
 	$row = mysql_fetch_array($result);																		// $row has data
 	$lineno = 0;															// for alternating row colors
-
+	$thetemp = get_defined_constants(true);
+//	dump($thetemp);
 	$the_custom = "./tables/u_" . $tablename . ".php";				// 12/20/08
 	if (file_exists ( $the_custom)){
 //		print __LINE__ . "<BR />";
@@ -1304,11 +1340,13 @@ case "u":	// =======================================  Update 	==================
 			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
 			print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
 			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
-			
 			switch (mysql_field_type($result, $i)) {
 				case "datetime":
 				case "date":
 				case "timestamp":
+				case "DATETIME":
+				case "DATE":
+				case "TIMESTAMP":
 					$max = 16;
 					$value=date($date_out_format);
 //					echo __LINE__ . " " . $max . "<BR />";
@@ -1319,6 +1357,7 @@ case "u":	// =======================================  Update 	==================
 					break;
 			
 				case "time":
+				case "TIME":
 					$max = 5;
 					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
@@ -1328,6 +1367,11 @@ case "u":	// =======================================  Update 	==================
 		
 				case "int":
 				case "bigint":
+				case "INTEGER":
+				case "BIGINT":
+				case "INT":
+				case "LONGLONG":
+				case "LONG":
 					$gotit = FALSE;
 					if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {			// maybe dropdown
 						$lgth = strlen(mysql_field_name($result, $i));
@@ -1362,8 +1406,14 @@ case "u":	// =======================================  Update 	==================
 						}
 					break;
 			
-				case "blob":
-				case "string":
+					case "BLOB":
+					case "blob":
+					case "VAR_STRING":
+					case "STRING":
+					case "str":
+					case "string":
+					case "text":
+					case "longtext":
 					if (substr($arrayattr[$i][1], 0, 4) == "enum") {				// yes, parse enums
 						$temp = substr($arrayattr[$i][1], 4);
 						$temparray = explode( ",", $temp);
@@ -1395,6 +1445,8 @@ case "u":	// =======================================  Update 	==================
 					break;
 			
 				case "real":
+				case "DOUBLE":
+				case "double":
 					$max = 12;
 					print "<TD><INPUT MAXLENGTH={$max} SIZE={$max} TYPE=text NAME='frm_" . mysql_field_name($result, $i) . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'/> ";
 //					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";

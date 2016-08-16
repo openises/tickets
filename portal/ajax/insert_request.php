@@ -118,7 +118,7 @@ if($_GET['frm_patient'] == "") {
 				'" . addslashes($arrival) . "',				
 				" . $origFac . ",					
 				" . $recFac . ",	
-				'" . addslashes($scope) . "',	
+				'" . addslashes($scope) . "',
 				'" . addslashes($description) . "',					
 				'" . addslashes($comments) . "',		
 				'" . $lat . "',		
@@ -148,9 +148,9 @@ if($_GET['frm_patient'] == "") {
 		$to_str3 = "";
 		$smsg_to_str3 = "";
 		$subject_str3 = "";
-		$text_str3 = "";				
+		$text_str3 = "";
 		$the_summary = "New Request from " . $userName . "\r\n";
-		$the_summary .= get_text('Scope') . ": " . $_GET['frm_scope'] . "\r\n\r\n";	
+		$the_summary .= get_text('Scope') . ": " . $_GET['frm_scope'] . "\r\n\r\n";
 		$the_summary .= get_text('Patient') . " name: " . $_GET['frm_patient'] . "\r\n";
 		$the_summary .= get_text('Street') . ": " . $street . ", ";	
 		$the_summary .= get_text('City') . ": " . $city . ", ";	

@@ -4,7 +4,7 @@
 */
 
 @session_start();
-session_write_close();
+
 require_once($_SESSION['fip']);
 error_reporting(E_ALL);				// 2/3/09
 do_login(basename(__FILE__));	// session_start()

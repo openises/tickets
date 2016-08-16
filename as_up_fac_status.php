@@ -24,7 +24,7 @@ $result = mysql_query($query) or do_error($query, "", mysql_error(), basename( _
 
 //	dump ($query);
 
-do_log($GLOBALS['LOG_FACILITY_STATUS'], $frm_ticket_id, $frm_responder_id, $frm_status_id);
+do_log($GLOBALS['LOG_FACILITY_STATUS'], $frm_ticket_id, 0, $frm_status_id, $frm_responder_id);
 	
 set_sess_exp();				// update session time
 session_write_close();

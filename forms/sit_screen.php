@@ -25,7 +25,11 @@ $show_facs = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")
 $facs_col_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none";
 $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "h")) ? "" : "none";
 $columns_arr = explode(',', get_msg_variable('columns'));
-$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;	
+$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;
+$customSit_setting = get_variable('custom_situation');
+$customSit_arr = explode ("/", $customSit_setting);			// Recent Events, Statistics
+$showEvents = intval($customSit_arr[0]);
+$showStats = intval($customSit_arr[1]);
 
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
@@ -68,8 +72,8 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
 		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+		table.scrollable thead tr { position: absolute; left: -1px; top: 0px; background-color: #CECECE; border: 1px solid #999; }
+		table.cruises th { text-align: left; border-left: 1px solid #999; background-color: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		div.tabBox {}
 		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
 		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
@@ -81,37 +85,41 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 				position: relative;	z-index: 101; cursor: normal; height: 300px;}
 		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
         .text-labels {font-size: 2em; font-weight: 700;}
+		.leaflet-control-layers-expanded { padding: 10px 10px 10px 10px; color: #333; background-color: #F1F1F1; border: 3px outset #707070;}
+		.leaflet-control-layers-expanded .leaflet-control-layers-list {height: auto; display: block; position: relative; margin-bottom: 20px;}
 	</STYLE>
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT TYPE="text/javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php 
-
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
-if ($_SESSION['internet']) {
 ?>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>
-	<script src="./js/leaflet/gpx.js"></script>  
-	<script src="./js/osopenspace.js"></script>
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-	<script src="./js/Google.js"></script>
+	<script type="text/javascript" src="./js/proj4js.js"></script>
+	<script type="text/javascript" src="./js/proj4-compressed.js"></script>
+	<script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
+	<script type="text/javascript" src="./js/proj4leaflet.js"></script>
+	<script type="text/javascript" src="./js/leaflet/KML.js"></script>
+	<script type="text/javascript" src="./js/leaflet/gpx.js"></script>  
+	<script type="text/javascript" src="./js/osopenspace.js"></script>
+	<script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
+	<script type="text/javascript" src="./js/esri-leaflet.js"></script>
+	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
+<?php
+	if ($_SESSION['internet']) {
+?>
+		<script src="http://maps.google.com/maps/api/js?v=3"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		} 
+?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 	<script type="text/javascript" src="./js/usng.js"></script>
 	<script type="text/javascript" src="./js/osgb.js"></script>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
-<?php } ?>
-
 <SCRIPT>
 window.onresize=function(){set_size()};
 var showTicker = <?php print $use_ticker;?>;
@@ -119,6 +127,8 @@ var showTicker = <?php print $use_ticker;?>;
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
+var showEvents = <?php print $showEvents;?>;
+var showStats = <?php print $showStats;?>;
 var counter = 0;
 var pagetimerStart = new Date();
 var pagetimerEnd = 0;
@@ -147,9 +157,12 @@ var f_interval = null;
 var b_interval = null;
 var c_interval = null;
 var s_interval = null;
+var log_interval = null;
+var latest_logid = 0;
 var latest_ticket = 0;
 var latest_responder = 0;
 var latest_facility = 0;
+var latest_log = 0;
 var inc_last_display = 0;
 var inc_period_changed = 0;
 var do_inc_refresh = false;
@@ -157,6 +170,7 @@ var do_update = true;
 var do_resp_update = true;
 var do_resp_refresh = false;
 var do_fac_update = true;
+var do_log_refresh = false;
 var tickets_updated = [];
 var responders_updated = [];
 var facilities_updated = [];
@@ -249,6 +263,13 @@ function do_incident_refresh() {
 	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>"; 
 	load_incidentlist(window.inc_field, window.inc_direct);
 	}
+	
+function do_loglist_refresh() {
+	window.do_log_refresh = true;
+	latest_log = 0;
+	$('the_loglist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>"; 
+	load_log(window.log_field, window.log_direct);
+	}
 
 function submit_period() {
 	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
@@ -286,7 +307,7 @@ function secondsToTime(secs) {
 	var outputText =  numdays + "D " + numhours + ":" + numminutes + ":" + Math.round(numseconds);
 	return outputText;
 	}
-	
+
 function do_statistics() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/basic_statistics.php?version=' + randomnumber;
@@ -351,7 +372,7 @@ function set_size() {
 	colwidth = outerwidth * .42;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .5;
-	listwidth = colwidth * .95
+	listwidth = colwidth * .95;
 	celwidth = listwidth * .20;
 	res_celwidth = listwidth * .15;
 	fac_celwidth = listwidth * .15;
@@ -389,12 +410,16 @@ function set_size() {
 	set_initial_pri_disp();
 	load_poly_controls();
 	if(!isGuest) {
-		$('logheading').style.width = mapWidth + "px";
-		$('loglist').style.width = mapWidth + "px";
-		$('stats_wrapper').style.width = mapWidth + "px";
-		$('stats_heading').style.width = mapWidth + "px";
-		load_log(window.log_field, window.log_direct);
-		do_statistics();
+		if(showEvents == 1) {
+			$('logheading').style.width = mapWidth + "px";
+			$('loglist').style.width = mapWidth + "px";
+			load_log(window.log_field, window.log_direct);
+			}
+		if(showStats == 1) {		
+			$('stats_wrapper').style.width = mapWidth + "px";
+			$('stats_heading').style.width = mapWidth + "px";
+			do_statistics();
+			}
 		}
 	get_scheduled_number();
 	map.invalidateSize();
@@ -414,8 +439,12 @@ function loadData() {
 	set_initial_pri_disp();
 	load_poly_controls();
 	if(!isGuest) {
-		load_log(window.log_field, window.log_direct);
-		do_statistics();
+		if(showEvents == 1) {
+			load_log(window.log_field, window.log_direct);
+			}
+		if(showStats == 1) {		
+			do_statistics();
+			}
 		}
 	get_scheduled_number();
 	map.invalidateSize();
@@ -466,17 +495,9 @@ if (is_guest()) {
 	try { parent.frames["upper"].$("ics").style.display  =			"none";}	
 	catch(e) { }
 	try { parent.frames["upper"].$("has_button").style.display  = 	"none";}
-	catch(e) { }	
-<?php
-	}		// end guest - needs other levels!
-
-if (is_guest()) {
-?>	
-	parent.frames["upper"].$("add").style.display  = 				"none";
-	try { parent.frames["upper"].$("ics").style.display  =			"none";}	
 	catch(e) { }
-	try { parent.frames["upper"].$("has_button").style.display  = 	"none";}
-	catch(e) { }	
+	try { parent.frames["upper"].guest_hide_buttons(isGuest);}
+	catch(e) { }		
 <?php
 	}		// end guest - needs other levels!
 
@@ -484,6 +505,7 @@ if (is_guest()) {
 ?>
 		parent.frames["upper"].$("gout").style.display  = "inline";
 		parent.frames["upper"].mu_init ();
+		parent.frames["upper"].theConnection();		
 		if (parent.frames.length == 3) {
 			parent.calls.location.href = 'board.php';
 			}
@@ -610,12 +632,8 @@ if (is_guest()) {
 	$gunload = "pageUnload();";
 	$from_right = 20;
 	$from_top = 10;
-//	$temp = intval(trim(get_variable('situ_refr')));
-//	$refresh =  ($temp < 15)? 15000: $temp * 1000;
-//	$set_to = (intval(trim(get_variable('situ_refr')))>0)? "setTimeout('location.reload(true);', {$refresh});": "";
 	$the_api_key = trim(get_variable('gmaps_api_key'));	
 	$set_map = "";	// 1/16/2013
-//	$set_regions_control = ((!($get_id)) && ((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))) ? "set_regions_control();" : "";
 	$get_messages = ($get_id) ? "get_mainmessages(" . $get_id . " ,'',sortby, sort, '', 'ticket');" : "";
 ?>
 <BODY onLoad = "loadData(); ck_frames(); <?php print $ld_ticker;?> parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
@@ -658,24 +676,23 @@ if (is_guest()) {
 					</SELECT>
 				</FORM>			
 				Incidents <SPAN ID='sched_flag'></SPAN>
-				<SPAN id='reload_incs'class='plain' style='width: 19px; height: 19px; float: left; text-align: center; vertical-align: top;' onmouseover='do_hover(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_incident_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
-				<SPAN id='collapse_incs' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
-				<SPAN id='expand_incs' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN><BR />
+				<SPAN id='collapse_incs' class='plain' onmouseover='do_hover(this.id); Tip("Minimize List");' onmouseout='do_plain(this.id); UnTip();' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right' height="19" width="19"></SPAN>
+				<SPAN id='expand_incs' class='plain' onmouseover='do_hover(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right' height="19" width="19"></SPAN>
+				<SPAN id='reload_incs' class='plain' onmouseover='do_hover(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_incident_refresh();" style = 'float: right; display: "";'><IMG SRC = './markers/refresh.png' ALIGN='right' height="19" width="19"></SPAN><BR />
 				<SPAN ID = 'btn_go' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: green;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);' onClick='submit_period(); hide_btns_closed();' CLASS='conf_button' STYLE = 'margin-left: 10px; color: green; display: none;'>Next</SPAN>
 				<SPAN ID = 'btn_can' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: red;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);' onClick='hide_btns_closed(); hide_btns_scheduled(); ' CLASS='conf_button' STYLE = 'margin-left: 10px; color: red; display: none'>Cancel</SPAN>
-				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click on item to view / edit, Click headers to sort</SPAN></EM></FONT><BR />
+				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click item to view / edit, right click for act / pat / notes, Click headers to sort</SPAN></EM></FONT><BR />
 			</DIV>
 		</DIV>
-
 		<DIV class="scrollableContainer" id='ticketlist' style='border: 1px outset #707070;'>
 			<DIV class="scrollingArea" id='the_list'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 		</DIV>
 		<BR />
 		<DIV id='respondersheading' class = 'heading' style='border: 1px outset #707070;'>
 			<DIV style='text-align: center;'>Responders 
-				<SPAN id='collapse_resp' onClick="hideDiv('responderlist', 'collapse_resp', 'expand_resp')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
-				<SPAN id='expand_resp' onClick="showDiv('responderlist', 'collapse_resp', 'expand_resp')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
-				<SPAN id='reload_resp'class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to refresh Responder List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_responder_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
+				<SPAN id='collapse_resp' class='plain' onmouseover='do_hover(this.id); Tip("Minimize List");' onmouseout='do_plain(this.id); UnTip();' onClick="hideDiv('responderlist', 'collapse_resp', 'expand_resp')" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
+				<SPAN id='expand_resp' class='plain' onmouseover='do_hover(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('responderlist', 'collapse_resp', 'expand_resp')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
+				<SPAN id='reload_resp' class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to refresh Responder List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_responder_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
 				<SPAN id='messageAll' class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to message all units");' onmouseout='do_plain(this.id); UnTip();' onClick='do_mail_all_win(1);'>
 					<IMG SRC='mail.png' BORDER=0 onmouseover='Tip("Click to message all units");' onmouseout='UnTip();' onClick='do_mail_all_win(1);'>
 				</SPAN>	
@@ -689,9 +706,9 @@ if (is_guest()) {
 		<BR />
 		<DIV id='facilitiesheading' class = 'heading' style='border: 1px outset #707070;'>
 			<DIV style='text-align: center;'>Facilities 
-				<SPAN id='collapse_facs' onClick="hideDiv('facilitylist', 'collapse_facs', 'expand_facs')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
-				<SPAN id='expand_facs' onClick="showDiv('facilitylist', 'collapse_facs', 'expand_facs')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
-				<SPAN id='reload_facs'class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to refresh Facility List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_facility_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
+				<SPAN id='collapse_facs' class='plain' onmouseover='do_hover(this.id); Tip("Minimize List");' onmouseout='do_plain(this.id); UnTip();' onClick="hideDiv('facilitylist', 'collapse_facs', 'expand_facs')" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
+				<SPAN id='expand_facs' class='plain' onmouseover='do_hover(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('facilitylist', 'collapse_facs', 'expand_facs')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
+				<SPAN id='reload_facs' class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to refresh Facility List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_facility_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
 				<SPAN id='messageFacAll' class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to message all Facilities");' onmouseout='do_plain(this.id); UnTip();' onClick='do_fac_mail_win();'>
 					<IMG SRC='mail.png' BORDER=0 onmouseover='Tip("Click to message all Facilities");' onmouseout='UnTip();' onClick='do_fac_mail_win();'>
 				</SPAN>	
@@ -710,47 +727,55 @@ if (is_guest()) {
 
 	<DIV id='rightcol' style='position: absolute; right: 170px;'>
 		<DIV id = 'map_canvas' style = 'border: 1px outset #707070;'></DIV>
-		<CENTER><SPAN style='width: 100%; text-align: center;''><?php print get_variable('map_caption');?></SPAN></CENTER><BR />
+		<CENTER><SPAN style='width: 100%; text-align: center;'><?php print get_variable('map_caption');?></SPAN></CENTER><BR />
 		<BR />
 <?php
 	if(!is_guest()) {
+		if(intval($customSit_arr[0]) == 1) {
 ?>
-		<DIV id='logheading' class = 'heading'>
-			<DIV style='text-align: center;'>Recent Events
-				<SPAN id='collapse_log' onClick="hideDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
-				<SPAN id='expand_log' onClick="showDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN><BR />
-				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click on underlined item to view, Click headers to sort</SPAN></EM></FONT>
+			<DIV id='logheading' class = 'heading' style='border: 1px outset #707070;'>
+				<DIV style='text-align: center;'>Recent Events
+					<SPAN id='collapse_log' class='plain' onmouseover='do_hover(this.id); Tip("Minimize List");' onmouseout='do_plain(this.id); UnTip();' onClick="hideDiv('loglist', 'collapse_log', 'expand_log')" style = 'float: right; display: none;'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
+					<SPAN id='expand_log' class='plain' onmouseover='do_hover(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('loglist', 'collapse_log', 'expand_log'); do_loglist_refresh();" style = 'float: right; display: "";'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
+					<SPAN id='reload_log'class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to refresh Log List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_loglist_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
+					<BR />
+					<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click on underlined item to view, Click headers to sort</SPAN></EM></FONT>
+				</DIV>
 			</DIV>
-		</DIV>
-		<DIV class="scrollableContainer" id='loglist' style='border: 1px outset #707070;'>
-			<DIV class="scrollingArea" id='the_loglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
-		</DIV><BR /><BR />
-		<DIV id='stats_heading' class = 'heading'>
-			<DIV style='text-align: center;'>Statistics<BR />
-				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>hover over header for details on what each element is</SPAN></EM></FONT>
-			</DIV>
-		</DIV>
-		<DIV id='stats_wrapper' style='width: 100%;'>
-			<TABLE id='stats_table' BORDER=1 style='width: 100%;'>
-				<TR class='heading' style='width: 100%;'>
-					<TH class='heading' onMouseover="Tip('Number of Tickets');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NT</TH>
-					<TH class='heading' onMouseover="Tip('Number of Tickets not assigned');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NA</TH>
-					<TH class='heading' onMouseover="Tip('Number of Responders on Scene');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>RO</TH>
-					<TH class='heading' onMouseover="Tip('Average time to dispatch (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AD</TH>
-					<TH class='heading' onMouseover="Tip('Average time ticket is open (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>TO</TH>
-					<TH class='heading' onMouseover="Tip('Number of available responders');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AR</TH>
-				</TR>
-				<TR class='even' style='width: 100%;'>
-					<TD id='s1' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s2' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s3' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s4' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s5' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s6' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-				</TR>
-			</TABLE>
-		</DIV>
+			<DIV class="scrollableContainer" id='loglist' style='border: 1px outset #707070; display: none;'>
+				<DIV class="scrollingArea" id='the_loglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+			</DIV><BR /><BR />
 <?php
+			}
+		if(intval($customSit_arr[1]) == 1) {
+?>
+			<DIV id='stats_heading' class = 'heading'>
+				<DIV style='text-align: center;'>Statistics<BR />
+					<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>hover over header for details on what each element is</SPAN></EM></FONT>
+				</DIV>
+			</DIV>
+			<DIV id='stats_wrapper' style='width: 100%;'>
+				<TABLE id='stats_table' BORDER=1 style='width: 100%;'>
+					<TR class='heading' style='width: 100%;'>
+						<TH class='heading' onMouseover="Tip('Number of Tickets');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NT</TH>
+						<TH class='heading' onMouseover="Tip('Number of Tickets not assigned');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NA</TH>
+						<TH class='heading' onMouseover="Tip('Number of Responders on Scene');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>RO</TH>
+						<TH class='heading' onMouseover="Tip('Average time to dispatch (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AD</TH>
+						<TH class='heading' onMouseover="Tip('Average time ticket is open (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>TO</TH>
+						<TH class='heading' onMouseover="Tip('Number of available responders');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AR</TH>
+					</TR>
+					<TR class='even' style='width: 100%;'>
+						<TD id='s1' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s2' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s3' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s4' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s5' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s6' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					</TR>
+				</TABLE>
+			</DIV><BR /><BR />
+<?php
+			}
 		}
 ?>
 	</DIV><BR /><BR />
@@ -836,10 +861,14 @@ $('the_flist').style.maxHeight = listHeight + "px";
 $('the_flist').style.width = listwidth + "px";
 $('facilitiesheading').style.width = listwidth + "px";
 if(!isGuest) {
-	$('logheading').style.width = mapWidth + "px";
-	$('loglist').style.width = mapWidth + "px";	
-	$('stats_wrapper').style.width = mapWidth + "px";
-	$('stats_heading').style.width = mapWidth + "px";
+	if(showEvents == 1) {
+		$('logheading').style.width = mapWidth + "px";
+		$('loglist').style.width = mapWidth + "px";
+		}
+	if(showStats == 1) {		
+		$('stats_wrapper').style.width = mapWidth + "px";
+		$('stats_heading').style.width = mapWidth + "px";
+		}
 	}
 // end of set widths
 var theLocale = <?php print get_variable('locale');?>;
@@ -852,7 +881,6 @@ var zoom = map.getZoom();
 var got_points = false;
 $('controls').innerHTML = controlsHTML;
 $('theHeading').innerHTML = heading;
-
 <?php
 do_kml();
 ?>
@@ -863,28 +891,30 @@ do_kml();
 		require_once('./modules/Ticker/incs/ticker.inc.php');
 		$the_markers = buildmarkers();
 		foreach($the_markers AS $value) {
+			if(my_is_float($value[3]) && my_is_float($value[3])) {
 ?>
 <SCRIPT>
-			var theLat = <?php print $value[3];?>;
-			var theLng = <?php print $value[4];?>;
-			var theA = "<?php print $value[6];?>";
-			var the_point = new L.LatLng(theLat, theLng);		//	10/23/12
-			var the_header = "Traffic Alert";		//	10/23/12
-			var the_text = "<?php print $value[1];?>";		//	10/23/12
-			var the_id = "<?php print $value[0];?>";		//	10/23/12
-			var the_category = "<?php print $value[5];?>";		//	10/23/12
-			var the_link = '<A CLASS="link" HREF="' + theA + '" TARGET="_blank" TITLE="' + the_text + '">' + the_text + '</A>';
-			var the_descrip = "<DIV style='border: 1px outset #707070; background-color: yellow;'>";
-			the_descrip += "<DIV style='font-size: 14px; color: #FFFFFF; background-color: #707070; font-weight: bold;'>" + the_header + "</DIV><BR />";		//	10/23/12
-			the_descrip += "<DIV style='font-size: 14px; color: #000000; font-weight: bold;'>" + the_category + "</DIV><BR />";		//	10/23/12
-			the_descrip += "<DIV><SPAN>" + the_link + "</SPAN></DIV><BR />";		
-			the_descrip += "<DIV style='font-size: 12px; color: blue; font-weight: normal;'>";		//	10/23/12
-			the_descrip += "<?php print $value[2];?>";		//	10/23/12
-			the_descrip += "</DIV></DIV>";		//	10/23/12
-			var rss_marker = create_feedMarker(the_point, the_text, the_descrip, the_id, the_id);		//	10/23/12
-			rss_marker.addTo(map);			
+				var theLat = <?php print $value[3];?>;
+				var theLng = <?php print $value[4];?>;
+				var theA = "<?php print $value[6];?>";
+				var the_point = new L.LatLng(theLat, theLng);		//	10/23/12
+				var the_header = "Traffic Alert";		//	10/23/12
+				var the_text = "<?php print $value[1];?>";		//	10/23/12
+				var the_id = "<?php print $value[0];?>";		//	10/23/12
+				var the_category = "<?php print $value[5];?>";		//	10/23/12
+				var the_link = '<A CLASS="link" HREF="' + theA + '" TARGET="_blank" TITLE="' + the_text + '">' + the_text + '</A>';
+				var the_descrip = "<DIV style='border: 1px outset #707070; background-color: yellow;'>";
+				the_descrip += "<DIV style='font-size: 14px; color: #FFFFFF; background-color: #707070; font-weight: bold;'>" + the_header + "</DIV><BR />";		//	10/23/12
+				the_descrip += "<DIV style='font-size: 14px; color: #000000; font-weight: bold;'>" + the_category + "</DIV><BR />";		//	10/23/12
+				the_descrip += "<DIV><SPAN>" + the_link + "</SPAN></DIV><BR />";		
+				the_descrip += "<DIV style='font-size: 12px; color: blue; font-weight: normal;'>";		//	10/23/12
+				the_descrip += "<?php print $value[2];?>";		//	10/23/12
+				the_descrip += "</DIV></DIV>";		//	10/23/12
+				var rss_marker = create_feedMarker(the_point, the_text, the_descrip, the_id, the_id);		//	10/23/12
+				rss_marker.addTo(map);			
 </SCRIPT>
 <?php
+			}
 		}
 	}
 $time = microtime();
@@ -921,6 +951,7 @@ var pageLoadTime = "<?php print $total_time;?>";
 <FORM NAME='fac_form' METHOD='get' ACTION='facilities.php'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 <br /><br />

@@ -127,8 +127,8 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$arrival = $row['req_arrival'];
 		$orig_facility = $row['origFacility'];				
 		$rec_facility = $row['recFacility'];		
-		$scope = shorten($row['req_scope'], 25);	
-		$description = shorten($row['req_description'], 48);
+		$scope = $row['req_scope'];	
+		$description = $row['req_description'];
 		$ticket_id = ($row['r_tick_id'] == NULL || $row['r_tick_id'] == 0) ? 0 : $row['r_tick_id'];
 		$comments = "";
 		$lat = (($row['r_lat'] != "") && ($row['r_lat'] != NULL) && ($row['r_lat'] != 0.999999)) ? $row['r_lat'] : 0.999999;

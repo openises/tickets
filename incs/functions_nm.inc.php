@@ -227,6 +227,7 @@ $GLOBALS['LOG_FACILITY_CHANGE']		=41;		// 9/22/09
 $GLOBALS['LOG_FACILITY_INCIDENT_OPEN']	=42;		// 9/29/09
 $GLOBALS['LOG_FACILITY_INCIDENT_CLOSE']	=43;		// 9/29/09
 $GLOBALS['LOG_FACILITY_INCIDENT_CHANGE']=44;		// 9/29/09
+$GLOBALS['LOG_FACILITY_STATUS']		= 4040;
 
 $GLOBALS['LOG_CALL_U2FENR']			=45;		// 9/29/09
 $GLOBALS['LOG_CALL_U2FARR']			=46;		// 9/29/09
@@ -2032,6 +2033,35 @@ function do_diff($indx, $row){		// returns diff in seconds from problemstart- 9/
 		}
 	return $temp - mysql2timestamp($row['problemstart']); 
 	}
+
+function do_diff_now($indx, $row){          // returns diff in seconds from problemstart- 9/29/10
+        switch ($indx) {
+                case 0:
+                        $temp = mysql2timestamp($row['dispatched']);
+                    break;
+                case 1:
+                        $temp = mysql2timestamp($row['responding']);
+                    break;
+                case 2:
+                        $temp = mysql2timestamp($row['on_scene']);
+                    break;
+                case 3:
+                        $temp = mysql2timestamp($row['u2fenr']);                // 10/19/10
+                    break;
+                case 4:
+                        $temp = mysql2timestamp($row['u2farr']);
+                    break;
+                case 5:
+                        $temp = mysql2timestamp($row['clear']);
+                    break;
+                case 6:
+                        $temp = mysql2timestamp($row['problemend']);
+                    break;
+                default:
+                        dump($indx);                            // error  error  error  error  error
+                }
+        return date("U") - mysql2timestamp($row['problemstart']);
+        }
 
 function get_disp_status ($row_in) {			// 8/29/10
 	$tags_arr = explode("/", get_variable('disp_stat'));

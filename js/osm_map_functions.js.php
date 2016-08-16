@@ -31,7 +31,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 	$states[$row['name']] = $row['code'];
 	}
 ?>
-var doDebug = false;
+var doDebug = (parseInt(<?php print get_variable('debug');?> == 1)) ? true: false;
 var guest = <?php print $guest;?>;
 function isIE() { 
 	if((navigator.appName == 'Microsoft Internet Explorer') || ((navigator.appName == 'Netscape') && (new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})").exec(navigator.userAgent) != null))) {
@@ -163,6 +163,7 @@ var theTicket = 0;
 var theFacility = 0;
 var thefiletype = 1;
 var states_arr = <?php echo json_encode($states); ?>;
+var divTag = false;
 
 function isFloat(n){
     return n != "" && !isNaN(n) && Math.round(n) != n;
@@ -1268,10 +1269,32 @@ function hide_btns_scheduled() {
 	$('btn_can').style.display = 'none';
 	}
 	
-function do_add_note (id) {				// 8/12/09
+function do_print_ticket (id) {
+	var url = "print_screen.php?ticket_id="+ id;
+	var printWindow = window.open(url, 'printWindow', 'resizable=1, scrollbars, height=800, width=1000, left=100, top=100, screenX=100, screenY=100');
+	close_context();
+	printWindow.focus();
+	}
+	
+function do_add_note (id) {
 	var url = "add_note.php?ticket_id="+ id;
-	var noteWindow = window.open(url, 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100');
+	var noteWindow = window.open(url, 'noteWindow', 'resizable=1, scrollbars, height=240, width=600, left=100, top=100, screenX=100, screenY=100');
+	close_context();
 	noteWindow.focus();
+	}
+	
+function do_add_action (id) {
+	var url = "action_w.php?ticket_id="+ id;
+	var actionWindow = window.open(url, 'actWindow', 'resizable=1, scrollbars, height=240, width=600, left=100, top=100, screenX=100, screenY=100');
+	close_context();
+	actionWindow.focus();
+	}
+	
+function do_add_patient (id) {
+	var url = "patient_w.php?ticket_id="+ id;
+	var patientWindow = window.open(url, 'patWindow', 'resizable=1, scrollbars, height=240, width=600, left=100, top=100, screenX=100, screenY=100');
+	close_context();
+	patientWindow.focus();
 	}
 
 function do_aprs_window() {				// 6/25/08
@@ -1357,6 +1380,7 @@ function loc_lkup(my_form) {		   						// 7/5/10
 		theLat = r.lat;
 		theLng = r.lng;
 		pt_to_map (my_form, theLat, theLng);
+		if(my_form == document.add) { find_warnings(theLat, theLng);}
 		});
 	}				// end function loc_lkup()
 	
@@ -1987,8 +2011,18 @@ function createdummyMarker(lat, lon, info, icon, title){
 function createdummyUnitMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		icon = new baseSqIcon({iconUrl: image_file});	
+		icon = new baseIcon({iconUrl: image_file});	
 		var marker = L.marker([lat, lon], {icon: icon}).addTo(map).bindPopup(info);
+		marker.on('popupclose', function(e) {
+			map.setView(mapCenter, mapZoom);
+			});
+		marker.on('click', function(e) {
+			if($('screenname').innerHTML == "fullscreen") {
+				get_fs_resppopup(theid);
+				} else {
+				get_resppopup(theid);
+				}
+			});
 		rmarkers[theid] = marker;
 		rmarkers[theid][lat] = lat;
 		rmarkers[theid][lon] = lon;
@@ -2001,7 +2035,7 @@ function createdummyUnitMarker(lat, lon, info, icon, title, theid){
 function createdummyIncMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		icon = new baseSqIcon({iconUrl: image_file});	
+		icon = new baseIcon({iconUrl: image_file});	
 		var marker = L.marker([lat, lon], {icon: icon}).addTo(map).bindPopup(info);
 		tmarkers[theid] = marker;
 		tmarkers[theid][lat] = lat;
@@ -2015,7 +2049,7 @@ function createdummyIncMarker(lat, lon, info, icon, title, theid){
 function createdummyFacMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		icon = new baseSqIcon({iconUrl: image_file});	
+		icon = new baseIcon({iconUrl: image_file});	
 		var marker = L.marker([lat, lon], {icon: icon}).addTo(map).bindPopup(info);
 		fmarkers[theid] = marker;
 		fmarkers[theid][lat] = lat;
@@ -2043,7 +2077,29 @@ function sendInfo(theText) {
 		theResult = theResponse[0];
 		}
 	}
-	
+
+function ajaxSafe(s) {
+	return s.replace(/&(?!\w+([;\s]|$))/g, "&amp;")
+	.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	}
+
+function log_debug(theText) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var theString = ajaxSafe(theText);
+	var url = './ajax/write_debuglog.php?debugtxt=' + theString + '&version=' + randomnumber;
+	sendRequest (url,errCB, "");
+	function errCB(req) {
+		var theResponse = JSON.decode(req.responseText);
+		theResult = theResponse[0];
+		if(theResult == 99) {
+			alert("Can't create debug file - check file permissions on Tickets Directory");
+			} else if(theResult == 0){
+			alert("Can't write to debug file - check file permissions on Tickets Directory");	
+			}
+		}
+	}
+
 function get_tickpopup(id) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var sessID = "<?php print $_SESSION['id'];?>";
@@ -2179,7 +2235,9 @@ function myfclick(id) {					// Responds to sidebar click, then triggers listener
 		document.fac_form.id.value=id;
 		document.fac_form.func.value='responder';
 		document.fac_form.edit.value='true';
-		document.fac_form.view.value='false';
+		if(typeof document.fac_form.view != 'undefined') {
+			document.fac_form.view.value='false';
+			}
 		document.fac_form.action='facilities.php';
 		document.fac_form.submit();
 		} else if(guest) {
@@ -2516,6 +2574,297 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 function layer_handleResult(req) {
 //	alert(req.responseText);
 	}
+	
+function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_position) {
+	if(locale == 1 && useOSMAP == 1) {	//	UK Use Ordnance Survey as Basemap
+		var openspace_api = "<?php print get_variable('openspace_api');?>";
+		openspaceLayer = L.tileLayer.OSOpenSpace(openspace_api, {debug: true});
+		var grid = L.graticule({ interval: .5 })
+		roadalerts = new L.LayerGroup();
+		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
+		var baseLayerNamesArr = ["Ordnance Survey"];	
+		var baseLayerVarArr = [openspaceLayer];
+		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
+		theLayer = baseLayerVarArr[a];
+		map = new L.Map('map_canvas', {
+			crs: L.OSOpenSpace.getCRS(),
+			continuousWorld: true,
+			worldCopyJump: false,
+			minZoom: 0,
+			maxZoom: L.OSOpenSpace.RESOLUTIONS.length - 1,
+			zoomControl: false,
+			layers: [openspaceLayer],
+			});
+
+		if(window.geo_provider == 1) {
+			geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+			control = L.Control.geocoder({
+				showResultIcons: false,
+				collapsed: true,
+				expand: 'click',
+				position: 'topleft',
+				placeholder: 'Search...',
+				errorMessage: 'Nothing found.',
+				geocoder: geocoder
+				});
+			} else if(window.geo_provider == 2) {
+			geocoder = L.Control.Geocoder.bing(window.BingKey), 
+			control = L.Control.geocoder({
+				showResultIcons: false,
+				collapsed: true,
+				expand: 'click',
+				position: 'topleft',
+				placeholder: 'Search...',
+				errorMessage: 'Nothing found.',
+				geocoder: geocoder
+				});				
+			} else {
+			geocoder = L.Control.Geocoder.nominatim(), 
+			control = L.Control.geocoder({
+				showResultIcons: false,
+				collapsed: true,
+				expand: 'click',
+				position: 'topleft',
+				placeholder: 'Search...',
+				errorMessage: 'Nothing found.',
+				geocoder: geocoder
+				});
+			}
+		if(!isIE()) {
+			control.addTo(map);
+			}
+		var baseLayers;
+		var overlays = {
+			"Grid": grid,
+		};
+		if(control_position == "tl") {
+			ctrlPos = 'topleft';
+			} else if(control_position == "tr") {
+			ctrlPos = 'topright';
+			} else if(control_position == "bl") {
+			ctrlPos = 'bottomleft';
+			} else if(control_position == "br") {
+			ctrlPos = 'bottomright';
+			} else {
+			ctrlPos = 'none';
+			}
+		if(ctrlPos != "none") {
+			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
+			map.addLayer(roadalerts);
+			layercontrol.addOverlay(roadalerts, "Road Conditions");
+			L.control.scale().addTo(map);
+			L.control.zoom({position: ctrlPos}).addTo(map);
+			}
+		if(theType ==2) {
+			createcrossMarker(lat, lng);
+			}
+		if(theType ==3) {
+			createstdMarker(lat, lng);
+			}
+		map.setView([lat, lng], theZoom);
+		bounds = map.getBounds();	
+		zoom = map.getZoom();
+		map.on('baselayerchange', function (eventLayer) {
+			var layerName = eventLayer.name;
+			var layerName = layerName.replace(" ", "_");
+			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
+			var url = "persist3.php";	//	3/15/11	
+			sendRequest (url, layer_handleResult, params);	
+			});
+		} else {
+		var latLng;
+		var in_local_bool = <?php print get_variable('local_maps');?>;
+		var osmUrl = (in_local_bool=="1")? "./_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+		var	cmAttr = '';
+		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
+		var ggl = new L.Google('ROAD');
+		var ggl1 = new L.Google('TERRAIN');
+		var ggl2 = new L.Google('SATELLITE');
+		var ggl3 = new L.Google('HYBRID');
+		var clouds = L.OWM.clouds({showLegend: false, opacity: 0.3});
+		var cloudscls = L.OWM.cloudsClassic({showLegend: false, opacity: 0.3});
+		var precipitation = L.OWM.precipitation({showLegend: false, opacity: 0.3});
+		var precipitationcls = L.OWM.precipitationClassic({showLegend: false, opacity: 0.3});
+		var rain = L.OWM.rain({showLegend: false, opacity: 0.3});
+		var raincls = L.OWM.rainClassic({showLegend: false, opacity: 0.3});
+		var snow = L.OWM.snow({showLegend: false, opacity: 0.3});
+		var pressure = L.OWM.pressure({showLegend: false, opacity: 0.3});
+		var pressurecntr = L.OWM.pressureContour({showLegend: false, opacity: 0.8});
+		var temp = L.OWM.temperature({showLegend: false, opacity: 0.3});
+		var wind = L.OWM.wind({showLegend: false, opacity: 0.3});
+		var dark = L.tileLayer.provider('Thunderforest.TransportDark');
+		var aerial = L.tileLayer.provider('MapQuestOpen.Aerial');
+		var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
+			layers: 'nexrad-n0r-900913',
+			format: 'image/png',
+			transparent: true,
+			attribution: "",
+		});
+		var shade = L.tileLayer.wms("http://ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
+			layers: "HR-NED.IMAGE", 
+			format: 'image/png',
+			attribution: "",
+		});
+		var usgstopo = L.tileLayer('http://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
+			maxZoom: 20,
+			attribution: '',
+		});
+		var grid = L.graticule({ interval: .5 })
+		roadalerts = new L.LayerGroup();
+		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
+		var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial"];	
+		var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark,aerial];
+		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
+		theLayer = (in_local_bool != "1") ? baseLayerVarArr[a]: OSM;	// Load OSM if using local maps
+		var setZoom = <?php print $setZoom;?>;
+		var theZoom = <?php print $localZoomMin;?>;
+		var max_zoom = <?php print $localZoomMax;?>;
+		if(window.geo_provider == 1) {
+			if(window.GoogleKey.length > 0 && window.GoogleKey.length < 39) {
+				alert("Google set as Geo-coding provider but invalid Google Maps API Key");
+				}
+			if(!map) { map = L.map('map_canvas',
+				{
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
+				layers: [theLayer],
+				zoomControl: false,
+				}
+				)};
+				geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+				control = L.Control.geocoder({
+					showResultIcons: false,
+					collapsed: true,
+					expand: 'click',
+					position: 'topleft',
+					placeholder: 'Search...',
+					errorMessage: 'Nothing found.',
+					geocoder: geocoder
+					});
+				if(!isIE()) {
+					control.addTo(map);
+					}
+			} else if(window.geo_provider == 2){
+			if(window.BingKey.length != 64) {
+				alert("Bing set as Geo-coding provider but invalid Bing Maps API Key");
+				}
+			if(!map) { map = L.map('map_canvas',
+				{
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
+				layers: [theLayer],
+				zoomControl: false,
+				}
+				)};
+				geocoder = L.Control.Geocoder.bing(window.BingKey), 
+				control = L.Control.geocoder({
+					showResultIcons: false,
+					collapsed: true,
+					expand: 'click',
+					position: 'topleft',
+					placeholder: 'Search...',
+					errorMessage: 'Nothing found.',
+					geocoder: geocoder
+					});
+				if(!isIE()) {
+					control.addTo(map);
+					}			
+			} else {
+			if(!map) {map = L.map('map_canvas',
+				{
+				maxZoom: max_zoom,
+				minZoom: theZoom,
+				zoom: setZoom,
+				layers: [theLayer],
+				zoomControl: false,
+				}
+				)};
+				geocoder = L.Control.Geocoder.nominatim(), 
+				control = L.Control.geocoder({
+					showResultIcons: false,
+					collapsed: true,
+					expand: 'click',
+					position: 'topleft',
+					placeholder: 'Search...',
+					errorMessage: 'Nothing found.',
+					geocoder: geocoder
+					});
+				if(!isIE()) {
+					control.addTo(map);
+					}
+			}
+
+		if(in_local_bool != "1") {	//	remove all but OSM if using local maps
+			var baseLayers = {
+				"Open Streetmaps": OSM,
+				"Google": ggl,
+				"Google Terrain": ggl1,
+				"Google Satellite": ggl2,
+				"Google Hybrid": ggl3,
+				"USGS Topo": usgstopo,
+				"Dark": dark,
+				"Aerial": aerial,		
+			};
+			
+			var overlays = {
+				"Clouds": cloudscls,
+				"Precipitation": precipitationcls,
+				"Rain": raincls,
+				"Pressure": pressurecntr,
+				"Temperature": temp,
+				"Wind": wind,
+				"Snow": snow,
+				"Radar": nexrad,
+				"Grid": grid,
+			};
+
+			} else {
+			var baseLayers = {
+				"Open Streetmaps": OSM,
+			};
+			
+			var overlays = {};				
+			}
+			if(control_position == "tl") {
+				ctrlPos = 'topleft';
+				} else if(control_position == "tr") {
+				ctrlPos = 'topright';
+				} else if(control_position == "bl") {
+				ctrlPos = 'bottomleft';
+				} else if(control_position == "br") {
+				ctrlPos = 'bottomright';
+				} else {
+				ctrlPos = 'none';
+				}
+
+		if(ctrlPos != "none") {
+			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
+			map.addLayer(roadalerts);
+			layercontrol.addOverlay(roadalerts, "Road Conditions");
+			L.control.scale().addTo(map);
+			L.control.zoom({position: ctrlPos}).addTo(map);
+			}
+		if(theType ==2) {
+			createcrossMarker(lat, lng);
+			}
+		if(theType ==3) {
+			createstdMarker(lat, lng);
+			}
+		map.setView([lat, lng], setZoom);
+		bounds = map.getBounds();	
+		zoom = map.getZoom();
+		map.on('baselayerchange', function (eventLayer) {
+			var layerName = eventLayer.name;
+			var layerName = layerName.replace(" ", "_");
+			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
+			var url = "persist3.php";	//	3/15/11	
+			sendRequest (url, layer_handleResult, params);	
+			});
+		}
+	return map;
+	}
 
 function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	var latLng;
@@ -2721,6 +3070,61 @@ function do_inc_sort(id, field, header_text) {
 	load_incidentlist(field, inc_direct);
 	return true;
 	}
+	
+var cursorX = 0;
+var cursorY = 0;
+
+function getPos(e, id){
+	window.cursorX=e.clientX;
+	window.cursorY=e.clientY;
+	return true;
+	}
+	
+function close_context() {
+//	document.body.removeChild(divTag);
+	if(divTag) {divTag.style.display = "none";}
+	document.oncontextmenu = function() {return true; }
+	}
+
+function getPosition(element) {
+	var offsets = $(element).getBoundingClientRect();
+	var top = offsets.top;
+	var left = offsets.left;
+	var theRet = [];
+	theRet[0] = top;
+	theRet[1] = left;
+	return theRet;
+	}
+	
+function localContext(id) {
+	if(divTag) {divTag.style.display = "none";}
+	document.oncontextmenu = function() {return false; }
+	createDiv(id);
+	}
+
+function createDiv(id) {
+	var clickedElem = "inc_" + id;
+	var coords = getPosition(clickedElem);
+	divTag = document.createElement("div");
+	divTag.id = "div1";
+	divTag.style.position = "absolute";
+	divTag.style.width = "130px";
+	divTag.style.height = "150px";
+    divTag.style.backgroundColor = "rgb(0%, 0%, 0%)";
+    divTag.style.backgroundColor = "rgba(0%, 0%, 0%, 0.3)";
+	divTag.style.borderLeft = "1px solid #707070";
+	divTag.style.borderTop = "1px solid #707070";
+	divTag.innerHTML = "<DIV style='height: auto; width: 130px; display: block;'>";
+	divTag.innerHTML += "<DIV style='height: 25px; display: block;'><img src='images/close.png' style='float: right;' onClick='close_context();' alt='close' height='23px' width='23px'></DIV>";
+	divTag.innerHTML += "<SPAN id='note_" + id + "' CLASS='plain' style='color: #000000; height: auto; width: 100px; display: block;' onClick = 'do_add_note(" + id + ");' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);'>Add note</SPAN><BR />";
+	divTag.innerHTML += "<SPAN id='action_" + id + "' CLASS='plain' style='color: #000000; height: auto; width: 100px; display: block;' onClick = 'do_add_action(" + id + ");' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);'>Add action</SPAN><BR />";
+	divTag.innerHTML += "<SPAN id='patient_" + id + "' CLASS='plain' style='color: #000000; height: auto; width: 100px; display: block;' onClick = 'do_add_patient(" + id + ");' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);'>Add patient</SPAN><BR />";
+	divTag.innerHTML += "<SPAN id='print_" + id + "' CLASS='plain' style='color: #000000; height: auto; width: 100px; display: block;' onClick = 'do_print_ticket(" + id + ");' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);'>Print</SPAN><BR />";
+	divTag.innerHTML += "<SPAN id='close_" + id + "' CLASS='plain' style='color: #000000; height: auto; width: 100px; display: block;' onClick = 'do_close_tick(" + id + ");' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);'>Close</SPAN><BR /><BR /></DIV><BR />";
+	divTag.style.left = cursorX + "px";
+	divTag.style.top = coords[0] + "px";
+	document.body.appendChild(divTag);
+    }
 
 function load_incidentlist(sort, dir) {
 	window.counter++;
@@ -2740,10 +3144,12 @@ function load_incidentlist(sort, dir) {
 	sendRequest (url,incidentlist_cb, "");
 	function incidentlist_cb(req) {
 		var inc_arr = JSON.decode(req.responseText);
-		if(!inc_arr && doDebug) { alert(req.responseText); sendInfo(url);}
+		if(!inc_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText);}
 		if(window.inc_period_changed == 1) {
-			for(var key in tmarkers) {
-				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+			if($('map_canvas')) {	
+				for(var key in tmarkers) {
+					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+					}
 				}
 			if($('map_canvas')) {	
 				for(var key in tmarkers) {
@@ -2837,7 +3243,7 @@ function load_incidentlist(sort, dir) {
 					} else {
 					var datestring = "<SPAN style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
 					}
-				outputtext += "<TR CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px; " + strike + "' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
+				outputtext += "<TR ID='inc_" + inc_id + "' CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px; " + strike + "' oncontextmenu=\"getPos(event); localContext(" + inc_id + ");\" onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + pad(4, i, "\u00a0") + "</TD>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + htmlentities(inc_arr[key][0], 'ENT_QUOTES') + "</TD>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][1] + "</TD>";
@@ -2941,7 +3347,7 @@ function load_incidentlist(sort, dir) {
 			window.incFin = true;
 			pageLoaded();
 			window.do_inc_refresh = false;
-			incidentlist_get();
+//			incidentlist_get();
 			},500);
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
@@ -3163,7 +3569,7 @@ function load_responderlist(sort, dir) {
 		var i = 1;
 		var responder_number = 0;	
 		var resp_arr = JSON.decode(req.responseText);
-		if(!resp_arr && doDebug) { alert(req.responseText); }
+		if(!resp_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
 			for(var key in rmarkers) {
 				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
@@ -3346,7 +3752,7 @@ function load_responderlist(sort, dir) {
 				window.respFin = true;
 				pageLoaded();
 				window.do_resp_refresh = false;
-				responderlist_get();
+//				responderlist_get();
 				},3000);
 			}
 		}				// end function responderlist_cb()
@@ -3571,6 +3977,7 @@ function load_responderlist2(sort, dir) {
 		var i = 1;
 		var responder_number = 0;	
 		var resp_arr = JSON.decode(req.responseText);
+		if(!resp_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
 			for(var key in rmarkers) {
 				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
@@ -3767,7 +4174,7 @@ function load_responderlist2(sort, dir) {
 				window.resp_last_display = resp_arr[0][23];
 				window.respFin = true;
 				pageLoaded();
-				responderlist2_get();
+//				responderlist2_get();
 				},500);
 			}
 		}				// end function responderlist_cb()
@@ -3954,7 +4361,7 @@ function load_facilitylist(sort, dir) {
 		var i = 1;
 		var facility_number = 0;
 		var fac_arr = JSON.decode(req.responseText);
-		if(!fac_arr && doDebug) { alert(req.responseText); }
+		if(!fac_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText);}
 		if((fac_arr[0]) && (fac_arr[0][0] == 0)) {
 			for(var key in fmarkers) {
 				if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
@@ -4106,7 +4513,7 @@ function load_facilitylist(sort, dir) {
 				window.facFin = true;
 				pageLoaded();
 //				facilitylist_get();
-				},500);
+				},5000);
 			}
 		}				// end function facilitylist_cb()
 	}				// end function load_facilitylist()	
@@ -5349,6 +5756,7 @@ function load_log(sort, dir) {
 			outputtext += "</thead>";
 			outputtext += "<tbody>";
 			for(var key in log_arr) {
+				latest_log = log_arr[0][0];
 				if(log_arr[key][0]) {
 					if(log_arr[key][11] != "") {
 						var theURL = log_arr[key][11];
@@ -5369,36 +5777,49 @@ function load_log(sort, dir) {
 				}
 			outputtext += "</tbody>";
 			outputtext += "</TABLE>";
-			setTimeout(function() {$('the_loglist').innerHTML = outputtext;
-				var logtbl = document.getElementById('logtable');
-				if(logtbl) {
-					var headerRow = logtbl.rows[0];
-					var tableRow = logtbl.rows[1];
-					if(tableRow) {
-						if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
-						if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
-						if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
-						if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
-						if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
-						if(tableRow.cells[5] && headerRow.cells[5]) {headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";}
-						if(tableRow.cells[6] && headerRow.cells[6]) {headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";}
-						} else {
-						var cellwidthBase = window.mapWidth / 24;
-						headerRow.cells[0].style.width = (cellwidthBase * 4) + "px";
-						headerRow.cells[1].style.width = (cellwidthBase * 4) + "px";
-						headerRow.cells[2].style.width = (cellwidthBase * 4) + "px";
-						headerRow.cells[3].style.width = (cellwidthBase * 4) + "px";
-						headerRow.cells[4].style.width = (cellwidthBase * 3) + "px";
-						headerRow.cells[5].style.width = (cellwidthBase * 3) + "px";
-						headerRow.cells[6].style.width = (cellwidthBase * 5) + "px";
-						}				
-					}
-				window.logFin = true;
-				pageLoaded();
-				},500);
+			if(window.latest_logid != latest_log || do_log_refresh) {
+				setTimeout(function() {$('the_loglist').innerHTML = outputtext;
+					var logtbl = document.getElementById('logtable');
+					if(logtbl) {
+						var headerRow = logtbl.rows[0];
+						var tableRow = logtbl.rows[1];
+						if(tableRow) {
+							if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
+							if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
+							if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
+							if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
+							if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
+							if(tableRow.cells[5] && headerRow.cells[5]) {headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";}
+							if(tableRow.cells[6] && headerRow.cells[6]) {headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";}
+							} else {
+							var cellwidthBase = window.mapWidth / 24;
+							headerRow.cells[0].style.width = (cellwidthBase * 4) + "px";
+							headerRow.cells[1].style.width = (cellwidthBase * 4) + "px";
+							headerRow.cells[2].style.width = (cellwidthBase * 4) + "px";
+							headerRow.cells[3].style.width = (cellwidthBase * 4) + "px";
+							headerRow.cells[4].style.width = (cellwidthBase * 3) + "px";
+							headerRow.cells[5].style.width = (cellwidthBase * 3) + "px";
+							headerRow.cells[6].style.width = (cellwidthBase * 5) + "px";
+							}				
+						}
+					window.logFin = true;
+					pageLoaded();
+					window.latest_logid = latest_log;
+					},500);
+				}
+			log_get();
 			}
 		}				// end function loglist_cb()
-	}				// end function load_log()			
+	}				// end function load_log()
+
+function log_get() {								// set cycle
+	if (log_interval!=null) {return;}
+	log_interval = window.setInterval('log_loop()', 240000);
+	}			// end function log_get()
+
+function log_loop() {
+	load_log(window.log_field, window.log_direct);
+	}			// end function log_loop()	
 
 /* function load_tickerMarkers() {
 	var randomnumber=Math.floor(Math.random()*99999999);
@@ -5599,7 +6020,8 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 	var theSortField = "sort=" + sort;
 	var theOrder = "&dir=" + dir;
 	var randomnumber=Math.floor(Math.random()*99999999);
-	var url ='./ajax/sidebar_list_messages.php'+theSearchstring+theSortField+theOrder+"&version=" + randomnumber + "&inorout=" + window.inorout;
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url ='./ajax/sidebar_list_messages.php'+theSearchstring+theSortField+theOrder+"&version=" + randomnumber + "&inorout=" + window.inorout+'&q='+sessID;
 	sendRequest (url, main_mess_cb, "");
 	function main_mess_cb(req) {
 		var theNew = 0;

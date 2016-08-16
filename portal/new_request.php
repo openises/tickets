@@ -88,10 +88,17 @@ var rec_fac_city = [];
 var rec_fac_state = [];
 var theLat;
 var theLng;
+var theRetLat;
+var theRetLng;
+var theRetLat;
+var theRetLng;
 var showall = "yes";
 var ct = 1;
 var countmail = 0;
 var the_link = "";
+var isReturn = 0;
+var gotLatLng = false;
+var gotRetLatLng = false;
 
 function out_frames() {		//  onLoad = "out_frames()"
 	if (top.location != location) top.location.href = document.location.href;
@@ -130,6 +137,43 @@ function do_hover (the_id) {
 function do_plain (the_id) {
 	CngClass(the_id, 'plain');
 	return true;
+	}
+	
+function show_return(selector) {
+	var theForm = document.forms['add'];
+	var selectedOption = selector.value;
+	window.isReturn = selectedOption;
+	if(selectedOption == 1) {
+		$('retA').style.display = ""; $('retA2').style.display = ""; $('retB').style.display = "";$('retB2').style.display = "";
+		$('ret1').style.display = ""; $('ret1A').style.display = ""; $('ret1B').style.display = "";
+		$('ret2').style.display = ""; $('ret2A').style.display = ""; $('ret2B').style.display = "";
+		$('ret3').style.display = ""; $('ret3A').style.display = ""; $('ret3B').style.display = "";
+		$('ret4').style.display = ""; $('ret4A').style.display = ""; $('ret4B').style.display = "";
+		$('ret5').style.display = ""; $('ret5A').style.display = ""; $('ret5B').style.display = "";
+		$('ret6').style.display = ""; $('ret6A').style.display = ""; $('ret6B').style.display = "";
+		$('ret7').style.display = ""; $('ret7A').style.display = ""; $('ret7B').style.display = "";
+		$('ret8').style.display = ""; $('ret8A').style.display = ""; $('ret8B').style.display = "";
+		$('ret9').style.display = ""; $('ret9A').style.display = ""; $('ret9B').style.display = "";
+		theForm.frm_ret_street.value = theForm.frm_to_street.value;
+		theForm.frm_ret_city.value = theForm.frm_to_city.value;
+		theForm.frm_ret_postcode.value = theForm.frm_to_postcode.value;
+		theForm.frm_ret_state.value = theForm.frm_to_state.value;
+		theForm.frm_retto_street.value = theForm.frm_street.value;
+		theForm.frm_retto_city.value = theForm.frm_city.value;
+		theForm.frm_retto_postcode.value = theForm.frm_postcode.value;
+		theForm.frm_retto_state.value = theForm.frm_state.value;
+		} else {
+		$('retA').style.display = "none";$('retA2').style.display = "none";$('retB').style.display = "none";$('retB2').style.display = "none";
+		$('ret1').style.display = "none";$('ret1A').style.display = "none";$('ret1B').style.display = "none";
+		$('ret2').style.display = "none";$('ret2A').style.display = "none";$('ret2B').style.display = "none";
+		$('ret3').style.display = "none";$('ret3A').style.display = "none";$('ret3B').style.display = "none";
+		$('ret4').style.display = "none";$('ret4A').style.display = "none";$('ret4B').style.display = "none";
+		$('ret5').style.display = "none"; $('ret5A').style.display = "none"; $('ret5B').style.display = "none";
+		$('ret6').style.display = "none"; $('ret6A').style.display = "none"; $('ret6B').style.display = "none";
+		$('ret7').style.display = "none"; $('ret7A').style.display = "none"; $('ret7B').style.display = "none";
+		$('ret8').style.display = "none"; $('ret8A').style.display = "none"; $('ret8B').style.display = "none";
+		$('ret9').style.display = "none"; $('ret9A').style.display = "none"; $('ret9B').style.display = "none";		
+		}
 	}
 	
 function new_line() {
@@ -205,6 +249,7 @@ function sub_request() {
 		}
 	var err_msg = "";
 	var appEmail = theForm.frm_app_email.value;
+	var retJourney = window.isReturn;
 	var street = theForm.frm_street.value;
 	var city = theForm.frm_city.value;
 	var postcode = theForm.frm_postcode.value;
@@ -295,6 +340,7 @@ function sub_request() {
 	if(theForm.frm_description.value == "") { err_msg += "\t<?php print get_text('Description');?> is required\n"; }
 	if(requestDate == "") { err_msg += "\tRequest date required\n"; }
 	if((thePickup == "") && (theArrival == "")) { err_msg += "\tEither a Pickup or Arrival Time is required\n"; }
+	if(retJourney == 1 && theForm.frm_ret_time.value == "") { err_msg += "\tReturn journey requested but no return pickup time set\n"; }
 	if(err_msg != "") {
 		alert ("Please correct the following and re-submit:\n\n" + err_msg);
 		return;
@@ -303,44 +349,203 @@ function sub_request() {
 		$('waiting').style.display='block';
 		$('waiting').innerHTML = "Please Wait, Inserting Request<BR /><IMG style='vertical-align: middle;' src='../images/progressbar3.gif'/>";
 		var geocoder = new google.maps.Geocoder();
-		var myAddress = theForm.frm_street.value.trim() + ", " +theForm.frm_city.value.trim() + ", " +theForm.frm_postcode.value.trim() + ", " +theForm.frm_state.value.trim();
-		geocoder.geocode( { 'address': myAddress}, function(results, status) {		
-		if (status == google.maps.GeocoderStatus.OK) {
-			theForm.frm_lat.value = results[0].geometry.location.lat();
-			theForm.frm_lng.value = results[0].geometry.location.lng();
-			theLat = theForm.frm_lat.value;
-			theLng = theForm.frm_lng.value
-			var params = "frm_street=" + street;
-			params += "&frm_app_email=" + appEmail
-			params += "&frm_city=" + city;
-			params += "&frm_postcode=" + postcode;			
-			params += "&frm_state=" + state;
-			params += "&frm_lat=" + theLat;
-			params += "&frm_lng=" + theLng;
-			params += "&frm_description=" + theDescription;
-			params += "&frm_request_date=" + requestDate;
-			params += "&frm_phone=" + thePhone;
-			params += "&frm_toaddress=" + ToAddress;
-			params += "&frm_pickup=" + thePickup;
-			params += "&frm_arrival=" + theArrival;			
-			params += "&frm_username=" + theApprover;
-			params += "&frm_patient=" + thePatient;
-			params += "&frm_orig_fac=" + origFac;
-			params += "&frm_rec_fac=" + recFac;
-			params += "&frm_scope=" + theScope;
-			params += "&frm_comments=" + theComments;
-			var paramsEncoded = encodeURI(params);
-			var url = './ajax/insert_request.php?'+paramsEncoded;
-			sendRequest (url,local_handleResult, "");			// does the work via POST
-			} else { 
-			alert("Geocode lookup failed: " + status);
-			$('the_form').style.display="block";
-			$('waiting').style.display='none';
-			alert("Couldn't insert your request at this time due to an error, please try again.");
-			return
-			}
-		});				// end geocoder.geocode()
+		var myAddress = theForm.frm_street.value.trim() + ", " +theForm.frm_city.value.trim() + ", " + theForm.frm_postcode.value.trim() + ", " + theForm.frm_state.value.trim();
+		geocoder.geocode( { 'address': myAddress}, function(results, status) {	
+			if (status == google.maps.GeocoderStatus.OK) {
+				window.theLat = results[0].geometry.location.lat();
+				window.theLng = results[0].geometry.location.lng();
+				if(window.isReturn == 1) {
+					var geocoder2 = new google.maps.Geocoder();
+					var myRetAddress = theForm.frm_ret_street.value.trim() + ", " + theForm.frm_ret_city.value.trim() + ", " + theForm.frm_ret_postcode.value.trim() + ", " + theForm.frm_ret_state.value.trim();
+					geocoder2.geocode( { 'address': myRetAddress}, function(results, status2) {	
+						if (status2 == google.maps.GeocoderStatus.OK) {
+							window.theRetLat = results[0].geometry.location.lat();
+							window.theRetLng = results[0].geometry.location.lng();
+							var params = "frm_street=" + street;
+							params += "&frm_app_email=" + appEmail
+							params += "&frm_city=" + city;
+							params += "&frm_postcode=" + postcode;			
+							params += "&frm_state=" + state;
+							params += "&frm_lat=" + theLat;
+							params += "&frm_lng=" + theLng;
+							params += "&frm_description=" + theDescription;
+							params += "&frm_request_date=" + requestDate;
+							params += "&frm_phone=" + thePhone;
+							params += "&frm_toaddress=" + ToAddress;
+							params += "&frm_pickup=" + thePickup;
+							params += "&frm_arrival=" + theArrival;			
+							params += "&frm_username=" + theApprover;
+							params += "&frm_patient=" + thePatient;
+							params += "&frm_orig_fac=" + origFac;
+							params += "&frm_rec_fac=" + recFac;
+							params += "&frm_scope=" + theScope;
+							params += "&frm_comments=" + theComments;
+							var paramsEncoded = encodeURI(params);
+							var url = './ajax/insert_request.php?'+paramsEncoded;
+							sendRequest (url,local_handleResult, "");			// does the work via POST
+							} else {
+							alert("Geocode lookup failed: " + status);
+							$('the_form').style.display="block";
+							$('waiting').style.display='none';
+							alert("Couldn't insert your request at this time due to an error, please try again.");
+							return
+							}
+						});				// end geocoder.geocode()			
+					} else {
+					var params = "frm_street=" + street;
+					params += "&frm_app_email=" + appEmail
+					params += "&frm_city=" + city;
+					params += "&frm_postcode=" + postcode;			
+					params += "&frm_state=" + state;
+					params += "&frm_lat=" + theLat;
+					params += "&frm_lng=" + theLng;
+					params += "&frm_description=" + theDescription;
+					params += "&frm_request_date=" + requestDate;
+					params += "&frm_phone=" + thePhone;
+					params += "&frm_toaddress=" + ToAddress;
+					params += "&frm_pickup=" + thePickup;
+					params += "&frm_arrival=" + theArrival;			
+					params += "&frm_username=" + theApprover;
+					params += "&frm_patient=" + thePatient;
+					params += "&frm_orig_fac=" + origFac;
+					params += "&frm_rec_fac=" + recFac;
+					params += "&frm_scope=" + theScope;
+					params += "&frm_comments=" + theComments;
+					var paramsEncoded = encodeURI(params);
+					var url = './ajax/insert_request.php?'+paramsEncoded;
+					sendRequest (url,local_handleResult, "");			// does the work via POST
+					}
+				} else { 
+				alert("Geocode lookup failed: " + status);
+				$('the_form').style.display="block";
+				$('waiting').style.display='none';
+				alert("Couldn't insert your request at this time due to an error, please try again.");
+				return
+				}
+			});				// end geocoder.geocode()
 		}
+	}
+	
+function sub_retrequest() {
+	var theForm = document.forms['add'];
+	var theAddAddress = "";
+	var theDescVal = "\r\n" + theForm.frm_description.value + "\r\n";
+	var theField = document.getElementsByName("frm_to_street_extra[]");
+	var theField2 = document.getElementsByName("frm_to_city_extra[]");
+	var theField3 = document.getElementsByName("frm_to_state_extra[]");
+	var theField4 = document.getElementsByName("frm_patient_extra[]");
+	var theField5 = document.getElementsByName("frm_patient_id_extra[]");
+	if(theField.length != 0) {
+		theAddAddress += "Additional Addresses and Passengers:\r\n";
+		for (var i = 0; i < theField.length; i++ ){
+			theAddAddress += theField4[i].value + ", " + theField5[i].value + "\r\n";
+			theAddAddress += theField[i].value + ", " + theField2[i].value + ", " + theField3[i].value + "\r\n";
+			theAddAddress += "-----------------------\r\n";			
+			}
+		theAddAddress += "\r\n";
+		}
+	var err_msg = "";
+	var appEmail = theForm.frm_app_email.value;
+	var retJourney = theForm.frm_return_journey.value;
+	var street = theForm.frm_ret_street.value;
+	var city = theForm.frm_ret_city.value;
+	var postcode = theForm.frm_ret_postcode.value;
+	var state = theForm.frm_ret_state.value;
+	var theApprover = theForm.frm_approver.value;
+	var theAppContact = theForm.frm_app_contact.value;
+	var theCompany = theForm.frm_company.value;
+	var theManager = theForm.frm_contact.value;
+	var theManagerPhone = theForm.frm_contactno.value;	
+	var thePickup = theForm.frm_ret_time.value;
+	var theArrival = "";	
+	var theAuthDet = "";
+ 	if(theApprover != "") {
+		theAuthDet += "Approver: ";	
+		theAuthDet += theApprover;
+		theAuthDet += "\r\n";
+		}
+	if(theAppContact != "") {
+		theAuthDet += "Approver Contact Phone: ";	
+		theAuthDet += theAppContact;
+		theAuthDet += "\r\n";
+		}
+	if(theCompany != "") {
+		theAuthDet += "Company: ";	
+		theAuthDet += theCompany;
+		theAuthDet += "\r\n";
+		}
+	if(theManager != "") {
+		theAuthDet += "Manager: ";	
+		theAuthDet += theManager;
+		theAuthDet += "\r\n";
+		}
+	if(theManagerPhone != "") {
+		theAuthDet += "Contact: ";	
+		theAuthDet += theManagerPhone;
+		theAuthDet += "\r\n";
+		}
+	var theTimeDet = "";
+	if(thePickup != "") {
+		theTimeDet += "Pickup Time: ";		
+		theTimeDet += thePickup;
+		theTimeDet += "\r\n";
+		}
+	if(theArrival != "") {
+		theTimeDet += "Arrival Time: ";	
+		theTimeDet += theArrival;
+		theTimeDet += "\r\n";
+		}
+	if(theAuthDet != "") {
+		theAuthDet = "Approver Details\r\n" + theAuthDet + "\r\n";
+		}
+	if(theTimeDet != "") {
+		theTimeDet = "Journey Time Details\r\n" + theTimeDet + "\r\n";
+		}
+	if(theForm.frm_patient_id.value != "") {
+		var thePatientID = "<?php print get_text('Patient');?> ID: " + theForm.frm_patient_id.value + "\r\n";
+		} else {
+		var thePatientID = "";	
+		}
+	var thePatient = theForm.frm_patient.value;
+	var thePhone = (theForm.frm_phone.value != "") ? theForm.frm_phone.value : "Not Given";
+	var patDetails = "Passenger Name: " + thePatient + "\r\nPassenger Contact: " + thePhone + "\r\n\r\n";
+	var theDescription = patDetails + thePatientID + theTimeDet + theAddAddress + theDescVal + theAuthDet;
+	var requestDate = theForm.frm_year_request_date.value + "-" + theForm.frm_month_request_date.value + "-" + theForm.frm_day_request_date.value;
+	var ToAddress = encodeURI(theForm.frm_retto_street.value + ", " + theForm.frm_retto_city.value + ", " + theForm.frm_retto_state.value);
+	var dest_address_array = ToAddress.split(",");
+	if(dest_address_array[0] == "") {
+		ToAddress = "";
+		}
+	var theUserName = "<?php print addslashes(get_user_name($_SESSION['user_id']));?>";
+	var origFac = theForm.frm_orig_fac.value;
+	var recFac = theForm.frm_rec_fac.value;	
+	var theScope = theForm.frm_patient.value + " " + requestDate + " - Return Journey";
+	var theComments = "";
+	$('the_form').style.display="none";
+	$('waiting').style.display='block';
+	$('waiting').innerHTML = "Please Wait, Inserting Return Request<BR /><IMG style='vertical-align: middle;' src='../images/progressbar3.gif'/>";
+	var params = "frm_street=" + street;
+	params += "&frm_app_email=" + appEmail
+	params += "&frm_city=" + city;
+	params += "&frm_postcode=" + postcode;			
+	params += "&frm_state=" + state;
+	params += "&frm_lat=" + theRetLat;
+	params += "&frm_lng=" + theRetLng;
+	params += "&frm_description=" + theDescription;
+	params += "&frm_request_date=" + requestDate;
+	params += "&frm_phone=" + thePhone;
+	params += "&frm_toaddress=" + ToAddress;
+	params += "&frm_pickup=" + thePickup;
+	params += "&frm_arrival=" + theArrival;			
+	params += "&frm_username=" + theApprover;
+	params += "&frm_patient=" + thePatient;
+	params += "&frm_orig_fac=" + origFac;
+	params += "&frm_rec_fac=" + recFac;
+	params += "&frm_scope=" + theScope;
+	params += "&frm_comments=" + theComments;
+	var paramsEncoded = encodeURI(params);
+	var url = './ajax/insert_request.php?'+paramsEncoded;
+	sendRequest (url,local_handleResult2, "");			// does the work via POST
 	}
 
 function pausejs(millis) {
@@ -351,6 +556,63 @@ function pausejs(millis) {
 	}
 	
 function local_handleResult(req) {			// the called-back function
+	var theForm = document.forms['add'];
+	var retJourney = theForm.frm_return_journey.value;
+	countmail = 0;
+	var the_response=JSON.decode(req.responseText);	
+	if(the_response[0] == 0) {
+		$('waiting').style.display='none';					
+		$('result').style.display = 'inline-block';
+		the_link = "Could not insert new Ticket, please try again<BR /><BR /><BR /><BR />";		
+		the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+		$('done').innerHTML = the_link;	
+		} else {
+		if(retJourney == 0) {
+			var to_str1 = the_response[1];
+			var smsg_to_str1 = the_response[2];
+			var subject_str1 = the_response[3];
+			var text_str1 = the_response[4];
+			var to_str2 = the_response[5];
+			var smsg_to_str2 = the_response[6];
+			var subject_str2 = the_response[7];
+			var text_str2 = the_response[8];
+			var to_str3 = the_response[9];
+			var smsg_to_str3 = the_response[10];
+			var subject_str3 = the_response[11];
+			var text_str3 = the_response[12];	
+			var randomnumber = Math.floor(Math.random()*99999999);	
+			if((to_str1 == "") && (smsg_to_str1 == "") && (text_str1 == "")) {
+				} else {
+				var url ="../do_send_mail.php?to_str=" + to_str1 + "&smsg_to_str=" + smsg_to_str1 + "&subject_str=" + subject_str1 + "&text_str=" + encodeURI(text_str1) + "&version=" + randomnumber;
+				sendRequest (url,mail_handleResult, "");
+				}
+			pausejs(2000);
+			if((to_str2 == "") && (smsg_to_str2 == "") && (text_str2 == "")) {
+				} else {
+				var url ="../do_send_mail.php?to_str=" + to_str2 + "&smsg_to_str=" + smsg_to_str2 + "&subject_str=" + subject_str2 + "&text_str=" + encodeURI(text_str2) + "&version=" + randomnumber;
+				sendRequest (url,mail_handleResult, "");
+				}
+			pausejs(2000);
+			if((to_str3 == "") && (smsg_to_str3 == "") && (text_str3 != "")) {
+				} else {
+				var url ="../do_send_mail.php?to_str=" + to_str3 + "&smsg_to_str=" + smsg_to_str3 + "&subject_str=" + subject_str3 + "&text_str=" + encodeURI(text_str3) + "&version=" + randomnumber;
+				}
+			the_link = "<SPAN>Your request has been inserted successfully</SPAN><BR /><BR /><BR /><BR />";		
+			the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+			if($('waiting')) {$('waiting').style.display='none';}
+			$('result').style.display = 'inline-block';
+			$('done').innerHTML = the_link;
+			window.opener.get_requests();
+			} else {
+			pausejs(3000);
+			sub_retrequest();
+			}
+		}
+	}			// end function local handleResult
+	
+function local_handleResult2(req) {			// the called-back function for the return journey
+	var theForm = document.forms['add'];
+	var retJourney = theForm.frm_return_journey.value;
 	countmail = 0;
 	var the_response=JSON.decode(req.responseText);	
 	if(the_response[0] == 0) {
@@ -391,13 +653,13 @@ function local_handleResult(req) {			// the called-back function
 			}
 		the_link = "<SPAN>Your request has been inserted successfully</SPAN><BR /><BR /><BR /><BR />";		
 		the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
-//		the_link += "<BR /><BR />" + countmail + " messages have been sent";
 		if($('waiting')) {$('waiting').style.display='none';}
 		$('result').style.display = 'inline-block';
 		$('done').innerHTML = the_link;
 		window.opener.get_requests();
 		}
-	}			// end function local handleResult	
+	}			// end function local handleResult
+	
 function mail_handleResult(req) {
 	var the_response=JSON.decode(req.responseText);	
 	if(parseInt(the_response[0]) > 0) {
@@ -567,9 +829,9 @@ $orig_fac_menu .= "<SELECT>";
 	<FORM NAME="go" action="#" TARGET = "main"></FORM>
 	<DIV id='outer' style='position: absolute; width: 95%; text-align: center; margin: 10px; height: 690px; overflow: hidden;'>
 		<DIV id='the_form' style='height: 100%; overflow: hidden;'>
-			<DIV id='the_heading' class='heading' style='font-size: 1.25em; height: 30px;'>ADD A NEW REQUEST
-				<SPAN id='sub_but' CLASS ='plain' style='float: none; font-size: 1em;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "sub_request();">Submit</SPAN>
-				<SPAN id='can_but' CLASS ='plain' style='float: none; font-size: 1em;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.close();">Cancel</SPAN>		
+			<DIV id='the_heading' class='heading' style='font-size: 1.25em; line-height: 40px;'>ADD A NEW REQUEST
+				<SPAN id='sub_but' CLASS ='plain' style='float: none; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "sub_request();">Submit</SPAN>
+				<SPAN id='can_but' CLASS ='plain' style='float: none; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.close();">Cancel</SPAN>		
 			</DIV>
 			<DIV id='inner' style='z-index: 1; overflow-y: scroll; height: 660px;'>
 				<FORM NAME='add' METHOD='POST' ACTION = "<?php print basename( __FILE__); ?>">
@@ -647,6 +909,58 @@ $orig_fac_menu .= "<SELECT>";
 						<TD class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
 					</TR>
 					<TR class='spacer'>
+						<TD class='spacer' COLSPAN=99></TD>
+					</TR>	
+					<TR class='odd'>	
+						<TD class='td_label' style='text-align: left;' TITLE='Select whether return journey required.'><?php print get_text('Return Journey');?></TD>
+						<TD class='td_data' style='text-align: left;'>
+							<INPUT type='radio' name='frm_return_journey' value = 0 onClick = "show_return(this);" CHECKED>No
+							<INPUT type='radio' name='frm_return_journey' value = 1 onClick = "show_return(this);">Yes						
+						</TD>
+					</TR>
+					<TR id='ret9' class='even' style='display: none;'>	
+						<TD id='ret9A' class='td_label' style='text-align: left;' TITLE='Pickup Time for return Journey'><?php print get_text('Pickup Time');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret9B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_time' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+					</TR>
+					<TR id='retA' class='spacer' style='display: none;'>
+						<TD id='retA2' class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Start Address');?></TD>
+					</TR>
+					<TR id='ret1' class='even' style='display: none;'>	
+						<TD id='ret1A' class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret1B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
+					</TR>	
+					<TR id='ret2' class='odd' style='display: none;'>	
+						<TD id='ret2A' class='td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret2B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_city($_SESSION['user_id']);?>"></TD>
+					</TR>		
+					<TR id='ret3' class='even' style='display: none;'>	
+						<TD id='ret3A' class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD>
+						<TD id='ret3B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
+					</TR>					
+					<TR id='ret4' class='odd' style='display: none;'>	
+						<TD id='ret4A' class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret4B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
+					</TR>
+					<TR id='retB' class='spacer' style='display: none;'>
+						<TD id='retB2'  class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Destination');?></TD>
+					</TR>
+					<TR id='ret5' class='even' style='display: none;'>	
+						<TD id='ret5A' class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret5B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
+					</TR>	
+					<TR id='ret6' class='odd' style='display: none;'>	
+						<TD id='ret6A' class='td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret6B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_city($_SESSION['user_id']);?>"></TD>
+					</TR>		
+					<TR id='ret7' class='even' style='display: none;'>	
+						<TD id='ret7A' class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD>
+						<TD id='ret7B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
+					</TR>					
+					<TR id='ret8' class='odd' style='display: none;'>	
+						<TD id='ret8A' class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret8B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
+					</TR>
+					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Additional Addresses');?></TD>
 					</TR>
 					<TR>
@@ -655,9 +969,9 @@ $orig_fac_menu .= "<SELECT>";
 							</DIV>
 						</TD>
 					</TR>
-					<TR class='even' style='height: 30px; vertical-align: middle;'>
-						<TD class='td_label' COLSPAN=99>
-							<SPAN id='add_newline' class='plain' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='new_line();'>Add Line</SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
+					<TR class='even'>
+						<TD class='td_label' style='line-height: 30px;' COLSPAN=99>
+							&nbsp;<SPAN id='add_newline' class='plain' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='new_line();'>Add Line</SPAN>&nbsp;
 						</TD>
 					</TR>
 					<TR class='spacer'>
@@ -677,11 +991,9 @@ $orig_fac_menu .= "<SELECT>";
 					</TR>	
 					<TR class='odd'>	
 						<TD class='td_label' COLSPAN=2 style='text-align: center;'><FONT COLOR='RED' SIZE='-1'>*</FONT>&nbsp;&nbsp;&nbsp;<B>Required</B></TD></TD>
-					</TR>	
-				</TABLE>
+					</TR>
+				</TABLE><BR /><BR />	
 				<INPUT NAME='requester' TYPE='hidden' SIZE='24' VALUE="<?php print $_SESSION['user_id'];?>">
-				<INPUT NAME='frm_lat' TYPE='hidden' SIZE='10' VALUE="">
-				<INPUT NAME='frm_lng' TYPE='hidden' SIZE='10' VALUE="">
 				</FORM>
 				<FORM METHOD='POST' NAME="gout_form" action="index.php">
 				<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />

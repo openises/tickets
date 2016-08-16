@@ -155,7 +155,7 @@ function add_res () {		// turns on add responder form
 				<TR CLASS='odd'>
 					<TD CLASS="td_label">
 						<A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>
-							:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.loc_add_form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
+							:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.loc_add_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
 					</TD>
 					<TD>
 						<INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
@@ -266,8 +266,10 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, $allow_filedelete, 0, 0, 0, 0);
 	var bounds = map.getBounds();	
 	var zoom = map.getZoom();
 	var got_points = false;	// map is empty of points
+	var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
 	function onMapClick(e) {
-	if(marker) {map.removeLayer(marker); }
+		if(doReverse == 0) {return;}
+		if(marker) {map.removeLayer(marker); }
 		var iconurl = "./our_icons/yellow.png";
 		icon = new baseIcon({iconUrl: iconurl});	
 		marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});

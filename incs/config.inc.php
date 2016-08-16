@@ -184,6 +184,8 @@ function reset_db($user=0,$ticket=0,$responders=0,$facilities=0,$settings=0,$mes
 		do_insert_settings('_inc_num','');				//	10/23/12
 		do_insert_settings('_cloud','0');				//	10/23/12
 		do_insert_settings('aprs_fi_key','');				//	10/23/12
+		do_insert_settings('followmee_key','');				//	10/23/12
+		do_insert_settings('followmee_username','');				//	10/23/12
 		do_insert_settings('title_string','');				//	10/23/12
 		do_insert_settings('ogts_info','');				//	10/23/12
 		do_insert_settings('regions_control','0');				//	10/23/12
@@ -191,6 +193,7 @@ function reset_db($user=0,$ticket=0,$responders=0,$facilities=0,$settings=0,$mes
 		do_insert_settings('use_messaging','0');				//	10/23/12
 		do_insert_settings ('ics_top','0');						// 5/21/2013 apply ICS button to top.php if == 1
 		do_insert_settings ('auto_refresh','1/1/1');			// 5/21/2013 auto-refresh for sitscr, fullscr, mobile
+		do_insert_settings('calltaker_mode','0');
 		}	//
 
 
@@ -490,7 +493,10 @@ function get_setting_help($setting){/* get help for settings */
 		case "disp_stat": 				return "Dispatch status tags, slash-separated; for &#39;dispatched&#39;, responding&#39;, &#39;on-scene&#39;, &#39;facility-enroute&#39;, &#39;facility arrived&#39;, &#39;clear&#39; IN THAT ORDER! (D/R/O/FE/FA/Clear)"; break;	// 8/29/10
 		case "group_or_dispatch": 		return "Show hide categories for units on the situation screen are based on show/hide setting in un_status table (0 - default) or on status groups in un_status table (1)"; break;	// 8/29/10
 		case "aprs_fi_key": 			return "To use aprs location data you will need to sign up for an aprs.fi user account/key (free).  Obtain from http://aprs.fi"; break;	// 3/19/11
+		case "followmee_key": 			return "To use FollowMee Tracking for Smart Phones, see http://www.followmee.com for more info."; break;	// 3/19/11
+		case "followmee_username": 		return "To use FollowMee Tracking for Smart Phones, see http://www.followmee.com for more info."; break;	// 3/19/11
 		case "title_string": 			return "If text is entered here it replaces the default title in the top bar."; break;	// 6/10/11
+		case "calltaker_mode":			return "Disables directly entering Dispatch screen when entering a new ticket, designed for calltaker and dispatcher being distinct roles"; break;
 		case "use_messaging": 			return "Setting determines whether to use Tickets 2-way Messaging interface. Setting 0 (Default) does not use messaging, 1 to use Email, 2 to use SMS Gateway and 3 to use Email and SMS Gateway"; break;	// 6/10/11
 		case "map_in_portal": 			return "Setting determines whether to show map on portal page or not - 1 (default) shows the map"; break;	// 6/10/11
 		case "ics_top": 				return "Do/don&#39;t (1/0) show ICS button in top button row.  (Default is 0, for \"No\".)";	 break;	// 5/21/2013
@@ -520,6 +526,12 @@ function get_setting_help($setting){/* get help for settings */
 		case "geocoding_provider": 		return "Geocoding provider - 0 (default) for OSM Nominatim, 1 for Google, 2 for Bing";	 break;
 		case "addr_source": 			return "0 - don&#39;t bother, 1 - use existing incident street addresses, 2 - use constituents.";	break;
 		case "default_map_layer": 		return "0 (Default) - Open Streetmap, 1 - Google Road, 2 - Google Terrain, 3 - Google Satellite, 4 - Google Hybrid, 5 - USGS Topographic, 6 - Dark Map, 7 - Aerial Map.";	break;
+		case "status_watch":			return "Displays watch alert for units that have been in a status (of a particular Group) for longer than a number of minutes. Format is Group/Time, for example Break/30. This would alert operators when someone has been on break for more than 30 minutes";
+		case "mob_show_cleared": 		return "Sets display of incidents in Mobile screen to include Assignments that are cleared but the incident is still open. 1 (default) shows them, 0 hides them";	break;
+		case "custom_situation": 		return "Customise Situation screen, two settings 0 to hide, 1 to show for Recent Events and Statistics";	break;
+		case "facboard_hide_patient": 	return "Show (0) or Hide (1) Patient Name on facility board";	break;
+		case "debug": 					return "Debug on (1) or off (0) (default) for situation screen and other lists";	break;
+		case "log_days": 				return "Number of days to show the recent events for on the Situation screen, 3 is the default";	break;
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}
 	}
@@ -574,7 +586,14 @@ function get_msg_settings_help($setting){/* get help for color settings	3/15/11 
 		case "email_password": 				return "Your email server password"; break;
 		case "email_svr_simple":			return "Email server simple or normal authentication - i.e. does this use SSL and a different port. Most public servers do not use simple authentication. 1 for simple 0 for normal."; break;
 		case "no_whitelist": 				return "Use (0) or not use (1) the whitelist functionality which stops storing of emails from unknown senders"; break;
-		case "smsg_provider": 				return "Shows the current SMS Gateway Provider (only provides name translation in the various screens). Only SMS Responder is currently implemented, please leave with this setting. "; break;
+		case "mototrbopy_path":				return "The fully qualified path to the MOTOTRBO Text Message Service Python Script, e.g. /var/www/ticketscad/mototrbo/Mototrbo.py"; break;
+		case "mototrbo_cai_id":				return "Common Air Interface Network ID, typically this is 12 on most TRBO systems"; break;
+		case "mototrbo_python_path":		return "Path to Python interpreter, must be V3 to use the script for MOTOTRBO TMS supplied with TicketsCAD"; break;
+		case "smsbroadcast_api_url":		return "Full http URL to SMS Broadcast API - https://api.smsbroadcast.com.au/api-adv.php"; break;
+		case "smsbroadcast_maxsplit":		return "Max split parameter for SMS Broadcast, maximum number of messages that can be used per message sent from TicketsCAD using SMS multiple message support, 2 should be sufficient but keep in mind the cost of each SMS may increase"; break;
+		case "smsbroadcast_password":		return "Password for SMS Broadcast user"; break;
+		case "smsbroadcast_username":		return "Username for SMS Broadcast user"; break;
+		case "smsg_provider": 				return "Shows the current SMS Gateway Provider. SMS Responder, MOTOTRBO and SMS Broadcast are operational "; break;
 		case "smsg_server":					return "Incoming API page for SMS Gateway provider (the receiving page). Include the http://."; break;
 		case "smsg_server2":				return "If SMS Gateway provider has a backup server this is the address for the receiving page. Include the http://"; break;
 		case "smsg_og_serv1": 				return "Outgoing Primary server API sending page for the SMS Gateway provider. Include the http://"; break;

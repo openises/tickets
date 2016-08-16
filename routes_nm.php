@@ -14,8 +14,8 @@ if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
 	$from_top = round (0.3 * $_SESSION['scr_height']);
 	} else {
 	$inWin = false;
-	$from_left = round (0.4 * $_SESSION['scr_width']);
-	$from_top = round (0.3 * $_SESSION['scr_height']);
+	$from_left = round (0.5 * $_SESSION['scr_width']);
+	$from_top = round (0.00001 * $_SESSION['scr_height']);
 	}
 
 $show_tick_left = FALSE;	// controls left-side vs. right-side appearance of incident details - 11/27/09
@@ -347,6 +347,7 @@ function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 if (!empty($_POST)) {				// 77-200
 	extract($_POST);
 	$addrs = array();													// 10/7/08
+	$smsgaddrs = array();
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
 	$assigns = explode ("|", $_POST['frm_id_str']);		// pipe sep'd id's in frm_id_str
 	for ($i=0;$i<count($assigns); $i++) {		//10/6/09 added facility and receiving facility
@@ -369,11 +370,11 @@ if (!empty($_POST)) {				// 77-200
 		$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 
-		$query = "SELECT `id`, `contact_via` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";		// 10/7/08
+		$query = "SELECT `id`, `contact_via`,smsg_id FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";		// 10/7/08
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$row_addr = stripslashes_deep(mysql_fetch_assoc($result));
 		if (is_email($row_addr['contact_via'])) {array_push($addrs, $row_addr['contact_via']); }		// to array for emailing to unit
-
+		if ($row_addr['smsg_id'] != "") {array_push($smsgaddrs, $row_addr['smsg_id']); }
 		do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $assigns[$i], $frm_status_id);
 		if ($frm_facility_id != 0) {
 			do_log($GLOBALS['LOG_FACILITY_DISP'], $frm_ticket_id, $assigns[$i], $frm_status_id);
@@ -433,11 +434,11 @@ if (!empty($_POST)) {				// 77-200
 
 	var starting = false;						// 2/15/09
 
-	function do_mail_win(addrs, ticket_id) {	
+	function do_mail_win(addrs, smsgaddrs, ticket_id) {	
 		if(starting) {return;}					// dbl-click catcher
-//		alert("174 " +addrs);
+//		alert(" <?php print __LINE__; ?> " +addrs);
 		starting=true;	
-		var url = "mail_edit.php?ticket_id=" + ticket_id + "&addrs=" + addrs + "&text=";	// no text
+		var url = "mail_edit.php?ticket_id=" + ticket_id + "&addrs=" + addrs + "&smsgaddrs=" + smsgaddrs + "&text=";	// no text
 		newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=360,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
 		if (isNull(newwindow_mail)) {
 			alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
@@ -457,13 +458,14 @@ if (!empty($_POST)) {				// 77-200
 </HEAD>
 <?php
 	$addr_str = urlencode( implode("|", array_unique($addrs)));
-	if (empty($addr_str)) {
+	$smsg_add_str = urlencode( implode(",", array_unique($smsgaddrs)));
+	if (empty($addr_str) && empty($smsg_add_str)) {
 		$next = (intval(get_variable('quick'))==1)? " onLoad = 'document.cont_form.submit();'" : "";			//3/11/09
 		print "\n<BODY $next>\n";
 		}
 	else {
 		$next = (intval(get_variable('quick'))==1)? "; document.cont_form.submit();" : "";
-		print "\n<BODY onLoad = \"do_mail_win('" . $addr_str . "', '" . $_POST['frm_ticket_id'] . "')$next \">\n";
+		print "\n<BODY onLoad = \"do_mail_win('{$addr_str}', '{$smsg_add_str}', '{$_REQUEST['frm_ticket_id']}');$next \">\n";
 		}
 ?>
 	<CENTER><BR><BR><BR><BR><H3>Call Assignments made to:<BR /><?php print substr((str_replace ( "\n", ", ", $_POST['frm_name_str'])) , 0, -2);?><BR><BR> <!-- 11/8/08 -->

@@ -29,7 +29,7 @@ print do_calls();		// call signs to JS array for validation
 
 function can_do_dispatch($the_row) {
 	if (intval($the_row['multi'])==1) return TRUE;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";	// all dispatches this unit
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
 	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
 		if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
@@ -518,7 +518,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						<A CLASS="td_label" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address">Contact Via</A>:&nbsp;
 					</TD>	
 					<TD COLSPAN=3>
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" />
+						<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">

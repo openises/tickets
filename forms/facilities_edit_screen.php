@@ -698,6 +698,23 @@ function check_days(id) {
 						<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="<?php print $row['notify_email'] ;?>" />
 					</TD>
 				</TR>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label">
+						<A CLASS="td_label" HREF="#" TITLE="Notify when?"><?php print get_text("Notify when"); ?></A>:&nbsp;
+					</TD>
+					<TD COLSPAN=3 >
+<?php
+						$sel1 = ($row['notify_when'] == 1) ? "SELECTED" : "";
+						$sel2 = ($row['notify_when'] == 2) ? "SELECTED" : "";
+						$sel3 = ($row['notify_when'] == 3) ? "SELECTED" : "";
+?>							
+						<SELECT NAME='frm_notify_when'>
+							<OPTION VALUE=1 <?php print $sel1;?>>All</OPTION>
+							<OPTION VALUE=2 <?php print $sel2;?>>Incident Open</OPTION>
+							<OPTION VALUE=3 <?php print $sel3;?>>Incident Close</OPTION>
+						</SELECT>					
+					</TD>
+				</TR>
 				<TR>
 					<TD>&nbsp;</TD>
 				</TR>
@@ -751,8 +768,9 @@ var initZoom = <?php print get_variable('def_zoom');?>;
 init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
-
+var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
 function onMapClick(e) {
+	if(doReverse == 0) {return;}
 	if(marker) {map.removeLayer(marker); }
 	var iconurl = "./our_icons/yellow.png";
 	icon = new baseIcon({iconUrl: iconurl});	

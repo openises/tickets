@@ -121,8 +121,15 @@ function subval_sort($a,$subkey, $dd) {
 	return $c;
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]log` WHERE `who` != " . $_SESSION['user_id'] . " AND `code` != 90 AND `code` != 127 ORDER BY `id` DESC LIMIT 1000";
+$logdays = intval(get_variable('log_days'));	
 
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]log` 
+	WHERE `who` != " . $_SESSION['user_id'] . " 
+	AND `code` != 90 AND `code` != 127 
+	AND `code` != 5000 
+	AND `when` >= CURRENT_DATE - INTERVAL " . $logdays . " DAY
+	ORDER BY `id` DESC LIMIT 1000";
+	
 $result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 $num_rows = mysql_num_rows($result);
 $i = 0;

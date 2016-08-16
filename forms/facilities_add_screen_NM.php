@@ -593,6 +593,18 @@ function check_days(id) {
 						<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="" />
 					</TD>
 				</TR>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label">
+						<A CLASS="td_label" HREF="#" TITLE="Notify when?"><?php print get_text("Notify When"); ?></A>:&nbsp;
+					</TD>
+					<TD COLSPAN=3 >
+						<SELECT NAME="frm_notify_when">
+							<OPTION VALUE=1 SELECTED>All</OPTION>
+							<OPTION VALUE=2 SELECTED>Incident Open</OPTION>
+							<OPTION VALUE=3 SELECTED>Incident Close</OPTION>
+						</SELECT>
+					</TD>
+				</TR>
 				<TR class='spacer'>
 					<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
 				</TR>

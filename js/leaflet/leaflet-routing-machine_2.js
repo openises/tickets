@@ -1587,7 +1587,7 @@ if (typeof module !== undefined) module.exports = polyline;
 			    i;
 
 			context = context || callback;
-			if (response.status !== 0) {
+			if (response.status !== 0 && response.status !== 200) {
 				callback.call(context, {
 					status: response.status,
 					message: response.status_message

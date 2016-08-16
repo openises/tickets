@@ -85,5 +85,9 @@ $types = array();
 	$types[$GLOBALS['LOG_WARNLOCATION_DELETE']]				="Location Warning Deleted";			// 10/24/13
 	
 	$types[$GLOBALS['LOG_SPURIOUS']]						="Logged incorrectly - Ignore";			//	10/24/13
+	
+	$types[$GLOBALS['LOG_BROADCAST_MESSAGE']] 				="Broadcast Message";					//	11/30/15
+	$types[$GLOBALS['LOG_BROADCAST_ALERT']] 				="Responder Needs Help";					//	11/30/15
+	$types[$GLOBALS['LOG_BROADCAST_ERROR']] 				="Broadcast Error";						//	11/30/15 
 
 ?>

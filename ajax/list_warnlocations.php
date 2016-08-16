@@ -84,13 +84,12 @@ if($num_locations == 0) {
 			$theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $row['lat'] . ',' . $row['lng'] . ');">Location</span>';
 			$theTabs .= '</div>';
 			$theTabs .= '<div class="contentwrapper">';	
-			$tab_1 = "<TABLE width='{$iw_width}' style='height: 280px;'><TR><TD><TABLE>";		
+			$tab_1 = "<TABLE width='280px' style='height: 280px;'><TR><TD><TABLE width='98%'>";		
 			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($display_name, 48)) . "</B></TD></TR>";
 			$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . $toedit . "&nbsp;&nbsp;<A HREF='{$_SESSION['warnlocationsfile']}?func=location&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";	// 08/8/02
-			$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row['_on'])) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD ALIGN='left'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD ALIGN='left'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row['_on'])) . "</TD></TR>";
 			$tab_1 .= "</TABLE></TD></TR></TABLE>";
-
 			$tab_3 = "<TABLE width='{$iw_width}' style='height: 280px;'><TR><TD>";
 			$tab_3 .= "<TABLE width='100%'>";
 			$locale = get_variable('locale');	// 08/03/09
@@ -100,7 +99,7 @@ if($num_locations == 0) {
 				break;
 			
 				case "1":
-				$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+				$tab_3 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 				break;
 			
 				case "2":

@@ -77,7 +77,25 @@ if (empty($_POST)) {
 
 <FORM NAME="log_form" METHOD = "post" ACTION="<?php print basename(__FILE__); ?>">
 <TABLE>
-<TR CLASS = 'even' ><TH COLSPAN=2>Station Log</TH></TR>
+<TR CLASS = 'even' >
+	<TH COLSPAN=2>Station Log</TH>
+</TR>
+<TR CLASS = 'odd'>
+	<TD>Unit</td>
+	<td>
+		<SELECT NAME="frm_responder">
+			<OPTION VALUE=0>Select</OPTION>
+<?php
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle` ASC";           // 12/18/10
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			while ($row_responder = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$sel = ($row['responder'] == $row_responder['id']) ? "SELECTED" : "";
+					print "\t<OPTION {$sel} VALUE='{$row_responder['id']}'>{$row_responder['handle']} ({$row_responder['name']}) </OPTION>\n";
+					}
+?>
+		</SELECT>
+	</td>
+</tr>
 <TR CLASS = 'odd'><TD>Log entry:</TD><TD><TEXTAREA NAME="frm_comment" COLS="45" ROWS="2" WRAP="virtual"></TEXTAREA></TD></TR>
 <TR CLASS = 'even'><TD COLSPAN=2 ALIGN='center'>
 <INPUT TYPE = 'button' VALUE='Submit' onClick="document.log_form.submit()" />&nbsp;&nbsp;&nbsp;&nbsp;
@@ -151,8 +169,8 @@ else {										// not empty
 
 	switch ($_POST['func']) {
 		case "add":
-			do_log($GLOBALS['LOG_COMMENT'], $ticket_id=0, $responder_id=0, strip_tags(trim($_POST['frm_comment'])));
-			
+			do_log($GLOBALS['LOG_COMMENT'], $ticket_id=0, $_POST['frm_responder'], strip_tags(trim($_POST['frm_comment'])));
+			print "<script>window.close();</script>";			
 			break;
 		case "view":
 			print my_show_log ();

@@ -164,7 +164,7 @@ function any_track(theForm) {
 
 var track_captions = ["", "Callsign", "Device key", "Userid ", "Userid ", "Badge", "Device", "Userid", "Automatic"];	//	9/6/13
 function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific code to switch off unselected,
-	theForm.frm_aprs.value=theForm.frm_instam.value=theForm.frm_locatea.value=theForm.frm_gtrack.value=theForm.frm_glat.value=theForm.frm_ogts.value=theForm.frm_t_tracker.value=theForm.frm_mob_tracker.value=theForm.frm_xastir_tracker.value=0;		//	 9/6/13
+	theForm.frm_aprs.value=theForm.frm_instam.value=theForm.frm_locatea.value=theForm.frm_gtrack.value=theForm.frm_glat.value=theForm.frm_ogts.value=theForm.frm_t_tracker.value=theForm.frm_mob_tracker.value=theForm.frm_xastir_tracker.value=theForm.frm_followmee_tracker.value=0;		//	 9/6/13
 	switch(parseInt(theVal)) {
 		case <?php print $GLOBALS['TRACK_NONE'];?>:		 break;
 		case <?php print $GLOBALS['TRACK_APRS'];?>:		 theForm.frm_aprs.value=1;	 break;
@@ -176,6 +176,7 @@ function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific
 		case <?php print $GLOBALS['TRACK_OGTS'];?>:		 theForm.frm_ogts.value=1;	 break;
 		case <?php print $GLOBALS['TRACK_MOBILE'];?>:	 theForm.frm_mob_tracker.value=1;	 break;	//	9/6/13
 		case <?php print $GLOBALS['TRACK_XASTIR'];?>:	 theForm.frm_xastir_tracker.value=1;	 break;	//	1/30/14
+		case <?php print $GLOBALS['TRACK_FOLLOWMEE'];?>:	 theForm.frm_followmee_tracker.value=1;	 break;	//	1/30/14
 		default:  alert("error <?php print __LINE__;?>");
 		}		// end switch()
 	}				// end function do tracking()		
@@ -211,6 +212,7 @@ function track_reset(the_Form) {		// reset to original as-loaded values
 	the_Form.frm_t_tracker.value = <?php echo $row['t_tracker'];?>;
 	the_Form.frm_mob_tracker.value = <?php echo $row['mob_tracker'];?>;				//	9/6/13
 	the_Form.frm_xastir_tracker.value = <?php echo $row['xastir_tracker'];?>;				//	9/6/13
+	the_Form.frm_followmee_tracker.value = <?php echo $row['followmee_tracker'];?>;				//	9/6/13
 	}		// end function track reset()
 	
 var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "Userid&nbsp;&raquo;", "Userid&nbsp;&raquo;", "Badge&nbsp;&raquo;", "Device&nbsp;&raquo;", "Userid&nbsp;&raquo;","Automatic&nbsp;&raquo;","Callsign&nbsp;&raquo;"];	//	 9/6/13
@@ -337,6 +339,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 							print "<OPTION VALUE={$GLOBALS['TRACK_T_TRACKER']} 	{$selects[$GLOBALS['TRACK_T_TRACKER']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_T_TRACKER']]} </OPTION>";	
 							print "<OPTION VALUE={$GLOBALS['TRACK_MOBILE']} 	{$selects[$GLOBALS['TRACK_MOBILE']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_MOBILE']]} </OPTION>";
 							print "<OPTION VALUE={$GLOBALS['TRACK_XASTIR']} 	{$selects[$GLOBALS['TRACK_XASTIR']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_XASTIR']]} </OPTION>";
+							print "<OPTION VALUE={$GLOBALS['TRACK_FOLLOWMEE']} 	{$selects[$GLOBALS['TRACK_FOLLOWMEE']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_FOLLOWMEE']]} </OPTION>";
 ?>
 						</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <SCRIPT>				
@@ -526,7 +529,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						<A CLASS="td_label" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address. For Twitter, input the Screen Name preceded by a '@'.">Contact Via</A>:&nbsp;
 					</TD>	
 					<TD COLSPAN=3>
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" />
+						<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -634,6 +637,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 			<INPUT TYPE="hidden" NAME = "frm_ogts" VALUE=<?php print $row['ogts'] ;?> />
 			<INPUT TYPE="hidden" NAME = "frm_mob_tracker" VALUE=<?php print $row['mob_tracker'] ;?> />
 			<INPUT TYPE="hidden" NAME = "frm_xastir_tracker" VALUE=<?php print $row['xastir_tracker'] ;?> />
+			<INPUT TYPE="hidden" NAME = "frm_followmee_tracker" VALUE=<?php print $row['followmee_tracker'] ;?> />
 			<INPUT TYPE="hidden" NAME = "frm_direcs" VALUE=<?php print $row['direcs'] ;?> />
 			<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">
 			<INPUT TYPE="hidden" NAME = "frm_status_updated" VALUE="<?php print $row['status_updated'] ;?>" />	
@@ -674,8 +678,9 @@ var initZoom = <?php print get_variable('def_zoom');?>;
 init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
-
+var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
 function onMapClick(e) {
+	if(doReverse == 0) {return;}
 	if(marker) {map.removeLayer(marker); }
 	var iconurl = "./our_icons/yellow.png";
 	icon = new baseIcon({iconUrl: iconurl});	

@@ -69,10 +69,10 @@ function get_current() {		// 3/16/09, 6/10/11, 7/25/09  2/14/2014
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 
-	$aprs = $instam = $locatea = $gtrack = $glat = $ogts = $t_tracker = $mob_tracker = $xastir_tracker = FALSE;		// 6/10/11, 7/6/11, 1/30/14
+	$aprs = $instam = $locatea = $gtrack = $glat = $ogts = $t_tracker = $mob_tracker = $xastir_tracker = $followmee_tracker = FALSE;		// 6/10/11, 7/6/11, 1/30/14
 	$ts_threshold = strtotime('now - 24 hour');				// discard inputs older than this - 4/25/11
 
-	$query = "SELECT `id`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `ogts`, `t_tracker`, `mob_tracker`, `xastir_tracker` FROM `$GLOBALS[mysql_prefix]responder` WHERE ((`aprs` = 1) OR (`instam` = 1) OR (`locatea` = 1) OR (`gtrack` = 1) OR (`glat` = 1) OR (`ogts` = 1) OR (`t_tracker` = 1))";
+	$query = "SELECT `id`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `ogts`, `t_tracker`, `mob_tracker`, `xastir_tracker`, `followmee_tracker` FROM `$GLOBALS[mysql_prefix]responder` WHERE ((`aprs` = 1) OR (`instam` = 1) OR (`locatea` = 1) OR (`gtrack` = 1) OR (`glat` = 1) OR (`ogts` = 1) OR (`t_tracker` = 1) OR (`followmee_tracker` = 1))";
 	$result = mysql_query($query) or do_error($query, ' mysql error=', mysql_error(), basename( __FILE__), __LINE__);
 
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
@@ -85,6 +85,7 @@ function get_current() {		// 3/16/09, 6/10/11, 7/25/09  2/14/2014
 		if ($row['t_tracker'] == 1) { $t_tracker = TRUE;}		// 6/10/11
 		if ($row['mob_tracker'] == 1) { $mob_tracker = TRUE;}		// 9/6/11
 		if ($row['xastir_tracker'] == 1) { $xastir_tracker = TRUE;}		// 1/30/14
+		if ($row['followmee_tracker'] == 1) { $followmee_tracker = TRUE;}		// 1/30/14
 		}		// end while ()
 	unset($result);
 	if ($aprs) 		{do_aprs();}
@@ -96,7 +97,8 @@ function get_current() {		// 3/16/09, 6/10/11, 7/25/09  2/14/2014
 	if ($t_tracker) {do_t_tracker();}				// 6/10/11
 	if ($mob_tracker) {do_mob_tracker();}				// 6/10/11
 	if ($xastir_tracker) {do_xastir();}				// 6/10/11
-	return array("aprs" => $aprs, "instam" => $instam, "locatea" => $locatea, "gtrack" => $gtrack, "glat" => $glat, "ogts" => $ogts, "t_tracker" => $t_tracker, "mob_tracker" => $mob_tracker, "xastir_tracker" => $xastir_tracker);		//7/29/09, 7/6/11, 6/10/11
+	if ($followmee_tracker) {do_followmee();}				// 6/10/11
+	return array("aprs" => $aprs, "instam" => $instam, "locatea" => $locatea, "gtrack" => $gtrack, "glat" => $glat, "ogts" => $ogts, "t_tracker" => $t_tracker, "mob_tracker" => $mob_tracker, "xastir_tracker" => $xastir_tracker, "followmee_tracker" => $followmee_tracker);		//7/29/09, 7/6/11, 6/10/11
 	}		// end get_current()
 
 function get_instam_device($key) {				// 2/14/2014
@@ -692,4 +694,92 @@ function do_xastir() {				// 1/30/14 - track responder locations with Xastir ser
 			}			// end while $row2
 		}			// end while $row1
 	}			// end function do_xastir()
+
+function do_followmee() {				// 7/2/2013 - 6/20/2015 -  populates the APRS tracks table and updates responder position data
+	function log_followmee_err($message) {								// error logger - 4/29/12
+		@session_start();
+		if (!(array_key_exists ( "followmee_err", $_SESSION ))) {		// limit to once per session
+			do_log($GLOBALS['LOG_ERROR'], 0, 0, $message);
+			$_SESSION['followmee_err'] = TRUE;
+			}
+		}		// end function
+
+	function is_recent($time_val) {
+		return ( strtotime($time_val) > (now() - (6+2)*60*60) );
+		}
+
+	global $ts_threshold;					// 4/25/11
+	global $istest;
+	$now_ts = now_ts();
+	$the_key = trim(get_variable('followmee_key'));
+	$fmusername = trim(get_variable('followmee_username'));
+	if (empty($the_key)) {
+		log_followmee_err("Follow Mee key required for aprs operation") ;
+		return FALSE;
+		}
+	if (empty($fmusername)) {
+		log_followmee_err("Follow Mee username required for aprs operation") ;
+		return FALSE;
+		}
+
+	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated`< (NOW() - INTERVAL 7 DAY)";
+	$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	unset($resultd);
+
+	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `followmee_tracker`= 1 AND `callsign` <> ''";  // work each call sign, 8/10/09
+	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+
+	if (mysql_num_rows($result) > 0) {			//
+		$call_str = $sep = "";
+		while ($row = @mysql_fetch_assoc($result)) {
+			$call_str .= $sep . $row['callsign'];
+			$the_url = "https://www.followmee.com/api/tracks.aspx?key={$the_key}&username={$fmusername}&output=json&function=currentfordevice&deviceid=${call_str}";
+
+
+			$data=get_remote($the_url);				// returns JSON-decoded values
+			if ((!(is_array($data))) && (!(is_object($data)))) {				// 4/29/12
+				log_followmee_err("FollowMee JSON data format error");
+			}
+			if (count($data) > 0){
+				$time_offset = 6*60*60;							// 6 hours - determined from aprs.fi site observation
+				$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+
+				$entry = $data->Data[0];
+				$callsign_in = $entry->DeviceID;
+				$callsign_in_rev = like_ify($callsign_in);		// 3/3/2015 - revise callsign for LIKE lookup
+
+				$lat = $entry->Latitude;
+				$lng = $entry->Longitude;
+				$updated =  $entry->Date;
+				$kph = $entry->{'Speed(km/h)'};
+				$alt = $entry->{'Altitude(m)'};
+				$packet_date = $entry->Date;
+				if ( sane ( floatval ($lat), floatval ($lng), intval (strtotime($updated)) ) && ( is_recent($packet_date) ) ) {
+					$the_time = mysql_format_date(strtotime($packet_date) - $time_offset);		// adjust per aprs.fi observation
+					$query = "UPDATE `$GLOBALS[mysql_prefix]responder`
+						SET `lat` = '{$lat}', `lng` = '{$lng}'
+						WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+
+						$result = @mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
+					if ( mysql_affected_rows() > 0 ) {									// movement ?
+
+						$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `updated` = '{$now_ts}'
+							WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
+
+						$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;	// a hash - use tbd
+
+						$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
+							`packet_id`, `source`, `latitude`, `longitude`, `speed`, `course`, `altitude`, `packet_date`, `updated`)
+							VALUES (
+									'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$kph}', '{$course}', '{$alt}', '{$packet_date}', '{$now}')";
+
+						$result = @mysql_query($query);		// 6/17/2015
+						}
+
+					}			// end if (sane( ... ))
+				}			// end ( JSON data OK)
+			}
+		}			// end (mysql_affected_rows() > 0) - any APRS units?
+	}			// end function do_aprs()
 ?>

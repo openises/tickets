@@ -491,6 +491,7 @@ function get_user_details($rosterID) {	//	9/6/13
 			case <?php print $GLOBALS['TRACK_OGTS'];?>:		 theForm.frm_ogts.value=1;	 break;
 			case <?php print $GLOBALS['TRACK_MOBILE'];?>:	 theForm.frm_mob_tracker.value=1;	 break;	//	9/6/13
 			case <?php print $GLOBALS['TRACK_XASTIR'];?>:	 theForm.frm_xastrir_tracker.value=1;	 break;	//	1/30/14
+			case <?php print $GLOBALS['TRACK_FOLLOWMEE'];?>:	 theForm.frm_followmee_tracker.value=1;	 break;	//	1/30/14
 			default:  alert("error <?php print __LINE__;?>");
 			}		// end switch()
 		}				// end function do tracking()	
@@ -1218,6 +1219,7 @@ if(get_num_groups()) {
 					<OPTION VALUE='<?php print $GLOBALS['TRACK_OGTS'];?>'>OpenGTS</OPTION>
 					<OPTION VALUE='<?php print $GLOBALS['TRACK_MOBILE'];?>'>Mobile Tracking</OPTION>	<!-- 9/6/13 -->
 					<OPTION VALUE='<?php print $GLOBALS['TRACK_XASTIR'];?>'>Xastir</OPTION>	<!-- 1/30/14 -->
+					<OPTION VALUE='<?php print $GLOBALS['TRACK_FOLLOWMEE'];?>'>FollowMee</OPTION>	<!-- 1/30/14 -->
 					</SELECT>&nbsp;&nbsp;
 			<A CLASS="td_label" HREF="#" TITLE="Callsign / License key - required for all tracking types - APRS will be unit radio callsign, others will be license key given by provider">
 				</A>
@@ -1501,6 +1503,7 @@ if(get_num_groups()) {
 	print "<OPTION VALUE={$GLOBALS['TRACK_T_TRACKER']} 		{$selects[$GLOBALS['TRACK_T_TRACKER']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_T_TRACKER']]} </OPTION>";	
 	print "<OPTION VALUE={$GLOBALS['TRACK_MOBILE']} 		{$selects[$GLOBALS['TRACK_MOBILE']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_MOBILE']]} </OPTION>";	//	9/6/13
 	print "<OPTION VALUE={$GLOBALS['TRACK_XASTIR']} 		{$selects[$GLOBALS['TRACK_XASTIR']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_XASTIR']]} </OPTION>";	//	1/30/14
+	print "<OPTION VALUE={$GLOBALS['TRACK_FOLLOWMEE']} 		{$selects[$GLOBALS['TRACK_FOLLOWMEE']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_FOLLOWMEE']]} </OPTION>";	//	1/30/14
 ?>
 			</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;
 <SCRIPT>				

@@ -87,7 +87,11 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 			if($n == count($the_resp_ids)) {
 				$thesep = "";
 				}
+			if($val != "") {
 			$resp_names .= get_respondername($val) . $thesep;
+				} else {
+				$resp_names .= "Unk" . $thesep;
+				}			
 			$n++;
 			}
 		$the_message = ($msg_row['message'] != "") ? strip_tags($msg_row['message']) : "";

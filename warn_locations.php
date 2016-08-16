@@ -83,9 +83,7 @@ $osgb = get_text('OSGB');
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
 	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
-<?php 
-if ($_SESSION['internet']) {				// 8/22/10
-?>
+
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -96,7 +94,13 @@ if ($_SESSION['internet']) {				// 8/22/10
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
+<?php 
+if ($_SESSION['internet']) {				// 8/22/10
+?>
 	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+<?php 
+	} 
+?>	
 	<script src="./js/Google.js"></script>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -104,9 +108,6 @@ if ($_SESSION['internet']) {				// 8/22/10
 	<script type="text/javascript" src="./js/usng.js"></script>
 	<script type="text/javascript" src="./js/osgb.js"></script>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
-<?php 
-	} 
-?>
 	<script>
 	var map;		// note global
 	var layercontrol;
@@ -284,5 +285,4 @@ if ($_SESSION['internet']) {				// 8/22/10
 		require_once('./forms/wl_screen.php');
 		}
 	exit();
-    break;
 ?>

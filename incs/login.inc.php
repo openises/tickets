@@ -132,7 +132,7 @@ function is_expired($id) {		// returns boolean
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$id} LIMIT 1;";	
 	$result = mysql_query($query);
 	$row = @stripslashes_deep(mysql_fetch_assoc($result));
-	return ((is_resource($result)) && (mysql_affected_rows()==1) && ($row['expires'] > $now));
+	return ((mysql_num_rows($result)==1) && ($row['expires'] > $now));
 	}
 
 function redir($url, $time = 0) {
@@ -278,6 +278,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['user_unit_id'] = $row['responder_id'];		//3/19/11
 				$_SESSION['show_hide_upper'] = "s";		//6/10/11
 				$_SESSION['sh_cond'] = "s";
+				$_SESSION['mobile_selected'] = 0;
 				$initLayer = intval(get_variable('default_map_layer'));
 				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");	
 				$_SESSION['layer_inuse'] = $baseLayerNamesArr[$initLayer];
@@ -324,7 +325,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					} else if($level == $GLOBALS['LEVEL_STATS']) {
 					$extra = 'stats_scr.php?stats=stats';
 					} else if($level == $GLOBALS['LEVEL_SERVICE_USER']) {	//	10/11/12
-					$extra = 'portal.php';	
+					$extra = 'portal.php';
+					} else if($level == $GLOBALS['LEVEL_FACILITY']) {	//	10/11/12
+					$extra = 'facility_board.php';	
 					} else if($level == $GLOBALS['LEVEL_MEMBER']){
 					$_SESSION = array();
 					@session_destroy();
@@ -336,7 +339,6 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$url = "http://" . $host . $uri . "/" . $extra;
 				redir($url);
 				exit();				
-				
 				}			// end if (mysql_affected_rows()==1)
 			}			// end if((!empty($_POST))&&(check_for_rows(...)
 
@@ -453,10 +455,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				}
 			document.login_form.scr_width.value=screen.width;			// 1/23/10
 			document.login_form.scr_height.value=screen.height;
-	//		document.login_form.frm_user.focus();
-	//		parent.upper.hide_butts();				// 1/21/09
-			}		// end function do onload () 
-	
+			}		// end function do onload ()
 <?php
 		if (get_variable('call_board')==2) {		// 7/7/09
 ?>
@@ -474,7 +473,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		</SCRIPT>
 		</HEAD>
 <?php
-		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload()'>\n" : "\n\t<BODY onLoad = 'do_onload()'>\n";		// 2/24/09
+		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload();'>\n" : "\n\t<BODY onLoad = 'do_onload();'>\n";		// 2/24/09
 ?>	
 		
 <!--	<BODY onLoad = "do_onload()"> 11/6/10 -->

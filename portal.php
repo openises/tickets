@@ -24,7 +24,7 @@ function get_user_name($the_id) {
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	if(mysql_num_rows($result) == 1) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_ret = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
+		$the_ret = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $row['user'];
 		}
 	return $the_ret;
 	}

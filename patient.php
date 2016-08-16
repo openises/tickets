@@ -50,6 +50,13 @@ $dateofbirth =	 	get_text("Date of birth");
 $gender =	 		get_text("Gender");
 $insurance =	 	get_text("Insurance");
 $facilitycontact = 	get_text("Facility contact");
+
+$responder_details = array();
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id` ASC";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$responder_details[$row['id']] = $row['handle'];
+	}
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -137,7 +144,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		if (theForm.frm_name.value == "")						{errmsg+= "\tID/Name is required\n";}
 //		if (theForm.frm_gender_val.value==0) 					{errmsg+= "\t<?php echo $gender;?> required\n";}
 //		if (theForm.frm_ins_id.value==0) 						{errmsg+= "\t<?php echo $insurance;?> selection required\n";}		// 4/7/2014
-		if (theForm.frm_description.value == "")				{errmsg+= "\tDescription is required\n";}
+//		if (theForm.frm_description.value == "")				{errmsg+= "\tDescription is required\n";}
 		do_unlock(theForm) ;
 		if (!chkval(theForm.frm_hour_asof.value, 0,23)) 		{errmsg+= "\tAs-of time error - Hours\n";}
 		if (!chkval(theForm.frm_minute_asof.value, 0,59)) 		{errmsg+= "\tAs-of time error - Minutes\n";}
@@ -202,21 +209,22 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		}
 
 	</SCRIPT>
-<?php				// 7/3/2013
+<?php
 	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 	
 		require_once('./incs/socket2me.inc.php');		// 5/22/2013
 		}
 ?>
 	</HEAD>
-<?php 
+<?php
+
 	print (($get_action == "add")||($get_action == "update"))? "<BODY onLoad = 'ck_frames();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
 		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]' LIMIT 1"))
 			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
-		elseif ($_POST['frm_description'] == '')
-			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
+//		elseif ($_POST['frm_description'] == '')
+//			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
 		else {
 			$_POST['frm_description'] = strip_html($_POST['frm_description']); 				//fix formatting, custom tags etc.
 
@@ -306,13 +314,11 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			}
 		}
 	else if ($get_action == 'update') {		//update patient record and show ticket
-
 		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
 
 		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
 //		$query = "UPDATE `$GLOBALS[mysql_prefix]patient` SET `description`='$_POST[frm_description]' , `name`='$_POST[frm_name]', `updated` = '$frm_asof' WHERE id='$_GET[id]' LIMIT 1";
 		$now = mysql_format_date(now());
-
 		if ((array_key_exists ('frm_fullname', $_POST))) {		// 6/22/11
 			$ins_data = "
 				`fullname`	= " . 			quote_smart(addslashes(trim($_POST['frm_fullname']))) . ",
@@ -330,7 +336,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	    	`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
 	    	`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
 	    	`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ",
-			`facility_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",
+			`facility_id` =" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",
 			`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",			
 	    	`updated` = " .  	quote_smart(addslashes(trim($now))) . "
 	    	WHERE id= " . 		quote_smart($_GET['id']) . " LIMIT 1";
@@ -342,17 +348,91 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 
 		$result = mysql_query("SELECT ticket_id FROM `$GLOBALS[mysql_prefix]patient` WHERE id='$_GET[id]'") or do_error('patient.php::update patient record','mysql_query',mysql_error(), basename( __FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
+
+		if($_POST['assigns'] != "0") {
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id` = " . $_GET['id'];
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			if(mysql_num_rows($result) > 0) {
+				$query = "DELETE FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id`= " . $_GET['id'];
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				}			
+			
+			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 6/4/2013
+			$query  = "INSERT INTO `$GLOBALS[mysql_prefix]patient_x` (
+					`patient_id`, `assign_id`, `_by`, `_on`, `_from`
+					) VALUES (" .
+					quote_smart(trim($_GET['id'])) . "," .
+					quote_smart(trim($_POST['assigns'])) . "," .
+					quote_smart(trim($_SESSION['user_id'])) . "," .
+					quote_smart(trim($now)) . "," .
+					quote_smart(trim($_SERVER['REMOTE_ADDR'])) . ");";
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			} else {
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id` = " . $_GET['id'];
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			if(mysql_num_rows($result) > 0) {
+				$query = "DELETE FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id`= " . $_GET['id'];
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				}					
+			}
 		
 		print '<br><br><FONT CLASS="header">' . get_text("Patient") . ' record updated</FONT><BR /><BR />';
 		add_header($_GET['ticket_id']);				// 8/16/08
 		show_ticket($row['ticket_id']);
 		}
 	else if ($get_action == 'edit') {		//get and show action to update
+
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id` = " . $_GET['id'];
+		$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
+		if(mysql_num_rows($result) > 0) {
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$assigned_to = $row['assign_id'];
+			} else {
+			$assigned_to = 0;				
+			}
+	
+		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
+		$regions_inuse = get_regions_inuse($user_level);	//	5/4/11
+		$group = get_regions_inuse_numbers($user_level);	//	5/4/11		
+		$al_groups = $_SESSION['user_groups'];
+		if(array_key_exists('viewed_groups', $_SESSION)) {	//	5/4/11
+			$curr_viewed= explode(",",$_SESSION['viewed_groups']);
+			} else {
+			$curr_viewed = $al_groups;
+			}
+		if(!isset($curr_viewed)) {	
+			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+				} else {
+				$x=0;	//	6/10/11
+				$where2 = "WHERE (";	//	6/10/11
+				foreach($al_groups as $grp) {	//	6/10/11
+					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= $where3;
+					$x++;
+					}
+				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11					
+				}
+			} else {
+			if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+				} else {				
+				$x=0;	//	6/10/11
+				$where2 = "WHERE (";	//	6/10/11
+				foreach($curr_viewed as $grp) {	//	6/10/11
+					$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= $where3;
+					$x++;
+					}
+				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11						
+				}
+			}	
+	
 		$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]patient` WHERE id='$_GET[id]' LIMIT 1";	// 8/11/08
 		$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
-//		dump($row);
-//		dump(stripslashes($row['description']));
 ?>
 		<FONT CLASS="header">Edit <?php print get_text("Patient");?> Record</FONT><BR /><BR />
 		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
@@ -401,14 +481,28 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 				<TD><?php echo $ins_sel_str;?></TD></TR>
 <?php
 			}
+		$query_fac = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
+			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )		
+			$where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";		
+		$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$pulldown = '<option value = 0 selected>Select</option>\n'; 	// 3/18/10
+			while ($row_fac = mysql_fetch_array($result_fac, MYSQL_ASSOC)) {
+				$sel = ($row_fac['fac_id'] == $row['facility_id']) ? "SELECTED" : "";
+				$pulldown .= "<option value=\"{$row_fac['fac_id']}\" {$sel}>" . $row_fac['name'] . "</option>\n";
+				}	
 ?>
+		<TR CLASS='odd'>
+			<TD CLASS="td_label">Facility:</TD><TD COLSPAN='2' class='td_label'>
+				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>
+			</TD>
+		</TR>
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $facilitycontact;?>: &nbsp;&nbsp;</TD>
 			<TD><INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='<?php print $row['facility_contact'];?>' SIZE = '64' /></TD>
 		</TR>
 <?php
 		}		// end 	if($num_rows>0) 
 ?>		
-		<TR CLASS='odd'  VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD></TR>
+		<TR CLASS='odd'  VALIGN='top'><TD><B>Description:</B> </TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD></TR>
 		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
 			<TD ALIGN='right' CLASS="td_label">Signal: </TD><TD>
 
@@ -422,7 +516,24 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 					}
 ?>
 			</SELECT>
-			</TD></TR>
+			</TD>
+		</TR>
+		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
+			<TD ALIGN='right' CLASS="td_label">Add to Assign: </TD><TD>
+
+				<SELECT NAME='assigns'>
+				<OPTION VALUE=0 SELECTED>Select</OPTION>
+<?php
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $row['ticket_id'] . " AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				while ($row_ass = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$sel = ($row_ass['id'] == $assigned_to) ? "SELECTED" : "";
+					print "\t<OPTION VALUE='{$row_ass['id']}' {$sel}>{$responder_details[$row_ass['responder_id']]}&nbsp;|&nbsp;{$row_ass['as_of']}</OPTION>\n";		// pipe separator
+					}
+?>
+			</SELECT>
+			</TD>
+		</TR>
 <?php
 			print "\n<TR CLASS='even'><TD CLASS='td_label'>As of:</TD><TD>";
 			print  generate_date_dropdown("asof",$row['date'], TRUE);
@@ -578,7 +689,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			</SELECT>
 			</TD></TR>
 
-		<TR CLASS='even' ><TD class='td_label'><B>Description: </B><font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="6" COLS="62" NAME="frm_description" WRAP="virtual"></TEXTAREA></TD></TR> <!-- 10/19/08 -->
+		<TR CLASS='even' ><TD class='td_label'><B>Description: </B></TD><TD><TEXTAREA ROWS="6" COLS="62" NAME="frm_description" WRAP="virtual"></TEXTAREA></TD></TR> <!-- 10/19/08 -->
 
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label">As of: &nbsp;&nbsp;</TD><TD><?php print generate_date_dropdown('asof',0,TRUE);?>&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.patientAdd);'></TD></TR>
 

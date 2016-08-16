@@ -334,6 +334,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 						<OPTION VALUE='<?php print $GLOBALS['TRACK_OGTS'];?>'>OpenGTS</OPTION>
 						<OPTION VALUE='<?php print $GLOBALS['TRACK_MOBILE'];?>'>Mobile Tracking</OPTION>
 						<OPTION VALUE='<?php print $GLOBALS['TRACK_XASTIR'];?>'>Xastir</OPTION>
+						<OPTION VALUE='<?php print $GLOBALS['TRACK_FOLLOWMEE'];?>'>FollowMee</OPTION>
 					</SELECT>&nbsp;&nbsp;
 <SCRIPT>				
 					var track_info = "APRS:   callsign\nInstamapper:   Device key\nLocateA:   Userid\nGtrack:   Userid\nLatitude:   Badge\nOpenGTS:   Device\nMobile Tracking: automatic\n";
@@ -467,7 +468,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 					<A CLASS="td_label" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address">Contact Via</A>:&nbsp;
 				</TD>	
 				<TD COLSPAN=3 >
-					<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_via" VALUE="" />
+					<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="" />
 				</TD>
 			</TR>
 			<TR CLASS = "even">
@@ -526,6 +527,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			<INPUT TYPE='hidden' NAME = 'frm_ogts' VALUE=0 />	<!-- 7/6/11 -->
 			<INPUT TYPE='hidden' NAME = 'frm_mob_tracker' VALUE=0 />	<!-- 9/6/13 -->
 			<INPUT TYPE='hidden' NAME = 'frm_xastir_tracker' VALUE=0 />	<!-- 1/30/14 -->
+			<INPUT TYPE='hidden' NAME = 'frm_followmee_tracker' VALUE=0 />	<!-- 1/30/14 -->
 			<INPUT TYPE='hidden' NAME = 'frm_direcs' VALUE=1 />  <!-- note default -->
 			</TABLE> <!-- end inner left -->
 			</FORM>

@@ -46,6 +46,14 @@ while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 	}
 unset($result_st);
 
+$users_arr = array();
+
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
+$result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) {
+	$users_arr[$row_users['id']] = $row_users['responder_id'];
+	}
+
 function get_status_selector($unit_in, $status_val_in, $tbl_in) {
 	switch ($tbl_in) {
 		case ("u") :
@@ -136,6 +144,18 @@ function get_responder_name($id) {
 			}
 		}
 	}
+	
+function get_responder_handle($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+	$result = mysql_query($query);	
+	if(mysql_num_rows($result) != 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$ret = $row['handle'];	
+		return $ret;
+		} else {
+		return "NA";
+		}
+	}
 
 if (isset($_SESSION['user_id'])) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`= '" . $_SESSION['user_id'] . "'";
@@ -163,8 +183,9 @@ if($the_user != 0) {
 if($the_responder != 0) {
 	$the_status_sel = get_status_selector($the_responder, get_responder_status($the_responder), "u");
 	}
-
+	
 $logged_in_load = ($logged_in == 1) ? "get_conditions(); get_ticket_markers(" . $the_user . ");" : "";
+$respondername = get_responder_handle($the_responder);
 ?>
 <!DOCTYPE html>
 <html>
@@ -180,7 +201,10 @@ $logged_in_load = ($logged_in == 1) ? "get_conditions(); get_ticket_markers(" . 
 <style type="text/css">
 	*, html { margin:0; padding:0 }
 	div#map_canvas {z-index: 1; position: fixed; top: 0px; left: 0px;}
-	div#map_outer { width:100%; height: auto; z-index: 1;}	
+	div#map_outer { width:100%; height: auto; z-index: 1;}
+	div#has_line {z-index: 100; position: fixed; bottom: 50%; left: 10%; width: 80%; line-height: 40px; background-color: yellow; border: 2px outset #707070;}
+	#has_wrapper {color: black; font-size: 20px; font-weight: bold; width: 80%; display: inline-block; line-height: 40px; vertical-align: middle;}
+	#closeHas {display: inline-block; vertical-align: middle; float: right;}
 	div#screen_buttons { width: 100%; height: 50px; position: absolute; bottom: 0px; z-index: 999; text-align: center; }	
 	div#app_outer { position: absolute; top: 0px; left: 0%; width: 80%; height: auto; z-index: 6; color: #000000;}
 	div#app_title { position: relative; top: 2px; left: 0%; width: 80%; z-index: 6; color: #000000; background-color: #FEFEFE; font-size: 1em; font-weight: bold; display: inline-block; border: 4px outset #DEDEDE;}
@@ -195,6 +219,7 @@ $logged_in_load = ($logged_in == 1) ? "get_conditions(); get_ticket_markers(" . 
 	div#night_but { z-index: 5; display: inline-block; position: fixed; top: 150px; right: 160px; }	
 	div#plus_but { z-index: 5; display: inline-block; position: fixed; top: 150px; right: 20px; }
 	div#minus_but { z-index: 5; display: inline-block; position: fixed; top: 220px; right: 20px; }
+	div#help_but { z-index: 5; display: inline-block; position: fixed; top: 290px; right: 20px; }
 	div#map_controls { z-index: 5; display: inline-block; position: fixed; top: 5px; right: 150px;}	
 	div#map_but { z-index: 5; display: inline-block; position: fixed; top: 5px; right: 5px; }		
 	div#screen_title { width: auto; height: auto; text-align: center; z-index: 5; color: #707070; background-color: #FFFFFF; font-size: 1.5em; font-weight: bold;  }	
@@ -228,7 +253,6 @@ $logged_in_load = ($logged_in == 1) ? "get_conditions(); get_ticket_markers(" . 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="../js/leaflet/leaflet.js"></script>
 <script src="../js/misc_function.js" type="text/javascript"></script>
-<script src="./js/mobile_functions.js" type="text/javascript"></script>
 <SCRIPT SRC="../js/usng.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC='../js/jscoord.js' TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC="../js/lat_lng.js" TYPE="text/javascript"></SCRIPT>
@@ -281,6 +305,7 @@ var theIcon;
 window.onresize=function(){set_size()};
 
 window.onload = function() {
+	start_connection();
 	set_size();
 	screen1(); 
 	<?php print $logged_in_load;?>
@@ -484,7 +509,7 @@ function do_login() {
 	primary_timer = null;
 	secondary_timer = null;
 	tertiary_timer = null;
-	document.gin_form.submit();			// send logout 	
+	document.gin_form.submit();			// send login 	
 	}
 
 function get_latest_ids() {				// get latest chat invites and new assignments
@@ -1716,7 +1741,8 @@ function pause_messages() {	//	10/29/13
 	<div id='outer' style='height: 80%; width: 100%; background-color: #CECECE;'>
 		<div id="map_canvas"></div>	
 		<div id='plus_but' onClick = "zoomIn();"><IMG SRC = './images/zoomin.png' ALT='Zoom In' BORDER=0 STYLE = 'vertical-align: middle'></div>	
-		<div id='minus_but' onClick = "zoomOut();"><IMG SRC = './images/zoomout.png' ALT='Zoom Out' BORDER=0 STYLE = 'vertical-align: middle'></div>	
+		<div id='minus_but' onClick = "zoomOut();"><IMG SRC = './images/zoomout.png' ALT='Zoom Out' BORDER=0 STYLE = 'vertical-align: middle'></div>
+		<div id='help_but' onClick = "broadcast('Responder <?php print $respondername;?> needs assistance', 99);"><IMG SRC = './images/help.png' ALT='Help' BORDER=0 STYLE = 'vertical-align: middle'></div>	
 		<div id='map_but' class='plain' style="display: inline-block; z-index: 10;" onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"  onClick = "map_controls_onoff();"><IMG SRC = './images/map.png' ALT='Map Controls' BORDER=0 STYLE = 'vertical-align: middle'></div>		
 		<div id='map_controls' style='display: none; border: 3px outset #707070; background-color: #CECECE; width: 70px; height: 230px;'>
 			<div id='day_but' style='display: none;' onClick = "do_day();"><IMG SRC = './images/day.png' ALT='Day Colorsl' BORDER=0 STYLE = 'vertical-align: middle'></div>
@@ -1785,7 +1811,11 @@ function pause_messages() {	//	10/29/13
 						}
 					}
 ?>
-				<div id='theFlag' style='display: inline;'></div><BR />
+					<div id='theFlag' style='display: inline;'></div><BR />
+					<DIV id='broadcastWrapper' class='plain' style='display: none; float: right; width: auto;'>
+						<SPAN ID = 'usercount' CLASS="titlebar_text" style='float: right; font-weight: bold; padding-left: 20px;'></SPAN>
+						<SPAN ID = 'timeText' CLASS="titlebar_text" style='float: right; font-weight: bold;'></SPAN>
+					</DIV>
 				</DIV>
 				<div id='close_title_button' class='plain' style='position: absolute; right: 0px; top: 0px; display: inline-block; width: auto; height: auto;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick='showhideTitle();'><IMG SRC="./images/close2.png" ALT='Close' style='vertical-align: middle;' BORDER=0 /></div>
 			<BR />
@@ -2167,6 +2197,15 @@ function zoomOut() {
 	map.zoomOut();
 	$('app_title').style.display = "none";		
 	}
-</script>	
+</script>
+<div id='has_line' style='display: none;'>
+	<SPAN id='closeHas' class='plain' onMouseover='do_hover(this.id)' onMouseout='do_plain(this.id)' onClick="$('has_line').style.display = 'none';">Close</SPAN>
+	<SPAN id='has_wrapper'><marquee id='has_text' behavior="scroll" direction="left"></marquee></SPAN>
+</DIV>
+<?php
+if ((intval(get_variable ('broadcast')==1)) && (intval(get_variable ('internet')==1))) {
+	require_once('./incs/mob_sockets.inc.php');
+	}
+?>
 </body>
 </html>

@@ -277,26 +277,34 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 				
 				<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
 				<INPUT TYPE='hidden' NAME='frm_step' VALUE='3'>	
-				<TR VALIGN = 'TOP' CLASS='even'><TD ALIGN='right'  CLASS="td_label">To: </TD>
-					<TD><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $row['contact_via']; ?>' SIZE = 36></TD></TR>	
-			
-				<TR VALIGN = 'TOP' CLASS='odd'>
-					<TD ALIGN='right' CLASS="td_label">Subject: </TD><TD><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>	
+<?php
+				if($row['contact_via'] != "") { 
+?>
+					<TR VALIGN = 'TOP' CLASS='even'><TD ALIGN='right'  CLASS="td_label">To: </TD>
+						<TD><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $row['contact_via'];?>' SIZE = 36></TD>
+					</TR>	
+					<TR VALIGN = 'TOP' CLASS='odd'>
+						<TD ALIGN='right' CLASS="td_label">Subject: </TD><TD><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>	
+<?php 
+					} else { 
+					print "<INPUT TYPE='hidden' NAME='frm_add_str' value''>"; 
+					} 
+?>
 				<TR VALIGN = 'TOP' CLASS='even'>
 					<TD ALIGN='right' CLASS="td_label">Message: </TD><TD><TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA><?php print get_text("mail_help"); ?></TD></TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
 					<TD ALIGN='right' CLASS="td_label">Signal: </TD><TD>
 
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
-						<OPTION VALUE=0 SELECTED>Select</OPTION>
+							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-							print "\t<OPTION VALUE='{$row['code']}'>{$row['code']}|{$row['text']}</OPTION>\n";		// pipe separator
-							}
+							$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+							$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+							while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) {
+								print "\t<OPTION VALUE='{$row2['code']}'>{$row2['code']}|{$row2['text']}</OPTION>\n";		// pipe separator
+								}
 ?>
-					</SELECT>
+						</SELECT>
 						<SPAN STYLE='margin-left:20px;'>Apply to: Subject &raquo;<INPUT TYPE='radio' NAME='frm_set_where' VALUE='0' CHECKED onClick = 'set_text = false;'></SPAN>
 						<SPAN STYLE='margin-left:20px;'>Text &raquo;<INPUT TYPE='radio' NAME='frm_set_where' VALUE='1' CHECKED onClick = 'set_text = true;'>&nbsp;&nbsp;</SPAN>
 					</TD>
@@ -308,10 +316,10 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 //					dump(__LINE__);
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";	//	10/23/12
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-							print "\t<OPTION VALUE='{$row['id']}'>{$row['message']}</OPTION>\n";
+						$query3 = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";	//	10/23/12
+						$result3 = mysql_query($query3) or do_error($query3, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+						while ($row3 = stripslashes_deep(mysql_fetch_assoc($result3))) {
+							print "\t<OPTION VALUE='{$row3['id']}'>{$row3['message']}</OPTION>\n";
 							}
 ?>
 						</SELECT>
@@ -331,8 +339,27 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 ?>				
 					<TR>
 						<TD ALIGN='left' COLSPAN=2>
-							<input type="radio" name="use_smsg" VALUE="0" checked> Use Email or Twitter<br>	<!-- 10/23/12 -->
-							<input type="radio" name="use_smsg" VALUE="1"> Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?<br>	<!-- 10/23/12 -->
+<?php 
+							if($row['contact_via'] != "") {
+?>			
+								<input type="radio" name="use_smsg" VALUE="0"
+<?php
+									if($row['contact_via'] != "") {
+										print "checked";
+										}	
+?>
+									> Use Email or Twitter<br>
+<?php 
+								} 
+?>
+							<input type="radio" name="use_smsg" VALUE="1"
+<?php
+							if($row['contact_via'] == "") {
+								print "checked";
+								}	
+?>
+								> Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>
+								?<br>	<!-- 10/23/12 -->
 						</TD>
 					</TR>
 <?php

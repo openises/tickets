@@ -47,7 +47,7 @@ function get_email_from_responder($theid) {
 
 if(!empty($_POST)) {
 	if ($_POST['frm_formname'] == 'edit') {
-		if($_POST['frm_remove'] == "yes") {
+		if(array_key_exists('frm_remove', $_POST) && $_POST['frm_remove'] == "yes") {
 			$theEmail = (intval($_POST['frm_contacts']) != 0) ? get_email_from_contacts(intval($_POST['frm_contacts'])) : get_email_from_responder(intval($_POST['frm_responder']));
 			$query = "DELETE FROM $GLOBALS[mysql_prefix]mailgroup_x WHERE `id`=" . $_POST['frm_id'];
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -55,7 +55,6 @@ if(!empty($_POST)) {
 			} else {
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
 			$by = $_SESSION['user_id'];
-			
 			$query = "UPDATE `$GLOBALS[mysql_prefix]mailgroup_x` SET
 				`mailgroup`= " . 	quote_smart(trim($_POST['frm_mailgroup'])) . ",
 				`contacts`= " . 	quote_smart(trim($_POST['frm_contacts'])) . ",
@@ -325,7 +324,7 @@ if(!empty($_POST)) {
 							<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 						</TR>	
 						<TR CLASS="odd" VALIGN='baseline'>
-							<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Delete from mailing list.">Remove Entry</A>:&nbsp;</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
+							<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Delete from mailing list.">Remove Entry</A>:&nbsp;</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove">
 						</TR>
 					</TABLE>
 				</DIV>

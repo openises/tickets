@@ -676,6 +676,18 @@ function check_days(id) {
 						<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="" />
 					</TD>
 				</TR>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label">
+						<A CLASS="td_label" HREF="#" TITLE="Notify when?"><?php print get_text("Notify when"); ?></A>:&nbsp;
+					</TD>
+					<TD COLSPAN=3 >
+						<SELECT NAME="frm_notify_when">
+							<OPTION VALUE=1 SELECTED>All</OPTION>
+							<OPTION VALUE=2 SELECTED>Incident Open</OPTION>
+							<OPTION VALUE=3 SELECTED>Incident Close</OPTION>
+						</SELECT>
+					</TD>
+				</TR>
 				<TR class='spacer'>
 					<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
 				</TR>
@@ -748,16 +760,18 @@ function check_days(id) {
 	var bounds = map.getBounds();	
 	var zoom = map.getZoom();
 	var got_points = false;	// map is empty of points
-		function onMapClick(e) {
+	var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
+	function onMapClick(e) {
+		if(doReverse == 0) {return;}
 		if(marker) {map.removeLayer(marker); }
-			var iconurl = "./our_icons/yellow.png";
-			icon = new baseIcon({iconUrl: iconurl});	
-			marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
-			marker.addTo(map);
-			newGetAddress(e.latlng, "a");
-			};
+		var iconurl = "./our_icons/yellow.png";
+		icon = new baseIcon({iconUrl: iconurl});	
+		marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
+		marker.addTo(map);
+		newGetAddress(e.latlng, "a");
+		};
 
-		map.on('click', onMapClick);
+	map.on('click', onMapClick);
 <?php
 	do_kml();
 ?>

@@ -120,7 +120,8 @@ function directory_empty($path) {
 		}
 		
 	function get_tiles_required(z,col,row,lastfile) {
-		var url = "./ajax/gettiles.php?dir=" + z + "&subdir=" + col + "&file=" + row + "&lastfile=" + lastfile;
+		var sessID = "<?php print $_SESSION['id'];?>";
+		var url = "./ajax/gettiles.php?dir=" + z + "&subdir=" + col + "&file=" + row + "&lastfile=" + lastfile+'&q='+sessID;
 		var payload = syncAjax(url);
 		var the_ret_file=JSON.decode(payload);
 		var finish_but = "<SPAN id='b6' class = 'plain' style='display: none; z-index: 999; float: none; width: 120px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'document.forms[\"to_config_Form\"].submit();'>Back to Config</SPAN>";
@@ -134,17 +135,36 @@ function directory_empty($path) {
 				}
 			$('file_list').scrollTop = $('file_list').scrollHeight;
 			} else if(the_ret_file[2] == "yes") {
-			$('file_list').innerHTML += the_ret_file[1];
-			$('file_list').innerHTML += "<BR />";
-			$('file_list').innerHTML += "Last Tile Downloaded<BR />";
-			$('waiting').style.display='block'; 
-			$('waiting').innerHTML = "<CENTER>Complete<BR /><BR />" + finish_but + "</CENTER>";
-			$('b6').style.display='block'; 
-			$('b6').style.zindex = 999;
+
+			update_localmaps();
 			} else {
 			alert("Failed");
 			}				
-		}	
+		}
+		
+	function update_localmaps() {
+		var url = "./ajax/update_localmaps.php";
+		var finish_but = "<SPAN id='b6' class = 'plain' style='display: none; z-index: 999; float: none; width: 120px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'document.forms[\"to_config_Form\"].submit();'>Back to Config</SPAN>";
+		var payload = syncAjax(url);
+		var the_ret=JSON.decode(payload);
+		if(the_ret[0] == 1){
+			$('file_list').innerHTML += the_ret[1];
+			$('file_list').innerHTML += "<BR />";
+			$('file_list').innerHTML += "Last Tile Downloaded<BR />";
+			$('waiting').style.display='block'; 
+			$('waiting').innerHTML = "<CENTER>Complete<BR /><BR /> Also changed setting to use local maps<BR /><BR />" + finish_but + "</CENTER>";
+			$('b6').style.display='block'; 
+			$('b6').style.zindex = 999;
+			} else {
+			$('file_list').innerHTML += the_ret[1];
+			$('file_list').innerHTML += "<BR />";
+			$('file_list').innerHTML += "Last Tile Downloaded<BR />";
+			$('waiting').style.display='block'; 
+			$('waiting').innerHTML = "<CENTER>Complete<BR /><BR />However failed to change setting to use local maps.<BR />Please go to edit settings<BR />and change Local maps to 1<BR /><BR />" + finish_but + "</CENTER>";
+			$('b6').style.display='block'; 
+			$('b6').style.zindex = 999;
+			}
+		}
 		
 	function get_bounds() {
 		var theBounds = map.getBounds();
@@ -362,7 +382,8 @@ if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 		<DIV id='help4' style='display: none;'><CENTER>Help.</CENTER><BR /><BR />
 		Now click the "Next" button and the system will go away and collect the tiles appropriate for the settings you have provided.<BR />
 		Please note that this could take a considerable time. Do not navigate away from this page until the system alerts you that<BR />	
-		the collection of tiles is complete.<BR />		
+		the collection of tiles is complete. Once you have downloaded all the files remember to go into eedit settings and set<BR />
+		Local maps to 1<BR />
 		</DIV><BR /><BR />
 		<DIV id='file_list_header' class='heading' style='position: relative; left: 40%; width: 60%; text-align: center; display: none;'>Downloaded Tiles</DIV>
 		<DIV id='file_list' style='border: 1px solid #707070; position: relative; left: 40%; width: 60%; height: 200px; overflow-y: scroll; display: none; font-weight: normal; font-size: .8em;'></DIV>

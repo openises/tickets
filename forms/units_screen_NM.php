@@ -32,7 +32,7 @@ require_once($the_inc);
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 
-	<HEAD><TITLE>Tickets - Main Module</TITLE>
+	<HEAD><TITLE>Tickets - Units</TITLE>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
@@ -68,23 +68,23 @@ require_once($the_inc);
 	</STYLE>
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="text/javascript" SRC="./js/messaging.js"></SCRIPT><!-- 10/23/12-->
 <?php 
 
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	require_once('./incs/modules.inc.php');
 	}	
 ?>
-<script src="./js/proj4js.js"></script>
-<script src="./js/proj4-compressed.js"></script>
-<script src="./js/leaflet/leaflet.js"></script>
-<script src="./js/proj4leaflet.js"></script>
-<script src="./js/leaflet/KML.js"></script>
-<script src="./js/leaflet/gpx.js"></script>  
-<script src="./js/leaflet-openweathermap.js"></script>
-<script src="./js/esri-leaflet.js"></script>
-<script src="./js/osopenspace.js"></script>
-<script src="./js/Control.Geocoder.js"></script>
+<script type="text/javascript" src="./js/proj4js.js"></script>
+<script type="text/javascript" src="./js/proj4-compressed.js"></script>
+<script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
+<script type="text/javascript" src="./js/proj4leaflet.js"></script>
+<script type="text/javascript" src="./js/leaflet/KML.js"></script>
+<script type="text/javascript" src="./js/leaflet/gpx.js"></script>  
+<script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
+<script type="text/javascript" src="./js/esri-leaflet.js"></script>
+<script type="text/javascript" src="./js/osopenspace.js"></script>
+<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
 <script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 <script type="text/javascript" src="./js/L.Graticule.js"></script>
 <script type="text/javascript" src="./js/leaflet-providers.js"></script>

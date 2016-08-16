@@ -11,6 +11,7 @@ $patient = get_text("Patient");
 $incident = get_text("Incident");
 $incidents = get_text("Incidents");
 $gt_status = get_text("Status");
+$isGuest = (is_guest()) ? 1 : 0;
 	
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -24,7 +25,11 @@ $show_facs = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")
 $facs_col_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none";
 $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "h")) ? "" : "none";
 $columns_arr = explode(',', get_msg_variable('columns'));
-$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;	
+$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;
+$customSit_setting = get_variable('custom_situation');
+$customSit_arr = explode ("/", $customSit_setting);			// Recent Events, Statistics
+$showEvents = intval($customSit_arr[0]);
+$showStats = intval($customSit_arr[1]);
 
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
@@ -81,14 +86,37 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 	</STYLE>
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT TYPE="text/javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php 
 
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
 ?>
-<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+	<script type="text/javascript" src="./js/proj4js.js"></script>
+	<script type="text/javascript" src="./js/proj4-compressed.js"></script>
+	<script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
+	<script type="text/javascript" src="./js/proj4leaflet.js"></script>
+	<script type="text/javascript" src="./js/leaflet/KML.js"></script>
+	<script type="text/javascript" src="./js/leaflet/gpx.js"></script>  
+	<script type="text/javascript" src="./js/osopenspace.js"></script>
+	<script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
+	<script type="text/javascript" src="./js/esri-leaflet.js"></script>
+	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
+<?php
+	if ($_SESSION['internet']) {
+?>
+		<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+		<script src="./js/Google.js"></script>
+<?php 
+		} 
+?>
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+	<script type="text/javascript" src="./js/L.Graticule.js"></script>
+	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<script type="text/javascript" src="./js/usng.js"></script>
+	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="text/javascript" src="./js/geotools2.js"></script>
 
 <SCRIPT>
 window.onresize=function(){set_size()};
@@ -97,6 +125,8 @@ var showTicker = <?php print $use_ticker;?>;
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
+var showEvents = <?php print $showEvents;?>;
+var showStats = <?php print $showStats;?>;
 var pagetimerStart = new Date();
 var pagetimerEnd = 0;
 var doTime = false;
@@ -123,6 +153,8 @@ var f_interval = null;
 var b_interval = null;
 var c_interval = null;
 var s_interval = null;
+var log_interval = null;
+var latest_logid = 0;
 var latest_ticket = 0;
 var latest_responder = 0;
 var latest_facility = 0;
@@ -138,6 +170,7 @@ var responders_updated = [];
 var facilities_updated = [];
 var inc_period = 0;
 var last_disp = 0;
+var isGuest = <?php print $isGuest;?>;
 
 var captions = ["Current situation", "Incidents closed today", "Incidents closed yesterday+", "Incidents closed this week", "Incidents closed last week", "Incidents closed last week+", "Incidents closed this month", "Incidents closed last month", "Incidents closed this year", "Incidents closed last year", "Scheduled"];
 var heading = captions[inc_period];
@@ -208,6 +241,12 @@ function do_incident_refresh() {
 	load_incidentlist(window.inc_field, window.inc_direct);
 	}
 
+function do_loglist_refresh() {
+	window.do_log_refresh = true; 
+	$('the_loglist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>"; 
+	load_log(window.log_field, window.log_direct);
+	}
+
 function submit_period() {
 	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 	inc_period_changed = 1;
@@ -219,7 +258,7 @@ function secondsToTime(secs) {
 	var numhours = Math.floor((secs % 86400) / 3600);
 	var numminutes = Math.floor(((secs % 86400) % 3600) / 60);
 	var numseconds = ((secs % 86400) % 3600) % 60;
-	var outputText =  numdays + "D " + numhours + ":" + numminutes + ":" + Math.round(numseconds);
+	var outputText =  numdays + "D " + pad_left(numhours,2) + ":" + pad_left(numminutes,2) + ":" + pad_left(Math.round(numseconds),2);
 	return outputText;
 	}
 	
@@ -318,9 +357,19 @@ function set_size() {
 	load_fac_status_control();
 	load_incidentlist(window.inc_field, window.inc_direct);
 	load_regions();
-	load_log(window.log_field, window.log_direct);
 	set_initial_pri_disp();
-	do_statistics();
+	if(!isGuest) {
+		if(showEvents == 1) {
+			$('logheading').style.width = mapWidth + "px";
+			$('loglist').style.width = mapWidth + "px";
+			load_log(window.log_field, window.log_direct);
+			}
+		if(showStats == 1) {		
+			$('stats_wrapper').style.width = mapWidth + "px";
+			$('stats_heading').style.width = mapWidth + "px";
+			do_statistics();
+			}
+		}
 	get_scheduled_number();
 	}
 	
@@ -329,9 +378,15 @@ function loadData() {
 	load_fac_status_control();
 	load_incidentlist(window.inc_field, window.inc_direct);
 	load_regions();
-	load_log(window.log_field, window.log_direct);
 	set_initial_pri_disp();
-	do_statistics();
+	if(!isGuest) {
+		if(showEvents == 1) {
+			load_log(window.log_field, window.log_direct);
+			}
+		if(showStats == 1) {		
+			do_statistics();
+			}
+		}
 	get_scheduled_number();
 	}
 	
@@ -380,6 +435,8 @@ if (is_guest()) {
 	try { parent.frames["upper"].$("ics").style.display  =			"none";}	
 	catch(e) { }
 	try { parent.frames["upper"].$("has_button").style.display  = 	"none";}
+	catch(e) { }
+	try { parent.frames["upper"].guest_hide_buttons(isGuest);}
 	catch(e) { }	
 <?php
 	}		// end guest - needs other levels!
@@ -553,41 +610,55 @@ if (is_guest()) {
 			<DIV class="scrollingArea" id='the_list'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 		</DIV>
 		<BR />
-		<DIV id='logheading' class = 'heading'>
-			<DIV style='text-align: center;'>Recent Events
-				<SPAN id='collapse_log' onClick="hideDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
-				<SPAN id='expand_log' onClick="showDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN><BR />
-				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click on underlined item to view, Click headers to sort</SPAN></EM></FONT>
+<?php
+	if(!is_guest()) {
+		if(intval($customSit_arr[0]) == 1) {
+?>
+			<DIV id='logheading' class = 'heading'>
+				<DIV style='text-align: center;'>Recent Events
+					<SPAN id='collapse_log' onClick="hideDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
+					<SPAN id='expand_log' onClick="showDiv('loglist', 'collapse_log', 'expand_log')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN><BR />
+					<SPAN id='reload_log'class='plain' style='width: 19px; height: 19px; float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover(this.id); Tip("Click to refresh Log List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_loglist_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
+					<BR />
+					<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click on underlined item to view, Click headers to sort</SPAN></EM></FONT>
+				</DIV>
 			</DIV>
-		</DIV>
-		<DIV class="scrollableContainer" id='loglist' style='border: 1px outset #707070;'>
-			<DIV class="scrollingArea" id='the_loglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
-		</DIV><BR /><BR />
-		<DIV id='stats_heading' class = 'heading'>
-			<DIV style='text-align: center;'>Statistics<BR />
-				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>hover over header for details on what each element is</SPAN></EM></FONT>
+			<DIV class="scrollableContainer" id='loglist' style='border: 1px outset #707070;'>
+				<DIV class="scrollingArea" id='the_loglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+			</DIV><BR /><BR />
+<?php
+			}
+		if(intval($customSit_arr[1]) == 1) {
+?>
+			<DIV id='stats_heading' class = 'heading'>
+				<DIV style='text-align: center;'>Statistics<BR />
+					<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>hover over header for details on what each element is</SPAN></EM></FONT>
+				</DIV>
 			</DIV>
-		</DIV>
-		<DIV id='stats_wrapper' style='width: 100%;'>
-			<TABLE id='stats_table' BORDER=1 style='width: 100%;'>
-				<TR class='heading' style='width: 100%;'>
-					<TH class='heading' onMouseover="Tip('Number of Tickets');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NT</TH>
-					<TH class='heading' onMouseover="Tip('Number of Tickets not assigned');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NA</TH>
-					<TH class='heading' onMouseover="Tip('Number of Responders on Scene');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>RO</TH>
-					<TH class='heading' onMouseover="Tip('Average time to dispatch (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AD</TH>
-					<TH class='heading' onMouseover="Tip('Average time ticket is open (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>TO</TH>
-					<TH class='heading' onMouseover="Tip('Number of available responders');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AR</TH>
-				</TR>
-				<TR class='even' style='width: 100%;'>
-					<TD id='s1' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s2' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s3' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s4' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s5' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-					<TD id='s6' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
-				</TR>
-			</TABLE>
-		</DIV>
+			<DIV id='stats_wrapper' style='width: 100%;'>
+				<TABLE id='stats_table' BORDER=1 style='width: 100%;'>
+					<TR class='heading' style='width: 100%;'>
+						<TH class='heading' onMouseover="Tip('Number of Tickets');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NT</TH>
+						<TH class='heading' onMouseover="Tip('Number of Tickets not assigned');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NA</TH>
+						<TH class='heading' onMouseover="Tip('Number of Responders on Scene');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>RO</TH>
+						<TH class='heading' onMouseover="Tip('Average time to dispatch (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AD</TH>
+						<TH class='heading' onMouseover="Tip('Average time ticket is open (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>TO</TH>
+						<TH class='heading' onMouseover="Tip('Number of available responders');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AR</TH>
+					</TR>
+					<TR class='even' style='width: 100%;'>
+						<TD id='s1' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s2' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s3' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s4' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s5' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+						<TD id='s6' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					</TR>
+				</TABLE>
+			</DIV>
+<?php
+			}
+		}
+?>
 		<BR /><BR /><BR /><BR />
 		<A NAME="bottom" />
 	</DIV>
@@ -638,7 +709,6 @@ if (is_guest()) {
 		<DIV class="scrollableContainer" id='facilitylist' style='border: 1px outset #707070;'>
 			<DIV class="scrollingArea" id='the_flist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 		</DIV>
-
 	</DIV>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
@@ -705,8 +775,16 @@ $('facilitylist').style.width = listwidth + "px";
 $('the_flist').style.maxHeight = listHeight + "px";
 $('the_flist').style.width = listwidth + "px";
 $('facilitiesheading').style.width = listwidth + "px";
-$('stats_wrapper').style.width = mapWidth + "px";
-$('stats_heading').style.width = mapWidth + "px";
+if(!isGuest) {
+	if(showEvents == 1) {
+		$('logheading').style.width = mapWidth + "px";
+		$('loglist').style.width = mapWidth + "px";
+		}
+	if(showStats == 1) {		
+		$('stats_wrapper').style.width = mapWidth + "px";
+		$('stats_heading').style.width = mapWidth + "px";
+		}
+	}
 // end of set widths
 var theLocale = <?php print get_variable('locale');?>;
 $('controls').innerHTML = controlsHTML;
@@ -747,6 +825,7 @@ var pageLoadTime = "<?php print $total_time;?>";
 <FORM NAME='fac_form' METHOD='get' ACTION='facilities.php'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <INPUT TYPE='hidden' NAME='edit' VALUE='true'>
+<INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 <br /><br />

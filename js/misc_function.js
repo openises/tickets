@@ -436,118 +436,95 @@ function Browser() {
   }
 }
 
-var browser = new Browser();
+var _startX = 0;            // mouse starting positions
+var _startY = 0;
+var _offsetX = 0;           // current element offset
+var _offsetY = 0;
+var _dragElement;           // needs to be passed from OnMouseDown to OnMouseMove
+var _oldZIndex = 0;         // we temporarily increase the z-index during drag
 
-// Global object to hold drag information.
+function dragStart(e) {
+    // IE is retarded and doesn't pass the event object
+    if (e == null) 
+        e = window.event; 
+    
+    // IE uses srcElement, others use target
+    var target = e.target != null ? e.target : e.srcElement;
 
-var dragObj = new Object();
-dragObj.zIndex = 0;
+    // for IE, left click == 1
+    // for Firefox, left click == 0
+    if ((e.button == 1 && window.event != null || 
+        e.button == 0) && 
+        target.className == 'bar') {
+		target = target.parentNode
+        // grab the mouse position
+        _startX = e.clientX;
+        _startY = e.clientY;
+        
+        // grab the clicked element's position
+        _offsetX = ExtractNumber(target.style.left);
+        _offsetY = ExtractNumber(target.style.top);
+        
+        // bring the clicked element to the front while it is being dragged
+        _oldZIndex = target.style.zIndex;
+        target.style.zIndex = 10000;
+        
+        // we need to access the element in OnMouseMove
+        _dragElement = target;
 
-function dragStart(event, id) {
+        // tell our code to start moving the element with the mouse
+        document.onmousemove = dragGo;
+        document.onmouseup = dragStop;
+        // cancel out any text selections
+        document.body.focus();
 
-  var el;
-  var x, y;
+        // prevent text selection in IE
+        document.onselectstart = function () { return false; };
+        // prevent IE from trying to drag an image
+        target.ondragstart = function() { return false; };
+        
+        // prevent text selection (except IE)
+        return false;
+		}
+	}
 
-  // If an element id was given, find it. Otherwise use the element being
-  // clicked on.
+function dragGo(e) {
+    if (e == null) 
+        var e = window.event; 
 
-  if (id)
-    dragObj.elNode = document.getElementById(id);
-  else {
-    if (browser.isIE)
-      dragObj.elNode = window.event.srcElement;
-    if (browser.isNS)
-      dragObj.elNode = event.target;
+    // this is the actual "drag code"
+    _dragElement.style.left = (_offsetX + e.clientX - _startX) + 'px';
+    _dragElement.style.top = (_offsetY + e.clientY - _startY) + 'px';
+    
+	}
 
-    // If this is a text node, use its parent element.
+function dragStop(e) {
+    if (_dragElement != null) {
+        _dragElement.style.zIndex = _oldZIndex;
 
-    if (dragObj.elNode.nodeType == 3)
-      dragObj.elNode = dragObj.elNode.parentNode;
-  }
+        // we're done with these events until the next OnMouseDown
+        document.onmousemove = null;
+        document.onselectstart = null;
+        _dragElement.ondragstart = null;
 
-  // Get cursor position with respect to the page.
+        // this is how we know we're not dragging      
+        _dragElement = null;
+		}
+	}
 
-  if (browser.isIE) {
-    x = window.event.clientX + document.documentElement.scrollLeft
-      + document.body.scrollLeft;
-    y = window.event.clientY + document.documentElement.scrollTop
-      + document.body.scrollTop;
-  }
-  if (browser.isNS) {
-    x = event.clientX + window.scrollX;
-    y = event.clientY + window.scrollY;
-  }
-
-  // Save starting positions of cursor and element.
-
-  dragObj.cursorStartX = x;
-  dragObj.cursorStartY = y;
-  dragObj.elStartLeft  = parseInt(dragObj.elNode.style.left, 10);
-  dragObj.elStartTop   = parseInt(dragObj.elNode.style.top,  10);
-
-  if (isNaN(dragObj.elStartLeft)) dragObj.elStartLeft = 0;
-  if (isNaN(dragObj.elStartTop))  dragObj.elStartTop  = 0;
-
-  // Update element's z-index.
-
-  dragObj.elNode.style.zIndex = ++dragObj.zIndex;
-
-  // Capture mousemove and mouseup events on the page.
-
-  if (browser.isIE) {
-    document.attachEvent("onmousemove", dragGo);
-    document.attachEvent("onmouseup",   dragStop);
-    window.event.cancelBubble = true;
-    window.event.returnValue = false;
-  }
-  if (browser.isNS) {
-    document.addEventListener("mousemove", dragGo,   true);
-    document.addEventListener("mouseup",   dragStop, true);
-    event.preventDefault();
-  }
+function ExtractNumber(value)
+{
+    var n = parseInt(value);
+	
+    return n == null || isNaN(n) ? 0 : n;
 }
 
-function dragGo(event) {
-
-  var x, y;
-
-  // Get cursor position with respect to the page.
-
-  if (browser.isIE) {
-    x = window.event.clientX + document.documentElement.scrollLeft
-      + document.body.scrollLeft;
-    y = window.event.clientY + document.documentElement.scrollTop
-      + document.body.scrollTop;
-  }
-  if (browser.isNS) {
-    x = event.clientX + window.scrollX;
-    y = event.clientY + window.scrollY;
-  }
-
-  // Move drag element by the same amount the cursor has moved.
-
-  dragObj.elNode.style.left = (dragObj.elStartLeft + x - dragObj.cursorStartX) + "px";
-  dragObj.elNode.style.top  = (dragObj.elStartTop  + y - dragObj.cursorStartY) + "px";
-
-  if (browser.isIE) {
-    window.event.cancelBubble = true;
-    window.event.returnValue = false;
-  }
-  if (browser.isNS)
-    event.preventDefault();
+// this is simply a shortcut for the eyes and fingers
+function $(id)
+{
+    return document.getElementById(id);
 }
 
-function dragStop(event) {  // Stop capturing mousemove and mouseup events.
-
-  if (browser.isIE) {
-    document.detachEvent("onmousemove", dragGo);
-    document.detachEvent("onmouseup",   dragStop);
-  }
-  if (browser.isNS) {
-    document.removeEventListener("mousemove", dragGo,   true);
-    document.removeEventListener("mouseup",   dragStop, true);
-  }
-}
 function getWinDims() {							// 2/20/11
 	var myWidth = 0, myHeight = 0;
 	if( typeof( window.innerWidth ) == 'number' ) {
@@ -1085,23 +1062,11 @@ function file_window(id) {										// 9/10/13
 	setTimeout(function() { nfWindow.focus(); }, 1);
 	}
 	
-function unit_log(id) {										// 9/10/13
-	var url = "unit_ticket_log.php?responder="+ id + "&ticket=0";
-	var ulWindow = window.open(url, 'unitLogWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
-	setTimeout(function() { ulWindow.focus(); }, 1);
-	}
-	
 function twitter_window() {										// 9/10/13
 	var url = "load.php";
 	var twWindow = window.open(url, 'TwitterWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
 	setTimeout(function() { twWindow.focus(); }, 1);
 	}
-	
-function view_log_entry(id) {										// 9/10/13
-	var url = "unit_log_view.php?id=" + id;
-	var ulvWindow = window.open(url, 'unitLogWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
-	setTimeout(function() { ulvWindow.focus(); }, 1);
-	}		
 
 var starting = false;
 
@@ -1155,6 +1120,7 @@ function do_close_tick(the_id) {	//	3/15/11
 		return;
 		}
 	if (window.focus) {newwindow_close.focus()}
+	close_context();
 	starting = false;
 	}		// end function do mail_win()
 	
@@ -1205,6 +1171,14 @@ function get_roster_details(theForm, id)	{	//	9/6/13
 		the_text += "Notes: " + the_details[12] + "<BR />";
 		$('user_details').style.display = 'inline-block';
 		$('user_details').innerHTML = the_text;
+		}			
+	}
+	
+function writeto_log(code, ticket_id, responder_id, info, fac_id, rec_fac_id, mileage)	{
+	randomnumber=Math.floor(Math.random()*99999999);
+	var theurl ="./ajax/do_log.php?version=" + randomnumber + "&code=" + code + "&ticket_id=" + ticket_id + "&responder_id=" + responder_id + "&info=" + info + "&fac_id=" + fac_id + "&rec_fac_id=" + rec_fac_id + "&mileage=" + mileage;
+	sendRequest (theurl, log_cb, "");
+	function log_cb(req) {
 		}			
 	}
 	
@@ -1454,4 +1428,15 @@ function base64_encode(data) {
   return (r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
 }
 
+function asyncAJAX(url) {
+	var obj; 
+	obj = new XMLHttpRequest();
+	obj.onreadystatechange = function() {
+		if(obj.readyState == 4) {
+			//process the response
+			}
+		}
+	obj.open("POST", url, true);
+	obj.send(null);
+	}
 		

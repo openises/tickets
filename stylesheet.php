@@ -455,8 +455,6 @@ tr.heading {
 	}
 
 .config_heading { 
-	background-color: #DEDEDE;
-	color: #000000;	
 	font-size: 12px; 
 	font-weight: bold; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 

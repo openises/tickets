@@ -326,6 +326,20 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 					return null;
 					}
 				}		// end function Get_Cookie(
+				
+		function start_server() {
+			var randomnumber=Math.floor(Math.random()*99999999);
+			var url ="../socketserver/server.php?version=" + randomnumber;
+			var obj; 
+			obj = new XMLHttpRequest();
+			obj.onreadystatechange = function() {
+				if(obj.readyState == 4) {
+					//process the response
+					}
+				}
+			obj.open("POST", url, true);
+			obj.send(null);
+			}
 		
 		function do_hh_onload () {				// 2/24/09
 			document.login_form.scr_width.value=getBrowserWidth();
@@ -392,7 +406,7 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 		</SCRIPT>
 		</HEAD>
 <?php
-		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload()'>\n" : "\n\t<BODY onLoad = 'do_onload()'>\n";		// 2/24/09
+		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload(); start_server();'>\n" : "\n\t<BODY onLoad = 'do_onload(); start_server();'>\n";		// 2/24/09
 ?>	
 		
 		<CENTER>

@@ -20,7 +20,7 @@ function validate_form(myform) {	// reject empty form elements
 		<INPUT TYPE="hidden" NAME="id" 			VALUE="<?php print $row['id'];?>" />
 	
 		<TABLE BORDER="0" ALIGN="center">
-		<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table 'Conditions' - Update Entry</FONT></TD></TR>
+		<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table 'Personnel' - Update Entry</FONT></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Surname:</TD>
 			<TD><INPUT ID="ID1" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_surname" VALUE="<?php print $row['surname'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>

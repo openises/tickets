@@ -216,6 +216,20 @@ function do_tab(tabid, suffix, lat, lng) {
 		minimap.setView([lat,lng], 13);
 		}
 	}
+	
+function find_warnings(tick_lat, tick_lng) {	//	9/10/13
+	randomnumber=Math.floor(Math.random()*99999999);
+	var theurl ="./ajax/loc_warn_list.php?version=" + randomnumber + "&lat=" + tick_lat + "&lng=" + tick_lng;
+	sendRequest(theurl, loc_w, "");	//	11/14/13
+	function loc_w(req) {
+		var the_warnings=JSON.decode(req.responseText);
+		var the_count = the_warnings[0];
+		if(the_count != 0) {
+			$('loc_warnings').innerHTML = the_warnings[1];
+			$('loc_warnings').style.display = 'block';
+			}
+		}			
+	}
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
@@ -308,7 +322,7 @@ function do_tab(tabid, suffix, lat, lng) {
 <?php
 
 	print do_ticket($row, $col_width, FALSE) ;				// 2/25/09
-	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
+	print show_actions($row['id'], "date", FALSE, TRUE, 0);		/* lists actions and patient data belonging to ticket */
 	print "</TD></TR></TABLE>\n";	
 	$lat = $row['lat']; $lng = $row['lng'];
 ?>
@@ -328,6 +342,7 @@ var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 var theLat = "<?php print $lat;?>";
 var theLng = "<?php print $lng;?>";
+find_warnings(theLat, theLng);
 init_map(1, theLat, theLng, "", 13, theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();
 var zoom = map.getZoom();

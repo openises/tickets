@@ -764,7 +764,8 @@ var buttons_html = "";
 				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
 				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
 				`notify_mailgroup` = " . quote_smart(trim($_POST['frm_notify_mailgroup'])) . ",
-				`notify_email` = " . quote_smart(trim($_POST['frm_notify_email'])) . ",	
+				`notify_email` = " . quote_smart(trim($_POST['frm_notify_email'])) . ",
+				`notify_when` = " . quote_smart(trim($_POST['frm_notify_when'])) . ",
 				`updated`= " . 		quote_smart(trim($now)) . "
 				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	8/28/13
 
@@ -802,7 +803,7 @@ var buttons_html = "";
 		$frm_lng = (empty($_POST['frm_lng']))? '0.999999': quote_smart(trim($_POST['frm_lng']));
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]facilities` (
-			`name`, `street`, `city`, `state`, `handle`, `icon_str`, `boundary`, `description`, `beds_a`, `beds_o`, `beds_info`, `capab`, `status_id`, `status_about`, `contact_name`, `contact_email`, `contact_phone`, `security_contact`, `security_email`, `security_phone`, `opening_hours`, `access_rules`, `security_reqs`, `pager_p`, `pager_s`, `type`, `user_id`, `notify_mailgroup`, `notify_email`, `updated` )
+			`name`, `street`, `city`, `state`, `handle`, `icon_str`, `boundary`, `description`, `beds_a`, `beds_o`, `beds_info`, `capab`, `status_id`, `status_about`, `contact_name`, `contact_email`, `contact_phone`, `security_contact`, `security_email`, `security_phone`, `opening_hours`, `access_rules`, `security_reqs`, `pager_p`, `pager_s`, `type`, `user_id`, `notify_mailgroup`, `notify_email`, `notify_when`, `updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_name'])) . "," .
 				quote_smart(trim($_POST['frm_street'])) . "," .
@@ -834,6 +835,7 @@ var buttons_html = "";
 				quote_smart(trim($_SESSION['user_id'])) . "," .
 				quote_smart(trim($_POST['frm_notify_mailgroup'])) . "," .
 				quote_smart(trim($_POST['frm_notify_email'])) . "," .
+				quote_smart(trim($_POST['frm_notify_when'])) . "," .
 				quote_smart(trim($now)) . ");";	// 8/28/13
 
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);

@@ -67,7 +67,6 @@ function set_size() {
 	fac_celwidth = listwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
-	$('titlebar').style.width = outerwidth + "px";	
 	$('leftcol').style.width = colwidth + "px";
 	$('leftcol').style.height = colheight + "px";	
 	$('rightcol').style.width = colwidth + "px";
@@ -183,7 +182,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label"><?php print get_text("Description"); ?>: </TD>	
-				<TD><?php print $row['description'];?></TD>
+				<TD class='td_data_wrap'><?php print $row['description'];?></TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label">
@@ -303,14 +302,27 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 				<TD CLASS="td_label"><?php print get_text("Notify Email Address"); ?>:</TD>	
 				<TD><?php print $row['notify_email'];?></TD>
 			</TR>
-			<TR CLASS = 'odd'>
+			<TR CLASS = "odd">
+				<TD CLASS="td_label"><?php print get_text("Notify when"); ?>:</TD>
+<?php
+				switch($row['notify_when'])	{
+					case 1: 	$nw = 'All';	break;
+					case 2: 	$nw = 'Incident Open';		break;
+					case 3: 	$nw = 'Incident Closed';	break;
+					default: 	$nw = 'Error';
+					}
+		
+?>		
+				<TD><?php print $nw;?></TD>
+			</TR>
+			<TR CLASS = 'even'>
 				<TD CLASS="td_label">As of:</TD>	
 				<TD><?php print fac_format_date(strtotime($row['updated'])); ?></TD>
 			</TR>
 <?php
 			if (my_is_float($lat)) {
 ?>		
-			<TR CLASS = "even">
+			<TR CLASS = "odd">
 				<TD CLASS="td_label"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD>
 				<TD>
 					<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;

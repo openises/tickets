@@ -57,7 +57,7 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 
-	<HEAD><TITLE>Tickets - Main Module</TITLE>
+	<HEAD><TITLE>Tickets - Full Screen</TITLE>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
@@ -92,42 +92,43 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 				position: relative;	z-index: 101; cursor: normal; height: 250px;}
 		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 		#controlsbar {position: fixed; top: 0px; left: 0px; height: 150px; background-color: #000000; z-index: 9999;}
-		.leaflet-control-layers-expanded { padding: 6px 10px 6px 6px; color: #333; background-color: #FFFFFF;}
+		.leaflet-control-layers-expanded { padding: 10px 10px 10px 10px; color: #333; background-color: #F1F1F1; border: 3px outset #707070;}
 		.leaflet-control-layers-expanded .leaflet-control-layers-list {height: auto; display: block; position: relative; margin-bottom: 20px;}
 		.leaflet-bottom {bottom: 150px;	}
+		.leaflet-right {right: 100px;	}
 	</STYLE>
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT TYPE="text/javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php 
-
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
-if ($_SESSION['internet']) {
-	$api_key = trim(get_variable('gmaps_api_key'));
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 ?>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>
-	<script src="./js/leaflet/gpx.js"></script>  
-	<script src="./js/osopenspace.js"></script>
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-	<script src="./js/Google.js"></script>
+	<script type="text/javascript" src="./js/proj4js.js"></script>
+	<script type="text/javascript" src="./js/proj4-compressed.js"></script>
+	<script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
+	<script type="text/javascript" src="./js/proj4leaflet.js"></script>
+	<script type="text/javascript" src="./js/leaflet/KML.js"></script>
+	<script type="text/javascript" src="./js/leaflet/gpx.js"></script>  
+	<script type="text/javascript" src="./js/osopenspace.js"></script>
+	<script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
+	<script type="text/javascript" src="./js/esri-leaflet.js"></script>
+	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
+<?php
+	if ($_SESSION['internet']) {
+?>
+		<script src="http://maps.google.com/maps/api/js?v=3"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		} 
+?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 	<script type="text/javascript" src="./js/usng.js"></script>
 	<script type="text/javascript" src="./js/osgb.js"></script>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
-<?php } ?>
-
 <SCRIPT>
 window.onresize=function(){set_size()};
 var showTicker = <?php print $use_ticker;?>;
@@ -205,6 +206,12 @@ var fscolors = new Array ('fs_odd', 'fs_even');
 
 function set_period(period) {
 	window.inc_period = period;
+	thelength = document.getElementById('period_select').options.length;
+	for(var f = 0; f < thelength; f++) {
+		if(document.getElementById('period_select').options[f].value == period) {
+			document.getElementById('period_select').options[f].selected = true;
+			}
+		}
 	$('theHeading').innerHTML = window.captions[window.inc_period];
 	}
 
@@ -246,10 +253,10 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	mapWidth = viewportwidth;
-	mapHeight = viewportheight - 10;
-	outerwidth = viewportwidth;
-	outerheight = viewportheight - 10;
+	mapWidth = viewportwidth -2;
+	mapHeight = viewportheight - 40;
+	outerwidth = viewportwidth -2;
+	outerheight = viewportheight - 20;
 	listHeight = viewportheight * .25;
 	colwidth = outerwidth * .42;
 	colheight = outerheight * .7;
@@ -278,7 +285,7 @@ function set_size() {
 	$("hidelists").style.left = colwidth + "px";
 	if(isTicker == 1) {
 		$('controls_bar').style.position = "fixed";
-		$("controls_bar").style.bottom = "40px";
+		$("controls_bar").style.bottom = "60px";
 		}
 	load_exclusions();
 	load_ringfences();
@@ -316,300 +323,6 @@ function loadData() {
 	setTimeout(function() {$('leftcol').style.display = "none"; $('showlists').style.display='inline-block';},10000);
 	}
 
-function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_position) {
-	if(locale == 1 && useOSMAP == 1) {	//	UK Use Ordnance Survey as Basemap
-		var openspace_api = "<?php print get_variable('openspace_api');?>";
-		openspaceLayer = L.tileLayer.OSOpenSpace(openspace_api, {debug: true});
-		var grid = L.graticule({ interval: .5 })
-		roadalerts = new L.LayerGroup();
-		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
-		var baseLayerNamesArr = ["Ordnance Survey"];	
-		var baseLayerVarArr = [openspaceLayer];
-		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
-		theLayer = baseLayerVarArr[a];
-		map = new L.Map('map_canvas', {
-			crs: L.OSOpenSpace.getCRS(),
-			continuousWorld: true,
-			worldCopyJump: false,
-			minZoom: 0,
-			maxZoom: L.OSOpenSpace.RESOLUTIONS.length - 1,
-			zoomControl: false,
-			layers: [openspaceLayer],
-			});
-
-		if(window.geo_provider == 1) {
-			geocoder = L.Control.Geocoder.google(window.GoogleKey), 
-			control = L.Control.geocoder({
-				showResultIcons: false,
-				collapsed: true,
-				expand: 'click',
-				position: 'topleft',
-				placeholder: 'Search...',
-				errorMessage: 'Nothing found.',
-				geocoder: geocoder
-				});
-			} else if(window.geo_provider == 2) {
-			geocoder = L.Control.Geocoder.bing(window.BingKey), 
-			control = L.Control.geocoder({
-				showResultIcons: false,
-				collapsed: true,
-				expand: 'click',
-				position: 'topleft',
-				placeholder: 'Search...',
-				errorMessage: 'Nothing found.',
-				geocoder: geocoder
-				});				
-			} else {
-			geocoder = L.Control.Geocoder.nominatim(), 
-			control = L.Control.geocoder({
-				showResultIcons: false,
-				collapsed: true,
-				expand: 'click',
-				position: 'topleft',
-				placeholder: 'Search...',
-				errorMessage: 'Nothing found.',
-				geocoder: geocoder
-				});
-			}
-		if(!isIE()) {
-			control.addTo(map);
-			}		
-	
-		var baseLayers = {
-			"Ordnance Survey": openspaceLayer,
-		};
-		
-		var overlays = {
-			"Grid": grid,
-		};
-		if(control_position == "tl") {
-			ctrlPos = 'topleft';
-			} else if(control_position == "tr") {
-			ctrlPos = 'topright';
-			} else if(control_position == "bl") {
-			ctrlPos = 'bottomleft';
-			} else if(control_position == "br") {
-			ctrlPos = 'bottomright';
-			} else {
-			ctrlPos = 'none';
-			}
-		if(ctrlPos != "none") {
-			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
-			map.addLayer(roadalerts);
-			layercontrol.addOverlay(roadalerts, "Road Conditions");
-			L.control.scale().addTo(map);
-			L.control.zoom({position: ctrlPos}).addTo(map);
-			}
-		if(theType ==2) {
-			createcrossMarker(lat, lng);
-			}
-		if(theType ==3) {
-			createstdMarker(lat, lng);
-			}
-		map.setView([lat, lng], theZoom);
-		bounds = map.getBounds();	
-		zoom = map.getZoom();
-		map.on('baselayerchange', function (eventLayer) {
-			var layerName = eventLayer.name;
-			var layerName = layerName.replace(" ", "_");
-			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
-			var url = "persist3.php";	//	3/15/11	
-			sendRequest (url, layer_handleResult, params);	
-			});
-		} else {
-		var latLng;
-		var in_local_bool = <?php print get_variable('local_maps');?>;
-		var osmUrl = (in_local_bool=="1")? "./_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-		var	cmAttr = '';
-		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-		var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
-		var ggl = new L.Google('ROAD');
-		var ggl1 = new L.Google('TERRAIN');
-		var ggl2 = new L.Google('SATELLITE');
-		var ggl3 = new L.Google('HYBRID');
-		var clouds = L.OWM.clouds({showLegend: false, opacity: 0.3});
-		var cloudscls = L.OWM.cloudsClassic({showLegend: false, opacity: 0.3});
-		var precipitation = L.OWM.precipitation({showLegend: false, opacity: 0.3});
-		var precipitationcls = L.OWM.precipitationClassic({showLegend: false, opacity: 0.3});
-		var rain = L.OWM.rain({showLegend: false, opacity: 0.3});
-		var raincls = L.OWM.rainClassic({showLegend: false, opacity: 0.3});
-		var snow = L.OWM.snow({showLegend: false, opacity: 0.3});
-		var pressure = L.OWM.pressure({showLegend: false, opacity: 0.3});
-		var pressurecntr = L.OWM.pressureContour({showLegend: false, opacity: 0.8});
-		var temp = L.OWM.temperature({showLegend: false, opacity: 0.3});
-		var wind = L.OWM.wind({showLegend: false, opacity: 0.3});
-		var dark = L.tileLayer.provider('Thunderforest.TransportDark');
-		var aerial = L.tileLayer.provider('MapQuestOpen.Aerial');
-		var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
-			layers: 'nexrad-n0r-900913',
-			format: 'image/png',
-			transparent: true,
-			attribution: "",
-		});
-		var shade = L.tileLayer.wms("http://ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
-			layers: "HR-NED.IMAGE", 
-			format: 'image/png',
-			attribution: "",
-		});
-		var usgstopo = L.tileLayer('http://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
-			maxZoom: 20,
-			attribution: '',
-		});
-		var grid = L.graticule({ interval: .5 })
-		roadalerts = new L.LayerGroup();
-		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
-		var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial"];	
-		var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark,aerial];
-		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
-		theLayer = (in_local_bool != "1") ? baseLayerVarArr[a]: OSM;	// Load OSM if using local maps
-		var setZoom = <?php print $setZoom;?>;
-		var theZoom = <?php print $localZoomMin;?>;
-		var max_zoom = <?php print $localZoomMax;?>;
-		
-		if(window.geo_provider == 1) {
-			if(!map) { map = L.map('map_canvas',
-				{
-				maxZoom: max_zoom,
-				minZoom: theZoom,
-				zoom: setZoom,
-				layers: [theLayer],
-				zoomControl: false,
-				}
-				)};
-				geocoder = L.Control.Geocoder.google(window.GoogleKey), 
-				control = L.Control.geocoder({
-					showResultIcons: false,
-					collapsed: true,
-					expand: 'click',
-					position: 'topleft',
-					placeholder: 'Search...',
-					errorMessage: 'Nothing found.',
-					geocoder: geocoder
-					});
-				if(!isIE()) {
-					control.addTo(map);
-					}
-			} else if(window.geo_provider == 2){
-			if(!map) { map = L.map('map_canvas',{
-				maxZoom: max_zoom,
-				minZoom: theZoom,
-				zoom: setZoom,
-				layers: [theLayer],
-				zoomControl: false,
-				}
-				)};
-				geocoder = L.Control.Geocoder.bing(window.BingKey), 
-				control = L.Control.geocoder({
-					showResultIcons: false,
-					collapsed: true,
-					expand: 'click',
-					position: 'topleft',
-					placeholder: 'Search...',
-					errorMessage: 'Nothing found.',
-					geocoder: geocoder
-					});
-				if(!isIE()) {
-					control.addTo(map);
-					}			
-			} else {
-			if(!map) {map = L.map('map_canvas',{
-				maxZoom: max_zoom,
-				minZoom: theZoom,
-				zoom: setZoom,
-				layers: [theLayer],
-				zoomControl: false,
-				}
-				)};
-				geocoder = L.Control.Geocoder.nominatim(), 
-				control = L.Control.geocoder({
-					showResultIcons: false,
-					collapsed: true,
-					expand: 'click',
-					position: 'topleft',
-					placeholder: 'Search...',
-					errorMessage: 'Nothing found.',
-					geocoder: geocoder
-					});
-				if(!isIE()) {
-					control.addTo(map);
-					}
-			}
-
-		if(in_local_bool != "1") {	//	remove all but OSM if using local maps
-			var baseLayers = {
-				"Open Streetmaps": OSM,
-				"Google": ggl,
-				"Google Terrain": ggl1,
-				"Google Satellite": ggl2,
-				"Google Hybrid": ggl3,
-				"USGS Topo": usgstopo,
-				"Dark": dark,
-				"Aerial": aerial,		
-			};
-			
-			var overlays = {
-				"Clouds": cloudscls,
-				"Precipitation": precipitationcls,
-				"Rain": raincls,
-				"Pressure": pressurecntr,
-				"Temperature": temp,
-				"Wind": wind,
-				"Snow": snow,
-				"Radar": nexrad,
-				"Grid": grid,
-			};
-
-			} else {
-			var baseLayers = {
-				"Open Streetmaps": OSM,
-			};
-			
-			var overlays = {};				
-			}
-		
-		if(control_position == "tl") {
-			ctrlPos = 'topleft';
-			} else if(control_position == "tr") {
-			ctrlPos = 'topright';
-			} else if(control_position == "bl") {
-			ctrlPos = 'bottomleft';
-			} else if(control_position == "br") {
-			ctrlPos = 'bottomright';
-			} else {
-			ctrlPos = 'none';
-			}
-
-		if(ctrlPos != "none") {
-			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
-			map.addLayer(roadalerts);
-			layercontrol.addOverlay(roadalerts, "Road Conditions");
-			L.control.scale().addTo(map);
-			L.control.zoom({position: ctrlPos}).addTo(map);
-			}
-		if(theType ==2) {
-			createcrossMarker(lat, lng);
-			}
-		if(theType ==3) {
-			createstdMarker(lat, lng);
-			}
-		map.setView([lat, lng], setZoom);
-		bounds = map.getBounds();	
-		zoom = map.getZoom();
-		map.on('baselayerchange', function (eventLayer) {
-			var layerName = eventLayer.name;
-			var layerName = layerName.replace(" ", "_");
-			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
-			var url = "persist3.php";	//	3/15/11	
-			sendRequest (url, layer_handleResult, params);	
-			});
-		}
-	return map;
-	}
-	
-function layer_handleResult(req) {
-//	alert(req.responseText);
-	}
-	
 var thelevel = '<?php print $the_level;?>';
 
 function get_new_colors() {
@@ -654,7 +367,6 @@ function do_tab(tabid, suffix, lat, lng) {
 	if ($_SESSION['internet']) {	
 ?>
 		<SCRIPT SRC='./js/usng.js' 			TYPE='text/javascript'></SCRIPT>
-		<SCRIPT SRC="./js/graticule_V3.js" 	TYPE="text/javascript"></SCRIPT>
 <?php
 	}
 	if($_SESSION['good_internet']) {
@@ -670,21 +382,9 @@ function do_tab(tabid, suffix, lat, lng) {
 		}
 
 ?>	
-<STYLE TYPE="text/css">
-.box { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:1000; width: 180px; }
-.bar { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
-/* 3/26/2013
-.bar_header { height: 20px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
-*/
-.bar_header { height: 30px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
-.content { padding: 1em; }
-</STYLE>
 </HEAD>
 <?php
-	$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
 	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-	$get_sort_by_field = 	(array_key_exists('sort_by_field', ($_GET)))?	$_GET['sort_by_field']:	NULL;
-	$get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	NULL;	
 	
 	if((!(is_guest())) && ($_SESSION['good_internet']) && (!($get_id))) {
 		if(file_exists("./incs/modules.inc.php")) {
@@ -693,21 +393,8 @@ function do_tab(tabid, suffix, lat, lng) {
 		}	
 	
 	$gunload = "clearInterval(i_interval); clearInterval(r_interval); clearInterval(f_interval); clearInterval(b_interval);";
-	$from_right = 20;
-	$from_top = 10;
-	$temp = intval(trim(get_variable('situ_refr')));
-	$refresh =  ($temp < 15)? 15000: $temp * 1000;
-	$set_to = (intval(trim(get_variable('situ_refr')))>0)? "setTimeout('location.reload(true);', {$refresh});": "";
-	$the_api_key = trim(get_variable('gmaps_api_key'));	
-	$set_map = "";	// 1/16/2013
-	$set_regions_control = ((!($get_id)) && ((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))) ? "set_regions_control();" : "";
-	$get_messages = ($get_id) ? "get_mainmessages(" . $get_id . " ,'',sortby, sort, '', 'ticket');" : "";
 ?>
-<BODY onLoad = "loadData(); <?php print $ld_ticker;?> location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
-<?php
-	include("./incs/links.inc.php");
-?>
-
+<BODY onLoad = "loadData(); <?php print $ld_ticker;?> location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <A NAME='top'></A>
 <DIV id='screenname' style='display: none;'>fullscreen</DIV>
 <DIV ID='to_bottom' style="position: fixed; top: 20px; left: 20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 ID = "down"/></div>
@@ -781,20 +468,6 @@ function do_tab(tabid, suffix, lat, lng) {
 	</CENTER>
 
 </DIV>	
-<SCRIPT>
-		var controlsHTML = "<TABLE id='controlstable' ALIGN='center'>";
-		controlsHTML +=	"<TR CLASS='odd'><TD>";
-		controlsHTML +=	"<TABLE WIDTH='100%'><TR class='heading_2' WIDTH='100%'><TH ALIGN='center'>Incidents</TH></TR><TR><TD>";
-		controlsHTML +=	"<DIV class='pri_button' onClick=\"set_pri_chkbox('normal'); hideGroup(1, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' STYLE = 'vertical-align: middle'BORDER=0>&nbsp;&nbsp;Normal: <input type=checkbox id='normal'  onClick=\"set_pri_chkbox('normal')\"/>&nbsp;&nbsp;</DIV>";
-		controlsHTML +=	"<DIV class='pri_button' onClick=\"set_pri_chkbox('medium'); hideGroup(2, 'Incident');\"><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;Medium: <input type=checkbox id='medium'  onClick=\"set_pri_chkbox('medium')\"/>&nbsp;&nbsp;</DIV>";
-		controlsHTML +=	"<DIV class='pri_button' onClick=\"set_pri_chkbox('high'); hideGroup(3, 'Incident');\"><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;High: <input type=checkbox id='high'  onClick=\"set_pri_chkbox('high')\"/>&nbsp;&nbsp;</DIV>";
-		controlsHTML +=	"<DIV class='pri_button' ID = 'pri_all' class='pri_button' STYLE = 'display: none; width: 70px;' onClick=\"set_pri_chkbox('all'); hideGroup(4, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' BORDER=0 STYLE = 'vertical-align: middle'><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;All <input type=checkbox id='all'  STYLE = 'display:none;' onClick=\"set_pri_chkbox('all')\"/>&nbsp;&nbsp;</DIV>";
-		controlsHTML +=	"<DIV class='pri_button' ID = 'pri_none' class='pri_button' STYLE = 'width: 60px;' onClick=\"set_pri_chkbox('none'); hideGroup(5, 'Incident');\"><IMG SRC = './our_icons/sm_white.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;None <input type=checkbox id='none' STYLE = 'display:none;' onClick=\"set_pri_chkbox('none')\"/>&nbsp;&nbsp;</DIV>";
-		controlsHTML +=	"</TD></TR></TABLE></TD></TR><TR CLASS='odd'><TD><DIV ID = 'boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
-		controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'fac_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
-		controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'poly_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
-		controlsHTML += "</TABLE></CENTER></TD></TR></TABLE>";
-</SCRIPT>
 <DIV style='position: fixed; top: 100px; right: 0px; z-index: 9999; width: auto;'>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
@@ -802,6 +475,18 @@ print add_sidebar(TRUE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 ?>
 </DIV>
 <SCRIPT>
+var controlsHTML = "<TABLE id='controlstable' ALIGN='center'>";
+controlsHTML +=	"<TR CLASS='odd'><TD>";
+controlsHTML +=	"<TABLE WIDTH='100%'><TR class='heading_2' WIDTH='100%'><TH ALIGN='center'>Incidents</TH></TR><TR><TD>";
+controlsHTML +=	"<DIV class='pri_button' onClick=\"set_pri_chkbox('normal'); hideGroup(1, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' STYLE = 'vertical-align: middle'BORDER=0>&nbsp;&nbsp;Normal: <input type=checkbox id='normal'  onClick=\"set_pri_chkbox('normal')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button' onClick=\"set_pri_chkbox('medium'); hideGroup(2, 'Incident');\"><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;Medium: <input type=checkbox id='medium'  onClick=\"set_pri_chkbox('medium')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button' onClick=\"set_pri_chkbox('high'); hideGroup(3, 'Incident');\"><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;High: <input type=checkbox id='high'  onClick=\"set_pri_chkbox('high')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button' ID = 'pri_all' class='pri_button' STYLE = 'display: none; width: 70px;' onClick=\"set_pri_chkbox('all'); hideGroup(4, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' BORDER=0 STYLE = 'vertical-align: middle'><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;All <input type=checkbox id='all'  STYLE = 'display:none;' onClick=\"set_pri_chkbox('all')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button' ID = 'pri_none' class='pri_button' STYLE = 'width: 60px;' onClick=\"set_pri_chkbox('none'); hideGroup(5, 'Incident');\"><IMG SRC = './our_icons/sm_white.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;None <input type=checkbox id='none' STYLE = 'display:none;' onClick=\"set_pri_chkbox('none')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"</TD></TR></TABLE></TD></TR><TR CLASS='odd'><TD><DIV ID = 'boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
+controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'fac_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
+controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'poly_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
+controlsHTML += "</TABLE></CENTER></TD></TR></TABLE>";
 
 //	setup map-----------------------------------//
 var map;
@@ -834,10 +519,10 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-mapWidth = viewportwidth;
-mapHeight = viewportheight - 10;
-outerwidth = viewportwidth;
-outerheight = viewportheight - 10;
+mapWidth = viewportwidth -2;
+mapHeight = viewportheight - 40;
+outerwidth = viewportwidth -2;
+outerheight = viewportheight - 20;
 listHeight = viewportheight * .25;
 colwidth = outerwidth * .42;
 colheight = outerheight * .7;
@@ -866,17 +551,16 @@ $("hidelists").style.top = "0px";
 $("hidelists").style.left = colwidth + "px";
 if(isTicker == 1) {
 	$('controls_bar').style.position = "fixed";
-	$("controls_bar").style.bottom = "40px";
+	$("controls_bar").style.bottom = "60px";
 	}
-
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 var initZoom = <?php print get_variable('def_zoom');?>;
 init_fsmap(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "br");
 map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
-bounds = map.getBounds();	
-zoom = map.getZoom();
-got_points = false;
+var bounds = map.getBounds();	
+var zoom = map.getZoom();
+var got_points = false;
 $('controls').innerHTML = controlsHTML;
 $('theHeading').innerHTML = heading;
 <?php
@@ -889,28 +573,30 @@ do_kml();
 		require_once('./modules/Ticker/incs/ticker.inc.php');
 		$the_markers = buildmarkers();
 		foreach($the_markers AS $value) {
+			if(my_is_float($value[3]) && my_is_float($value[3])) {
 ?>
 <SCRIPT>
-			var theLat = <?php print $value[3];?>;
-			var theLng = <?php print $value[4];?>;
-			var theA = "<?php print $value[6];?>";
-			var the_point = new L.LatLng(theLat, theLng);		//	10/23/12
-			var the_header = "Traffic Alert";		//	10/23/12
-			var the_text = "<?php print $value[1];?>";		//	10/23/12
-			var the_id = "<?php print $value[0];?>";		//	10/23/12
-			var the_category = "<?php print $value[5];?>";		//	10/23/12
-			var the_link = '<A CLASS="link" HREF="' + theA + '" TARGET="_blank" TITLE="' + the_text + '">' + the_text + '</A>';
-			var the_descrip = "<DIV style='border: 1px outset #707070; background-color: yellow;'>";
-			the_descrip += "<DIV style='font-size: 14px; color: #FFFFFF; background-color: #707070; font-weight: bold;'>" + the_header + "</DIV><BR />";		//	10/23/12
-			the_descrip += "<DIV style='font-size: 14px; color: #000000; font-weight: bold;'>" + the_category + "</DIV><BR />";		//	10/23/12
-			the_descrip += "<DIV><SPAN>" + the_link + "</SPAN></DIV><BR />";		
-			the_descrip += "<DIV style='font-size: 12px; color: blue; font-weight: normal;'>";		//	10/23/12
-			the_descrip += "<?php print $value[2];?>";		//	10/23/12
-			the_descrip += "</DIV></DIV>";		//	10/23/12
-			var rss_marker = create_feedMarker(the_point, the_text, the_descrip, the_id, the_id);		//	10/23/12
-			rss_marker.addTo(map);			
+				var theLat = <?php print $value[3];?>;
+				var theLng = <?php print $value[4];?>;
+				var theA = "<?php print $value[6];?>";
+				var the_point = new L.LatLng(theLat, theLng);		//	10/23/12
+				var the_header = "Traffic Alert";		//	10/23/12
+				var the_text = "<?php print $value[1];?>";		//	10/23/12
+				var the_id = "<?php print $value[0];?>";		//	10/23/12
+				var the_category = "<?php print $value[5];?>";		//	10/23/12
+				var the_link = '<A CLASS="link" HREF="' + theA + '" TARGET="_blank" TITLE="' + the_text + '">' + the_text + '</A>';
+				var the_descrip = "<DIV style='border: 1px outset #707070; background-color: yellow;'>";
+				the_descrip += "<DIV style='font-size: 14px; color: #FFFFFF; background-color: #707070; font-weight: bold;'>" + the_header + "</DIV><BR />";		//	10/23/12
+				the_descrip += "<DIV style='font-size: 14px; color: #000000; font-weight: bold;'>" + the_category + "</DIV><BR />";		//	10/23/12
+				the_descrip += "<DIV><SPAN>" + the_link + "</SPAN></DIV><BR />";		
+				the_descrip += "<DIV style='font-size: 12px; color: blue; font-weight: normal;'>";		//	10/23/12
+				the_descrip += "<?php print $value[2];?>";		//	10/23/12
+				the_descrip += "</DIV></DIV>";		//	10/23/12
+				var rss_marker = create_feedMarker(the_point, the_text, the_descrip, the_id, the_id);		//	10/23/12
+				rss_marker.addTo(map);			
 </SCRIPT>
 <?php
+			}
 		}
 	}
 ?>

@@ -350,6 +350,7 @@ $the_type = $temp[0];			// name of type
 ?>
 						<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Dispatch" onClick="$('incidents').style.display='block'; $('view_unit').style.display='none';" />
 						<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Facility" onClick="to_fac_routes(<?php print $id;?>);">
+						<INPUT TYPE='button' VALUE='Log' onclick = 'unit_log(<?php print $id;?>);'>
 <?php
 						}
 ?>

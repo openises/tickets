@@ -41,15 +41,15 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 				    break;
 				case "B":
 					$gt = get_text("Incident");
-					$message .= "{$gt}: {$the_scope}{$eol}";
+					$message .= "{$the_scope}{$eol}";
 				    break;
 				case "C":
 					$gt = get_text("Priority");
-					$message .= "{$gt}: " . get_severity($t_row['severity']) . $eol;
+					$message .= "" . strtoupper(get_severity($t_row['severity'])) . $eol;
 				    break;
 				case "D":
 					$gt = get_text("Nature");
-					$message .= "{$gt}: " . get_type($t_row['in_types_id']) . $eol;
+					$message .= "" . get_type($t_row['in_types_id']) . $eol;
 				    break;
 				case "J":
 					$gt = get_text("Addr");
@@ -57,15 +57,15 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					$str .= (empty($t_row['street']))? 	""  : $t_row['street'] . " " ;
 					$str .= (empty($t_row['city']))? 	""  : $t_row['city'] . " " ;
 					$str .= (empty($t_row['state']))? 	""  : $t_row['state'];
-					$message .= empty($str) ? "" : "{$gt}: " . $str . $eol;
+					$message .= empty($str) ? "" : " " . $str . $eol;
 				    break;
 				case "K":
 					$gt = get_text("Description");
-					$message .= (empty($t_row['description']))?  "": "{$gt}: ". wordwrap($t_row['description']).$eol;
+					$message .= (empty($t_row['description']))?  "": " ". wordwrap($t_row['description']).$eol;
 				    break;
 				case "G":
 					$gt = get_text("Reported by");
-					$message .= "{$gt}: " . $t_row['contact'] . $eol;
+					$message .= "" . $t_row['contact'] . $eol;
 				    break;
 				case "H":
 					$gt = get_text("Phone");
@@ -73,61 +73,59 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					break;
 				case "E":
 					$gt = get_text("Written");
-					$message .= (empty($t_row['date']))? "":  "{$gt}: " . format_date_2($t_row['date']) . $eol;
+					$message .= (empty($t_row['date']))? "":  "" . format_date_2($t_row['date']) . $eol;
 				    break;
 				case "F":
 					snap(__LINE__, $t_row['updated']);
 					$gt = get_text("Updated");
-					$message .= "{$gt}: " . format_date_2($t_row['updated']) . $eol;
+					$message .= "" . format_date_2($t_row['updated']) . $eol;
 				    break;
 				case "I":
 					$gt = get_text("Status");
-					$message .= "{$gt}: ".get_status($t_row['status']).$eol;
+					$message .= "".get_status($t_row['status']).$eol;
 				    break;
 				case "L":
 					$gt = get_text("Disposition");
-					$message .= (empty($t_row['comments']))? "": "{$gt}: ".wordwrap($t_row['comments']).$eol;
+					$message .= (empty($t_row['comments']))? "": "".wordwrap($t_row['comments']).$eol;
 				    break;
 				case "M":
 					snap(__LINE__, $t_row['problemstart']);
 					$gt = get_text("Run Start");
-					$message .= get_text("{$gt}") . ": " . format_date_2($t_row['problemstart']). $_end .$eol;
+					$message .= format_date_2($t_row['problemstart']). $_end .$eol;
 				    break;
 				case "N":
 					$gt = get_text("Position");
 					if($locale == 0) {
 						$usng = LLtoUSNG($t_row['lat'], $t_row['lng']);
-						$message .= "{$gt}: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $usng . "\n";
+						$message .= "" . $t_row['lat'] . " " . $t_row['lng'] . ", " . $usng . "\n";
 						}
 					if($locale == 1) {
 						$osgb = LLtoOSGB($t_row['lat'], $t_row['lng']);
-						$message .= "{$gt}: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $osgb . "\n";
+						$message .= "" . $t_row['lat'] . " " . $t_row['lng'] . ", " . $osgb . "\n";
 						}	
 					if($locale == 2) {
 						$utm = LLtoUTM($t_row['lat'], $t_row['lng']);
-						$message .= "{$gt}: " . $t_row['lat'] . " " . $t_row['lng'] . ", " . $utm . "\n";
+						$message .= "" . $t_row['lat'] . " " . $t_row['lng'] . ", " . $utm . "\n";
 						}							
 				    break;
-			
 				case "P":															
 					$gt = get_text("Patient");
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 					if (mysql_affected_rows()>0) {
-						$message .= "\n{$gt}:\n";
+						$message .= "\n";
 						while($pat_row = stripslashes_deep(mysql_fetch_array($result))){
 							$message .= $pat_row['name'] . ", " . $pat_row['updated']  . "- ". wordwrap($pat_row['description'], 70)."\n";
 							}
 						}
 					unset ($result);
 				    break;
-			
 				case "O":
 					$gt = get_text("Actions");
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 					if (mysql_affected_rows()>0) {
-						$message .= "\n{$gt}:\n";
+						$message .= "\n";
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 						while($act_row = stripslashes_deep(mysql_fetch_array($result))) {
 							$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
@@ -135,17 +133,15 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 						}	
 					unset ($result);
 				    break;
-			
 				case "Q":
 					$gt = get_text("Tickets host");
-					$message .= "{$gt}: ".get_variable('host').$eol;
+					$message .= "".get_variable('host').$eol;
 				    break;
 
 				case "R":							// 6/26/10
 					$gt = get_text("911 Contacted");
-					$message .= (empty($t_row['nine_one_one']))?  "": "{$gt}: " . wordwrap($t_row['nine_one_one']).$eol;	//	11/10/11
+					$message .= (empty($t_row['nine_one_one']))?  "": "" . wordwrap($t_row['nine_one_one']).$eol;	//	11/10/11
 				    break;
-
 				case "S":		// 6/20/12 - 12/14/2012
 					$gt = get_text("Links");
 					$protocol = explode("/", $_SERVER["SERVER_PROTOCOL"]);
@@ -153,7 +149,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					unset ($uri[count($uri)-1]);
 					$uri = join("/", $uri);					
 					//$message .= "{$gt}: {$temp_arr[0]}://{$_SERVER['HTTP_HOST']}:{$_SERVER['SERVER_PORT']}/main.php?id={$ticket_id}";
-					$message .= "{$gt}: {$protocol[0]}//{$_SERVER["SERVER_ADDR"]}:{$_SERVER["SERVER_PORT"]}{$uri}?id={$ticket_id}";
+					$message .= "{$protocol[0]}//{$_SERVER["SERVER_ADDR"]}:{$_SERVER["SERVER_PORT"]}{$uri}?id={$ticket_id}";
 					break;
 				case "T":							// 6/20/12
 					$gt = get_text("Facility");
@@ -163,12 +159,11 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 						if (mysql_num_rows ($result)>0) {
 							$f_row = stripslashes_deep(mysql_fetch_array($result));
-							$message .= "{$gt}: {$f_row['handle']}\n";
-							$message .= "{$gt}: {$f_row['beds_info']}\n";
+							$message .= "{$f_row['handle']}\n";
+							$message .= "{$f_row['beds_info']}\n";
 							}
 						}
 				    break;
-
 				case "U":		// 11/13/2012
 					$query_u = "SELECT  `handle` FROM `$GLOBALS[mysql_prefix]assigns` `a`
 						LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`a`.`responder_id` = `r`.`id`)
@@ -177,22 +172,20 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					$result_u = mysql_query($query_u) or do_error($query_u, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 					if (mysql_num_rows($result_u)>0) {
 						$gt = get_text("Units");
-						$message .= "\n{$gt} (" . mysql_num_rows($result_u) . "):\n";
+						$message .= "\n(" . mysql_num_rows($result_u) . "):\n";
 						while($u_row = stripslashes_deep(mysql_fetch_assoc($result_u))) {
 							$message .= "{$u_row['handle']},";
 							}
 						$message .= $eol;		// 4/1/2013
 						}	
 					unset ($result_u);
-					break;
-					
+					break;			
 				case "V":
 					if (is_date($t_row['booked_date'])) {
 						$gt = get_text("Scheduled For");
-						$message .= get_text("{$gt}") . ": " . format_date_2($t_row['booked_date']). $_end .$eol;
+						$message .= format_date_2($t_row['booked_date']). $_end .$eol;
 						}
 				    break;
-
 				default:
 //				    $message = "Match string error:" . $match_str[$i]. " " . $match_str . $eol ;
 					@session_start();

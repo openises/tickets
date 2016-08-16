@@ -208,5 +208,7 @@ function file_window() {										// 9/10/13
 <DIV ID='file_list' style='width: 60%;'></DIV>
 <BR /><BR /><BR /><BR />
 <SPAN id='up_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='file_window();'>Upload File</SPAN>
+<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Back to Config</SPAN>
 </CENTER>
+<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>
 </BODY></HTML>

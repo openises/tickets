@@ -216,9 +216,9 @@
 	<SCRIPT>
 // for messages
 	function get_msgs() {	//	10/23/12
+		$('statusBar').innerHTML = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>Downloading messages, please wait.</marquee>";
+		$('statusBar').style.display = "inline-block";
 		var randomnumber=Math.floor(Math.random()*99999999);		
-//		alert("getting messages");
-	  	// call the server to execute the server side operation
 		if (window.XMLHttpRequest) {
 			xmlHttp = new XMLHttpRequest();
 			xmlHttp.open("GET", "./ajax/get_messages.php?mode=all&version=" + randomnumber, true);
@@ -233,16 +233,26 @@
 		if (xmlHttp.readyState == 4) {
 			if (xmlHttp.status == 200) {
 				var response = JSON.decode(xmlHttp.responseText);
-				alert(xmlHttp.responseText);
 				for(var key in response[0]) {
 					the_resp = key;
 					the_val = response[0][key];
-					un_stat_chg(the_resp, the_val)
-					}	
-				var the_mess = response[1][0];
-				var the_stored = response[1][1];
-				if(the_stored > 0) {
-					show_msg("There are " + the_stored + " new messages");
+					if(typeof parent.frames["upper"].un_stat_chg == 'function') {
+						parent.frames["upper"].un_stat_chg(the_resp, the_resp);
+						}
+					}
+				setTimeout(function() {
+					if(response[1][0] == 0) {
+						var theText = "Download complete. There were no new messages.";
+						} else {
+						var theText = "Download complete. There were " + response[1][0] + " messages of which " + response[1][1] + " were new.";						
+						}
+					$('statusBar').innerHTML = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>" + theText + "</marquee>";
+					},5000);					
+				setTimeout(function() {
+					$('statusBar').style.display = "none";
+					},20000);	
+				if(response[1][1] > 0) {
+					show_msg("There are " + response[1][1] + " new messages");
 					}	
 				}
 			}
@@ -503,7 +513,9 @@
 		if (theForm.frm_user.value=="")											{errmsg+="\tUserID is required.\n";}
 		var got_level = false;
 		for (i=0; i<theForm.frm_level.length; i++){
-			if (theForm.frm_level[i].checked) {	got_level = true;	}
+			if (theForm.frm_level[i].checked) {
+				got_level = true;
+				}
 			}
 		if (!got_level)															{errmsg+="\tUser LEVEL is required.\n";}
 		if ((theForm.frm_func.value=="a") && (in_array(ary_users, theForm.frm_user.value.length>0))&& (in_array(ary_users, theForm.frm_user.value.trim())))
@@ -513,8 +525,10 @@
 		if ((theForm.frm_func.value=="a") && (theForm.frm_passwd.value==""))	{errmsg+="\tPASSWORD is required.\n";}		// only for ADD
 		if ((theForm.frm_passwd.value.trim().length>0) && (theForm.frm_passwd.value.trim().length<5))	
 																				{errmsg+="\tPasswd length 5 or more is required.\n";}
-		if ((theForm.frm_level[<?php echo $GLOBALS['LEVEL_UNIT'];?>].checked) && (theForm.frm_responder_id.value==0)) 
+		if ((theForm.frm_level[5].checked) && (theForm.frm_responder_id.value==0)) 
 																				{errmsg+="\t<?php print get_text("Units");?> selection is required.\n";}
+		if ((theForm.frm_level[6].checked) && (theForm.frm_facility_id.value==0)) 
+																				{errmsg+="\t<?php print get_text("Facility");?> selection is required.\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -529,6 +543,10 @@
 
 	function do_set_unit(in_val){					// selected value to hidden
 		document.user_add_Form.frm_responder_id.value = in_val;
+		}
+		
+	function do_set_facility(in_val){					// selected value to hidden
+		document.user_add_Form.frm_facility_id.value = in_val;
 		}
 
 	function validate_set(theForm) {			// limited form contents validation  
@@ -1303,9 +1321,17 @@ if (mysql_num_rows($result)>0) {
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_msg_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
 					print "<TD>";
 					print "<SELECT NAME='smsg_provider'>";
-					print "<OPTION VALUE=0 SELECTED>Not Selected</OPTION>";					
-					print "<OPTION VALUE=1 SELECTED>SMS Responder</OPTION>";
-					print "<OPTION VALUE=2>Txt Local</OPTION>";
+					$opts = array(0 => "None",
+					1 => "SMS Responder",
+					2 => "Txt Local",
+					3 => "MOTOTRBO Python Text Message Protocol",
+					4 => "SMS Broadcast");
+
+					foreach($opts as $i => $val) {
+						print "<option value=$i ";
+						if($row['value'] == $i) print "selected";
+						print ">$val</option>";
+					}
 					print "</SELECT>";					
 					print "</TD></TR>\n";
 	
@@ -1386,115 +1412,182 @@ if (mysql_num_rows($result)>0) {
 				}		// end outer switch()
 	// =======================		
 				$do_unit = (intval($row['responder_id']) > 0)? "inline": "none";
-	
+
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 7/11/10
 				$result_sel = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				$sel_str = "<SELECT ID='frm_responder_sel' NAME='sel_responder_id' STYLE = 'display:inline;' onChange='do_set_unit(this.options[selectedIndex].value.trim())' {$disabled}><\n\t<OPTION VALUE=0 SELECTED>NA</OPTION>\n";
+				$sel_str = "<SELECT ID='frm_responder_sel' NAME='sel_responder_id' STYLE = 'display: " . $do_unit . ";' onChange='do_set_unit(this.options[selectedIndex].value.trim())' {$disabled}><\n\t<OPTION VALUE=0 SELECTED>NA</OPTION>\n";
 	
 				while ($row_sel = stripslashes_deep(mysql_fetch_assoc($result_sel))) {
 					$sel_bool = ($row['responder_id']==$row_sel['id'])? "SELECTED": "";				// this unit?
 					$sel_str .= "\t<OPTION VALUE='{$row_sel['id']}' {$sel_bool}>{$row_sel['name']}</OPTION>\n";		
 					}
 				$sel_str .= "\n</SELECT>\n";
+
+				$do_fac = (intval($row['facility_id']) > 0)? "inline": "none";	
+
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		// 7/11/10
+				$result_sel = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				$sel_str2 = "<SELECT ID='frm_facility_sel' NAME='sel_facility_id' STYLE = 'display: " . $do_fac . ";' onChange='do_set_facility(this.options[selectedIndex].value.trim())' {$disabled}><\n\t<OPTION VALUE=0 SELECTED>NA</OPTION>\n";
 	
+				while ($row_sel = stripslashes_deep(mysql_fetch_assoc($result_sel))) {
+					$sel_bool = ($row['facility_id']==$row_sel['id'])? "SELECTED": "";				// this unit?
+					$sel_str2 .= "\t<OPTION VALUE='{$row_sel['id']}' {$sel_bool}>{$row_sel['name']}</OPTION>\n";		
+					}
+				$sel_str2 .= "\n</SELECT>\n";
+				
 				$caption = (is_administrator() || is_super())? "Edit": "View";
-				$onclick = " onClick = '$(\"frm_responder_sel\").style.display = \"none\";  document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;' $('frm_responder_sel').style.display = 'none';";
+				$onclick = " onClick = '$(\"frm_responder_sel\").style.display = \"none\";$(\"unit_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
+							$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
+
+				$on_responder = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\"; $(\"unit_sel\").style.display = \"inline\"; $(\"frm_facility_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true; $(\"fac_sel\").style.display = \"none\";'";
+				$on_facility = " onClick = '$(\"frm_facility_sel\").style.display = \"inline\"; $(\"fac_sel\").style.display = \"inline\"; $(\"frm_responder_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true; $(\"unit_sel\").style.display = \"none\";'";
 ?>
 				<FONT CLASS="header"><?php print $caption; ?> User Data</FONT><BR /><BR />
 				<TABLE BORDER="0" CELLSPACING=1>
 				<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&edit=true">
 					<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $id;?>">
-				<TR CLASS="even"><TD ALIGN="right" CLASS="td_label">User ID:</TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $row['user'];?>" NAME="frm_user" <?php print $disabled;?> ></TD></TR>
-				<TR CLASS="odd"><TD ALIGN="right" CLASS="td_label">Password:</TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" <?php print $disabled;?>> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm" <?php print $disabled;?>></TD></TR>
-				<TR CLASS="even" VALIGN='middle'><TD ALIGN="right" CLASS="td_label">Level:</TD><TD COLSPAN=3>&nbsp;&nbsp;&nbsp;
+					<TR CLASS="even">
+						<TD ALIGN="right" CLASS="td_label">User ID:</TD>
+						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $row['user'];?>" NAME="frm_user" <?php print $disabled;?> ></TD>
+					</TR>
+					<TR CLASS="odd">
+						<TD ALIGN="right" CLASS="td_label">Password:</TD>
+						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" <?php print $disabled;?>> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm" <?php print $disabled;?>></TD>
+					</TR>
+					<TR CLASS="even" VALIGN='middle'>
+						<TD ALIGN="right" CLASS="td_label">Level:</TD>
+						<TD COLSPAN=3>&nbsp;&nbsp;&nbsp;
 <?php
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_USER']))?			"checked":"" ;
-				print "Operator &raquo<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_USER'] . 		"' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_GUEST']))? 			"checked":"" ;
-				print " Guest &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_GUEST'] . 		"' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_ADMINISTRATOR']))? 	"checked":"" ;
-				print " Administrator &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
-				if (is_super()) {				// 6/9/08
-					$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SUPER']))? 	"checked":"" ;
-					print " Super &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
-					}
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_MEMBER']))? 	"checked":"" ;						// 12/15/08
-				print " Member &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_MEMBER'] ."' {$checked} {$disabled} {$onclick}>\n";
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_USER']))?			"checked":"" ;
+						print "Operator &raquo<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_USER'] . 		"' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_GUEST']))? 			"checked":"" ;
+						print " Guest &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_GUEST'] . 		"' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_ADMINISTRATOR']))? 	"checked":"" ;
+						print " Administrator &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
+						if (is_super()) {				// 6/9/08
+							$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SUPER']))? 	"checked":"" ;
+							print " Super &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
+							}
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_MEMBER']))? 	"checked":"" ;						// 12/15/08
+						print " Member &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_MEMBER'] ."' {$checked} {$disabled} {$onclick}>\n";
 	// 7/12/10
-	
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_UNIT']))? 	"checked":"" ;						// 12/15/08
-	 			print get_text("Units") . "&raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_UNIT'] ."' {$checked} {$disabled}>\n";
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_UNIT']))? 	"checked":"" ;						// 12/15/08
+						print get_text("Unit") . "&raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_UNIT'] ."' {$checked} {$disabled} {$on_responder}>\n";
+	// 7/4/16
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_FACILITY']))? 	"checked":"" ;						// 7/4/16
+						print get_text("Facility") . "&raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_FACILITY'] ."' {$checked} {$disabled} {$on_facility}>\n";
 	//	7/6/11
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_STATS']))? 	"checked":"" ;						// 12/15/08
-	 			print " Statistics &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_STATS'] ."' {$checked} {$disabled}>\n";				
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_STATS']))? 	"checked":"" ;						// 12/15/08
+						print " Statistics &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_STATS'] ."' {$checked} {$disabled} {$onclick}>\n";				
 	//	10/23/12
-				$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SERVICE_USER']))? 	"checked":"" ;						// 12/15/08
-	 			print " Service User &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SERVICE_USER'] ."' {$checked} {$disabled}>\n";					
+						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SERVICE_USER']))? 	"checked":"" ;						// 12/15/08
+						print " Service User &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SERVICE_USER'] ."' {$checked} {$disabled} {$onclick}>\n";					
 ?>			
-				</TD></TR>
+						</TD>
+					</TR>
 <?php
-
-				if(is_administrator()) {
-					print "<TR CLASS='odd' VALIGN='top'>";
-					print "<TD CLASS='td_label' ALIGN='right'>" . get_text('Region') . "</A>: </TD>";
-					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
-					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>";
-					print "</TD><TD COLSPAN =2 ALIGN='left'>";	
-					$alloc_groups = implode(',', get_allocates(4, $id));	//	6/10/11
-					print get_all_group_butts(get_allocates(4, $id));	//	6/10/11	
-					print "</TD></TR>";
-				} else {
-					print "<DIV style='display: none'>";
-					$alloc_groups = implode(',', get_allocates(4, $id));	//	6/10/11
-					print get_all_group_butts(get_allocates(4, $id));	//	6/10/11
-					print "</DIV";
-				}
+					if(is_administrator()) {
+						print "<TR CLASS='odd' VALIGN='top'>";
+						print "<TD CLASS='td_label' ALIGN='right'>" . get_text('Region') . "</A>: </TD>";
+						print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
+						print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>";
+						print "</TD><TD COLSPAN =2 ALIGN='left'>";	
+						$alloc_groups = implode(',', get_allocates(4, $id));	//	6/10/11
+						print get_all_group_butts(get_allocates(4, $id));	//	6/10/11	
+						print "</TD></TR>";
+					} else {
+						print "<DIV style='display: none'>";
+						$alloc_groups = implode(',', get_allocates(4, $id));	//	6/10/11
+						print get_all_group_butts(get_allocates(4, $id));	//	6/10/11
+						print "</DIV";
+					}
 ?>	
-				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"><?php print get_text("Units");?>: </TD><TD><?php print $sel_str;?></TD></TR>
-				<TR VALIGN="baseline" CLASS="spacer"><TD class="spacer" COLSPAN=99 ALIGN='center'>&nbsp;</TD></TR>
-				<TR VALIGN="baseline" CLASS="even"><TD COLSPAN=4 ALIGN='center'>&nbsp;</TD></TR>
-				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Last name: </TD>
-					<TD><INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="<?php print $row['name_l'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
-					<TD CLASS="td_label" ALIGN="right">First: </TD>
-					<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="<?php print $row['name_f'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">MI: </TD>
-					<TD><INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="<?php print $row['name_mi'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
-					<TD CLASS="td_label" ALIGN="right">DOB: </TD><TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="<?php print $row['dob'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> /></TD></TR>
-				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>"<?php print $disabled;?>/></TD>
-					<TD CLASS="td_label" ALIGN="right">Ident: </TD>
-					<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="<?php print $row['ident'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-				<TR CLASS="even"><TD CLASS="td_label" ALIGN="right">Info: </TD><TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE="<?php print $row['info'];?>"<?php print $disabled;?>></TD></TR>
-				<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="32" TYPE="text" NAME="frm_email" VALUE="<?php print $row['email'];?>"<?php print $disabled;?>></TD>
-					<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;&nbsp;&nbsp;Alternate: </TD>
-					<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_email_s" VALUE="<?php print $row['email_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"> Street addr: </TD>
-					<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="<?php print $row['addr_street'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">City: </TD>
-					<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_city" VALUE="<?php print $row['addr_city'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
-					<TD CLASS="td_label" ALIGN="right">St: </TD>
-					<TD><INPUT ID="ID10" MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" type="text" NAME="frm_addr_st" VALUE="<?php print $row['addr_st'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Phone: </TD>
-					<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_p" VALUE="<?php print $row['phone_p'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
-					<TD CLASS="td_label" ALIGN="right">Alternate: </TD><TD>
-						<INPUT ID="ID20" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_s" VALUE="<?php print $row['phone_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Mobile: </TD>
-					<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_m" VALUE="<?php print $row['phone_m'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
-<?php if ((is_administrator() || is_super())) { ?>					
-				<TR CLASS="even" VALIGN='top'><TD CLASS="td_label">Remove User: </TD><TD COLSPAN=3> &raquo; <INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $disabled;?>></TD></TR>
-<?php } ?>			
-				<TR CLASS="odd"><TD></TD>
-					<TD COLSPAN=3 ALIGN="center"><BR />
-						<INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<?php if ((is_administrator() || is_super())) { ?>					
-						<INPUT TYPE="reset" VALUE="Reset" onClick = "this.form.reset(); this.form.frm_responder_id.value='<?php echo $row['responder_id'];?>';" <?php print $disabled;?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<TR VALIGN="baseline" CLASS="even">
+						<TD CLASS="td_label" ALIGN="right">
+							<SPAN  id='unit_sel'><?php print get_text("Unit");?>: </SPAN>
+						</TD>
+						<TD><?php print $sel_str;?></TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="even">
+						<TD CLASS="td_label" ALIGN="right">
+							<SPAN id='fac_sel'><?php print get_text("Facility");?>: </SPAN>
+						</TD>
+						<TD><?php print $sel_str2;?></TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="spacer">
+						<TD class="spacer" COLSPAN=99 ALIGN='center'>&nbsp;</TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="even">
+						<TD COLSPAN=4 ALIGN='center'>&nbsp;</TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="odd">
+						<TD CLASS="td_label" ALIGN="right">Last name: </TD>
+						<TD><INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="<?php print $row['name_l'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD CLASS="td_label" ALIGN="right">First: </TD>
+						<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="<?php print $row['name_f'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">MI: </TD>
+						<TD><INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="<?php print $row['name_mi'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD CLASS="td_label" ALIGN="right">DOB: </TD>
+						<TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="<?php print $row['dob'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> /></TD>
+					</TR>
+					<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>"<?php print $disabled;?>/></TD>
+						<TD CLASS="td_label" ALIGN="right">Ident: </TD>
+						<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="<?php print $row['ident'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
+					<TR CLASS="even">
+						<TD CLASS="td_label" ALIGN="right">Info: </TD>
+						<TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE="<?php print $row['info'];?>"<?php print $disabled;?>></TD>
+					</TR>
+					<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="128" TYPE="text" NAME="frm_email" VALUE="<?php print $row['email'];?>"<?php print $disabled;?>></TD>
+						<TD CLASS="td_label" ALIGN="right">&nbsp;&nbsp;&nbsp;&nbsp;Alternate: </TD>
+						<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE="128" type="text" NAME="frm_email_s" VALUE="<?php print $row['email_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"> Street addr: </TD>
+						<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="<?php print $row['addr_street'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">City: </TD>
+						<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_addr_city" VALUE="<?php print $row['addr_city'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD CLASS="td_label" ALIGN="right">St: </TD>
+						<TD><INPUT ID="ID10" MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" type="text" NAME="frm_addr_st" VALUE="<?php print $row['addr_st'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Phone: </TD>
+						<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_p" VALUE="<?php print $row['phone_p'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD CLASS="td_label" ALIGN="right">Alternate: </TD>
+						<TD><INPUT ID="ID20" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_s" VALUE="<?php print $row['phone_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Mobile: </TD>
+						<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_m" VALUE="<?php print $row['phone_m'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					</TR>
+<?php 
+					if ((is_administrator() || is_super())) { 
+?>					
+						<TR CLASS="even" VALIGN='top'>
+							<TD CLASS="td_label">Remove User: </TD>
+							<TD COLSPAN=3> &raquo; <INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $disabled;?>></TD>
+						</TR>
+<?php 
+						} 
+?>			
+					<TR CLASS="odd">
+						<TD></TD>
+						<TD COLSPAN=3 ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel"  onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<?php 
+					if ((is_administrator() || is_super())) { 
+?>					
+						<INPUT TYPE="reset" VALUE="Reset" onClick = "this.form.reset(); this.form.frm_responder_id.value='<?php echo $row['responder_id'];?>'; this.form.frm_facility_id.value='<?php echo $row['facility_id'];?>';" <?php print $disabled;?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 						<INPUT TYPE="submit" VALUE="Submit" <?php print $disabled;?>>
-<?php } ?>					
-					</TD></TR>
+<?php 
+						} 
+?>					
+						</TD>
+					</TR>
 					<INPUT TYPE='hidden' NAME='frm_hash' VALUE='<?php print $row['passwd'];?>' />	<!-- 11/30/08 -->
 					<INPUT TYPE='hidden' NAME='frm_func' VALUE='e' />
-					<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='<?php echo $row['responder_id'];?>' /></TD>
+					<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='<?php echo $row['responder_id'];?>' />
+					<INPUT TYPE='hidden' NAME='frm_facility_id' VALUE='<?php echo $row['facility_id'];?>' />
 					<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print $alloc_groups;?>">						
-				</FORM></TABLE>
+					</FORM>
+				</TABLE>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
 				</BODY>
 				</HTML>
@@ -1512,7 +1605,7 @@ if (mysql_num_rows($result)>0) {
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE owner=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 				$ctr += mysql_affected_rows();
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE user=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE user=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 				$ctr += mysql_affected_rows();
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE user=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
@@ -1545,7 +1638,8 @@ if (mysql_num_rows($result)>0) {
 							`ident` = " . quote_smart(trim($_POST['frm_ident'])) . ",			
 							`info` = " . quote_smart(trim($_POST['frm_info'])) . ",		
 							`level` = " . quote_smart(trim($_POST['frm_level'])) . ",			
-							`responder_id` = " . quote_smart(trim($_POST['frm_responder_id'])) . ",			
+							`responder_id` = " . quote_smart(trim($_POST['frm_responder_id'])) . ",		
+							`facility_id` = " . quote_smart(trim($_POST['frm_facility_id'])) . ",								
 							`name_f` = " . quote_smart(trim($_POST['frm_name_f'])) . ",		
 							`name_l` = " . quote_smart(trim($_POST['frm_name_l'])) . ",		
 							`name_mi` = " . quote_smart(trim($_POST['frm_name_mi'])) . ",	
@@ -1590,8 +1684,8 @@ if (mysql_num_rows($result)>0) {
 					if($_POST['frm_passwd'] == $_POST['frm_passwd_confirm']) {						// 11/30/08
 						$dob = empty($_POST['frm_dob']) ? "NULL" : quote_smart(trim($_POST['frm_dob']));		// 6/25/10
 	
-						$query = sprintf("INSERT INTO`$GLOBALS[mysql_prefix]user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`user`)
-							 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+						$query = sprintf("INSERT INTO`$GLOBALS[mysql_prefix]user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`facility_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`user`)
+							 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
 	
 									quote_smart(trim($_POST['frm_addr_city'])),	
 									quote_smart(trim($_POST['frm_addr_st'])),	
@@ -1604,7 +1698,8 @@ if (mysql_num_rows($result)>0) {
 									quote_smart(trim($_POST['frm_ident'])),			
 									quote_smart(trim($_POST['frm_info'])),		
 									quote_smart(trim($_POST['frm_level'])),			
-									quote_smart(trim($_POST['frm_responder_id'])),			
+									quote_smart(trim($_POST['frm_responder_id'])),	
+									quote_smart(trim($_POST['frm_facility_id'])),										
 									quote_smart(trim($_POST['frm_name_f'])),		
 									quote_smart(trim($_POST['frm_name_l'])),		
 									quote_smart(trim($_POST['frm_name_mi'])),	
@@ -1632,34 +1727,57 @@ if (mysql_num_rows($result)>0) {
 					else {
 						print "Passwords don't match. Please try again.<BR />";
 						?>
-						<BR /><TABLE BORDER="0">
-						<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&add=true&go=true">
-						<TR CLASS="even"><TD CLASS="td_label">User ID:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_user'];?>" NAME="frm_user"></TD></TR>
-						<TR CLASS="odd"><TD CLASS="td_label">Password</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd"></TD></TR>
-						<TR CLASS="even"><TD CLASS="td_label">Confirm Password: &nbsp;&nbsp;</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
-						<TR CLASS="odd"><TD CLASS="td_label">Callsign:</TD><TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_callsign'];?>" NAME="frm_callsign"></TD></TR>
-						<TR CLASS="even"><TD CLASS="td_label">Level:</TD><TD>
+						<BR />
+						<TABLE BORDER="0">
+							<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&add=true&go=true">
+							<TR CLASS="even">
+								<TD CLASS="td_label">User ID:</TD>
+								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_user'];?>" NAME="frm_user"></TD>
+							</TR>
+							<TR CLASS="odd">
+								<TD CLASS="td_label">Password</TD>
+								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd"></TD>
+							</TR>
+							<TR CLASS="even">
+								<TD CLASS="td_label">Confirm Password: &nbsp;&nbsp;</TD>
+								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd_confirm"></TD>
+							</TR>
+							<TR CLASS="odd">
+								<TD CLASS="td_label">Callsign:</TD>
+								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_callsign'];?>" NAME="frm_callsign"></TD>
+							</TR>
+							<TR CLASS="even">
+								<TD CLASS="td_label">Level:</TD><TD>
 <?php
-					if (is_super()) {				// 6/9/08
+									if (is_super()) {				// 6/9/08
 ?>				
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level" <?php print is_super()?"checked":"";?>> Super<BR />
+										<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level" <?php print is_super()?"checked":"";?>> Super<BR />
 <?php
-						}
+										}
 ?>						
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level" <?php print is_administrator()?"checked":"";?>> Administrator<BR />
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level" <?php print is_user()?"checked":"";?>> Operator<BR />
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" <?php print is_guest()?"checked":"";?>> Guest<BR />
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level" <?php print is_member()?"checked":"";?>> Member<BR />
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_UNIT'];?>" NAME="frm_level" <?php print is_unit()?"checked":"";?>> Unit<BR />
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_STATISTICS'];?>" NAME="frm_level" <?php print is_statistics()?"checked":"";?>> Statistics<BR />	
-							<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SERVICE_USER'];?>" NAME="frm_level" <?php print is_service_user()?"checked":"";?>> Service User<BR />
-							</TD></TR>
-						<TR CLASS="odd"><TD CLASS="td_label">Info:</TD><TD><INPUT SIZE="40" MAXLENGTH="80" TYPE="text" VALUE="<?php print $_POST['frm_info'];?>" NAME="frm_info"></TD></TR>
-						<TR CLASS="even"><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD></TR>
-						</FORM></TABLE>
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level" <?php print is_administrator()?"checked":"";?>> Administrator<BR />
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level" <?php print is_user()?"checked":"";?>> Operator<BR />
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" <?php print is_guest()?"checked":"";?>> Guest<BR />
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level" <?php print is_member()?"checked":"";?>> Member<BR />
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_UNIT'];?>" NAME="frm_level" <?php print is_unit()?"checked":"";?>> Unit<BR />
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_FACILITY'];?>" NAME="frm_level" <?php print is_facility()?"checked":"";?>> Facility<BR />
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_STATISTICS'];?>" NAME="frm_level" <?php print is_statistics()?"checked":"";?>> Statistics<BR />	
+									<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SERVICE_USER'];?>" NAME="frm_level" <?php print is_service_user()?"checked":"";?>> Service User<BR />
+								</TD>
+							</TR>
+							<TR CLASS="odd">
+								<TD CLASS="td_label">Info:</TD>
+								<TD><INPUT SIZE="40" MAXLENGTH="80" TYPE="text" VALUE="<?php print $_POST['frm_info'];?>" NAME="frm_info"></TD>
+							</TR>
+							<TR CLASS="even">
+								<TD></TD>
+								<TD><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="reset" VALUE="Reset">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="submit" VALUE="Submit"></TD>
+							</TR>
+						</FORM>
+						</TABLE>
 						<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
-						</BODY>
-						</HTML>
+					</BODY>
+					</HTML>
 <?php
 						exit();
 						}
@@ -1667,31 +1785,59 @@ if (mysql_num_rows($result)>0) {
 				else {
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 7/11/10
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-					$sel_str = "\n<SELECT ID='frm_responder_sel' NAME='frm_responder_sel' STYLE = 'display:inline;' onChange='do_set_unit(this.options[selectedIndex].value.trim())'>\n\t<OPTION VALUE=0 SELECTED>Select one</OPTION>\n";
+					$sel_str = "\n<SELECT ID='frm_responder_sel' NAME='frm_responder_sel' STYLE = 'display: none;' onChange='do_set_unit(this.options[selectedIndex].value.trim())'>\n\t<OPTION VALUE=0 SELECTED>Select one</OPTION>\n";
 					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		
 						$sel_str .= "\t<OPTION VALUE='{$row['id']}'>{$row['name']}</OPTION>\n";		
 						}
 					$sel_str .= "\n</SELECT>\n";
+					
+					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		// 7/11/10
+					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+					$sel_str2 = "\n<SELECT ID='frm_facility_sel' NAME='frm_facility_sel' STYLE = 'display: none;' onChange='do_set_facility(this.options[selectedIndex].value.trim())'>\n\t<OPTION VALUE=0 SELECTED>Select one</OPTION>\n";
+					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		
+						$sel_str2 .= "\t<OPTION VALUE='{$row['id']}'>{$row['name']}</OPTION>\n";		
+						}
+					$sel_str2 .= "\n</SELECT>\n";
+					
+					$onclick = " onClick = '$(\"frm_responder_sel\").style.display = \"none\";$(\"unit_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
+								$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
+
+					$on_responder = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\"; $(\"unit_sel\").style.display = \"inline\"; $(\"frm_facility_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true; $(\"fac_sel\").style.display = \"none\";'";
+					$on_facility = " onClick = '$(\"frm_facility_sel\").style.display = \"inline\"; $(\"fac_sel\").style.display = \"inline\"; $(\"frm_responder_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true; $(\"unit_sel\").style.display = \"none\";'";
 ?>
 					<FONT CLASS="header">Add User</FONT><BR /><BR />
 	
 					<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);"  ACTION="config.php?func=user&add=true&go=true">
 					<TABLE BORDER=0 CELLSPACING=1>
 					<TR><TD COLSPAN=4 ALIGN='center'><FONT COLOR='red'>*</FONT> Required</TD></TR>
-					<TR CLASS="even"><TD CLASS="td_label" ALIGN="right"> User ID: <FONT COLOR='red'>*</FONT></TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" NAME="frm_user" VALUE=""></TD></TR>
-					<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right"> Password: <FONT COLOR='red'>*</FONT></TD><TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" VALUE="">&nbsp;&nbsp; <B>Confirm: </B> <INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD></TR>
-					<TR CLASS="even" VALIGN='baseline'><TD CLASS="td_label" ALIGN="right"> Level: <FONT COLOR='red'>*</FONT></TD><TD COLSPAN=3>&nbsp;&nbsp;&nbsp;&nbsp;
-<?php 				if (is_super()) { ?>	<!-- / 6/9/08 -->				
-						 Super  &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level">&nbsp;&nbsp;&nbsp;
-<?php 					}  ?>
-						Admin &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level" />&nbsp;&nbsp;
-						Operator &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level" />&nbsp;&nbsp;
-						Guest &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" /> &nbsp;&nbsp;
-						Member &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level" /> 	<!-- 3/3/09 -->
-						<?php print get_text("Units");?> &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_UNIT'];?>" NAME="frm_level"/> <!-- 6/30/09 -->
-						Statistics &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_STATS'];?>" NAME="frm_level"/> <!-- 7/6/11 -->
-						Service User &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SERVICE_USER'];?>" NAME="frm_level"/> <!-- 10/11/12 -->							
-						</TD></TR>
+					<TR CLASS="even">
+						<TD CLASS="td_label" ALIGN="right"> User ID: <FONT COLOR='red'>*</FONT></TD>
+						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" NAME="frm_user" VALUE=""></TD>
+					</TR>
+					<TR CLASS="odd">
+						<TD CLASS="td_label" ALIGN="right"> Password: <FONT COLOR='red'>*</FONT></TD>
+						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" VALUE="">&nbsp;&nbsp; <B>Confirm: </B> <INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD>
+					</TR>
+					<TR CLASS="even" VALIGN='baseline'>
+						<TD CLASS="td_label" ALIGN="right"> Level: <FONT COLOR='red'>*</FONT></TD>
+						<TD COLSPAN=3>&nbsp;&nbsp;&nbsp;&nbsp;
+<?php 						
+							if (is_super()) { 
+?>
+								Super  &raquo;<INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SUPER'];?>" NAME="frm_level" <?php print $onclick;?>>&nbsp;&nbsp;&nbsp;
+<?php 							
+								}  
+?>
+							Admin &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_ADMINISTRATOR'];?>" NAME="frm_level" <?php print $onclick;?>/>&nbsp;&nbsp;
+							Operator &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_USER'];?>" NAME="frm_level" <?php print $onclick;?>/>&nbsp;&nbsp;
+							Guest &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_GUEST'];?>" NAME="frm_level" <?php print $onclick;?>/> &nbsp;&nbsp;
+							Member &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_MEMBER'];?>" NAME="frm_level" <?php print $onclick;?>/> 	<!-- 3/3/09 -->
+							<?php print get_text("Unit");?> &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_UNIT'];?>" NAME="frm_level" <?php print $on_responder;?>/> <!-- 6/30/09 -->
+							<?php print get_text("Facility");?> &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_FACILITY'];?>" NAME="frm_level" <?php print $on_facility;?>/> <!-- 4/7/16 -->
+							Statistics &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_STATS'];?>" NAME="frm_level" <?php print $onclick;?>/> <!-- 7/6/11 -->
+							Service User &raquo; <INPUT TYPE="radio" VALUE="<?php print $GLOBALS['LEVEL_SERVICE_USER'];?>" NAME="frm_level" <?php print $onclick;?>/>						
+						</TD>
+					</TR>
 <?php
 					if(is_super()) {		//	6/10/11
 						print "<TR CLASS='odd' VALIGN='top'>";
@@ -1727,43 +1873,64 @@ if (mysql_num_rows($result)>0) {
 					}
 ?>							
 						
-					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"><?php print get_text("Units");?>: </TD><TD><?php print $sel_str;?></TD></TR>
-					<TR VALIGN="baseline" CLASS="spacer"><TD class="spacer" COLSPAN=4 ALIGN='center'>&nbsp;</TD></TR>
-					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Last name: </TD>
+					<TR VALIGN="baseline" CLASS="even">
+						<TD id="unit_sel" CLASS="td_label" style='display: none;' ALIGN="right"><?php print get_text("Units");?>: </TD>
+						<TD><?php print $sel_str;?></TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="odd">
+						<TD id="fac_sel" CLASS="td_label" style='display: none;' ALIGN="right"><?php print get_text("Facility");?>: </TD>
+						<TD><?php print $sel_str2;?></TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="spacer">
+						<TD class="spacer" COLSPAN=4 ALIGN='center'>&nbsp;</TD>
+					</TR>
+					<TR VALIGN="baseline" CLASS="odd">
+						<TD CLASS="td_label" ALIGN="right">Last name: </TD>
 						<TD><INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="" onChange = "this.value=this.value.trim()"></TD>
 						<TD CLASS="td_label" ALIGN="right">First: </TD>
-						<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
+						<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
+					</TR>
 					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">MI: </TD>
 						<TD><INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="" onChange = "this.value=this.value.trim()"></TD>
 						<TD CLASS="td_label" ALIGN="right">DOB: </TD><TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="" onChange = "this.value=this.value.trim()"/></TD></TR>
 					<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE=""></TD>
 						<TD CLASS="td_label" ALIGN="right">Ident: </TD>
-						<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="" onChange = "this.value=this.value.trim()"></TD></TR>
-					<TR CLASS="even"><TD CLASS="td_label" ALIGN="right">Info: </TD><TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE=""></TD></TR>
-					<TR CLASS="odd"><TD CLASS="td_label" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="32" TYPE="text" NAME="frm_email" VALUE=""></TD>
+						<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="" onChange = "this.value=this.value.trim()"></TD>
+					</TR>
+					<TR CLASS="even">
+						<TD CLASS="td_label" ALIGN="right">Info: </TD><TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE=""></TD>
+					</TR>
+					<TR CLASS="odd">
+						<TD CLASS="td_label" ALIGN="right">Email: </TD>
+						<TD><INPUT SIZE="32" MAXLENGTH="128" TYPE="text" NAME="frm_email" VALUE=""></TD>
 						<TD CLASS="td_label" ALIGN="right">Alternate: </TD>
-						<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_email_s" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
+						<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE="128" type="text" NAME="frm_email_s" VALUE="" onChange = "this.value=this.value.trim()"></TD>
+					</TR>
 					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"> Street addr: </TD>
-						<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
+						<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
+					</TR>
 					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">City: </TD>
-						<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_city" VALUE="" onChange = "this.value=this.value.trim()"></TD>
+						<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_addr_city" VALUE="" onChange = "this.value=this.value.trim()"></TD>
 						<TD CLASS="td_label" ALIGN="right">St: </TD>
 						<TD><INPUT ID="ID10" MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" type="text" NAME="frm_addr_st" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
 					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Phone: </TD>
-						<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_p" VALUE="" onChange = "this.value=this.value.trim()"></TD>
+						<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_p" VALUE="" onChange = "this.value=this.value.trim()"></TD>
 						<TD CLASS="td_label" ALIGN="right">Alternate: </TD><TD>
-							<INPUT ID="ID20" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_s" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
+							<INPUT ID="ID20" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_s" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
 					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Mobile: </TD>
-						<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_phone_m" VALUE="" onChange = "this.value=this.value.trim()"> </TD></TR>
-							<INPUT TYPE='hidden' NAME='frm_func' VALUE='a'>
-							<INPUT TYPE='hidden' NAME='frm_hash' VALUE=''>	<!-- 11/30/08 -->
-							</TD></TR>
+						<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_m" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
+					</TR>
+					<INPUT TYPE='hidden' NAME='frm_func' VALUE='a'>
+					<INPUT TYPE='hidden' NAME='frm_hash' VALUE=''>	<!-- 11/30/08 -->
+					</TD>
+					</TR>
 					<TR CLASS="even">
 						<TD COLSPAN=4 ALIGN="center"><BR /><INPUT TYPE="button" VALUE="Cancel" onClick="document.can_Form.submit();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 						<INPUT TYPE="reset" VALUE="Reset" onClick = "this.form.reset(); $('frm_responder_sel').style.display = 'none'; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 						<INPUT TYPE="submit" VALUE="Submit"></TD>
-						</TR>
-					<INPUT TYPE="hidden" NAME = "frm_responder_id" VALUE="0" /></TD>
+					</TR>
+					<INPUT TYPE="hidden" NAME = "frm_responder_id" VALUE="0" />
+					<INPUT TYPE="hidden" NAME = "frm_facility_id" VALUE="0" />
 					</FORM>
 					</TABLE>
 					<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
@@ -2269,6 +2436,7 @@ if (mysql_num_rows($result)>0) {
 
 			foreach ($_POST as $VarName=>$VarValue) {
 				if ($VarName != 'func'){
+					shorten($VarValue, 511);
 					$query = "UPDATE `$GLOBALS[mysql_prefix]hints` SET `hint`=". quote_smart($VarValue)." WHERE `tag`='". $VarName."'";
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					}
@@ -2440,7 +2608,7 @@ ul {
 	<BODY onLoad = 'ck_frames()'> <!-- 11/13/10 -->
 <?php if (isset($top_notice)) print "<SPAN STYLE='margin-left: 100px;' CLASS='header' >{$top_notice}</SPAN><BR /><BR />"; ?>
 <BR />
-		<DIV id='mainmenu' style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-x: hidden; overflow-y: auto;'>
+		<DIV id='mainmenu' class='odd' style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-x: hidden; overflow-y: auto;'>
 		<DIV class='config_heading' id='gen_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 			<DIV class='config_heading'>General</DIV>
 			<A id='about' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_about();">About this version ...</A>	
@@ -2516,7 +2684,7 @@ ul {
 			</DIV>
 			<DIV class='config_heading' id='serv_user_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading' style='display: block; clear: both;'>Service User Portal</DIV>
-				<A id='su_req' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="./portal/requests.php">Service User Requests</A>	
+				<A id='su_req' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="./portal/requests.php?from_config=1">Service User Requests</A>	
 			</DIV>
 <?php
 			}
@@ -2608,6 +2776,7 @@ ul {
 				<A id='tst_smtp' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_smtp();">SMTP Mail</A>
 				<A id='tst_native' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_native();">Native PHP Mail</A>
 				<DIV class='config_heading' style='display: block; clear: both;'>Unit Tracking Tests</DIV>
+				<A id='tst_aprs_track' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_test();">APRS</A>
 				<A id='tst_gl' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_glat();">Google Latitude</A>
 				<A id='tst_loca' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_locatea();">LocateA</A>
 				<A id='tst_gtrack' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_gtrack();">Gtrack</A>
@@ -2625,9 +2794,9 @@ ul {
 			</DIV>
 			<DIV class='config_heading' id='units_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading' style='display: block; clear: both;'><?php print get_text("Units");?> Configuration</DIV>		
-				<A id='un_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('unit_types');"><?php print get_text("Units");?> types</A>
-				<A id='un_status' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('un_status');"><?php print get_text("Units");?> status</A>
-				<A id='rst_unstat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_responder_status.php" >Reset <?php print get_text("Units");?> status</A>
+				<A id='un_status' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('un_status');"><?php print get_text("Unit");?> status</A>
+				<A id='un_types' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('unit_types');"><?php print get_text("Unit");?> types</A>
+				<A id='rst_unstat' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_responder_status.php" >Reset <?php print get_text("Unit");?> status</A>
 			</DIV>
 <?php
 
@@ -2717,6 +2886,11 @@ ul {
 ?>		
 				<A id='mods_add' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="install_module.php">Add Tickets Module</A>
 			</DIV>
+			<DIV class='config_heading' id='socket_admin' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading' style='display: block; clear: both;'>Websocket Server Admin</DIV>	
+				<A id='sd_socket' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "parent.frames['upper'].broadcast('close server',1);">Shut Down Websocket Server</A>
+				<A id='rs_socket' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "parent.frames['upper'].broadcast('restart server',1);">Restart Websocket Server</A>		
+			</DIV>
 <?php
 			if ($istest) {
 ?>
@@ -2751,6 +2925,7 @@ ul {
 	show_stats();
 ?>
 	</DIV>
+	<DIV id='statusBar' style='position: fixed; bottom: 5px; left: 5px; width: 100%; hieght: 50px; background-color: yellow; color: black; display: none;'></DIV>
 	<FORM NAME='tables' METHOD = 'post' ACTION='tables.php'>
 	<INPUT TYPE='hidden' NAME='func' VALUE='r'>
 	<INPUT TYPE='hidden' NAME='tablename' VALUE=''>

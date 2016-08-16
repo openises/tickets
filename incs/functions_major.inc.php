@@ -366,7 +366,7 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
  		print show_assigns(0, $row[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
  		print "</TD></TR>";		
  		print "<TR CLASS='print_TD'><TD colspan=99 ALIGN='left'>";
- 		print show_actions($row['tick_id'], "date", FALSE, TRUE);		// lists actions and patient data, print - 10/30/09
+ 		print show_actions($row['tick_id'], "date", FALSE, TRUE, 0);		// lists actions and patient data, print - 10/30/09
 
 		print "</TD></TR>";
 		print "</TABLE>\n";
@@ -450,7 +450,7 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 <?php
 
 	print do_ticket($row, $col_width, $search) ;				// 2/25/09
-	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
+	print show_actions($row['id'], "date", FALSE, TRUE, 0);		/* lists actions and patient data belonging to ticket */
 	$column_arr = explode(',', get_msg_variable('columns'));		
 	print "<TD ALIGN='left'>";
 	print "<TABLE ID='theMap' BORDER=0><TR CLASS='odd' ><TD  ALIGN='center'>
@@ -1016,7 +1016,7 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
+	$print .= show_actions($theRow[0], "date", FALSE, FALSE, 0);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;
@@ -1101,7 +1101,7 @@ function do_ticket_extras($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
+	$print .= show_actions($theRow[0], "date", FALSE, FALSE, 0);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;
@@ -1687,7 +1687,7 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE, 0);
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";	
 	$print .= list_messages($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR>";

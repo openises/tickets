@@ -160,9 +160,6 @@ function get_mailgroup_name($id) {	//	8/28/13
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
 	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
-<?php 
-if ($_SESSION['internet']) {				// 8/22/10
-?>
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -173,7 +170,13 @@ if ($_SESSION['internet']) {				// 8/22/10
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
+<?php 
+if ($_SESSION['internet']) {				// 8/22/10
+?>
 	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+<?php 
+	} 
+?>
 	<script src="./js/Google.js"></script>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -181,9 +184,7 @@ if ($_SESSION['internet']) {				// 8/22/10
 	<script type="text/javascript" src="./js/usng.js"></script>
 	<script type="text/javascript" src="./js/osgb.js"></script>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
-<?php 
-	} 
-?>
+
 	<SCRIPT>
 	var map;		// note global
 	var layercontrol;
@@ -317,7 +318,8 @@ if ($_SESSION['internet']) {				// 8/22/10
 				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
 				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
 				`notify_mailgroup` = " . quote_smart(trim($_POST['frm_notify_mailgroup'])) . ",
-				`notify_email` = " . quote_smart(trim($_POST['frm_notify_email'])) . ",				
+				`notify_email` = " . quote_smart(trim($_POST['frm_notify_email'])) . ",
+				`notify_when` = " . quote_smart(trim($_POST['frm_notify_when'])) . ",
 				`updated`= " . 		quote_smart(trim($now)) . "
 				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	8/28/13
 
@@ -355,7 +357,7 @@ if ($_SESSION['internet']) {				// 8/22/10
 		$frm_lng = (empty($_POST['frm_lng']))? 'NULL': quote_smart(trim($_POST['frm_lng']));		// 7/15/10
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 6/4/2013
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]facilities` (
-			`name`, `street`, `city`, `state`, `handle`, `icon_str`, `boundary`, `description`, `beds_a`, `beds_o`, `beds_info`, `capab`, `status_id`, `status_about`, `contact_name`, `contact_email`, `contact_phone`, `security_contact`, `security_email`, `security_phone`, `opening_hours`, `access_rules`, `security_reqs`, `pager_p`, `pager_s`, `lat`, `lng`, `type`, `user_id`, `notify_mailgroup`, `notify_email`, `updated` )
+			`name`, `street`, `city`, `state`, `handle`, `icon_str`, `boundary`, `description`, `beds_a`, `beds_o`, `beds_info`, `capab`, `status_id`, `status_about`, `contact_name`, `contact_email`, `contact_phone`, `security_contact`, `security_email`, `security_phone`, `opening_hours`, `access_rules`, `security_reqs`, `pager_p`, `pager_s`, `lat`, `lng`, `type`, `user_id`, `notify_mailgroup`, `notify_email`, `notify_when`, `updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_name'])) . "," .
 				quote_smart(trim($_POST['frm_street'])) . "," .
@@ -388,6 +390,7 @@ if ($_SESSION['internet']) {				// 8/22/10
 				quote_smart(trim($_SESSION['user_id'])) . "," .
 				quote_smart(trim($_POST['frm_notify_mailgroup'])) . "," .
 				quote_smart(trim($_POST['frm_notify_email'])) . "," .
+				quote_smart(trim($_POST['frm_notify_when'])) . "," .
 				quote_smart(trim($now)) . ");";	//	8/28/13
 
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -521,5 +524,4 @@ if ($_SESSION['internet']) {				// 8/22/10
 			require_once('./forms/facilities_screen.php');
 			}
 		exit();
-    break;
 ?>

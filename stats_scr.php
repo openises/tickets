@@ -848,7 +848,7 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 							if($('stats6_inner')) {$('stats6_inner').innerHTML = the_id_arr[6];}
 							if($('hint7')) {$('hint7').innerHTML = "Integer - input a number";}					
 							} else {
-							if($('stats6_inner')) {$('stats6_inner').innerHTML = the_id_arr[6].timeLeft();}
+							if($('stats6_inner')) {$('stats6_inner').innerHTML = the_id_arr[6].timeLeft(); }
 							if($('hint7')) {$('hint7').innerHTML = "Date time, input as Days-Hours-Minutes-Seconds";}					
 							}
 						if(type8 == "int") {				
@@ -883,7 +883,8 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 ?>
 		<DIV class='header_wrapper'>
 			<DIV class='header_row'>
-				<DIV class='page_heading'>TICKETS CAD Statistics Module</DIV><DIV class='page_heading_s'></DIV>
+			<!-- Title -->
+				<DIV class='page_heading'><IMG SRC="<?php print get_variable('logo');?>" BORDER=0 /> <?php print get_variable('title_string'); ?> Statistics</DIV><DIV class='page_heading_s'></DIV>
 			</DIV>
 			<DIV class='header_row'>
 				<DIV id='stats8_inner' class='date_time'></DIV>

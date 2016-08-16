@@ -13,7 +13,7 @@ function autoCompleteDB() {
 	/* debug */ //alert(maxSize+"ok getmatches");
 	var ctr=0;
 	for(var i in this.aNames) {
-		 if(this.aNames[i].toLowerCase().indexOf(str.toLowerCase())==0) { /*looking for case insensitive matches */
+		 if(this.aNames[i].toString().toLowerCase().indexOf(str.toString().toLowerCase())==0) { /*looking for case insensitive matches */
 		  aList.push(this.aNames[i]);
 		  ctr++;
 	  	}

@@ -258,7 +258,7 @@
 
 		_routeDone: function(response, waypoints, callback, context) {
 			context = context || callback;
-			if (response.status !== 0) {
+			if (response.status !== 0 && response.status !== 200) {
 				callback.call(context, {
 					status: response.status,
 					message: response.message
@@ -464,7 +464,7 @@
 		},
 
 		addTo: function(map) {
-			map.addLayer(this);
+			if(map) {map.addLayer(this);}
 			return this;
 		},
 
@@ -643,6 +643,7 @@
 				distance: this._formatDistance(alt.summary.totalDistance),
 				time: this._formatTime(alt.summary.totalTime)
 			});
+			window.totTime = alt.summary.totalTime;
 			L.DomEvent.addListener(altDiv, 'click', this._onAltClicked, this);
 			altDiv.appendChild(this._createItineraryTable(alt));
 			return altDiv;
@@ -1304,7 +1305,7 @@
 			this._hookEvents(this._line);
 
 			if (this.options.fitSelectedRoutes) {
-				this._map.fitBounds(this._line.getBounds());
+				if(this._map) {this._map.fitBounds(this._line.getBounds());}
 			}
 		},
 
@@ -1343,7 +1344,8 @@
 	});
 
 	L.Routing.control = function(options) {
-		return new L.Routing.Control(options);
+		var obj = new L.Routing.Control(options);
+		return obj;
 	};
 })();
     return L.Routing;

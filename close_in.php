@@ -83,7 +83,7 @@ else {			// not empty then is finished
 		if($mode == 0) {
 ?>
 			<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
-			<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.do_incident_refresh(); window.close();">
+			<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "try {opener.do_incident_refresh();}catch (e){} window.close();">
 			</BODY>
 			</HTML>
 <?php
@@ -281,6 +281,7 @@ function do_is_start($in_row) {				// 3/22/10
 		$the_id = quote_smart($_POST['frm_ticket_id']);
 		$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 		$by = $_SESSION['user_id'];
+		$counter = 0;
 		
 		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
 			`problemend`= {$the_problemend},
@@ -292,10 +293,12 @@ function do_is_start($in_row) {				// 3/22/10
 			WHERE `id` = {$the_id} LIMIT 1";
 			
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		if($result) { $counter++;}
 		
 		$query  = "UPDATE `$GLOBALS[mysql_prefix]allocates` SET `al_status` = 0, `al_as_of` = '{$now}' WHERE `type` = 1 AND `resource_id` = {$the_id}";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-										
+		if($result) { $counter++;}
+		
 		foreach ($_POST as $VarName=>$VarValue) {			// set clear time each assign record - 8/10/10
 			if (substr($VarName, 0, 8) == "frm_ckbx" ) {		
 				//	Get Responder ID for auto dispatch status
@@ -323,15 +326,17 @@ function do_is_start($in_row) {				// 3/22/10
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$row = mysql_fetch_assoc($result);
 
-		do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])	;
-		$addrs = notify_user($the_id, $GLOBALS['NOTIFY_TICKET_CHG']);		// returns array of adddr's for notification, or FALSE
+		if($counter > 1) {
+			do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])	;
+			$addrs = notify_user($the_id, $GLOBALS['NOTIFY_TICKET_CLOSE']);		// returns array of adddr's for notification, or FALSE
 			// any addresses?	8/28/13
-		if ($addrs) {
-			$id = $_POST['frm_ticket_id'];
-			$theTo = implode("|", array_unique($addrs));
-			$theText = get_text("Incident") . " " . $row['scope'] . " has been closed";
-			mail_it ($theTo, "", $theText, $id, 1 );
-			}				// end if ($addrs)
+			if ($addrs) {
+				$id = $_POST['frm_ticket_id'];
+				$theTo = implode("|", array_unique($addrs));
+				$theText = get_text("Incident") . " " . $row['scope'] . " has been closed";
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if ($addrs)
+			}
 		unset($result);
 		return $row['scope'];				// 2/15/10
 

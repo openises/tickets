@@ -25,9 +25,9 @@
 ?>
 	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Set severity:</TD>
 		<TD>
-			<SPAN STYLE = "margin-left:20px;">Normal &raquo; <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '0' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[0];?>/></SPAN>
-			<SPAN STYLE = "margin-left:20px;">Medium &raquo; <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '1' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[1];?>/></SPAN>
-			<SPAN STYLE = "margin-left:20px;">High &raquo; 	 <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '2' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[2];?>/></SPAN>
+			<SPAN STYLE = "margin-left:20px;"><?php print get_text('Normal'); ?>&raquo; <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '0' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[0];?>/></SPAN>
+			<SPAN STYLE = "margin-left:20px;"><?php print get_text('Medium'); ?> &raquo; <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '1' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[1];?>/></SPAN>
+			<SPAN STYLE = "margin-left:20px;"><?php print get_text('High'); ?> &raquo; 	 <INPUT TYPE = 'radio' NAME ='dum_severity'  VALUE = '2' onClick = "this.form.frm_set_severity.value=this.value;" <?php print $temp[2];?>/></SPAN>
 		</TD></TR>
 
 <?php						// 4/4/2015
@@ -64,6 +64,7 @@
 ?>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Notify Mailgroup:</TD><TD><?php print $mg_select;?></TD></TR>
 	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Notify Email:</TD><TD><INPUT MAXLENGTH=256 SIZE=60 TYPE= "text" NAME="frm_notify_email" VALUE="<?php print $row['notify_email'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Notify When:</TD><TD><INPUT MAXLENGTH=1 SIZE=1 TYPE= "number" min="1" max="3" NAME="frm_notify_when" VALUE="<?php print $row['notify_when'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >1,2 or 3 for All, Open or Close</SPAN></TD></TR>
 	<TR><TD COLSPAN="99" ALIGN="center">
 	<BR />
 	<INPUT TYPE="button" 	VALUE="Cancel" onClick = "Javascript: document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;

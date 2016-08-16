@@ -120,7 +120,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		var current_unit;
 		
 		function setDirections(fromLat, fromLng, toLat, toLng, recLat, recLng, locale, unit_id, lineCalled) {
-			$('mail_dir_but').style.visibility = "hiddent";			// 11/12/09	
+			$('mail_dir_but').style.visibility = "hidden";			// 11/12/09	
 			$("mail_button").style.display = "none";	//10/6/09
 			if(window.theDirections) { window.theDirections.removeFrom(map);}
 			window.current_unit = unit_id;
@@ -140,6 +140,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					],
 				}
 			});
+			window.theDirections.on('routingerror', function(o) { console.log(o); });
 			window.theDirections.addTo(map);
 			setTimeout(function() {
 			direcs = $('directions').innerHTML;
@@ -448,7 +449,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 	
 			if(mysql_affected_rows()>0) {
 			$end_date = (intval($problemend)> 1)? $problemend:  (time() - (get_variable('delta_mins')*60));
-			$elapsed = my_date_diff($problemstart, $end_date);		// 5/13/10
+			$elapsed = my_date_diff(date("Y-m-d H:i:s",$problemstart), date("Y-m-d H:i:s",$end_date));		// 5/13/10
 
 //	==========================================================================================		
 			$search_arg = ((array_key_exists('capabilities', ($_GET))))? "<TR class='even' STYLE = 'white-space:nowrap;'><TD COLSPAN='99' ALIGN='center'>" . get_text("Units") . " capabilities match: '" . $_GET['capabilities']. "'</TD></TR>": "";

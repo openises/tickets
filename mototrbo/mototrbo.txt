@@ -1,0 +1,26 @@
+TicketsCAD can now transmit Text Messages to MOTOTRBO radios for dispatches.
+
+This uses SMS functionality.
+
+In the Message Settings table in Configuration:
+SMSG Provier is set to MOTOTRBO Python Text Message Protocol
+Set "mototrbo cai id" to your systems Common Air Interface ID, typically this is 12
+Set "mototrbopy path" to your TicketsCAD install path, plus "/mototrbo/Mototrbo.py" on the end (use backslashes if server is Windows)
+Set "mototrbo python path" to the full path of the Python Interpreter on your system, it must be version 3 or above
+
+Configure the radio ID's in your responder list under MOTOTRBO Text Message ID. This can be obtained from the Radio Alias item in the menu, it must be the Radio ID, not the Alias Name!!
+
+Next, you need to ensure you have an IP link from your server to your radio. This can be done with Bluetooth PAN to a handheld or via USB.
+
+Essentially, if you can connect your radio and read from it using CPS, you are 99% of the way there. Configuring it is outside the scope of this document.
+
+You must add a route to your system to:
+
+[CAI ID].0.0.0 with netmask 255.0.0.0 via the Radio IP Address. When via USB this is 192.168.10.1 or 192.168.11.1 for Bluetooth PAN
+
+For example:
+
+route add 12.0.0.0 mask 255.0.0.0 192.168.11.1
+
+Merry Christmas.
+

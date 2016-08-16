@@ -24,7 +24,6 @@ require_once('./incs/functions.inc.php');				//7/28/10
 // snap(basename(__FILE__), __LINE__);
 
 $_SESSION["osw_ntrupt_ok"] = TRUE; 						// usage TBD
-
 function error_out($err_arg) {							// 2/10/12
 	do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_arg);		// logs supplied error message
 	return;
@@ -296,13 +295,15 @@ function ck_int ($var) {
 	}
 function is_auth() {		// returns boolean
 	global $osw_arr, $osw_str;
-	return ( is_super() || ( ( is_admin() ) && ( count( $osw_arr ) > 3 ) && ( intval(trim($osw_arr[3])) == 1 ) ) ) ;
+	return ( ( count( $osw_arr ) > 3 ) && ( intval(trim($osw_arr[3])) == 1 ) ) ;
 	}
 function  is_ok() {
 	global $osw_arr, $osw_str;
-	return  ( ( ( count ($osw_arr) >= 3 ) && ( ck_int ($osw_arr[0] ) && ck_int ( $osw_arr[1] && ck_int ($osw_arr[2] ) ) ) ) ) ;
+	return  ( ( ( count ($osw_arr) >= 3 ) && 
+				( ck_int ($osw_arr[0] ) && 
+				ck_int ( $osw_arr[1] 
+				&& ck_int ($osw_arr[2] ) ) ) ) ) ;
 	}
-
 function  is_empty() {
 	global $osw_arr, $osw_str;
 	return  ( ( $osw_str == "//" ) || ( $osw_str == "0/0/0" ) || ( $osw_str == "" ) );
@@ -313,9 +314,9 @@ $now = ( time() - 30 );
 
 $watch_val = 0;					// default
 
-if ( ( ! ( is_empty() ) ) && ( is_auth() ) && ( is_ok() ) ) {
+if ( ( ! ( is_empty() ) ) && ( is_ok() ) ) {
+//	if ( ( ! ( is_empty() ) ) && ( is_auth() ) && ( is_ok() ) ) {
 //	snap(basename(__FILE__), __LINE__);
-
 	$limit = 1;				// following sql is a clone of os_watch.php - differentiated by $limit value
 
 	$query_core = "SELECT `t`.`severity`, `t`.`scope`, `t`.`status` AS `tickstatus`, CONCAT_WS(' ', `t`.`street`, `t`.`city`, `t`.`state`) AS `tickaddr`, `y`.`type`, `on_scene`, `handle`, `contact_via`, `r`.`callsign` AS `unit_call`, `r`.`id` AS `unitid`, `t`.`id` AS `tickid`, `u`.`expires`
@@ -327,9 +328,9 @@ if ( ( ! ( is_empty() ) ) && ( is_auth() ) && ( is_ok() ) ) {
 			WHERE ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 			AND ((`on_scene` IS  NOT NULL) AND  (DATE_FORMAT(`on_scene`,'%y') <> '00')) ";
 
-	$query [0] = "{$query_core} AND `severity` <> {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$limit}";	/*	PRIORITIES medium and high on-scene:		*/
+	$query [0] = "{$query_core} AND on_scene < (now() - interval {$osw_arr[0]} minute) AND `severity` <> {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$limit}";	/*	PRIORITIES medium and high on-scene:		*/
 
-	$query [1] = "{$query_core} AND `severity` = {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$limit}";		/*	PRIORITY normal  on-scene:		*/
+	$query [1] = "{$query_core} AND on_scene < (now() - interval {$osw_arr[1]} minute) AND `severity` = {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$limit}";		/*	PRIORITY normal  on-scene:		*/
 
 	$query [2] = 																					/*	ROUTINES not on-scene:		*/
 			"SELECT * , `t`.`id` AS `tickid`, CONCAT_WS(' ', `t`.`street`, `t`.`city`, `t`.`state`) AS `tickaddr`, 999999 AS `handle`
@@ -339,13 +340,21 @@ if ( ( ! ( is_empty() ) ) && ( is_auth() ) && ( is_ok() ) ) {
 			WHERE ( `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']} )
 			AND ( (`a`.`on_scene` IS NULL ) OR ( DATE_FORMAT(`a`.`on_scene`,'%y') = '00') )
 			AND `y`.`watch` = 1
+			AND `t`.problemstart < (now() - interval {$osw_arr[2]} minute)
 			ORDER BY `t`.`severity` DESC, `t`.`scope` ASC LIMIT {$limit} ";
 
+	$bits = explode('/', get_variable('status_watch'));
+	if(count($bits) == 2) {
+		$watch_group = $bits[0];
+		$watch_interval = $bits[1];
+		$query [3] = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` left join $GLOBALS[mysql_prefix]un_status on 
+			$GLOBALS[mysql_prefix]responder.un_status_id = $GLOBALS[mysql_prefix]un_status.id where $GLOBALS[mysql_prefix]un_status.group = '$watch_group' and status_updated < (now() - interval $watch_interval minute)";
+	}
+
 	if ( ! (array_key_exists ( "osw_run_at", $_SESSION ) ) ) { $_SESSION['osw_run_at'] = array ( $now-1, $now-1, $now-1 ) ; }		// initialize routines, normals, priorities
-																																	// ensure operation at startup
+																															// ensure operation at startup
 	for ($j=0; $j< 3; $j++) {
 		if ($now >= $_SESSION['osw_run_at'][$j]) {						// seconds
-
 			$result = mysql_query($query[$j]) or do_error($query[$j], 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$temp = mysql_num_rows($result);
 			if ( $temp > 0 ) {
@@ -354,7 +363,9 @@ if ( ( ! ( is_empty() ) ) && ( is_auth() ) && ( is_ok() ) ) {
 				}
 			}
 		}
-	}			// end is_super() if/else
+	} else {
+	
+}			// end is_super() if/else
 
 $the_hash = md5($the_chat_id . $the_tick_id . $the_unit_id . $the_updated . $the_dispatch_change . $the_act_id . $the_pat_id . $the_reqs . $the_reqs2 . $status_updated . $the_status . $status_updated_time . $watch_val . $osw_str);	//	10/23/12
 $ret_arr = array ($the_chat_id, $the_tick_id, $the_unit_id, $the_updated, $the_dispatch_change, $the_act_id, $the_pat_id, $the_reqs, $the_reqs2, $status_updated, $the_status, $status_updated_time, $watch_val, $osw_str, $the_hash);	//	10/23/12

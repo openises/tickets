@@ -20,8 +20,12 @@ $temp = get_variable('smtp_acct');
 	$port =  		isset($temp_ar[1])? $temp_ar[1]:""; 
 	$security =  	isset($temp_ar[2])? $temp_ar[2]:""; // 7/5/10
 	$user_acct =  	isset($temp_ar[3])? $temp_ar[3]:""; 
-	$pass =  		isset($temp_ar[4])? $temp_ar[4]:""; 
+	$pass =  		isset($temp_ar[4])? $temp_ar[4]:"";
 //	}
+
+$chkd_none = ($security == "") ? "CHECKED" : "";
+$chkd_tls = ($security == "tls" || $security == "TLS") ? "CHECKED" : "";
+$chkd_ssl = ($security == "ssl" || $security == "SSL") ? "CHECKED" : "";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -80,9 +84,9 @@ if (empty($_POST)) {
 <TR CLASS="even"><TD>Server name: </TD>			<TD><INPUT TYPE = 'text' NAME='server' 		VALUE='<?php print $server;?>' SIZE= 24><I> ex: outgoing.verizon.net</TD></TR>
 <TR CLASS="odd"><TD>Port:  </TD>				<TD><INPUT TYPE = 'text' NAME='port'  		VALUE='<?php print $port;?>' SIZE= 4><I> ex:587</TD></TR>
 <TR CLASS="even"><TD>Security: </TD>	<TD>
-						<SPAN STYLE = 'margin-left: 24px;'>None &raquo; <INPUT TYPE = 'radio' NAME = 'security' VALUE = 'none' CHECKED></SPAN>
-						<SPAN STYLE = 'margin-left: 24px;'>SSL &raquo; <INPUT TYPE = 'radio' NAME = 'security' VALUE = 'ssl' ></SPAN>
-						<SPAN STYLE = 'margin-left: 24px;'>TLS &raquo; <INPUT TYPE = 'radio' NAME = 'security' VALUE = 'tls' ></SPAN>
+						<SPAN STYLE = 'margin-left: 24px;'>None &raquo; <INPUT TYPE = 'radio' NAME = 'security' VALUE = '' <?php print $chkd_none;?>></SPAN>
+						<SPAN STYLE = 'margin-left: 24px;'>SSL &raquo; <INPUT TYPE = 'radio' NAME = 'security' VALUE = 'ssl' <?php print $chkd_ssl;?>></SPAN>
+						<SPAN STYLE = 'margin-left: 24px;'>TLS &raquo; <INPUT TYPE = 'radio' NAME = 'security' VALUE = 'tls' <?php print $chkd_tls;?>></SPAN>
 		<SPAN STYLE = 'margin-left: 24px;'><I> ISP dependent (Gmail requires a secure transport)</SPAN></TD></TR> <!-- 7/5/10 -->
 
 <TR CLASS="odd"><TD>User account: </TD>			<TD><INPUT TYPE = 'text' NAME='user_acct'  	VALUE='<?php print $user_acct;?>' SIZE= 24><I> ex:ashore3</TD></TR>
@@ -107,7 +111,7 @@ if (empty($_POST)) {
 
 else {
 	$errors = FALSE;
-	@set_time_limit(5);		// certain errors take longer
+	@set_time_limit(10);		// certain errors take longer
 	
 	function myErrorHandler($errno, $errstr, $errfile, $errline) {
 		global $errors, $istest;
@@ -124,15 +128,12 @@ else {
 	require_once 'lib/swift_required.php';
 	error_reporting(E_ALL);
 	$old_error_handler = set_error_handler("myErrorHandler");
-
 	$server = trim($_POST['server']);
 	$fp = gethostbyname($server);
-//	$fp = @fsockopen($server, trim($_POST['port']), $errno, $errstr, $timeout);
-//	$fp = @fsockopen("outgoing.verizon.net", 587);
 	if ($fp) {
 		
 		//Create the Transport the call setUsername() and setPassword()
-		$transport = Swift_SmtpTransport::newInstance(trim($_POST['server']) , trim($_POST['port']) , trim($_POST['security']))
+ 		$transport = Swift_SmtpTransport::newInstance(trim($_POST['server']) , trim($_POST['port']) , trim($_POST['security']))
 		  ->setUsername(trim($_POST['user_acct']))
 		  ->setPassword(trim($_POST['pass']))
 		  ;

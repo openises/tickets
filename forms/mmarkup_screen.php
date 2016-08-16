@@ -163,6 +163,8 @@ function do_tab(tabid, suffix, lat, lng) {
 <?php
 					}
 ?>
+				<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Back to Config</SPAN>
+
 			</DIV>				
 		</DIV>
 
@@ -199,16 +201,13 @@ var got_points = false;	// map is empty of points
 do_kml();
 ?>
 </SCRIPT>
-
+<FORM NAME='can_Form' METHOD="post" ACTION = "config.php"></FORM>
 <FORM NAME='doit_form' METHOD='get' ACTION='mmarkup.php'>
 <INPUT TYPE='hidden' NAME='func' VALUE=''>
 <INPUT TYPE='hidden' NAME='view' VALUE=''>
 <INPUT TYPE='hidden' NAME='add' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
-
-<FORM NAME='can_Form' METHOD="post" ACTION = "mmarkup.php?func=responder"></FORM>
-
 <br /><br />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:20px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png" ID = "up" BORDER=0></div>
 <A NAME="bottom" /> <!-- 11/11/09 -->

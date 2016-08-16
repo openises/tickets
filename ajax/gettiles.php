@@ -16,18 +16,22 @@ error_reporting(E_ALL);
 set_time_limit(0);
 $got_curl = function_exists("curl_init");
 $base = "http://tile.openstreetmap.org";
-$local = "../_osm/tiles";
+$directory_separator = DIRECTORY_SEPARATOR;
+$ajax_dir = dirname( realpath( __FILE__ ) ) . DIRECTORY_SEPARATOR;
+$tickets_root = preg_replace( '~[/\\\\][^/\\\\]*[/\\\\]$~' , DIRECTORY_SEPARATOR , $ajax_dir );
+$local = $tickets_root . "_osm" . DIRECTORY_SEPARATOR . "tiles";
 $url = "";
 
 function chmod_r($Path) {
+	global $directory_separator;
 	$dp = opendir($Path);
 	while($File = readdir($dp)) {
 		if($File != "." AND $File != "..") {
 			if(is_dir($File)){
 				chmod($File, 0750);
-				chmod_r($Path."/".$File);
+				chmod_r($Path.$directory_separator.$File);
 				} else {
-				chmod($Path."/".$File, 0644);
+				chmod($Path.$directory_separator.$File, 0644);
 				}
 			}
 		}

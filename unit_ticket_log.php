@@ -133,7 +133,7 @@ if (empty($_POST)) {
 	extract($_POST);
 	do_log($GLOBALS['LOG_COMMENT'], $ticket, $responder, strip_tags(trim($_POST['frm_comment'])));
 ?>
-	<DIV style='width: 100%; text-align: center;'><BR /><BR /><BR /><BR /><BR /><BR />Log entry inserted
+	<DIV style='width: 100%; text-align: center;'><BR /><BR /><BR /><BR /><BR /><BR />Log entry inserted<script>window.close()</script>
 	<BR /><BR /><BR /><SPAN id='close_but' class='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.close()" />Close</SPAN>
 	</DIV>
 <?php

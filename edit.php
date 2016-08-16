@@ -415,7 +415,11 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 			add_header($id, FALSE, TRUE);
 			print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
-			$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
+			if($tick_stat == 1) {
+				$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE				
+				} else {
+				$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CLOSE']);		// returns array or FALSE						
+				}
 			unset ($_SESSION['active_ticket']);								// 5/4/11
 			return($addrs);	//	11/18/13
 			}
@@ -829,6 +833,15 @@ function set_size() {
 		newwindow_wl.focus();
 		start_wl = false;
 		}		// end function sv win()
+		
+	function load_markup() {
+		load_exclusions();
+		load_ringfences();
+		load_catchments();
+		load_basemarkup();
+		load_groupbounds();	
+		load_regions();
+		}
 </SCRIPT>
 <?php				// 7/3/2013
 	if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) { 	
@@ -916,7 +929,7 @@ function set_size() {
 			
 			$row = stripslashes_deep(mysql_fetch_array($result));
 ?>
-			<BODY onLoad = "ck_frames(); find_warnings(<?php print $row['lat'];?>, <?php print $row['lng'];?>);">	<!-- 628, 11/18/13 -->
+			<BODY onLoad = "ck_frames(); load_markup(); find_warnings(<?php print $row['lat'];?>, <?php print $row['lng'];?>);">	<!-- 628, 11/18/13 -->
 
 			<div id = "bldg_info" class = "even" style = "display: none; position:fixed; left:500px; top:70px; z-index: 998; width:300px; height:auto;"></div> <!-- 4/1/2014  -->
 			
@@ -1069,7 +1082,7 @@ function set_size() {
 					}			
 				print "<OPTION VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
 				if (!(empty($row2['protocol']))) {				// 7/7/09 - note string key
-					$temp = preg_replace("/[\n\r]/"," ",$temp_row['protocol']); 
+					$temp = preg_replace("/[\n\r]/"," ",$row2['protocol']); 
 					$temp = addslashes($temp);
 					print "\n<SCRIPT>protocols[{$row2['id']}] = '" . $temp . "';</SCRIPT>\n";		// 5/6/10
 					}
@@ -1081,10 +1094,9 @@ function set_size() {
 				$nsel = ($row['severity']==$GLOBALS['SEVERITY_NORMAL'])? "SELECTED" : "" ;
 				$msel = ($row['severity']==$GLOBALS['SEVERITY_MEDIUM'])? "SELECTED" : "" ;
 				$hsel = ($row['severity']==$GLOBALS['SEVERITY_HIGH'])? "SELECTED" : "" ;
-				
-				print "<OPTION VALUE='" . $GLOBALS['SEVERITY_NORMAL'] . "' $nsel>normal</OPTION>";
-				print "<OPTION VALUE='" . $GLOBALS['SEVERITY_MEDIUM'] . "' $msel>medium</OPTION>";
-				print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>high</OPTION>";
+				print "<OPTION VALUE='" . $GLOBALS['SEVERITY_NORMAL'] . "' $nsel>" . get_text("Normal") . "</OPTION>";
+				print "<OPTION VALUE='" . $GLOBALS['SEVERITY_MEDIUM'] . "' $msel>" . get_text("Medium") ."</OPTION>";
+				print "<OPTION VALUE='" . $GLOBALS['SEVERITY_HIGH'] . "' $hsel>" . get_text("High"). "</OPTION>";
 				print "</SELECT>";
 				print "</SPAN></TD></TR>";
 
@@ -1137,30 +1149,41 @@ function set_size() {
 			if (mysql_num_rows($result_sigs)>0) {				// 2/11/11
 ?>
 <SCRIPT>
-	function set_signal(inval) {
-		var lh_sep = (document.edit.frm_description.value.trim().length>0)? " " : "";
-		var temp_ary = inval.split("|", 2);		// inserted separator
-		document.edit.frm_description.value+= lh_sep + temp_ary[1] + ' ';		
-		document.edit.frm_description.focus();		
+	function set_signal(theCode) {
+		randomnumber=Math.floor(Math.random()*99999999);
+		var theurl ="./ajax/get_signal.php?version=" + randomnumber + "&code=" + theCode;
+		sendRequest(theurl, signalCB, "");
+		function signalCB(req) {
+			var theRet = JSON.decode(req.responseText);
+			var theText = theRet[0];
+			var lh_sep = (document.edit.frm_description.value.trim().length>0)? "\r\n" : "";
+			document.edit.frm_description.value+= lh_sep + theText + '\r\n';
+			document.edit.frm_description.focus();
+			}
 		}		// end function set_signal()
 
-	function set_signal2(inval) {
-		var lh_sep = (document.edit.frm_comments.value.trim().length>0)? " " : "";
-		var temp_ary = inval.split("|", 2);		// inserted separator
-		document.edit.frm_comments.value+= lh_sep + temp_ary[1] + ' ';		
-		document.edit.frm_comments.focus();		
+	function set_signal2(theCode) {
+		randomnumber=Math.floor(Math.random()*99999999);
+		var theurl ="./ajax/get_signal.php?version=" + randomnumber + "&code=" + theCode;
+		sendRequest(theurl, signalCB, "");
+		function signalCB(req) {
+			var theRet = JSON.decode(req.responseText);
+			var theText = theRet[0];
+			var lh_sep = (document.edit.frm_comments.value.trim().length>0)? "\r\n" : "";
+			document.edit.frm_comments.value+= lh_sep + theText + '\r\n';
+			document.edit.frm_comments.focus();
+			}
 		}		// end function set_signal()
 </SCRIPT>
 		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
 			<TD COLSPAN=2 ></TD><TD CLASS="td_label">Signal &raquo; 
-
-				<SELECT NAME='signals' <?php print $dis; ?> onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+				<SELECT NAME='signals' <?php print $dis; ?> onChange = 'set_signal(this.options[this.selectedIndex].value); this.options[0].selected=true;'>	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|" . shorten($row_sig['text'], 32) . "</OPTION>\n";		// pipe separator
+					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|" . $row_sig['text'] . "</OPTION>\n";		// pipe separator
 					}
 ?>
 			</SELECT>
@@ -1378,12 +1401,11 @@ function set_size() {
 ?>
 		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 12/18/10 -->
 			<TD COLSPAN=2 ></TD><TD CLASS="td_label">Signal &raquo; 
-
-				<SELECT NAME='signals' <?php print $dis; ?> onChange = 'set_signal2(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+				<SELECT NAME='signals' <?php print $dis; ?> onChange = 'set_signal2(this.options[this.selectedIndex].value); this.options[0].selected=true;'>	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result_sigs))) {
-					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|" . shorten($row_sig['text'], 32) . "</OPTION>\n";		// pipe separator
+					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|" . $row_sig['text']	. "</OPTION>\n";		// pipe separator
 					}
 ?>
 			</SELECT>
@@ -1450,7 +1472,7 @@ function set_size() {
 			print "<TR CLASS='even'>
 				<TD COLSPAN='10' ALIGN='center'><BR /><B><U><A HREF='#' TITLE='List of all actions and patients atached to this Incident'>Actions and Patients</A></U></B><BR /></TD></TR>";	//8/7/09
 			print "<TR CLASS='odd'><TD COLSPAN='10' ALIGN='center'>";										//8/7/09
-			print show_actions($row[0], "date", !$disallow, TRUE);											//8/7/09
+			print show_actions($row[0], "date", !$disallow, TRUE, 0);											//8/7/09
 			print "<BR /><BR /></TD></TR>";																//8/7/09
 			print "</TABLE>";		// end data 8/7/09
 															//8/7/09
@@ -1474,10 +1496,12 @@ function set_size() {
 ?>			
 			<FORM NAME='can_Form' ACTION="main.php">
 			<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
-			</FORM>	
+			</FORM>
+
+			
 					<DIV id='boxB' class='box' STYLE='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed; z-index: 2;' > <!-- 9/23/10 -->
-					<DIV class="bar" STYLE="width:12em; color:red; background-color : transparent; z-index: 2;"
-						 onmousedown="dragStart(event, 'boxB')">&nbsp;&nbsp;&nbsp;&nbsp;<I>Drag me</I></DIV><!-- drag bar - 2/5/11 -->
+					<div class="bar" STYLE="width:12em; color:red; background-color : transparent; text-align: center; text-decoration: italic;"
+					   onmousedown="dragStart(event, 'boxB')">Drag me</div>			
 						 <DIV STYLE = 'height:10px;'/>
 							<INPUT id='hist_but' TYPE='button' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE='<?php print get_text("Cancel");?>' onClick='history.back();'  STYLE = 'margin-left:20px;' /><BR />
 <?php
@@ -1680,6 +1704,9 @@ if($gmaps) {
 ?>
 	<SCRIPT>
 	var latLng;
+	var boundary = [];			//	exclusion zones array
+	var bound_names = [];
+	var cmarkers;
 	var in_local_bool = "0";
 	var mapWidth = <?php print get_variable('map_width');?>+20;
 	var mapHeight = <?php print get_variable('map_height');?>+20;
@@ -1691,8 +1718,9 @@ if($gmaps) {
 	init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 	var bounds = map.getBounds();	
 	var zoom = map.getZoom();
-
+	var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
 	function onMapClick(e) {
+		if(doReverse == 0) {return;}
 		if(marker) {map.removeLayer(marker); }
 		var iconurl = "./our_icons/yellow.png";
 		icon = new baseIcon({iconUrl: iconurl});	

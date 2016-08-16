@@ -49,7 +49,7 @@ $evenodd = array ("even", "odd");
 		}		// end if (mysql_num_rows($result)==0)
 	else {
 ?>
-<FORM NAME='popup' METHOD = 'get' ACTION = 'Incident_popup.php'>
+<FORM NAME='popup' METHOD = 'get' ACTION = 'incident_popup.php'>
 <INPUT TYPE = 'hidden' NAME = 'id' VALUE=''>
 <!-- <INPUT TYPE = 'hidden' NAME = 'tick_only' VALUE=1> -->
 <FORM>

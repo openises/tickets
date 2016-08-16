@@ -131,7 +131,7 @@ $lng = $row['lng'];
 				<TR CLASS='odd'>
 					<TD CLASS="td_label">
 						<A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:
-						&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.res_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
+						&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.loc_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
 					</TD>
 					<TD>
 						<INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print $row['city'] ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
@@ -170,9 +170,9 @@ $lng = $row['lng'];
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label">
-						<SPAN onClick = 'javascript: do_coords(document.res_edit_Form.frm_lat.value ,document.res_edit_Form.frm_lng.value  )' ><A HREF="#" TITLE="Latitude and Longitude - set from map click">
+						<SPAN onClick = 'javascript: do_coords(document.loc_edit_Form.frm_lat.value ,document.loc_edit_Form.frm_lng.value  )' ><A HREF="#" TITLE="Latitude and Longitude - set from map click">
 						Lat/Lng</A></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;
-						<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_edit_Form);'>
+						<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.loc_edit_Form);'>
 					</TD>
 					<TD COLSPAN=3>
 						<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;
@@ -188,7 +188,7 @@ $lng = $row['lng'];
 						switch($locale) { 
 							case "0":
 ?>
-								<SPAN ID = 'usng_link' onClick = 'do_usng_conv(res_edit_Form)'>USNG:</SPAN><INPUT TYPE="text" NAME="frm_ngs" VALUE='<?php print $usng_val;?>' SIZE=19 disabled />
+								<SPAN ID = 'usng_link' onClick = 'do_usng_conv(loc_edit_Form)'>USNG:</SPAN><INPUT TYPE="text" NAME="frm_ngs" VALUE='<?php print $usng_val;?>' SIZE=19 disabled />
 <?php 	
 								break;
 
@@ -260,8 +260,9 @@ var initZoom = <?php print get_variable('def_zoom');?>;
 init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
-
+var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
 function onMapClick(e) {
+	if(doReverse == 0) {return;}
 	if(marker) {map.removeLayer(marker); }
 	var iconurl = "./our_icons/yellow.png";
 	icon = new baseIcon({iconUrl: iconurl});	

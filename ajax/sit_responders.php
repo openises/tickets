@@ -188,7 +188,7 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	`r`.`ring_fence` AS `ring_fence`,	
 	`r`.`excl_zone` AS `excl_zone`,		
 	(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns`
-	WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND  (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )) AS `nr_assigned` 
+	WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id` AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )) AS `nr_assigned` 
 	FROM `$GLOBALS[mysql_prefix]responder` `r` 
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
 	LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
@@ -205,7 +205,7 @@ else {
 	$checked[$_SESSION['unit_flag_2']] = " CHECKED";
 	}
 
-$aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = FALSE;		//7/23/09
+$aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = $followmee = FALSE;		//7/23/09
 
 $utc = gmdate ("U");				// 3/25/09
 
@@ -268,8 +268,8 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$handle = htmlentities($row['handle'],ENT_QUOTES);
 
 // MAIL						
-	if ((!is_guest()) && (is_email($row['contact_via']) || is_twitter($row['contact_via']))) {		// 2/1/10
-		$mail_link = $row['contact_via'];
+	if ((!is_guest()) && (is_email($row['contact_via']) || $row["smsg_id"] !="" || is_twitter($row['contact_via']))) {		// 2/1/10
+		$mail_link = $row['contact_via'] . $row['smsg_id'];
 		} else {
 		$mail_link = "";
 		}
@@ -342,7 +342,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 		array ( "", "") : 
 		array ( "<strike>", "<strike>") ;
 	$strike = $strike_ary[0];
-	$updated = format_sb_date_2 ( $row['updated'] );
+	$updated = format_sb_date_2($row['updated']);
 
 	$resp_cat = $un_stat_cats[$row['unit_id']];
 	$the_time = $row['r_updated'];
@@ -356,14 +356,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$temp = $row['un_status_id'] ;
 	$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
 	$theTabs = "";
-	if(my_is_float($row['lat'])) {
-		$lat = $row['lat'];
-		$lng = $row['lng'];
-		} else {
-		$lat = get_variable('def_lat');
-		$lng = get_variable('def_lng');
-		}
-		$locale = get_variable('locale');	// 08/03/09	
+	$lat = $row['lat'];
+	$lng = $row['lng'];
+	$locale = get_variable('locale');	// 08/03/09	
 
 	$ret_arr[$i][0] = $name;
 	$ret_arr[$i][1] = $handle;
@@ -381,7 +376,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$ret_arr[$i][13] = $the_bull;
 	$ret_arr[$i][14] = $bull_color;
 	$ret_arr[$i][15] = $status_id;
-	$ret_arr[$i][16] = shorten($updated, 10);
+	$ret_arr[$i][16] = $updated;
 	$ret_arr[$i][17] = $row['unit_id'];
 	$ret_arr[$i][18] = $the_color;	
 	$ret_arr[$i][20] = $resp_cat;

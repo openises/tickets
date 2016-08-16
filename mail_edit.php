@@ -118,6 +118,8 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 				document.mail_form.frm_text.value += replacement_text;					
 				}			// end function replacetext_cb()	
 		}		// end function set_message(message)
+</SCRIPT>
+</HEAD>
 <?php
 	if (empty($_POST)) {
 //		dump($_GET);
@@ -129,10 +131,6 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 		$temp = explode("\n", $text);
 		$finished_str = ((get_variable('call_board')==1))? "location.href = 'board.php'": "window.close();";	// 8/30/10
 ?>
-
-</SCRIPT>
-</HEAD>
-
 <BODY onLoad = "reSizeScr(<?php print count($temp);?>)";><CENTER>
 <?php
 $use_messaging = get_variable('use_messaging');
@@ -142,7 +140,7 @@ $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'
 <FORM NAME="mail_frm" METHOD="post" ACTION = "<?php print basename( __FILE__); ?>">
 <TABLE ALIGN='center' BORDER=0>
 	<TR CLASS='even'>
-		<TD COLSPAN=2><TEXTAREA NAME="frm_text" COLS=60 ROWS=<?php print count($temp); ?>><?php print $text ;?></TEXTAREA></TD>
+		<TD COLSPAN=2><TEXTAREA NAME="frm_text" COLS=80 ROWS=<?php print count($temp)*2; ?>><?php print $text ;?></TEXTAREA></TD>
 	</TR>
 	<TR VALIGN = 'TOP' CLASS='even'> <!-- 10/23/12 -->
 		<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD> <!-- 10/23/12 -->
@@ -162,7 +160,7 @@ $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'
 		</TD>
 	</TR>	
 	<TR CLASS='even'>
-		<TD>Addressed to: </TD>
+		<TD>Email Addresses: </TD>
 		<TD><INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'></TD> <!-- 10/23/12 -->
 	</TR>
 <?php
@@ -174,7 +172,7 @@ $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'
 			<TD><INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsgaddrs;?>'></TD>
 		</TR>	
 		<TR CLASS='even'><TD>Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: </TD> <!-- 10/23/12 -->
-			<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="0"></TD> <!-- 10/23/12 -->
+			<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="1" <? if($_GET['addrs'] == "" && $smsgaddrs != "") { print "checked"; } ?>></TD> <!-- 10/23/12 -->
 		</TR>			
 		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $the_other;?>"/> <!-- 10/23/12 -->
 <?php
@@ -218,13 +216,10 @@ else {
 	$resps = substr(implode(',', $the_resp_ids), 0 -2);
 	$count = do_send ($email_addresses, $smsg_addresses, "Tickets CAD",  $_POST['frm_text'], $_POST['ticket_id'], $resps );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 ?>
-</SCRIPT>
-</HEAD>
-
-<BODY onLoad = "setTimeout('window.close()',6000);"><CENTER>
-<BR /><BR /><H3>Emailing dispatch notifications</H3><BR /><BR />
+<!-- <BODY onLoad = "setTimeout('window.close()',6000);"><CENTER> -->
+<BODY><CENTER> 
+<BR /><BR /><H3>Sent dispatch notifications</H3><BR /><BR />
 <P><?php print $count;?> Message(s) sent</P>
-
 <?php
 	}				// end else
 ?>

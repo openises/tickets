@@ -142,7 +142,7 @@ if (empty($_POST) || $display_form) {
 				<TD><INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsg_id;?>'></TD>
 			</TR>	
 			<TR CLASS='even'><TD>Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: </TD> <!-- 10/23/12 -->
-				<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="0"></TD> <!-- 10/23/12 -->
+				<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="0" <? if ($smsg_id != "" && $contact_email == "") print "checked";?>></TD> <!-- 10/23/12 -->
 			</TR>			
 <?php
 			} else {

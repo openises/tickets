@@ -99,7 +99,7 @@ function the_ticket($theRow, $theWidth=500, $search=FALSE, $dist=TRUE) {						//
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
 	$end_date = (is_null($theRow['problemend'])) ? $theRow['problemend']: date("Y-m-d H:i:00", (time() - (intval(get_variable('delta_mins'))*60)));	// 11/29/2012
 	$elapsed =  my_date_diff($theRow['problemstart'], $end_date);
-	$elapsed_str = get_elapsed_time ($theRow['problemstart'], $theRow['problemend']);			
+	$elapsed_str = get_elapsed_time ($theRow);			
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
 	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
@@ -329,6 +329,8 @@ if(!empty($_POST)) {
 			$the_server = (!isset($_POST['frm_server'])) ? NULL: $_POST['frm_server'];
 			do_send ("", $_POST['frm_addrs'], "Tickets CAD",  $_POST['frm_reply'] . $the_separator . $_POST['frm_message'], $_POST['frm_ticket_id'], $_POST['frm_resp_id'], $the_messageid, $the_server );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 			} else {
+			$the_messageid = (!isset($_POST['frm_messageid'])) ? "email" : $_POST['frm_messageid'];
+			$the_server = (!isset($_POST['frm_server'])) ? NULL: $_POST['frm_server'];
 			$the_addresses = (!empty($_POST['frm_theothers'])) ? $_POST['frm_addrs'] . "|" . $_POST['frm_theothers'] : $_POST['frm_addrs'];
 			do_send ($the_addresses, "", "Tickets CAD",  $_POST['frm_reply'] . $the_separator . $_POST['frm_message'], $_POST['frm_ticket_id'], $_POST['frm_resp_id'], $the_messageid, $the_server );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 			}

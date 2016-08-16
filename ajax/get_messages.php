@@ -20,7 +20,9 @@ if (empty($_SESSION)) {
 session_write_close();
 $retrivemode = (!empty($_GET['mode'])) ? 1 : 0;
 $response = 0;
-$response2 = 0;
+$response2 = array();
+$response2[0] = 0;
+$response2[1] = 0;
 $ret_arr = array();
 if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {
 	$the_ret = do_smsg_retrieve($orgcode,$apipin,$mode,$retrivemode);
@@ -38,7 +40,6 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 3))
 	$ssl = 'ssl';
 	$response2 = get_emails("$url", "$user", "$password", $port, "$ssl", 100);
 	}
-
 
 $ret_arr[] = $response;
 $ret_arr[] = $response2;

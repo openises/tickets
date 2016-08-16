@@ -190,7 +190,7 @@ if (my_is_float($row['lat'])) {		// 6/21/10
 
 	$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
 	$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Description:</TD><TD ALIGN='left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
-	$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>911 contact:</TD><TD ALIGN='left'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
+	$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>" . get_text('911 Contacted') . ":</TD><TD ALIGN='left'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
 	$tab_2 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>{$disposition}:</TD><TD ALIGN='left'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
 	$tab_2 .= "<TR><TD COLSPAN=2 ALIGN='left'><DIV style='max-height: 200px; overflow-y: scroll;'>" . show_assigns(0, $the_id) . "</DIV></TD></TR>";
 
