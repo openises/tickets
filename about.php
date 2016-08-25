@@ -777,12 +777,19 @@ Changes for 3.10A - Additional features and maintenance release
 303.  Added new print Ticket screen accessed from context menu.
 304.  Fix of incorrect display of responder marker on invalid position data.
 305.  Fix for APRS tracking failing on some installations.
-306.  Fix to adding and editing warn locations.
-307.  Lots of Fixes and screen tidy ups.
+306.  Lots of Fixes and screen tidy ups.
+
+Changes for 3.11A - Maintenance release
+
+307.  Revisions to cater for Google requiring Maps API key again.
+308.  Revisions to Messaging including ability to individually select messages for deletion, read status or restore.
+309.  Revisions to standard messages and replacement text for standard messages, more options added and name field for
+      the standard messages where the name rather than the message will show in the select menu.
+310.  Lots of Fixes and screen tidy ups.	  
 	 
 <A NAME = 'bottom'></A>
 
-May '16
+August '16
 Arnie Shore
 Andy Harvey, UK
 

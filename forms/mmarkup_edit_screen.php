@@ -79,6 +79,7 @@ $cat_name = $row_cat['category'];
 window.onresize=function(){set_size()};
 
 window.onload = function(){set_size();};
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var count = 0;
 var type;
 var polygon;

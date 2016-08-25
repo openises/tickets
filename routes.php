@@ -198,6 +198,8 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		}
 	catch(e) {
 		}
+		
+	var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 
 	function get_new_colors() {								// 5/4/11
 		window.location.href = '<?php print basename(__FILE__);?>';
@@ -563,7 +565,7 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 								// 7/29/10
 	$addr_str = urlencode( implode("|", array_unique($addrs)));
 	$smsg_add_str = urlencode( implode(",", array_unique($smsgaddrs)));
-	$mail_str = (empty($addr_str) || empty($smsg_add_str))? "" :  "do_mail_win('{$addr_str}', '{$smsg_add_str}', '{$_REQUEST['frm_ticket_id']}');";
+	$mail_str = (empty($addr_str) && empty($smsg_add_str))? "" :  "do_mail_win('{$addr_str}', '{$smsg_add_str}', '{$_REQUEST['frm_ticket_id']}');";
 	$quick_str = ((get_variable('quick'))==1)? "document.more_form.submit();" : "";
 	$extra =  (((empty($mail_str)) && (empty($quick_str))))? "" : " onLoad = \"{$mail_str}{$quick_str}\"";
 
@@ -612,8 +614,18 @@ else {
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-	<script src="./js/Google.js"></script>
+<?php
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+			}
+		}
+?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>

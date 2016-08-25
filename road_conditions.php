@@ -53,30 +53,27 @@ unset($result);
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <?php
-$api_key = trim(get_variable('gmaps_api_key'));
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-	$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-	} else {
-	$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-	}
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
 ?>
-	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+			}
+		}
+?>
 	<SCRIPT SRC="./js/usng.js" 			TYPE="text/javascript"></SCRIPT>
 	<SCRIPT SRC="./js/lat_lng.js" 		TYPE="text/javascript"></SCRIPT>
 	<SCRIPT SRC="./js/geotools2.js" 	TYPE="text/javascript"></SCRIPT>
 	<SCRIPT SRC="./js/osgb.js" 			TYPE="text/javascript"></SCRIPT>		
 	<SCRIPT SRC='./js/misc_function.js' TYPE='text/javascript'></SCRIPT>
-	<SCRIPT SRC='./js/graticule_V3.js' 	TYPE='text/javascript'></SCRIPT> 	
-<!--
-	<SCRIPT SRC="./js/v3_epoly.js" 		TYPE="text/javascript"></SCRIPT>
--->	
-	<SCRIPT src="./js/elabel_v3.js" TYPE="text/javascript"></SCRIPT>
+	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>
-	<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></script>
-	<SCRIPT src = "./js/elabel_v3.js"></SCRIPT>	
 	<SCRIPT>
 	var map;		// note global
+	var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 	var theAlertTypeIcon;
 	try {
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";

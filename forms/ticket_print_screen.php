@@ -106,8 +106,18 @@ unset($result_as);
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-	<script src="./js/Google.js"></script>
+<?php
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			}
+		}
+?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
@@ -117,7 +127,7 @@ unset($result_as);
 <SCRIPT>
 window.onresize=function(){set_size()};
 window.onload = function(){set_size();};
-
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
 var fmarkers = [];			//	Responder Markers array

@@ -105,11 +105,15 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
 <?php
 	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
 ?>
-		<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-		<script src="./js/Google.js"></script>
-<?php 
-		} 
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			}
+		}
 ?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -258,7 +262,7 @@ function secondsToTime(secs) {
 	var numhours = Math.floor((secs % 86400) / 3600);
 	var numminutes = Math.floor(((secs % 86400) % 3600) / 60);
 	var numseconds = ((secs % 86400) % 3600) % 60;
-	var outputText =  numdays + "D " + pad_left(numhours,2) + ":" + pad_left(numminutes,2) + ":" + pad_left(Math.round(numseconds),2);
+	var outputText =  numdays + "D " + numhours + ":" + numminutes + ":" + Math.round(numseconds);
 	return outputText;
 	}
 	

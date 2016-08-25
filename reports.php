@@ -738,7 +738,7 @@ p.page { page-break-after: always; }
 			`ticket_id` AS `incident`
 			FROM `$GLOBALS[mysql_prefix]log`
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
-			$where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_UNIT_STATUS'] . ") OR (`code` = " . $GLOBALS['LOG_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_MESSAGE'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_ALERT'] . ")) ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;	//	9/10/13
+			$where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_UNIT_STATUS'] . ") OR (`code` = " . $GLOBALS['LOG_COMMENT'] . ")) ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;	//	9/10/13
 //		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$i = 0;
@@ -756,7 +756,7 @@ p.page { page-break-after: always; }
 					$theIncident_id = $row['incident'];
 					} else {														// no, flush, initialize and populate
 					if($row['code'] == $GLOBALS['LOG_UNIT_STATUS']) {	//	9/10/13
-					$statuses[$row['status']] = time_part($row['when']);		// yes, populate the row
+						$statuses[$row['status']] = time_part($row['when']);		// yes, populate the row
 						print "<TR CLASS='" . $evenodd[$i%2] . "'>";
 						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
 						print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>[#" . $curr_unit . "]</TD>";	//	Unit column
@@ -769,7 +769,7 @@ p.page { page-break-after: always; }
 						if(((date ('z', strtotime($row['when_num']))) != $curr_date_test)) {		// date change?
 							$do_date=$row['when_num'];
 							$curr_date_test = date ('z', strtotime($row['when_num']));
-							}	
+							}
 						foreach($statuses as $val) {
 							print "<TD ALIGN='center'> " . $val . "</TD>";		//	Each Status change time
 							}
@@ -787,27 +787,6 @@ p.page { page-break-after: always; }
 						$curr_inc = $row['incident'];
 						$i++;
 						$theIncident_id = $row['incident'];
-						} elseif($row['code'] == $GLOBALS['LOG_BROADCAST_MESSAGE'] || $row['code'] == $GLOBALS['LOG_BROADCAST_ALERT']) {
-						print "<TR CLASS='" . $evenodd[$i%2] . "'>";
-						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
-						print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>[#" . $curr_unit . "]</TD>";	//	Unit column
-						if (!empty($do_date)) {		//	The Date column
-							print "<TD>" . date ('D, M j', strtotime($do_date)) . "</TD>";
-							$do_date = "";
-							} else {
-							print "<TD>&nbsp;</TD>";
-							}
-						if(((date ('z', strtotime($row['when_num']))) != $curr_date_test)) {		// date change?
-							$do_date=$row['when_num'];
-							$curr_date_test = date ('z', strtotime($row['when_num']));
-							}	
-						for ($zz = 1; $zz <= $status_count; $zz++) {	//	Status columns - all blank
-							print "<TD ALIGN='center'>&nbsp;</TD>";
-							} 
-						print "<TD>&nbsp;</TD>";		//	Incident Column
-						print "<TD ALIGN='left'>" . $row['info'] . "</TD>";	// Info Column
-						$statuses = $blank;															// initalize
-						$i++;							
 						} else {	//	9/10/13
 						print "<TR CLASS='" . $evenodd[$i%2] . "'>";
 						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
@@ -858,6 +837,117 @@ p.page { page-break-after: always; }
 		print "<TR><TD COLSPAN=99 ALIGN='center'><HR STYLE = 'color: blue; size: 1; width: 50%'></TD></TR>";
 		print "</TABLE>\n";
 		}		// end function do_unitreport()
+		
+// =================================================== UNIT COMMS LOG =========================================
+
+	function do_unitcommsreport($date_in, $func_in) {				// $frm_date, $mode as params
+		global $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
+		global $evenodd, $types;
+		global $w_tiny, $w_small, $w_medium, $w_large;		// 4/14/11
+
+		$from_to = date_range($date_in,$func_in);	// get date range as array
+
+		$unit_names = $users = array();
+
+		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
+		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$unit_names[0]="TBD";
+		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+			$unit_names[$temp_row['id']]=$temp_row['name'];
+			$unit_status_ids[$temp_row['id']]=$temp_row['un_status_id'];
+			}
+
+		$query = "SELECT `id`, `user` FROM `$GLOBALS[mysql_prefix]user`";
+		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$users[0]="TBD";
+		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+			$users[$temp_row['id']]=$temp_row['user'];
+			}
+		$priorities = array("text_black","text_blue","text_red" );
+		$titles = array ();
+		$titles['dr'] = get_text("Comms") . " - Daily Report - ";
+		$titles['cm'] = get_text("Comms") . " - Current Month-to-date - ";
+		$titles['lm'] = get_text("Comms") . " - Last Month - ";
+		$titles['cw'] = get_text("Comms") . " - Current Week-to-date - ";
+		$titles['lw'] = get_text("Comms") . " - Last Week - ";
+		$titles['cy'] = get_text("Comms") . " - Current Year-to-date - ";
+		$titles['ly'] = get_text("Comms") . " - Last Year - ";
+		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
+		print "\n<TABLE ALIGN='left' BORDER = 0 WIDTH='95%'>\n<TR CLASS='even' style='height: 24px'>\n";
+		print "<TH COLSPAN=99 ALIGN = 'center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</TH></TR>\n";
+
+		$i = 1;
+
+//		collect status values in use
+		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `info` ASC";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$i++;
+
+		$caption =  "<TR CLASS = 'odd'><TD ALIGN='left'><B>" . get_text("Unit") . "</B></TD>";
+		$curr_unit = "";
+		$caption .=  "<TD ALIGN='left'><B>" . get_text("Date") . "</B></TD>";
+		$caption .=  "<TD ALIGN='left'><B>" . get_text("Time") . "</B></TD>";
+		$caption .=  "<TD ALIGN='left'><B>" . get_text("Message") . "</B></TD></TR>";
+		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
+		$which_unit = ((!isset($_POST['frm_resp_sel']) || ($_POST['frm_resp_sel']==0)))? "" : " AND `responder_id` = " .$_POST['frm_resp_sel'];
+																																			// 3/23/09
+		$query = "SELECT *,
+			`when` AS `when_num`,
+			`responder_id` AS `unit`,
+			`info` AS `status`
+			FROM `$GLOBALS[mysql_prefix]log`
+			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
+			$where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_MESSAGE'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_ALERT'] . ")) ORDER BY `name` ASC, `when` ASC" ;	//	9/10/13
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$i = 0;
+		if (mysql_num_rows($result)>0) {				// main loop - top
+			print $caption;
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				if (empty($curr_unit)) {
+					$who = $row['unit'];
+					$curr_date_test = date ('z', strtotime($row['when_num']));
+					$curr_time_test = date ("H:i:s", strtotime($row['when_num']));
+					}								// populate break item
+				if (($row['unit'] == $curr_unit) && ($row['unit'] > 0) && (date ('z', strtotime($row['when_num'])) == $curr_date_test ) && (date ('H:i:s', strtotime($row['when_num'])) == $curr_time_test )) {	// same unit and date and time?
+					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
+					print "<TD ALIGN='left'>&nbsp;</TD>";	//	Blank Unit field
+					print "<TD>&nbsp;</TD>";	//	blank date field
+					print "<TD>&nbsp;</TD>";	//	blank time field
+					print "<TD ALIGN='left'>" . $row['info'] . "</TD>";	//	The Info Column
+					$i++;
+					} elseif(($row['unit'] == $curr_unit) && ($row['unit'] > 0) && (date ('z', strtotime($row['when_num'])) == $curr_date_test ) && (date ('H:i:s', strtotime($row['when_num'])) != $curr_time_test )) {	// same unit and date, different time?
+					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
+					print "<TD ALIGN='left'>&nbsp;</TD>";	//	Blank Unit field
+					print "<TD>&nbsp;</TD>";	//	blank date field
+					print "<TD>" . date("H:i:s", strtotime($row['when_num'])) . "</TD>";	//	populate new time
+					print "<TD ALIGN='left'>" . $row['info'] . "</TD>";	//	The Info Column
+					$curr_unit = $row['unit'];
+					$curr_time_test = date ("H:i:s", strtotime($row['when_num']));
+					$i++;
+					} else {	//	different everything
+					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
+					$user = (array_key_exists($row['who'], $users)) ? $users[$row['who']] : "UNK";
+					$theWho = ($row['unit'] == 0) ? $user : $curr_unit;
+					print "<TD ALIGN='left'>" . $theWho . "</TD>";	//	The Unit
+					print "<TD>" . date ('D, M j', strtotime($row['when_num'])) . "</TD>";	//	populate new date
+					print "<TD>" . date("H:i:s", strtotime($row['when_num'])) . "</TD>";	//	populate new time
+					print "<TD ALIGN='left'>" . $row['info'] . "</TD>";	//	The Info Column
+					$curr_unit = $row['unit'];
+					$curr_date_test = date ('z', strtotime($row['when_num']));
+					$curr_time_test = date ("H:i:s", strtotime($row['when_num']));
+					$i++;						
+					}
+				print "</TR>";
+				}		// end while($row...)		 main loop - bottom
+			}	//	end if mysql_num_rows()
+		print "<TR><TD ALIGN='center' COLSPAN=99>";
+		$m = date("m"); $d = date("d"); $y = date("Y");
+		print "</TD></TR>";
+		$i++;
+		print "<TR><TD COLSPAN=99 ALIGN='center'><HR STYLE = 'color: blue; size: 1; width: 50%'></TD></TR>";
+		print "</TABLE>\n";
+		}		// end function do_unitcommsreport()		
+		
 // =============================================== STATION LOG  ===========================================
 
 	function do_sta_report($date_in, $func_in) {				// $frm_date, $mode as params
@@ -1940,6 +2030,9 @@ function my_stripslashes_deep($value) {
 		case "u":
 		    do_unitreport ($theDate, $theFunc) ;
 		    break;
+		case "c":
+		    do_unitcommsreport ($theDate, $theFunc) ;
+		    break;
 		case "f":
 		    do_facilityreport ($theDate, $theFunc) ;
 		    break;
@@ -1958,7 +2051,7 @@ function my_stripslashes_deep($value) {
 		}
 
 	$i=1;
-	$checked = array("a" => "", "u" => "", "d" => "", "s" => "", "i" => "", "f" => ""); // 8/3/09 added d option to array to allow default to unit report correctly
+	$checked = array("a" => "", "u" => "", "c" => "", "d" => "", "s" => "", "i" => "", "f" => ""); // 8/3/09 added d option to array to allow default to unit report correctly
 	$temp = (empty($_POST))? "u":  $_POST['frm_group']; 		// set selector fm last, default is unit
 	$checked [$temp] = " CHECKED ";								// copy fm last
 
@@ -2054,6 +2147,7 @@ function my_stripslashes_deep($value) {
 
 	<TR CLASS='odd'><TD COLSPAN=8 ALIGN='center'><B>
 		<SPAN STYLE='margin-left:10px;'><?php print get_text("Unit"); ?> Log <INPUT TYPE='radio' <?php print $checked['u']; ?> NAME= 'frm_which' onClick ="Javascript: which='u';"></SPAN>
+		<SPAN STYLE='margin-left:10px;'><?php print get_text("Comms"); ?><INPUT TYPE='radio' <?php print $checked['f']; ?> NAME= 'frm_which' onClick ="Javascript: which='c';"></SPAN>
 		<SPAN STYLE='margin-left:10px;'><?php print get_text("Facility"); ?> Log <INPUT TYPE='radio' <?php print $checked['f']; ?> NAME= 'frm_which' onClick ="Javascript: which='f';"></SPAN>
 		<SPAN STYLE='margin-left:10px;'>Dispatch Log <INPUT TYPE='radio' <?php print $checked['d']; ?> NAME= 'frm_which' onClick ="Javascript: which='d';"></SPAN> <!-- 1/29/09, 8/3/09 fixed default changed $checked to ['d'] -->
 		<SPAN STYLE='margin-left:10px;'>Station Log <INPUT TYPE='radio' <?php print $checked['s']; ?> NAME= 'frm_which' onClick ="Javascript: which = 's';"></SPAN>

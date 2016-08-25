@@ -34,7 +34,6 @@ while ($row = stripslashes_deep(mysql_fetch_array($result))) {
 	}				
 $signals_list .= "</SELECT>\n";
 ?> 
-<BODY> 
 	<DIV>
 	<FONT CLASS="header">Chat</FONT> <I>(logged-in: <span id='whos_chatting'></span>)</I><BR /><BR />
 	</DIV>
@@ -105,5 +104,3 @@ $signals_list .= "</SELECT>\n";
 		<A NAME="bottom"></A>
 	</DIV>
 	</CENTER>
-</BODY>
-</HTML>

@@ -21,6 +21,17 @@ $id = clean_string($id);
 $count_users = count($the_users);
 $the_status = ($status == "read") ? 1 : 0;
 $where = ($id == 0) ? "" : " WHERE `id` = '" . $id . "'";
+$selected = array_key_exists('selected', $_GET) ? strip_tags($_GET['selected']) : "";
+$selected_arr = array();
+if($selected != "") {
+	$selected_arr = explode("|", $selected);
+	if(count($selected_arr) == 1) {
+		$id = $selected_arr[0];
+		}
+	} else {
+
+	}
+
 $the_messages = array();
 $the_readers = array();
 $the_user = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
@@ -33,18 +44,29 @@ if($the_folder == 'inbox') {
 	$msgDirection = "";
 	}
 
-if($id == 0) {	// It's a read or unread all
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) >= 1) {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$the_id = $row['id'];
-		$the_messages[$the_id][0] = $row['id'];
-		$the_messages[$the_id][1] = $row['readby'];
+if($id == 0 || count($selected_arr) > 1) {	// It's a read or unread all
+	if(count($selected_arr) < 2) {
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		if(mysql_num_rows($result) >= 1) {
+			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$the_id = $row['id'];
+				$the_messages[$the_id][0] = $row['id'];
+				$the_messages[$the_id][1] = $row['readby'];
+				}
+			}
+		} else {
+		foreach($selected_arr as $theID) {
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `id` = " . $theID;
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$the_id = $row['id'];
+			$the_messages[$the_id][0] = $row['id'];
+			$the_messages[$the_id][1] = $row['readby'];
+			}			
 		}
-	}
 
-	if($status == "read") {	
+	if($status == "read") {
 		foreach($the_messages AS $val) {
 			$the_message = $val[0];
 			$the_readers = ($val[1] != "") ? explode(",", $val[1]): NULL;

@@ -187,7 +187,7 @@ while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
 		}
 		
 	function msgtype_1(message, unit_id) {
-		writeto_log(5000, 0, unit_id, message, 0, 0, 0); 			
+//		writeto_log(5000, 0, unit_id, message, 0, 0, 0); 			
 		if ((window.opener) && (window.opener.parent.frames["upper"])) {		// in call board call the function() there
 			window.opener.parent.frames["upper"].show_has_message(message); 
 			} else {
@@ -274,6 +274,7 @@ while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
 				alert("Restarting Websocket Server");
 				}				
 			var type = (theType) ? theType : 1;
+			if(theType == 1) {writeto_log(5000, 0, 0, theMessage, 0, 0, 0);}
 	    	var temp = get_user_id();
 			var outStr = temp + "/" + theMessage + "/" + theType;
 			if(window.socket) {

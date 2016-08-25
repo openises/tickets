@@ -33,66 +33,69 @@ require_once($the_inc);
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 
-	<HEAD><TITLE>Tickets - Main Module</TITLE>
-	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
-	<META HTTP-EQUIV="Expires" CONTENT="0" />
-	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
-	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
-	<!--[if lte IE 8]>
-		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
-	<![endif]-->
-	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
-	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<STYLE>
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-		table.cruises td {overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
-		div.scrollableContainer2 { position: relative; padding-top: 2em; }
-		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
-		div.tabBox {}
-		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
-				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-				position: relative;	z-index: 101; cursor: normal; height: 250px;}
-		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
-	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
-<?php 
+<HEAD><TITLE>Tickets - Main Module</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+<META HTTP-EQUIV="Expires" CONTENT="0" />
+<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
+<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+<!--[if lte IE 8]>
+	 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+<![endif]-->
+<link rel="stylesheet" href="./js/Control.Geocoder.css" />
+<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
+<STYLE>
+	.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+	table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+	table.cruises td {overflow: hidden; }
+	div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
+	div.scrollableContainer2 { position: relative; padding-top: 2em; }
+	div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+	div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
+	table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
+	table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+	.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
+	div.tabBox {}
+	div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
+	span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
+			padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
+	span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
+			border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
+	span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
+	div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
+			position: relative;	z-index: 101; cursor: normal; height: 250px;}
+	div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
+</STYLE>
+<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+<script src="./js/proj4js.js"></script>
+<script src="./js/proj4-compressed.js"></script>
+<script src="./js/leaflet/leaflet.js"></script>
+<script src="./js/proj4leaflet.js"></script>
+<script src="./js/leaflet/KML.js"></script>
+<script src="./js/leaflet/gpx.js"></script>  
+<script src="./js/leaflet-openweathermap.js"></script>
+<script src="./js/esri-leaflet.js"></script>
+<script src="./js/osopenspace.js"></script>
+<script src="./js/Control.Geocoder.js"></script>
+<?php
 if ($_SESSION['internet']) {				// 8/22/10
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
 ?>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>
-	<script src="./js/leaflet/gpx.js"></script>  
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/osopenspace.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-	<script src="./js/Google.js"></script>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<?php 
-	} 
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script src="./js/Google.js"></script>
+<?php
+		}
+	}
 ?>
-
+<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+<script type="text/javascript" src="./js/L.Graticule.js"></script>
+<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
 
@@ -102,7 +105,7 @@ window.onload = function(){set_size();};
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
-
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var minimap;
 var mapCenter;
 var mapWidth;

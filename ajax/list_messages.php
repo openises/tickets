@@ -46,7 +46,7 @@ if(isset($facility_id)) { $where .= " AND (`resp_id` = '" . $facility_id . "')";
 if((isset($filter)) && ($filter != "")) { $where .= " AND ((`m`.`fromname` REGEXP '" . $filter . "') OR (`m`.`message` REGEXP '" . $filter . "') OR (`m`.`recipients` REGEXP '" . $filter . "') OR  (`m`.`subject` REGEXP '" . $filter . "'))"; }
 
 
-$order = (isset($sort)) ? "ORDER BY `read_status`, " . $sort : "ORDER BY `date`" ;
+$order = (isset($sort)) ? "ORDER BY " . $sort : "ORDER BY `read_status`, `date`" ;
 $order2 = (isset($way)) ? $way : "DESC";
 $actr=0;
 

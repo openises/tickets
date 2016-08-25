@@ -250,7 +250,6 @@ $respondername = get_responder_handle($the_responder);
 	.lists {z-index: 5; text-align: left; overflow-y: scroll; display: block; background-color: #EFEFEF; margin: 10px; }
 	.detail_page { z-index: 5; text-align: left; height: 60%; overflow-y: auto; overflow-x: hidden; display: none; background-color: #EFEFEF; margin: 10px; }
 </style>
-<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="../js/leaflet/leaflet.js"></script>
 <script src="../js/misc_function.js" type="text/javascript"></script>
 <SCRIPT SRC="../js/usng.js" TYPE="text/javascript"></SCRIPT>
@@ -260,6 +259,18 @@ $respondername = get_responder_handle($the_responder);
 <SCRIPT SRC="../js/osgb.js" TYPE="text/javascript"></SCRIPT>
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
+<?php
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <script src="./js/Control.Geocoder.js"></script>
 <script src="../js/L.Graticule.js" TYPE="text/javascript"></script>
 <script src="../js/leaflet-providers.js" TYPE="text/javascript"></script>

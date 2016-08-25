@@ -458,8 +458,10 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 			}
 		}		// end function set_signal()
 
-	function set_message(message) {	//	10/23/12
+	function set_message(id) {	//	10/23/12
 		var randomnumber=Math.floor(Math.random()*99999999);
+		var theMessages = <?php echo json_encode($std_messages);?>;
+		var message = theMessages[id]['message'];
 		var tick_id = <?php print $tik_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
 		sendRequest (url,replacetext_cb, "");
@@ -560,15 +562,13 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 				<TR VALIGN = 'TOP' CLASS='even' style = 'display: none;'>
 					<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD>
 
-						<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].text);'>	<!--  11/17/10 -->
+						<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].value);'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-//					dump(__LINE__);
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";	//	10/23/12
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-							print "\t<OPTION VALUE='{$row['id']}'>{$row['message']}</OPTION>\n";
-							}
+//							dump(__LINE__);
+							foreach($std_messages as $val) {
+								print "\t<OPTION VALUE='{$val['id']}'>{$val['name']}</OPTION>\n";
+								}
 ?>
 						</SELECT>
 						<BR />

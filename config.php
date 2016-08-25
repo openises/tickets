@@ -216,7 +216,7 @@
 	<SCRIPT>
 // for messages
 	function get_msgs() {	//	10/23/12
-		$('statusBar').innerHTML = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>Downloading messages, please wait.</marquee>";
+		$('statusBar').innerHTML = "<marquee scrollamount=10 direction='left' style='font-size: 1.5em; font-weight: bold;'>Downloading messages, please wait.</marquee>";
 		$('statusBar').style.display = "inline-block";
 		var randomnumber=Math.floor(Math.random()*99999999);		
 		if (window.XMLHttpRequest) {
@@ -246,14 +246,52 @@
 						} else {
 						var theText = "Download complete. There were " + response[1][0] + " messages of which " + response[1][1] + " were new.";						
 						}
-					$('statusBar').innerHTML = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>" + theText + "</marquee>";
-					},5000);					
+					$('statusBar').innerHTML = "<marquee scrollamount=10 direction='left' style='font-size: 1.5em; font-weight: bold;'>" + theText + "</marquee>";
+					},15000);					
 				setTimeout(function() {
 					$('statusBar').style.display = "none";
 					},20000);	
 				if(response[1][1] > 0) {
 					show_msg("There are " + response[1][1] + " new messages");
 					}	
+				}
+			}
+		}
+		
+	function do_dedupe() {
+		$('statusBar').innerHTML = "<marquee scrollamount=10 direction='left' style='font-size: 1.5em; font-weight: bold;'>Removing Duplicate database entries.</marquee>";
+		$('statusBar').style.display = "inline-block";
+		var randomnumber=Math.floor(Math.random()*99999999);		
+		if (window.XMLHttpRequest) {
+			xmlHttp = new XMLHttpRequest();
+			xmlHttp.open("GET", "./ajax/dedupe.php?version=" + randomnumber, true);
+			xmlHttp.onreadystatechange = handleRequestStateChange2;
+			xmlHttp.send(null);
+			}
+		}
+		
+	function handleRequestStateChange2() {
+		var the_resp;
+		var the_val;
+		if (xmlHttp.readyState == 4) {
+			if (xmlHttp.status == 200) {
+				var response = JSON.decode(xmlHttp.responseText);
+				setTimeout(function() {
+					if(response[0] == 0) {
+						var theText = "No duplicate entries found, Function complete.";
+						} else {
+						var theText = "Removed Duplicate Entries. There were ";
+						theText += response[1] + " duplicate(s) in Captions. ";
+						theText += response[2] + " duplicate(s) in the States Translator. ";
+						theText += response[3] + " duplicate(s) in Codes. ";
+						theText += response[4] + " duplicate(s) in Hints. ";
+						theText += response[5] + " duplicate(s) in Insurance. ";						
+						}
+					$('statusBar').innerHTML = "<scrollamount=10 marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>" + theText + "</marquee>";
+					},15000);					
+				setTimeout(function() {
+					$('statusBar').style.display = "none";
+					},50000);	
 				}
 			}
 		}	
@@ -2746,6 +2784,7 @@ ul {
 				<A id='rst_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=reset">Reset Database</A>
 				<A id='opt_db' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=optimize">Optimize Database</A>
 				<A id='del_indx' class='plain' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "show_tables_and_indexes.php">Delete Duplicate Indexes</A>	
+				<A id='dedupe_db' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_dedupe();">Remove Duplicate DB Entries</A>	
 			</DIV>
 <?php
 			}
@@ -2776,7 +2815,7 @@ ul {
 				<A id='tst_smtp' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_smtp();">SMTP Mail</A>
 				<A id='tst_native' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_native();">Native PHP Mail</A>
 				<DIV class='config_heading' style='display: block; clear: both;'>Unit Tracking Tests</DIV>
-				<A id='tst_aprs_track' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_test();">APRS</A>
+				<A id='tst_aprs' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_test();">APRS</A>
 				<A id='tst_gl' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_glat();">Google Latitude</A>
 				<A id='tst_loca' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_locatea();">LocateA</A>
 				<A id='tst_gtrack' class='plain' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_gtrack();">Gtrack</A>

@@ -119,16 +119,17 @@ $the_url = "http://www.google.com/latitude/apps/badge/api?user={$frm_badge}&type
 	$user = $_POST['frm_badge'];
 	$results = test_glat($user, $the_url);
 	$is_good = $results;
-	$api_key = get_variable('gmaps_api_key');
-	if ($is_good) {
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-			if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-				$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-				} else {
-				$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-				}
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
 ?>
-		<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+			}
+		}
+?>
     <script type="text/javascript">
 
     function initialize() {

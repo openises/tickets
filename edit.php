@@ -490,8 +490,18 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/osopenspace.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
-<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-<script src="./js/Google.js"></script>
+<?php
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
 <SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
@@ -504,7 +514,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 window.onresize=function(){set_size();}
 
 window.onload = function(){set_size();}
-
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var layercontrol;
 var mapWidth;
 var mapHeight;
@@ -626,6 +636,7 @@ function set_size() {
 	function validate(theForm) {
 //		alert (theForm);
 		var errmsg="";
+		if ((theForm.frm_street.value == "") && (theForm.frm_city.value == "") && (theForm.frm_state.value == ""))	{errmsg+= "\tAddress is required\n";}
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_year_problemend.disabled))
 														{errmsg+= "\tClosed ticket requires run end date\n";}
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_comments==""))
@@ -1025,7 +1036,7 @@ function set_size() {
 			print 		"<TD><INPUT SIZE='32' TYPE='text' 	NAME='frm_city' VALUE=\"{$row['city']}\" MAXLENGTH='32' onChange = 'this.value=capWords(this.value)' {$dis}>\n";
 			$st_size = (get_variable("locale") ==0)?  2: 4;												// 11/23/10, 3/27/2013
 			
-			print 	"<SPAN STYLE='margin-left:24px'  onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_state']}');\">" . get_text("St") . "</SPAN>:&nbsp;&nbsp;<INPUT SIZE='{$st_size}' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='{$st_size}' {$dis}>";
+			print 	"<SPAN class='td_label' STYLE='margin-left:24px'  onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_state']}');\">" . get_text("St") . "</SPAN>: <font color='red' size='-1'>*</font>&nbsp;<INPUT SIZE='{$st_size}' TYPE='text' NAME='frm_state' VALUE='" . $row['state'] . "' MAXLENGTH='{$st_size}' {$dis}>";
 
 			if ($gmaps) {						// 6/4/2013
 				print "<BUTTON type='button' onClick='Javascript:do_nearby(this.form); return false;'>Nearby?</BUTTON>";
@@ -1427,12 +1438,12 @@ function set_size() {
 			
 				case "1":
 					$osgb = LLtoOSGB($row['lat'], $row['lng']) ;
-					print "<B><SPAN ID = 'OSGB' ><U><A HREF='#' TITLE='United Kingdom Ordnance Survey Grid Reference.'>OSGB</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_osgb' VALUE='{$osgb}' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
+					print "<B><SPAN ID = 'OSGB' ><U><A HREF='#' TITLE='United Kingdom Ordnance Survey Grid Reference.'>OSGB</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='{$osgb}' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
 					break;			
 
 				default:																	// 8/10/09
 					$utm_str = toUTM("{$row['lat']}, {$row['lng']}");
-					print "<B><SPAN ID = 'UTM'><U><A HREF='#' TITLE='Universal Transverse Mercator coordinate.'>UTM</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_utm' VALUE='{$utm_str}' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
+					print "<B><SPAN ID = 'UTM'><U><A HREF='#' TITLE='Universal Transverse Mercator coordinate.'>UTM</A></U>:&nbsp;</SPAN></B><INPUT SIZE='19' TYPE='text' NAME='frm_ngs' VALUE='{$utm_str}' DISABLED ></TD></TR>";		// 9/13/08, 5/2/09
 					break;
 
 				}
@@ -1492,7 +1503,7 @@ function set_size() {
 			$from_left = 450;
 			$from_top = 220;
 			$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
-			print add_sidebar(FALSE, TRUE, TRUE, FALSE, $allow_filedelete, $tick_id, 0, 0, 0);
+			print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, $tick_id, 0, 0, 0);
 ?>			
 			<FORM NAME='can_Form' ACTION="main.php">
 			<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
@@ -1532,14 +1543,15 @@ if (!$disallow) {
 	function do_ngs() {											// LL to USNG
 		var loc = <?php print get_variable('locale');?>;
 		if(loc == 0) { document.forms[0].frm_ngs.disabled=false; document.forms[0].frm_ngs.value = LLtoUSNG(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value, 5); document.forms[0].frm_ngs.disabled=true;}
-		if(loc == 1) { document.forms[0].frm_osgb.disabled=false; document.forms[0].frm_osgb.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value); document.forms[0].frm_osgb.disabled=true; }
-		if(loc == 2) { document.forms[0].frm_utm.disabled=false; document.forms[0].frm_utm.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value); document.forms[0].frm_utm.disabled=true; }			
+		if(loc == 1) { document.forms[0].frm_ngs.disabled=false; document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value); document.forms[0].frm_ngs.disabled=true; }
+		if(loc == 2) { document.forms[0].frm_ngs.disabled=false; document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value); document.forms[0].frm_ngs.disabled=true; }			
 		}
 
 	function do_grids(theForm) {								//12/13/10
-		if (theForm.frm_ngs) {do_usng(theForm) ;}
-		if (theForm.frm_utm) {do_utm (theForm);}
-		if (theForm.frm_osgb) {do_osgb (theForm);}
+		var loc = <?php print get_variable('locale');?>;
+		if (loc == 0) {do_usng(theForm) ;}
+		if (loc == 1) {do_utm (theForm);}
+		if (loc == 2) {do_osgb (theForm);}
 		}
 		
 	function do_usng(theForm) {								// 8/23/08, 12/5/10
@@ -1550,13 +1562,13 @@ if (!$disallow) {
 		var ll_in = new LatLng(parseFloat(theForm.frm_lat.value), parseFloat(theForm.frm_lng.value));
 		var utm_out = ll_in.toUTMRef().toString();
 		temp_ary = utm_out.split(" ");
-		theForm.frm_utm.value = (temp_ary.length == 3)? temp_ary[0] + " " +  parseInt(temp_ary[1]) + " " + parseInt(temp_ary[2]) : "";
+		theForm.frm_ngs.value = (temp_ary.length == 3)? temp_ary[0] + " " +  parseInt(temp_ary[1]) + " " + parseInt(temp_ary[2]) : "";
 		}
 
 	function do_osgb (theForm) {
 		var ll_in = new LatLng(parseFloat(theForm.frm_lat.value), parseFloat(theForm.frm_lng.value));
 		var osgb_out = ll_in.toOSRef();
-		theForm.frm_osgb.value = osgb_out.toSixFigureString();
+		theForm.frm_ngs.value = osgb_out.toSixFigureString();
 		}
 
 	function resetmap(lat, lng) {						// restore original marker and center

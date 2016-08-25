@@ -184,20 +184,22 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 			}
 		}		// end function set_signal()
 		
-	function set_message(message) {	//	10/23/12
-		var randomnumber=Math.floor(Math.random()*99999999);	
+	function set_message(id) {	//	10/23/12
+		var randomnumber=Math.floor(Math.random()*99999999);
+		var theMessages = <?php echo json_encode($std_messages);?>;
+		var message = theMessages[id]['message'];
 		var tick_id = <?php print $tik_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
 		sendRequest (url,replacetext_cb, "");			
-			function replacetext_cb(req) {
-				var the_text=JSON.decode(req.responseText);
-				if (the_text[0] == "") {
-					var replacement_text = message;
-					} else {
-					var replacement_text = the_text[0];					
-					}
-				document.mail_form.frm_text.value += replacement_text;					
-				}			// end function replacetext_cb()	
+		function replacetext_cb(req) {
+			var the_text=JSON.decode(req.responseText);
+			if (the_text[0] == "") {
+				var replacement_text = message;
+				} else {
+				var replacement_text = the_text[0];					
+				}
+			document.mail_form.frm_text.value += replacement_text;					
+			}			// end function replacetext_cb()	
 		}		// end function set_message(message)
 
 	function sendRequest(url,callback,postData) {
@@ -283,13 +285,14 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 					<TR VALIGN = 'TOP' CLASS='even'><TD ALIGN='right'  CLASS="td_label">To: </TD>
 						<TD><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $row['contact_via'];?>' SIZE = 36></TD>
 					</TR>	
-					<TR VALIGN = 'TOP' CLASS='odd'>
-						<TD ALIGN='right' CLASS="td_label">Subject: </TD><TD><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>	
+
 <?php 
 					} else { 
 					print "<INPUT TYPE='hidden' NAME='frm_add_str' value''>"; 
 					} 
 ?>
+				<TR VALIGN = 'TOP' CLASS='odd'>
+					<TD ALIGN='right' CLASS="td_label">Subject: </TD><TD><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>	
 				<TR VALIGN = 'TOP' CLASS='even'>
 					<TD ALIGN='right' CLASS="td_label">Message: </TD><TD><TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA><?php print get_text("mail_help"); ?></TD></TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
@@ -312,14 +315,12 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 				<TR VALIGN = 'TOP' CLASS='even'>
 					<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD>
 
-						<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].text);'>	<!--  11/17/10 -->
+						<SELECT NAME='std_msgs' onChange = 'set_message(this.options[this.selectedIndex].value);'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 //					dump(__LINE__);
-						$query3 = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";	//	10/23/12
-						$result3 = mysql_query($query3) or do_error($query3, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row3 = stripslashes_deep(mysql_fetch_assoc($result3))) {
-							print "\t<OPTION VALUE='{$row3['id']}'>{$row3['message']}</OPTION>\n";
+						foreach($std_messages as $val) {
+							print "\t<OPTION VALUE='{$val['id']}'>{$val['name']}</OPTION>\n";
 							}
 ?>
 						</SELECT>
@@ -597,14 +598,12 @@ if ((!(empty($_GET))) && (isset($_GET['name']))) {	//	10/23/12
 			<TR VALIGN = 'TOP' CLASS='even'>
 				<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD>	<!-- 10/23/12 -->
 
-					<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].text);'>	<!--  11/17/10 -->
+					<SELECT NAME='std_msgs' onChange = 'set_message(this.options[this.selectedIndex].value);'>	<!--  11/17/10 -->
 					<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 //					dump(__LINE__);
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-						print "\t<OPTION VALUE='{$row['id']}'>{$row['message']}</OPTION>\n";
+					foreach($std_messages as $val) {
+						print "\t<OPTION VALUE='{$val['id']}'>{$val['name']}</OPTION>\n";
 						}
 ?>
 					</SELECT>

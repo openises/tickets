@@ -43,7 +43,6 @@ $use_ticker = (($_SESSION['good_internet']) && (module_active("Ticker")==1) && (
 $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
-
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -108,11 +107,15 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
 <?php
 	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
 ?>
-		<script src="http://maps.google.com/maps/api/js?v=3"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
-<?php 
-		} 
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			}
+		}
 ?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -127,6 +130,7 @@ var showTicker = <?php print $use_ticker;?>;
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var showEvents = <?php print $showEvents;?>;
 var showStats = <?php print $showStats;?>;
 var counter = 0;
@@ -808,7 +812,7 @@ var columns = "<?php print get_msg_variable('columns');?>";
 var the_columns = new Array(<?php print get_msg_variable('columns');?>);
 var thescreen = 'ticket';
 var thelevel = '<?php print $the_level;?>';
-var tmarkers = [];	//	Incident markers array
+var tmarkers = [];			//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
 var fmarkers = [];			//	Responder Markers array
 var cmarkers = [];			//	conditions markers array

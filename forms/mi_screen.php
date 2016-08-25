@@ -77,6 +77,8 @@ if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
 if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -88,8 +90,14 @@ if ($_SESSION['internet']) {
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/osopenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-	<script src="./js/Google.js"></script>
+<?php
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script src="./js/Google.js"></script>
+<?php
+		}
+?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
@@ -103,7 +111,7 @@ window.onload = function(){set_size();};
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
-
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var minimap;
 var mapWidth;
 var mapHeight;

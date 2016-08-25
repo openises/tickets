@@ -77,8 +77,12 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 	while ($msg_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$the_class = ($msg_row['read_status'] == 0) ? 0 : 1;
 		$the_message_id = $msg_row['message_id'];
-		$the_responder = $msg_row['resp_id'];
-		$resp_name = get_respondername($the_responder);	
+		if($msg_row['resp_id'] != "") {
+			$the_responder = $msg_row['resp_id'];
+			$resp_name = get_respondername($the_responder);
+			} else {
+			$resp_name = "NA";				
+			}
 		$the_message = strip_tags($msg_row['message']);
 		if($msg_row['recipients'] == NULL) {
 			$respstring = $resp_name;		

@@ -50,6 +50,11 @@ function directory_empty($path) {
 <script type="text/javascript" src="./js/L.Graticule.js"></script>
 <SCRIPT>
 	var theTiles = [];
+	var tl_lon = 0.0;
+	var tl_lat = 0.0;
+	var br_lon = 0.0;
+	var br_lat = 0.0;
+	
 	window.onload = function() {
 		if($('map_canvas')) { initialise(); }
 		};
@@ -83,13 +88,17 @@ function directory_empty($path) {
 		return ret_arr;
 		}				// end function calc_tile_name ()
 		
-	function get_tile_list() {
+	function startIt() {
 		$('help4').innerHTML = "<BR /><BR /><BR /><BR />";
 		$('file_list_header').style.display='block';
 		$('file_list').style.display='block';
 		$('the_box').style.display='block';
 		$('waiting').style.display='block';
 		$('waiting').innerHTML = "Please Wait, Downloading Tiles<BR /><IMG style='vertical-align: middle;' src='./images/progressbar3.gif'/>";
+		get_tile_list();	
+		}
+		
+	function get_tile_list() {
 		var zoom_top = parseInt(document.map_tiles_form.zoom_top.value);
 		var zoom_btm = parseInt(document.map_tiles_form.zoom_bot.value);
 		var top_left_lat = document.map_tiles_form.tl_lat.value;
@@ -113,7 +122,7 @@ function directory_empty($path) {
 					if((z == zoom_btm) && (col == col_last) && (row == row_last)) { lastfile = "yes";} else { lastfile = "no"; }
 					theTiles[z][col][row] = [];
 					get_tiles_required(z,col,row,lastfile);
-					pausecomp(1500);
+					pausecomp(3000);
 					}
 				}
 			}
@@ -135,7 +144,6 @@ function directory_empty($path) {
 				}
 			$('file_list').scrollTop = $('file_list').scrollHeight;
 			} else if(the_ret_file[2] == "yes") {
-
 			update_localmaps();
 			} else {
 			alert("Failed");
@@ -155,6 +163,7 @@ function directory_empty($path) {
 			$('waiting').innerHTML = "<CENTER>Complete<BR /><BR /> Also changed setting to use local maps<BR /><BR />" + finish_but + "</CENTER>";
 			$('b6').style.display='block'; 
 			$('b6').style.zindex = 999;
+			update_bounds();
 			} else {
 			$('file_list').innerHTML += the_ret[1];
 			$('file_list').innerHTML += "<BR />";
@@ -168,10 +177,25 @@ function directory_empty($path) {
 		
 	function get_bounds() {
 		var theBounds = map.getBounds();
-		document.map_tiles_form.tl_lon.value = theBounds.getNorthWest().lng;
-		document.map_tiles_form.tl_lat.value = theBounds.getNorthWest().lat;
-		document.map_tiles_form.br_lon.value = theBounds.getSouthEast().lng;
-		document.map_tiles_form.br_lat.value = theBounds.getSouthEast().lat;		
+		document.map_tiles_form.tl_lon.value = theBounds.getWest();
+		document.map_tiles_form.tl_lat.value = theBounds.getNorth();
+		document.map_tiles_form.br_lon.value = theBounds.getEast();
+		document.map_tiles_form.br_lat.value = theBounds.getSouth();
+		window.tr_lon = theBounds.getEast();
+		window.tr_lat = theBounds.getNorth();
+		window.bl_lon = theBounds.getWest();
+		window.bl_lat = theBounds.getSouth();
+		}
+		
+	function update_bounds() {
+		var url = "./ajax/update_localmap_boundary.php?tr_lat=" + window.tr_lat + "&tr_lon=" + window.tr_lon + "&bl_lat=" + window.bl_lat + "&bl_lon=" + window.bl_lon;
+		var payload = syncAjax(url);
+		var the_ret=JSON.decode(payload);
+		if(the_ret[0] == 1){
+			alert("Updated stored boundary values");
+			} else {
+			alert("Failed to update stored boundary values");
+			}		
 		}
 		
 	function get_zoom_max() {
@@ -182,54 +206,6 @@ function directory_empty($path) {
 		document.map_tiles_form.zoom_top.value = map.getZoom();
 		}			
 
-	function CngClass(obj, the_class){
-		$(obj).className=the_class;
-		return true;
-		}
-		
-	function do_hover (the_id) {
-		CngClass(the_id, 'hover');
-		return true;
-		}
-		
-	function do_hover_centered (the_id) {
-		CngClass(the_id, 'hover_centered');
-		return true;
-		}
-		
-	function do_lo_hover (the_id) {
-		CngClass(the_id, 'lo_hover');
-		return true;
-		}
-		
-	function do_plain (the_id) {				// 8/21/10
-		CngClass(the_id, 'plain');
-		return true;
-		}
-		
-	function do_plain_centered (the_id) {				// 8/21/10
-		CngClass(the_id, 'plain_centered');
-		return true;
-		}
-		
-	function do_lo_plain (the_id) {
-		CngClass(the_id, 'lo_plain');
-		return true;
-		}	
-
-	function $() {															// 12/20/08
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
-		
 	function del_tiles() {
 		$('waiting').innerHTML = "Please Wait, Deleting existing tiles<BR /><IMG style='vertical-align: middle;' src='./images/progressbar3.gif'/>";
 		var url = "./ajax/deltiles.php?deltiles=yes";
@@ -339,7 +315,7 @@ if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 			<SPAN id='b1' class = 'plain' style='display: inline;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "get_bounds(); $('b2').style.display='block'; $('b1').style.display='none'; $('help1').style.display='none'; $('help2').style.display='block'; $('b5').style.display='block';">Get Bounds</SPAN>
 			<SPAN id='b2' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "get_zoom_min(); $('b3').style.display='block'; $('b2').style.display='none'; $('help2').style.display='none'; $('help3').style.display='block';">Get Zoom Out</SPAN>
 			<SPAN id='b3' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "get_zoom_max(); $('b4').style.display='block'; $('b3').style.display='none'; $('help3').style.display='none'; $('help4').style.display='block';">Get Zoom In</SPAN>
-			<SPAN id='b4' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "$('b4').style.display='none'; get_tile_list();">Next</SPAN>
+			<SPAN id='b4' class = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "$('b4').style.display='none'; startIt();">Next</SPAN>
 		</DIV>
 		<DIV style='width: 100%;'>
 			<FORM METHOD="POST" NAME= "map_tiles_form" ACTION="get_tiles.php?func=get_tiles">
@@ -382,8 +358,8 @@ if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 		<DIV id='help4' style='display: none;'><CENTER>Help.</CENTER><BR /><BR />
 		Now click the "Next" button and the system will go away and collect the tiles appropriate for the settings you have provided.<BR />
 		Please note that this could take a considerable time. Do not navigate away from this page until the system alerts you that<BR />	
-		the collection of tiles is complete. Once you have downloaded all the files remember to go into eedit settings and set<BR />
-		Local maps to 1<BR />
+		the collection of tiles is complete. Once you have downloaded all the files remember to go into edit settings and check<BR />
+		that "local maps" is set to 1<BR />
 		</DIV><BR /><BR />
 		<DIV id='file_list_header' class='heading' style='position: relative; left: 40%; width: 60%; text-align: center; display: none;'>Downloaded Tiles</DIV>
 		<DIV id='file_list' style='border: 1px solid #707070; position: relative; left: 40%; width: 60%; height: 200px; overflow-y: scroll; display: none; font-weight: normal; font-size: .8em;'></DIV>

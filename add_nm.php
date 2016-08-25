@@ -453,24 +453,23 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css" />
 <?php
-	if ($gmaps) {
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-		if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-			$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-			} else {
-			$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-			}
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
 ?>
-		<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
-		<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
-<?php
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
 		}
-?>	
+	}
+?>
 <SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>		<!-- coordinate conversion 12/10/10 -->	
 <SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT> <!-- 7/22/10 -->
 
 <SCRIPT>
+	var colors = new Array ('odd', 'even');
 	function ck_frames() {		// onLoad = "ck_frames()"
 		return;
 		if(self.location.href==parent.location.href) {
@@ -1786,7 +1785,8 @@ $locale = get_variable('locale');	// 08/03/09
 	</TABLE>
 	
 <?php 
-//	dump($_SESSION['user_id']);
+	$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
+	print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 	} //end if/else
 ?>
 <FORM NAME='can_Form' ACTION="main.php">

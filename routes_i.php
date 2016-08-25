@@ -88,14 +88,17 @@ catch(e) {
 <?php		
 	}		// end if (!empty($_POST))
 else {	
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-		} else {
-		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+			}
 		}
 ?>
-	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 <SCRIPT>
 	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";

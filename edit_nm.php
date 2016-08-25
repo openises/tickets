@@ -778,6 +778,8 @@ require_once('./incs/links.inc.php');
 			print "<TR><TD CLASS='print_TD' COLSPAN='2'>";
 			print "</FORM>";
 			print "</TD></TR></TABLE>";		// bottom of outer
+			$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
+			print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, $tick_id, 0, 0, 0);
 ?>
 	<SCRIPT type="text/javascript">
 	

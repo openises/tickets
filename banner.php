@@ -60,15 +60,17 @@ tr.front 					{height: 18px; }
 
 <SCRIPT SRC="./js/jscolor/jscolor.js"  type="text/javascript"></SCRIPT>
 <?php
-	$api_key = trim(get_variable('gmaps_api_key'));
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-		} else {
-		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-		}
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
 ?>
-<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
 <SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 <SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->

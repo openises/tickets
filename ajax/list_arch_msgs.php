@@ -166,14 +166,21 @@ foreach($the_result AS $msg_row) {
 	$resp_names = "";
 	$n = 1;
 	$thesep = ",";
-	foreach($the_resp_ids as $val) {
-		if($n == count($the_resp_ids)) {
-			$thesep = "";
+	if(count($the_resp_ids) > 1) {
+		foreach($the_resp_ids as $val) {
+			if($n == count($the_resp_ids)) {
+				$thesep = "";
+				}
+			if($val != "") {
+				$resp_names .= get_respondername($val) . $thesep;
+				}
+			$n++;
 			}
-		$resp_names .= get_respondername($val) . $thesep;
-		$n++;
+		} else {
+			if($the_responder != "") {
+			$resp_name = get_respondername($the_responder);
+			}
 		}
-	$resp_name = get_respondername($the_responder);	
 	$the_message = ($msg_row['message'] != "") ? strip_tags($msg_row['message']) : "";
 	if($msg_row['recipients'] == NULL) {
 		$respstring = $resp_names;		

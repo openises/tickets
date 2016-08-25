@@ -784,13 +784,26 @@ select.sit {
 	font-weight: bolder;
 	cursor: pointer;
 	border-radius:.2em;
-	}		
+	}
 	
 .hover 	{ 
 	margin-left: 4px;  
 	font: normal 12px Arial, Helvetica, sans-serif; 
 	color:#000000; 
 	border: 1px inset #FFFFFF;
+	padding: 4px 0.5em;
+	text-decoration: none; 
+	float: left; 
+	background-color: #DEE3E7;
+	font-weight: bolder;
+	cursor: pointer;
+	border-radius:.2em;
+	}
+	
+.plain_inactive 	{ 
+	margin-left: 4px;  
+	font: normal 12px Arial, Helvetica, sans-serif; 
+	color:#909090; 
 	padding: 4px 0.5em;
 	text-decoration: none; 
 	float: left; 
@@ -982,6 +995,15 @@ select.sit {
 	color: #000000;
 	padding-top: 3px; 
 	padding-bottom: 3px; 
+	border: 1px outset #DEDEDE;
+	}
+	
+.cols_h_chk {
+	font-size: 10px; 
+	font-weight: bold; 
+	display: inline-block; 	
+	background-color: #CECECE; 
+	color: #000000;
 	border: 1px outset #DEDEDE;
 	}
 	

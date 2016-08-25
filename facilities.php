@@ -170,14 +170,18 @@ function get_mailgroup_name($id) {	//	8/28/13
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-<?php 
-if ($_SESSION['internet']) {				// 8/22/10
+<?php
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
 ?>
-	<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script type="text/javascript" src="./js/Google.js"></script>
 <?php 
-	} 
+			}
+		}
 ?>
-	<script src="./js/Google.js"></script>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>

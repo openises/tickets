@@ -634,8 +634,18 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/osopenspace.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
-<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-<script src="./js/Google.js"></script>
+<?php
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->
 <SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
@@ -646,7 +656,9 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 <script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 	var protocols = new Array();		// 7/7/09
+	var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 	var states_arr = <?php echo json_encode($states); ?>;
+	var colors = new Array ('odd', 'even');
 	function get_new_colors() {				// 5/4/11
 		window.location.href = '<?php print basename(__FILE__);?>';
 		}
@@ -856,9 +868,6 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 				alert("There is at least one location nearby with a warning registered for it\r\nPlease view the Ticket to see the warnings");
 				$('loc_warnings').innerHTML = the_warnings[1];
 				$('loc_warnings').style.display = 'block';
-				document.add.submit();
-				} else {
-				document.add.submit();
 				}
 			}
 		}
@@ -966,6 +975,7 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 		do_unlock_ps(theForm);								// 8/11/08
 
 		var errmsg="";
+		if ((theForm.frm_street.value == "") && (theForm.frm_city.value == "") && (theForm.frm_state.value == ""))	{errmsg+= "\tAddress is required\n";}
 		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_CLOSED'];?>) && (!theForm.re_but.checked))
 													{errmsg+= "\tRun end-date is required for Status=Closed\n";}
 		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_OPEN'];?>) && (theForm.re_but.checked))
@@ -1017,12 +1027,14 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 		if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) {
 ?>																						/*	5/22/2013 */
 			var theMessage = "New  <?php print get_text('Incident');?> (" + theForm.frm_scope.value + ") " + theAddr  + " by <?php echo $_SESSION['user'];?>";
-			parent.frames["upper"].broadcast(theMessage, 1) ;
+			if(parent.frames["upper"]) {parent.frames["upper"].broadcast(theMessage, 1);}
+			if(window.opener) {window.opener.parent.frames["upper"].broadcast(theMessage, 1);}
 <?php
 			}			// end if (broadcast)
 		if ($gmaps) {
 ?>
 			find_warnings(theForm.frm_lat.value, theForm.frm_lng.value);	//	9/10/13
+			document.add.submit();			
 <?php
 			} else {
 ?>
@@ -1663,7 +1675,7 @@ if (mysql_num_rows($result_bldg) > 0) {
 <?php
 	}
 ?>
-		<SPAN CLASS="td_label" STYLE='margin-left:20px;' onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_state'];?>');"><?php print get_text("St"); ?></SPAN>:&nbsp;&nbsp;
+		<SPAN CLASS="td_label" STYLE='margin-left:20px;' onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_state'];?>');"><?php print get_text("St"); ?></SPAN>:  <font color='red' size='-1'>*</font>&nbsp;
 		<INPUT NAME="frm_state" tabindex=40 SIZE="<?php print $st_size;?>" TYPE="text" VALUE="<?php print $st; ?>" MAXLENGTH="<?php print $st_size;?>">
 		<DIV id='loc_warnings' style='z-index: 1000; display: none; height: 100px; width: 300px; font-size: 1.5em; font-weight: bold; border: 1px outset #707070;'></DIV>		<!-- 9/10/13 -->
 		</TD>
@@ -2101,7 +2113,8 @@ if($has_portal == 1) {
 	</TABLE></DIV>
 
 <?php
-//	dump($_SESSION['user_id']);
+	$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
+	print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 	} //end if/else
 ?>
 <FORM NAME='can_Form' ACTION="main.php">

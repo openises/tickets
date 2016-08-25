@@ -147,8 +147,8 @@ function set_size() {
 	outerheight = viewportheight * .95;
 	listHeight = viewportheight * .25;
 	colwidth = outerwidth * .42;
-	leftcolwidth = colwidth * 1.2;
-	rightcolwidth = colwidth * .8;
+	leftcolwidth = colwidth * 1.8;
+	rightcolwidth = colwidth * .1;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .5;
 	listwidth = leftcolwidth * .99

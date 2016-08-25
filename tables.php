@@ -174,13 +174,17 @@ $secondaries = array();				// table names
 $arDate_formats = array(array ("-",0, 1, 2), array ("/", 2, 0, 1));
 $disallow = FALSE;										// 2/25/10
 if ((isset($tablename)) && (!isset($indexname))) {
-	$query ="SHOW KEYS FROM `$mysql_prefix$tablename` WHERE Key_name = 'PRIMARY'";
+	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	$r = mysql_fetch_assoc($result); 
-	$indexname = $r['Column_name']; 
+	for($i = 0; $i < mysql_num_fields($result); $i++) {
+		if(strpos(mysql_field_flags($result, $i), 'primary_key') !== false) {
+			$indexname = mysql_field_name($result, $i);
+			unset ($result);
+			break;
+			}
+		}
 	unset($result);
 	}
-
 
 function fnQuote_Smart($value) {    // Stripslashes
     if (get_magic_quotes_gpc()) {
@@ -325,8 +329,18 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
-<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-<script src="./js/Google.js"></script>
+<?php
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 <script type="text/javascript" src="./js/L.Graticule.js"></script>
 <script type="text/javascript" src="./js/leaflet-providers.js"></script>
@@ -1712,7 +1726,7 @@ case "u":	// =======================================  Update 	==================
 	<TR><TD>&nbsp;</TD></TR>
 	<TR CLASS="even" VALIGN="top"><TD ALIGN="CENTER" COLSPAN = "2"><FONT SIZE="+1">&nbsp;&nbsp;Field Properties - Table  '<?php print str_replace( "_", " ", ucfirst($tablename)) ; ?>'&nbsp;&nbsp;</TD></TR></TABLE>
 <?php
-	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
+/* 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	print "\n<table align=\"CENTER\" BORDER=\"0\">";
@@ -1738,7 +1752,7 @@ case "u":	// =======================================  Update 	==================
 		print "</TR>\n";
 		}
 	unset ($result);
-	print "<TR><TD COLSPAN=\"99\">&nbsp;</TD></TR></TABLE>";
+	print "<TR><TD COLSPAN=\"99\">&nbsp;</TD></TR></TABLE>"; */
 
 	$query ="SHOW FULL COLUMNS FROM `$mysql_prefix$tablename`";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);

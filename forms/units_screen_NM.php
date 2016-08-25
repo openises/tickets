@@ -143,12 +143,12 @@ function set_size() {
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
-	leftcolwidth = colwidth * 1.2;
-	rightcolwidth = colwidth * .8;
+	leftcolwidth = colwidth * 1.8;
+	rightcolwidth = colwidth * .1;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .7;
 	listwidth = colwidth * .99;
-	leftlistwidth = leftcolwidth * .99;
+	leftlistwidth = leftcolwidth;
 	rightlistwidth = rightcolwidth * .99;
 	inner_listwidth = listwidth *.9;
 	celwidth = listwidth * .20;

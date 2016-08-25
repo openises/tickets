@@ -29,20 +29,6 @@ function get_user_name($the_id) {
 	return $the_ret;
 	}
 
-if ($_SESSION['internet']) {				// 8/22/10
-	$api_key = trim(get_variable('gmaps_api_key'));
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-	} else {
-	$api_key = "";
-	$key_str = "";	
-	}
-	
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-	$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-	} else {
-	$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-	}
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Strict//EN">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -98,7 +84,18 @@ if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
-<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT><script src="./js/Google.js"></script>
+<?php
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 <script type="text/javascript" src="./js/L.Graticule.js"></script>
 <script type="text/javascript" src="./js/leaflet-providers.js"></script>

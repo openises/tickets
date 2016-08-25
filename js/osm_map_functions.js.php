@@ -3,6 +3,9 @@ require_once('../incs/functions.inc.php');
 @session_start();
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 $showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
+$api_key = get_variable('gmaps_api_key');
+$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$gmaps_ok = ($key_str) ? 1 : 0;
 $temp = get_variable('auto_poll');				// 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';	//	3/15/11
@@ -40,7 +43,7 @@ function isIE() {
 		return false;
 		}
 	}
-	
+var good_gmapsapi = <?php print $gmaps_ok;?>;
 var internet = <?php print $showmaps;?>;
 var geo_provider = <?php print get_variable('geocoding_provider');?>;
 var BingKey = "<?php print get_variable('bing_api_key');?>";
@@ -408,7 +411,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 
 	if(priority == 1) {
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (tmarkers[i]) {
+			if (map && tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
 					tmarkers[j].addTo(map);	
 					}
@@ -428,7 +431,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		}	//	end if priority == 1
 	if(priority == 2) {
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (tmarkers[i]) {
+			if (map && tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
 					tmarkers[i].addTo(map);		
 					}
@@ -448,7 +451,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		}	//	end if priority == 2
 	if(priority == 3) {
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (tmarkers[i]) {
+			if (map && tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
 					tmarkers[i].addTo(map);		
 					}
@@ -484,7 +487,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		}	//	end if priority == 4
 	if(priority == 5) {		// hide all
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (tmarkers[i]) {
+			if (map && tmarkers[i]) {
 				if (tmarkers[i].category == category) {
 					map.removeLayer(tmarkers[i]);	
 					}
@@ -568,7 +571,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 			$(catname).checked = true;
 		} else {
 			for (var j = 1; j < rmarkers.length; j++) {
-				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
+				if (map && (rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
 					map.removeLayer(rmarkers[j]);
 					if(j == 131) { alert(catname + "131");}
 					var catid = catname + j;
@@ -680,7 +683,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 				if($(catid)) {
 					$(catid).style.display = "none";
 					}
-				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {
+				if (map && (rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {
 					map.removeLayer(rmarkers[j]);		
 					}
 				}
@@ -728,7 +731,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 					if($(catid)) {
 						$(catid).style.display = "none";
 						}
-					if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {			
+					if (map && (rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {			
 						map.removeLayer(rmarkers[j]);		
 						}
 					}
@@ -817,7 +820,7 @@ function set_fac_categories() {
 			$(fac_catname).checked = true;
 		} else {
 			for (var j = 0; j < fmarkers.length; j++) {
-				if((fmarkers[j]) && (fmarkers[j].category == fac_catname)) {
+				if(map && (fmarkers[j]) && (fmarkers[j].category == fac_catname)) {
 					map.removeLayer(fmarkers[j]);		
 					var fac_catid = fac_catname + j;
 					if($(fac_catid)) {
@@ -929,7 +932,7 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 				if($(fac_catid)) {
 					$(fac_catid).style.display = "none";
 				}
-				if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
+				if (map && (fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
 					map.removeLayer(fmarkers[j]);		
 					}
 				}
@@ -978,7 +981,7 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 					if($(fac_catid)) {
 						$(fac_catid).style.display = "none";
 						}
-					if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
+					if (map && (fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
 						map.removeLayer(fmarkers[j]);		
 						}
 					}
@@ -1071,7 +1074,7 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 			var url = "persist2.php";	//	3/15/11
 			sendRequest (url, gbb_handleResult, params);
 			$(bnds).checked = false;
-			if(bound_names[key]) {
+			if(map && bound_names[key]) {
 				map.removeLayer(boundary[key]);		
 				}
 			$('BND_NONE').checked = false;
@@ -1106,7 +1109,7 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 				var url = "persist2.php";	//	3/15/11
 				sendRequest (url, gbb_handleResult, params);
 				$(bnds).checked = false;
-				if(bound_names[key]) {
+				if(map && bound_names[key]) {
 					map.removeLayer(boundary[key]);	
 					}
 				}
@@ -1150,7 +1153,7 @@ function set_bnds() {			//	12/03/10 - checks current session values and sets che
 			$(bnd_nm).checked = true;
 			if(window.boundary[key]) {window.boundary[key].addTo(map);}
 			} else {
-			map.removeLayer(boundary[key]);				
+			if(map) {map.removeLayer(boundary[key]);}
 			$(bnd_nm).checked = false;
 			}				
 		if(bnd_hidden!=0) {
@@ -1259,7 +1262,14 @@ function show_btns_closed() {						// 4/30/10
 function hide_btns_closed() {
 	$('btn_go').style.display = 'none';
 	$('btn_can').style.display = 'none';
+	if($('frm_interval')) {
+		$('frm_interval').options[0].selected = true;
+		}
+	if($('period_select')) {
+		$('period_select').options[0].selected = true;
+		}
 	}
+
 function show_btns_scheduled() {						// 4/30/10
 	$('btn_scheduled').style.display = 'inline';
 	$('btn_can').style.display = 'inline';
@@ -1386,8 +1396,8 @@ function loc_lkup(my_form) {		   						// 7/5/10
 	
 function pt_to_map (my_form, lat, lng) {
 	if(!$('map_canvas')) {return; }
-	if(marker) {map.removeLayer(marker);}
-	if(myMarker) {map.removeLayer(myMarker);}
+	if(map && marker) {map.removeLayer(marker);}
+	if(map && myMarker) {map.removeLayer(myMarker);}
 	var theLat = parseFloat(lat).toFixed(6);
 	var theLng = parseFloat(lng).toFixed(6);
 	my_form.frm_lat.value=theLat;	
@@ -1591,8 +1601,8 @@ function newGetAddress(latlng, currform) {
 					document.edit.frm_street.focus();
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.edit.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
-					if(loc == 1) { document.edit.frm_osgb.value=LLtoOSGB(lat, lng, 5); }
-					if(loc == 2) { document.edit.frm_utm.value=LLtoUTM(lat, lng, 5); }							
+					if(loc == 1) { document.edit.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
+					if(loc == 2) { document.edit.frm_ngs.value=LLtoUTM(lat, lng, 5); }							
 					break;
 					
 				default:
@@ -1764,11 +1774,11 @@ function createcrossMarker(lat, lon) {
 	}
 	
 function createstdMarker(lat, lon) {
-	if(marker) { map.removeLayer(marker); }
+	if(map && marker) { map.removeLayer(marker); }
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconurl = "./our_icons/yellow.png";
 		icon = new baseIcon({iconUrl: iconurl});	
-		marker = L.marker([lat, lon], {icon: icon});
+		marker = L.marker([lat, lon], {icon: icon}).bindPopup("Standard Marker").openPopup();
 		marker.addTo(map);
 		}
 	}
@@ -1787,7 +1797,7 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 		var iconStr = sym;
 		var iconurl = "./our_icons/gen_icon.php?blank=" + escape(window.icons[color]) + "&text=" + iconStr;	
 		icon = new baseIcon({iconUrl: iconurl});	
-		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.inczindexno, riseOnHover: true, riseOffset: 30000}).bindPopup(info).openPopup();
+		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.inczindexno, riseOnHover: true, riseOffset: 30000});
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
@@ -1807,7 +1817,17 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 		tmarkers[theid][lat] = lat;
 		tmarkers[theid][lon] = lon;
 		var point = new L.LatLng(lat, lon);
-		bounds.extend(point);
+		var in_local_bool = <?php print get_variable('local_maps');?>;
+		if(in_local_bool == "1" && (theBounds instanceof Array)) {
+			var southWest = L.latLng(theBounds[3], theBounds[0]);
+			var northEast = L.latLng(theBounds[1], theBounds[2]);
+			var maxBounds = L.latLngBounds(southWest, northEast);
+			if(maxBounds.contains(point)) {
+				bounds.extend(point);
+				}
+			} else {
+			bounds.extend(point);				
+			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
 			if((theScreen == "situation") && ((dzf == 1) || (dzf == 3))) {
@@ -1863,7 +1883,17 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 		rmarkers[theid][lat] = lat;
 		rmarkers[theid][lon] = lon;
 		var point = new L.LatLng(lat, lon);
-		bounds.extend(point);
+		var in_local_bool = <?php print get_variable('local_maps');?>;
+		if(in_local_bool == "1" && (theBounds instanceof Array)) {
+			var southWest = L.latLng(theBounds[3], theBounds[0]);
+			var northEast = L.latLng(theBounds[1], theBounds[2]);
+			var maxBounds = L.latLngBounds(southWest, northEast);
+			if(maxBounds.contains(point)) {
+				bounds.extend(point);
+				}
+			} else {
+			bounds.extend(point);				
+			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
 			if((theScreen == "situation") && ((dzf == 1) || (dzf == 3))) {
@@ -1912,7 +1942,17 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 		fmarkers[theid][lat] = lat;
 		fmarkers[theid][lon] = lon;
 		var point = new L.LatLng(lat, lon);
-		bounds.extend(point);
+		var in_local_bool = <?php print get_variable('local_maps');?>;
+		if(in_local_bool == "1" && (theBounds instanceof Array)) {
+			var southWest = L.latLng(theBounds[3], theBounds[0]);
+			var northEast = L.latLng(theBounds[1], theBounds[2]);
+			var maxBounds = L.latLngBounds(southWest, northEast);
+			if(maxBounds.contains(point)) {
+				bounds.extend(point);
+				}
+			} else {
+			bounds.extend(point);				
+			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
 			if((theScreen == "situation") && ((dzf == 1) || (dzf == 3))) {
@@ -1954,7 +1994,17 @@ function createWlocationMarker(lat, lon, info, color, stat, theid, sym, category
 		wlmarkers[theid][lat] = lat;
 		wlmarkers[theid][lon] = lon;
 		var point = new L.LatLng(lat, lon);
-		bounds.extend(point);
+		var in_local_bool = <?php print get_variable('local_maps');?>;
+		if(in_local_bool == "1" && (theBounds instanceof Array)) {
+			var southWest = L.latLng(theBounds[3], theBounds[0]);
+			var northEast = L.latLng(theBounds[1], theBounds[2]);
+			var maxBounds = L.latLngBounds(southWest, northEast);
+			if(maxBounds.contains(point)) {
+				bounds.extend(point);
+				}
+			} else {
+			bounds.extend(point);				
+			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
 			if((theScreen == "situation") && ((dzf == 1) || (dzf == 3))) {
@@ -2062,7 +2112,7 @@ function createdummyFacMarker(lat, lon, info, icon, title, theid){
 
 function destroy_unitmarkers() {
 	for(var key in rmarkers) {
-		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+		if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 		}
 	}
 	
@@ -2381,10 +2431,12 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 		var	cmAttr = '';
 		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 		var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
-		var ggl = new L.Google('ROAD');
-		var ggl1 = new L.Google('TERRAIN');
-		var ggl2 = new L.Google('SATELLITE');
-		var ggl3 = new L.Google('HYBRID');
+		if(good_gmapsapi == 1) {
+			var ggl = new L.Google('ROAD');
+			var ggl1 = new L.Google('TERRAIN');
+			var ggl2 = new L.Google('SATELLITE');
+			var ggl3 = new L.Google('HYBRID');
+			}
 		var clouds = L.OWM.clouds({showLegend: false, opacity: 0.3});
 		var cloudscls = L.OWM.cloudsClassic({showLegend: false, opacity: 0.3});
 		var precipitation = L.OWM.precipitation({showLegend: false, opacity: 0.3});
@@ -2397,7 +2449,6 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 		var temp = L.OWM.temperature({showLegend: false, opacity: 0.3});
 		var wind = L.OWM.wind({showLegend: false, opacity: 0.3});
 		var dark = L.tileLayer.provider('Thunderforest.TransportDark');
-		var aerial = L.tileLayer.provider('MapQuestOpen.Aerial');
 		var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
 			layers: 'nexrad-n0r-900913',
 			format: 'image/png',
@@ -2416,8 +2467,17 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 		var grid = L.graticule({ interval: .5 })
 		roadalerts = new L.LayerGroup();
 		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
-		var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial"];	
-		var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark,aerial];
+		if(good_gmapsapi == 0 && (currentSessionLayer == "Google" || currentSessionLayer == "Google_Terrain" || currentSessionLayer == "Google_Satellite" || currentSessionLayer == "Google_Hybrid")) {
+			currentSessionLayer = "Open_Streetmaps";
+			alert("please change your default map layer, Google is not available,\n Tickets has set the map to Open Street Maps.\n After changing you will need to log out and log in again.");
+			}
+		if(good_gmapsapi == 1) {
+			var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark"];	
+			var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark];
+			} else {
+			var baseLayerNamesArr = ["Open_Streetmaps","USGS_Topo","Dark"];	
+			var baseLayerVarArr = [OSM,usgstopo,dark];
+			}
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
 		theLayer = (in_local_bool != "1") ? baseLayerVarArr[a]: OSM;	// Load OSM if using local maps
 		var setZoom = <?php print $setZoom;?>;
@@ -2500,17 +2560,24 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 					}
 			}
 
-		if(in_local_bool != "1") {	//	remove all but OSM if using local maps
-			var baseLayers = {
-				"Open Streetmaps": OSM,
-				"Google": ggl,
-				"Google Terrain": ggl1,
-				"Google Satellite": ggl2,
-				"Google Hybrid": ggl3,
-				"USGS Topo": usgstopo,
-				"Dark": dark,
-				"Aerial": aerial,		
-			};
+		if(in_local_bool == "0") {
+			if(good_gmapsapi == 1) {
+				var baseLayers = {
+					"Open Streetmaps": OSM,
+					"Google": ggl,
+					"Google Terrain": ggl1,
+					"Google Satellite": ggl2,
+					"Google Hybrid": ggl3,
+					"USGS Topo": usgstopo,
+					"Dark": dark,
+					};
+				} else {
+				var baseLayers = {
+					"Open Streetmaps": OSM,
+					"USGS Topo": usgstopo,
+					"Dark": dark,
+					};
+				}
 			
 			var overlays = {
 				"Clouds": cloudscls,
@@ -2523,13 +2590,23 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 				"Radar": nexrad,
 				"Grid": grid,
 			};
-
-			} else {
+			map.setView([lat, lng], setZoom);
+			bounds = map.getBounds();	
+			zoom = map.getZoom();
+			} else {	//	remove all but OSM if using local maps
 			var baseLayers = {
 				"Open Streetmaps": OSM,
 			};
-			
-			var overlays = {};				
+			if(in_local_bool == "1" && (theBounds instanceof Array)) {
+				var southWest = L.latLng(theBounds[3], theBounds[0]);
+				var northEast = L.latLng(theBounds[1], theBounds[2]);
+				var maxBounds = L.latLngBounds(southWest, northEast);
+				map.setMaxBounds(maxBounds);
+				}
+			var overlays = {};
+			map.setView([lat, lng], setZoom);
+			bounds = map.getBounds();	
+			zoom = map.getZoom();		
 			}
 			
 			if(control_position == "tl") {
@@ -2557,9 +2634,6 @@ function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_po
 		if(theType ==3) {
 			createstdMarker(lat, lng);
 			}
-		map.setView([lat, lng], setZoom);
-		bounds = map.getBounds();	
-		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
 			var layerName = eventLayer.name;
 			var layerName = layerName.replace(" ", "_");
@@ -2677,10 +2751,12 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 		var osmUrl = (in_local_bool=="1")? "./_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 		var	cmAttr = '';
 		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
-		var ggl = new L.Google('ROAD');
-		var ggl1 = new L.Google('TERRAIN');
-		var ggl2 = new L.Google('SATELLITE');
-		var ggl3 = new L.Google('HYBRID');
+		if(good_gmapsapi == 1) {
+			var ggl = new L.Google('ROAD');
+			var ggl1 = new L.Google('TERRAIN');
+			var ggl2 = new L.Google('SATELLITE');
+			var ggl3 = new L.Google('HYBRID');
+			}
 		var clouds = L.OWM.clouds({showLegend: false, opacity: 0.3});
 		var cloudscls = L.OWM.cloudsClassic({showLegend: false, opacity: 0.3});
 		var precipitation = L.OWM.precipitation({showLegend: false, opacity: 0.3});
@@ -2693,7 +2769,6 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 		var temp = L.OWM.temperature({showLegend: false, opacity: 0.3});
 		var wind = L.OWM.wind({showLegend: false, opacity: 0.3});
 		var dark = L.tileLayer.provider('Thunderforest.TransportDark');
-		var aerial = L.tileLayer.provider('MapQuestOpen.Aerial');
 		var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
 			layers: 'nexrad-n0r-900913',
 			format: 'image/png',
@@ -2712,8 +2787,17 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 		var grid = L.graticule({ interval: .5 })
 		roadalerts = new L.LayerGroup();
 		var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
-		var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial"];	
-		var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark,aerial];
+		if(good_gmapsapi == 0 && (currentSessionLayer == "Google" || currentSessionLayer == "Google_Terrain" || currentSessionLayer == "Google_Satellite" || currentSessionLayer == "Google_Hybrid")) {
+			currentSessionLayer = "Open_Streetmaps";
+			alert("please change your default map layer, Google is not available,\n Tickets has set the map to Open Street Maps.\n After changing you will need to log out and log in again.");
+			}
+		if(good_gmapsapi == 1) {
+			var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark"];	
+			var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark];
+			} else {
+			var baseLayerNamesArr = ["Open_Streetmaps","USGS_Topo","Dark"];	
+			var baseLayerVarArr = [OSM,usgstopo,dark];
+			}
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
 		theLayer = (in_local_bool != "1") ? baseLayerVarArr[a]: OSM;	// Load OSM if using local maps
 		var setZoom = <?php print $setZoom;?>;
@@ -2796,17 +2880,24 @@ function init_fsmap(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_
 					}
 			}
 
-		if(in_local_bool != "1") {	//	remove all but OSM if using local maps
-			var baseLayers = {
-				"Open Streetmaps": OSM,
-				"Google": ggl,
-				"Google Terrain": ggl1,
-				"Google Satellite": ggl2,
-				"Google Hybrid": ggl3,
-				"USGS Topo": usgstopo,
-				"Dark": dark,
-				"Aerial": aerial,		
-			};
+		if(in_local_bool == "0") {	//	remove all but OSM if using local maps
+			if(good_gmapsapi == 1) {
+				var baseLayers = {
+					"Open Streetmaps": OSM,
+					"Google": ggl,
+					"Google Terrain": ggl1,
+					"Google Satellite": ggl2,
+					"Google Hybrid": ggl3,
+					"USGS Topo": usgstopo,
+					"Dark": dark,
+					};
+				} else {
+				var baseLayers = {
+					"Open Streetmaps": OSM,
+					"USGS Topo": usgstopo,
+					"Dark": dark,
+					};
+				}
 			
 			var overlays = {
 				"Clouds": cloudscls,
@@ -2873,7 +2964,6 @@ function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	var my_Path = "http://127.0.0.1/_osm/tiles/";
 	var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 	var	cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-
 	var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
 	if(minimap) { minimap.remove(); }
 	minimap = L.map('minimap',
@@ -3176,7 +3266,7 @@ function load_incidentlist(sort, dir) {
 			}
 		if(window.changed_inc_sort == true) {
 			for(var key in tmarkers) {
-				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 				}
 			}
 		var i = 1;
@@ -3255,13 +3345,13 @@ function load_incidentlist(sort, dir) {
 				outputtext += "<TD>" + pad(3, " ", "\u00a0") + "</TD>";
 				outputtext += "</TR>";
 				if(window.tickets_updated[key]) {
-					if(window.tickets_updated[key] != inc_arr[key][11]) {
+					if(window.tickets_updated[key] != inc_arr[key][10]) {
 						window.do_update = true;
 						} else {
 						window.do_update = false;
 						}
 					} else {
-					window.tickets_updated[key] = inc_arr[key][11];
+					window.tickets_updated[key] = inc_arr[key][10];
 					window.do_update = true;
 					}
 				ticket_number = key;
@@ -3443,7 +3533,7 @@ function isInteger(s) {
 
 function do_destroy() {
 	for(var key in rmarkers) {
-		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+		if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 		}
 	}
 	
@@ -3572,7 +3662,7 @@ function load_responderlist(sort, dir) {
 		if(!resp_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
 			for(var key in rmarkers) {
-				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
@@ -3980,7 +4070,7 @@ function load_responderlist2(sort, dir) {
 		if(!resp_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
 			for(var key in rmarkers) {
-				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
@@ -4038,7 +4128,7 @@ function load_responderlist2(sort, dir) {
 						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" +  pad(6, resp_arr[key][13], "\u00a0") + "</TD>";
 						var theFlag = resp_arr[key][27];
 						outputtext += "<TD onClick='myrclick(" + unit_no + ");'><SPAN id = '" + theFlag + "' style='white-space: nowrap;'>" + pad(2, resp_arr[key][16], "\u00a0") + "</SPAN></TD>";
-						outputtext += "<TD>" + pad(12, " ", "\u00a0") + "</TD>";
+						outputtext += "<TD>" + pad(2, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
 						if(window.responders_updated[resp_arr[key][17]]) {
 							if(window.responders_updated[resp_arr[key][17]] != resp_arr[key][16]) {
@@ -4059,17 +4149,6 @@ function load_responderlist2(sort, dir) {
 										theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][3]);
 										rmarkers[unit_no].setLatLng(theLatLng);
 										}
-									} else {
-	/* 								do_destroy();
-									if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
-										var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
-										marker.addTo(map);
-										} else {
-										var deflat = "<?php print get_variable('def_lat');?>";
-										var deflng = "<?php print get_variable('def_lng');?>";		
-										var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], unit_no);
-										marker.addTo(map);
-										} */
 									}
 								} else {
 								if($('map_canvas')) {
@@ -4174,7 +4253,6 @@ function load_responderlist2(sort, dir) {
 				window.resp_last_display = resp_arr[0][23];
 				window.respFin = true;
 				pageLoaded();
-//				responderlist2_get();
 				},500);
 			}
 		}				// end function responderlist_cb()
@@ -4364,7 +4442,7 @@ function load_facilitylist(sort, dir) {
 		if(!fac_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText);}
 		if((fac_arr[0]) && (fac_arr[0][0] == 0)) {
 			for(var key in fmarkers) {
-				if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
+				if(map && fmarkers[key]) {map.removeLayer(fmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Facilities to view.........</marquee>";
 			$('the_flist').innerHTML = outputtext;
@@ -4668,14 +4746,14 @@ function load_warnloclist(sort, dir) {
 		var loc_arr = JSON.decode(req.responseText);
 		if(loc_arr[0][0] == 0) {
 			for(var key in wlmarkers) {
-				if(wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
+				if(map && wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Warn Locations to view.........</marquee>";
 			$('the_wllist').innerHTML = outputtext;
 			window.latest_wlocation = 0;
 			} else {
 			for(var key in wlmarkers) {
-				if(wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
+				if(map && wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
 				}
 			var outputtext = "<TABLE id='locationstable' class='cruises scrollable' style='width: " + window.listwidth + "px;'>";
 			outputtext += "<thead>";
@@ -4798,7 +4876,7 @@ function load_fs_incidentlist() {
 		var inc_arr = JSON.decode(req.responseText);
 		if(window.inc_period_changed == 1) {
 			for(var key in tmarkers) {
-				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 				}
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
@@ -4806,7 +4884,7 @@ function load_fs_incidentlist() {
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;
 			for(var key in tmarkers) {
-				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 				}
 			outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
 			$('the_list').innerHTML = outputtext;
@@ -4817,7 +4895,7 @@ function load_fs_incidentlist() {
 			} else {
 			if(window.changed_inc_sort == true) {
 				for(var key in tmarkers) {
-					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+					if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 					}
 				}	
 			var i = 1;
@@ -4828,7 +4906,7 @@ function load_fs_incidentlist() {
 			var outputtext = "<TABLE id='incidenttable' class='cruises scrollable' style='width: " + window.listwidth + "px;'>";
 			outputtext += "<thead>";
 			outputtext += "<TR style='width: " + window.listwidth + "px;'>";
-			outputtext += "<TH id='t1' class='plain_listheader_fs'><?php print get_text('ID');?></TH>";
+			outputtext += "<TH id='t1' class='plain_listheader_fs'>&nbsp;<?php print get_text('ID');?></TH>";
 			outputtext += "<TH id='t2' class='plain_listheader_fs'><?php print get_text('Scope');?></TH>";
 			outputtext += "<TH id='t3' class='plain_listheader_fs'><?php print get_text('Address');?></TH>";
 			outputtext += "<TH id='t4' class='plain_listheader_fs'><?php print get_text('Type');?></TH>";
@@ -4848,7 +4926,7 @@ function load_fs_incidentlist() {
 						blinkend = "</blink>";
 						}
 					outputtext += "<TR CLASS='" + fscolors[i%2] +"' style='width: " + window.listwidth + "px;' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
-					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + key + "</TD>";
+					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>&nbsp;" + key + "</TD>";
 					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][0] + "</TD>";
 					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][1] + "</TD>";
 					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][4] + "</TD>";
@@ -4947,7 +5025,7 @@ function load_fs_responders() {
 		var resp_arr = JSON.decode(req.responseText);
 		if(resp_arr[0][22] == 0) {
 			for(var key in rmarkers) {
-				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 				}
 			$('boxes').innerHTML = resp_arr[0][19];
 			window.latest_responder = 0;
@@ -5022,7 +5100,7 @@ function load_fs_facilities() {
 		var fac_arr = JSON.decode(req.responseText);
 		if(fac_arr[0][13] == 0) {
 			for(var key in fmarkers) {
-				if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
+				if(map && fmarkers[key]) {map.removeLayer(fmarkers[key]);}
 				}
 			$('fac_boxes').innerHTML = fac_arr[0][19];
 			window.latest_facility = 0;
@@ -6080,7 +6158,7 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 				}
 			var the_delstat = "Delivery Status: " + the_text + " ---- ";
 			var theTitle = the_delstat + the_messages[key][11];
-			outputtext += "<TR class=\"" + theClass + "\" title=\"" + theTitle + "\" style='width: 100%;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
+			outputtext += "<TR class=\"" + theClass + "\" title=\"" + theTitle + "\" style='width: 100%;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox&ticket_id=" + ticket_id + "&responder_id=" + responder_id + "&facility_id=" + facility_id + "&mi_id=" + mi_id + "&sort= " + sort + "&dir=" + dir + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
 			outputtext += "<TD style='" + theStatus + ";'>" + the_messages[key][10] + "</TD>";	//	Message ID
 			outputtext += "<TD style='" + theStatus + ";'>" + the_messages[key][1] + "</TD>";	//	Ticket ID
 			outputtext += "<TD style='" + theStatus + ";'>" + pad(8, the_messages[key][2], "\u00a0") + "</TD>";	//	Type Padded to 8 characters
@@ -6368,7 +6446,7 @@ function full_scr_ass() {
 			var outputtext = "<TABLE id='assignmentstable' class='cruises scrollable' style='width: 100%;'>";
 			outputtext += "<thead>";
 			outputtext += "<TR c='" + colors[i%2] + "'  style='width: " + window.listwidth + "px;'>";
-			outputtext += "<TH id='ass1' class='plain_listheader_fs'><?php print get_text('Ticket');?></TH>";
+			outputtext += "<TH id='ass1' class='plain_listheader_fs'>&nbsp;<?php print get_text('Ticket');?></TH>";
 			outputtext += "<TH id='ass2' class='plain_listheader_fs'><?php print get_text('Description');?></TH>";
 			outputtext += "<TH id='ass3' class='plain_listheader_fs'><?php print get_text('Unit');?></TH>";
 			outputtext += "<TH id='ass4' class='plain_listheader_fs'><?php print get_text('DS');?></TH>";
@@ -6379,7 +6457,7 @@ function full_scr_ass() {
 			for(var key = 0; key < ass_arr.length; key++) {
 				var the_resp = ass_arr[key][6];
 				outputtext += "<TR class='" + colors[i%2] + "' style='width: " + window.listwidth + "px;' onClick='myrclick(" + the_resp + ");'>";
-				outputtext += "<TD class='fs_td' >" + ass_arr[key][0] + "</TD>";
+				outputtext += "<TD class='fs_td' >&nbsp;" + ass_arr[key][0] + "</TD>";
 				outputtext += "<TD class='fs_td' >" + ass_arr[key][2] + "</TD>";
 				outputtext += "<TD class='fs_td' >" + ass_arr[key][4] + "</TD>";
 				outputtext += "<TD class='fs_td' >" + ass_arr[key][5] + "</TD>";

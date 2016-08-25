@@ -44,7 +44,7 @@ function get_categoryName($id) {
 window.onresize=function(){set_size();}
 
 window.onload = function(){set_size();}
-
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
 var mapHeight;
 var listHeight;

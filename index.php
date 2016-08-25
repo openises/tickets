@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.10A Beta - 05/31/16";	
+$version = "3.11A Beta - 8/10/16";	
 
 /*
 10/1/08 added error reporting
@@ -346,6 +346,27 @@ function cleanup_captions() {	//	detects and deletes dupe captions, leaves custo
 					$query4 = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES (" . $caption . ", " . $caption . ");";
 					$result4 = mysql_query($query4) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 					}
+				}
+			}
+		}
+	}
+	
+function cleanup_states_translator() {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`;";	// 11/30/10
+	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
+	$num_rows = mysql_num_rows($result);
+	if($num_rows > 0) {
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$name = quote_smart($row['name']);
+			$code = quote_smart($row['code']);
+			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator` WHERE `name` = " . $name . ";";
+			$result2 = mysql_query($query2) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$num_rows2 = mysql_num_rows($result2);
+			if($num_rows2 > 1) {
+				$query3 = "DELETE FROM `$GLOBALS[mysql_prefix]states_translator` WHERE `name` = " . $name . ";";
+				$result3 = mysql_query($query3) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				$query4 = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` ( `name`, `code`) VALUES (" . $name . ", " . $code . ");";
+				$result4 = mysql_query($query4) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
 				}
 			}
 		}
@@ -1180,7 +1201,8 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 				(4, 'Ring Fence', '1', 'install routine', '$now'),
 				(5, 'Exclusion Zone', '1', 'install routine', '$now');";
 				$result_insert = mysql_query($query_insert) or do_error($query_insert , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	6/10/11	
-			}
+				}
+			
 			if (!table_exists("stats_type")) {	//	6/10/11		
 				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]stats_type` (
 				`st_id` int(2) NOT NULL AUTO_INCREMENT,
@@ -1963,64 +1985,64 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 					PRIMARY KEY  (`id`)
 					) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;";
 				$result = @mysql_query($query);
-				}
 				
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` (`id`, `name`, `code`) VALUES
-				(1, 'Alabama', 'AL'),
-				(2, 'Alaska', 'AK'),
-				(3, 'Arizona', 'AZ'),
-				(4, 'Arkansas', 'AR'),
-				(5, 'California', 'CA'),
-				(6, 'Colorado', 'CO'),
-				(7, 'Connecticut', 'CT'),
-				(8, 'Delaware', 'DE'),
-				(9, 'Florida', 'FL'),
-				(10, 'Georgia', 'GA'),
-				(11, 'Hawaii', 'HI'),
-				(12, 'Idaho', 'ID'),
-				(13, 'Illinois', 'IL'),
-				(14, 'Indiana', 'IN'),
-				(15, 'Iowa', 'IA'),
-				(16, 'Kansas', 'KS'),
-				(17, 'Kentucky', 'KY'),
-				(18, 'Louisiana', 'LA'),
-				(19, 'Maine', 'ME'),
-				(20, 'Maryland', 'MD'),
-				(21, 'Massachusetts', 'MA'),
-				(22, 'Michigan', 'MI'),
-				(23, 'Minnesota', 'MN'),
-				(24, 'Mississippi', 'MS'),
-				(25, 'Missouri', 'MO'),
-				(26, 'Montana', 'MT'),
-				(27, 'Nebraska', 'NE'),
-				(28, 'Nevada', 'NV'),
-				(29, 'New Hampshire', 'NH'),
-				(30, 'New Jersey', 'NJ'),
-				(31, 'New Mexico', 'NM'),
-				(32, 'New York', 'NY'),
-				(33, 'North Carolina', 'NC'),
-				(34, 'North Dakota', 'ND'),
-				(35, 'Ohio', 'OH'),
-				(36, 'Oklahoma', 'OK'),
-				(37, 'Oregon', 'OR'),
-				(38, 'Pennsylvania', 'PA'),
-				(39, 'Rhode Island', 'RI'),
-				(40, 'South Carolina', 'SC'),
-				(41, 'South Dakota', 'SD'),
-				(42, 'Tennessee', 'TN'),
-				(43, 'Texas', 'TX'),
-				(44, 'Utah', 'UT'),
-				(45, 'Vermont', 'VT'),
-				(46, 'Virginia', 'VA'),
-				(47, 'Washington', 'WA'),
-				(48, 'West Virginia', 'WV'),
-				(49, 'Wisconsin', 'WI'),
-				(50, 'Wyoming', 'WY'),
-				(51, 'England', 'UK');";
-			$result = @mysql_query($query);
-			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` (`id`, `name`, `code`) VALUES (52, 'District of Columbia', 'DC');";
-			$result = @mysql_query($query);
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` (`id`, `name`, `code`) VALUES
+					(1, 'Alabama', 'AL'),
+					(2, 'Alaska', 'AK'),
+					(3, 'Arizona', 'AZ'),
+					(4, 'Arkansas', 'AR'),
+					(5, 'California', 'CA'),
+					(6, 'Colorado', 'CO'),
+					(7, 'Connecticut', 'CT'),
+					(8, 'Delaware', 'DE'),
+					(9, 'Florida', 'FL'),
+					(10, 'Georgia', 'GA'),
+					(11, 'Hawaii', 'HI'),
+					(12, 'Idaho', 'ID'),
+					(13, 'Illinois', 'IL'),
+					(14, 'Indiana', 'IN'),
+					(15, 'Iowa', 'IA'),
+					(16, 'Kansas', 'KS'),
+					(17, 'Kentucky', 'KY'),
+					(18, 'Louisiana', 'LA'),
+					(19, 'Maine', 'ME'),
+					(20, 'Maryland', 'MD'),
+					(21, 'Massachusetts', 'MA'),
+					(22, 'Michigan', 'MI'),
+					(23, 'Minnesota', 'MN'),
+					(24, 'Mississippi', 'MS'),
+					(25, 'Missouri', 'MO'),
+					(26, 'Montana', 'MT'),
+					(27, 'Nebraska', 'NE'),
+					(28, 'Nevada', 'NV'),
+					(29, 'New Hampshire', 'NH'),
+					(30, 'New Jersey', 'NJ'),
+					(31, 'New Mexico', 'NM'),
+					(32, 'New York', 'NY'),
+					(33, 'North Carolina', 'NC'),
+					(34, 'North Dakota', 'ND'),
+					(35, 'Ohio', 'OH'),
+					(36, 'Oklahoma', 'OK'),
+					(37, 'Oregon', 'OR'),
+					(38, 'Pennsylvania', 'PA'),
+					(39, 'Rhode Island', 'RI'),
+					(40, 'South Carolina', 'SC'),
+					(41, 'South Dakota', 'SD'),
+					(42, 'Tennessee', 'TN'),
+					(43, 'Texas', 'TX'),
+					(44, 'Utah', 'UT'),
+					(45, 'Vermont', 'VT'),
+					(46, 'Virginia', 'VA'),
+					(47, 'Washington', 'WA'),
+					(48, 'West Virginia', 'WV'),
+					(49, 'Wisconsin', 'WI'),
+					(50, 'Wyoming', 'WY'),
+					(51, 'England', 'UK');";
+				$result = @mysql_query($query);
+				
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` (`id`, `name`, `code`) VALUES (52, 'District of Columbia', 'DC');";
+				$result = @mysql_query($query);
+			}
 			
 			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `watch` INT(2) NOT NULL DEFAULT 0 AFTER `set_severity`;";
 			$result = mysql_query($query);
@@ -2248,6 +2270,42 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 			do_setting ('debug','0');			// 04/22/16	For debug purposes
 			do_setting ('log_days','3');			// 04/22/16	For debug purposes
 			update_setting ('reverse_geo','1');
+			do_setting ('bounds','0.0,0.0,0.0,0.0');
+			
+			cleanup_states_translator();
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `name` VARCHAR( 48 ) NOT NULL AFTER `id`";
+			$result = mysql_query($query);
+			
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs`";
+			$result = mysql_query($query);
+			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				if($row['name'] == "") {$row['name'] = trim(substr($row['message'], 0));}
+				}
+				
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_phone` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_desc`";		// 07/06/16
+			$result = mysql_query($query);
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_street` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_phone`";		// 07/06/16
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_city` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_street`";		// 07/06/16
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_toaddress` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_city`";		// 07/06/16
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_dispnotes` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_toaddress`";		// 07/06/16
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_nature` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_dispnotes``";		// 07/06/16
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_priority` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_nature`";		// 07/06/16
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_warnloc` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_priority`";		// 07/06/16
+			$result = mysql_query($query);
 			}		// end (!($version ==...) ==================================================			
 
 //	check_ai("major_incidents");

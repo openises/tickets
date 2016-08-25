@@ -2,9 +2,9 @@
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
-if($_GET['q'] != $_SESSION['id']) {
+/* if($_GET['q'] != $_SESSION['id']) {
 	exit();
-	}
+	} */
 extract($_GET);
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
 $sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : $_GET['sort'];
@@ -39,6 +39,7 @@ $showall = (array_key_exists('showall', $_GET) && $_GET['showall'] == 'no') ? " 
 
 function incident_list() {
 	global $theFacility, $istest, $disposition, $patient, $incident, $num_rows, $internet, $by_severity, $sev_color, $gender, $showall;
+	$i = 0;
 	$time = microtime(true); // Gets microseconds
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 	$pats_ary = array();
@@ -116,7 +117,7 @@ function incident_list() {
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`t`.`rec_facility` = `rf`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `in` ON (`t`.`in_types_id` = `in`.`id`) 
 		LEFT JOIN `$GLOBALS[mysql_prefix]fac_case_cat` `fcc` ON (`fn`.`type` = `fcc`.`id`) 
-		WHERE (`t`.`facility` = " . $theFacility . " OR `t`.`rec_facility` = " . $theFacility . ")" . $showall;
+		WHERE (`t`.`facility` = " . $theFacility . " OR `t`.`rec_facility` = " . $theFacility . ") AND (`t`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `t`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}') " . $showall;
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$num_rows = mysql_num_rows($result);
@@ -125,7 +126,6 @@ function incident_list() {
 		$ticket_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
-		$i = 0;
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
 			$problemstart = strtotime($row['problemstart']);
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
@@ -202,6 +202,123 @@ function incident_list() {
 			$ticket_row[$i][19] = $facLat;
 			$ticket_row[$i][20] = $facLng;
 			$i++;
+			}				// end tickets while ($row = ...)
+		}
+	//	undispatched incidents
+	$limit = "";
+	
+	$query = "SELECT *,problemstart AS tick_pstart,
+		`problemend` AS `problemend`,
+		`booked_date` AS `booked_date`,
+		`u`.`user` AS `theuser`, 
+		`t`.`scope` AS `tick_scope`,
+		`t`.`id` AS `tick_id`,
+		`t`.`description` AS `tick_descr`,
+		`t`.`problemstart` AS `problemstart`,		
+		`t`.`status` AS `ticket_status`,
+		`t`.`street` AS `ticket_street`,
+		`t`.`city` AS `ticket_city`,
+		`t`.`state` AS `ticket_state`,
+		`t`.`lat` AS `tick_lat`,
+		`t`.`lng` AS `tick_lng`,
+		`t`.`facility` AS `facility`,
+		`t`.`rec_facility` AS `rec_facility`,		
+		`f`.`name` AS `fac_name`,
+		`f`.`lat` AS `fac_lat` ,
+		`f`.`lng` AS `fac_lng` ,
+		`rf`.`name` AS `rec_fac_name`,
+		`rf`.`lat` AS `rec_fac_lat` ,
+		`rf`.`lng` AS `rec_fac_lng` ,
+		`in`.`type` AS `intype`, 
+		`in`.`id` AS `intype_id`,
+		`in`.`color` AS `color`,		
+		`fn`.`origin` AS `origin`,
+		`fn`.`destination` AS `fac_dest`,
+		`fn`.`type` AS `fac_dealtype`,
+		`fn`.`notes` AS `fac_notes`,
+		`fn`.`patient` AS `fac_patient`,
+		`fn`.`ETA` AS `ETA`,
+		`fcc`.`category` AS `med_category`,
+		`fcc`.`color` AS `med_color`,
+		`fcc`.`bgcolor` AS `med_bgcolor`,
+		(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` `a`
+			WHERE `a`.`ticket_id` = `t`.`id`  
+			AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
+			AS `units_assigned`	
+		FROM `$GLOBALS[mysql_prefix]ticket` `t`
+		LEFT JOIN `$GLOBALS[mysql_prefix]facnotes` `fn` ON (`t`.`id` = `fn`.`ticket_id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` ON (`t`.`_by` = `u`.`id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON (`t`.`facility` = `f`.`id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`t`.`rec_facility` = `rf`.`id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `in` ON (`t`.`in_types_id` = `in`.`id`) 
+		LEFT JOIN `$GLOBALS[mysql_prefix]fac_case_cat` `fcc` ON (`fn`.`type` = `fcc`.`id`) 
+		WHERE (`t`.`facility` = " . $theFacility . " OR `t`.`rec_facility` = " . $theFacility . ") AND (`t`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `t`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}')";
+
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$num_rows = mysql_num_rows($result);
+//	Major While
+	if($num_rows == 0) {
+		$ticket_row[0][0] = 0;
+		} else {
+		$temp  = (string) ( round((microtime(true) - $time), 3));
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			if(intval($row['units_assigned']) == 0) {
+				$problemstart = strtotime($row['problemstart']);
+				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+				$now = strtotime($now);
+				$difference = round(abs($now - $problemstart) / 60,2);
+				$by_severity[$row['severity']] ++;
+				$sevs_arr = array();
+				$sevs_arr[0] = "blue";
+				$sevs_arr[1] = "green";
+				$sevs_arr[2] = "red";
+				$textcol_arr = array();
+				$textcol_arr[0] = "white";
+				$textcol_arr[1] = "black";
+				$textcol_arr[2] = "black";			
+				$intype = $row['intype'];
+				$the_id = $row['tick_id'];
+				$facOrigin = $row['origin'];
+				$facDest = $row['fac_dest'];
+				$facType = $row['fac_dealtype'];
+				$facNotes = $row['fac_notes'];
+				$medType = $row['med_category'];
+				$medColor = $row['med_color'];
+				$medBgcolor = $row['med_bgcolor'];
+				$facLat = ($row['rec_facility'] != 0) ? $row['rec_fac_lat'] : $row['fac_lat'];
+				$facLng = ($row['rec_facility'] != 0) ? $row['rec_fac_lng'] : $row['fac_lng'];			
+				$color = ($facType == 0) ? $textcol_arr[$row['severity']] : $medColor;
+				$bgcolor = ($facType == 0) ? $sevs_arr[$row['severity']] : $medBgcolor;
+				$updated = format_sb_date_2($row['updated']);
+				$the_scope = htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
+				$address_street=htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 128), ENT_QUOTES);
+				$num_patients = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: 0;
+				if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
+				$locale = get_variable('locale');	// 08/03/09			
+				
+				$ticket_row[$i][0] = htmlentities($the_scope, ENT_QUOTES);
+				$ticket_row[$i][1] = htmlentities($address_street, ENT_QUOTES);
+				$ticket_row[$i][2] = $intype;
+				$ticket_row[$i][3] = $num_patients;
+				$ticket_row[$i][4] = $the_id;
+				$ticket_row[$i][5] = htmlentities($the_scope . " " . $address_street, ENT_QUOTES);
+				$ticket_row[$i][6] = $facDest;
+				$ticket_row[$i][7] = $medType;
+				$ticket_row[$i][8] = "TBA";
+				$ticket_row[$i][9] = "TBA";			
+				$ticket_row[$i][10] = "New Job not assigned";
+				$ticket_row[$i][11] = $color;
+				$ticket_row[$i][12] = $bgcolor;	
+				$ticket_row[$i][13] = 0;
+				$ticket_row[$i][14] = 0;
+				$ticket_row[$i][15] = 0;
+				$ticket_row[$i][16] = 0;
+				$ticket_row[$i][17] = $row['tick_lat'];
+				$ticket_row[$i][18] = $row['tick_lng'];
+				$ticket_row[$i][19] = $facLat;
+				$ticket_row[$i][20] = $facLng;
+				$i++;
+				}
 			}				// end tickets while ($row = ...)
 		}
 	return $ticket_row;

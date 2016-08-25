@@ -1112,7 +1112,6 @@ function do_mail_in_win(id) {			// individual email 8/17/09
 function do_close_tick(the_id) {	//	3/15/11
 	if(starting) {return;}					// dbl-click catcher
 	starting=true;
-	window.tmarkers[the_id].closePopup();
 	var url = "close_in.php?ticket_id=" + escape(the_id);	//
 	newwindow_close = window.open(url, "close_ticket", "titlebar, location=0, resizable=1, scrollbars, height=300, width=700, status=0, toolbar=0, menubar=0, left=100,top=100,screenX=100,screenY=100");
 	if (isNull(newwindow_close)) {
@@ -1120,7 +1119,7 @@ function do_close_tick(the_id) {	//	3/15/11
 		return;
 		}
 	if (window.focus) {newwindow_close.focus()}
-	close_context();
+	if(tmarkers[the_id]) {tmarkers[the_id].closePopup();}
 	starting = false;
 	}		// end function do mail_win()
 	

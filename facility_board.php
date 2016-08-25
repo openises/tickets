@@ -72,8 +72,18 @@ function get_user_name($the_id) {
 <script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
 <script type="text/javascript" src="./js/esri-leaflet.js"></script>
 <script type="text/javascript" src="./js/Control.Geocoder.js"></script>
-<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"></script>
-<script type="text/javascript" src="./js/Google.js"></script>
+<?php
+if ($_SESSION['internet']) {
+	$api_key = get_variable('gmaps_api_key');
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+	if($key_str) {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script type="text/javascript" src="./js/Google.js"></script>
+<?php 
+		}
+	}
+?>
 <script type="text/javascript" src="./js/L.Graticule.js"></script>
 <script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <script type="text/javascript" src="./js/usng.js"></script>
@@ -211,11 +221,9 @@ function setDirections(fromLat, fromLng, toLat, toLng, theDiv) {
 		]});
 	window.theDirections.on('routingerror', function(o) { console.log(o); });
 	setTimeout(function() {
-		if($(theDiv).innerHTML == "") {
-			theETA = Math.round(totTime / 60) + " Minutes<BR /><BR /><SPAN style='color: red; width: 80%; display: inline-block;'>Approximate based on tracking data</SPAN>";
-			$(theDiv).innerHTML = theETA;
-			}
-		},500);
+		theETA = Math.round(window.totTime / 60) + " Minutes<BR /><BR /><SPAN style='color: red; width: 80%; display: inline-block;'>Approximate based on tracking data</SPAN>";
+		$(theDiv).innerHTML = theETA;
+		},1000);
 	}
 	
 function logged_in() {								// returns boolean
@@ -324,6 +332,7 @@ function get_requests() {
 	var url = "./ajax/facboard_incidents.php?id=<?php print $_SESSION['user_id'];?>&version=" + randomnumber+"&q="+sessID+"&showall="+window.showall;
 	sendRequest (url,requestlist_cb, "");
 	function requestlist_cb(req) {
+//		var theIncs = new Array();
 		var i = 1;
  		var the_requests = JSON.decode(req.responseText);
 		var theCount;
@@ -333,7 +342,7 @@ function get_requests() {
 		outputtext += "<TH class='plain_listheader'>Incident Type</TH>";
 		outputtext += "<TH class='plain_listheader'>Origin</TH>";
 		outputtext += "<TH class='plain_listheader'>Destination</TH>";
-		outputtext += "<TH class='plain_listheader'>Med Type</TH>";
+		outputtext += "<TH class='plain_listheader'>Type</TH>";
 		outputtext += "<TH class='plain_listheader'>Num Patients</TH>";
 		outputtext += "<TH class='plain_listheader'>Notes</TH>";
 		outputtext += "<TH class='plain_listheader'>Patient Name</TH>";
@@ -348,7 +357,11 @@ function get_requests() {
 			} else {
 			theCount = the_requests.length;
 			for (var key = 0; key < the_requests.length; key++) {
+				if(the_requests[key][13] == 0) {
+				outputtext += "<TR class='listRow' style='background-color: yellow; width: " + window.listWidth + "px;'>";
+				} else {
 				outputtext += "<TR class='listRow " + colors[i%2] + "' style='width: " + window.listWidth + "px;'>";
+				}
 				outputtext += "<TD class='listEntry' onClick='do_window(" + the_requests[key][4] + ");'>" + the_requests[key][2] + "</TD>";
 				outputtext += "<TD class='listEntry' onClick='do_window(" + the_requests[key][4] + ");'>" + the_requests[key][5] + "</TD>";
 				outputtext += "<TD class='listEntry' onClick='do_window(" + the_requests[key][4] + ");'>" + the_requests[key][6] + "</TD>";

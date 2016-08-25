@@ -23,6 +23,7 @@ $gunload = "";
 window.onresize=function(){set_size()};
 
 window.onload = function(){set_size();};
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var type = "e";
 var selected_position = false;
 var circle;

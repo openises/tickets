@@ -43,15 +43,8 @@ function get_city($the_id) {
 	
 
 $now = time() - (intval(get_variable('delta_mins')*60));
-if ($_SESSION['internet']) {				// 8/22/10
-	$api_key = trim(get_variable('gmaps_api_key'));
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-	} else {
-	$api_key = "";
-	$key_str = "";	
-	}
-	
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+$api_key = trim(get_variable('gmaps_api_key'));
+$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -67,7 +60,13 @@ body {overflow:hidden}
 </style>
 <SCRIPT SRC="../js/misc_function.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
+<?php
+if($key_str) {
+?>
+	<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
+<?php
+	}
+?>
 <SCRIPT>
 var randomnumber;
 var the_string;

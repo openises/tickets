@@ -200,19 +200,23 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		if (xmlHttp.readyState == 4) {
 			if (xmlHttp.status == 200) {
 				var response = JSON.decode(xmlHttp.responseText);
-				for(var key in response[0]) {
-					the_resp = key;
-					the_val = response[0][key];
-					un_stat_chg(the_resp, the_val);
-					}
-				if(response[1]) {
-					var the_mess = response[1][0];
-					var the_stored = response[1][1];
-					if(the_stored != 0) {
-						show_msg("There are " + the_stored + " new messages");
-						msg_signal_r();								// light the msg button
-						} else {
-						msg_signal_r_off();								// unlight the msg button
+				if(response) {
+					if(response[0]) {
+						for(var key in response[0]) {
+							the_resp = key;
+							the_val = response[0][key];
+							un_stat_chg(the_resp, the_val);
+							}
+						}
+					if(response[1]) {
+						var the_mess = response[1][0];
+						var the_stored = response[1][1];
+						if(the_stored != 0) {
+							show_msg("There are " + the_stored + " new messages");
+							msg_signal_r();								// light the msg button
+							} else {
+							msg_signal_r_off();								// unlight the msg button
+							}
 						}
 					}
 				}

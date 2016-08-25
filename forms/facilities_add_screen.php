@@ -34,7 +34,7 @@ print do_calls();		// call signs to JS array for validation
 window.onresize=function(){set_size()};
 
 window.onload = function(){set_size();};
-
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
 var mapHeight;
 var listHeight;

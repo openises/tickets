@@ -103,8 +103,10 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 	theForm.submit();
 	}
 	
-	function set_message(message) {	//	10/23/12
-		var randomnumber=Math.floor(Math.random()*99999999);	
+	function set_message(id) {	//	10/23/12
+		var randomnumber=Math.floor(Math.random()*99999999);
+		var theMessages = <?php echo json_encode($std_messages);?>;
+		var message = theMessages[id]['message'];
 		var tick_id = <?php print $tick_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
 		sendRequest (url,replacetext_cb, "");			
@@ -145,15 +147,13 @@ $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'
 	<TR VALIGN = 'TOP' CLASS='even'> <!-- 10/23/12 -->
 		<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD> <!-- 10/23/12 -->
 
-			<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].text);'>	<!--  11/17/10, 10/23/12 -->
+			<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].value);'>	<!--  11/17/10, 10/23/12 -->
 			<OPTION VALUE=0 SELECTED>Select</OPTION> <!-- 10/23/12 -->
 <?php
-//					dump(__LINE__);
-			$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";
-			$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-			while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
-				print "\t<OPTION VALUE='{$row1['id']}'>{$row1['message']}</OPTION>\n";
-				}
+//				dump(__LINE__);
+				foreach($std_messages as $val) {
+					print "\t<OPTION VALUE='{$val['id']}'>{$val['name']}</OPTION>\n";
+					}
 ?>
 			</SELECT>
 			<BR />
@@ -216,12 +216,16 @@ else {
 	$resps = substr(implode(',', $the_resp_ids), 0 -2);
 	$count = do_send ($email_addresses, $smsg_addresses, "Tickets CAD",  $_POST['frm_text'], $_POST['ticket_id'], $resps );		// - ($to_str, $to_smsr, $subject_str, $text_str, %ticket_id, $responder_id ) 
 ?>
-<!-- <BODY onLoad = "setTimeout('window.close()',6000);"><CENTER> -->
-<BODY><CENTER> 
-<BR /><BR /><H3>Sent dispatch notifications</H3><BR /><BR />
-<P><?php print $count;?> Message(s) sent</P>
+	<!-- <BODY onLoad = "setTimeout('window.close()',6000);"><CENTER> -->
+	<BODY><CENTER> 
+	<BR /><BR /><H3>Sent dispatch notifications</H3><BR /><BR />
+	<P><?php print $count;?> Message(s) sent</P>
+	<SCRIPT>
+	setTimeout(function(){ window.close(); }, 10000);
+	</SCRIPT>
 <?php
 	}				// end else
 ?>
+
 </BODY>
 </HTML>

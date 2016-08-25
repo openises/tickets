@@ -61,6 +61,7 @@ $theRadius = (($row['line_type'] == "c") && (($temp[1]) && ($temp[1] != 0))) ? $
 window.onresize=function(){set_size()};
 
 window.onload = function(){set_size();};
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var polygon;
 var polyline;
 var circle;

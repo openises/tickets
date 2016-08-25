@@ -26,7 +26,6 @@ $facs_col_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == 
 $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "h")) ? "" : "none";
 $columns_arr = explode(',', get_msg_variable('columns'));
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;
-
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
@@ -95,7 +94,7 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 		.leaflet-control-layers-expanded { padding: 10px 10px 10px 10px; color: #333; background-color: #F1F1F1; border: 3px outset #707070;}
 		.leaflet-control-layers-expanded .leaflet-control-layers-list {height: auto; display: block; position: relative; margin-bottom: 20px;}
 		.leaflet-bottom {bottom: 150px;	}
-		.leaflet-right {right: 100px;	}
+		.leaflet-right {right: 20px;	}
 	</STYLE>
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
@@ -117,11 +116,15 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
 <?php
 	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
 ?>
-		<script src="http://maps.google.com/maps/api/js?v=3"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script type="text/javascript" src="./js/Google.js"></script>
 <?php 
-		} 
+			}
+		}
 ?>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -132,6 +135,7 @@ if(file_exists("./incs/modules.inc.php")) {
 <SCRIPT>
 window.onresize=function(){set_size()};
 var showTicker = <?php print $use_ticker;?>;
+var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var controlDiv;
 var theLayer;
 var quick = false;
@@ -286,6 +290,9 @@ function set_size() {
 	if(isTicker == 1) {
 		$('controls_bar').style.position = "fixed";
 		$("controls_bar").style.bottom = "60px";
+		} else {
+		$('controls_bar').style.position = "fixed";
+		$("controls_bar").style.bottom = "5px";			
 		}
 	load_exclusions();
 	load_ringfences();
@@ -415,7 +422,7 @@ function do_tab(tabid, suffix, lat, lng) {
 		onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 		onClick="$('leftcol').style.display = 'inline-block'; $('showlists').style.display = 'none'; $('hidelists').style.display = 'inline-block';">
 		<IMG src='./images/fs_show_lists_button.jpg'></SPAN>
-		<DIV id='leftcol' style='position: absolute; top: 5px; left: 5px; width: 250px; border: 1px outset #707070; background-color:rgba(0, 0, 0, 0.2); text-align: center; z-index: 3;'>
+		<DIV id='leftcol' style='position: absolute; top: 5px; left: 5px; width: 250px; padding-left: 20px; border: 1px outset #707070; background-color:rgba(0, 0, 0, 0.2); text-align: center; z-index: 3;'>
 			<BR /><BR />
 			<DIV id='listheading' class='heading' style='text-align: center; font-size: 24px;'>Incidents and Assignments</DIV><BR /><BR />
 			<DIV id='ticketheader' class='header' style='text-align: center;'>Incidents</DIV>
@@ -442,7 +449,7 @@ function do_tab(tabid, suffix, lat, lng) {
 		<TR>
 			<TD>
 				<FORM NAME = 'frm_interval_sel' STYLE = 'display:inline' >
-					<SELECT NAME = 'frm_interval' onChange = 'show_btns_closed(); set_period(this.value);'>
+					<SELECT ID='frm_interval' NAME = 'frm_interval' onChange = 'show_btns_closed(); set_period(this.value);'>
 						<OPTION VALUE='99' SELECTED><?php print get_text("Change display"); ?></OPTION>
 						<OPTION VALUE='0'><?php print get_text("Current situation"); ?></OPTION>
 						<OPTION VALUE='1'><?php print $incidents;?> closed today</OPTION>

@@ -499,12 +499,18 @@ if(empty($_POST)) {
 		$num_tkts = mysql_num_rows($tick_result);
 		$error_msg = "";
 		}
-		
+	//	ticket_id=" + ticket_id + "&responder_id=" + responder_id + "&facility_id=" + facility_id + "&mi_id=" + mi_id + "&sort= " + sort + "&dir=" + dir 
 
 	$tick_row = stripslashes_deep(mysql_fetch_array($tick_result));
 	$opener = strip_tags($_GET['screen']);
+	$ticket_id = array_key_exists('ticket_id', $_GET) ? strip_tags($_GET['ticket_id']) : 0;
+	$responder_id = array_key_exists('responder_id', $_GET) ? strip_tags($_GET['responder_id']) : 0;
+	$facility_id = array_key_exists('facility_id', $_GET) ? strip_tags($_GET['facility_id']) : 0;
+	$mi_id = array_key_exists('mi_id', $_GET) ? strip_tags($_GET['mi_id']) : 0;
+	$sort = array_key_exists('sort', $_GET) ? strip_tags($_GET['sort']) : 0;
+	$dir = array_key_exists('dir', $_GET) ? strip_tags($_GET['dir']) : 0;
 	$folder = (array_key_exists('foder', $_GET)) ? strip_tags($_GET['folder']) : "inbox";
-	$the_refresh =  (isset($_GET['wastebasket'])) ? "refresh_waste(\"" . $opener . "\");" : "refresh_opener(\"" . $opener . "\", \"" . $folder . "\");";
+	$the_refresh =  (isset($_GET['wastebasket'])) ? "refresh_waste(\"" . $opener . "\");" : "refresh_opener(\"" . $opener . "\", \"" . $folder . "\", \"" . $ticket_id . "\", \"" . $responder_id . "\", \"" . $facility_id . "\", \"" . $mi_id . "\", \"" . $sort . "\", \"" . $dir . "\");";
 ?>
 	<BODY onLoad='<?php print $the_refresh;?>;'>
 		<CENTER>	

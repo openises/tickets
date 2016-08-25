@@ -80,7 +80,11 @@ var the_list = "";
 var archive;
 var folder = "inbox";
 var the_sentstring = "";
-var thebutton;	
+var thebutton;
+var showing_inbox = false;
+var showing_sent = false;
+var showing_archive = false;
+var existing_msgs = 0;
 
 function open_tick_window (id) {				// 5/2/10
 	var url = "single.php?ticket_id="+ id;
@@ -89,10 +93,24 @@ function open_tick_window (id) {				// 5/2/10
 	}
 
 function get_mainmessages() {
+	window.showing_inbox = true;
+	window.showing_archive = false;
+	window.showing_sent = false;
+	window.showing_waste = false;
+	window.msgs_interval = false;
+	window.sentmsgs_interval = false;
+	window.all_msgs_interval = false;
 	get_main_messagelist('','',sortby, 'DESC','', 'msg_win');
 	}
 
 function get_sentmessages() {
+	window.showing_inbox = false;
+	window.showing_archive = false;
+	window.showing_sent = true;
+	window.showing_waste = false;
+	window.msgs_interval = false;
+	window.sentmsgs_interval = false;
+	window.all_msgs_interval = false;
 	get_sent_messagelist('','',sortby, 'DESC','', 'msg_win');
 	}
 	
@@ -122,10 +140,21 @@ function do_plain (the_id) {				// 8/21/10
 	}
 		
 function get_archive(thearchive, button) {
-	if($('all_read_but')) { $('all_read_but').style.display = "none"; }
-	if($('all_unread_but')) { $('all_unread_but').style.display = "none"; }
-	if($('empty_waste')) { $('empty_waste').style.display = "none"; }	
-	if($('del')) { $('del').innerHTML = "&nbsp;&nbsp;";	}
+	window.showing_inbox = false;
+	window.showing_archive = true;
+	window.showing_sent = false;
+	window.showing_waste = false;
+	window.msgs_interval = false;
+	window.sentmsgs_interval = false;
+	window.all_msgs_interval = false;
+	if($('chk_control')) { $('chk_control').style.display = "none"; }
+	deadButton("sel_unread_but");
+	deadButton("sel_read_but");
+	deadButton("rest_sel_but");	
+	deadButton("del_sel");
+	aliveButton("empty_waste");
+	if($('chk')) { $('chk').className = "cols_h"; }	
+	if($('empty_waste')) { $('empty_waste').style.display = "none"; }
 	folder = "archive";
 	thebutton = button;
 	light_butt(button);	
@@ -135,10 +164,21 @@ function get_archive(thearchive, button) {
 	}
 	
 function get_wastebin() {
-	if($('all_read_but')) { $('all_read_but').style.display = "none"; }
-	if($('all_unread_but')) { $('all_unread_but').style.display = "none"; }
-	if($('empty_waste')) { $('empty_waste').style.display = "inline-block"; }
-	if($('del')) { $('del').innerHTML = "Res"; }
+	$('chk_control').checked = false;
+	window.showing_inbox = false;
+	window.showing_archive = false;
+	window.showing_sent = false;
+	window.showing_waste = true;
+	window.msgs_interval = false;
+	window.sentmsgs_interval = false;
+	window.all_msgs_interval = false;
+	if($('chk_control')) { $('chk_control').style.display = "inline-block"; }
+	deadButton("sel_unread_but");
+	deadButton("sel_read_but");
+	deadButton("rest_sel_but");	
+	deadButton("del_sel");
+	aliveButton("empty_waste");
+	if($('chk')) { $('chk').className = "cols_h_chk"; }	
 	folder = "wastebasket";	
 	light_butt('deleted');
 	archive = "";	
@@ -146,10 +186,14 @@ function get_wastebin() {
 	}
 	
 function get_inbox() {
-	if($('all_read_but')) { $('all_read_but').style.display = "inline-block"; }
-	if($('all_unread_but')) { $('all_unread_but').style.display = "inline-block"; }
-	if($('empty_waste')) { $('empty_waste').style.display = "none";	}
-	if($('del')) { $('del').innerHTML = "Del"; }	
+	$('chk_control').checked = false;
+	if($('chk_control')) { $('chk_control').style.display = "inline-block"; }
+	deadButton("sel_unread_but");
+	deadButton("sel_read_but");
+	deadButton("rest_sel_but");	
+	deadButton("del_sel");
+	deadButton("empty_waste");
+	if($('chk')) { $('chk').className = "cols_h_chk"; }	
 	folder = "inbox";	
 	clear_filter(folder);		
 	light_butt('inbox');
@@ -158,10 +202,14 @@ function get_inbox() {
 	}
 
 function get_sent() {
-	if($('all_read_but')) { $('all_read_but').style.display = "inline-block"; }
-	if($('all_unread_but')) { $('all_unread_but').style.display = "inline-block"; }
-	if($('empty_waste')) { $('empty_waste').style.display = "none"; }
-	if($('del')) { $('del').innerHTML = "Del";	}
+	$('chk_control').checked = false;
+	if($('chk_control')) { $('chk_control').style.display = "inline-block"; }
+	deadButton("sel_unread_but");
+	deadButton("sel_read_but");
+	deadButton("rest_sel_but");	
+	deadButton("del_sel");
+	deadButton("empty_waste");
+	if($('chk')) { $('chk').className = "cols_h_chk"; }	
 	folder = "sent";	
 	clear_filter(folder);		
 	light_butt('sent');
@@ -206,19 +254,19 @@ thelevel = "<?php print can_delete_msg();?>";
 	</DIV>
 	<DIV id='view_messages' style='position: absolute; right: 0px; top: 0px; width: 82%; height: 100%; border: 4px outset #FFFFFF;'>
 		<DIV id='header1' style='position: relative; width: 100%;'>
-			<DIV style='background-color: #707070; color: #FFFFFF; position: relative; text-align: center;'><BR />
-				<SPAN id='close_but' class='plain' style='float: none;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='window.close();'>Close</SPAN>
+			<DIV style='background-color: #808080; position: relative; text-align: center;'>
+				<SPAN id='close_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='window.close();'>Close</SPAN>
+				<SPAN id='sel_read_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status_selected("read", 0, "messages");'>Mark Sel Read</SPAN>	
+				<SPAN id='sel_unread_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status_selected("unread", 0, "messages");'>Mark Sel Unread</SPAN>	
+				<SPAN id='rest_sel_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='rest_selected_messages();'>Restore Sel</SPAN>	
 <?php
 				if(is_super()) {
 ?>
-				<SPAN id='all_read_but' class='plain' style='float: none; display: none;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status("read", 0, "messages");'>Mark All Read</SPAN>	
-				<SPAN id='all_unread_but' class='plain' style='float: none; display: none;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status("unread", 0, "messages");'>Mark All Unread</SPAN>	
-				<SPAN id='del_all' class='plain' style='float: none; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='del_all_messages();'>Delete All Messages</SPAN>	
-				<SPAN id='empty_waste' class='plain' style='float: none; display: none;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='empty_waste()'>Empty Wastebin</SPAN>	
+					<SPAN id='del_sel' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='del_selected_messages();'>Delete Sel</SPAN>	
+					<SPAN id='empty_waste' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='empty_waste();'>Empty Waste</SPAN>	
 <?php
-}
-?>
-			
+					}
+?>	
 			</DIV>
 			<DIV style='background-color: #707070; color: #FFFFFF; position: relative; text-align: center;'>
 				<SPAN style='vertical-align: middle; text-align: center; font-size: 22px; color: #FFFFFF;'>Messages</SPAN>
@@ -230,21 +278,23 @@ thelevel = "<?php print can_delete_msg();?>";
 						<SPAN id = 'filter_box' class='plain' style='float: none; vertical-align: middle;' onMouseover = 'do_hover(this);' onMouseout='do_plain(this);' onClick='do_filter(folder);'>&nbsp;&nbsp;&#9654;&nbsp;&nbsp;GO</SPAN>
 						<SPAN id = 'the_clear' class='plain' style='float: none; display: none; vertical-align: middle;' onMouseover = 'do_hover(this);' onMouseout='do_plain(this);' onClick='clear_filter(folder);'>&nbsp;&nbsp;X&nbsp;&nbsp;Clear</SPAN>
 					</SPAN>
-				</FORM><BR />
+				</FORM>
+			<DIV id='status_box' style='width: 100%; height: 1.5em; display: inline-block;'> </DIV>
 			</DIV>
 			<TABLE cellspacing='0' cellpadding='0' style='width: 99%; background-color: #CECECE; position: relative;'>
 				<TR id='therow' style='padding-top: 3px; padding-bottom: 3px; background-color: #CECECE; color: #FFFFFF; width: 100%;'>
 <?php
 				$print = "";
+				$print .= "<TD id='chk' class='cols_h_chk' style='width: 3%;'><input type='checkbox' id='chk_control' name='chk_control' value='chk_control' onClick='toggle_select_all();'></TD>";
 				$print .= (in_array('1', $columns_arr)) ? "<TD id='ticket' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`ticket_id`',filter)\">Tkt</TD>" : "";					
 				$print .= (in_array('2', $columns_arr)) ? "<TD id='type' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`msg_type`',filter)\">Typ</TD>" : "";				
 				$print .= (in_array('3', $columns_arr)) ? "<TD id='fromname' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`fromname`',filter)\">From</TD>" : "";				
 				$print .= (in_array('4', $columns_arr)) ? "<TD id='recipients' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`recipients`',filter)\">To</TD>" : "";
 				$print .= (in_array('5', $columns_arr)) ? "<TD id='subject' class='cols_h' NOWRAP style='width: 15.5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`subject`',filter)\">Subject</TD>" : "";					
-				$print .= (in_array('6', $columns_arr)) ? "<TD id='message' class='cols_h' NOWRAP style='width: 40%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`message`',filter)\">Message</TD>" : "";
+				$print .= (in_array('6', $columns_arr)) ? "<TD id='message' class='cols_h' NOWRAP style='width: 38%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`message`',filter)\">Message</TD>" : "";
 				$print .= (in_array('7', $columns_arr)) ? "<TD id='date' class='cols_h' style='width: 8%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`date`',filter)\">Date</TD>" : "";
 				$print .= (in_array('8', $columns_arr)) ? "<TD id='owner' class='cols_h' NOWRAP style='width:7%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`_by`',filter)\">Owner</TD>" : "";
-				$print .= "<TD id='del' class='cols_h' NOWRAP style='width: 3%; color: red;'>DEL</TD>";
+				$print .= "<TD id='del' class='cols_h' NOWRAP style='width: 3%; color: red;'>&nbsp;&nbsp;&nbsp;</TD>";
 				print $print;
 ?>			
 				</TR>

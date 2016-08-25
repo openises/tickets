@@ -324,7 +324,8 @@ $GLOBALS['LOG_WARNLOCATION_DELETE']	=4014;		// 8/9/13
 
 $GLOBALS['LOG_BROADCAST_MESSAGE'] 	=5000;		//	11/30/15
 $GLOBALS['LOG_BROADCAST_ALERT'] 	=5001;		//	11/30/15
-$GLOBALS['LOG_BROADCAST_ERROR'] 	=5099;		//	11/30/15 
+$GLOBALS['LOG_BROADCAST_ERROR'] 	=5099;		//	11/30/15
+$GLOBALS['LOG_SYSTEM_MESSAGE'] 		=5999;		//	07/06/16
 
 $GLOBALS['SOCKET_MESSAGETYPE_STANDARD'] 	= 1;		//	12/16/15
 $GLOBALS['SOCKET_MESSAGETYPE_ERROR'] 		= 99;		//	12/16/15
@@ -2195,7 +2196,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 	$match_str = preg_replace("/[^a-zA-Z]+/", "", $match_str);					// drop ash/trash - 5/31/2013
 
 	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "V"));}		// empty get all - force non-zero hit
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`=$ticket_id LIMIT 1";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id . " LIMIT 1";
 	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
 	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
@@ -2306,7 +2307,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 			
 				case "P":															
 					$gt = get_text("Patient");
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
+					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id` = " . $ticket_id;
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 					if (mysql_affected_rows()>0) {
 						$message .= "\n{$gt}:\n";
@@ -2319,7 +2320,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 			
 				case "O":
 					$gt = get_text("Actions");
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
+					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = " . $ticket_id;		// 10/16/08
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
 					if (mysql_affected_rows()>0) {
 						$message .= "\n{$gt}:\n";
@@ -3674,11 +3675,13 @@ function get_index_str ($in_str) {
 		if (get_variable('locale')==1)	{ return date("j/n/y H:i", intval($date_wk));}					// 08/27/10 - Revised to show UK format for locale = 1	
 		else 							{ return date(get_variable("date_format"), intval($date_wk)); }
 		}
-		
-	function format_dateonly($date_in){								// 12/3/13
-		$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
-		if (get_variable('locale')==0)	{ return date("n/j/y", intval($date_wk));}					//
-		else 							{ return date("j/n/y", intval($date_wk));}
+
+	if (!function_exists('format_dateonly')) {		
+		function format_dateonly($date_in){								// 12/3/13
+			$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
+			if (get_variable('locale')==0)	{ return date("n/j/y", intval($date_wk));}					//
+			else 							{ return date("j/n/y", intval($date_wk));}
+			}
 		}
 
 	function log_error($err_arg) {									// reports non-fatal error - 11/29/2012
@@ -4014,4 +4017,108 @@ function send_tweet_direct($message, $userid = NULL, $screenname = NULL) {
 		}
 	}
 	
+function is_dir_empty($dir) {
+	if (!is_readable($dir)) return NULL; 
+	$handle = opendir($dir);
+	while (false !== ($entry = readdir($handle))) {
+		if ($entry != "." && $entry != "..") {
+			return FALSE;
+			}
+		}
+	return TRUE;
+	}
+	
+function get_tile_bounds ($repository) {
+	if(is_dir_empty($repository)) {return false;}
+	function tile2long( $x, $z) {
+		$n = pow(2, $z);
+		return $x / $n * 360.0 - 180.0;
+		}
+	function tile2lat( $y, $z) {
+		$n = pow(2, $z);
+		return rad2deg(atan(sinh(pi() * (1 - 2 * $y / $n))));
+		}
+	function low_high_dir ($path, $low = TRUE) {
+		$dh  = opendir($path);
+		if ($low) {		// find min
+			$return = 99999;					// starter - see below
+			while (false !== ($filename = readdir($dh))  ) {
+				if ( intval($filename) > 0 && intval ($filename) < intval ($return ) ) {
+					$return = $filename ;		// retain extension if file
+					}
+				}		// end while ()
+			}
+		else {			//find max
+			$return = 0;						// starter - see below
+			while (false !== ($filename = readdir($dh))  ) {
+
+				if ( intval($filename) > 0 && intval ($filename) > intval ($return ) ) {
+					$return = $filename ;
+					}
+				}		// end while ()
+			}		// end else
+		return $return;
+		}		// end function
+	//	1.  compute zoom
+	$dir = $repository;
+	$dh  = opendir($dir);
+	$zoom = 99;						// starter - see below
+	while (false !== ($filename = readdir($dh))  ) {
+		if ( is_numeric ($filename ) && intval ($filename) < intval ($zoom ) ) { $zoom = intval ($filename) ; }
+		}		// end while ()
+
+	// 2. compute west and east longs
+
+	$west = 99999;		// set extremes
+	$east = 0;
+	$path = "{$dir}/{$zoom}";
+	$dh  = opendir($path);
+	while (false !== ($filename = readdir($dh) ) ) {	// walk down the selected zoom directory
+		if (is_numeric ($filename) ) {
+			if ( intval($filename ) < intval ($west) ) {$west = $filename;}		// min
+			if ( intval($filename ) > intval ($east) ) {$east = $filename;}		// max
+			}		// end if (is_numeric () )
+		}		// end while ()
+
+
+	// 3. compute northwest tile - OK
+
+	$path = "{$dir}/{$zoom}/{$west}";
+	$northwest = low_high_dir ($path, $low = TRUE) ;
+
+	// 4. compute southeast tile
+
+	$path = "{$dir}/{$zoom}/{$east}";
+	$southeast = low_high_dir ($path, $low = FALSE) ;
+
+	$west_long = round (tile2long( $west, $zoom), 6) ;
+	$north_lat = round (tile2lat( intval($northwest), $zoom), 6);
+	$east_long = round (tile2long( $east + 1, $zoom), 6);					// note + 1
+	$south_lat = round (tile2lat( intval($southeast) + 1, $zoom), 6);		// note + 1
+
+	return array($west_long, $north_lat, $east_long, $south_lat );
+	}		// end function
+	
+function  checkColExists($table, $col) {
+	$query = "SHOW COLUMNS FROM `$GLOBALS[mysql_prefix]" . $table . "` LIKE '" . $col . "'";
+	$result = mysql_query($query);
+	if($result) {
+		return true;
+		} else {
+		return false;
+		}
+	}
+
+function get_standard_messages() {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` ORDER BY `id` ASC";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$ret_arr[$row['id']]['id'] = $row['id'];
+		$ret_arr[$row['id']]['name'] = $row['name'];
+		$ret_arr[$row['id']]['message'] = $row['message'];
+		}
+	return $ret_arr;
+	}
+
+if(checkColExists('std_msgs', 'name')) {$std_messages = get_standard_messages();}
 ?>
