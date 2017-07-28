@@ -298,6 +298,8 @@ function get_user_details($rosterID) {	//	9/6/13
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
+	<script type="text/javascript" src="./js/usng.js"></script>
+	<script type="text/javascript" src="./js/osgb.js"></script>
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
@@ -313,8 +315,7 @@ function get_user_details($rosterID) {	//	9/6/13
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+
 	<script type="text/javascript" src="./js/geotools2.js"></script>
 	<SCRIPT>
 	var sortby = '`date`';	//	11/18/13

@@ -22,22 +22,6 @@ $tickets_root = preg_replace( '~[/\\\\][^/\\\\]*[/\\\\]$~' , DIRECTORY_SEPARATOR
 $local = $tickets_root . "_osm" . DIRECTORY_SEPARATOR . "tiles";
 $url = "";
 
-function isStoredTile($zoom, $column, $tile) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]maptiles` WHERE `mapzoom` = " . $zoom . " AND `mapcolumn` = " . $column . " AND `maptile` = " . $tile;
-	$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_affected_rows() == 1) {
-		return "File Already saved";
-		} else {
-		$query  = "INSERT INTO `$GLOBALS[mysql_prefix]maptiles` (`mapzoom` , `mapcolumn`, `maptile`) VALUES (" . $zoom . ", " . $column . ", " . $tile . ")";
-		$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
-		if(mysql_affected_rows() == 1) {
-			return "Saved File";
-			} else {
-			return "Didn't Save File";
-			}
-		}
-	}
-
 function chmod_r($Path) {
 	global $directory_separator;
 	$dp = opendir($Path);
@@ -94,7 +78,6 @@ function do_file ($dir, $subdir, $file) {
 //			print "error " . __LINE__ . "<br />";		// @fopen fails
 			}
 		} else {
-			isStoredTile($dir, $subdir, $file);
 			$theFileName = "_osm/tiles/{$dir}/{$subdir}/{$file}.png";
 			$completed[1] = "{$theFileName} existed already";
 		}
@@ -105,6 +88,7 @@ do_file($dir, $subdir, $file);
 if($_GET['lastfile'] == "yes") {
 	chmod_r($local);
 	}
+$completed[1] = ($completed[1]) ? $completed[1] : "";
 $completed[0] = "Completed";
 $completed[2] = $_GET['lastfile'];
 print json_encode($completed);

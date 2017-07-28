@@ -105,6 +105,8 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
 	<script type="text/javascript" src="./js/esri-leaflet.js"></script>
 	<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
+	<script type="text/javascript" src="./js/usng.js"></script>
+	<script type="text/javascript" src="./js/osgb.js"></script>
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
@@ -120,8 +122,6 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};

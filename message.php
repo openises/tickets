@@ -509,8 +509,8 @@ if(empty($_POST)) {
 	$mi_id = array_key_exists('mi_id', $_GET) ? strip_tags($_GET['mi_id']) : 0;
 	$sort = array_key_exists('sort', $_GET) ? strip_tags($_GET['sort']) : 0;
 	$dir = array_key_exists('dir', $_GET) ? strip_tags($_GET['dir']) : 0;
-	$folder = (array_key_exists('foder', $_GET)) ? strip_tags($_GET['folder']) : "inbox";
-	$the_refresh =  (isset($_GET['wastebasket'])) ? "refresh_waste(\"" . $opener . "\");" : "refresh_opener(\"" . $opener . "\", \"" . $folder . "\", \"" . $ticket_id . "\", \"" . $responder_id . "\", \"" . $facility_id . "\", \"" . $mi_id . "\", \"" . $sort . "\", \"" . $dir . "\");";
+	$folder = (array_key_exists('folder', $_GET)) ? strip_tags($_GET['folder']) : "inbox";
+	$the_refresh = (array_key_exists('wastebasket', $_GET)) ? "refresh_waste(\"" . $opener . "\");" : "refresh_opener(\"" . $opener . "\", \"" . $folder . "\", \"" . $ticket_id . "\", \"" . $responder_id . "\", \"" . $facility_id . "\", \"" . $mi_id . "\", \"" . $sort . "\", \"" . $dir . "\");";
 ?>
 	<BODY onLoad='<?php print $the_refresh;?>;'>
 		<CENTER>	

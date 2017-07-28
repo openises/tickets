@@ -229,7 +229,7 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 
     </SCRIPT>
 <?php
-		
+			$st_size = (get_variable("locale") ==0)?  2: 4;			
 			$lat = get_variable('def_lat');
 			$lng = get_variable('def_lng');
 			$checks_ar = array("","","","");

@@ -84,10 +84,8 @@ function getZoneNumber($lat, $lon) {
 	} // END get$zoneNumber() function
 
 
-function LLtoUTM($lat,$lon, $utmcoords) {
+function LLtoUTM($lat,$lon) {
 	global $UTMZone, $ECC_SQUARED, $UNDEFINED_STR, $UTMEasting, $UTMNorthing, $zoneNumber, $DEG_2_RAD, $EASTING_OFFSET, $k0, $EQUATORIAL_RADIUS, $ECC_PRIME_SQUARED, $ECC_PRIME_SQUARED;
-	// $utmcoords is a 2-D array declared by the calling routine
-
 	$lat = (float)$lat;
 	$lon = (float)$lon;
 
@@ -146,9 +144,10 @@ function LLtoUTM($lat,$lon, $utmcoords) {
 									+ (61 - 58 * $T + $T * $T + 600 * $C - 330 * $ECC_PRIME_SQUARED )
 									* ($A * $A * $A * $A * $A * $A) / 720)));
 
-	$utmcoords[0] = $UTMEasting;
-	$utmcoords[1] = $UTMNorthing;
-	return $utmcoords;
+//	$utmcoords[0] = $UTMEasting;
+//	$utmcoords[1] = $UTMNorthing;
+	$return = $UTMNorthing . "N," . $UTMEasting . "E";
+	return $return;
 	}
 
 function LLtoUSNG($lat, $lon, $precision=5) {				// note default precision

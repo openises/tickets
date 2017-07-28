@@ -678,6 +678,7 @@
 		},
 
 		geocode: function(query, cb, context) {
+			var theTemp = [];
 			var params = {
 				address: query,
 			};
@@ -694,6 +695,16 @@
 					if (data.results && data.results.length) {
 						for (var i = 0; i <= data.results.length - 1; i++) {
 							loc = data.results[i];
+/* 							for(var key in loc) {
+								if(key == "address_components") {
+									var addresscomp = loc[key];
+									for(var z = 0; z <= addresscomp.length - 1; z++) {
+										var theType = addresscomp[z]['types'];
+										var theName = addresscomp[z]['short_name'];
+										theTemp[theType] = theName;
+										}
+									}
+								} */
 							latLng = L.latLng(loc.geometry.location);
 							latLngBounds = L.latLngBounds(L.latLng(loc.geometry.viewport.northeast), L.latLng(loc.geometry.viewport.southwest));
 							results[i] = {
@@ -703,7 +714,6 @@
 							};
 						}
 					}
-
 					cb.call(context, results);
 			});
 		},
@@ -725,11 +735,11 @@
 					for (var i = 0; i <= data.results.length - 1; i++) {
 						var address_parts = [];
 						loc = data.results[0];
-						var add_comp = loc.address_components;
-						for(var zz in add_comp) {
-							for(var yy in add_comp[zz]) {
-								if(yy == "long_name"){
-									address_parts.push(add_comp[zz][yy]);
+ 						for(var key in loc) {
+							if(key == "address_components") {
+								var addresscomp = loc[key];
+								for(var z = 0; z <= addresscomp.length - 1; z++) {
+									address_parts[addresscomp[z]['types']] = addresscomp[z]['short_name'];
 									}
 								}
 							}
@@ -737,12 +747,12 @@
 						latLngBounds = L.latLngBounds(L.latLng(loc.geometry.viewport.northeast), L.latLng(loc.geometry.viewport.southwest));
 						results[i] = {
 							name: loc.formatted_address,
-							house_number: address_parts[0],
-							road: address_parts[1],
-							suburb: address_parts[2],
-							city: address_parts[3],
-							state: address_parts[6],
-							postcode: address_parts[8],
+							house_number: address_parts['street_number'],
+							road: address_parts['route'],
+							suburb: address_parts['locality,political'],
+							city: address_parts['locality,political'],
+							state: address_parts['administrative_area_level_1,political'],
+							postcode: address_parts['postal_code'],
 							bbox: latLngBounds,
 							center: latLng
 						};

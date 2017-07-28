@@ -411,7 +411,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 
 	if(priority == 1) {
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (map && tmarkers[i]) {
+			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
 					tmarkers[j].addTo(map);	
 					}
@@ -431,7 +431,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		}	//	end if priority == 1
 	if(priority == 2) {
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (map && tmarkers[i]) {
+			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
 					tmarkers[i].addTo(map);		
 					}
@@ -451,7 +451,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		}	//	end if priority == 2
 	if(priority == 3) {
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (map && tmarkers[i]) {
+			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
 					tmarkers[i].addTo(map);		
 					}
@@ -487,7 +487,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		}	//	end if priority == 4
 	if(priority == 5) {		// hide all
 		for (var i = 1; i < tmarkers.length; i++) {
-			if (map && tmarkers[i]) {
+			if (tmarkers[i]) {
 				if (tmarkers[i].category == category) {
 					map.removeLayer(tmarkers[i]);	
 					}
@@ -571,7 +571,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 			$(catname).checked = true;
 		} else {
 			for (var j = 1; j < rmarkers.length; j++) {
-				if (map && (rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
+				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
 					map.removeLayer(rmarkers[j]);
 					if(j == 131) { alert(catname + "131");}
 					var catid = catname + j;
@@ -683,7 +683,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 				if($(catid)) {
 					$(catid).style.display = "none";
 					}
-				if (map && (rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {
+				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {
 					map.removeLayer(rmarkers[j]);		
 					}
 				}
@@ -731,7 +731,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 					if($(catid)) {
 						$(catid).style.display = "none";
 						}
-					if (map && (rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {			
+					if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == category)) {			
 						map.removeLayer(rmarkers[j]);		
 						}
 					}
@@ -820,7 +820,7 @@ function set_fac_categories() {
 			$(fac_catname).checked = true;
 		} else {
 			for (var j = 0; j < fmarkers.length; j++) {
-				if(map && (fmarkers[j]) && (fmarkers[j].category == fac_catname)) {
+				if((fmarkers[j]) && (fmarkers[j].category == fac_catname)) {
 					map.removeLayer(fmarkers[j]);		
 					var fac_catid = fac_catname + j;
 					if($(fac_catid)) {
@@ -932,7 +932,7 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 				if($(fac_catid)) {
 					$(fac_catid).style.display = "none";
 				}
-				if (map && (fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
+				if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
 					map.removeLayer(fmarkers[j]);		
 					}
 				}
@@ -981,7 +981,7 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 					if($(fac_catid)) {
 						$(fac_catid).style.display = "none";
 						}
-					if (map && (fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
+					if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
 						map.removeLayer(fmarkers[j]);		
 						}
 					}
@@ -1074,7 +1074,7 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 			var url = "persist2.php";	//	3/15/11
 			sendRequest (url, gbb_handleResult, params);
 			$(bnds).checked = false;
-			if(map && bound_names[key]) {
+			if(bound_names[key]) {
 				map.removeLayer(boundary[key]);		
 				}
 			$('BND_NONE').checked = false;
@@ -1109,7 +1109,7 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 				var url = "persist2.php";	//	3/15/11
 				sendRequest (url, gbb_handleResult, params);
 				$(bnds).checked = false;
-				if(map && bound_names[key]) {
+				if(bound_names[key]) {
 					map.removeLayer(boundary[key]);	
 					}
 				}
@@ -1153,7 +1153,7 @@ function set_bnds() {			//	12/03/10 - checks current session values and sets che
 			$(bnd_nm).checked = true;
 			if(window.boundary[key]) {window.boundary[key].addTo(map);}
 			} else {
-			if(map) {map.removeLayer(boundary[key]);}
+			map.removeLayer(boundary[key]);				
 			$(bnd_nm).checked = false;
 			}				
 		if(bnd_hidden!=0) {
@@ -1396,8 +1396,8 @@ function loc_lkup(my_form) {		   						// 7/5/10
 	
 function pt_to_map (my_form, lat, lng) {
 	if(!$('map_canvas')) {return; }
-	if(map && marker) {map.removeLayer(marker);}
-	if(map && myMarker) {map.removeLayer(myMarker);}
+	if(marker) {map.removeLayer(marker);}
+	if(myMarker) {map.removeLayer(myMarker);}
 	var theLat = parseFloat(lat).toFixed(6);
 	var theLng = parseFloat(lng).toFixed(6);
 	my_form.frm_lat.value=theLat;	
@@ -1419,27 +1419,43 @@ function newGetAddress(latlng, currform) {
 	var popup = L.popup();
 	var loc = <?php print get_variable('locale');?>;
 	control.options.geocoder.reverse(latlng, 20, function(results) {
+		if(!results) {alert("Try again"); return;}
 		if(window.geo_provider == 0){
-			if(results) {var r1 = results[0]; var r = r1['properties']['address'];} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
+			var r1 = results[0]; 
+			var r = r1['properties']['address'];
+			if(r.neighbourhood && r.neighbourhood != "") {
+				r.city = r.neighbourhood;
+				} else if(r.suburb && r.suburb != "") {
+				r.city = r.suburb;
+				} else if(r.town && r.town != "") {
+				r.city = r.town;
+				}
 			} else if(window.geo_provider == 1) {
-			if(results) {var r = results[0];} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
+			var r = results[0];
+			if(!r.city) {
+				if(r.suburb && (r.suburb != "")) {
+				theCity = r.suburb;
+				} else if(r.locality && (r.locality != "")) {
+					theCity = r.locality;
+					} else {
+					theCity = "";
+					}
+				}
 			} else if(window.geo_provider == 2) {
-			if(results) {var r1 = results[0]; var r = {city: r1.city, house_number: "", road: r1.street, properState: r1.state};} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
+			var r = results[0]; 
+			if(!r.city) {
+				if(r.suburb && (r.suburb != "")) {
+				theCity = r.suburb;
+				} else if(r.locality && (r.locality != "")) {
+					theCity = r.locality;
+					} else {
+					theCity = "";
+					}
+				}
 			}
 		var lat = parseFloat(latlng.lat.toFixed(6));
 		var lng = parseFloat(latlng.lng.toFixed(6));
-		var theCity = "";
-		if(!r.city) {
-			if(r.suburb && (r.suburb != "")) {
-				theCity = r.suburb;
-				} else if(r.locality && (r.locality != "")) {
-				theCity = r.locality;
-				} else {
-				theCity = "";
-				}
-			} else {
-			theCity = r.city;
-			}
+		var theCity = r.city;
 		if(!r.state) {
 			if(r.county) {
 				var state = r.county;
@@ -1449,6 +1465,13 @@ function newGetAddress(latlng, currform) {
 			} else {
 			var state = r.state;
 			}
+		if(!theCity) {
+			var theCity = "";
+			}
+		var ausStates = ['New South Wales','Queensland','NSW','QLD','Northern Territory','Western Australia','South Australia','Victoria','Tasmania'];	//	Australian State full names in array
+		var ausStatesAbb = ['NSW','QLD','NSW','QLD','NT','WA','SA','Vic','Tas'];	//	Australian State abbreviations in array
+		var auskey = ausStates.indexOf(state);	//	Checks if current reported state is an Australian one.
+		if(auskey != -1) {state = ausStatesAbb[auskey];}	//	if State is Australian, converts full name to abbreviation.
 		if (r) {
 			switch(currform) {
 				case "a":
@@ -1458,14 +1481,15 @@ function newGetAddress(latlng, currform) {
 					var theStreet2 = (street != "") ? street : "";
 					document.res_add_Form.frm_street.value = theStreet1 + theStreet2;
 					document.res_add_Form.frm_city.value = theCity;
-					var theState = (state != "") ? states_arr[state] : "";
-					if(r.properState) { theState = r.properState;}
-					document.res_add_Form.frm_state.value = theState;
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
+					document.res_add_Form.frm_state.value = state;
 					document.res_add_Form.frm_lat.value = lat; 
 					document.res_add_Form.frm_lng.value = lng; 
 					document.res_add_Form.show_lat.value = lat; 
 					document.res_add_Form.show_lng.value = lng;
-					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.res_add_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.res_add_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(loc == 2) { document.res_add_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
@@ -1479,14 +1503,15 @@ function newGetAddress(latlng, currform) {
 					var theStreet2 = (street != "") ? street : "";
 					document.res_edit_Form.frm_street.value = theStreet1 + theStreet2;
 					document.res_edit_Form.frm_city.value = theCity;
-					var theState = (state != "") ? states_arr[state] : "";
-					if(r.properState) { theState = r.properState;}
-					document.res_edit_Form.frm_state.value = theState;
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
+					document.res_edit_Form.frm_state.value = state;
 					document.res_edit_Form.frm_lat.value = lat; 
 					document.res_edit_Form.frm_lng.value = lng; 
 					document.res_edit_Form.show_lat.value = lat; 
 					document.res_edit_Form.show_lng.value = lng;
-					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.res_edit_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.res_edit_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(loc == 2) { document.res_edit_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
@@ -1500,14 +1525,15 @@ function newGetAddress(latlng, currform) {
 					var theStreet2 = (street != "") ? street : "";
 					document.loc_add_Form.frm_street.value = theStreet1 + theStreet2;
 					document.loc_add_Form.frm_city.value = theCity;
-					var theState = (state != "") ? states_arr[state] : "";
-					if(r.properState) { theState = r.properState;}
-					document.loc_add_Form.frm_state.value = theState;
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
+					document.loc_add_Form.frm_state.value = state;
 					document.loc_add_Form.frm_lat.value = lat; 
 					document.loc_add_Form.frm_lng.value = lng; 
 					document.loc_add_Form.show_lat.value = lat; 
 					document.loc_add_Form.show_lng.value = lng;
-					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.loc_add_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.loc_add_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(loc == 2) { document.loc_add_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
@@ -1521,14 +1547,15 @@ function newGetAddress(latlng, currform) {
 					var theStreet2 = (street != "") ? street : "";
 					document.loc_edit_Form.frm_street.value = theStreet1 + theStreet2;
 					document.loc_edit_Form.frm_city.value = theCity;
-					var theState = (state != "") ? states_arr[state] : "";
-					if(r.properState) { theState = r.properState;}
-					document.loc_edit_Form.frm_state.value = theState;
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
+					document.loc_edit_Form.frm_state.value = state;
 					document.loc_edit_Form.frm_lat.value = lat; 
 					document.loc_edit_Form.frm_lng.value = lng; 
 					document.loc_edit_Form.show_lat.value = lat; 
 					document.loc_edit_Form.show_lng.value = lng;
-					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.loc_edit_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.loc_edit_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(loc == 2) { document.loc_edit_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
@@ -1538,11 +1565,14 @@ function newGetAddress(latlng, currform) {
 				case "c":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
-					var theState = (state != "") ? states_arr[state] : "";
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
 					var address1 = (number != "") ? number + " " : "";
 					var address2 = (street != "") ? street + ", " : "";
 					var address3 = (theCity != "") ? theCity + ", " : "";
-					var address4 = (r.state != "") ? r.state : "";					
+					var address4 = (state != "") ? state : "";					
 					document.c.frm_address.value = address1 + address2 + address3 + address4;
 					document.c.frm_lat.value = lat; 
 					document.c.frm_lng.value = lng; 
@@ -1552,11 +1582,14 @@ function newGetAddress(latlng, currform) {
 				case "u":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
-					var theState = (state != "") ? states_arr[state] : "";
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
 					var address1 = (number != "") ? number + " " : "";
 					var address2 = (street != "") ? street + ", " : "";
 					var address3 = (theCity != "") ? theCity + ", " : "";
-					var address4 = (r.state != "") ? r.state : "";					
+					var address4 = (state != "") ? state : "";					
 					document.u.frm_address.value = address1 + address2 + address3 + address4;
 					document.u.frm_lat.value = lat; 
 					document.u.frm_lng.value = lng; 
@@ -1570,15 +1603,17 @@ function newGetAddress(latlng, currform) {
 					var address2 = (street != "") ? street : "";
 					document.add.frm_street.value = address1 + address2;
 					document.add.frm_city.value = theCity;
-					var theState = (state != "") ? states_arr[state] : "";
-					if(r.properState) { theState = r.properState;}
-					document.add.frm_state.value = theState;
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
+					if(r.properState) { state = r.properState;}
+					document.add.frm_state.value = state;
 					document.add.frm_lat.value = lat; 
 					document.add.frm_lng.value = lng; 
 					document.add.show_lat.value = lat; 
 					document.add.show_lng.value = lng; 
 					document.add.frm_street.focus();
-					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.add.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.add.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(loc == 2) { document.add.frm_ngs.value=LLtoUTM(lat, lng, 5); }
@@ -1591,15 +1626,16 @@ function newGetAddress(latlng, currform) {
 					var address2 = (street != "") ? street : "";
 					document.edit.frm_street.value = address1 + address2;
 					document.edit.frm_city.value = theCity;
-					var theState = (state != "") ? states_arr[state] : "";
-					if(r.properState) { theState = r.properState;}
-					document.edit.frm_state.value = theState;
+					if(loc == 0) {
+						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						}
+					if(loc == 1) {state = "UK";}
+					document.edit.frm_state.value = state;
 					document.edit.frm_lat.value = lat; 
 					document.edit.frm_lng.value = lng; 
 					document.edit.show_lat.value = lat; 
 					document.edit.show_lng.value = lng; 
 					document.edit.frm_street.focus();
-					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.edit.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.edit.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(loc == 2) { document.edit.frm_ngs.value=LLtoUTM(lat, lng, 5); }							
@@ -1611,7 +1647,7 @@ function newGetAddress(latlng, currform) {
 			var theContent1 = (number != "") ? number + " ": "";
 			var theContent2 = (street != "") ? street + ", ": "";
 			var theContent3 = (theCity != "") ? theCity + ", ": "";
-			var theContent4 = (theState != "") ? theState + ", ": "";
+			var theContent4 = (state != "") ? state + ", ": "";
 			var theContent = theContent1 + theContent2 + theContent3 + theContent4;
 			popup
 				.setLatLng(latlng)
@@ -1774,7 +1810,7 @@ function createcrossMarker(lat, lon) {
 	}
 	
 function createstdMarker(lat, lon) {
-	if(map && marker) { map.removeLayer(marker); }
+	if(marker) { map.removeLayer(marker); }
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconurl = "./our_icons/yellow.png";
 		icon = new baseIcon({iconUrl: iconurl});	
@@ -2050,8 +2086,18 @@ function test(location) {
 function createdummyMarker(lat, lon, info, icon, title){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		var marker = L.marker([lat, lon], {icon: image_file}).addTo(map)
-			.bindPopup(info);
+		var marker = L.marker([lat, lon], {icon: image_file}).addTo(map);
+		marker.on('popupclose', function(e) {
+			map.setView(mapCenter, mapZoom);
+			});
+		marker.on('click', function(e) {
+			if($('screenname').innerHTML == "fullscreen") {
+				get_fs_tickpopup(theid);
+				} else if($('screenname').innerHTML == "popup") {
+				} else {
+				get_tickpopup(theid);
+				}
+			});	
 		return marker;
 		} else {
 		return false;
@@ -2062,7 +2108,7 @@ function createdummyUnitMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
 		icon = new baseIcon({iconUrl: image_file});	
-		var marker = L.marker([lat, lon], {icon: icon}).addTo(map).bindPopup(info);
+		var marker = L.marker([lat, lon], {icon: icon}).addTo(map);
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
@@ -2086,7 +2132,18 @@ function createdummyIncMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
 		icon = new baseIcon({iconUrl: image_file});	
-		var marker = L.marker([lat, lon], {icon: icon}).addTo(map).bindPopup(info);
+		var marker = L.marker([lat, lon], {icon: icon}).addTo(map);
+		marker.on('popupclose', function(e) {
+			map.setView(mapCenter, mapZoom);
+			});
+		marker.on('click', function(e) {
+			if($('screenname').innerHTML == "fullscreen") {
+				get_fs_tickpopup(theid);
+				} else if($('screenname').innerHTML == "popup") {
+				} else {
+				get_tickpopup(theid);
+				}
+			});
 		tmarkers[theid] = marker;
 		tmarkers[theid][lat] = lat;
 		tmarkers[theid][lon] = lon;
@@ -2100,7 +2157,17 @@ function createdummyFacMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
 		icon = new baseIcon({iconUrl: image_file});	
-		var marker = L.marker([lat, lon], {icon: icon}).addTo(map).bindPopup(info);
+		var marker = L.marker([lat, lon], {icon: icon}).addTo(map);
+		marker.on('popupclose', function(e) {
+			map.setView(mapCenter, mapZoom);
+			});
+		marker.on('click', function(e) {
+			if($('screenname') && $('screenname').innerHTML == "fullscreen") {
+				get_fs_facspopup(theid);
+				} else {
+				get_facspopup(theid);
+				}
+			});	
 		fmarkers[theid] = marker;
 		fmarkers[theid][lat] = lat;
 		fmarkers[theid][lon] = lon;
@@ -2112,7 +2179,7 @@ function createdummyFacMarker(lat, lon, info, icon, title, theid){
 
 function destroy_unitmarkers() {
 	for(var key in rmarkers) {
-		if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 		}
 	}
 	
@@ -3266,7 +3333,7 @@ function load_incidentlist(sort, dir) {
 			}
 		if(window.changed_inc_sort == true) {
 			for(var key in tmarkers) {
-				if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 				}
 			}
 		var i = 1;
@@ -3533,7 +3600,7 @@ function isInteger(s) {
 
 function do_destroy() {
 	for(var key in rmarkers) {
-		if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 		}
 	}
 	
@@ -3662,7 +3729,7 @@ function load_responderlist(sort, dir) {
 		if(!resp_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
 			for(var key in rmarkers) {
-				if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
@@ -4070,7 +4137,7 @@ function load_responderlist2(sort, dir) {
 		if(!resp_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
 			for(var key in rmarkers) {
-				if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
@@ -4128,7 +4195,7 @@ function load_responderlist2(sort, dir) {
 						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" +  pad(6, resp_arr[key][13], "\u00a0") + "</TD>";
 						var theFlag = resp_arr[key][27];
 						outputtext += "<TD onClick='myrclick(" + unit_no + ");'><SPAN id = '" + theFlag + "' style='white-space: nowrap;'>" + pad(2, resp_arr[key][16], "\u00a0") + "</SPAN></TD>";
-						outputtext += "<TD>" + pad(2, " ", "\u00a0") + "</TD>";
+						outputtext += "<TD>" + pad(12, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
 						if(window.responders_updated[resp_arr[key][17]]) {
 							if(window.responders_updated[resp_arr[key][17]] != resp_arr[key][16]) {
@@ -4149,6 +4216,17 @@ function load_responderlist2(sort, dir) {
 										theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][3]);
 										rmarkers[unit_no].setLatLng(theLatLng);
 										}
+									} else {
+	/* 								do_destroy();
+									if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
+										var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
+										marker.addTo(map);
+										} else {
+										var deflat = "<?php print get_variable('def_lat');?>";
+										var deflng = "<?php print get_variable('def_lng');?>";		
+										var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], unit_no);
+										marker.addTo(map);
+										} */
 									}
 								} else {
 								if($('map_canvas')) {
@@ -4253,6 +4331,7 @@ function load_responderlist2(sort, dir) {
 				window.resp_last_display = resp_arr[0][23];
 				window.respFin = true;
 				pageLoaded();
+//				responderlist2_get();
 				},500);
 			}
 		}				// end function responderlist_cb()
@@ -4442,7 +4521,7 @@ function load_facilitylist(sort, dir) {
 		if(!fac_arr && doDebug) {log_debug(req.responseText); sendInfo(req.responseText);}
 		if((fac_arr[0]) && (fac_arr[0][0] == 0)) {
 			for(var key in fmarkers) {
-				if(map && fmarkers[key]) {map.removeLayer(fmarkers[key]);}
+				if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Facilities to view.........</marquee>";
 			$('the_flist').innerHTML = outputtext;
@@ -4746,14 +4825,14 @@ function load_warnloclist(sort, dir) {
 		var loc_arr = JSON.decode(req.responseText);
 		if(loc_arr[0][0] == 0) {
 			for(var key in wlmarkers) {
-				if(map && wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
+				if(wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Warn Locations to view.........</marquee>";
 			$('the_wllist').innerHTML = outputtext;
 			window.latest_wlocation = 0;
 			} else {
 			for(var key in wlmarkers) {
-				if(map && wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
+				if(wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
 				}
 			var outputtext = "<TABLE id='locationstable' class='cruises scrollable' style='width: " + window.listwidth + "px;'>";
 			outputtext += "<thead>";
@@ -4876,7 +4955,7 @@ function load_fs_incidentlist() {
 		var inc_arr = JSON.decode(req.responseText);
 		if(window.inc_period_changed == 1) {
 			for(var key in tmarkers) {
-				if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 				}
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
@@ -4884,7 +4963,7 @@ function load_fs_incidentlist() {
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;
 			for(var key in tmarkers) {
-				if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 				}
 			outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
 			$('the_list').innerHTML = outputtext;
@@ -4895,7 +4974,7 @@ function load_fs_incidentlist() {
 			} else {
 			if(window.changed_inc_sort == true) {
 				for(var key in tmarkers) {
-					if(map && tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 					}
 				}	
 			var i = 1;
@@ -5025,7 +5104,7 @@ function load_fs_responders() {
 		var resp_arr = JSON.decode(req.responseText);
 		if(resp_arr[0][22] == 0) {
 			for(var key in rmarkers) {
-				if(map && rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 				}
 			$('boxes').innerHTML = resp_arr[0][19];
 			window.latest_responder = 0;
@@ -5100,7 +5179,7 @@ function load_fs_facilities() {
 		var fac_arr = JSON.decode(req.responseText);
 		if(fac_arr[0][13] == 0) {
 			for(var key in fmarkers) {
-				if(map && fmarkers[key]) {map.removeLayer(fmarkers[key]);}
+				if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
 				}
 			$('fac_boxes').innerHTML = fac_arr[0][19];
 			window.latest_facility = 0;

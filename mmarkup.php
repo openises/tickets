@@ -99,6 +99,8 @@ extract($_POST);
 	<SCRIPT src="./js/esri-leaflet.js"></SCRIPT>
 	<SCRIPT src="./js/OSOpenspace.js"></SCRIPT>
 	<script src="./js/Control.Geocoder.js"></script>
+	<script type="text/javascript" src="./js/usng.js"></script>
+	<script type="text/javascript" src="./js/osgb.js"></script>
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');

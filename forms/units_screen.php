@@ -88,6 +88,8 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/osopenspace.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
+<script type="text/javascript" src="./js/usng.js"></script>
+<script type="text/javascript" src="./js/osgb.js"></script>
 <?php
 if ($_SESSION['internet']) {				// 8/22/10
 	$api_key = get_variable('gmaps_api_key');

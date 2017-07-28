@@ -1186,11 +1186,16 @@ function refresh_opener(the_screen, thefolder, ticket_id, responder_id, facility
 		if(thefolder== "inbox") {
 			window.opener.get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);
 			} else if(thefolder== "sent") {
-			window.opener.get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);	
+			window.opener.get_sentmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);	
 			} else {
 			}
 		} else if (the_screen == "messages") {
-		get_mainmessages();
+		if(thefolder== "inbox") {
+			window.opener.get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);
+			} else if(thefolder== "sent") {
+			window.opener.get_sentmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);	
+			} else {
+			}
 		} else {
 		get_mainmessages();
 		}
@@ -1324,10 +1329,12 @@ function toggle_select_all() {
 	}
 	
 function deadButton(id) {
-	$(id).className = "plain_inactive";
-	$(id).onclick = function(){null};
-	$(id).onmouseover = function(){null};
-	$(id).onmouseout = function(){null};
+	if($(id)) {
+		$(id).className = "plain_inactive";
+		$(id).onclick = function(){null};
+		$(id).onmouseover = function(){null};
+		$(id).onmouseout = function(){null};
+		}
 	}
 	
 function aliveButton(id) {

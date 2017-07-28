@@ -10,6 +10,7 @@ require_once('../incs/messaging.inc.php');
 @session_start();
 session_write_close();
 $the_result = "";
+
 if (empty($_SESSION)) {
 	header("Location: ../index.php");
 	}
@@ -26,6 +27,16 @@ $end_tag = "|";
 
 $proximity = 1000;
 $unit = get_variable('warn_proximity_units');
+
+$infotype = array();
+$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]replacetext_order`";
+$result = mysql_query($query);
+while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+	$key = intval($row['displayorder']);
+	$infotype[$key] = $row['info_name'];
+	}
+
+ksort($infotype);
 
 function distance($lat1, $lon1, $lat2, $lon2, $unit) { 
 	if(($lat1 == 0 ) || ($lon1 == 0)) { 
@@ -58,6 +69,7 @@ function subval_sort($a,$subkey) {
 	}
 
 function get_warnlocs($id) {
+	if($id == 0) {return;}
 	global $proximity, $unit;
 	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
@@ -102,7 +114,7 @@ function get_warnlocs($id) {
 			$z++;
 			}
 		}
-	$warningsText = "Near Location Warnings\n";
+	$warningsText = (count($out_arr) > 0) ? "Near Location Warnings\n" : "";
 	foreach($out_arr as $val) {
 		$warningsText .= $val[1] . " - " . $val[8] . "\n";
 		$warningsText .= $val[2] . ", " . $val[3] . " " . $val[4] . "\n";
@@ -373,9 +385,9 @@ function get_replacement_text($val) {
 		$return[] = $row['app_city'];
 		$return[] = $row['app_toaddress'];
 		$return[] = $row['app_dispnotes'];
-//		$return[] = $row['app_nature'];
-//		$return[] = $row['app_priority'];
-//		$return[] = $row['app_warnloc'];		
+		$return[] = $row['app_nature'];
+		$return[] = $row['app_priority'];
+		$return[] = $row['app_warnloc'];		
 		return $return;
 		} else {
 		return false;
@@ -403,11 +415,48 @@ if($rep_val) {
 	$thecity = ($rep_val[11] == "Yes") ? tkt_city($ticket) . "\n" : "";
 	$thetoaddress = ($rep_val[12] == "Yes") ? tkt_toaddress($ticket) . "\n" : "";
 	$thedispnotes = ($rep_val[13] == "Yes") ? tkt_dispnotes($ticket) . "\n" : "";
-	$theNature = "";	
-	$thePriority = "";	
-	$warningsText = "";
+	$theNature = ($rep_val[14] == "Yes") ? tkt_nature($ticket) . "\n" : "";	
+	$thePriority = ($rep_val[15] == "Yes") ? tkt_severity($ticket) . "\n" : "";	
+	$warningsText = ($rep_val[16] == "Yes") ? get_warnlocs($ticket) . "\n" : "";
 	$the_output = replace_content_inside_delimiters($start_tag, $end_tag, $the_replaced_text, $text_to_replace) . "\n";
-	$ret_arr[0] = $the_output . $thesummary . $theshortsummary . $thedescsumm . $thephone . $thestreet . $thecity . $thetoaddress . $thedispnotes . $theNature . $thePriority . $warningsText;
+	$add_tkt_order = array_keys($infotype, 'add_ticket');
+	$add_user_order = array_keys($infotype, 'add_user');
+	$add_user_unit_order = array_keys($infotype, 'add_user_unit');
+	$add_time_order = array_keys($infotype, 'add_time');
+	$add_date_order = array_keys($infotype, 'add_date');
+	$app_summ_order = array_keys($infotype, 'app_summ');
+	$app_shortsumm_order = array_keys($infotype, 'app_shortsumm');
+	$app_desc_order = array_keys($infotype, 'app_desc');
+	$app_phone_order = array_keys($infotype, 'app_phone');
+	$app_street_order = array_keys($infotype, 'app_street');
+	$app_city_order = array_keys($infotype, 'app_city');
+	$app_toaddress_order = array_keys($infotype, 'app_toaddress');
+	$app_dispnotes_order = array_keys($infotype, 'app_dispnotes');
+	$app_nature = 14;
+	$app_priority = 15;
+	$app_warnings = 16;
+	$output[0] = $the_output;
+	$output[$add_tkt_order[0]] = ($rep_val[1] == "Yes") ? "" . $ticket : "";
+	$output[$add_user_order[0]] = ($rep_val[2] == "Yes") ? "" . $user_name : "";
+	$output[$add_user_unit_order[0]] = ($rep_val[3] == "Yes") ? "" . get_owner_unit_handle(get_owner_unit($user)) : "";
+	$output[$add_time_order[0]] = ($rep_val[4] == "Yes") ? "" . $time : "";
+	$output[$add_date_order[0]] = ($rep_val[5] == "Yes") ? "" . $date : "";
+	$output[$app_summ_order[0]] = ($rep_val[6] == "Yes") ? tkt_summary($ticket) . "\n" : "";
+	$output[$app_shortsumm_order[0]] = ($rep_val[7] == "Yes") ? tkt_shortSummary($ticket) . "\n" : "";
+	$output[$app_desc_order[0]] = ($rep_val[8] == "Yes") ? tkt_description($ticket) . "\n" : "";
+	$output[$app_phone_order[0]] = ($rep_val[9] == "Yes") ? tkt_phone($ticket) . "\n" : "";
+	$output[$app_street_order[0]] = ($rep_val[10] == "Yes") ? tkt_street($ticket) . "\n" : "";
+	$output[$app_city_order[0]] = ($rep_val[11] == "Yes") ? tkt_city($ticket) . "\n" : "";
+	$output[$app_toaddress_order[0]] = ($rep_val[12] == "Yes") ? tkt_toaddress($ticket) . "\n" : "";
+	$output[$app_dispnotes_order[0]] = ($rep_val[13] == "Yes") ? tkt_dispnotes($ticket) . "\n" : "";
+	$output[$app_nature[0]] = ($rep_val[14] == "Yes") ? tkt_nature($ticket) . "\n" : "";
+	$output[$app_priority[0]] = ($rep_val[15] == "Yes") ? tkt_severity($ticket) . "\n" : "";
+	$output[$app_warnings[0]] = ($rep_val[16] == "Yes") ? get_warnlocs($ticket) . "\n" : "";
+	$theText = "";
+	foreach($output as $val) {
+		$theText .= $val;
+		}
+	$ret_arr[0] = $theText;
 	} else {
 	$ret_arr[0] = "";
 	}

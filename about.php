@@ -785,7 +785,13 @@ Changes for 3.11A - Maintenance release
 308.  Revisions to Messaging including ability to individually select messages for deletion, read status or restore.
 309.  Revisions to standard messages and replacement text for standard messages, more options added and name field for
       the standard messages where the name rather than the message will show in the select menu.
-310.  Lots of Fixes and screen tidy ups.	  
+310.  Lots of Fixes and screen tidy ups.
+
+Changes for 3.12A - Maintenance release
+
+311.  Revisions to geocoding and reverse geocoding to improve reliability of location finding.
+312.  Revision to messaging to cure incorrect messaging screen refresh when opening sent message.
+313.  Improvements to local map download scripts including existing tile deletion.
 	 
 <A NAME = 'bottom'></A>
 

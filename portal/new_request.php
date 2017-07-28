@@ -58,15 +58,32 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 <style type="text/css">
 body {overflow:hidden}
 </style>
-<SCRIPT SRC="../js/misc_function.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT TYPE="text/javascript" SRC="../js/misc_function.js"></SCRIPT>	
 <SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
+<script src="../js/leaflet/leaflet.js"></script>
+<script src="../js/proj4js.js"></script>
+<script src="../js/proj4-compressed.js"></script>
+<script src="../js/proj4leaflet.js"></script>
+<script src="../js/leaflet/KML.js"></script>
+<script src="../js/leaflet/gpx.js"></script>  
+<script src="../js/osopenspace.js"></script>
+<script src="../js/leaflet-openweathermap.js"></script>
+<script src="../js/esri-leaflet.js"></script>
+<script src="../js/Control.Geocoder.js"></script>
+<script type="text/javascript" src="./js/usng.js"></script>
+<script type="text/javascript" src="./js/osgb.js"></script>
 <?php
 if($key_str) {
 ?>
-	<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
-<?php
+	<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+	<script type="text/javascript" src="../js/Google.js"></script>
+<?php 
 	}
 ?>
+<script type="text/javascript" src="../js/osm_map_functions.js.php"></script>
+<script type="text/javascript" src="../js/L.Graticule.js"></script>
+<script type="text/javascript" src="../js/leaflet-providers.js"></script>
+<script type="text/javascript" src="../js/geotools2.js"></script>
 <SCRIPT>
 var randomnumber;
 var the_string;
@@ -103,41 +120,6 @@ function out_frames() {		//  onLoad = "out_frames()"
 	if (top.location != location) top.location.href = document.location.href;
 	}		// end function out_frames()
 
-function $() {									// 1/21/09
-	var elements = new Array();
-	for (var i = 0; i < arguments.length; i++) {
-		var element = arguments[i];
-		if (typeof element == 'string')		element = document.getElementById(element);
-		if (arguments.length == 1)			return element;
-		elements.push(element);
-		}
-	return elements;
-	}
-	
-String.prototype.trim = function () {
-	return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-	};
-		
-function go_there (where, the_id) {		//
-	document.go.action = where;
-	document.go.submit();
-	}				// end function go there ()	
-	
-function CngClass(obj, the_class){
-	$(obj).className=the_class;
-	return true;
-	}
-
-function do_hover (the_id) {
-	CngClass(the_id, 'hover');
-	return true;
-	}
-
-function do_plain (the_id) {
-	CngClass(the_id, 'plain');
-	return true;
-	}
-	
 function show_return(selector) {
 	var theForm = document.forms['add'];
 	var selectedOption = selector.value;
@@ -227,6 +209,20 @@ function delIt(eleId) {	// function to delete the newly added set of elements
 	parentEle.removeChild(ele);
 	ct--;
 	}
+	
+function addressLookup(address) {
+	var ret_arr = [];
+	control.options.geocoder.geocode(address, function(results) {
+		if(!results[0]) {
+			alert("Error geocoding the address");
+			return;
+			}
+		var r = results[0]['center'];
+		ret_arr[0] = r.lat;
+		ret_arr[1] = r.lng;
+		});
+	return ret_arr;
+	}				// end function loc_lkup()
 	
 function sub_request() {
 	var theForm = document.forms['add'];
@@ -347,50 +343,17 @@ function sub_request() {
 		$('the_form').style.display="none";
 		$('waiting').style.display='block';
 		$('waiting').innerHTML = "Please Wait, Inserting Request<BR /><IMG style='vertical-align: middle;' src='../images/progressbar3.gif'/>";
-		var geocoder = new google.maps.Geocoder();
 		var myAddress = theForm.frm_street.value.trim() + ", " +theForm.frm_city.value.trim() + ", " + theForm.frm_postcode.value.trim() + ", " + theForm.frm_state.value.trim();
-		geocoder.geocode( { 'address': myAddress}, function(results, status) {	
-			if (status == google.maps.GeocoderStatus.OK) {
-				window.theLat = results[0].geometry.location.lat();
-				window.theLng = results[0].geometry.location.lng();
-				if(window.isReturn == 1) {
-					var geocoder2 = new google.maps.Geocoder();
-					var myRetAddress = theForm.frm_ret_street.value.trim() + ", " + theForm.frm_ret_city.value.trim() + ", " + theForm.frm_ret_postcode.value.trim() + ", " + theForm.frm_ret_state.value.trim();
-					geocoder2.geocode( { 'address': myRetAddress}, function(results, status2) {	
-						if (status2 == google.maps.GeocoderStatus.OK) {
-							window.theRetLat = results[0].geometry.location.lat();
-							window.theRetLng = results[0].geometry.location.lng();
-							var params = "frm_street=" + street;
-							params += "&frm_app_email=" + appEmail
-							params += "&frm_city=" + city;
-							params += "&frm_postcode=" + postcode;			
-							params += "&frm_state=" + state;
-							params += "&frm_lat=" + theLat;
-							params += "&frm_lng=" + theLng;
-							params += "&frm_description=" + theDescription;
-							params += "&frm_request_date=" + requestDate;
-							params += "&frm_phone=" + thePhone;
-							params += "&frm_toaddress=" + ToAddress;
-							params += "&frm_pickup=" + thePickup;
-							params += "&frm_arrival=" + theArrival;			
-							params += "&frm_username=" + theApprover;
-							params += "&frm_patient=" + thePatient;
-							params += "&frm_orig_fac=" + origFac;
-							params += "&frm_rec_fac=" + recFac;
-							params += "&frm_scope=" + theScope;
-							params += "&frm_comments=" + theComments;
-							var paramsEncoded = encodeURI(params);
-							var url = './ajax/insert_request.php?'+paramsEncoded;
-							sendRequest (url,local_handleResult, "");			// does the work via POST
-							} else {
-							alert("Geocode lookup failed: " + status);
-							$('the_form').style.display="block";
-							$('waiting').style.display='none';
-							alert("Couldn't insert your request at this time due to an error, please try again.");
-							return
-							}
-						});				// end geocoder.geocode()			
-					} else {
+		var address1 = addressLookup(myAddress);
+		if (address1) {
+			window.theLat = address1[0];
+			window.theLng = address1[1];
+			if(window.isReturn == 1) {
+				var myRetAddress = theForm.frm_ret_street.value.trim() + ", " + theForm.frm_ret_city.value.trim() + ", " + theForm.frm_ret_postcode.value.trim() + ", " + theForm.frm_ret_state.value.trim();
+				var address2 = addressLookup(myRetAddress);
+				if (address2) {
+					window.theRetLat = address2[0];
+					window.theRetLng = address2[0];
 					var params = "frm_street=" + street;
 					params += "&frm_app_email=" + appEmail
 					params += "&frm_city=" + city;
@@ -413,15 +376,44 @@ function sub_request() {
 					var paramsEncoded = encodeURI(params);
 					var url = './ajax/insert_request.php?'+paramsEncoded;
 					sendRequest (url,local_handleResult, "");			// does the work via POST
+					} else {
+					alert("Geocode lookup failed: " + status);
+					$('the_form').style.display="block";
+					$('waiting').style.display='none';
+					alert("Couldn't insert your request at this time due to an error, please try again.");
+					return
 					}
-				} else { 
-				alert("Geocode lookup failed: " + status);
-				$('the_form').style.display="block";
-				$('waiting').style.display='none';
-				alert("Couldn't insert your request at this time due to an error, please try again.");
-				return
+				} else {
+				var params = "frm_street=" + street;
+				params += "&frm_app_email=" + appEmail
+				params += "&frm_city=" + city;
+				params += "&frm_postcode=" + postcode;			
+				params += "&frm_state=" + state;
+				params += "&frm_lat=" + theLat;
+				params += "&frm_lng=" + theLng;
+				params += "&frm_description=" + theDescription;
+				params += "&frm_request_date=" + requestDate;
+				params += "&frm_phone=" + thePhone;
+				params += "&frm_toaddress=" + ToAddress;
+				params += "&frm_pickup=" + thePickup;
+				params += "&frm_arrival=" + theArrival;			
+				params += "&frm_username=" + theApprover;
+				params += "&frm_patient=" + thePatient;
+				params += "&frm_orig_fac=" + origFac;
+				params += "&frm_rec_fac=" + recFac;
+				params += "&frm_scope=" + theScope;
+				params += "&frm_comments=" + theComments;
+				var paramsEncoded = encodeURI(params);
+				var url = './ajax/insert_request.php?'+paramsEncoded;
+				sendRequest (url,local_handleResult, "");			// does the work via POST
 				}
-			});				// end geocoder.geocode()
+			} else { 
+			alert("Geocode lookup failed: " + status);
+			$('the_form').style.display="block";
+			$('waiting').style.display='none';
+			alert("Couldn't insert your request at this time due to an error, please try again.");
+			return
+			}
 		}
 	}
 	
@@ -660,8 +652,8 @@ function local_handleResult2(req) {			// the called-back function for the return
 	}			// end function local handleResult
 	
 function mail_handleResult(req) {
-	var the_response=JSON.decode(req.responseText);	
-	if(parseInt(the_response[0]) > 0) {
+	var the_response=JSON.decode(req.responseText);
+	if(the_response && parseInt(the_response[0]) > 0) {
 		countmail++;
 		}
 	}
@@ -1004,5 +996,17 @@ $orig_fac_menu .= "<SELECT>";
 	<DIV id='result' style='position: absolute; width: 95%; text-align: center; margin: 10px;'>
 		<DIV id='done'></DIV>
 	</DIV>
+	<DIV id='map_canvas' style='display: none;'></DIV>
+	<SCRIPT>
+	var map;				// make globally visible
+	var mapWidth = <?php print get_variable('map_width');?>;
+	var mapHeight = <?php print get_variable('map_height');?>;;
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	var theLocale = <?php print get_variable('locale');?>;
+	var useOSMAP = <?php print get_variable('use_osmap');?>;
+	var initZoom = <?php print get_variable('def_zoom');?>;
+	init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+	</SCRIPT>
 </BODY>
 </HTML>

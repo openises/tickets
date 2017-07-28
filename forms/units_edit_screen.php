@@ -575,8 +575,9 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 
 							case "2":
 								print $utm_link;
+								$utmcoords = $row['lat'] . "," . $row['lng'];
 ?> 								
-								<INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUTM($row['lat'], $row['lng']) ;?>" SIZE=19 disabled />
+								<INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print toUTM($utmcoords);?>" SIZE=30 disabled />
 <?php 
 								break;		
 

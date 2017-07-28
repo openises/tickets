@@ -78,7 +78,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 			ret_arr[1] = r.lng;
 			});
 		return ret_arr;
-	}				// end function addressLookup()
+		}				// end function loc_lkup()
 		
 	function sendRequest(url,callback,postData) {
 		var req = createXMLHTTPObject();

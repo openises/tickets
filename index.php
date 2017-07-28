@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.11A Beta - 8/10/16";	
+$version = "3.12A Beta - 8/25/16";	
 
 /*
 10/1/08 added error reporting

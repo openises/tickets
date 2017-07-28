@@ -222,8 +222,7 @@ function getZoneNumber(lat, lon) {
 
 
 ***************************************************************************/
-function LLtoUTM(lat,lon, utmcoords) {
-  // utmcoords is a 2-D array declared by the calling routine
+function LLtoUTM(lat,lon) {
 //alert(227);
   lat = parseFloat(lat);
   lon = parseFloat(lon);
@@ -282,11 +281,9 @@ function LLtoUTM(lat,lon, utmcoords) {
                   * C + 4 * C * C ) * (A * A * A * A) / 24
                   + (61 - 58 * T + T * T + 600 * C - 330 * ECC_PRIME_SQUARED )
                   * (A * A * A * A * A * A) / 720)));
-
-  utmcoords[0] = UTMEasting
-  utmcoords[1] = UTMNorthing
-
-  return
+  UTMNorthing = 10000000 - (UTMNorthing * -1);
+  var utmreturn	= UTMZone + " " + UTMEasting.toFixed(2) + " " + UTMNorthing.toFixed(2);
+  return utmreturn;
 }
 
 
