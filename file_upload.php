@@ -57,7 +57,7 @@ $select_u .= "</SELECT>";
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<STYLE type="text/css">
@@ -67,8 +67,8 @@ $select_u .= "</SELECT>";
   				  padding: 4px 0.5em; text-decoration: none; float: left; background-color: #EFEFEF; font-weight: bolder; cursor: pointer; }	
   	</STYLE>
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<script src="./js/misc_function.js" type="text/javascript"></script>
-	<script type="text/javascript">
+	<script src="./js/misc_function.js" type="application/x-javascript"></script>
+	<script type="application/x-javascript">
 	
 	function CngClass(obj, the_class){
 		$(obj).className=the_class;

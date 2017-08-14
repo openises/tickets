@@ -12,6 +12,17 @@ function get_types($curr_val) {
 	return $the_ret;
 	}
 ?>
+<SCRIPT>
+function checkInput(myform, mybutton) {
+	var theControl = myform.frm_conditions;
+	if(theControl.options[theControl.selectedIndex].value==0) {
+		alert("Condition Type must be set");
+		return;
+		} else {
+		JSfnCheckInput(myform, mybutton);
+		}
+	}
+</SCRIPT>
 		<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>" /><!-- 1/21/09 - APRS moved to responder schema  -->
 		<INPUT TYPE="hidden" NAME="func" 		VALUE="pu" />
 		<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename;?>" />
@@ -29,13 +40,13 @@ function get_types($curr_val) {
 		<TR><TD>&nbsp;</TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Title:</TD>
-			<TD><INPUT ID="ID1" CLASS="dirty" MAXLENGTH="16" SIZE="16" type="text" NAME="frm_title" VALUE="<?php print $row['title'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
+			<TD><INPUT ID="ID1" CLASS="dirty" MAXLENGTH="128" SIZE="48" type="text" NAME="frm_title" VALUE="<?php print $row['title'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Description:</TD>
-			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_description" VALUE="<?php print $row['description'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
+			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="128" SIZE="48" type="text" NAME="frm_description" VALUE="<?php print $row['description'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Address:</TD>
-			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_address" VALUE="<?php print $row['address'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
+			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="128" SIZE="48" type="text" NAME="frm_address" VALUE="<?php print $row['address'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Type:</TD>
 			<TD><?php print get_types($row['conditions']);?></TD></TR>
@@ -50,13 +61,14 @@ function get_types($curr_val) {
 				<DIV id = "map_canvas" style = "width: 500px; height: 500px; text-align: center;"></DIV>
 			</TD>
 		</TR>
-		<TR><TD COLSPAN="99" ALIGN="center">
-		<BR />
-		<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button"	VALUE="Reset" onClick = "Javascript: document.u.reset();icon_to_form('<?php print $row['icon'];?>'); "/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button" NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this );"/> 
-		
-		</TD></TR>
+		<TR>
+			<TD COLSPAN="99" ALIGN="center">
+				<SPAN id='can_but' CLASS='plain text' style='width: 80px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="Javascript: document.retform.func.value='r';document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+				<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="Javascript: document.u.reset();icon_to_form('<?php print $row['icon'];?>'); "><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="checkInput(document.u, this );"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
+		</TD></TR></TABLE>
 		</FORM>
 <SCRIPT>
 var map;
@@ -93,6 +105,9 @@ function onMapClick(e) {
 	};
 
 map.on('click', onMapClick);
+<?php
+do_kml();
+?>
 </SCRIPT>
 		</td></tr></table>
 

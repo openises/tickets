@@ -33,7 +33,7 @@ $as_of = 		get_text("As-of");
 <meta http-equiv="expires" content="0" />
 <meta http-equiv="cache-control" content="no-cache" />
 <meta http-equiv="pragma" content="no-cache" />
-<meta http-equiv="content-script-type"	content="text/javascript" />
+<meta http-equiv="content-script-type"	content="application/x-javascript" />
 <meta http-equiv="script-date" content="<?php print date("n/j/y g:i", filemtime(basename(__file__)));?>" />
 <meta http-equiv="x-ua-compatible" content="ie=emulateie7"/>
 <link rel=stylesheet href="stylesheet.php?version=<?php print time();?>" type="text/css">
@@ -42,7 +42,8 @@ td: 		font-size: 1.0em;
 th:			font-weight: 100;  text-align: center;
 td.closed:  text-decoration: line-through;
 </style>
-
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <script>
 var do_LOG 		 = 10;
 var do_LOG_DB 	 = 11;
@@ -51,6 +52,8 @@ var do_NOTE_DB 	 = 13;
 var do_MAIL 	 = 14;
 var do_MAIL_SEND = 15;
 var do_REFRESH	 = 99;
+var viewportheight;
+var viewportwidth;
 
 function reSizeScr() {				// 244			-- 5/23/09
 	var the_height = (document.getElementById('data_tbl').offsetHeight) + 120;	// 3/21/2015
@@ -192,13 +195,13 @@ switch ($mode) {
 				$mail_onclick = (is_email($row['contact_via'])) ? "onclick = 'do_mail({$row['unitid']});'" : "" ;
 				$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
 				echo "<tr class = '{$evenodd[($i%2)]}'>
-					<td class = '{$sev_cls}' onclick = 'do_log({$row['unitid']})'>{$row['handle']}</td>
-					<td class = '{$sev_cls}' align = 'center'>{$online}</td>
-					<td class = '{$sev_cls}'>{$date} ({$the_status})</td>
-					<td class = '{$sev_cls}' {$mail_onclick}>{$row['contact_via']}</td>
-					<td class = '{$sev_cls} {$closed}' onclick = 'do_note({$row['tickid']})' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$the_addr}');\" >{$row['type']} ({$row['scope']})</td>
-					<td class = '{$sev_cls}'>{$the_addr}</td>
-					<td class = '{$sev_cls}'>{$the_asof}</td>
+					<td class = '{$sev_cls} text_small text_left' onclick = 'do_log({$row['unitid']})'>{$row['handle']}</td>
+					<td class = '{$sev_cls} text_small text_center' align = 'center'>{$online}</td>
+					<td class = '{$sev_cls} text_small text_left'>{$date} ({$the_status})</td>
+					<td class = '{$sev_cls} text_small text_left' {$mail_onclick}>{$row['contact_via']}</td>
+					<td class = '{$sev_cls} {$closed} text_small text_left' onclick = 'do_note({$row['tickid']})' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$the_addr}');\" >{$row['type']} ({$row['scope']})</td>
+					<td class = '{$sev_cls} text_small text_left'>{$the_addr}</td>
+					<td class = '{$sev_cls} text_small text_left'>{$the_asof}</td>
 					</tr>\n";
 				}
 			else {				// mode = 1, watch this incident
@@ -213,9 +216,9 @@ switch ($mode) {
 						<td></td>
 						<td></td>
 						<td></td>
-						<td class = '{$sev_cls} {$closed}' onclick = 'do_note({$row['tickid']})'>{$row['type']} ({$row['scope']})</td>
-						<td class = '{$sev_cls} {$closed}' >{$the_addr}</td>
-						<td class = '{$sev_cls}'>{$the_asof}</td>
+						<td class = '{$sev_cls} {$closed} text_small text_left' onclick = 'do_note({$row['tickid']})'>{$row['type']} ({$row['scope']})</td>
+						<td class = '{$sev_cls} {$closed} text_small text_left' >{$the_addr}</td>
+						<td class = '{$sev_cls} text_small text_left'>{$the_asof}</td>
 						</tr>\n";
 					}				// end if ( ! ( in_array ... ) )
 
@@ -225,12 +228,12 @@ switch ($mode) {
 			function do_tbl_header($val){
 				global $handle, $units, $on_scene, $contact_via, $addr, $nature, $watch_val, $as_of;
 				echo "<center><table id='data_tbl' border = 1 cellpadding = 2 cellspacing = 2 style = 'border-collapse: collapse; overflow: auto;'>";
-				echo "<tr class = 'even header'><th colspan=99 align = center>{$units} Watch ({$val} min. cycle)</th></tr>\n";
-				echo "<tr><th>{$handle}</th><th><img src= 'images/online.png' /></th><th >{$on_scene} (Status)</th><th >{$contact_via}</th><th>{$nature}</th><th>{$addr}</th><th>{$as_of}</th></tr>\n";
+				echo "<tr class = 'even header text'><th colspan=99 align = center>{$units} Watch ({$val} min. cycle)</th></tr>\n";
+				echo "<tr><th CLASS='text'>{$handle}</th><th CLASS='text'><img src= 'images/online.png' /></th><th CLASS='text'>{$on_scene} (Status)</th><th CLASS='text'>{$contact_via}</th><th CLASS='text'>{$nature}</th><th CLASS='text'>{$addr}</th><th CLASS='text'>{$as_of}</th></tr>\n";
 				}
 			function do_tbl_footer() {
 				global $handle, $unit, $contact, $nature, $incident;
-				echo "<tr class = 'even header'><td colspan = 99 align = 'center'><i>Click <b>{$handle}</b> to add {$unit} log entry -- click <b>{$contact}</b> to send text/email -- click <b>{$nature}</b> to add {$incident} note</i></td></tr>";
+				echo "<tr class = 'even header'><td colspan = 99 CLASS='text text_center'><i>Click <b>{$handle}</b> to add {$unit} log entry -- click <b>{$contact}</b> to send text/email -- click <b>{$nature}</b> to add {$incident} note</i></td></tr>";
 				echo "</table>\n";
 				}
 
@@ -241,7 +244,7 @@ switch ($mode) {
 
 ?>
 <BODY onload = "reSizeScr(); document.getElementById('data_tbl').style.overflow = 'auto'; <?php echo $do_audible; ?> ">			<!-- window.resizeBy(-200, -100); window.resizeTo(aWidth, aHeight) -->
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <form name = "osw_form" method = post action = "<?php echo basename(__FILE__) ;?>" >
 <input type = hidden name = "mode" value = "<?php echo $mode;?>" />
 <input type = hidden name = "ref" value = "" />
@@ -283,8 +286,9 @@ switch ($mode) {
 				}				// end for ()
 
 			do_tbl_footer();
-		  	echo "<button onclick = 'window.close();' class='plain text_small' style = 'float: none; margin-top: 12px;'>Close</button>\n";
-
+?>
+			<SPAN ID='close_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+<?php
 			break;		// end case 1
     case 10:		// log entry
 
@@ -294,14 +298,23 @@ switch ($mode) {
 ?>
 <body onload = "document.osw_form.frm_comment.focus();">		<!-- log entry  <?php echo __LINE__;?> -->
 <form name="osw_form" method = "post" action="<?php echo basename(__FILE__);?>">
-<center><table border = 0 style = 'margin-top:40px;'>
-<tr class = 'even'><th colspan=2><?php echo $row['handle']; ?> Log entry</th></tr>
-<tr class = 'odd'><td><textarea name="frm_comment" cols="72" rows="1" wrap="virtual" placeholder="Log entry here ..."></textarea></td></tr>
-<tr class = 'even'><td align='center'><span style ='text-align: center; margin: 0 auto;'>
-	<input type = 'button' value='Next' 	class='plain text_small' onClick= 'this.form.submit();' style = 'margin-left:100px;'/>
-	<input type = 'button' value='Reset'  	class='plain text_small' style = "margin-left:20px;" onClick = 'document.osw_form.reset();' />
-	<input type = 'button' value='Cancel'  	class='plain text_small' style = "margin-left:20px;" onClick = 'do_can ();' />
-	</span></td></tr>
+<center>
+<table border = 0 style = 'margin-top:40px;'>
+	<tr class = 'even'>
+		<th colspan=2><?php echo $row['handle']; ?> Log entry</th>
+	</tr>
+	<tr class = 'odd'>
+		<td>
+			<textarea name="frm_comment" cols="72" rows="1" wrap="virtual" placeholder="Log entry here ..."></textarea>
+		</td>
+	</tr>
+	<tr class = 'even'>
+		<td align='center'>
+			<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.osw_form.submit();'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+			<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.osw_form.reset();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+			<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_can();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+		</td>
+	</tr>
 </table>
 <input type = hidden name = "mode"	value = 11 /> <!-- do_LOG_DB  -->
 <input type = hidden name = "ref" 	value = "<?php echo $_POST['ref'];?>" />
@@ -390,9 +403,9 @@ Signal &raquo;
 Description &raquo; <input type = 'radio' name='frm_add_to' value='0' checked />&nbsp;&nbsp;&nbsp;&nbsp;
 Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><br />
 <span style ='display: table; margin: 0 auto;'>
-<input type = 'button' value = 'Next' 		class='plain text_small' style = "margin-left:250px;" onClick = 'validate();' />
-<input type = 'button' value = 'Reset' 		class='plain text_small' style = "margin-left:20px;" onClick = 'this.form.reset()' />
-<input type = 'button' value = 'Cancel'  	class='plain text_small' style = "margin-left:20px;" onClick = 'do_can ();' />
+	<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate();'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+	<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='this.form.reset();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+	<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_can();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 </span>
 </form>
 <?php
@@ -461,7 +474,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 	function set_message(id) {	//	10/23/12
 		var randomnumber=Math.floor(Math.random()*99999999);
 		var theMessages = <?php echo json_encode($std_messages);?>;
-		var message = theMessages[id]['message'];
+		var message = theMessages[parseInt(id)]['message'];
 		var tick_id = <?php print $tik_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
 		sendRequest (url,replacetext_cb, "");
@@ -563,22 +576,23 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 					<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD>
 
 						<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].value);'>	<!--  11/17/10 -->
-						<OPTION VALUE=0 SELECTED>Select</OPTION>
+							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-//							dump(__LINE__);
-							foreach($std_messages as $val) {
-								print "\t<OPTION VALUE='{$val['id']}'>{$val['name']}</OPTION>\n";
-								}
+							print get_standard_messages_sel();
 ?>
 						</SELECT>
 						<BR />
 					</TD>
 				</TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>
-					<TD></TD><TD ALIGN='center' ><BR /><BR /><span style ='display: table; margin: 0 auto;'>
-						<input type='button' 	value='Next'   class='plain text_small' onClick = "validate();" style = 'margin-left:10px;'>
-						<input type='reset' 	value='Reset'  class='plain text_small' style = 'margin-left:40px;'>
-						<input type='button'	value='Cancel' class='plain text_small' style = "margin-left:40px;" onClick = 'do_can ();' />
+					<TD></TD>
+					<TD ALIGN='center' >
+						<BR />
+						<BR />
+						<span style ='display: table; margin: 0 auto;'>
+							<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate();'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+							<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.osw_form..reset();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+							<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_can();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 						</span>
 					</TD>
 				</TR>
@@ -629,4 +643,17 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 	}		// end switch ($mode)
 ?>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

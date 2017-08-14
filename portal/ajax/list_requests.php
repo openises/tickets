@@ -3,7 +3,7 @@
 require_once('../../incs/functions.inc.php');
 require_once('../incs/portal.inc.php');
 include('../../incs/html2text.php');
-$sortby = (!(array_key_exists('sort', $_GET))) ? "request_date" : $_GET['sort'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "`request_date`" : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 
 function br2nl($input) {
@@ -49,7 +49,6 @@ if($where == "") {
 	} else {
 	$where .= ($showall == false) ? " AND `r`.`status` <> 'Closed' " : "";
 	}
-
 $query = "SELECT *, 
 		`r`.`id` AS `request_id`,
 		`r`.`ticket_id` AS `r_tick_id`,
@@ -176,8 +175,8 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 			$color = "background-color: #33CCFF; color: #000000;";			
 			} elseif ($row['req_status'] == 'Resourced') {
 			$color = "background-color: #00FF00; color: #000000;";			
-			} elseif ($row['req_status'] == 'Completed') {
-			$color = "background-color: #FFFFFF; color: #00FF00;";		
+			} elseif ($row['req_status'] == 'Complete') {
+			$color = "background-color: #A9F5BC; color: #0B3B24;";		
 			} elseif ($row['req_status'] == 'Declined') {
 			$color = "background-color: #FF9900; color: #FFFFFF;";	
 			} elseif ($row['req_status'] == 'Closed') {
@@ -253,7 +252,7 @@ switch($sortby) {
 	case 'scope':
 		$sortval = 13;
 		break;
-	case 'toaddress':
+	case 'to_address':
 		$sortval = 31;
 		break;
 	case 'postcode':

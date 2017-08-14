@@ -13,8 +13,11 @@ require_once($the_inc);
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
 var mapHeight;
@@ -24,6 +27,8 @@ var viewportheight;
 var colheight;
 var outerwidth;
 var outerheight;
+var listHeight;
+var listwidth;
 var wlmarkers = [];
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
@@ -58,20 +63,16 @@ function set_size() {
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
 	colheight = outerheight * .95;
-	listHeight = viewportheight * .7;
-	listwidth = colwidth * .95
-	inner_listwidth = listwidth *.9;
-	celwidth = listwidth * .20;
-	res_celwidth = listwidth * .15;
-	fac_celwidth = listwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
+	$('leftcol').style.height = colheight + "px";
+	$('view_location').style.width = colwidth + "px";	
 	$('rightcol').style.width = colwidth + "px";
 	$('rightcol').style.height = colheight + "px";	
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
+	set_fontsizes(viewportwidth, "fullscreen");
 	map.invalidateSize();
 	}
 
@@ -86,67 +87,74 @@ $lng = $row['lng'];
 $coords =  $row['lat'] . "," . $row['lng'];		// for UTM			
 ?>
 </HEAD>
-<BODY onLoad='set_size();'>
-<A NAME='top'>
-<DIV ID='to_bottom' style="position: fixed; top: 20px; left: 20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 ID = "down"/></DIV>
-	<DIV id='outer' style='position: absolute; left: 0px;'>
-		<DIV id='leftcol' style='position: absolute; left: 10px;'>
-			<FONT CLASS="header">Warn Location'<?php print $row['title'] ;?>' Data</FONT> (#<?php print $row['id'];?>) <BR /><BR />
-			<TABLE BORDER=0 ID='view_location' STYLE='display: block'>
+<BODY>
+	<A NAME='top'>
+	<DIV ID='to_bottom' style="position: fixed; top: 20px; left: 10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 ID = "down"/></DIV>
+	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
+			<TABLE ID='view_location'>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='2'>&nbsp;</TD>
+				</TR>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='2'>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;View Warn Location '<?php print $row['title'] ;?>' Data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></SPAN>
+						<BR />
+						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
+						<BR />
+					</TD>
+				</TR>
+				<TR class='spacer'>
+					<TD class='spacer' COLSPAN=2></TD>
+				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label"><?php print get_text("Name"); ?>: </TD>
-					<TD><?php print $row['title'];?></TD>
+					<TD CLASS="td_label text"><?php print get_text("Name"); ?>: </TD>
+					<TD CLASS='td_data text'><?php print $row['title'];?></TD>
 				</TR>
 				<TR CLASS = 'odd'>
-					<TD CLASS="td_label"><?php print get_text("Location"); ?>: </TD>
-					<TD><?php print $row['street'] ;?></TD>
+					<TD CLASS="td_label text"><?php print get_text("Location"); ?>: </TD>
+					<TD CLASS='td_data text'><?php print $row['street'] ;?></TD>
 				</TR>
 				<TR CLASS = 'even'>
-					<TD CLASS="td_label"><?php print get_text("City"); ?>: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
-					<TD><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
+					<TD CLASS="td_label text"><?php print get_text("City"); ?>: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
+					<TD CLASS='td_data text'><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
 				</TR>
-				<TR CLASS = "even">
-					<TD CLASS="td_label"><?php print get_text("Description"); ?>: </TD>
-					<TD><?php print $row['description'];?></TD>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label text"><?php print get_text("Description"); ?>: </TD>
+					<TD CLASS='td_data_wrap text' style='height: 50px;'><?php print $row['description'];?></TD>
 				</TR>
-				<TR CLASS = 'odd'>
-					<TD CLASS="td_label">As of:</TD>	
-					<TD><?php print loc_format_date(strtotime($row['_on'])); ?></TD>
+				<TR CLASS = 'even'>
+					<TD CLASS="td_label text">As of:</TD>	
+					<TD CLASS='td_data text'><?php print loc_format_date(strtotime($row['_on'])); ?></TD>
 				</TR>
 <?php
 				if (my_is_float($lat)) {
-?>		
-					<TR CLASS = "even">
-						<TD CLASS="td_label"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD>
-						<TD><?php print get_lat($lat);?> <?php print get_lng($lng);?>&nbsp;
-<?php
-							$usng_val = LLtoUSNG($row['lat'], $row['lng']);
-							$osgb_val = LLtoOSGB($row['lat'], $row['lng']) ;
-							$utm_val = toUTM("{$row['lat']}, {$row['lng']}");
-
-							$locale = get_variable('locale');
-							switch($locale) { 
-								case "0":
+					$usng_val = LLtoUSNG($row['lat'], $row['lng']);
+					$osgb_val = LLtoOSGB($row['lat'], $row['lng']) ;
+					$utm_val = toUTM("{$row['lat']}, {$row['lng']}");
+					$locale = get_variable('locale');
+					switch($locale) { 
+						case "0":
+							$label = "USNG:";
+							$input = $usng_val;
+							break;
+							
+						case "1":
+							$label = "OSGB:";
+							$input = $osgb_val;
+							break;
+							
+						default:
+							$label = "UTM:";
+							$input = $utm_val;
+						}
 ?>
-									&nbsp;USNG: 
-<?php 
-									print $usng_val;
-									break;
-									
-								case "1":
-?>
-									&nbsp;OSGB: 
-<?php
-									print $osgb_val;
-									break;
-									
-								default:
-?>
-									&nbsp;UTM: 
-<?php								
-									print $utm_val;
-								}		// end switch()
-?>
+					<TR CLASS = "odd">
+						<TD CLASS="td_label text">
+							<?php print $label;?>
+						</TD>
+						<TD CLASS='td_data text' COLSPAN=3>
+							<?php print $input;?>					
 						</TD>
 					</TR>
 <?php
@@ -156,23 +164,21 @@ $coords =  $row['lat'] . "," . $row['lng'];		// for UTM
 				<TR>
 					<TD COLSPAN=2>&nbsp;</TD>
 				</TR>
+			</TABLE>
+		</DIV>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
 <?php
 				if (is_administrator() || is_super()) {
 ?>
-					<TR CLASS = "even">
-						<TD COLSPAN=99 ALIGN='center'>
-							<DIV style='text-align: center;'>
-								<SPAN id='edit_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick= 'to_edit_Form.submit();'>Edit</SPAN>
-								<SPAN id='can_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick= 'document.can_Form.submit();'>Cancel</SPAN>
-							</DIV>
-						</TD>
-					</TR>
+					<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+					<SPAN id='ed_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='to_edit_Form.submit();'><?php print get_text("Edit");?><BR /><IMG id='edit_img' SRC='./images/edit.png' /></SPAN>
 <?php
 					}		// end if (is_administrator() || is_super())
-?>
-			</TABLE>
+?>			
+			</DIV>
 		</DIV>
-		<DIV id='rightcol' style='position: absolute; right: 170px; z-index: 1;'>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 			<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
 		</DIV>
 	</DIV>
@@ -183,17 +189,40 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 <FORM NAME='can_Form' METHOD="post" ACTION = "warn_locations.php"></FORM>
 <FORM NAME="to_edit_Form" METHOD="post" ACTION = "warn_locations.php?edit=true&id=<?php print $id; ?>"></FORM>
 <A NAME="bottom" /> 
-<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>			
+<DIV ID='to_top' style="position:fixed; bottom:50px; left:10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>			
 <SCRIPT>
-var latLng;
-var mapWidth = <?php print get_variable('map_width');?>+20;
-var mapHeight = <?php print get_variable('map_height');?>+20;;
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+mapWidth = viewportwidth * .40;
+mapHeight = viewportheight * .55;
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('leftcol').style.width = colwidth + "px";
+$('leftcol').style.height = colheight + "px";
+$('view_location').style.width = colwidth + "px";	
+$('rightcol').style.width = colwidth + "px";
+$('rightcol').style.height = colheight + "px";	
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
+set_fontsizes(viewportwidth, "fullscreen");
+var latLng;
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+map.setView([<?php print $lat;?>, <?php print $lng;?>], parseInt(initZoom));
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 <?php

@@ -47,7 +47,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 	<STYLE>
@@ -63,9 +63,44 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		.reg_button 	{ font: normal 12px Arial, Helvetica, sans-serif; color:#000000; padding: 4px 0.5em;text-decoration: none; float: left; background-color: #EFEFEF; font-weight: bold; padding-left: 10px;}		
 		.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#000000; border: 1px inset #FFFFFF;
   				  padding: 4px 0.5em;text-decoration: none; float: left; background-color: #DEE3E7;font-weight: bolder;}		
-	</STYLE>	
-		<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>	<!-- 6/10/11 -->
-<SCRIPT>
+	</STYLE>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>	<!-- 6/10/11 -->
+	<SCRIPT>
+	window.onresize=function(){set_size()};
+
+	var viewportwidth;
+	var viewportheight;
+	var outerwidth;
+	var outerheight;
+	var listHeight;
+	var listwidth;
+	var colwidth;
+	var colheight;
+
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth, "fullscreen");
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		listHeight = viewportheight * .25;
+		colwidth = outerwidth * .42;
+		colheight = outerheight * .95;
+		listHeight = viewportheight * .5;
+		listwidth = colwidth;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
+		}
+
 	function ck_frames() {		//  onLoad = "ck_frames()"
 		if(self.location.href==parent.location.href) {
 			self.location.href = 'index.php';
@@ -302,28 +337,110 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		}
 ?>
 	</HEAD>
+	<BODY onLoad='ck_frames(); init();'>
+		<DIV id='outer'>
 <?php 
-	print "<BODY onLoad = 'ck_frames();'>\n";
+			$do_yr_asof = false;		// js year housekeeping
 
-	$do_yr_asof = false;		// js year housekeeping
+			$optstyles = array ();		// see css
 
-	$optstyles = array ();		// see css
+			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";				// 1/27/09
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$optstyles[$row['name']] = $row['name'];	
+				}
+			unset($result);
 
-	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";				// 1/27/09
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$optstyles[$row['name']] = $row['name'];	
-		}
-	unset($result);
+			if ($get_action == 'add') {
+			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-	if ($get_action == 'add') {
-		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+			if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]'")) {
+				print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
+				} elseif ($_POST['frm_description'] == '') {
+				print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
+				} else {
+				$responder = $sep = "";
+				foreach ($_POST as $VarName=>$VarValue) {			// 3/20/10
+					$temp = explode("_", $VarName);
+					if (substr($VarName, 0, 7)=="frm_cb_") {
+						$responder .= $sep . $VarValue;		// space separator for multiple responders
+						$sep = " ";
+						}
+					}
+				$_POST['frm_description'] = strip_html($_POST['frm_description']); //fix formatting, custom tags etc.
 
-		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]'"))
-			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
-		elseif ($_POST['frm_description'] == '')
-			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
-		else {
+				$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST['frm_meridiem_asof'] : "" ;
+
+				$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
+																			// 4/22/11
+				$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE
+					`description` = '" . addslashes($_POST['frm_description']) . "' AND
+					`ticket_id` = '{$_GET['ticket_id']}' AND
+					`user` = '{$_SESSION['user_id']}' AND
+					`action_type` = '{$GLOBALS['ACTION_COMMENT']}' AND
+					`updated` = '{$frm_asof}' AND
+					`responder` = '{$responder}' ";
+					
+				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
+				if (mysql_affected_rows()==0) {		// not a duplicate - 8/15/10
+					
+					$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]action` 
+						(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES
+						('" . addslashes($_POST['frm_description']) . "', '{$_GET['ticket_id']}', '{$now}', {$_SESSION['user_id']}, {$GLOBALS['ACTION_COMMENT']}, '{$frm_asof}', '{$responder}')";		// 8/24/08
+					$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
+		
+					$ticket_id = mysql_insert_id();								// just inserted action id
+//						($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
+					do_log($GLOBALS['LOG_ACTION_ADD'], $_GET['ticket_id'], 0,  mysql_insert_id());		// 3/18/10
+					$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE `id`='" . $_GET['ticket_id'] . "' LIMIT 1";
+					$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+					}		// end insert process
+					
+				$id = $_GET['ticket_id'];
+				print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action record has been added.</SPAN><BR /><BR /><BR />';
+				print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
+				print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
+				print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+				print "</DIV>";
+				$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+
+				if ($addrs) {
+					$theTo = implode("|", array_unique($addrs));
+					$theText = "TICKET - ACTION: ";
+					mail_it ($theTo, "", $theText, $id, 1 );
+					}				// end if/else ($addrs)
+				}		// end else ...
+// ____________________________________________________
+			} else if ($get_action == 'delete') {		// 	end if($get_action == 'add')
+			if (array_key_exists('confirm', ($_GET))) {
+				do_log($GLOBALS['LOG_ACTION_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 8/7/08
+//					($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
+			
+				$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") or do_error('','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
+				$id = $_GET['ticket_id'];
+				print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action deleted.</SPAN><BR /><BR /><BR />';
+				print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
+				print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
+				print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+				print "</DIV>";
+				$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+				if ($addrs) {
+					$theTo = implode("|", array_unique($addrs));
+					$theText = "TICKET - ACTION DELETED: ";
+					mail_it ($theTo, "", $theText, $id, 1 );
+					}
+				} else {
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
+				$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				print "<FONT CLASS='header'>Really delete action record '" . shorten($row['description'], 24) . "' ? </FONT><BR /><BR />";
+				print "<FORM NAME='delfrm' METHOD='post' ACTION='action.php?action=delete&id=$_GET[id]&ticket_id=" . $_GET['ticket_id'] . "&confirm=1'>";
+				
+				print "<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_step_2();'><SPAN STYLE='float: left;'>" . get_text('Yes') . "</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>";
+				print "<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'>" . get_text('Cancel') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
+				print "</FORM>";
+				}
+			} else if ($get_action == 'update') {	// end if ($get_action == 'delete') update action and show ticket
 			$responder = $sep = "";
 			foreach ($_POST as $VarName=>$VarValue) {			// 3/20/10
 				$temp = explode("_", $VarName);
@@ -332,331 +449,274 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 					$sep = " ";
 					}
 				}
-			$_POST['frm_description'] = strip_html($_POST['frm_description']); //fix formatting, custom tags etc.
-
-			$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST['frm_meridiem_asof'] : "" ;
-
+			$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
 			$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
-																		// 4/22/11
-     		$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE
-     			`description` = '" . addslashes($_POST['frm_description']) . "' AND
-     			`ticket_id` = '{$_GET['ticket_id']}' AND
-     			`user` = '{$_SESSION['user_id']}' AND
-     			`action_type` = '{$GLOBALS['ACTION_COMMENT']}' AND
-     			`updated` = '{$frm_asof}' AND
-     			`responder` = '{$responder}' ";
-     			
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
-			if (mysql_affected_rows()==0) {		// not a duplicate - 8/15/10
-				
-	     		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]action` 
-	     			(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES
-	     			('" . addslashes($_POST['frm_description']) . "', '{$_GET['ticket_id']}', '{$now}', {$_SESSION['user_id']}, {$GLOBALS['ACTION_COMMENT']}, '{$frm_asof}', '{$responder}')";		// 8/24/08
-				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
-	
-				$ticket_id = mysql_insert_id();								// just inserted action id
-	//			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
-				do_log($GLOBALS['LOG_ACTION_ADD'], $_GET['ticket_id'], 0,  mysql_insert_id());		// 3/18/10
-				$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE `id`='" . $_GET['ticket_id'] . "' LIMIT 1";
-				$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-				}		// end insert process
-				
-			add_header($_GET['ticket_id']);
+			$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]action` SET `description`='$_POST[frm_description]', `responder` = '$responder', `updated` = '$frm_asof' WHERE `id`='$_GET[id]' LIMIT 1") or do_error('action.php::update action','mysql_query',mysql_error(),basename( __FILE__), __LINE__);
+			$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` =	'$frm_asof' WHERE id='$_GET[ticket_id]' LIMIT 1") 	or do_error('action.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
+			$result = mysql_query("SELECT ticket_id FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") 			or do_error('action.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
+			$row = stripslashes_deep(mysql_fetch_array($result));
 			$id = $_GET['ticket_id'];
-			print '<br /><FONT CLASS="header">Action record has been added.</FONT><BR /><BR />';
-			print "<A HREF='main.php'><U>Continue</U></A>";
+			print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action record has been updated.</SPAN><BR /><BR /><BR />';
+			print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
+			print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
+			print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+			print "</DIV>";
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
-
 			if ($addrs) {
 				$theTo = implode("|", array_unique($addrs));
-				$theText = "TICKET - ACTION: ";
+				$theText = "TICKET - ACTION UPDATED: ";
 				mail_it ($theTo, "", $theText, $id, 1 );
-				}				// end if/else ($addrs)
-			if($_SESSION['internet']) {
-				require_once('./forms/ticket_view_screen.php');
-				} else {
-				require_once('./forms/ticket_view_screen_NM.php');
 				}
-			print "</BODY>";				// 10/19/08		
-			print "</HTML>";				// 10/19/08
-			}		// end else ...
-// ____________________________________________________
-		exit();
 
-		}		// 	end if($get_action == 'add')
-
-	else if ($get_action == 'delete') {
-		if (array_key_exists('confirm', ($_GET))) {
-			do_log($GLOBALS['LOG_ACTION_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 8/7/08
-//			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
-		
-			$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") or do_error('','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-			print '<FONT CLASS="header">Action deleted</FONT><BR /><BR />';
-			add_header($_GET['ticket_id']);
-			show_ticket($_GET['ticket_id']);
-			}
-		else {
+			} else if ($get_action == 'edit') {		// end if ($get_action == 'update'), get and show action to update
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
 			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
-
-			print "<FONT CLASS='header'>Really delete action record '" . shorten($row['description'], 24) . "' ? </FONT><BR /><BR />";
-			print "<FORM NAME='delfrm' METHOD='post' ACTION='action.php?action=delete&id=$_GET[id]&ticket_id=" . $_GET['ticket_id'] . "&confirm=1'>";
-			print "<INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-			print "<INPUT TYPE='Button' VALUE='Cancel' onClick='history.back();'></FORM>";
-			}
-
-		}				// end if ($get_action == 'delete') 
-		
-	else if ($get_action == 'update') {		//update action and show ticket
-		$responder = $sep = "";
-		if (array_key_exists('frm_responder', ($_POST))) {			
-			for ($i=0; $i< count ($_POST['frm_responder']); $i++) {
-				$responder .= $sep . $_POST['frm_responder'][$i];		// space separator for multiple responders
-				$sep = " ";
-				}
-			}
-		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
-				
-		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
-		$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]action` SET `description`='$_POST[frm_description]', `responder` = '$responder', `updated` = '$frm_asof' WHERE `id`='$_GET[id]' LIMIT 1") or do_error('action.php::update action','mysql_query',mysql_error(),basename( __FILE__), __LINE__);
-		$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` =	'$frm_asof' WHERE id='$_GET[ticket_id]' LIMIT 1") 	or do_error('action.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("SELECT ticket_id FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") 			or do_error('action.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_array($result));
-		print '<BR /><BR /><FONT CLASS="header">Action updated</FONT><BR /><BR />';
-		add_header($_GET['ticket_id']);
-		show_ticket($row['ticket_id']);
-		}				// end if ($get_action == 'update') 
-		
-	else if ($get_action == 'edit') {		//get and show action to update
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_array($result));
-		$responders = explode(" ", $row['responder']);				// to array
-//		dump (__LINE__);
-//		dump ($responders);
-		$do_yr_asof = true;
+			$row = stripslashes_deep(mysql_fetch_array($result));
+			$responders = explode(" ", $row['responder']);				// to array
+			$do_yr_asof = true;
+			$heading = "Edit Action";
 ?>
-		<SPAN STYLE='margin-left:83px;'><FONT CLASS="header">Edit Action</FONT></SPAN><BR /><BR />
-		<FORM METHOD="post" NAME='ed_frm' ACTION="action.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update">
-		<TABLE BORDER="0"> <!-- 3/20/10 -->
-		<TR CLASS='even' VALIGN='top'><TD rowspan=4><B>Description:</B> <font color='red' size='-1'>*</font></TD>
-			<TD colspan=3><TEXTAREA ROWS="2" COLS="90" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA>
-			</TD></TR>
-		<TR CLASS='odd' VALIGN='top'>
+			<FORM METHOD="post" NAME='ed_frm' ACTION="action.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update">
+			<TABLE BORDER="0">
+				<TR CLASS='header'>
+					<TD COLSPAN='99' ALIGN='center'>
+						<FONT CLASS='header' STYLE='background-color: inherit;'><?php print $heading; ?> </FONT>
+					</TD>
+				</TR>
+				<TR CLASS='even' VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD>
+					<TD colspan=3><TEXTAREA ROWS="4" COLS="60" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA>
+					</TD>
+				</TR>
+				<TR CLASS='even'>
+					<TD COLSPAN=99>&nbsp;</TD>
+				</TR>
+				<TR CLASS='odd' VALIGN='top'>				
 <?php
 //						generate dropdown menu of responders -- if(in_array($rowtemp[id], $row[responder]))
-
-//		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 2/12/09
-
-		$query = "SELECT *, 
-			`updated` AS `updated`,
-			`y`.`id` AS `type_id`,
-			`r`.`id` AS `unit_id`,
-			`r`.`name` AS `unit_name`,
-			`s`.`description` AS `stat_descr`,
-			`r`.`description` AS `unit_descr`, 
-			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
-				AS `nr_assigned` 
-			FROM `$GLOBALS[mysql_prefix]responder` `r` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `y` ON ( `r`.`type` = y.id )	
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
-			ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10
-//		dump($query);	//
-		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
-		$max = 24;
-		$height =  (mysql_affected_rows()>$max) ? ($max * 30 ) : (mysql_affected_rows() + 1) * 30;
-		print "<TR VALIGN='top'><TD COLSPAN=2>" . get_units_legend(). "</TD></TR>";
-		$checked = (in_array("0", $responders))? "CHECKED" : "";	// NA is special case - 8/8/10
-		print "<TD><DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >
-			<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0'>NA<BR />\n";
-
-    	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
-			$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		// 
-
-    		$checked = (in_array($row['unit_id'], $responders))? "CHECKED" : "";
-    		$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
-//    		dump($ct_str);
-
-			$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
-			print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" $checked />
-				<SPAN STYLE='width:300px; display:inline; background-color:{$the_bg_color}; color:{$the_text_color};'>" .  
-				stripslashes ($row['unit_name']) . "&nbsp;</SPAN>{$ct_str}";
-			print "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;<SPAN STYLE = 'width:200px; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
-				{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
-
-			}
-		unset ($row);
-		print "\t</DIV></TD>\n";
+				$query = "SELECT *, 
+					`updated` AS `updated`,
+					`y`.`id` AS `type_id`,
+					`r`.`id` AS `unit_id`,
+					`r`.`name` AS `unit_name`,
+					`s`.`description` AS `stat_descr`,
+					`r`.`description` AS `unit_descr`, 
+					(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
+						WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
+						AS `nr_assigned` 
+					FROM `$GLOBALS[mysql_prefix]responder` `r` 
+					LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `y` ON ( `r`.`type` = y.id )	
+					LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
+					ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10
+//						dump($query);	//
+				$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+				$max = 24;
+				$height =  (mysql_affected_rows()>$max) ? ($max * 30 ) : (mysql_affected_rows() + 1) * 30;
+				print "<TR VALIGN='top'><TD COLSPAN=3 CLASS='td_label' style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
+				$checked = (in_array("0", $responders))? "CHECKED" : "";	// NA is special case - 8/8/10
 ?>
-		<TD CLASS="td_label"><SPAN>As of: &nbsp;&nbsp;<SPAN>
-		<INPUT SIZE=4 NAME="frm_year_asof" VALUE="" MAXLENGTH=4>
-		<INPUT SIZE=2 NAME="frm_month_asof" VALUE="" MAXLENGTH=2>
-		<INPUT SIZE=2 NAME="frm_day_asof" VALUE="" MAXLENGTH=2>
-		<INPUT SIZE=2 NAME="frm_hour_asof" VALUE="" MAXLENGTH=2>:<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="" MAXLENGTH=2>
-		&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.ed_frm);'>
-			<br /> <br /> <br />
-
-			<INPUT TYPE="button" VALUE="Cancel"	onClick="history.back()" STYLE = 'margin-left:20px' > 
-			<INPUT TYPE="button" VALUE="Form reset" 	onClick="this.form.reset();init();" STYLE = 'margin-left:20px'>
-			<INPUT TYPE="button" VALUE="Next"	onClick="return validate(this.form)" STYLE = 'margin-left:20px'>
-			</TD></TR>
-		</TABLE></FORM><BR />
+					<TD rowspan=3 CLASS='td_label_wrap' STYLE='vertical-align: top;'>Action for <?php print get_text('Responders');?>(s)</TD>
+					<TD>
+						<DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >
+							<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0' />NA<BR />
 <?php
-		}		// end if ($get_action == 'edit')
-		
-	else if ($get_action == 'form') {
-		$do_yr_asof = true;
-		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
-		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
-		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
+							while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
+								$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		// 
 
-		$al_groups = $_SESSION['user_groups'];
-			
-		if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
-			$curr_viewed= explode(",",$_SESSION['viewed_groups']);
-			} else {
-			$curr_viewed = $al_groups;
-			}
+								$checked = (in_array($row['unit_id'], $responders))? "CHECKED" : "";
+								$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
+								$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
+								print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" $checked />
+									<SPAN STYLE='width:300px; display:inline; background-color:{$the_bg_color}; color:{$the_text_color};'>" .  
+									stripslashes ($row['unit_name']) . "&nbsp;</SPAN>{$ct_str}";
+								print "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;<SPAN STYLE = 'width:200px; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
+									{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
 
-		$curr_names="";	//	6/10/11
-		$z=0;	//	6/10/11
-		foreach($curr_viewed as $grp_id) {	//	6/10/11
-			$counter = (count($curr_viewed) > ($z+1)) ? ", " : "";
-			$curr_names .= get_groupname($grp_id);
-			$curr_names .= $counter;
-			$z++;
-			}			
-
-		$heading = "Add Action";
+								}
+							unset ($row);
 ?>
-		<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="action.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
-		<TABLE BORDER="0">
-		<TR CLASS='header'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'><?php print $heading; ?> </FONT></TD></TR>	<!-- 6/10/11 -->
-		<TR CLASS='spacer'><TD CLASS='spacer' COLSPAN='99' ALIGN='center'>&nbsp;</TD></TR>				<!-- 6/10/11 -->	
-		<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="action.php?ticket_id=<?php print $tick_id;?>&action=add">		<!-- 6/10/11-->
-		<TR CLASS='even'><TD CLASS='td_label'>Description: <font color='red' size='-1'>*</font></TD>
-			<TD colspan=2><TEXTAREA ROWS="2" COLS="90" NAME="frm_description"></TEXTAREA>
-			</TD></TR>
+						</DIV>
+					</TD>
+				</TR>
+				<TR>			
+					<TD CLASS="td_label text"><SPAN>As of: &nbsp;&nbsp;<SPAN>
+						<INPUT SIZE=4 NAME="frm_year_asof" VALUE="" MAXLENGTH=4>
+						<INPUT SIZE=2 NAME="frm_month_asof" VALUE="" MAXLENGTH=2>
+						<INPUT SIZE=2 NAME="frm_day_asof" VALUE="" MAXLENGTH=2>
+						<INPUT SIZE=2 NAME="frm_hour_asof" VALUE="" MAXLENGTH=2>:
+						<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="" MAXLENGTH=2>
+						&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.ed_frm);'>
+						<br />
+						<br />
+						<br />
+						<SPAN ID='can_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+						<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.ed_frm.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+						<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='return validate(document.ed_frm);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+					</TD>
+				</TR>
+			</TABLE>
+			</FORM>
+			<BR />
+<?php
+			} else if ($get_action == 'form') {		// end if ($get_action == 'edit')
+			$do_yr_asof = true;
+			$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
+			$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
+			$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
+
+			$al_groups = $_SESSION['user_groups'];
+				
+			if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
+				$curr_viewed= explode(",",$_SESSION['viewed_groups']);
+				} else {
+				$curr_viewed = $al_groups;
+				}
+
+			$curr_names="";	//	6/10/11
+			$z=0;	//	6/10/11
+			foreach($curr_viewed as $grp_id) {	//	6/10/11
+				$counter = (count($curr_viewed) > ($z+1)) ? ", " : "";
+				$curr_names .= get_groupname($grp_id);
+				$curr_names .= $counter;
+				$z++;
+				}			
+
+			$heading = "Add Action";
+?>
+			<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="action.php?ticket_id=<?php print $tick_id;?>&action=add">
+			<TABLE BORDER="0">
+				<TR CLASS='header'>
+					<TD COLSPAN='99' ALIGN='center'>
+						<FONT CLASS='header' STYLE='background-color: inherit;'><?php print $heading; ?> </FONT>
+					</TD>
+				</TR>
+				<TR CLASS='spacer'>
+					<TD CLASS='spacer' COLSPAN='99' ALIGN='center'></TD>
+				</TR>				<!-- 6/10/11 -->	
+				<TR CLASS='even'>
+					<TD CLASS='td_label text'>
+						Description: <font color='red' size='-1'>*</font>
+					</TD>
+					<TD colspan=2 CLASS='td_data text'>
+						<TEXTAREA ROWS="4" COLS="60" NAME="frm_description"></TEXTAREA>
+					</TD>
+				</TR>
 <SCRIPT>
-	function set_signal(inval) {				// 12/17/10
-		var lh_sep = (document.add_frm.frm_description.value.trim().length>0)? " " : "";
-		var temp_ary = inval.split("|", 2);		// inserted separator
-		document.add_frm.frm_description.value+= lh_sep + temp_ary[1] + ' ';		
-		document.add_frm.frm_description.focus();		
-		}		// end function set_signal()
+				function set_signal(inval) {				// 12/17/10
+					var lh_sep = (document.add_frm.frm_description.value.trim().length>0)? " " : "";
+					var temp_ary = inval.split("|", 2);		// inserted separator
+					document.add_frm.frm_description.value+= lh_sep + temp_ary[1] + ' ';		
+					document.add_frm.frm_description.focus();		
+					}		// end function set_signal()
 </SCRIPT>
-		<TR VALIGN = 'TOP' CLASS='even'>		<!-- 11/15/10 -->
-			<TD ALIGN='right' CLASS="td_label"></TD><TD>Signal &raquo;
-				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
-				<OPTION VALUE=0 SELECTED>Select</OPTION>
+				<TR VALIGN = 'TOP' CLASS='even'>		<!-- 11/15/10 -->
+					<TD ALIGN='right' CLASS="td_label text">Signal &raquo;</TD><TD CLASS='td_data text'>
+						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
-					}
+							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+							while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+								print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+								}
 ?>
-			</SELECT>
-			</TD></TR>
+						</SELECT>
+					</TD>
+				</TR>
 
 <?php
-//						generate dropdown menu of responders
+//				generate dropdown menu of responders
 
-	if(!isset($curr_viewed)) {	
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-			$where = "WHERE `a`.`type` = 2";
-			} else {
-			$x=0;	//	6/10/11
-			$where = "WHERE (";	//	6/10/11
-			foreach($al_groups as $grp) {	//	6/10/11
-				$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-				$where .= "`a`.`group` = '{$grp}'";
-				$where .= $where2;
-				$x++;
-				}
-			$where .= "AND `a`.`type` = 2";	//	6/10/11					
-			}
-		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-			$where = "WHERE `a`.`type` = 2";
-			} else {				
-			$x=0;	//	6/10/11
-			$where = "WHERE (";	//	6/10/11
-			foreach($curr_viewed as $grp) {	//	6/10/11
-				$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
-				$where .= "`a`.`group` = '{$grp}'";
-				$where .= $where2;
-				$x++;
-				}
-			$where .= "AND `a`.`type` = 2";	//	6/10/11						
-			}
-		}	
-	
+				if(!isset($curr_viewed)) {	
+					if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+						$where = "WHERE `a`.`type` = 2";
+						} else {
+						$x=0;	//	6/10/11
+						$where = "WHERE (";	//	6/10/11
+						foreach($al_groups as $grp) {	//	6/10/11
+							$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+							$where .= "`a`.`group` = '{$grp}'";
+							$where .= $where2;
+							$x++;
+							}
+						$where .= "AND `a`.`type` = 2";	//	6/10/11					
+						}
+					} else {
+					if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+						$where = "WHERE `a`.`type` = 2";
+						} else {				
+						$x=0;	//	6/10/11
+						$where = "WHERE (";	//	6/10/11
+						foreach($curr_viewed as $grp) {	//	6/10/11
+							$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+							$where .= "`a`.`group` = '{$grp}'";
+							$where .= $where2;
+							$x++;
+							}
+						$where .= "AND `a`.`type` = 2";	//	6/10/11						
+						}
+					}	
+				
 
-		$query = "SELECT *, 
-			`updated` AS `updated`,
-			`t`.`id` AS `type_id`, 
-			`r`.`id` AS `unit_id`, 
-			`r`.`name` AS `unit_name`,
-			`s`.`description` AS `stat_descr`,  
-			`r`.`description` AS `unit_descr`, 
-			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id`  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
-				AS `nr_assigned` 
-			FROM `$GLOBALS[mysql_prefix]responder` `r` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )					
-			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
-			$where GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10, 6/10/11
-//		dump($query);	
-		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
-		$max = 24;
+					$query = "SELECT *, 
+						`updated` AS `updated`,
+						`t`.`id` AS `type_id`, 
+						`r`.`id` AS `unit_id`, 
+						`r`.`name` AS `unit_name`,
+						`s`.`description` AS `stat_descr`,  
+						`r`.`description` AS `unit_descr`, 
+						(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
+							WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id`  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
+							AS `nr_assigned` 
+						FROM `$GLOBALS[mysql_prefix]responder` `r` 
+						LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )					
+						LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
+						LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
+						$where GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10, 6/10/11
+					$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
+					$max = 24;
 
-		$height =  (mysql_affected_rows()>$max) ? ($max * 22 ) : (mysql_affected_rows() + 1) * 22;
-		print "<TR><TD></TD><TD COLSPAN=2>" . get_units_legend(). "</TD></TR>";
-		print "<TR CLASS='odd'><TD CLASS='td_label'></TD>";		// 8/8/10
-		print "<TD><DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >
-			<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0'>NA<BR />\n";
-//    		$the_class = (array_key_exists($row['type'], $optstyles))?  $optstyles[$row['type']] : "";
+					$height =  (mysql_affected_rows()>$max) ? ($max * 22 ) : (mysql_affected_rows() + 1) * 22;
+					print "<TR><TD></TD><TD COLSPAN=2>" . get_units_legend(). "</TD></TR>";
+					print "<TR CLASS='odd'><TD CLASS='td_label text'></TD>";		// 8/8/10
+					print "<TD CLASS='td_data text'><DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >
+						<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0'>NA<BR />\n";
+//    				$the_class = (array_key_exists($row['type'], $optstyles))?  $optstyles[$row['type']] : "";
 
-    	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			$type_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
-			$type_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		// 
+					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+						$type_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
+						$type_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		// 
 
-    		$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
-//    		dump($ct_str);
-			$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
-			print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" />
-				<SPAN STYLE = 'width:300px; display:inline; background-color:{$type_bg_color}; color:{$type_text_color};'>" .  
-				stripslashes ($row['unit_name']) . "</SPAN> &nbsp; {$ct_str}";
-			print " - <SPAN STYLE = 'width:200px; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
-				{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
-			}
-		print "</DIV></TD>";
+						$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
+						$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
+						print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" />
+							<SPAN STYLE = 'width:300px; display:inline; background-color:{$type_bg_color}; color:{$type_text_color};'>" .  
+							stripslashes ($row['unit_name']) . "</SPAN> &nbsp; {$ct_str}";
+						print " - <SPAN STYLE = 'width:200px; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
+							{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
+						}
+					print "</DIV></TD>";
 ?>
-		<TD CLASS="td_label"><SPAN STYLE = 'margin-left:20px'>As of: &nbsp;&nbsp;</SPAN>
-			<INPUT SIZE=4 NAME="frm_year_asof" VALUE="" MAXLENGTH=4 />
-			<INPUT SIZE=2 NAME="frm_month_asof" VALUE="" MAXLENGTH=2 />
-			<INPUT SIZE=2 NAME="frm_day_asof" VALUE="" MAXLENGTH=2 />
-			<INPUT SIZE=2 NAME="frm_hour_asof" VALUE="" MAXLENGTH=2 />:<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="" MAXLENGTH=2>
-			<INPUT TYPE="hidden" NAME = "frm_ticket_id" VALUE = "<?php print $tick_id;?>" />		<!-- 6/10/11 -->
-			&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.add_frm);'>
-			<br /> <br /> <br />
+					<TD CLASS="td_label text"><SPAN STYLE = 'margin-left:20px'>As of: &nbsp;&nbsp;</SPAN>
+						<INPUT SIZE=4 NAME="frm_year_asof" VALUE="" MAXLENGTH=4 />
+						<INPUT SIZE=2 NAME="frm_month_asof" VALUE="" MAXLENGTH=2 />
+						<INPUT SIZE=2 NAME="frm_day_asof" VALUE="" MAXLENGTH=2 />
+						<INPUT SIZE=2 NAME="frm_hour_asof" VALUE="" MAXLENGTH=2 />:<INPUT SIZE=2 NAME="frm_minute_asof" VALUE="" MAXLENGTH=2>
+						<INPUT TYPE="hidden" NAME = "frm_ticket_id" VALUE = "<?php print $tick_id;?>" />		<!-- 6/10/11 -->
+						&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.add_frm);'>
+						<br /> <br /> <br />
+						<SPAN ID='can_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+						<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.add_frm.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+						<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='return validate(document.add_frm);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+					</TD>
+				</TR>
 
-			<INPUT TYPE="button" VALUE="Cancel"	onClick="history.back();"  STYLE = 'margin-left:40px' />
-			<INPUT TYPE="button" VALUE="Reset form"	onClick="this.form.reset();init();"  STYLE = 'margin-left:20px' />
-			<INPUT TYPE="button" VALUE="Next"	onClick="return validate(this.form)"  STYLE = 'margin-left:20px' />
-			</TD></TR>
-
-		</TABLE><BR />
-		</FORM>
+			</TABLE>
+			<BR />
+			</FORM>
 <?php
-		}				// end if ($get_action == 'form')
+			}				// end if ($get_action == 'form')
 
-//				 common to all
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
 <INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $tick_id;?>">		<!-- 6/10/11 -->
@@ -670,7 +730,29 @@ $from_top = 10;		//	6/10/11
 	if ($do_yr_asof) { 		// for ADD and EDIT only
 ?>
 <SCRIPT LANGUAGE="Javascript">
-init();
+
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "fullscreen");
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+listHeight = viewportheight * .25;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+listHeight = viewportheight * .5;
+listwidth = colwidth;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+
 function do_asof(theForm, theBool) {							// 8/10/08, 6/11/12
 //		alert(56);
 //		alert(theForm.name);

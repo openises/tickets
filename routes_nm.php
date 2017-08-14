@@ -5,7 +5,7 @@ require_once('./incs/functions.inc.php');
 require_once($_SESSION['fmp']);
 
 
-$sidebar_width = 400;		// pixels
+$sidebar_width = 450;		// pixels
 //$from_left = $sidebar_width + get_variable('map_width') + 72;
 //$from_left =  get_left_margin ($sidebar_width);
 if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
@@ -85,34 +85,14 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
-	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
-	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
-    <STYLE TYPE="text/css">
-		body 				{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
-		table 				{border-collapse: collapse; }
-		table.directions th {background-color:#EEEEEE;}	  
-		img 				{color: #000000;}
-		span.even 			{background-color: #DEE3E7;}
-		span.warn			{display:none; background-color: #FF0000; color: #FFFFFF; font-weight: bold; font-family: Verdana, Arial, sans serif; }
-
-		span.mylink			{margin-right: 32PX; text-decoration:underline; font-weight: bold; font-family: Verdana, Arial, sans serif;}
-		span.other_1		{margin-right: 32PX; text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
-		span.other_2		{margin-right: 8PX;  text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-		.box {background-color: transparent;  border: none;  color: #000000;  padding: 0px;  position: absolute;  }
-		.bar {background-color: #DEE3E7;  color: transparent;  cursor: move;  font-weight: bold;  padding: 2px 1em 2px 1em;  }
-		.bar_header { height: 20px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}	
-		.content {
-			padding: 1em;
-			}
-
-		.box2 { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:10000; width: 180px; }
-		.bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
-		.content { padding: 1em; text-align: center; }		
-    	</STYLE>
-
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
+	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
+	window.onresize=function(){set_size()};
+	
 	try {	
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
@@ -121,7 +101,38 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	catch(e) {
 		}
 	
-//	var url = "do_session.php?the_name=the_value";
+	function set_size(){
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+			
+		set_fontsizes(viewportwidth, "fullscreen");
+		mapWidth = viewportwidth * .40;
+		mapHeight = viewportheight * .55;
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		leftcolwidth = viewportwidth * .43;
+		rightcolwidth = viewportwidth * .4;
+		colheight = viewportheight * .7;
+		listHeight = viewportheight * .70;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
+		$('leftcol').style.width = leftcolwidth + "px";
+		$('leftcol').style.height = colheight + "px";	
+		$('rightcol').style.width = rightcolwidth + "px";
+		$('rightcol').style.height = colheight + "px";	
+		$('side_bar').style.maxHeight = listHeight + "px";
+		$('side_bar').style.width = leftcolwidth + "px";
+		$('the_ticket').style.width = rightcolwidth + "px";
+		$('address').style.width = leftcolwidth + "px";
+		}
 
 	function syncAjax(strURL) {							// synchronous ajax function
 		if (window.XMLHttpRequest) {						 
@@ -174,7 +185,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
 </SCRIPT>	
-<script type="text/javascript">//<![CDATA[
+<script type="application/x-javascript">//<![CDATA[
 //*****************************************************************************
 // Do not remove this notice.
 //
@@ -475,11 +486,11 @@ if (!empty($_POST)) {				// 77-200
 <?php
 	if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
 ?>	
-		<INPUT TYPE='button' VALUE='Finished' onClick = "window.close()">
+		<SPAN ID='fin_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 <?php
 		} else {
 ?>
-		<INPUT TYPE='button' VALUE='Continue' onClick = "document.cont_form.submit()">
+		<SPAN ID='fin_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.cont_form.submit();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 <?php	
 		}
 ?>		
@@ -746,49 +757,136 @@ function createXMLHTTPObject() {	//	5/4/11
 	}	
 </SCRIPT>
 <?php
-$ck_frames_str = (((array_key_exists ( "frm_mode", $_GET)) && ($_GET['frm_mode']) ==1))? "": "ck_frames();" ;		// 10/9/10
+$ck_frames_str = (((array_key_exists ( "frm_mode", $_GET)) && ($_GET['frm_mode']) ==1))? "": "ck_frames();";
 $unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
-$capabilities = (array_key_exists('capabilities', $_GET))? stripslashes(trim(str_replace('/', '|', $_GET['capabilities']))) : "" ;	// 11/18/10
+$capabilities = (array_key_exists('capabilities', $_GET))? stripslashes(trim(str_replace('/', '|', $_GET['capabilities']))) : "";
 $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
+
+function get_addr(){				// returns incident address
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . $_GET['ticket_id'] . " LIMIT 1";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	$row = stripslashes_deep(mysql_fetch_array($result));
+	return "{$row['street']} {$row['city']} {$row['state']}"; 
+	}		// end function get_addr()
+
+$thefunc = (is_guest())? "guest()" : "validate()";		// disallow guest attempts
+$nr_units = 1;
+$addr = get_addr();
+$theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 ?>
 
-<BODY onLoad = "do_notify(); <?php print $ck_frames_str;?>" >
-<A NAME='top'>
-
-<TABLE ID = 'outer' BORDER=0>
-<TR><TD COLSPAN=2></TD></TR>
-<TR>
-	<TD><DIV ID='side_bar' style="height: <?php print $the_height;?>px; overflow-y: auto; overflow-x: auto;"></DIV>
+<BODY onLoad = "do_notify(); <?php print $ck_frames_str;?>">
+<A NAME='page_top'>
+	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 <?php
-	$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
-	if($unit_id=="") { 	// 11/18/10
-		?>
-		<DIV ID='theform' style='position: relative; top: 10px; background-color: transparent; border-color: #000000;'><!-- 11/18/10 -->	
-		<TABLE ALIGN='center' BORDER='0'>
-		<TR class='heading'><TH class='heading'>FILTER BY CAPABILITIES</TH></TR>	<!-- 3/15/11 -->
-		<FORM NAME='filter_Form' METHOD="GET" ACTION="routes_nm.php">
-		<TR class='odd'><TD ALIGN='center'>Filter Type: <b>OR </b><INPUT TYPE='radio' NAME='searchtype' VALUE='OR' checked><b>AND </b><INPUT TYPE='radio' NAME='searchtype' VALUE='AND'></TD></TR>	<!-- 3/15/11 -->
-		<TR class='even'><TD><INPUT SIZE='48' TYPE='text' NAME='capabilities' VALUE='<?php print $capabilities;?>' MAXLENGTH='64'></TD></TR>	<!-- 3/15/11 -->
-		<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />
-		<INPUT TYPE='hidden' NAME='unit_id' 	VALUE='<?php print $unit_id; ?>' />
-		<TR class='odd'><TD align="center"><input type="button" OnClick="filterSubmit();" VALUE="Filter"/>&nbsp;&nbsp;<input type="button" OnClick="filterReset();" VALUE="Reset Filter" <?php print $disabled;?>/></TD></TR>	<!-- 3/15/11 -->	
-		</FORM></TABLE></DIV></TD>
-	<?php }
-	?>
-	<TD><DIV ID='the_ticket' STYLE='width: " .  get_variable('map_width') . "'>
-<?php	print do_ticket($row_ticket, $the_width, FALSE, FALSE); ?>	
-		</DIV></TD>
-	</TD>
-	</TR>
-	</TABLE> <!-- end ID = 'outer' -->
+		if($inWin == 1) {
+?>
+			<DIV id='button_bar' class='but_container'>
+				<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+<?php
+				if ($nr_units>0) {
+?>
+					<SPAN ID='disp_but' class='plain_centerbuttons text' style='float: none; width: 100px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="<?php print $thefunc;?>;"><SPAN STYLE='float: left;'><?php print get_text("Dispatch");?></SPAN><IMG STYLE='float: right;' SRC='./images/dispatch_small.png' BORDER=0></SPAN>
+<?php
+					}
+?>
+			</DIV>
 
+			<DIV id = "leftcol" style='position: relative; left: 30px; top: 70px; float: left;'>
+				<IMG SRC="markers/down.png" BORDER=0 onclick = "location.href = '#page_bottom';" STYLE = 'position: fixed; top: 10px; left: 10px;' />	
+<?php
+			} else {
+?>
+			<DIV id = "leftcol" style='position: relative; left: 30px; top: 10px; float: left;'>
+				<IMG SRC="markers/down.png" BORDER=0 onclick = "location.href = '#page_bottom';" STYLE = 'position: fixed; top: 10px; left: 10px;' />	
+<?php
+			}
+?>
+			<SPAN ID='address' STYLE='width: 100%; display: inline-block; text-align: center;' class='normal_text'><NOBR><H3>to: <I><?php print $addr;?></I></H3></NOBR></SPAN>
+			<DIV ID='side_bar' style="overflow-y: auto; overflow-x: auto;"></DIV>
+<?php
+				$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
+				if($unit_id=="") {
+?>
+					<DIV ID='theform' style='position: relative; top: 10px; background-color: transparent; border-color: #000000;'>
+						<FORM NAME='filter_Form' METHOD="GET" ACTION="routes_nm.php">
+						<TABLE ALIGN='center' BORDER='0'>
+							<TR class='heading'>
+								<TH class='heading'>FILTER BY CAPABILITIES</TH>
+							</TR>
 
+							<TR class='odd'>
+								<TD ALIGN='center'>Filter Type: <b>OR </b>
+									<INPUT TYPE='radio' NAME='searchtype' VALUE='OR' checked /><b>AND </b>
+									<INPUT TYPE='radio' NAME='searchtype' VALUE='AND' />
+								</TD>
+							</TR>
+							<TR class='even'>
+								<TD>
+									<INPUT SIZE='48' TYPE='text' NAME='capabilities' VALUE='<?php print $capabilities;?>' MAXLENGTH='64' />
+								</TD>
+							</TR>
+							<TR class='odd'>
+								<TD align="center">
+									<SPAN ID='filter_button' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='filterSubmit();'><SPAN STYLE='float: left;'><?php print get_text("Filter");?></SPAN><IMG STYLE='float: right;' SRC='./images/filter_small.png' BORDER=0></SPAN>
+									<SPAN ID='filter_reset' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='filterReset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+								</TD>
+							</TR>
+						</TABLE>
+						<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />
+						<INPUT TYPE='hidden' NAME='unit_id' 	VALUE='<?php print $unit_id; ?>' />
+						</FORM>
+
+					</DIV>
+<?php 
+					}
+?>
+			<IMG SRC="markers/up.png" BORDER=0  onclick = "location.href = '#page_top';" STYLE = 'position: fixed; bottom: 10px; left: 10px;'/><br />
+		</DIV>
+		<DIV ID="middle_col" style='position: relative; left: 40px; width: 110px; float: left;'>&nbsp;
+<?php
+			if($inWin == 0) {
+				if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {			
+					print "<SPAN id='can_but' CLASS='plain text' style='float: none; width: 80px; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>" . get_text('Cancel') . "</SPAN>";
+					} else {
+					print "<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'>" . get_text('Cancel') . "<BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>";
+
+					}
+				if ($nr_units>0) {			
+					print "<SPAN id='disp_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='" . $thefunc . "'>" . get_text('Dispatch') . "<BR /><IMG id='can_img' SRC='./images/dispatch.png' /></SPAN>";
+					}
+?>
+				</SPAN>
+
+<?php
+				}		
+?>
+		</DIV>
+<?php
+		if($inWin == 1) {
+?>
+			<DIV id='rightcol' style='position: relative; left: 40px; top: 70px; float: left;'>
+<?php
+			} else {
+?>
+			<DIV id='rightcol' style='position: relative; left: 40px; top: 10px; float: left;'>
+<?php				
+			}
+?>
+			<DIV ID='the_ticket'>
+<?php
+				print do_ticket_wm($row_ticket, "100%", FALSE, FALSE); 
+?>	
+			</DIV>
+		<A NAME="page_bottom" />
+		</DIV>
+	</DIV>
 	<FORM NAME='can_Form' ACTION="main.php">
 	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>"/>	
 	</FORM>	
 
 <?php
-	$theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
+	
 ?>
 	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print $theAction;?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db' />
@@ -805,67 +903,17 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />	<!-- 10/25/08 -->
 	</FORM>
-	<!-- 8/2/09 -->
-	<DIV STYLE="position:fixed; width:120px; height:auto; top:<?php print $from_top;?>px; left:<?php print $from_left;?>px; background-color: transparent;">	<!-- 5/17/09, 7/7/09 -->
-		
 <?php
-			function get_addr(){				// returns incident address 11/27/09
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . $_GET['ticket_id'] . " LIMIT 1";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_array($result));
-				return "{$row['street']}<br />{$row['city']}<br /> {$row['state']}"; 
-				}		// end function get_addr()
-
-			$thefunc = (is_guest())? "guest()" : "validate()";		// disallow guest attempts
-			$nr_units = 1;
-			$addr = get_addr();
-?>
-		<div id='boxB' class='box' style='left:<?php print $from_left;?>px;top:<?php print $from_top;?>px; position:fixed; background-color : rgba(0, 0, 0, 0.2);' > <!-- 9/23/10 -->
-		<div class="bar" style="width:12em; color: #000000;"
-			 onmousedown="dragStart(event, 'boxB')">Drag me</div><!-- drag bar -->
-		<div style = "margin-top:10px;">
-		<IMG SRC="markers/down.png" BORDER=0  onclick = "location.href = '#page_bottom';" STYLE = 'margin-left:2px;' />		
-		<IMG SRC="markers/up.png" BORDER=0  onclick = "location.href = '#page_top';" STYLE = 'margin-left:40px;'/><br />
-		</div>
-			 <div style = 'height:10px;'/>&nbsp;</div>
-
-<?php
-
-			print "<SPAN ID=\"mail_button\" STYLE=\"display: 'none'\">";	//10/6/09
-			print "<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);'>";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_direcs' VALUE=''>";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_u_id' VALUE=''>";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident'>";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_scope' VALUE=''>"; // 10/29/09
-			print "</FORM>";	
-			print "<INPUT TYPE='button' VALUE='Reset' onClick = 'doReset()' />";
-			print "</SPAN>";	
-			if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {			
-				print "<INPUT TYPE='button' VALUE='Cancel'  onClick='window.close();' />";
-				} else {
-				print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();' />";
-				}
-			if ($nr_units>0) {			
-				print "<BR /><INPUT TYPE='button' value='DISPATCH\nUNITS' onClick = '" . $thefunc . "' />\n";	// 6/14/09
-				}
-			print "<BR /><BR /><SPAN STYLE='display: inline-block;' class='normal_text'><NOBR><H3>to:<BR /><I>{$addr}</I></H3></NOBR></SPAN>\n";
-			print "<SPAN ID=\"loading\" STYLE=\"display: 'inline-block'\">";
-			print "</SPAN>";
-
-?>
-	</DIV>
-<?php
-
-		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 
-		$regions_inuse = get_regions_inuse($user_level);	//	5/4/11
-		$group = get_regions_inuse_numbers($user_level);	//	5/4/11		
-		
-		$al_groups = $_SESSION['user_groups'];
+	$user_level = is_super() ? 9999 : $_SESSION['user_id']; 
+	$regions_inuse = get_regions_inuse($user_level);	//	5/4/11
+	$group = get_regions_inuse_numbers($user_level);	//	5/4/11		
+	
+	$al_groups = $_SESSION['user_groups'];
 ?>				
-		<A NAME="page_bottom" /> <!-- 5/13/10 -->	
-		<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
-		<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />	<!-- 10/25/08 -->
-		</FORM>
+	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
+	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />	<!-- 10/25/08 -->
+	</FORM>
+
 	</BODY>
 
 <?php
@@ -874,7 +922,6 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 ?>			
 <SCRIPT>
 	function do_notify() {
-//		alert(352);
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "ATTENTION - New Ticket: ";
 		var theId = '<?php print $_GET['ticket_id'];?>';
@@ -1005,105 +1052,105 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 	var have_direcs = 0;	//10/6/09
 	var tick_name = '<?php print $row_ticket['scope'];?>';	//10/29/09
 
-		var colors = new Array ('odd', 'even');
-		
-		var Direcs = null;			// global
-		var Now;
-		var mystart;
-		var myend;
-
-		function do_sidebar(sidebar, color, id, unit_id) {						// No map
-			var letter = ""+ id;										// start with 1 - 1/5/09 - 1/29/09
-			marker = null;
-			gmarkers[id] = null;										// marker to array for side bar click function
+	var colors = new Array ('odd', 'even');
 	
-			side_bar_html += "<TR ID = '_tr" + id  + "' CLASS='" + colors[(id)%2] +"' VALIGN='bottom' onClick = myclick(" + id + "," + unit_id +");><TD>";
+	var Direcs = null;			// global
+	var Now;
+	var mystart;
+	var myend;
+		
+	function do_sidebar(sidebar, color, id, unit_id) {						// No map
+		var letter = ""+ id;										// start with 1 - 1/5/09 - 1/29/09
+		marker = null;
+		gmarkers[id] = null;										// marker to array for side bar click function
 
-			side_bar_html += "<IMG BORDER=0 SRC='rtarrow.gif' ID = \"R" + id + "\"  STYLE = 'visibility:hidden;'></TD>";
-			var letter = ""+ id;										// start with 1 - 1/5/09 - 1/29/09
+		side_bar_html += "<TR ID = '_tr" + id  + "' CLASS='" + colors[(id)%2] +"' VALIGN='bottom' onClick = myclick(" + id + "," + unit_id +");><TD>";
+
+		side_bar_html += "<IMG BORDER=0 SRC='rtarrow.gif' ID = \"R" + id + "\"  STYLE = 'visibility:hidden;'></TD>";
+		var letter = ""+ id;										// start with 1 - 1/5/09 - 1/29/09
 
 //			var the_class = (direcs[id])?  "emph" : "td_label";
-			var the_class = (lats[id])?  "emph" : "td_label";
-			side_bar_html += "<TD CLASS='" + the_class + "'>" + letter + " "+ sidebar +"</TD></TR>\n";
-			return null;
-			}				// end function create Marker()
+		var the_class = (lats[id])?  "emph" : "td_label";
+		side_bar_html += "<TD CLASS='" + the_class + "'>" + letter + " "+ sidebar +"</TD></TR>\n";
+		return null;
+		}				// end function create Marker()
 
 
-		function myclick(id, unit_id) {								// responds to side bar click
+	function myclick(id, unit_id) {								// responds to side bar click
 //			alert (821);
-			var norecfac = "";
-			if (document.getElementById(current_id)) {
-				document.getElementById(current_id).style.visibility = "hidden";			// hide last check if defined
-				}
-			current_id= "R"+id;
-			document.getElementById(current_id).style.visibility = "visible";			// show newest
-
-			}					// end function my click(id)
-
-		function handleErrors(){		//G_GEO_UNKNOWN_DIRECTIONS 
-			if (gdir.getStatus().code == G_GEO_UNKNOWN_DIRECTIONS ) {
-				alert("501: directions unavailable\n\nClick map point for directions.");
-				}
-			else if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
-				alert("440: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
-			else if (gdir.getStatus().code == G_GEO_SERVER_ERROR)
-				alert("442: A map request could not be processed, reason unknown.\n Error code: " + gdir.getStatus().code);
-			else if (gdir.getStatus().code == G_GEO_MISSING_QUERY)
-				alert("444: Technical error.\n Error code: " + gdir.getStatus().code);
-			else if (gdir.getStatus().code == G_GEO_BAD_KEY)
-				alert("448: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
-			else if (gdir.getStatus().code == G_GEO_BAD_REQUEST)
-				alert("450: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
-			else alert("451: An unknown error occurred.");
-			}		// end function handleErrors()
-
-		function onGDirectionsLoad(){ 
-//			var temp = gdir.getSummaryHtml();
-			}		// function onGDirectionsLoad()
-
-		function guest () {
-			alert ("Demonstration only.  Guests may not commit dispatch!");
+		var norecfac = "";
+		if (document.getElementById(current_id)) {
+			document.getElementById(current_id).style.visibility = "hidden";			// hide last check if defined
 			}
-			
-		function validate(){		// frm_id_str
-			msgstr="";
-			for (var i =1;i<unit_sets.length;i++) {				// 3/30
-				if (unit_sets[i]) {
-					msgstr+=unit_names[i]+"\n";
-					document.routes_Form.frm_id_str.value += unit_ids[i] + "|";
-					}
+		current_id= "R"+id;
+		document.getElementById(current_id).style.visibility = "visible";			// show newest
+
+		}					// end function my click(id)
+
+	function handleErrors(){		//G_GEO_UNKNOWN_DIRECTIONS 
+		if (gdir.getStatus().code == G_GEO_UNKNOWN_DIRECTIONS ) {
+			alert("501: directions unavailable\n\nClick map point for directions.");
+			}
+		else if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
+			alert("440: No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
+		else if (gdir.getStatus().code == G_GEO_SERVER_ERROR)
+			alert("442: A map request could not be processed, reason unknown.\n Error code: " + gdir.getStatus().code);
+		else if (gdir.getStatus().code == G_GEO_MISSING_QUERY)
+			alert("444: Technical error.\n Error code: " + gdir.getStatus().code);
+		else if (gdir.getStatus().code == G_GEO_BAD_KEY)
+			alert("448: The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
+		else if (gdir.getStatus().code == G_GEO_BAD_REQUEST)
+			alert("450: A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
+		else alert("451: An unknown error occurred.");
+		}		// end function handleErrors()
+
+	function onGDirectionsLoad(){ 
+//			var temp = gdir.getSummaryHtml();
+		}		// function onGDirectionsLoad()
+
+	function guest () {
+		alert ("Demonstration only.  Guests may not commit dispatch!");
+		}
+		
+	function validate(){		// frm_id_str
+		msgstr="";
+		for (var i =1;i<unit_sets.length;i++) {				// 3/30
+			if (unit_sets[i]) {
+				msgstr+=unit_names[i]+"\n";
+				document.routes_Form.frm_id_str.value += unit_ids[i] + "|";
 				}
-			if (msgstr.length==0) {
-				var more = (nr_units>1)? "s": ""
-				alert ("Please select unit" + more + ", or cancel");
-				return false;
+			}
+		if (msgstr.length==0) {
+			var more = (nr_units>1)? "s": ""
+			alert ("Please select unit" + more + ", or cancel");
+			return false;
+			}
+		else {
+			var quick = <?php print (intval(get_variable("quick")==1))? "true;\n" : "false;\n";?>
+		
+//				if (confirm ("Please confirm Unit dispatch as follows\n\n" + msgstr)) {
+			if ((quick) || (confirm ("Please confirm unit dispatch\n\n" + msgstr))) {		// 11/23/09
+
+				document.routes_Form.frm_id_str.value = document.routes_Form.frm_id_str.value.substring(0, document.routes_Form.frm_id_str.value.length - 1);	// drop trailing separator
+				document.routes_Form.frm_name_str.value = msgstr;	// for re-use
+				document.routes_Form.submit();
+				document.getElementById("outer").style.display = "none";
+				document.getElementById("bottom").style.display = "block";					
 				}
 			else {
-				var quick = <?php print (intval(get_variable("quick")==1))? "true;\n" : "false;\n";?>
-			
-//				if (confirm ("Please confirm Unit dispatch as follows\n\n" + msgstr)) {
-				if ((quick) || (confirm ("Please confirm unit dispatch\n\n" + msgstr))) {		// 11/23/09
-
-					document.routes_Form.frm_id_str.value = document.routes_Form.frm_id_str.value.substring(0, document.routes_Form.frm_id_str.value.length - 1);	// drop trailing separator
-					document.routes_Form.frm_name_str.value = msgstr;	// for re-use
-					document.routes_Form.submit();
-					document.getElementById("outer").style.display = "none";
-					document.getElementById("bottom").style.display = "block";					
-					}
-				else {
-					document.routes_Form.frm_id_str.value="";	
-					return false;
-					}
+				document.routes_Form.frm_id_str.value="";	
+				return false;
 				}
+			}
 
-			}		// end function validate()
-	
-		function exists(myarray,myid) {
-			var str_key = " " + myid;		// force associative
-			return ((typeof myarray[str_key])!="undefined");		// exists if not undefined
-			}		// end function exists()
-			
-		var icons=[];						// note globals
+		}		// end function validate()
+
+	function exists(myarray,myid) {
+		var str_key = " " + myid;		// force associative
+		return ((typeof myarray[str_key])!="undefined");		// exists if not undefined
+		}		// end function exists()
+		
+	var icons=[];						// note globals
 <?php
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -1115,7 +1162,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 		}
 	unset($result);
 ?>
-		var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders' STYLE = 'WIDTH: <?php print $sidebar_width;?>px;'>";
+		var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders' STYLE = 'WIDTH: 98%;'>";
 
 		var gmarkers = [];
 		var lats = [];
@@ -1189,14 +1236,34 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 				for($j = 0; $j < count($searchitems); $j++){
 					if  ($j+1 != count($searchitems)) {
 						$where2 .= "`$GLOBALS[mysql_prefix]responder`.`capab` LIKE '%{$searchitems[$j]}%' $searchtype ";
-					} else {
+						} else {
 						$where2 .= "`$GLOBALS[mysql_prefix]responder`.`capab` LIKE '%{$searchitems[$j]}%')";
+						}
 					}
 				}
-			}
-		} else {
+			} else {
 			$where2="";
-		}
+			}
+		
+		switch (intval(trim(get_variable('locale')))) {			// nm conversion, 3/15/11
+			case 0:
+				$nm_to_what = 1.1515;				// mi
+				$capt = "mi";
+				break;
+			case 1:
+				$nm_to_what = 1.1515;				// UK - mi
+				$capt = "mi";
+				break;
+			case 2:
+				$nm_to_what = 1.1515*1.609344;		// ROW - km
+				$capt = "km";
+				break;
+			default:
+				$nm_to_what = 1.1515*1.609344 ;		// ERROR?
+				$capt = "km";
+				break;
+				}
+			$have_position = (!(($latitude==$GLOBALS['NM_LAT_VAL']) && ($longitude==$GLOBALS['NM_LAT_VAL'])));
 // ============================= Regions Stuff							
 			
 			$al_groups = $_SESSION['user_groups'];
@@ -1216,14 +1283,18 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 
 		// 4/5/10
 		$query = "SELECT *, UNIX_TIMESTAMP(`updated`) AS `updated`,
-			`r`.`id` AS `unit_id`, 
-			`s`.`status_val` AS `unitstatus`, `contact_via`, 
-			(POW(ABS({$latitude} - `r`.`lat`), 2.0) +  POW(ABS({$longitude} - `r`.`lng`), 2.0)) AS `distance`			
+			`r`.`handle` AS `unit_handle`, `r`.`name` AS `unit_name`, `t`.`name` AS `type_name`,
+			`r`.`type` AS `type`, `r`.`icon_str` AS `icon_str`, `t`.`icon` AS `icon`,
+			`r`.`id` AS `unit_id`, `r`.`capab` AS `capab`, `r`.`status_about` AS `status_about`,
+			`s`.`bg_color` AS `status_bg`, `s`.`text_color` AS `status_text`,
+			`s`.`status_val` AS `unitstatus`, `contact_via`,
+			(((acos(sin(({$latitude}*pi()/180)) * sin((`r`.`lat`*pi()/180))+cos(({$latitude}*pi()/180)) * cos((`r`.`lat`*pi()/180)) * cos((({$longitude} - `r`.`lng`)*pi()/180))))*180/pi())*60*{$nm_to_what}) AS `distance`
 			FROM `$GLOBALS[mysql_prefix]responder` `r`
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`r`.`un_status_id` = `s`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON (`r`.`type` = `t`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON (`r`.`id` = `a`.`resource_id`)					
 			$where3 $where $where2 GROUP BY unit_id
-			ORDER BY `distance` ASC, `handle` ASC, `name` ASC, `unit_id` ASC";		// 12/09/09
+			ORDER BY `distance` ASC, `handle` ASC, `unit_name` ASC, `unit_id` ASC";		// 12/09/09
 
 //		print $query;
 
@@ -1238,7 +1309,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 
 ?>
 		side_bar_html += "<TR class='even'>	<TD CLASS='<?php print $severityclass; ?>' COLSPAN=99 ALIGN='center'><B>To Incident: <I><?php print shorten($row_ticket['scope'], 20) . "</I>&nbsp;&nbsp;(" .  $elapsed; ?>)</B></TD></TR>\n";
-		side_bar_html += "<TR class='odd' STYLE = 'white-space:nowrap;'><TD COLSPAN=3></TD><TD ALIGN='center'>Unit</TD><TD ALIGN='center'>Call</TD><TD ALIGN='center'>Status</TD><TD ALIGN='center'>As of</TD></TR>\n";
+		side_bar_html += "<TR class='odd' STYLE = 'white-space:nowrap;'><TD COLSPAN=3></TD><TD class='text text_left'>Unit</TD><TD CLASS='text text_left'>SLD&nbsp;(<?php print $capt;?>)</TD><TD class='text text_left'>Call</TD><TD class='text text_left'>Status</TD><TD class='text text_left'>As of</TD></TR>\n";
 
 <?php
 													// major while ... for RESPONDER data starts here
@@ -1276,14 +1347,18 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 				var multi = <?php print (intval($unit_row['multi'])==1)? "true;\n" : "false;\n";?>	// 5/22/09
 <?php
 				$dispatched_to = (array_key_exists($unit_row['unit_id'], $dispatches_disp))?  $dispatches_disp[$unit_row['unit_id']]: "";
-
+				$the_bg_color = $GLOBALS['UNIT_TYPES_BG'][$unit_row['icon']];
+				$the_text_color = $GLOBALS['UNIT_TYPES_TEXT'][$unit_row['icon']];
+				$status_bgcolor = $unit_row['status_bg'];
+				$status_textcolor = $unit_row['status_text'];
+				$str_dist = ($have_position)? number_format(round($unit_row['distance'], 1), 1): "" ;		// 3/5/11				
 ?>					
 				sidebar_line = "<TD ALIGN='center'><INPUT TYPE='checkbox' <?php print get_cd_str($unit_row); ?> NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
-
-				sidebar_line += "<TD TITLE = \"<?php print addslashes($unit_row['name']);?>\">";
-				sidebar_line += "<NOBR><?php print shorten($unit_row['name'], 20);?></NOBR></TD>";
+				sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>; opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($unit_row['unit_name']);?>\">";
+				sidebar_line += "<NOBR><?php print shorten($unit_row['unit_name'], 20);?></NOBR></TD>";
+				sidebar_line += "<TD CLASS='text text_center'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
 				sidebar_line += "<TD><NOBR><?php print shorten(addslashes($dispatched_to), 20); ?></NOBR></TD>";
-				sidebar_line += "<TD TITLE = \"<?php print $unit_row['unitstatus'];?>\" CLASS='td_data'><?php print shorten($unit_row['unitstatus'], 12);?></TD>";
+				sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $status_bgcolor;?>; opacity: .7; color: <?php print $status_textcolor;?>;' TITLE = \"<?php print $unit_row['unitstatus'];?>\" CLASS='td_data'><?php print shorten($unit_row['unitstatus'], 12);?></TD>";
 				sidebar_line += "<TD CLASS='td_data'><?php print substr(format_sb_date($unit_row['updated']), 4);?></TD>";
 <?php
 					print "\n\t\t\t\tdo_sidebar(sidebar_line, color, i);\n";
@@ -1323,3 +1398,36 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 	}				// end function do_list() ===========================================================
 	
 ?>
+<SCRIPT>
+// set widths
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+		
+	set_fontsizes(viewportwidth, "fullscreen");
+	mapWidth = viewportwidth * .40;
+	mapHeight = viewportheight * .55;
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	leftcolwidth = viewportwidth * .43;
+	rightcolwidth = viewportwidth * .4;
+	colheight = viewportheight * .7;
+	listHeight = viewportheight * .70;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	$('leftcol').style.width = leftcolwidth + "px";
+	$('leftcol').style.height = colheight + "px";	
+	$('rightcol').style.width = rightcolwidth + "px";
+	$('rightcol').style.height = colheight + "px";	
+	$('side_bar').style.maxHeight = listHeight + "px";
+	$('side_bar').style.width = leftcolwidth + "px";
+	$('the_ticket').style.width = rightcolwidth + "px";
+	$('address').style.width = leftcolwidth + "px";
+</SCRIPT>

@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 set_time_limit(0);
 @session_start();
@@ -7,16 +9,6 @@ if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
 
-function valid_status($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		return true;
-		} else {
-		return false;
-		}
-	}	
-	
 $ret_arr = array();
 $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";

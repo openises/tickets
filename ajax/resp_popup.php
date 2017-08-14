@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
 set_time_limit(0);
@@ -7,6 +9,8 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
+	
+$id=$_GET['id'];
 
 $ret_arr = array();
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
@@ -49,14 +53,16 @@ function is_ok_coord($inval) {				// // 3/14/12
 $assigns = array();					// 8/3/08
 $tickets = array();					// ticket id's
 
-$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, 
+$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`,
+	`$GLOBALS[mysql_prefix]assigns`.`id` AS `assigns_id`,
 	`$GLOBALS[mysql_prefix]assigns`.`responder_id`, 
 	`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` 
 	FROM `$GLOBALS[mysql_prefix]assigns` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
+	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`
+	WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = {$id} AND (`$GLOBALS[mysql_prefix]ticket`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `$GLOBALS[mysql_prefix]ticket`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}') AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
 $result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
-	$assigns[$row_as['responder_id']] = $row_as['ticket'];
+	$assigns[$row_as['assigns_id']] = $row_as['ticket'];	
 	$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 	}
 unset($result_as);
@@ -79,7 +85,7 @@ unset($result_st);
 $assigns_ary = array();				// construct array of responder_id's on active calls
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-		WHERE `t`.`status` = '{$GLOBALS['STATUS_OPEN']}' AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
+		WHERE (`t`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `t`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}') AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$assigns_ary[$row['responder_id']] = TRUE;
@@ -103,7 +109,6 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
 	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
 	WHERE `r`.`id` = " . $id;
-
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $units_ct = mysql_affected_rows();			// 1/4/10
 
@@ -188,7 +193,7 @@ switch ($units_assigned) {
 		$ass_td = $units_assigned;
 		break;
 	}						// end switch(($units_assigned))
-
+	
 // STATUS
 $status = get_status_sel($row['unit_id'], $row['un_status_id'], "u");		// status
 $status_name = $status_vals[$row['un_status_id']];
@@ -229,13 +234,13 @@ $strike = $strike_ary[0];
 $updated = format_sb_date_2 ( $row['updated'] );
 
 $the_time = $row['r_updated'];
-$tofac = (is_guest())? 													"" : "<A id='tofac_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='fac_routes.php?stage=1&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
-$todisp = ((is_guest()) || (!(can_do_dispatch($row))))?					"" : "<A id='disp_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&disp=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";
-$toedit = (!(can_edit()))?				 								"" : "<A id='edit_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&edit=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
+$tofac = (is_guest())? 													"" : "<A id='tofac_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' HREF='fac_routes.php?stage=1&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
+$todisp = ((is_guest()) || (!(can_do_dispatch($row))))?					"" : "<A id='disp_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&disp=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";
+$toedit = (!(can_edit()))?				 								"" : "<A id='edit_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&edit=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
 $the_callsign = ($track_type == 8) ? "999_" . $row['unit_id']: $row['callsign'];	//	9/6/13
-$totrack  = ((intval($row['mobile'])==0) || (($track_type != 8) && (empty($row['callsign'])))) ? "" : "&nbsp;&nbsp;<SPAN id='tracks_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = do_track('" .$the_callsign  . "');>Tracks</SPAN>" ;	//	9/6/13
-$to_home = (is_guest() || (!(is_ok_coord($row['lat'])))) ?			 	"" : "<SPAN id='home_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onclick = 'go_home({$row['unit_id']});'>To quarters</SPAN>";
-$to_log = (is_guest()) ? "" : "<SPAN id='log_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onclick = 'unit_log({$row['unit_id']});'>Log</SPAN>";	//	9/10/13
+$totrack  = ((intval($row['mobile'])==0) || (($track_type != 8) && (empty($row['callsign'])))) ? "" : "&nbsp;&nbsp;<SPAN id='tracks_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = do_track('" .$the_callsign  . "');>Tracks</SPAN>" ;	//	9/6/13
+$to_home = (is_guest() || (!(is_ok_coord($row['lat'])))) ?			 	"" : "<SPAN id='home_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onclick = 'go_home({$row['unit_id']});'>To quarters</SPAN>";
+$to_log = (is_guest()) ? "" : "<SPAN id='log_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onclick = 'unit_log({$row['unit_id']});'>Log</SPAN>";	//	9/10/13
 $temp = $row['un_status_id'] ;
 $the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
 $theTabs = "";
@@ -249,7 +254,7 @@ $temp_array[1] = $lng;
 $temp_array[2] = addslashes(shorten($name, 48));
 $temp_array[3] = addslashes(shorten(str_replace($eols, " ", $row['unit_descr']), 256));
 $the_type = $temptype[0];																			// 1/1/09
-$toosmap = ((!($internet)) || ($locale != 1))? "" : "<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row['unit_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"responder\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>";
+$toosmap = ((!($internet)) || ($locale != 1))? "" : "<A id='osmap_but' class='plain text' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row['unit_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"responder\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>";
 
 $theTabs .= "<div class='infowin'><BR />";
 $theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
@@ -266,18 +271,23 @@ $tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>
 if ((!(is_ok_coord($row['lat']))) || (!(is_ok_coord($row['lng'])))) {
 	$tab_1 .= "<TR CLASS='odd' style='background-color: red; color: #FFFFFF;'><TD COLSPAN=2 ALIGN='center' style='color: #FFFFFF;'><B>Bad Position Data - Pls Check</B></TD></TR>";
 	}
-$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
-$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
-$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row['contact_name']). " Via: " . addslashes($row['contact_via']) . "</TD></TR>";
-$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
+$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD class='td_label text'>Description:</TD><TD CLASS='td_data text'>" . htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='even'><TD class='td_label text'>Status:</TD><TD CLASS='td_data text'>" . $the_status . " </TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD class='td_label text'>Contact:</TD><TD CLASS='td_data_wrap text'>" . addslashes($row['contact_name']). " Via: " . addslashes($row['contact_via']) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='even'><TD class='td_label text'>As of:</TD><TD CLASS='td_data text'>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 if ($units_assigned > 0) {
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . $ass_td . "</A></TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD CLASS='header text text_center' COLSPAN=2>Dispatched to</TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_data text text_left' COLSPAN=2>";
+	foreach($assigns as $val) {
+		$tab_1 .= "<A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'><SPAN CLASS='td_data text'>" . $val . "</SPAN></A><BR />";
+		}
+	$tab_1 .= "</TD></TR>";
 	}
 $tab_1 .= "</TABLE></TD></TR><TR><TD COLSPAN=99>&nbsp;</TD></TR>";
-$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE><TR style='height: 25px;'><TD style='text-align: center;'>";
+$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE>";
 $tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $tofac . $todisp . $totrack . "</TD></TR>";
-$tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $toedit . "<A id='view_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A></TD></TR>";
+$tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $toedit . "<A id='view_" . $row['unit_id'] . "' CLASS='plain text' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A></TD></TR>";
 $tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $to_log . $toosmap . "</TD></TR>";
 $tab_1 .= "</TABLE></TD></TR>";
 $tab_1 .= "</TABLE>";
@@ -286,15 +296,15 @@ $tab_1 .= "</TABLE>";
 // tab 2
 if ($row_track) {		// do all three tabs
 	$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
-	$tab_2 .="<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $row_track['source'] . "</B></TD></TR>";
-	$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $row_track['course'] . ", Speed:  " . $row_track['speed'] . ", Alt: " . $row_track['altitude'] . "</TD></TR>";
-	$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $row_track['closest_city'] . "</TD></TR>";
-	$tab_2 .= "<TR CLASS='odd'><TD>Status: </TD><TD>" . $row_track['status'] . "</TD></TR>";
+	$tab_2 .="<TR CLASS='even'><TD class='td_label text' COLSPAN=2 ALIGN='center'><B>" . $row_track['source'] . "</B></TD></TR>";
+	$tab_2 .= "<TR CLASS='odd'><TD class='td_label text'>Course: </TD><TD CLASS='td_data text'>" . $row_track['course'] . ", Speed:  " . $row_track['speed'] . ", Alt: " . $row_track['altitude'] . "</TD></TR>";
+	$tab_2 .= "<TR CLASS='even'><TD class='td_label text'>Closest city: </TD><TD CLASS='td_data text'>" . $row_track['closest_city'] . "</TD></TR>";
+	$tab_2 .= "<TR CLASS='odd'><TD class='td_label text'>Status: </TD><TD CLASS='td_data text'>" . $row_track['status'] . "</TD></TR>";
 	if (array_key_exists ('packet_date',$row_track ) ) {				// 7/2/2013
 		$strike_ary = ( abs ( ( now() - strtotime ($row_track['packet_date'] ) ) ) <  $GLOBALS['TOLERANCE'] ) ? 
 		array ( "", "") : 
 		array ( "<strike>", "<strike>") ;		
-		$tab_2 .= "<TR CLASS='even'><TD>As of: </TD><TD> {$strike_ary[0]}" . format_date($row_track['packet_date']) . "{$strike_ary[1]} </TD></TR></TABLE></TD></TR></TABLE>";
+		$tab_2 .= "<TR CLASS='even'><TD>As of: </TD><TD CLASS='td_data text'> {$strike_ary[0]}" . format_date($row_track['packet_date']) . "{$strike_ary[1]} </TD></TR></TABLE></TD></TR></TABLE>";
 		}
 	}	// end if ($row_track)
 	
@@ -303,23 +313,23 @@ $tab_3 .= "<TABLE width='98%'>";
 
 switch($locale) { 
 	case "0":
-	$tab_3 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($lat, $lng) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+	$tab_3 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoUSNG($lat, $lng) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 	break;
 
 	case "1":
-	$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($lat, $lng) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+	$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>OSGB:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoOSGB($lat, $lng) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 	break;
 
 	case "2":
 	$coords =  $lat . "," . $lng;							// 8/12/09
-	$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+	$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>UTM:</TD><TD CLASS='td_data text' ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 	break;
 
 	default:
 	print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 	}
-$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $lat . "</TD></TR>";
-$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $lng . "</TD></TR>";
+$tab_3 .= "<TR><TD class='td_label text'>Lat</TD><TD class='td_data text'>" . $lat . "</TD></TR>";
+$tab_3 .= "<TR><TD class='td_label text'>Lng</TD><TD class='td_data text'>" . $lng . "</TD></TR>";
 $tab_3 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 $tab_3 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 $tab_3 .= "</TABLE></TD</TR></TABLE>";

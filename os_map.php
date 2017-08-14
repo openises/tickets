@@ -89,9 +89,10 @@ if($popup_type == 'ticket') {
 		$responders[$row_ras['responder_id']][7] = $row_ras['r_handle'];
 		}
 	unset($result_ras);	
-
-	$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
+	$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row = mysql_fetch_assoc($result);
+	$theRow = $row;
 	$lat = $row['lat'];
 	$lng = $row['lng'];
 	$title = $text1 = $row['scope'];
@@ -166,6 +167,7 @@ if($popup_type == 'ticket') {
 	$outputstring = "";
 	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$id'");
 	$row = mysql_fetch_assoc($result);
+	$theRow = $row;
 	$lat = $row['lat'];
 	$lng = $row['lng'];
 	$name = $text1 = $row['name'];
@@ -207,7 +209,8 @@ if($popup_type == 'ticket') {
 	$label7 = get_text('Contact Email');
 	$label8 = get_text('Updated');
 	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE id='$id'");
-	$row = mysql_fetch_assoc($result);	
+	$row = mysql_fetch_assoc($result);
+	$theRow = $row;
 	$opening_arr_serial = base64_decode($row['opening_hours']);
 	$opening_arr = unserialize($opening_arr_serial);
 	$openingHours = "Opening Hours<BR />";
@@ -293,12 +296,12 @@ $_SERVER['HTTP_REFERER'] = $server_name;
 	div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 	.text-labels {font-size: 2em; font-weight: 700;}
 </STYLE>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="./js/osgb.js"></script>
-<script type="text/javascript" src="./js/geotools2.js"></script>
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<script type="application/x-javascript" src="./js/usng.js"></script>
+<script type="application/x-javascript" src="./js/osgb.js"></script>
+<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 <script src="./js/proj4js.js"></script>
 <script src="./js/proj4-compressed.js"></script>
 <script src="./js/leaflet/leaflet.js"></script>
@@ -309,14 +312,48 @@ $_SERVER['HTTP_REFERER'] = $server_name;
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
-<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-<script type="text/javascript" src="./js/L.Graticule.js"></script>
-<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=<?php print $openspace_api;?>"></script>
-<script type= "text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/basicmap.js"></script>
-<script type= "text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/searchbox.js"></script>
-<script type="text/javascript">
+<script type="application/x-javascript" src="./js/jss.js"></script>
+<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="./js/usng.js"></script>
+<script type="application/x-javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=<?php print $openspace_api;?>"></script>
+<script type= "application/x-javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/basicmap.js"></script>
+<script type= "application/x-javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/searchbox.js"></script>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<script type="application/x-javascript">
+window.onresize=function(){set_size()};
+var mapWidth;
+var mapHeight;
+var viewportwidth;
+var viewportheight;
+var outerwidth;
+var outerheight;
+var topheight;
+function set_size() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	mapWidth = viewportwidth * .95;
+	mapHeight = viewportheight * .60;
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	set_fontsizes(viewportwidth, "popup");
+	}
+
 //declare marker variables
 var pos, size, offset, infoWindowAnchor, icon, content, popUpSize;
 
@@ -325,7 +362,7 @@ var osgrid = LLtoOSGB(<?php print $lat;?>, <?php print $lng;?>, 5)
 function initmapbuilder() {
 	//initiate the map
 	var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5, 4, 2.5, 2, 1]};
-	osMap = new OpenSpace.Map('map', options);
+	osMap = new OpenSpace.Map('map_canvas', options);
 
 	//configure map options (basicmap.js)
 	setglobaloptions();
@@ -375,7 +412,7 @@ if($popup_type == 'ticket') {
 	$colors[$GLOBALS['SEVERITY_MEDIUM']] = "black";
 	$colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 	
-	$styleStr = "style='background-color: " . $severities[$row['severity']] . "; color: " . $colors[$row['severity']] . ";'";
+	$styleStr = "style='background-color: " . $severities[$theRow['severity']] . "; color: " . $colors[$theRow['severity']] . ";'";
 	} else {
 	$styleStr = "style='background-color: " . get_css("row_light", $day_night) . "; color: " . get_css("row_light_text", $day_night) . ";'";
 	}
@@ -393,157 +430,177 @@ switch($popup_type) {
 ?>
 <BODY <?php print $styleStr;?> onload="initmapbuilder();">
 <DIV id='outer' style='width: 100%;'>
-	<DIV id='theTop'>
-		<DIV id='header' style='text-align: center;'>
-			<SPAN class='heading'><?php print $header;?>: </SPAN><SPAN class='heading' id='osgrid'></SPAN>
-		</DIV>
-		<DIV style='width: 100%;'>
-			<TABLE style='width: 100%; table-layout: fixed; word-wrap: break-all;'>
-				<TR class='even'>
+	<DIV id='button_bar' class='but_container'>	
+		<SPAN id='print_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'><SPAN STYLE='float: left;'><?php print get_text("Print");?></SPAN><IMG STYLE='float: right;' SRC='./images/print_small.png' BORDER=0></SPAN>
+		<SPAN id='close_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
+	</DIV>
+	<DIV id='theTop' style='position: relative; left: 2px; top: 70px; text-align: left;'>
+		<SPAN class='heading text' style='width: 100%; display: block;'><?php print $header;?>:<SPAN class='heading' id='osgrid'></SPAN></SPAN>
+		<TABLE style='width: 100%; table-layout: fixed; word-wrap: break-all;'>
+			<TR class='even'>
+<?php
+			if($popup_type == "ticket") {
+?>
+				<TD style='width: 60%; border: 1px outset #707070;'>
+<?php
+				} else {
+?>
+				<TD style='width: 100%; border: 1px outset #707070;'>
+<?php
+				}
+?>
+					<TABLE style='table-layout: fixed; width: 100%; word-wrap: break-all;'>
+						<TR class='even' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label1;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text1;?></TD>
+						</TR>
+						<TR class='odd' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label2;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text2;?></TD>
+						</TR>
+						<TR class='even' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label3;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text3;?></TD>
+						</TR>
+						<TR class='odd' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label4;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text4;?></TD>
+						</TR>
+						<TR class='even' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label5;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%; height: auto;'><?php print $text5;?></TD>
+						</TR>
+						<TR class='odd' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label6;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text6;?></TD>
+						</TR>
+						<TR class='even' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label7;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text7;?></TD>
+						</TR>
+						<TR class='odd' style='width: 100%;'>
+							<TD class='td_label text' style='width: 40%;'><?php print $label8;?></TD>
+							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text8;?></TD>
+						</TR>
+					</TABLE>
+				</TD>
 <?php
 				if($popup_type == "ticket") {
 ?>
-					<TD style='width: 60%; border: 1px outset #707070;'>
+					<TD style='width: 40%; border: 1px outset #707070;'>
+						<TABLE>
+							<TR class='even'>
+								<TD CLASS='td_data_wrap text'>
+									<DIV style='width: 98%; height: 100%; overflow-y: auto;'>
 <?php
-					} else {
+										/* Creates statistics header and details of responding and en-route units 7/29/09 */
+
+										$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+											WHERE ticket_id='$id'
+											AND `dispatched` IS NOT NULL 
+											AND `responding` IS NULL 
+											AND `on_scene` IS NULL 
+											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
+										$num_rows_dispatched = mysql_num_rows($result_dispatched);
+
+										$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+											WHERE ticket_id='$id'
+											AND `responding` IS NOT NULL 
+											AND `on_scene` IS NULL 
+											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
+										$num_rows_responding = mysql_num_rows($result_responding);
+
+										$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+											WHERE ticket_id='$id' 
+											AND `on_scene` IS NOT NULL 
+											AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')	
+											");		// 6/25/10
+										$num_rows_on_scene = mysql_num_rows($result_on_scene);
+											
+										$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart, 
+											`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
+											`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+											`r`.`id` AS `unit_id`,
+											`r`.`name` AS `unit_name` ,
+											`r`.`type` AS `unit_type` ,
+											`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
+											FROM `$GLOBALS[mysql_prefix]assigns` 
+											LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+											LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+												WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
+												AND ticket_id='$id' ";
+
+										$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+										$num_rows_cleared = mysql_affected_rows();
+										$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
+										$tick_end_str = format_date_2($ticket_end);
+										$elapsed = my_date_diff(mysql_format_date($ticket_start), mysql_format_date($ticket_end));		// 5/13/10
+										echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;&nbsp;&nbsp;Status: {$ticket_status}</B><BR />";
+										$stats = "<B>Severity:&nbsp;{$ticket_severity}, &nbsp;age: {$elapsed}";
+
+										echo $stats;
+
+										echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
+										while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
+											$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+											$row = mysql_fetch_assoc($result);
+											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+											}
+
+										echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
+										while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
+											$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+											$row = mysql_fetch_assoc($result);
+											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+											}
+
+										echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
+										while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
+											$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+											$row = mysql_fetch_assoc($result);
+											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+											}
+
+										echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
+										while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
+											echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
+											}
 ?>
-					<TD style='width: 100%; border: 1px outset #707070;'>
+								</DIV>
+							</TD>
+						</TR>
+					</TABLE>
+				</TD>
 <?php
-					}
+				}
 ?>
-						<TABLE style='table-layout: fixed; width: 100%; word-wrap: break-all;'>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label1;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text1;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label2;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text2;?></TD>
-							</TR>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label3;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text3;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label4;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text4;?></TD>
-							</TR>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label5;?></TD>
-								<TD class='td_data_wrap' style='width: 60%; height: auto;'><?php print $text5;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label6;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text6;?></TD>
-							</TR>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label7;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text7;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label8;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text8;?></TD>
-							</TR>
-						</TABLE>
-					</TD>
-<?php
-					if($popup_type == "ticket") {
-?>
-						<TD style='width: 40%; border: 1px outset #707070;'>
-							<TABLE>
-								<TR class='even'>
-									<TD>
-										<DIV style='max-height: 170px; overflow-y: auto;'>
-<?php
-											/* Creates statistics header and details of responding and en-route units 7/29/09 */
-
-											$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-												WHERE ticket_id='$id'
-												AND `dispatched` IS NOT NULL 
-												AND `responding` IS NULL 
-												AND `on_scene` IS NULL 
-												AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
-											$num_rows_dispatched = mysql_num_rows($result_dispatched);
-
-											$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-												WHERE ticket_id='$id'
-												AND `responding` IS NOT NULL 
-												AND `on_scene` IS NULL 
-												AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
-											$num_rows_responding = mysql_num_rows($result_responding);
-
-											$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-												WHERE ticket_id='$id' 
-												AND `on_scene` IS NOT NULL 
-												AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')	
-												");		// 6/25/10
-											$num_rows_on_scene = mysql_num_rows($result_on_scene);
-												
-											$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart, 
-												`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
-												`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
-												`r`.`id` AS `unit_id`,
-												`r`.`name` AS `unit_name` ,
-												`r`.`type` AS `unit_type` ,
-												`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
-												FROM `$GLOBALS[mysql_prefix]assigns` 
-												LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-												LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
-													WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
-													AND ticket_id='$id' ";
-
-											$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-											$num_rows_cleared = mysql_affected_rows();
-											$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
-											$tick_end_str = format_date_2($ticket_end);
-											$elapsed = my_date_diff(mysql_format_date($ticket_start), mysql_format_date($ticket_end));		// 5/13/10
-											echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;&nbsp;&nbsp;Status: {$ticket_status}</B><BR />";
-											$stats = "<B>Severity:&nbsp;{$ticket_severity}, &nbsp;age: {$elapsed}";
-
-											echo $stats;
-
-											echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
-											while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
-												$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-												$row = mysql_fetch_assoc($result);
-												echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-												}
-
-											echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
-											while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
-												$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-												$row = mysql_fetch_assoc($result);
-												echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-												}
-
-											echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
-											while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
-												$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-												$row = mysql_fetch_assoc($result);
-												echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-												}
-
-											echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
-											while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
-												echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
-												}
-	?>
-									</DIV>
-								</TD>
-							</TR>
-						</TABLE>
-					</TD>
-<?php
-					}
-?>
-				</TR>
-			</TABLE>
-		</DIV>
-	</DIV>
-	<DIV id='thebottom' style='width: 100%; text-align: center;'><CENTER>
-		<DIV id="map" style="border: 1px solid black; width:500px; height:450px;"></DIV></CENTER><BR />
-		<SPAN id="close-but" class='plain' style="float: none; text-align: center;" onMouseover="do_hover(this.id);" onMouseout="do_plain(this.id);" onClick="window.close();">Close</SPAN>
+			</TR>
+		</TABLE>
+		<DIV id="map_canvas" style="border: 1px solid black;"></DIV></CENTER><BR />
 	</DIV>
 </DIV>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+mapWidth = viewportwidth * .95;
+mapHeight = viewportheight * .60;
+outerwidth = viewportwidth * .95;
+outerheight = viewportheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('theTop').style.width = mapWidth + "px";
+$('theTop').style.height = outerheight + "px";
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </BODY>
 </HTML>

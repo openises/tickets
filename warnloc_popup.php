@@ -67,9 +67,9 @@ $lng = $row['lng'];
 				position: relative;	z-index: 101; cursor: normal; height: 250px;}
 		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
@@ -80,14 +80,17 @@ $lng = $row['lng'];
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/OSOpenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 	<SCRIPT>
 	window.onresize=function(){set_size()};
-
 	window.onload = function(){set_size();};
-	
+	</SCRIPT>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
+	<SCRIPT>
 	var layercontrol;	
 	
 	function ck_frames() {		// onLoad = "ck_frames()"
@@ -214,7 +217,9 @@ $lng = $row['lng'];
 	</TR>
 </TABLE>
 <BR /><BR /><BR />
-<CENTER><SPAN id='fin_button' class='plain' style='text-align: center;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Finished</SPAN></CENTER>
+<CENTER>
+<SPAN ID='fin_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+</CENTER>
 <FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_CLOSED'];?>'>
 </FORM>

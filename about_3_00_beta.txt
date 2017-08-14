@@ -757,10 +757,43 @@ Changes for 3.11A - Maintenance release
 
 Changes for 3.12A - Maintenance release
 
-311.  Revisions to geocoding and reverse geocoding to improve reliability of location finding.
-312.  Revision to messaging to cure incorrect messaging screen refresh when opening sent message.
-313.  Improvements to local map download scripts including existing tile deletion.
+311.  Reworked script for downloading maps to improve stability.
+312.  Rework to geocoding to improve stability and accuracy.
+313.  Other minor fixes.
 
-August '16
+Changes for 3.20 - Major re-write
+
+314.  Screen look and feel, buttons and responsiveness to different screen sizes.
+315.  Reworking of No Maps mode so that it can be used to simplify the screen but not limiting ability to geocode 
+      addresses if you actually have a good internet connection. Means that dispatch in no maps mode will still have 
+	  correct distances.
+316.  Reports totally reworked with a couple of new reports thrown in for good measure. Also ability to download reports
+      to Word or Excel format.
+317.  Reworked standard messages to allow grouping of the messages in message groups, allow selective hiding of messages
+      that are for a particular SMS Gateway provider, handling of multiple replacement text tags in a single standard 
+	  message.
+318.  New button on the situation screen, press this to show all assigned units on the map with a small red 
+      infowindow – click on three dots in the infowindow brings up that responder detail infowindow.
+319.  Some more work on the Mobile screen to improve the refresh of the elements in the background on a timed 
+      basis with refresh only happening if there are changes.
+320.  Additions to Major Incidents. Sorted some problems with it and also added the flagging of major incidents 
+      at the top of the Situation, units and facilities screens if there are any Major Incidents active.
+321.  Fixed some problems with portal operation, revised the Requests screen (now lists requests sorted by status.
+322.  Some fixes and minor changes to messaging screens.
+323.  Added a script to show PHP config information from the config screen
+324.  Warn locations now show on the Maps using a triangle icon – click on it to see infowindow with warning details.
+325.  Some reworking of search both to look and feel as well as to fix some problems.
+326.  Addition of TRACCAR and javAPRSSrvr fpr APRS tracking.
+327.  Performance enhancement to APRS.fi tracking.
+328.  Added ability to set timezone from config, system now defaults to “America/New York” for systems where PHP ini settings 
+      for timezone are not correctly implemented. Timezone is set from config using select control offering all options so user
+      knowledge of what timezones exist is not necessary. Access to this is through “config / set default map”
+329.  Added system setting for responder and facility default list sort (setting choses which of the columns to sort by for
+      Both the situation screen and the responders / facilities screens. Also implemented session persistence for sorting if
+      Lists sorted by clicking on column heading.
+330.  Added “Txtlocal” as an SMS broadcast provider.
+331.  Added setting to allow default SMS for message sending.
+
+August '17
 Arnie Shore
 Andy Harvey, UK

@@ -12,7 +12,7 @@ function autoCompleteDB() {
  autoCompleteDB.prototype.getMatches=function(str,aList,maxSize) {
 	/* debug */ //alert(maxSize+"ok getmatches");
 	var ctr=0;
-	for(var i in this.aNames) {
+	for(var i=0;i<this.aNames.length;i++) {
 		 if(this.aNames[i].toString().toLowerCase().indexOf(str.toString().toLowerCase())==0) { /*looking for case insensitive matches */
 		  aList.push(this.aNames[i]);
 		  ctr++;
@@ -157,7 +157,7 @@ function autoCompleteDB() {
 	   if(bTextComplete) this.textComplete(aStr[0]);
 	   this.positionSuggest();
 
-	   for(i in aStr)	   {
+	   for(var i=0;i<aStr.length;i++) {
 		  var oNew=document.createElement('div');
 		  this.oDiv.appendChild(oNew);
 		  oNew.onmouseover=

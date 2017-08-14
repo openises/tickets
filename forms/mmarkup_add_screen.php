@@ -11,7 +11,7 @@ $capt_ary = array( "p" =>"click map - drag icons",	"c" => "Click map and enter f
 $line_ary = array( "p" =>"Line", 					"c" =>"Circle", "t" =>"Banner", "k" => "kml");
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-$cats_sel = "<SELECT NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
+$cats_sel = "<SELECT ID='cat_list' NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
 $cats_sel .= "<OPTION VALUE=0 SELECTED >Select</OPTION>\n";
 while ($row = mysql_fetch_assoc($result)) {
 	$cats_sel .= "<OPTION VALUE=\"{$row['id']}\">" . shorten($row['category'], 30) . "</OPTION>\n";
@@ -21,8 +21,11 @@ $gunload = "";
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var type = "e";
 var selected_position = false;
@@ -37,8 +40,6 @@ var mapHeight;
 var listHeight;
 var colwidth;
 var listwidth;
-var inner_listwidth;
-var celwidth;
 var colheight;
 var viewportwidth;
 var viewportheight;
@@ -63,6 +64,18 @@ var centeredIcon = L.Icon.extend({options: {iconSize: [25, 25], iconAnchor: [12,
 });
 			
 var colors = new Array ('odd', 'even');
+var fields = ["name",
+				"bannerText"];
+var medfields = ["selectType",
+				"fillColor",
+				"lineColor",
+				"cat_list",
+				"ident"];
+var smallfields = ["fillOpacity",
+					"lineOpacity",
+					"lineWidth",
+					"fontSize",
+					"circRadius"];
 
 function set_size() {
 	if (typeof window.innerWidth != 'undefined') {
@@ -81,19 +94,33 @@ function set_size() {
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
 	colheight = outerheight * .95;
-	listHeight = viewportheight * .7;
+	leftcolwidth = viewportwidth * .45;
+	rightcolwidth = viewportwidth * .40;
 	listwidth = colwidth * .95
-	inner_listwidth = listwidth *.9;
-	celwidth = listwidth * .20;
-	$('markup_form_table').style.width = colwidth + "px";
+	fieldwidth = colwidth * .4;
+	medfieldwidth = colwidth * .2;		
+	smallfieldwidth = colwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
-	$('leftcol').style.width = colwidth + "px";
+	$('leftcol').style.width = leftcolwidth + "px";
 	$('leftcol').style.height = colheight + "px";	
-	$('rightcol').style.width = colwidth + "px";
+	$('markup_form_table').style.width = leftcolwidth + "px";
+	$('mainForm').style.width = leftcolwidth + "px";
+	$('rightcol').style.width = rightcolwidth + "px";
 	$('rightcol').style.height = colheight + "px";	
-	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.width = rightcolwidth + "px";
+	$('map_caption').style.width = rightcolwidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
+	for (var i = 0; i < fields.length; i++) {
+		$(fields[i]).style.width = fieldwidth + "px";
+		} 
+	for (var i = 0; i < medfields.length; i++) {
+		$(medfields[i]).style.width = medfieldwidth + "px";
+		}
+	for (var i = 0; i < smallfields.length; i++) {
+		$(smallfields[i]).style.width = smallfieldwidth + "px";
+		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function change_type(id) {
@@ -134,7 +161,7 @@ function change_type(id) {
 		type = "e";
 		}
 	document.mkup_add.frm_line_type.value = type;
-	$('mainForm').style.display = 'inline';
+	$('mainForm').style.visibility = 'visible';
 	}
 
 function is_ok_radius (instr) {
@@ -308,21 +335,27 @@ function draw_banner() {
 </HEAD>
 <BODY onLoad = "set_size(); ck_frames(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 	<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
-	<DIV id='outer' style='position: absolute; left: 0px;'>
-		<DIV id='leftcol' style='position: absolute; left: 10px;'>
+	<DIV id = "outer" style='position: absolute; left: 0px;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<A NAME='top'>	
 			<FORM ID='mkup_Add_form' NAME="mkup_add" METHOD="post" ACTION="mmarkup.php?goadd=true">		
-			<TABLE id='markup_form_table' BORDER="0" ALIGN="center" width='100%'>
-				<TR CLASS="even" VALIGN="top" >
-					<TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">New <SPAN id='type_flag'></SPAN></FONT><BR /><BR />
-						<FONT SIZE = 'normal'><EM><SPAN id='caption'>click map to add points - drag icons to move points</SPAN></EM></FONT>
+			<TABLE id='markup_form_table' BORDER="0" ALIGN="center">
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center'>&nbsp;</TD>
+				</TR>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center'>
+						<SPAN CLASS='text_green text_biggest'>New <SPAN id='type_flag'></SPAN> Map Markup</SPAN>
+						<BR />
+						<SPAN CLASS='text_white'>click map to add points - drag icons to move points</SPAN>
+						<BR />
 					</TD>
 				</TR>
-				<TR CLASS="spacer" VALIGN="top" >
-					<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
+				<TR class='spacer'>
+					<TD class='spacer'></TD>
 				</TR>
 				<TR CLASS="even" VALIGN="top" >
-					<TD COLSPAN="2" ALIGN="CENTER">
+					<TD ALIGN="CENTER">
 						<SELECT ID = 'selectType' NAME='markup_type' onChange = "change_type(this.value)">
 							<OPTION VALUE=0 SELECTED>Select Type</OPTION>
 							<OPTION VALUE=1>Polygon</OPTION>
@@ -332,32 +365,34 @@ function draw_banner() {
 						</SELECT>
 					</TD>
 				</TR>
-				<TR>
-					<TD COLSPAN=99>
-						<TABLE id='mainForm' style='display: none;'>
-							<TR CLASS="spacer" VALIGN="top" >
-								<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
+				<TR CLASS='even'>
+					<TD ALIGN='center'>
+						<TABLE id='mainForm' style='visibility: hidden; width: 100%;'>
+							<TR CLASS="spacer">
+								<TD CLASS='spacer' COLSPAN="2"></TD>
 							</TR>
-							<TR VALIGN="baseline" CLASS="odd">
-								<TD CLASS="td_label" ALIGN="left">Description:</TD>
-								<TD><INPUT MAXLENGTH="32" SIZE="32" type="text" NAME="frm_name" VALUE="" onChange = "this.value.trim();" />
-									<SPAN STYLE = 'margin-left:20px' CLASS="td_label" >Visible&nbsp;&raquo;&nbsp;</SPAN>
+							<TR CLASS="odd">
+								<TD CLASS="td_label text text_left">Description:</TD>
+								<TD CLASS="td_data text text_left">
+									<INPUT ID='name' MAXLENGTH="32" SIZE="32" type="text" NAME="frm_name" VALUE="" onChange = "this.value.trim();" />
+									<SPAN STYLE = 'margin-left:20px' CLASS="td_label text" >Visible&nbsp;&raquo;&nbsp;</SPAN>
 									<SPAN STYLE = 'margin-left:10px'>Yes&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_is_vis' onClick = "document.mkup_Add_form.rb_line_not_vis.checked = false;document.c.frm_line_status.value=0" CHECKED /></SPAN>
 									<SPAN STYLE = 'margin-left:20px'>No&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_not_vis' onClick = "document.mkup_Add_form.rb_line_is_vis.checked = false;document.c.frm_line_status.value=1" /></SPAN>
 								
 								</TD>
 							</TR>
-							<TR VALIGN="baseline" CLASS="even">
-								<TD CLASS="td_label" ALIGN="left">Ident:</TD>
-								<TD ALIGN="left"><INPUT MAXLENGTH="10" SIZE="10" type="text" NAME="frm_ident" VALUE="" onChange = "this.value.trim();" />
-									<SPAN STYLE = 'margin-left:20px'  CLASS="td_label">Category:&nbsp;&raquo;&nbsp;</SPAN><?php echo $cats_sel;?>
-									<SPAN ID='radius' CLASS="td_label" STYLE = 'margin-left:20px; display: none;'>Radius&nbsp;&raquo;&nbsp;<INPUT NAME = 'circ_radius' VALUE= '' TYPE = 'text' SIZE = 6 MAXLENGTH = 6 onChange = "do_draw_circle();"/>&nbsp;&nbsp; <i>(mi)</i></SPAN>
-									<SPAN ID='ban_text' CLASS="td_label" STYLE = 'margin-left:20px; display: none;'>Banner text:&nbsp;&raquo;&nbsp;<INPUT NAME = 'banner_text' VALUE= '' TYPE = 'text' SIZE = 24 MAXLENGTH = 64 onChange='draw_banner();'/></SPAN>
-
+							<TR CLASS="even">
+								<TD CLASS="td_label text text_left">Ident:</TD>
+								<TD CLASS="td_data text text_left">
+									<INPUT ID='ident' MAXLENGTH="10" SIZE="10" type="text" NAME="frm_ident" VALUE="" onChange = "this.value.trim();" />
+									<SPAN STYLE = 'margin-left:20px' CLASS="td_label text">Category:&nbsp;&raquo;&nbsp;</SPAN><?php echo $cats_sel;?>
+									<SPAN ID='radius' CLASS="td_label text" STYLE = 'margin-left:20px; display: none;'>Radius&nbsp;&raquo;&nbsp;<INPUT ID='circRadius' NAME = 'circ_radius' VALUE= '' TYPE = 'text' SIZE = 6 MAXLENGTH = 6 onChange = "do_draw_circle();"/>&nbsp;&nbsp; <i>(mi)</i></SPAN>
+									<SPAN ID='ban_text' CLASS="td_label text" STYLE = 'margin-left:20px; display: none;'>Banner text:&nbsp;&raquo;&nbsp;<INPUT ID='bannerText' NAME = 'banner_text' VALUE= '' TYPE = 'text' SIZE = 24 MAXLENGTH = 64 onChange='draw_banner();'/></SPAN>
 								</TD>
 							</TR>
-							<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="left">Apply to:</TD>
-								<TD ALIGN='left' CLASS="td_label"  STYLE = 'white-space:nowrap;' >
+							<TR CLASS="odd">
+								<TD CLASS="td_label text text_left">Apply to:</TD>
+								<TD CLASS="td_label text text_left" STYLE = 'white-space:nowrap;' >
 									<SPAN STYLE="margin-left: 20px;border:1px; width:20%">Base Map&nbsp;&raquo;&nbsp;<INPUT TYPE= "radio" NAME="useWith" value="box_use_with_bm" onClick = "this.form.frm_use_with_bm.value=1"/></SPAN>
 									<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;<?php print get_text("Regions");?>&nbsp;&raquo;&nbsp;<INPUT TYPE= "radio" NAME="useWith" value="box_use_with_r" onClick = 	"this.form.frm_use_with_r.value=1"/></SPAN>
 									<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Facilities&nbsp;&raquo;&nbsp;<INPUT TYPE= "radio" NAME="useWith" value="box_use_with_f" onClick = "this.form.frm_use_with_f.value=1"/></SPAN>
@@ -365,70 +400,70 @@ function draw_banner() {
 									<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Unit Ringfence&nbsp;&raquo;&nbsp;<INPUT  TYPE= "radio" NAME="useWith" value="box_use_with_u_rf"  onClick = "this.form.frm_use_with_u_rf.value=1"/></SPAN>
 								</TD>
 							</TR>
-							<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="left"><SPAN id='type_flag2'></SPAN>:</TD>
-								<TD ALIGN="left">
-									<SPAN CLASS="td_label" STYLE= "margin-left:20px" >
-										Color &raquo;&nbsp;<INPUT MAXLENGTH="8" SIZE="8" type="text" NAME="frm_line_color" VALUE="#FF0000"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
-										<SPAN id='line_opacity'>Opacity &raquo;&nbsp;<INPUT MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_line_opacity" VALUE="0.5" />&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
-										<SPAN id='line_width' style='display: none;'>Width &raquo;&nbsp;<INPUT MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_line_width" VALUE="2" /> (px)</SPAN>
-										<SPAN id='font_size' style='display: none;'>Font Size &raquo;&nbsp;<INPUT MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_font_size" VALUE="16" /> (px)</SPAN>
+							<TR CLASS="even">
+								<TD CLASS="td_label text text_left">
+									<SPAN id='type_flag2'></SPAN>:
+								</TD>
+								<TD CLASS="td_data text text_left">
+									<SPAN CLASS="td_label text text_left" STYLE= "margin-left:20px" >
+										Color &raquo;&nbsp;<INPUT ID='lineColor' MAXLENGTH="8" SIZE="8" type="text" NAME="frm_line_color" VALUE="#FF0000"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
+										<SPAN id='line_opacity'>Opacity &raquo;&nbsp;<INPUT ID='lineOpacity' MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_line_opacity" VALUE="0.5" />&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+										<SPAN id='line_width' style='display: none;'>Width &raquo;&nbsp;<INPUT ID='lineWidth' MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_line_width" VALUE="2" /> (px)</SPAN>
+										<SPAN id='font_size' style='display: none;'>Font Size &raquo;&nbsp;<INPUT ID='fontSize' MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_font_size" VALUE="16" /> (px)</SPAN>
 									</SPAN>
 								</TD>
 							</TR>
-							<TR VALIGN="baseline" CLASS="odd" ID = 'fill_cb_tr'  >
-								<TD CLASS="td_label" ALIGN="left">Filled:&nbsp;&nbsp;&nbsp;</TD>
-								<TD ALIGN="left">
-									<SPAN CLASS="td_label" STYLE = "margin-left: 20px;" >
+							<TR CLASS="odd" ID = 'fill_cb_tr'  >
+								<TD CLASS="td_label text text_left">Filled:&nbsp;&nbsp;&nbsp;</TD>
+								<TD CLASS="td_data text text_left">
+									<SPAN CLASS="td_label text text_left" STYLE = "margin-left: 20px;" >
 									No&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_filled_n' value = 'n'	onClick = 'do_un_checked(this.form)' CHECKED  />&nbsp;&nbsp;&nbsp;&nbsp;
 									Yes&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_filled_y' value = 'y'  onClick = 'do_checked(this.form);'/>				
 									</SPAN>
 								</TD>
 							</TR>
-							<TR VALIGN="baseline" CLASS="even" ID = 'fill_tr' STYLE = 'display:none'>
-								<TD CLASS="td_label" ALIGN="left">Fill:</TD>
-								<TD ALIGN="left">
-									<SPAN CLASS="td_label" STYLE= "margin-left:20px" >
-										Color &raquo;&nbsp;<INPUT MAXLENGTH="8" SIZE="8" type="text" NAME="frm_fill_color" VALUE="#FF0000"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
-										Opacity &raquo;&nbsp;<INPUT MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_fill_opacity" VALUE="0.5" />&nbsp;&nbsp;&nbsp;&nbsp;
+							<TR CLASS="even" ID = 'fill_tr' STYLE = 'display:none'>
+								<TD CLASS="td_label text text_left">Fill:</TD>
+								<TD CLASS="td_label text text_left">
+									<SPAN STYLE= "margin-left:20px" >
+										Color &raquo;&nbsp;<INPUT ID='fillColor' MAXLENGTH="8" SIZE="8" type="text" NAME="frm_fill_color" VALUE="#FF0000"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
+										Opacity &raquo;&nbsp;<INPUT ID='fillOpacity' MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_fill_opacity" VALUE="0.5" />&nbsp;&nbsp;&nbsp;&nbsp;
 									</SPAN>
 								</TD>
 							</TR>
 							<TR CLASS="spacer" VALIGN="top" >
-								<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
-							</TR>
-							<TR CLASS="odd" style='height: 30px; vertical-align: middle;'>
-								<TD COLSPAN="2" ALIGN="center" style='vertical-align: middle;'>
-									<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Cancel</SPAN>
-									<SPAN id='reset_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_reset();this.form.reset();'>Reset</SPAN>
-									<SPAN id='sub_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='this.disabled=true; JSfnCheckInput(document.mkup_add, this);'>Submit</SPAN>
-								</TD>
+								<TD CLASS='spacer' COLSPAN="2"></TD>
 							</TR>
 							<TR CLASS="spacer" VALIGN="top" >
-								<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
-							</TR>
-							<TR  VALIGN="baseline"CLASS="odd">
-								<TD COLSPAN="2" ALIGN="center" STYLE = 'white-space:nowrap;'>
-									<INPUT TYPE='hidden' NAME = '_func' VALUE='cp' />
-									<INPUT TYPE='hidden' NAME = 'frm_line_status' VALUE='0' />	
-									<INPUT TYPE='hidden' NAME = 'frm_line_cat_id' VALUE='0' />	
-									<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='' />
-									<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='' />
-									<INPUT TYPE='hidden' NAME = 'frm_filled' VALUE='0' />
-									<INPUT TYPE='hidden' NAME = 'frm_use_with_bm' VALUE='0' />
-									<INPUT TYPE='hidden' NAME = 'frm_use_with_r' VALUE='0' />
-									<INPUT TYPE='hidden' NAME = 'frm_use_with_f' VALUE='0' />
-									<INPUT TYPE='hidden' NAME = 'frm_use_with_u_ex' VALUE='0' />
-									<INPUT TYPE='hidden' NAME = 'frm_use_with_u_rf' VALUE='0' />	
-								</TD>
+								<TD CLASS='spacer' COLSPAN="2"></TD>
 							</TR>
 						</TABLE>
 					</TD>
 				</TR>
-			</TABLE>			
+			</TABLE>
+			<INPUT TYPE='hidden' NAME = '_func' VALUE='cp' />
+			<INPUT TYPE='hidden' NAME = 'frm_line_status' VALUE='0' />	
+			<INPUT TYPE='hidden' NAME = 'frm_line_cat_id' VALUE='0' />	
+			<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='' />
+			<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='' />
+			<INPUT TYPE='hidden' NAME = 'frm_filled' VALUE='0' />
+			<INPUT TYPE='hidden' NAME = 'frm_use_with_bm' VALUE='0' />
+			<INPUT TYPE='hidden' NAME = 'frm_use_with_r' VALUE='0' />
+			<INPUT TYPE='hidden' NAME = 'frm_use_with_f' VALUE='0' />
+			<INPUT TYPE='hidden' NAME = 'frm_use_with_u_ex' VALUE='0' />
+			<INPUT TYPE='hidden' NAME = 'frm_use_with_u_rf' VALUE='0' />			
 			</FORM>
 		</DIV>
-		<DIV id='rightcol' style='position: absolute; right: 170px;'>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
+				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+				<SPAN id='reset_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='do_reset();document.mkup_add.reset();'><?php print get_text("Reset");?><BR /><IMG id='can_img' SRC='./images/restore.png' /></SPAN>
+				<SPAN id='sub_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='JSfnCheckInput(document.mkup_add, this);'><?php print get_text("Submit");?><BR /><IMG id='can_img' SRC='./images/submit.png' /></SPAN>
+			</DIV>
+		</DIV>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 			<DIV id= 'map_canvas' style = 'border: 1px outset #707070;'></DIV>
+			<SPAN id='map_caption' CLASS='text_blue text text_bold' style='width: 100%; text-align: center; display: block;'><?php print get_variable('map_caption');?></SPAN><BR />
 		</DIV>
 	</DIV>
 <?php
@@ -458,18 +493,57 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, $allow_filedelete, 0, 0, 0, 0);
 		var latLng;
 		var boundary = [];			//	exclusion zones array
 		var bound_names = [];
-		var mapWidth = <?php print get_variable('map_width');?>+20;
-		var mapHeight = <?php print get_variable('map_height');?>+20;;
-		$('map_canvas').style.width = mapWidth + "px";
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		mapWidth = viewportwidth * .40;
+		mapHeight = viewportheight * .55;
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		colwidth = outerwidth * .42;
+		colheight = outerheight * .95;
+		leftcolwidth = viewportwidth * .40;
+		rightcolwidth = viewportwidth * .40;
+		listwidth = colwidth * .95
+		fieldwidth = colwidth * .4;
+		medfieldwidth = colwidth * .2;		
+		smallfieldwidth = colwidth * .10;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
+		$('leftcol').style.width = leftcolwidth + "px";
+		$('leftcol').style.height = colheight + "px";	
+		$('markup_form_table').style.width = leftcolwidth + "px";
+		$('mainForm').style.width = leftcolwidth + "px";
+		$('rightcol').style.width = rightcolwidth + "px";
+		$('rightcol').style.height = colheight + "px";	
+		$('map_canvas').style.width = rightcolwidth + "px";
+		$('map_caption').style.width = rightcolwidth + "px";
 		$('map_canvas').style.height = mapHeight + "px";
+		for (var i = 0; i < fields.length; i++) {
+			$(fields[i]).style.width = fieldwidth + "px";
+			} 
+		for (var i = 0; i < medfields.length; i++) {
+			$(medfields[i]).style.width = medfieldwidth + "px";
+			}
+		for (var i = 0; i < smallfields.length; i++) {
+			$(smallfields[i]).style.width = smallfieldwidth + "px";
+			}
+		set_fontsizes(viewportwidth, "fullscreen");
 		var theLocale = <?php print get_variable('locale');?>;
 		var useOSMAP = <?php print get_variable('use_osmap');?>;
-		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
+		var initZoom = <?php print get_variable('def_zoom');?>;
+		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points
-		
-
+	
 		function onMapClick(e) {
 			semic = ";";			// separator
 			count++;

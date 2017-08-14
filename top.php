@@ -60,6 +60,12 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 //$temp = intval(get_variable('auto_poll'));
 //$poll_cycle_time = ($temp > 0)? ($temp * 1000) : 15000;	// 5/30/2013
 $poll_cycle_time = 5000;	// five seconds to ms - 8/20/10
+$resps_arr = array();
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
+$result_resps = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+while ($row_resps = stripslashes_deep(mysql_fetch_assoc($result_resps))) 	{
+	$resps_arr[$row_resps['id']] = $row_resps['icon_str'];
+	}
 
 $browser = trim(checkBrowser(FALSE));						// 6/12/10
 ?>
@@ -75,19 +81,45 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-
 <STYLE type="text/css">
-	table			{border-collapse:collapse;}
-	table, td, th	{border:0px solid black;}
-	.message { FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-	input		{background-color:transparent;}		/* Benefit IE radio buttons */
+	.message { FONT-WEIGHT: bold; FONT-SIZE: 2em; COLOR: #0000FF; FONT-STYLE: normal;}
 </STYLE>
-<SCRIPT SRC="./js/misc_function.js"></SCRIPT>	<!-- 1/6/11 JSON call-->
-<SCRIPT SRC='./js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
-
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT SRC='./js/md5.js'></SCRIPT>
 <SCRIPT>
+	window.onresize=function(){set_size();}
+	
+	var viewportwidth;
+	var viewportheight;
+	var resps = <?php echo json_encode($resps_arr);?>;
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+
+	function set_size()	{
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth,'fullscreen');
+		}
+
 	var current_butt_id = "main";
 	var internet = false;
 	var is_messaging = 0;
@@ -100,60 +132,41 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 
 	var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
 
-	String.prototype.trim = function () {
-		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-		};
-		
-	function $() {									// 1/21/09
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')		element = document.getElementById(element);
-			if (arguments.length == 1)			return element;
-			elements.push(element);
-			}
-		return elements;
-		}
-
-	function isNull(val) {								// checks var stuff = null;
-		return val === null;
-		}
-
 	function do_time() {		//4/5/10
 		var today=new Date();
-		today.setDate(today.getSeconds()+7.5);		// half-adjust
+//		today.setDate(today.getSeconds()+7.5);		// half-adjust
 		var hours = today.getHours();
 		var h=(hours < 10)?  "0" + hours : hours ;
 		var mins = today.getMinutes();
 		var m=(mins < 10)?  "0" + mins : mins ;
 		$('time_of_day').innerHTML=h+":"+m;
 		}
-
+		
 	var the_time = setInterval("do_time()", 15000);
 	var is_initialized = false;
-	var nmis_initialized = false;	//	10/23/12
+	var nmis_initialized = false;
 	var mu_interval = null;
-	var nm_interval = null;			//	10/23/12
-	var msgs_interval = null;		//	10/23/12
-	var emsgs_interval = null;		//	10/23/12
+	var nm_interval = null;
+	var msgs_interval = null;
+	var emsgs_interval = null;
 	var pos_interval = null;
 	var lit=new Array();
 	var lit_r = new Array();
 	var lit_o = new Array();
 	var unread_messages = 0;
 	var hasUsercount = 0;
-	var chat_id = 0;				// new chat invite - 8/25/10
-	var ticket_id = 0;				// new ticket
-	var unit_id;					// 'moved' unit
-	var updated;					// 'moved' unit date/time
-	var dispatch;					// latest dispatch status change - date-time
-	var new_msg = 0;				// New messages, 10/23/12
+	var chat_id = 0;
+	var ticket_id = 0;
+	var unit_id;
+	var updated;
+	var dispatch;
+	var new_msg = 0;
 	var the_unit = 0;
 	var the_status = 0;
 	var the_time = 0;
 
-	var d = new Date();				// millisecs since 1970/01/01
-	var chk_osw_at = d.getTime(); 	// when to check OSW
+	var d = new Date();
+	var chk_osw_at = d.getTime();
 	var ws_server_started = false;
 	var mu = false;
 	
@@ -194,7 +207,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			}
 		}			// end function do_msgs_loop()
 
-	function handleRequestStateChange2() {	//	10/23/12, 1/30/14
+	function handleRequestStateChange2() {
 		var the_resp;
 		var the_val;
 		if (xmlHttp.readyState == 4) {
@@ -213,9 +226,9 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 						var the_stored = response[1][1];
 						if(the_stored != 0) {
 							show_msg("There are " + the_stored + " new messages");
-							msg_signal_r();								// light the msg button
+							msg_signal_r();
 							} else {
-							msg_signal_r_off();								// unlight the msg button
+							msg_signal_r_off();
 							}
 						}
 					}
@@ -232,10 +245,12 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		var randomnumber=Math.floor(Math.random()*99999999);
 		sendRequest ('./ajax/list_message_totals.php?version=' + randomnumber,get_latest_messages_cb, "");
 		}
+		
 	function un_stat_chg(unit_id, the_stat_id) {	//	10/23/12
 		var the_stat_control = "frm_status_id_u_" + unit_id;
 		if(typeof parent.frames["main"].change_status_sel == 'function') {
-			parent.frames["main"].change_status_sel(the_stat_control, the_stat_id);
+			var theIcon = resps[unit_id];
+			parent.frames["main"].change_status_sel(the_stat_control, the_stat_id, theIcon, unit_id);
 			}
 		}
 
@@ -280,22 +295,31 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			ticket_id = temp;
 			tick_signal();								// light the ticket button
 			if(typeof parent.frames["main"].load_incidentlist == 'function') {
-				parent.frames["main"].load_incidentlist();
+				parent.frames["main"].load_incidentlist(parent.frames["main"].inc_field, parent.frames["main"].inc_direct);
 				}
 			}
 		var temp =  parseInt(the_id_arr[2]);			// unit?
 		var temp1 =  the_id_arr[3].trim();				// unit timestamp?
-		if ((temp != unit_id) || (temp1 != updated)) {	//	10/23/12
+		if ((temp == unit_id) || (temp1 == updated)) {	//	10/23/12
 			unit_id = temp;
 			updated =  temp1;							// timestamp this unit
 			$('unit_id').innerHTML = unit_id;			// unit id
 			unit_signal();								// light the unit button
-			if(typeof parent.frames["main"].load_responderlist == 'function') {
-				parent.frames["main"].load_responderlist();
-				}
-			if(typeof parent.frames["main"].load_responderlist2 == 'function') {
-				parent.frames["main"].load_responderlist2();
-				}
+/* 			if(parent.frames["main"].screenname.innerHTML == "situation") {
+				if(typeof parent.frames["main"].load_responderlist == 'function') {
+					if(!parent.frames["main"].changed_resp_sort) {
+						parent.frames["main"].load_responderlist(parent.frames["main"].resp_field, parent.frames["main"].resp_direct);
+						}
+					}
+				} else if(parent.frames["main"].screenname.innerHTML == "responders") {
+				if(typeof parent.frames["main"].load_responderlist2 == 'function') {
+					if(!parent.frames["main"].changed_resp_sort) {
+						parent.frames["main"].load_responderlist2(parent.frames["main"].resp_field, parent.frames["main"].resp_direct);
+						}
+					}
+				} else {
+				// do nothing
+				} */
 			}
 
 		$("div_assign_id").innerHTML = the_id_arr[4].trim();			// 2/19/12
@@ -351,7 +375,6 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 				setTimeout(function() { newwindow_co.focus(); }, 1);
 				}
 			}			// end ( rightNow > chk_osw_at )
-
 		}			// end function get_latest_id_cb()
 
 	function get_latest_messages_cb(req) {					// get_latest_messages callback(), 10/23/12, 1/30/14
@@ -403,10 +426,9 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		sendRequest ('get_latest_id.php?version=' + randomnumber,init_cb, "");
 			function init_cb(req) {
 				var the_id_arr=JSON.decode(req.responseText);				// 1/7/11
-				if (the_id_arr.length != arr_lgth_good)  {						// 2/25/12, 10/23/12
+				if (!the_id_arr || (the_id_arr.length != arr_lgth_good))  {						// 2/25/12, 10/23/12
 					alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
-					}
-				else {
+					} else {
 					chat_id =  parseInt(the_id_arr[0]);
 					ticket_id = parseInt(the_id_arr[1]);
 					unit_id =  parseInt(the_id_arr[2]);
@@ -475,6 +497,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		if (xmlHttp.readyState == 4) {
 			if (xmlHttp.status == 200) {
 				var response = JSON.decode(xmlHttp.responseText);
+				if(!response) {return;}
 				for(var key in response[0]) {
 					the_resp = key;
 					the_val = response[0][key];
@@ -506,6 +529,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			respxmlHttp.send(null);
 			}
 		}
+
 	function readPositions() {	//	1/3/14
 		if (respxmlHttp.readyState == 4) {
 			if (respxmlHttp.status == 200) {
@@ -522,10 +546,12 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			}
 		positions_get();
 		}
+
 	function positions_get() {			// set cycle, 1/3/14
 		if (pos_interval!=null) {return;}			// ????
 		pos_interval = window.setInterval('do_positions_loop()', 30000);
 		}			// end function mu get()
+		
 	function do_positions_loop() {	//	1/3/14
 		var randomnumber=Math.floor(Math.random()*99999999);
 	  	// call the server to execute the server side operation
@@ -536,6 +562,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			respxmlHttp.send(null);
 			}
 		}
+		
 	function readPositions2() {	//	1/3/14
 		if (respxmlHttp.readyState == 4) {
 			if (respxmlHttp.status == 200) {
@@ -614,11 +641,15 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		}		// end function sync Ajax()
 
 	function do_audible(element) {	// 6/12/10
-		a = typeof a !== 'undefined' ? a : 'incident';
+		element = typeof element !== 'undefined' ? element : 'incident';
+		var theID = element + "_alert";
 		try 		{
-		document.getElementById(element + '_alert').currentTime=0;
-		document.getElementById(element + '_alert').play();}
-		catch (e) 	{console.log(e);}		// ignore
+			document.getElementById(theID).currentTime=0;
+			document.getElementById(theID).play();
+			}
+		catch (e) 	{
+			console.log(e);
+			}		// ignore
 		}				// end function do_audible()
 
 	function get_line_count() {							// 4/5/10
@@ -674,6 +705,14 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		lit_o["msg"] = true;
 		}
 
+	function new_signal_off() {
+		if(current_butt_id = "add") {
+			lit["add"] = false;
+			CngClass("add", "plain");
+			CngClass("main", "signal_w");
+			}
+		}				// end function go there ()
+
 	function msg_signal_o_off() {										// light the msg button, 10/23/12, 1/30/14
 		if (!lit_o["msg"]) {return; }									// not lit ignore
 		if (lit_r["msg"]) {
@@ -708,7 +747,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 
 	function do_hover (the_id) {
 		if (the_id == current_butt_id) {return true;}				// 8/21/10
-		if (lit[the_id]) {return true;}
+		if (lit[the_id] || lit_o[the_id]) {return true;}
 		CngClass(the_id, 'hover');
 		return true;
 		}
@@ -718,7 +757,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 		}
 	function do_plain (the_id) {				// 8/21/10
 		if (the_id == current_butt_id) {return true;}
-		if (lit[the_id] ) {return true;}
+		if (lit[the_id] || lit_o[the_id]) {return true;}
 		CngClass(the_id, 'plain');
 		return true;
 		}
@@ -881,7 +920,7 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			if(starting) {return;}						// 6/6/08
 			starting=true;
 			do_set_sess_exp();		// session expiration update
-			newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+			newwindow_sl=window.open("log.php", "sta_log",  "titlebar, location=0, resizable=1, height=400,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=100,screenX=100,screenY=100");
 			if (isNull(newwindow_sl)) {
 				alert ("Station log operation requires popups to be enabled. Please adjust your browser options.");
 				return;
@@ -1037,21 +1076,6 @@ function get_daynight() {
 	return $day_night;
 	}
 ?>
-	function do_day_night(which){
-		for (i=0;i<document.day_night_form.elements.length;i++) {
-			if ((document.day_night_form.elements[i].type=='radio') && (document.day_night_form.elements[i].name=='frm_daynight')) {
-				if (document.day_night_form.elements[i].value == which) {
-					document.day_night_form.elements[i].checked = true;
-					document.day_night_form.elements[i].disabled = true;
-					}
-				else {
-					document.day_night_form.elements[i].checked = false;
-					document.day_night_form.elements[i].disabled = false;
-					}
-				}				// end if (type=='radio')
-			}
-		}		// end function do_day_night()
-
 	function guest_hide_buttons(level) {
 		if((level == "Guest") || (level == 1)) {
 			window.guest = 1;
@@ -1076,7 +1100,7 @@ function get_daynight() {
 		if(the_level == "Unit") {
 			if($("buttons")) {$("buttons").style.display  = "none";}
 			}
-		}	
+		}
 
 	function top_init() {					// initialize display
 		CngClass('main', 'signal_w');		// light up 'sit' button - 8/21/10
@@ -1087,25 +1111,23 @@ function get_daynight() {
 		if (empty($_SESSION)) {						// pending login
 			$day_checked = $night_checked = "";
 			$day_disabled = $night_disabled= "DISABLED";
-			}
-		else {				// logged-in
+			} else {				// logged-in
 			if ($start_up_str == 'Day') {	//	7/16/13	Revised to fix error on initial startup
 				$day_checked = "CHECKED";			// allow only 'night'
 				$day_disabled = "DISABLED";
 				$night_checked = "";
 				$night_disabled = "";
-				}
-			else {
+				} else {
 				$day_checked = "";					//  allow only 'day'
 				$day_disabled = "";
 				$night_checked = "CHECKED";
 				$night_disabled = "DISABLED";
 				}
 ?>
-		var current_user_id = "<?php print $the_userid;?>";
+			var current_user_id = "<?php print $the_userid;?>";
 			guest_hide_buttons();
 			show_butts();	// navigation buttons
-			$("gout").style.display  = "inline";								// logout button
+			$("gout").style.display  = "inline-block";								// logout button
 			$("user_id").innerHTML  = "<?php print $the_userid;?>";		//	7/16/13
 			$("whom").innerHTML  = "<?php print $the_whom;?>";			// user name, 7/1613
 			$("level").innerHTML = "<?php print $the_level;?>";		//	7/16/13
@@ -1122,22 +1144,59 @@ function get_daynight() {
 	function get_new_colors() {										// 5/4/11 - a simple refresh
 		window.location.href = '<?php print basename(__FILE__);?>';
 		}
+		
+	var daynight = [];
+	daynight['day_but'] = true;
+	daynight['night_but'] = false;		
+	
+	function do_is_set(the_id) {
+		CngClass(the_id, 'isselected text')
+		return true;
+		}
+		
+	function do_not_set(the_id) {
+		CngClass(the_id, 'plain text')
+		return true;			
+		}
+
+	var selecteddaynight = "<?php print $day_night;?>";
+		
+	function set_daynight_but(val) {
+		if(val == "Day") {
+			do_is_set("day_but"); 
+			do_not_set("night_but"); 
+			daynight['day_but'] = true;
+			lit['day_but'] = true;
+			daynight['night_but'] = false;
+			lit['night_but'] = false;
+			selecteddaynight="Day";
+			} else {
+			do_is_set("night_but"); 
+			do_not_set("day_but"); 
+			daynight['day_but'] = false;
+			lit['day_but'] = false;
+			daynight['night_but'] = true;
+			lit['night_but'] = true;
+			selecteddaynight="Night";		
+			}
+		}
 
 	function set_day_night(which) {			// 5/2/11
 		sendRequest ('./ajax/do_day_night_swap.php', day_night_callback, "");
-			function day_night_callback(req) {
-				var the_ret_val = req.responseText;
-				try {
-					parent.frames["main"].get_new_colors();			// reloads main frame
-					}
-				catch (e) {
-					}
-				window.clearInterval(mu_interval);
-				window.clearInterval(nm_interval);	//	10/23/12
-				window.clearInterval(msgs_interval);	//	10/23/12
-				window.clearInterval(emsgs_interval);	//	10/23/12
-				get_new_colors();								// reloads top
-				}									// end function day_night_callback()
+		function day_night_callback(req) {
+			var the_ret_val = req.responseText;
+			try {
+				parent.frames["main"].get_new_colors();			// reloads main frame
+				}
+			catch (e) {
+				}
+			window.clearInterval(mu_interval);
+			window.clearInterval(nm_interval);	//	10/23/12
+			window.clearInterval(msgs_interval);	//	10/23/12
+			window.clearInterval(emsgs_interval);	//	10/23/12
+			get_new_colors();								// reloads top
+			set_daynight_but(which);
+			}									// end function day_night_callback()
 		}
 
 	function do_manual(filename){							// launches Tickets manual page -  5/27/11
@@ -1215,12 +1274,12 @@ function get_daynight() {
 ?>
 	</SCRIPT>
 </HEAD>
-<BODY ID="main_body" onLoad = "top_init();">	<!-- 3/15/11, 10/23/12 -->
+<BODY ID="main_body" onLoad = "top_init(); set_fontsizes(viewportwidth,'fullscreen');">
 <DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>
 <DIV ID = "div_assign_id" STYLE="display:none;"></DIV>
-<DIV ID = "div_action_id" STYLE="display:none;"></DIV> <!-- 2/25/12 -->
+<DIV ID = "div_action_id" STYLE="display:none;"></DIV>
 <DIV ID = "div_patient_id" STYLE="display:none;"></DIV>
-<DIV ID = "div_requests_id" STYLE="display:none;"></DIV>	<!-- 10/23/12 -->
+<DIV ID = "div_requests_id" STYLE="display:none;"></DIV>
 
 	<TABLE ALIGN='left'>
 		<TR VALIGN='top' style='height: 30px;'>
@@ -1228,141 +1287,141 @@ function get_daynight() {
 			<TD>
 <?php
 
-	$temp = get_variable('_version');				// 8/8/10
-	$version_ary = explode ( "-", $temp, 2);
-	if(get_variable('title_string')=="") {
-		$title_string = "<FONT SIZE='3'>ickets " . trim($version_ary[0]) . " on <B>" . get_variable('host') . "</B></FONT>";
-		} else {
-		$title_string = "<FONT SIZE='3'><B>" .get_variable('title_string') . "</B></FONT>";
-		}
+			$temp = get_variable('_version');				// 8/8/10
+			$version_ary = explode ( "-", $temp, 2);
+			if(get_variable('title_string')=="") {
+				$title_string = "<FONT SIZE=3>ickets " . trim($version_ary[0]) . " on <B>" . get_variable('host') . "</B></FONT>";
+				} else {
+				$title_string = "<FONT SIZE=3><B>" . get_variable('title_string') . "</B></FONT>";
+				}
 ?>
-				<SPAN ID="tagline" CLASS="titlebar_text"><?php print $title_string; ?></SPAN>	<!-- 3/15/11 -->
-				<SPAN ID="logged_in_txt" STYLE = 'margin-left: 8px;' CLASS="titlebar_text"><?php print get_text("Logged in"); ?>:</SPAN>	<!-- 3/15/11 -->
-				<SPAN ID="whom" CLASS="titlebar_text"><?php print NOT_STR ; ?></SPAN>
-				<SPAN ID="perms_txt" CLASS="titlebar_text">:<SPAN ID="level" CLASS="titlebar_text">na</SPAN>&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
+				<SPAN ID="tagline" CLASS="titlebar_text text_large"><?php print $title_string; ?></SPAN>
+				<SPAN ID="logged_in_txt" STYLE='margin-left: 8px;' CLASS="titlebar_text text"><?php print get_text("Logged in"); ?>:</SPAN>
+				<SPAN ID="whom" CLASS="titlebar_text text"><?php print NOT_STR;?></SPAN>
+				<SPAN ID="perms_txt" CLASS="titlebar_text text">:</SPAN><SPAN ID="level" CLASS="titlebar_text text">na</SPAN>&nbsp;&nbsp;&nbsp;
 <?php
-	$temp = get_variable('auto_poll');
+			$temp = get_variable('auto_poll');
 
-	$dir = "./emd_cards";
-	if (file_exists ($dir)) {
-		$dh  = opendir($dir);
-		while (false !== ($filename = readdir($dh))) {
-			if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
-			    $card_file = $filename;						// at least one pdf, use first encountered
-			    break;
-			    }
-			}
-		$card_addr=(!empty($card_file))? $dir . "/" . $filename  : "";
-		}
+			$dir = "./emd_cards";
+			if (file_exists ($dir)) {
+				$dh  = opendir($dir);
+				while (false !== ($filename = readdir($dh))) {
+					if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
+						$card_file = $filename;						// at least one pdf, use first encountered
+						break;
+						}
+					}
+				$card_addr=(!empty($card_file))? $dir . "/" . $filename  : "";
+				}
 ?>
-				<SPAN ID='user_id' STYLE="display:none" CLASS="titlebar_text">0</SPAN><!-- default value - 5/29/10, 3/15/11 -->
-				<SPAN ID='unit_id' STYLE="display:none" CLASS="titlebar_text"></SPAN><!-- unit that has just moved - 4/7/10, 3/15/11 -->
-				<SPAN ID='modules_txt' CLASS="titlebar_text"><?php print get_text("Module"); ?>: </SPAN><SPAN ID="script" CLASS="titlebar_text">login</FONT></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
-				<SPAN ID='daynight' CLASS="titlebar_text"  STYLE = 'display:none'>
-					<FORM NAME = 'day_night_form' STYLE = 'display: inline-block'>
-											<!-- set in  above -->
-					<INPUT TYPE="radio" NAME="frm_daynight" VALUE="Day" <?php print "{$day_disabled} {$day_checked}" ;?> 		onclick = ' set_day_night(this.value);'>Day&nbsp;&nbsp;&nbsp;&nbsp;
-					<INPUT TYPE="radio" NAME="frm_daynight" value="Night" <?php print "{$night_disabled}  {$night_checked}" ;?> onclick = 'set_day_night(this.value);' >Night&nbsp;&nbsp;&nbsp;&nbsp;
-					</FORM>
+				<SPAN ID='user_id' STYLE="display:none" CLASS="titlebar_text text">0</SPAN>
+				<SPAN ID='unit_id' STYLE="display:none" CLASS="titlebar_text text"></SPAN>
+				<SPAN ID='modules_txt' CLASS="titlebar_text text"><?php print get_text("Module"); ?>: </SPAN>
+				<SPAN ID="script" CLASS="titlebar_text text">login</SPAN>&nbsp;&nbsp;&nbsp;&nbsp;
+				<SPAN ID='time_txt' CLASS="titlebar_text text"><?php print get_text("Time"); ?>: </SPAN><b><SPAN ID="time_of_day" CLASS="titlebar_text text"></SPAN></b>&nbsp;&nbsp;&nbsp;&nbsp;
+				<SPAN ID='daynight' CLASS="titlebar_text text"  STYLE = 'display:none'>
+<?php
+					$butText = (($day_checked == "CHECKED") || ($night_checked == "" && $day_checked == "")) ? "Night" : "D";
+?>
+					<SPAN ID='day_but' CLASS='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='set_day_night("Day");'>Day</SPAN>
+					<SPAN ID='night_but' CLASS='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='set_day_night("Night");'>Night</SPAN>
+					<SPAN ID='gout' CLASS='plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="do_logout();" STYLE="display: none; float: none;"><?php print get_text("Logout"); ?></SPAN>
 				</SPAN>
-				<SPAN ID='time_txt' CLASS="titlebar_text"><?php print get_text("Time"); ?>: </SPAN><b><SPAN ID="time_of_day" CLASS="titlebar_text"></SPAN></b></FONT>&nbsp;&nbsp;&nbsp;&nbsp;	<!-- 3/15/11 -->
 <?php				// 5/26/11
-	$dir = "./manual";
-	if (file_exists ($dir)) {
-		$dh  = opendir($dir);
-		while (false !== ($filename = readdir($dh))) {
-			if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
-			    $manual_file = $filename;						// at least one pdf, use first encountered
-			    break;
-			    }
-			}
-		$manual_addr=(!empty($manual_file))? $dir . "/" . $filename  : "";
-		}
-	if (!(empty($manual_addr))) {
+				$dir = "./manual";
+				if (file_exists ($dir)) {
+					$dh  = opendir($dir);
+					while (false !== ($filename = readdir($dh))) {
+						if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
+							$manual_file = $filename;						// at least one pdf, use first encountered
+							break;
+							}
+						}
+					$manual_addr=(!empty($manual_file))? $dir . "/" . $filename  : "";
+					}
+				if (!(empty($manual_addr))) {
 ?>
 
-				<SPAN ID='manual' CLASS="titlebar_text" onClick = "do_manual('<?php echo $manual_addr;?>');" STYLE="display:none;"  ><U>Manual</U></SPAN>
+					<SPAN ID='manual' CLASS="titlebar_text text" onClick = "do_manual('<?php echo $manual_addr;?>');" STYLE="display:none;"  ><U>Manual</U></SPAN>
 <?php
-			}
+					}
 ?>
-				<SPAN ID = 'gout' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_logout()" STYLE="display:none; float: none;"><?php print get_text("Logout"); ?></SPAN> <!-- 7/28/10 -->
+				
 <?php
-		if ($_SERVER['HTTP_HOST'] == "127.0.0.1") { print "&nbsp;&nbsp;&nbsp;&nbsp;DB:&nbsp;{$mysql_db}&nbsp;&nbsp;&nbsp;&nbsp;";}
+				if ($_SERVER['HTTP_HOST'] == "127.0.0.1") { print "&nbsp;&nbsp;&nbsp;&nbsp;DB:&nbsp;{$mysql_db}&nbsp;&nbsp;&nbsp;&nbsp;";}
 ?>
 
-				<SPAN ID='msg_span' CLASS = 'message'></SPAN>
-				<DIV id='broadcastWrapper' class='plain' TITLE='Click to Open Websocket Server Monitor' style='display: none; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_wsm_scr();'>
-					<SPAN ID = 'usercount' CLASS="titlebar_text" style='float: right; font-weight: bold; padding-right: 20px;'></SPAN>
-					<SPAN ID = 'timeText' CLASS="titlebar_text" style='float: right; font-weight: bold; padding-right: 20px;'></SPAN>
+				<SPAN ID='msg_span' CLASS = 'message text_biggest'></SPAN>
+				<DIV id='broadcastWrapper' class='plain text' TITLE='Click to Open Websocket Server Monitor' style='display: none; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_wsm_scr();'>
+					<SPAN ID = 'usercount' CLASS="text" style='float: right; font-weight: bold; padding-right: 20px;'></SPAN>
+					<SPAN ID = 'timeText' CLASS="text" style='float: right; font-weight: bold; padding-right: 20px;'></SPAN>
 				</DIV>
-				<br />
+				<BR />
 			</TD>
 		</TR>
 		<TR>
 			<TD ID = 'buttons' STYLE = "display:none">
-			<SPAN ID = 'main'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'main'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick ="go_there('main.php', this.id);"><?php print get_text("Situation"); ?></SPAN>
 <!--		<SPAN ID = 'mi'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick ="go_there('maj_inc.php', this.id);">Maj Incs</SPAN> -->
-			<SPAN ID = 'add'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'add'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('add.php', this.id);"><?php print get_text("New"); ?></SPAN>
-			<SPAN ID = 'resp'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'resp'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('units.php', this.id);"><?php print get_text("Units"); ?></SPAN>
-			<SPAN ID = 'facy'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'facy'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('facilities.php', this.id);"><?php print get_text("Fac's"); ?></SPAN>
 <?php
 		if((!is_guest()) && ((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3))) {		//	10/23/12
 ?>
-			<SPAN ID = 'msg'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'msg'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false; do_mess();"><?php print get_text("Msgs"); ?></SPAN>
 <?php
 			}
 ?>
-			<SPAN ID = 'srch'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'srch'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('search.php', this.id);"><?php print get_text("Search"); ?></SPAN>
 <?php
 		if (!(is_guest())) {
 ?>
-			<SPAN ID = 'reps'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'reps'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('reports.php', this.id);"><?php print get_text("Reports"); ?></SPAN>
-			<SPAN ID = 'conf'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'conf'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('config.php', this.id);"><?php print get_text("Config"); ?></SPAN>
 <?php
 			}
 		if (!(is_guest()) && !(empty($card_addr))) {
 ?>
-			<SPAN ID = 'card'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'card'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting = false; do_emd_card('<?php print $card_addr; ?>')"><?php print get_text("SOP's"); ?></SPAN>	<!-- 7/3/10 -->
 <?php
 			}
 		if((!(is_guest())) && (!(intval(get_variable('chat_time')==0)))) {
 ?>
-			<SPAN ID = 'chat'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'chat'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false; do_chat();"><?php print get_text("Chat"); ?></SPAN>
 <?php
 			}
 ?>
-			<SPAN ID = 'help'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'help'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('help.php', this.id);"><?php print get_text("Help"); ?></SPAN>
 <?php
 		if (!(is_guest())) {
 ?>
-			<SPAN ID = 'log'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'log'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "do_sta_log()"><?php print get_text("Log"); ?></SPAN>
-			<SPAN ID = 'rc'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "go_there('rc_redirect.php', this.id)">Road Cond</SPAN>
 <?php
 			}
 ?>
-			<SPAN ID = 'full'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+		<SPAN ID = 'full'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false; do_full_scr()"><?php print get_text("Full scr"); ?></SPAN>
 <?php
 		if (!(is_guest())) {
 			$call_disp_attr = (get_variable('call_board')==1)?  "inline" : "none";
 ?>
-			<SPAN ID = 'links'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'links'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "light_butt('links'); parent.main.$('links').style.display='inline';"><?php print get_text("Links"); ?></SPAN>
-			<SPAN ID = 'call'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'call'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false;do_callBoard()" STYLE = 'display:<?php print $call_disp_attr; ?>'><?php print get_text("Board"); ?></SPAN> <!-- 5/12/10 -->
 <?php
 			}
@@ -1371,10 +1430,10 @@ function get_daynight() {
 <?php
 		if (!(is_guest())) {
 ?>
-			<SPAN ID = 'term' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'term' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('mobile.php', this.id);"><?php print get_text("Mobile"); ?></SPAN>	<!-- 7/27/10 -->
 <!-- ================== -->
-			<SPAN ID = 'reqs'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'reqs'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('./portal/requests.php', this.id);">Requests</SPAN>	<!-- 10/23/12 -->
 <?php
 			}
@@ -1382,14 +1441,14 @@ function get_daynight() {
 ?>
 
 <!-- ================== -->			<!-- 5/13/2013 -->
-			<SPAN ID = 'ics'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'ics'  CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false;window.open('ics213.php', 'ics213')"><?php print get_text("ICS-FORMS"); ?></SPAN> <!-- 5/13/2013 -->
 <?php
 			}		// end if (ics_top)
 
 		if ((!(is_guest())) && (intval ( get_variable ('broadcast')==1 )) &&  (intval ( get_variable ('internet')==1 )) ) { 		// 6/3/2013 -7/2/2013
 ?>
-			<SPAN ID = 'has_button' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+			<SPAN ID = 'has_button' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "do_broadcast();"><?php echo get_text("HAS"); ?></SPAN> <!-- 5/24/2013 -->
 <?php
 	}			// end if (broadcast && internet )
@@ -1435,13 +1494,14 @@ function get_daynight() {
 	$temp = explode (" ", $browser);
 	switch (trim($temp[0])) {
 	    case "firefox" :
-			print (empty($the_wav_file))? "\n": "\t\t<audio id=\"incident\" src=\"./sounds/{$the_wav_file}\" preload></audio>\n";
+			print (empty($the_wav_file))? "\n": "\t\t<audio id=\"incident_alert\" src=\"./sounds/{$the_wav_file}\" preload></audio>\n";
 			break;
 	    case "chrome" :
 	    case "safari" :
+		case "mozilla" :
 			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"incident_alert\" src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
 			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"chat_alert\" src=\"./sounds/chat-alert.mp3\" preload></audio>\n";
-			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"message_alert\" src=\"./sounds/chat-alert.mp3\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"message_alert\" src=\"./sounds/message-alert.mp3\" preload></audio>\n";
 			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"unit_alert\" src=\"./sounds/unit-alert.mp3\" preload></audio>\n";
 			break;
 	    default:
@@ -1459,5 +1519,8 @@ function get_daynight() {
 		require_once('./incs/socket2me.inc.php');		// 5/24/2013
 		}
 ?>
+<SCRIPT>
+set_daynight_but(selecteddaynight);
+</SCRIPT>
 </BODY>
 </HTML>

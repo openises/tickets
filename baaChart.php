@@ -101,7 +101,7 @@ class baaChart  {
     /********************************************************
     *                   public methods                      *
     ********************************************************/
-    function baaChart ($awidth, $aheight=0, $pic='', $clip=0, $picx=0, $picy=0) {
+	public function __construct($awidth, $aheight=0, $pic='', $clip=0, $picx=0, $picy=0){	//	Changed for php7 10/31/16
         $this->width = $awidth;
         $this->height = $aheight==0 ? floor($awidth / 1.616) : $aheight;
         $this->pic = $pic;

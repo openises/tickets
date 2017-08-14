@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 $failed = "failed";
 if(empty($_GET)) {
 	exit();
@@ -58,7 +60,7 @@ if(@unlink($file)) {
 
 if(directory_empty($thecolDir)) {
 	@rmdir($thecolDir);
-	$addition .= "Directory /_osm/tiles/" . $zoom . "/" . $col . " deleted";
+	$addition .= "Directory /_osm/tiles/" . $col . " deleted";
 	}
 	
 if(directory_empty($thezoomDir)) {

@@ -34,13 +34,16 @@
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Hide:</TD>
 					<TD VALIGN='baseline'><SPAN STYLE = 'margin-left:20px'><B>No &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "n"  CHECKED /></SPAN>
 						<SPAN STYLE = 'margin-left:20px'>Yes &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "y" /></TD></TR>
-		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Watch:</TD>	<!-- 3/13/2015  -->
+		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Exclude from Status Reset:</TD>
+					<TD VALIGN='baseline'><SPAN STYLE = 'margin-left:20px'><B>No &raquo;<INPUT TYPE='radio' NAME="frm_excl_from_reset" VALUE= "n"  CHECKED /></SPAN>
+						<SPAN STYLE = 'margin-left:20px'>Yes &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "y" /></TD></TR>
+		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Watch:</TD>	<!-- 3/13/2015  -->
 					<TD VALIGN='baseline'><SPAN STYLE = 'margin-left:20px'><B>No &raquo;<INPUT TYPE='radio' NAME="frm_watch" VALUE= "0"  CHECKED /></SPAN>
 						<SPAN STYLE = 'margin-left:20px'>Yes &raquo;<INPUT TYPE='radio' NAME="frm_watch" VALUE= "1" /></TD></TR>
-		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Group:</TD>
+		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Group:</TD>
 			<TD><INPUT  ID="ID4"  MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"></TD></TR>
-		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT ID="ID5" MAXLENGTH=11 SIZE=11 TYPE= "text" NAME="frm_sort" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/> </TD></TR>
-		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Background color:</TD>
+		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT ID="ID5" MAXLENGTH=11 SIZE=11 TYPE= "text" NAME="frm_sort" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/> </TD></TR>
+		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Background color:</TD>
 			<TD>
 				<SELECT name='dmy_status_id' STYLE='background-color:transparent; color:black;' ONCHANGE =  "set_bg_vals (this.form);this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
 				<OPTION VALUE=0 STYLE='background-color:transparent; 	color:black;' SELECTED>None</OPTION>
@@ -64,18 +67,19 @@
 				<OPTION VALUE=19 STYLE='background-color:navy; 			color:white;' >Navy</OPTION>
 				<OPTION VALUE=20 STYLE='background-color:blue; 			color:white;' >Blue</OPTION>
 				</SELECT>
-			</TD></TR>
-			<TR><TD COLSPAN="99" ALIGN="center">
-		<BR />
-		<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="reset"		VALUE="Reset"  onClick = "this.form.frm_bg_color.value=this.form.def_bg_color.value; this.form.frm_text_color.value=this.form.def_text_color.value; this.form.reset()"; />&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button" NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this);"/>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="99" ALIGN="center">
+				<SPAN id='can_but' CLASS='plain text' style='width: 80px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="Javascript: document.retform.func.value='r';document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+				<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="this.form.frm_bg_color.value=this.form.def_bg_color.value; this.form.frm_text_color.value=this.form.def_text_color.value; this.form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnCheckInput(document.c, this );"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
 		<INPUT TYPE="hidden" NAME="frm_bg_color"  	VALUE="transparent" />
 		<INPUT TYPE="hidden" NAME="frm_text_color"	VALUE="black" />
 		<INPUT TYPE="hidden" NAME="def_bg_color"  	VALUE="transparent" /> <!-- default values see reset button -->
 		<INPUT TYPE="hidden" NAME="def_text_color"	VALUE="black" />
-
-		</TD></TR>
 		</FORM>
 		</TD></TR>
 		</TABLE>

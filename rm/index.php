@@ -303,6 +303,7 @@ var secondary_timer;
 var tertiary_timer;	
 var track_timer = "<?php print get_variable('responder_mobile_tracking');?>";
 var in_local_bool = "<?php print get_variable('local_maps');?>";
+var dobroadcast = "<?php print get_variable('broadcast');?>";
 var daynight = "day";
 var tracksOn = false;
 var theLatLng = false;
@@ -316,7 +317,7 @@ var theIcon;
 window.onresize=function(){set_size()};
 
 window.onload = function() {
-	start_connection();
+	if(dobroadcast == 1) {start_connection();}
 	set_size();
 	screen1(); 
 	<?php print $logged_in_load;?>
@@ -801,6 +802,7 @@ function get_ticket_markers(user_id) {
 	sendRequest (url, ticketMarkers_cb, "");
 	function ticketMarkers_cb(req) {
 		var the_tickets=JSON.decode(req.responseText);
+		if(the_tickets[0] == 0) {return true;}
 		for(var key in the_tickets) {
 			var tkt_id = the_tickets[key][0];
 			var tkt_scope = the_tickets[key][1];
@@ -1038,6 +1040,7 @@ function get_conditions() {
 	sendRequest (url, info_cb, "");
 	function info_cb(req) {
 		var cond_response=JSON.decode(req.responseText);
+		if(cond_response[0] == 0) {return true;}
 		for(var key in cond_response) {
 			if(cond_response[key][0] == 100) {	
 				alert("error");
@@ -2009,7 +2012,7 @@ function initialise() {	//	4/24/14
 		theLatLng = new L.LatLng(the_lat, the_lng);
 		theAltitude = ((e.altitude) && (e.altitude != null)) ? e.altitude : 0;
 		theSpeed = (e.speed != null) ? e.speed : 0;		
-		latLng = new google.maps.LatLng(the_lat, the_lng);
+		latLng = L.LatLng(the_lat, the_lng);
 		if(!theTrack) {
 			theTrack = L.polyline(theLatLng, {color: 'black'}).addTo(map);
 			if(($('toggle_tracks_off_but').style.display == "none") && (!tracksOn)) {
@@ -2083,7 +2086,7 @@ function initialise() {	//	4/24/14
 
 	map.on('locationfound', onLocationFound);
 	map.on('locationerror', onLocationError);
-	get_geo();
+	document.addEventListener("deviceready", onDeviceReady, false);
 	}
 
 function do_geolocate(the_latlng, theLat, theLng) {
@@ -2206,7 +2209,17 @@ function zoomIn() {
 	
 function zoomOut() {
 	map.zoomOut();
-	$('app_title').style.display = "none";		
+	$('app_title').style.display = "none";
+	}
+
+function onDeviceReady() {
+	get_geo();
+	}
+
+window.onload = function () {
+	if(! window.device) {
+		onDeviceReady();
+		}
 	}
 </script>
 <div id='has_line' style='display: none;'>

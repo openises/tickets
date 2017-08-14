@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.12A Beta - 8/25/16";	
+$version = "3.20A Beta - 07/28/17";	
 
 /*
 10/1/08 added error reporting
@@ -1471,8 +1471,6 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 				ADD `beds_o` VARCHAR( 6 ) NULL DEFAULT NULL COMMENT 'Occupied' AFTER `beds_a` ,
 				ADD `beds_info` VARCHAR( 2048 ) NULL DEFAULT NULL COMMENT 'Information' AFTER `beds_o` ";
 			$result = mysql_query($query);
-			
-			update_msg_settings ('smsg_provider', '1');
 
 			if (!table_exists("replacetext")) {		//	10/23/12
 				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]replacetext` (
@@ -2306,7 +2304,130 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 			
 			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]replacetext` ADD `app_warnloc` ENUM( 'Yes','No' ) NOT NULL DEFAULT 'No' AFTER `app_priority`";		// 07/06/16
 			$result = mysql_query($query);
-			}		// end (!($version ==...) ==================================================			
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `cellphone` VARCHAR(128) NULL DEFAULT NULL AFTER `smsg_id`";
+			$result = mysql_query($query);
+			
+			do_msg_setting ('txtlocal_icserver','http://api.txtlocal.com/get_messages/');			
+			do_msg_setting ('txtlocal_hash','');
+			do_msg_setting ('txtlocal_username','');
+			do_msg_setting ('txtlocal_ogserver','http://api.txtlocal.com/send/');
+			do_msg_setting ('txtlocal_inserver','http://api.txtlocal.com/get_inboxes/');
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]un_status` ADD `excl_from_reset` ENUM('n','y') NOT NULL DEFAULT 'n' AFTER `hide`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]fac_status` ADD `status_available` INT(2) NOT NULL DEFAULT '0' AFTER `group`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]fac_status` ADD `status_unavailable` INT(2) NOT NULL DEFAULT '0' AFTER `status_available`";
+			$result = mysql_query($query);
+			
+			do_setting ('facility_auto_status','0');
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]major_incidents` ADD `mi_status` ENUM('Open','Closed') NOT NULL DEFAULT 'Open' AFTER `type`";
+			$result = mysql_query($query);
+			
+			if (!table_exists("replacetext_order")) {	
+				$query = "CREATE TABLE `$GLOBALS[mysql_prefix]replacetext_order` (
+					`id` int(11) NOT NULL auto_increment,
+					`displayorder` int(2) NOT NULL,
+					`info_name` varchar(24) NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+				$result = mysql_query($query);				
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]replacetext_order` (`id`, `displayorder`, `info_name`) VALUES
+					(1, 1, 'add_ticket'),
+					(2, 2, 'add_user'),
+					(3, 3, 'add_user_unit'),
+					(4, 4, 'add_time'),
+					(5, 5, 'add_date'),
+					(6, 6, 'app_summ'),
+					(7, 7, 'app_shortsumm'),
+					(8, 8, 'app_desc'),
+					(9, 9, 'app_phone'),
+					(10, 10, 'app_street'),
+					(11, 11, 'app_city'),
+					(12, 12, 'app_toaddress'),
+					(13, 13, 'app_dispnotes'),
+					(14, 14, 'app_nature'),
+					(15, 15, 'app_priority'),
+					(16, 16, 'app_warnings');";
+				$result = mysql_query($query);
+				}
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `groupby` VARCHAR(64) NULL DEFAULT 'Messages' AFTER `message`";
+			$result = mysql_query($query);
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `email` INT(2) NOT NULL DEFAULT '1' AFTER `groupby`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `smsresponder` INT(2) NOT NULL DEFAULT '0' AFTER `email`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `txtlocal` INT(2) NOT NULL DEFAULT '0' AFTER `smsresponder`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `mototrbo` INT(2) NOT NULL DEFAULT '0' AFTER `txtlocal`";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]std_msgs` ADD `smsbroadcast` INT(2) NOT NULL DEFAULT '0' AFTER `mototrbo`";
+			$result = mysql_query($query);
+			
+			do_msg_setting ('default_sms','0');
+			do_msg_setting ('append_timestamp','0');
+			
+			do_setting ('httpuser','');			// 05/03/17	For HTTP Auth Security
+			do_setting ('httppwd','');			// 05/03/17	For HTTP Auth Security
+			do_setting ('timezone', "America/New_York");	//	05/19/17 For installs where Timezone is not set on the server
+			do_setting ('followmee_username', '');	//	05/19/17 For Followme tracking
+			do_setting ('followmee_key', '');	//	05/19/17 For Followme tracking
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `traccar` TINYINT( 2 ) NOT NULL DEFAULT 0 COMMENT 'APRS tracking using TRACCAR' AFTER `xastir_tracker`;";	//	6/29/17
+			$result = mysql_query($query);
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `javaprssrvr` TINYINT( 2 ) NOT NULL DEFAULT 0 COMMENT 'APRS tracking using JAVAPRSSRVR' AFTER `traccar`;";	//	6/29/17
+			$result = mysql_query($query);
+
+			do_setting ('traccar_server','localhost');	// 6/30/17				
+			do_setting ('traccar_db','');				// 6/30/17	
+			do_setting ('traccar_dbuser','');			// 6/30/17				
+			do_setting ('traccar_dbpass','');			// 6/30/17
+
+			do_setting ('javaprssrvr_server','localhost');	// 6/30/17				
+			do_setting ('javaprssrvr_db','');				// 6/30/17	
+			do_setting ('javaprssrvr_dbuser','');			// 6/30/17				
+			do_setting ('javaprssrvr_dbpass','');			// 6/30/17			
+			
+			if (!table_exists("responder_rota")) {		//	Rota / Scheduling table for future use
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]responder_rota` (
+					`id` int(8) NOT NULL auto_increment,
+					`person_id` int(4) DEFAULT NULL,
+					`resp_id` int(4) NOT NULL,
+					`starttime` datetime DEFAULT NULL,
+					`endtime` datetime DEFAULT NULL,
+					`rota_status` int(2) DEFAULT NULL,
+					`recurring` int(2) DEFAULT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";	
+				$result = mysql_query($query);
+				}
+				
+			do_setting ('responder_list_sort','1,1');			// 7/14/17				
+			do_setting ('facility_list_sort','1,1');			// 7/14/17
+			do_setting ('listheader_height','20');			// 7/14/17	
+			}		// end (!($version ==...) ==================================================
+
+$osmdir = getcwd() . "/_osm";
+$tiledir = $osmdir . "/tiles";
+
+if(!is_dir($osmdir)) {
+	mkdir($osmdir, 0700, true);			
+	}
+	
+if(!is_dir($tiledir)) {
+	mkdir($tiledir, 0700, true);			
+	}
 
 //	check_ai("major_incidents");
 	
@@ -2439,7 +2560,7 @@ if((count_responders()== 0) && (get_variable('title_string') == "") && ((!empty(
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" /> <!-- 7/7/09 -->
 	<TITLE>Tickets <?php print $disp_version;?></TITLE>
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">

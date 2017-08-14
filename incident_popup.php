@@ -139,7 +139,7 @@ if($row['status'] == $GLOBALS['STATUS_CLOSED']) {
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -169,9 +169,10 @@ if($row['status'] == $GLOBALS['STATUS_CLOSED']) {
 				position: relative;	z-index: 101; cursor: normal; height: 250px;}
 		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
@@ -189,18 +190,22 @@ if($row['status'] == $GLOBALS['STATUS_CLOSED']) {
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/jss.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
@@ -265,22 +270,16 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, "popup");	
 	mapWidth = viewportwidth * .95;
 	mapHeight = viewportheight * .60;
-	outerwidth = viewportwidth * .99;
+	outerwidth = viewportwidth * .95;
 	outerheight = viewportheight * .95;
-	colwidth = outerwidth * .42;
-	colheight = outerheight * .95;
-	listHeight = viewportheight * .7;
-	listwidth = colwidth * .95
-	inner_listwidth = listwidth *.9;
-	celwidth = listwidth * .20;
-	res_celwidth = listwidth * .15;
-	fac_celwidth = listwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
+	$('theTable').style.width = outerwidth + "px";
 	map.invalidateSize();
 	mapCenter = map.getCenter();
 	mapZoom = map.getZoom();
@@ -330,92 +329,99 @@ $colors[$GLOBALS['SEVERITY_MEDIUM']] = "black";
 $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 
 ?>
-<BODY style='background-color:{$severities[$row['severity']]}; text-color: {$colors[$row['severity']]};'>
-<DIV id='outer'>
-	<DIV id='theTop'>
-		<TABLE ALIGN = 'center'><TR><TD>
+<BODY style="background-color:{$severities[$row['severity']]}; text-color: {$colors[$row['severity']]};">
+<DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
+	<DIV id='button_bar' class='but_container'>
+		<SPAN id='print_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'><SPAN STYLE='float: left;'><?php print get_text("Print");?></SPAN><IMG STYLE='float: right;' SRC='./images/print_small.png' BORDER=0></SPAN>
+		<SPAN id='close_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
+	</DIV>
+	<DIV id='leftcol' style='position: absolute; left: 2px; top: 70px; z-index: 3; text-align: center;'>
+		<TABLE ALIGN = 'center'>
+			<TR>
+				<TD class='text' style='text-align: left;'>
+					<TABLE ID='theTable' style='border: 1px outset #707070;'>
 <?php
 
 /* Creates statistics header and details of responding and en-route units 7/29/09 */
 
-			$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE ticket_id='$id'
-				AND `dispatched` IS NOT NULL 
-				AND `responding` IS NULL 
-				AND `on_scene` IS NULL 
-				AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
-			$num_rows_dispatched = mysql_num_rows($result_dispatched);
+					$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+						WHERE ticket_id='$id'
+						AND `dispatched` IS NOT NULL 
+						AND `responding` IS NULL 
+						AND `on_scene` IS NULL 
+						AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) GROUP BY `responder_id`");		// 6/25/10
+					$num_rows_dispatched = mysql_num_rows($result_dispatched);
 
-			$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE ticket_id='$id'
-				AND `responding` IS NOT NULL 
-				AND `on_scene` IS NULL 
-				AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
-			$num_rows_responding = mysql_num_rows($result_responding);
+					$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+						WHERE ticket_id='$id'
+						AND `responding` IS NOT NULL 
+						AND `on_scene` IS NULL 
+						AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) GROUP BY `responder_id`");		// 6/25/10
+					$num_rows_responding = mysql_num_rows($result_responding);
 
-			$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE ticket_id='$id' 
-				AND `on_scene` IS NOT NULL 
-				AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')	
-				");		// 6/25/10
-			$num_rows_on_scene = mysql_num_rows($result_on_scene);
-				
-			$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart, 
-				`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
-				`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
-				`r`.`id` AS `unit_id`,
-				`r`.`name` AS `unit_name` ,
-				`r`.`type` AS `unit_type` ,
-				`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
-				FROM `$GLOBALS[mysql_prefix]assigns` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
-					WHERE (`clear` IS NOT NULL OR DATE_FORMAT(`clear`,'%y') <> '00')
-					AND ticket_id='$id' ";
+					$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+						WHERE ticket_id='$id' 
+						AND `on_scene` IS NOT NULL 
+						AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') GROUP BY `responder_id`");		// 6/25/10
+					$num_rows_on_scene = mysql_num_rows($result_on_scene);
+						
+					$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart, 
+						`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
+						`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+						`r`.`id` AS `unit_id`,
+						`r`.`name` AS `unit_name` ,
+						`r`.`type` AS `unit_type` ,
+						`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
+						FROM `$GLOBALS[mysql_prefix]assigns` 
+						LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+						LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+							WHERE (`clear` IS NOT NULL OR DATE_FORMAT(`clear`,'%y') <> '00')
+							AND ticket_id='$id' GROUP BY `r`.`id` ";
 
-			$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-			$num_rows_cleared = mysql_affected_rows();
-			$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
+					$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+					$num_rows_cleared = mysql_affected_rows();
+					$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
 
-			echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;<SPAN STYLE='background-color:white; color:black;'>&nbsp;&nbsp;Elapsed: $elapsed&nbsp;</SPAN><BR />Status: {$ticket_status}</B><BR />";
-			$stats = "<B>Severity:&nbsp;{$ticket_severity}";
-
-			echo $stats;
-
-			echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
-			while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
-				$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-				$row = mysql_fetch_assoc($result);
-				echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-				}
-
-			echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
-			while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
-				$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-				$row = mysql_fetch_assoc($result);
-				echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-				}
-
-			echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
-			while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
-				$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-				$row = mysql_fetch_assoc($result);
-				echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-				}
-
-			echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
-			while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
-				echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
-				}
-
+					echo "<TR CLASS='even'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Ticket:</TD><TD CLASS='td_data text'>{$title}</TD></TR>";
+					echo "<TR CLASS='odd'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Opened:</TD><TD CLASS='td_data text'>{$ticket_start_str},&nbsp;&nbsp;<SPAN STYLE='background-color:white; color:black;'>&nbsp;&nbsp;Elapsed: $elapsed&nbsp;</SPAN></TD><TR>";
+					echo "<TR CLASS='even'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Status:</TD><TD CLASS='td_data text'>{$ticket_status}</TD></TR>";
+					echo "<TR CLASS='odd'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Severity:</TD><TD CLASS='td_data text'>{$ticket_severity}</TD></TR>";					
+					echo "<TR CLASS='even'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Units dispatched:</TD><TD CLASS='td_data text'>({$num_rows_dispatched})&nbsp;";
+					
+					while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
+						$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+						$row = mysql_fetch_assoc($result);
+						echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+						}
+					echo "</TD></TR>";
+					echo "<TR CLASS='odd'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Units responding:</TD><TD CLASS='td_data_wrap text'>({$num_rows_responding})&nbsp;";
+					while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
+						$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+						$row = mysql_fetch_assoc($result);
+						echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+						}
+					echo "</TD></TR>";
+					echo "<TR CLASS='even'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Units on scene:</TD><TD CLASS='td_data_wrap text'>({$num_rows_on_scene})&nbsp;";
+					while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
+						$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
+						$row = mysql_fetch_assoc($result);
+						echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+						}
+					echo "</TD></TR>";
+					echo "<TR CLASS='odd'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Units clear:</TD><TD CLASS='td_data_wrap text'>({$num_rows_cleared})&nbsp;";
+					while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
+						echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
+						}
+					echo "</TD></TR>";
+					echo "</TABLE>"
 ?>
-		</TD></TR></TABLE>
-	</DIV>
-	<DIV ID='map_canvas' style='border: 1px outset #707070; z-index: 1;'></DIV>
-	<DIV id='theBottom' style='text-align: center;'>
-	<CENTER><BR /><BR clear=all/><BR /><SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;<?php print $ticket_addr;?>&nbsp;</SPAN></CENTER>
-	<BR /><BR /><BR />
-	<CENTER><SPAN id='fin_button' class='plain' style='text-align: center; float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Finished</SPAN></CENTER>
+				</TD>
+			</TR>
+		</TABLE>
+	<BR />
+	<CENTER>
+	<DIV ID='map_canvas' style='position: relative; left: 2px; border: 1px outset #707070; z-index: 1;'></DIV>
+	<BR clear=all/><SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;<?php print $ticket_addr;?>&nbsp;</SPAN></CENTER>
 	</DIV>
 </DIV>
 <FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
@@ -462,7 +468,6 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 var map;
 var minimap;
 var latLng;
-var in_local_bool = "0";
 if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = window.innerWidth,
 	viewportheight = window.innerHeight
@@ -473,13 +478,21 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
+set_fontsizes(viewportwidth, "popup");	
 mapWidth = viewportwidth * .95;
 mapHeight = viewportheight * .60;
+outerwidth = viewportwidth * .95;
+outerheight = viewportheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
+$('theTable').style.width = outerwidth + "px";
 var theLocale = <?php print get_variable('locale');?>;
-init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, 1);
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+var useOSMAP = <?php print get_variable('use_osmap');?>;
+init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+map.setView([<?php print $lat;?>, <?php print $lng;?>], parseInt(initZoom));
 var bounds = map.getBounds();
 var zoom = map.getZoom();
 </SCRIPT>
@@ -534,7 +547,7 @@ var zoom = map.getZoom();
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_array($result));
 		$tip =  htmlentities ("{$row['contact']}/{$row['tick_street']}/{$row['tick_city']}/{$row['tick_state']}/{$row['phone']}/{$row['scope']}", ENT_QUOTES);		// tooltip string - 10/28/2012
-		$sched_flag = (($row['status'] == $GLOBALS['STATUS_SCHEDULED']) && ($func != 10)) ? "*" : "";		
+		$sched_flag = ($row['status'] == $GLOBALS['STATUS_SCHEDULED']) ? "*" : "";		
 		$type = shorten($row['type'], 18);
 		$severity = $row['severity'];
 		$status = $row['status'];
@@ -566,27 +579,27 @@ var zoom = map.getZoom();
 		
 			$tab_1 = "<TABLE width='280px' style='height: 260px;'><TR><TD><TABLE width='98%'>";
 			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>$strike" . htmlentities(shorten($row['scope'], 48), ENT_QUOTES)  . "$strikend</B></TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>As of:</TD><TD ALIGN='left'>" . format_date_2(($row['updated'])) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD class='td_label text'>As of:</TD><TD class='td_data text'>" . format_date_2(($row['updated'])) . "</TD></TR>";
 			if (is_date($row['booked_date'])){
-				$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left' >Booked Date:</TD><TD ALIGN='left'>" . format_date_2($row['booked_date']) . "</TD></TR>";	//10/27/09, 3/15/11
+				$tab_1 .= "<TR CLASS='odd'><TD class='td_label text'>Booked Date:</TD><TD class='td_data text'>" . format_date_2($row['booked_date']) . "</TD></TR>";	//10/27/09, 3/15/11
 				}
-			$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Reported by:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['contact'], 32)) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Phone:</TD><TD ALIGN='left'>" . format_phone($row['phone']) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Addr:</TD><TD ALIGN='left'>$address_street</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD class='td_label text'>Reported by:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['contact'], 32)) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD class='td_label text'>Phone:</TD><TD class='td_data text'>" . format_phone($row['phone']) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD class='td_label text'>Addr:</TD><TD class='td_data text'>$address_street</TD></TR>";
 	
-			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Status:</TD><TD ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
-			$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Receiving Facility:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
+			$tab_1 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>Status:</TD><TD class='td_data text'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
+			$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD class='td_label text'>Receiving Facility:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
 			$utm = get_variable('UTM');
 			if ($utm==1) {
 				$coords =  $row['lat'] . "," . $row['lng'];																	// 8/12/09
-				$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>UTM grid:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";
+				$tab_1 .= "<TR CLASS='even'><TD class='td_label text'>UTM grid:</TD><TD class='td_data text'>" . toUTM($coords) . "</TD></TR>";
 				}
 			$tab_1 .= "</TABLE></TD></TR>";
 			$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08	
 			$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
-			$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Description:</TD><TD ALIGN='left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
-			$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>" . get_text("911 Contacted") . "</TD><TD ALIGN='left'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
-			$tab_2 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>{$disposition}:</TD><TD ALIGN='left'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
+			$tab_2 .= "<TR CLASS='even'><TD class='td_label text'>Description:</TD><TD class='td_data text'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
+			$tab_2 .= "<TR CLASS='even'><TD class='td_label text'>" . get_text("911 Contacted") . "</TD><TD class='td_data text'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
+			$tab_2 .= "<TR CLASS='odd'><TD class='td_label text'>{$disposition}:</TD><TD class='td_data text'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
 			$tab_2 .= "<TR><TD COLSPAN=2 ALIGN='left'><DIV style='max-height: 200px; overflow-y: scroll;'>" . show_assigns(0, $the_id) . "</DIV></TD></TR>";
 
 			$tab_2 .= "</TABLE>";			// 11/6/08			
@@ -596,23 +609,23 @@ var zoom = map.getZoom();
 
 			switch($locale) { 
 				case "0":
-				$tab_3 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+				$tab_3 .= "<TR CLASS='odd'><TD class='td_label text'>USNG:</TD><TD class='td_data text'>" . LLtoUSNG($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 				break;
 			
 				case "1":
-				$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+				$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text'>OSGB:</TD><TD class='td_data text'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 				break;
 			
 				case "2":
 				$coords =  $row['lat'] . "," . $row['lng'];							// 8/12/09
-				$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+				$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text'>UTM:</TD><TD class='td_data text'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 				break;
 			
 				default:
 				print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 				}
-			$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $row['lat'] . "</TD></TR>";
-			$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $row['lng'] . "</TD></TR>";
+			$tab_3 .= "<TR><TD class='td_label text'>Lat</TD><TD class='td_data text'>" . $row['lat'] . "</TD></TR>";
+			$tab_3 .= "<TR><TD class='td_label text'>Lng</TD><TD class='td_data text'>" . $row['lng'] . "</TD></TR>";
 			$tab_3 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 			$tab_3 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 			$tab_3 .= "</TABLE></TD</TR></TABLE>";
@@ -764,23 +777,23 @@ var zoom = map.getZoom();
 
 				switch($locale) { 
 					case "0":
-					$tab_2 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+					$tab_2 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 					break;
 				
 					case "1":
-					$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+					$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 					break;
 				
 					case "2":
 					$coords =  $row_fac['lat'] . "," . $row_fac['lng'];							// 8/12/09
-					$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+					$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 					break;
 				
 					default:
 					print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 					}
-				$tab_2 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $row_fac['lat'] . "</TD></TR>";
-				$tab_2 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $row_fac['lng'] . "</TD></TR>";
+				$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lat</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_fac['lat'] . "</TD></TR>";
+				$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lng</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_fac['lng'] . "</TD></TR>";
 				$tab_2 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 				$tab_2 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 				$tab_2 .= "</TABLE></TD</TR></TABLE>";
@@ -863,23 +876,23 @@ var zoom = map.getZoom();
 					$locale = get_variable('locale');	// 08/03/09
 					switch($locale) { 
 						case "0":
-						$tab_2 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+						$tab_2 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 						break;
 					
 						case "1":
-						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 						break;
 					
 						case "2":
 						$coords =  $row_unit['lat'] . "," . $row_unit['lng'];							// 8/12/09
-						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 						break;
 					
 						default:
 						print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 						}
-					$tab_2 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $row_unit['lat'] . "</TD></TR>";
-					$tab_2 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $row_unit['lng'] . "</TD></TR>";
+					$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lat</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_unit['lat'] . "</TD></TR>";
+					$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lng</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_unit['lng'] . "</TD></TR>";
 					$tab_2 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 					$tab_2 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 					$tab_2 .= "</TABLE></TD</TR></TABLE>";
@@ -902,5 +915,35 @@ var zoom = map.getZoom();
 			}	//	end while row
 // =====================================End of functions to show responding units========================================================================
 ?>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");	
+mapWidth = viewportwidth * .95;
+mapHeight = viewportheight * .60;
+outerwidth = viewportwidth * .95;
+outerheight = viewportheight * .95;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+listHeight = viewportheight * .7;
+listwidth = colwidth * .95
+inner_listwidth = listwidth *.9;
+celwidth = listwidth * .20;
+res_celwidth = listwidth * .15;
+fac_celwidth = listwidth * .15;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+$('theTable').style.width = outerwidth + "px";
+</SCRIPT>
 </BODY>
 </HTML>

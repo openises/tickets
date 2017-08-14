@@ -61,7 +61,7 @@ unset($result_as);
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -89,9 +89,9 @@ unset($result_as);
 				position: relative;	z-index: 101; cursor: normal; height: 250px;}
 		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 <?php 
 
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
@@ -108,13 +108,17 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/osopenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
 window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
 var fmarkers = [];			//	Responder Markers array
@@ -160,7 +164,7 @@ function set_size() {
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
 	<DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>
 <?php

@@ -2,6 +2,8 @@
 /*
 
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 set_time_limit(0);
 require_once('../incs/functions.inc.php');

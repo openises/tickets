@@ -29,7 +29,7 @@ $tables = array();
   				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: yellow;font-weight: bolder;}		
 	.message { FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
 </style>
-<script src="./js/misc_function.js" type="text/javascript"></script>
+<script src="./js/misc_function.js" type="application/x-javascript"></script>
 <SCRIPT>
 	var the_table_arr = new Array();
 	var progressText = "";

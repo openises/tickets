@@ -12,8 +12,10 @@ require_once('./incs/functions.inc.php');
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>
 <?php
 if (empty($_POST)) {
 ?>
@@ -67,10 +69,10 @@ function validateForm (theForm) {
 </FORM>
 
 <TR VALIGN="middle" CLASS = 'even'>
-	<TD colspan = 2 align= "center"><br/>
-	<input type="button" value="Submit" onclick = "validateForm (document.mail_form)">
-	<input type="button" value="Reset" onclick = "document.mail_form.reset(); document.mail_form.frm_from.focus();"  STYLE = 'margin-left: 24px;'>
-	<input type="button" value="Cancel" STYLE = 'margin-left: 24px;' onClick = "self.close();">
+	<TD colspan = 2 align= "center">
+	<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validateForm (document.mail_form);'><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+	<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.mail_form.reset(); document.mail_form.frm_from.focus();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+	<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 	</TD>
 </TR>
 </TABLE>
@@ -100,11 +102,25 @@ else {
 		}
 ?>
 	<p align='center'>
-	<input type="button" value="Another?" onclick = "document.mail_form.submit();">
-	<INPUT TYPE='button' VALUE = "Finished" onClick = "self.close();" />	
+	<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.mail_form.submit();'><SPAN STYLE='float: left;'><?php print get_text("Another");?> ?</SPAN><IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
+	<SPAN ID='close_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 	</p>
 <?php
 	}		// end if/else if (empty($_POST)) 
 ?>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

@@ -30,14 +30,14 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<SCRIPT SRC="../js/misc_function.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT SRC="../js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 	<SCRIPT SRC='../js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
 <?php
 	if($key_str) {
 ?>
-		<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
+		<SCRIPT TYPE="application/x-javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
 <?php
 		}
 ?>

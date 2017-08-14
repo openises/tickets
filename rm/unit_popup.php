@@ -134,8 +134,8 @@ $lng = $row['lng'];
 	div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 	.text-labels {font-size: 2em; font-weight: 700;}
 </STYLE>
-<SCRIPT TYPE="text/javascript" SRC="../js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-<SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
+<SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+<SCRIPT TYPE="application/x-javascript" SRC="../js/domready.js"></script>
 <script src="../js/proj4js.js"></script>
 <script src="../js/proj4-compressed.js"></script>
 <script src="../js/leaflet/leaflet.js"></script>
@@ -153,13 +153,13 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<script type="text/javascript" src="../js/L.Graticule.js"></script>
-<script type="text/javascript" src="../js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="../js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="../js/leaflet-providers.js"></script>
 </HEAD>
 <?php
 $styleStr = "style='background-color: " . get_css("row_light", $day_night) . "; color: " . get_css("row_light_text", $day_night) . ";'";

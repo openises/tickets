@@ -103,16 +103,12 @@ if (!array_key_exists('func', $_POST)) {
 	}
 
 extract($_POST);
-
 $sortby = (!(isset($sortby)) || empty($sortby))?		 "id" : $sortby; 
 $sortdir = (!(isset($sortdir)) || empty($sortdir))?		 0 : $sortdir; 
-$sortby = (!(isset($index)) || empty($index))?			 "id" : $index; 
-
+//$sortby = (!(isset($index)) || empty($index))?			 "id" : $index; 
 function get_comments($the_table) {  				// returns array key=> name, value=> comment - 10/31/10
-//	global $mysql_prefix;
 	$_array = array();								// 12/15/10
 	$query = "SHOW FULL COLUMNS FROM `$GLOBALS[mysql_prefix]{$the_table}`;";
-//	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);		
 	$result = mysql_query($query) ;			// use $result for meta-information reference
 	if (!($result)) {return $_array;}		// 12/15/10
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// 
@@ -289,7 +285,7 @@ unset ($result2);
 <META HTTP-EQUIV="Expires" CONTENT="0"/>
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE"/>
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE"/>
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript"/>
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 <!--  onFocus="LL_showinfo(1)" onBlur="LL_hideallinfo()" -->
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
@@ -301,6 +297,7 @@ unset ($result2);
 <link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
 <STYLE>
 /* comment */
+	TABLE {font-size: 0.8vw;}
 A:hover 					{text-decoration: underline; color: red;}
 TH:hover 					{text-decoration: underline; color: red;}
 td.mylink:hover 			{background-color: rgb(255, 255, 255); }
@@ -313,12 +310,13 @@ input.text:focus, textarea:focus	{background-color: lightyellow; color:black;}
 </STYLE>
 <?php
 if (($func == "c")||($func == "u")) {			// not required for all functions
-//	print "<SCRIPT type=\"text/javascript\" src=\"RegExpValidate.js\"></SCRIPT>";
+//	print "<SCRIPT type=\"application/x-javascript\" src=\"RegExpValidate.js\"></SCRIPT>";
 	}
 ?>
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 <script src="./js/leaflet/leaflet.js"></script>
 <script src="./js/proj4js.js"></script>
 <script src="./js/proj4-compressed.js"></script>
@@ -336,19 +334,46 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-<script type="text/javascript" src="./js/L.Graticule.js"></script>
-<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="./js/osgb.js"></script>
-<script type="text/javascript" src="./js/geotools2.js"></script>
+<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="./js/usng.js"></script>
+<script type="application/x-javascript" src="./js/osgb.js"></script>
+<script type="application/x-javascript" src="./js/geotools2.js"></script>
 </HEAD>
 <SCRIPT>
+	var viewportwidth;
+	var viewportheight;
+	var outerwidth;
+	var outerheight;
+	var tablewidth;
+	window.onresize=function(){set_size()};
+</SCRIPT>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth, "fullscreen");
+		tablewidth = viewportwidth * .8;
+		$('listView').style.width = tablewidth + "px";
+		}
+
 	if(self.location.href==parent.location.href) {				// 1/6/2013
 		self.location.href = 'index.php';
 		}
@@ -600,15 +625,15 @@ function JSfnBrowserSniffer() {													//detects the capabilities of the br
 		document.r.func.value="r";
 		document.r.submit();
 		}				// end function JSfnToNav()
+		
+	var currsort = '<?php print $sortby;?>';
 
 	function JSfnToSort(thevalue) {				// column name
-		var currsort = '<?php print $sortby; ?>';
 		if (thevalue == currsort) 	{
 			document.r.sortdir.value = parseInt(document.r.sortdir.value);
 			document.r.sortdir.value++;
 			document.r.sortdir.value = (document.r.sortdir.value) % 2; // toggle direction
-			}
-		else {
+			} else {
 			document.r.sortdir.value = 0;
 			}
 		document.r.sortby.value=thevalue;
@@ -805,7 +830,13 @@ if(array_key_exists('srch_str', $_POST)) {		//	3/18/11
 
 <BODY onLoad = "do_onload()">	<!-- 9/21/08 -->
 <?php $the_table = (strlen($tablename)>0)? $tablename : "tbd"; ?>
-<CENTER><BR /><H3>Table: <SPAN STYLE="background: white">&nbsp;<?php print $the_table; ?>&nbsp;</SPAN> <BR /></H3></CENTER>
+<BR />
+<CENTER>
+	<SPAN CLASS='header text_biggest text_center' style='padding-top: 10px; padding-bottom: 10px; width: 100%; display: block;'>Table: 
+		<SPAN STYLE="background: white">&nbsp;<?php print $the_table; ?>&nbsp;</SPAN>
+	</SPAN>
+</CENTER>
+<BR />
 <FORM NAME="detail" METHOD="post" 	ACTION="<?php print $_SERVER['PHP_SELF'] ?>">
 <INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>	<!-- 7/11/10 -->
 <INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
@@ -839,11 +870,9 @@ switch ($func) {		// ================================== case "c" ===============
 
 	$the_custom = "./tables/c_" . $tablename . ".php";				// 12/26/08
 	if (file_exists ( $the_custom)){
-//		print __LINE__ . "<BR />";
 		require_once($the_custom) ;
 		$custom	= TRUE;
-		}
-	else {
+		} else {
 		if ($fill_from_last) {
 			$the_id = $indexname;													// for form pre-filling
 			$query = "SELECT * FROM `$mysql_prefix$tablename` WHERE `$the_id` = (SELECT MAX(`$the_id`) FROM `$mysql_prefix$tablename`)";
@@ -1025,10 +1054,9 @@ switch ($func) {		// ================================== case "c" ===============
 	?>
 		<TR><TD COLSPAN="99" ALIGN="center">
 		<BR />
-		<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="reset"		VALUE="Reset"/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button" NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this);"/> 
-		
+		<SPAN id='can_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="Javascript: document.retform.func.value='r';document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+		<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="reset(document.c);"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+		<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnCheckInput(document.c, this);"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 		</TD></TR>
 		</FORM>
 		</TD></TR></TABLE>
@@ -1040,20 +1068,18 @@ switch ($func) {		// ================================== case "c" ===============
 	case "r":																			// Retrieve/List =================
 	function fnLinkTDm ( $theclass, $theid, $thestring, $the_in_use) {		// returns <td ... /td>
 		global $tablename, $mysql_prefix, $disallow, $can_edit;				// 2/25/10, 3/19/11
-//		$disallow = (($tablename == $mysql_prefix . "un_status") && ($theid==1));
 
 		$the_js_func = ($disallow)? "JSfnDisallow" : "JSfnToFunc" ;		// 10/20/09
 
 		if ($the_in_use) {																	// 10/13/09
 			$on_click = "onclick = \"alert('DELETE disallowed for this item');\"";
-			}
-		else {
+			} else {
 			$on_click = "onclick = \"{$the_js_func}('d', '" . $theid. "');\"";
 			}
 	
 		$breakat = 24;
 		if (strlen($thestring) > $breakat) {
-			$return = " CLASS='" . $theclass . "' onmouseover =\"document.getElementById('b" . $theid . "').style.visibility='hidden' ; document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; document.getElementById('b" . $theid . "').style.visibility='visible' ; \" >\n";
+			$return = " CLASS='" . $theclass . " text text_center' onmouseover =\"document.getElementById('b" . $theid . "').style.visibility='hidden' ; document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; document.getElementById('b" . $theid . "').style.visibility='visible' ; \" >\n";
 			$return .= substr($thestring, 0, $breakat) . "<SPAN id=\"b" . $theid . "\" style=\"visibility:visible\">" ;
 			$return .= substr($thestring, $breakat) . "</SPAN><SPAN id=\"c" . $theid . "\" style=\"visibility: hidden\">\n";
 			$return .= ". . . <IMG SRC='markers/view.png' BORDER=0 TITLE = 'click to view this' onclick = \"JSfnToFunc('v', '" . $theid . "');\">";
@@ -1066,8 +1092,7 @@ switch ($func) {		// ================================== case "c" ===============
 				$return .= "<IMG SRC='markers/del.png' BORDER=0 TITLE = 'click to delete this' $on_click> | ";
 				}
 			$return .= "</SPAN>\n";
-			}
-		else {
+			} else {
 			$return = " CLASS='" . $theclass . "' onmouseover =\"document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; \" >\n";
 			$return .= "<SPAN id=\"c" . $theid . "\" style=\"visibility: hidden\">\n";
 			$return .= " <IMG SRC='markers/view.png' BORDER=0 TITLE = 'click to view this' onclick = \"JSfnToFunc('v', '" . $theid . "');\">";
@@ -1081,15 +1106,14 @@ switch ($func) {		// ================================== case "c" ===============
 				}
 			$return .= "</SPAN>\n";
 			}
-		return "<TD ALIGN='right'" . $return . $thestring ."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>\n";
+		return "<TD ALIGN='center'" . $return . $thestring ."</TD>\n";
 		}			// end function fnLinkTDm ()
 
 			
 
 	$dirs = array (" ASC ", " DESC ");
-	$arrowdir = array ("<IMG SRC='./markers/up.png'>", "<IMG SRC='./markers/down.png'>");			// sort direction arrows
+	$arrowdir = array ("<IMG SRC='./markers/up.png' HEIGHT='20px' style='vertical-align: text-top; float: right;'>", "<IMG SRC='./markers/down.png' HEIGHT='20px' style='vertical-align: text-top; float: right;'>");			// sort direction arrows
 	if (!isset($sortby)) {
-//	if ($sortby == "") {
 		$sortby = $indexname; $sortdir = 0;										// default sort by is in $indexname
 		}
 	if (!isset ($numrows))	{
@@ -1098,8 +1122,9 @@ switch ($func) {		// ================================== case "c" ===============
 		$numrows = mysql_affected_rows();
 		unset ($result);
 		$pageNum = 1;
+		} else {
+		$pageNum = $page; 
 		}
-	else {$pageNum = $page; }
 	$offset = ($pageNum - 1) * $rowsPerPage;									// calculate 0-based offset	from 1-based page no.
 	$special = "`id`, `name`, `office`, `street`, `city`, `state`, `zip`, `phone`, `status`, `contract`, `email`, `website`, `type`, `chief`, `chief_title`, `emergency_contact`, `emergency_phone`, `contact_via`, `contact_via_use`, `admin_contact`, `admin_phone`, `hours`, `contact_date`";
 	$select ="SELECT * FROM `$mysql_prefix$tablename` ";
@@ -1126,34 +1151,32 @@ switch ($func) {		// ================================== case "c" ===============
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$row_count = mysql_affected_rows();
 
-	print "<TABLE ALIGN=\"center\" BORDER=\"0\" CELLPADDING=\"2\">\n";
+	print "<TABLE ID='listView' ALIGN=\"center\" CELLPADDING=\"2\">\n";
 
 	if (mysql_affected_rows() == 0) {
 		$page="";
 		$message = (empty($where))? "Table '" . str_replace( "_", " ", ucfirst($tablename))  . "' is empty!" :
 		"No matches in '{$tablename}' search for '{$ary_srch[0]}' ";
-		print "<TR VALIGN='top'><TD ALIGN='center' CLASS='header'><BR /><BR /><BR />{$message}<BR /><BR /><BR /><BR /><BR /></TD></TR>";
-		}
-	else {				// we got rows
+		print "<TR VALIGN='top'><TD ALIGN='center' CLASS='header text'><BR /><BR /><BR />{$message}<BR /><BR /><BR /><BR /><BR /></TD></TR>";
+		} else {				// we got rows
 		$maxPage = ceil($numrows/$rowsPerPage);						// # pages => $maxPage
 		$prev = $next = $nav = '';									// initially empty
 		$plural = ($row_count==1)? "" : "s";
-		$head1 = "<TR CLASS = 'odd' valign='TOP'><TH COLSPAN=99 ALIGN='center'>{$row_count} record{$plural} "." <FONT SIZE=\"-2\">&nbsp;&nbsp;(mouseover ";
-		$head2 = "<TR CLASS = 'even' VALIGN='top'>";
+		$head1 = "<TR CLASS = 'odd' valign='TOP' style='width: 100%;'><TH CLASS='text' COLSPAN=99 ALIGN='center'>{$row_count} record{$plural} "." <FONT SIZE=\"-2\">&nbsp;&nbsp;(mouseover ";
+		$head2 = "<TR CLASS = 'plain_listheader text' VALIGN='top' style='width: 100%;'>";
 		$cols = mysql_num_fields($result);
+		$cols = ($cols > 17) ? 17 : $cols;
 		$subst = array();											// will hold substitution values for colnames like 'what_id'
 
 		for ($i = 0; $i < $cols; $i++) {							// write table header, etc.
 			if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
 				$query = "SELECT * FROM $mysql_prefix$temp";	 
-//				echo __line__ . $query . "<br>";
 				$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 				while ($temp_row = mysql_fetch_array($temp_result))  {											// each row/value => $substitutions array
 					if (($temp == 'user') && (array_key_exists('user', $temp_row))) {							// 12/12/11 - special case table user
 						$subst[fnSubTableExists(mysql_field_name($result, $i))][$temp_row[0]] = $temp_row['user'];		// assign value to column_name[index]  value
-						}
-					else {
+						} else {
 						$subst[fnSubTableExists(mysql_field_name($result, $i))][$temp_row[0]] = $temp_row[1];		// assign value to column_name[index]  value
 						}
 					}						// end while ($temp_row = ...
@@ -1161,9 +1184,8 @@ switch ($func) {		// ================================== case "c" ===============
 				}
 
 			$thecolumn = mysql_field_name($result, $links_col);		// column name
-			$arrow = (mysql_field_name($result, $i) == $sortby) ? $arrowdir[$sortdir] : "";
-			$theclass=($i==$links_col)? " CLASS='ul'": "";
-			$head2 .= "<TH VALIGN='top'$theclass onClick =\"JSfnToSort('" . mysql_field_name($result, $i) . "')\" >" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . " $arrow</TH>\n";
+			$arrow = (mysql_field_name($result, $i) == $sortby) ? $arrowdir[$sortdir] : "<IMG SRC='./images/blank.png' HEIGHT='20px' style='vertical-align: text-top; float: right;' />";
+			$head2 .= "<TH ID='header_" . $i . "' ALIGN='top' CLASS='plain_listheader text' onMouseover='do_hover_listheader(this.id);' onMouseout='do_plain_listheader(this.id);' onClick =\"JSfnToSort('" . mysql_field_name($result, $i) . "')\" >" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . "<BR />$arrow</TH>\n";
 			}
 		$head2 .= "</TR>\n";										// end table heading
 		print $head1 . "<U>" . str_replace( "_", " ", ucfirst($thecolumn)) . "</U> data for functions)</FONT></TH></TR>\n" . $head2;
@@ -1174,7 +1196,7 @@ switch ($func) {		// ================================== case "c" ===============
 			$lineno++;
 			$on_click = " onClick=JSfnToFunc('v',{$row[$indexname]});";		// 9/15/10
 			
-			print "<TR valign=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";			// alternate line bg colors
+			print "<TR valign=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\" style='width: 100%;'>";			// alternate line bg colors
 			for($i = 0; $i < $cols; $i++){													// each column
 						
 				$in_use = FALSE;				// test for index value in use - 10/13/09
@@ -1186,23 +1208,19 @@ switch ($func) {		// ================================== case "c" ===============
 				if (isset($row[$i])) {														// not empty
 
 					if (mysql_field_type($result, $i)=="time") { 
-						print "<TD CLASS='mylink' {$on_click} >" . substr($row[$i],0,5) . "</TD>\n";
-						}
-					else {
+						print "<TD CLASS='mylink text text-center' {$on_click} >" . substr($row[$i],0,5) . "</TD>\n";
+						} else {
 						if ($i == $links_col) {												// 'name' or 'descr' or default
 							print fnLinkTDm ( "mylink" , $row[0] , $row[$i] , $in_use );	// generate JS function link - assume id as column 0
-							}
-						else {
+							} else {
 							if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {	// check terminal 3 chars
 								$thearray = substr(mysql_field_name($result, $i), 0, $lgth-$id_lg);	// extract table name
 								if (isset($subst[$thearray][$row[$i]])) {					// defined?
 									$thedata = $subst[$thearray][$row[$i]];					// yes - pull substitution data	
-									}
-								else {
+									} else {
 									$thedata = $row[$i]; 
 									}								// no substitution data		
-								}
-							else { 									// not substitution or date
+								} else { 									// not substitution or date
 								$thedata = (strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
 							if(($tablename=="unit_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
@@ -1211,16 +1229,14 @@ switch ($func) {		// ================================== case "c" ===============
 							if(($tablename=="fac_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
 								$thedata = "<IMG SRC='./our_icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
 								}
-
 							$out_str = ((isset($ary_srch)) && (in_array ( mysql_field_name($result, $i),$ary_srch )))?
 								highlight($srch_term, $thedata): $thedata;
 								
-							print "<TD CLASS='mylink'{$on_click} >" . $out_str . "</TD>\n";			// type not "datetime" and name not "descript"
+							print "<TD CLASS='mylink text'{$on_click} >" . $out_str . "</TD>\n";			// type not "datetime" and name not "descript"
 							}		// end else ...
 						}	// end not "datetime"
-					}	// end if (isset() ...
-				else {							// not set
-					print "<TD CLASS='mylink' {$on_click}>" . $i . "</TD>\n";							// empty
+					} else {	// end if (isset() ...
+					print "<TD CLASS='mylink text' {$on_click}>" . $i . "</TD>\n";							// empty
 					}			//  not set
 				}			// end for($i = 1 ...
 			unset ($row);
@@ -1230,24 +1246,49 @@ switch ($func) {		// ================================== case "c" ===============
 		unset ($subst);
 
 		for($page = 1; $page <= $maxPage; $page++) {  				// set link to each page no.
-			$nav .= ($page == $pageNum)? " <font color='red'><b>$page</b></font>&nbsp;&nbsp;" : " <a href=\"Javascript: JSfnToNav($page)\">$page</a>&nbsp;&nbsp;" ;
+			$nav .= ($page == $pageNum)? 
+				"<SPAN id='page_" . $page . "' class='plain text text_red text_boldest' style='background-color: blue; color: white; float: none;'>$page</SPAN>" : 
+				"<SPAN id='page_" . $page . "' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav(\"" . $page . "\");'>$page</SPAN>" ;
 			}
-
 		if ($pageNum > 1) {											// create prior/next links
 			$page = $pageNum - 1;
-			$prev = "&nbsp;&nbsp;<a href='Javascript: JSfnToNav($page)'><IMG SRC='./markers/prev.png' height='16' width= '16' border='0'></a> ";
+			$prev = "<SPAN id='prev_but' CLASS='plain text text-center' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav($page);'><IMG style='vertical-align: middle;' SRC='./markers/prev.png' height='16' width= '16' border='0' /></SPAN>";
 			}
 
 		if ($pageNum < $maxPage) {									// if not on last
 			$page = $pageNum + 1;
-			$next = " <a href='Javascript: JSfnToNav($page)'><IMG SRC='./markers/next.png'  height='16' width= '16' border='0'></a>&nbsp;&nbsp;&nbsp;&nbsp;";	// ************
+			$next = "<SPAN id='next_but' CLASS='plain text text-center' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav($page);'><IMG style='vertical-align: middle;' SRC='./markers/next.png' height='16' width= '16' border='0' /></SPAN>";
 			}
-		print "<TR VALIGN=\"top\"><TD ALIGN=\"center\" COLSPAN=\"99\"><BR />" . $prev . $nav . $next . "</TD></TR>";			// print the navigation links
+		print "<TR VALIGN=\"top\" style='width: 100%;'><TD ALIGN=\"center\" COLSPAN=\"99\"><BR />" . $prev . $nav . $next . "</TD></TR>";			// print the navigation links
 		}					// end got rows
-	print "</TABLE><TABLE ALIGN=\"center\" >";
-	print "<TR><TD ALIGN=\"center\" COLSPAN=\"99\">";
 ?>
+	</TABLE>
+	<BR />
+	<BR />
 	<FORM NAME="r" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
+	<TABLE ALIGN="center" style='width: 100%;'>
+		<TR>
+			<TD ALIGN="center" COLSPAN="99">
+				<CENTER>
+				<BR />
+<?php
+				if (($row_count > 0) || (array_key_exists('srch_str', $_POST))) {
+?>
+					<SPAN ID='srch_but' CLASS='plain text' style='width: auto; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.func.value='s'; document.retform.submit();"><SPAN STYLE='float: left;'>Search <?php print ucfirst($tablename);?></SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/search_small.png' BORDER=0></SPAN>
+<?php
+					}
+?>	
+				<SPAN ID='prop_but' CLASS='plain text' style='width: auto; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.func.value='p'; document.retform.submit();"><SPAN STYLE='float: left;'><?php print ucfirst($tablename);?> Properties</SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/exclamation_small.png' BORDER=0></SPAN>
+<?php
+				if ($can_edit) {
+?>
+					<SPAN ID='add_entry_but' CLASS='plain text' style='width: auto; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.func.value='c'; document.retform.submit();"><SPAN STYLE='float: left;'>New <?php print str_replace( "_", " ", ucfirst($tablename));?> entry</SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
+<?php
+					}
+?>
+			</TD>
+		</TR>
+	</TABLE>
 	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename; ?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
 	<INPUT TYPE="hidden" NAME="page" 		VALUE="<?php print $page; ?>"/>
@@ -1256,30 +1297,7 @@ switch ($func) {		// ================================== case "c" ===============
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE="<?php print $sortdir; ?>"/>
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r">
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-	
-	<CENTER><BR>
-<?php
-//dump (__LINE__);
-//dump($row_count);
-if (($row_count > 0) || (array_key_exists('srch_str', $_POST))) {
-?>
-	<INPUT TYPE="button" VALUE="Search <?php print ucfirst($tablename); ?>" 								onClick = "Javascript: document.retform.func.value='s'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp; <!-- 9/12/10 -->
-<?php
-	}		// end if ($row_count > 0)
-?>	
-
-	<INPUT TYPE="button" VALUE="<?php print ucfirst($tablename); ?> Properties" 							onClick = "Javascript: document.retform.func.value='p'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-<?php				// 3/19/11
-		if ($can_edit) {
-?>		
-	<INPUT TYPE="button" VALUE="Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry" 	onclick= "this.form.func.value='c'; this.form.submit();" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<?php				// 3/19/11
-		}
-?>	
-	
-<!--	<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/> 1/28/09 -->
 	</FORM>
-	</TD></TR></TABLE>
 <?php
 	break;											// end Retrieve  ==================================
 
@@ -1295,21 +1313,18 @@ case "u":	// =======================================  Update 	==================
 		$types[$i] = $row['Type'];
 		$i++;
 		}
-//	dump($types);
 	
 	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";					// target row
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
 	$row = mysql_fetch_array($result);																		// $row has data
 	$lineno = 0;															// for alternating row colors
 	$thetemp = get_defined_constants(true);
-//	dump($thetemp);
 	$the_custom = "./tables/u_" . $tablename . ".php";				// 12/20/08
 	if (file_exists ( $the_custom)){
 //		print __LINE__ . "<BR />";
 		$custom	= TRUE;
 		require_once($the_custom) ;
-		}
-	else {
+		} else {
 ?>
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename ?>"/>
@@ -1327,8 +1342,6 @@ case "u":	// =======================================  Update 	==================
 <?php
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
 		$max = get_digs($types[$i]);											// max input lgth per types array - 6/21/10
-//		dump(__LINE__);
-//		dump($max);
 		if (substr(mysql_field_name($result, $i), 0, 1 ) =="_") {				// 12/20/08
 			switch (mysql_field_name($result, $i)) {
 				case "_by":
@@ -1341,14 +1354,11 @@ case "u":	// =======================================  Update 	==================
 					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__from\" VALUE=\"$value\" />\n";
 					break;
 				case "_on":
-//					$value = date("Y-m-d H:i:00");			// ex: 2008-12-18 01:46:18;
 					$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 11/8/09
 					print "\t\t<INPUT ID=\"fd$i\" type=\"hidden\" NAME=\"frm__on\" VALUE=\"$now\" />\n";
 					break;
 				}				// end switch ()
-			}				// end if (substr())
-
-		else {			
+			} else {					// end if (substr())
 			$disabled = ($arrayattr[$i][5] == "auto_increment")? " disabled" : "";
 			$lineno++;
 			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
@@ -1476,12 +1486,12 @@ case "u":	// =======================================  Update 	==================
 
 	unset ($result);
 ?>
-	<TR><TD COLSPAN="99" ALIGN="center">
-	<BR />
-	<INPUT TYPE="button" 	VALUE="Cancel" onClick = "Javascript: document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="reset" 	VALUE="Reset"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" 	NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this )"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" 	NAME="del_but" VALUE="Delete this entry" onclick="if (confirm('Please confirm DELETE action')) {this.form.func.value='d'; this.form.submit();}"/></TD></TR>
+	<TR><TD COLSPAN="99" ALIGN="center"><BR />
+	<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='Javascript: document.retform.submit();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+	<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.u.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+	<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnCheckInput(document.u, this );'><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+	<SPAN ID='del_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="if (confirm('Please confirm DELETE action')) {document.u.func.value='d'; document.u.submit();}"><SPAN STYLE='float: left;'><?php print get_text("Delete");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+	</TD></TR>
 	</FORM>
 	</TD></TR></TABLE>
 <?php
@@ -1617,26 +1627,34 @@ case "u":	// =======================================  Update 	==================
 		} 			// end for ($i = ... )
 	unset ($result);
 	if ($func == "pc") 	{
-		print "<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\"><BR /><INPUT TYPE=\"button\" VALUE=\"Another\" onclick=\"document.pc.func.value='c';document.pc.submit()\";/></TD></TR>";
+?>
+		<TR>
+			<TD COLSPAN="2" ALIGN="CENTER">
+			<BR />
+				<SPAN ID='another_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.pc.func.value='c';document.pc.submit();"><SPAN STYLE='float: left;'><?php print get_text("Another");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
+<?php
 		}
 	}			// end else ... 
 ?>
 
-	<TR><TD COLSPAN="2" ALIGN="center">
-	<BR />
-	<INPUT TYPE="button" VALUE="Continue" onClick = "Javascript: document.retform.submit();"/>
+	<TR>
+		<TD COLSPAN="2" ALIGN="center">
+		<BR />
+		<SPAN ID='cont_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='Javascript: document.retform.submit();'><SPAN STYLE='float: left;'><?php print get_text("Continue");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 <?php
-	$disallow = is_in_use($row['id']);				// 10/20/09	- 2/25/10 - 11/9/10
-	if ((!($disallow) && ($can_edit))) {			// 3/19/11
-?>	
-	<INPUT TYPE="button" STYLE = 'margin-left:10px' NAME="el_but" VALUE="Delete this entry" onclick="JSfnToFunc ('d', '<?php print $id ?>');"/>
+		$disallow = is_in_use($row['id']);				// 10/20/09	- 2/25/10 - 11/9/10
+		if ((!($disallow) && ($can_edit))) {			// 3/19/11
+?>
+			<SPAN ID='del_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc ('d', '<?php print $id ?>');"><SPAN STYLE='float: left;'><?php print get_text("Delete entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
 <?php
-		}
-	if ($can_edit) {							// 3/19/11
-?>	
-	<INPUT TYPE="button" STYLE = 'margin-left:10px' NAME="edl_but" VALUE="Edit this entry" onclick="JSfnToFunc('u', '<?php print $id ?>');"/></TD>
+			}
+		if ($can_edit) {							// 3/19/11
+?>
+			<SPAN ID='edit_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc('u', '<?php print $id ?>');"><SPAN STYLE='float: left;'><?php print get_text("Edit entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
 <?php
-		}
+			}
 ?>		
 	</TR>
 	</FORM>
@@ -1681,7 +1699,7 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>  <!-- retrieve -->
-	<INPUT TYPE="button" VALUE="Continue" onclick="this.form.submit();"/>
+	<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.pu.submit();"><SPAN STYLE='float: left;'><?php print get_text("Continue");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
 	
 	</FORM>
@@ -1705,66 +1723,42 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>  <!-- retrieve -->
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-	
-	<INPUT TYPE="button" VALUE="Continue" onclick="this.form.submit();"/>
+	<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.d.submit();"><SPAN STYLE='float: left;'><?php print get_text("Continue");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 	</FORM>
 <?php
 	break;		// end Delete ======================
 
 	case "p":	// Properties  ===========================
 	
-//	$query = "SHOW FULL FIELDS FROM $tablename";			// build array of field captions
-//	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename(__FILE__), __LINE__);
-//	$captions = array();
-//	while($row = stripslashes_deep(mysql_fetch_array($result))) {
-//		$captions [$row['Field']] = $row['Comment'];
-//		print "\tjs_captions['" .$row['Field'] . "']='" .$row['Comment'] . "';\n";
-//		}
-		
 ?>
 	<TABLE BORDER="0" ALIGN="center">
-	<TR><TD>&nbsp;</TD></TR>
-	<TR CLASS="even" VALIGN="top"><TD ALIGN="CENTER" COLSPAN = "2"><FONT SIZE="+1">&nbsp;&nbsp;Field Properties - Table  '<?php print str_replace( "_", " ", ucfirst($tablename)) ; ?>'&nbsp;&nbsp;</TD></TR></TABLE>
+		<TR>
+			<TD>&nbsp;</TD>
+		</TR>
+		<TR CLASS="even" VALIGN="top">
+			<TD ALIGN="CENTER" COLSPAN = "2"><FONT SIZE="+1">&nbsp;&nbsp;Field Properties - Table  '<?php print str_replace( "_", " ", ucfirst($tablename)) ; ?>'&nbsp;&nbsp;</TD>
+		</TR>
+	</TABLE><BR /><BR />
 <?php
-/* 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
-
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	print "\n<table align=\"CENTER\" BORDER=\"0\">";
-	print "<TR VALIGN=\"top\" CLASS = \"even\"><TH>Field name</TH><TH>Field Type</TH><TH>Default value</TH><TH>Max length</TH><TH>Not NULL</TH><TH>Numeric Field</TH><TH>BLOB</TH><TH>Primary Key</TH><TH>Unique Key</TH><TH>Mutliple Key</TH><TH>Unsigned</TH><TH>Zero-filled</TH></TR>";
-	$lineno = 0;
-
-	while ($property = mysql_fetch_field($result)) {
-		$lineno++;
-		print "\n<TR valign=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";			// alternate line bg colors
-		print "<TD><B>" . $property->name . "</B></TD>";
-		print "<TD>" . $property->type . "</TD>";
-		print "<TD>" . $property->def . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->max_length . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->not_null . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->numeric . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->blob . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->primary_key . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->unique_key . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->multiple_key . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->unsigned . "</TD>";
-		print "<TD ALIGN=\"center\">" . $property->zerofill . "</TD>";
-			
-		print "</TR>\n";
-		}
-	unset ($result);
-	print "<TR><TD COLSPAN=\"99\">&nbsp;</TD></TR></TABLE>"; */
-
 	$query ="SHOW FULL COLUMNS FROM `$mysql_prefix$tablename`";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	print "\n<table align=\"CENTER\" BORDER=\"0\">";
-	print "\n<TR><TH>Field</TH><TH>Type</TH><TH>Null</TH><TH>Key</TH><TH COLSPAN=3>Default/Extra</TH></TR>";
+	print "<table align='CENTER'>";
+	print "<TR class='plain_listheader'>";
+	print "<TH class='plain_listheader text text_left'>Field</TH>";
+	print "<TH class='plain_listheader text text_left'>Type</TH>";
+	print "<TH class='plain_listheader text text_left'>Collation</TH>";
+	print "<TH class='plain_listheader text text_left'>Null</TH>";
+	print "<TH class='plain_listheader text text_left'>Key</TH>";
+	print "<TH class='plain_listheader text text_left'>Default</TH>";
+	print "<TH class='plain_listheader text text_left'>Extra</TH>";
+	print "<TH class='plain_listheader text text_left' COLSPAN=99>Permissions</TH>";
+	print "</TR>";
 	$lineno = 0;
 	while ($row = mysql_fetch_array($result))  {									// write each data row
 		$lineno++;
-		print "\n<TR VALIGN=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\">";		// alternate line bg colors
-//		for($i = 0; $i < count($row)-1; $i++){										// each column
+		print "<TR VALIGN='top' CLASS='" . $evenodd [$lineno % 2] . "'>";		// alternate line bg colors
 		for($i = 0; $i < count($row); $i++){										// each column
-			if((isset($row[$i])) && (!is_null($row[$i]))) {print "<TD> $row[$i] </TD>";}
+			if((isset($row[$i])) && (!is_null($row[$i]))) {print "<TD class='text text_left' style='padding-right: 20px;'>$row[$i]</TD>";} else {print "<TD class='text text_left' style='padding-right: 20px;'>&nbsp;</TD>";}
 			}
 		print "</TR>";
 
@@ -1778,16 +1772,17 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
-	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>  <!-- retrieve -->
-	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-	
-	<CENTER><BR><INPUT TYPE="button" 	VALUE="Continue" onClick = "Javascript: document.retform.func.value='r'; document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-<?php				// 3/19/11
+	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>
+	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/>
+	<CENTER>
+	<BR>
+	<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.func.value='r'; document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Continue");?></SPAN>&nbsp;<IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+<?php
 		if ($can_edit) {
-?>	
-	<INPUT TYPE="button" VALUE="Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry" onclick= "this.form.func.value='c'; this.form.submit();" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+?>
+			<SPAN id='add_but' CLASS='plain text' style='float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.p.func.value='c'; document.p.submit();"><SPAN STYLE='float: left;'>Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry </SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
 <?php			
-		}
+			}
 ?>	
 	
 	</FORM>
@@ -1892,17 +1887,25 @@ function do_check(the_bool) {
 		}
 	}
 </SCRIPT>
-	<TR CLASS= "<?php print $evenodd[($i+1) % 2];?>"><TD COLSPAN=99 ALIGN='center'><B>
-	<SPAN ID="check_on"		STYLE = 'display:inline;text-decoration:underline;'	onclick = "$('check_on').style.display='none'; 	 $('check_off').style.display='inline'; do_check(true)">Check all</SPAN>
-	<SPAN ID="check_off"  	STYLE = 'display:none;text-decoration:underline;'	onclick = "$('check_on').style.display='inline'; $('check_off').style.display='none'; 	do_check(false)">Un-check all</SPAN>
-	</B><BR /><BR /></TD></TR>
-<?php
-	print "<TR CLASS='{$evenodd[($i) % 2]}'><TD COLSPAN=99 ALIGN='center'><BR />
-			<INPUT TYPE='button' VALUE='Reset' 	onClick = 'this.form.reset()' >
-			<INPUT TYPE='button' VALUE='Next' 	onClick = 'validate_s(this.form)' STYLE='margin-left:40PX;'>
-			<INPUT TYPE='button' VALUE='Cancel' onClick = \"Javascript: document.retform.func.value='r'; document.retform.submit();\" STYLE='margin-left:40PX;'>	
-		</TD></TR>";
-		
+	<TR CLASS= "<?php print $evenodd[($i+1) % 2];?>">
+		<TD COLSPAN=99 ALIGN='center'><BR />
+			<SPAN id='check_off' CLASS='plain text' style='width: 100px; display: none; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="$('check_on').style.display='inline-block'; $('check_off').style.display='none'; 	do_check(false);"><SPAN STYLE='float: left;'><?php print get_text("Uncheck All");?></SPAN><IMG STYLE='float: right;' SRC='./images/unselect_all_small.png' BORDER=0></SPAN>
+			<SPAN id='check_on' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="$('check_on').style.display='none'; 	 $('check_off').style.display='inline-block'; do_check(true);"><SPAN STYLE='float: left;'><?php print get_text("Check All");?></SPAN><IMG STYLE='float: right;' SRC='./images/select_all_small.png' BORDER=0></SPAN>
+			<BR />
+			<BR />
+		</TD>
+	</TR>
+	<TR CLASS='<?php print $evenodd[($i) % 2];?>'>
+		<TD COLSPAN=99 ALIGN='center'><BR />
+			<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.s.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+			<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate_s(document.s);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+			<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="Javascript: document.retform.func.value='r'; document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+		</TD>
+	</TR>
+	</TABLE>
+	</TABLE>
+	</FORM>
+	<?php	
 	print "</TABLE></TABLE></FORM>\n";		
 	break;			// end Search ======================
 
@@ -1989,19 +1992,38 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 if ($calstuff!="") {
 
 	print "<link rel='stylesheet' type='text/css' media='all' href='./js/calendar-win2k-cold-1.css' title='win2k-cold-1' />\n";
-	print "<script type='text/javascript' src='./js/calendar.js'></script>\n";
-	print "<script type='text/javascript' src='./js/calendar-en.js'></script>\n";
-	print "<script type='text/javascript' src='./js/calendar-setup.js\'></script>\n";		// 10/10/09
+	print "<script type='application/x-javascript' src='./js/calendar.js'></script>\n";
+	print "<script type='application/x-javascript' src='./js/calendar-en.js'></script>\n";
+	print "<script type='application/x-javascript' src='./js/calendar-setup.js\'></script>\n";		// 10/10/09
 
-	print "<SCRIPT TYPE=\"text/javascript\">\n";
+	print "<SCRIPT TYPE=\"application/x-javascript\">\n";
 	print $calstuff;
 	print "\n</SCRIPT>\n";
 	}
 ?>
 <CENTER>
 <FORM NAME = 'finform' METHOD = 'post' ACTION = 'config.php'>
-<INPUT TYPE='button' VALUE = 'Finished' onClick = 'this.form.submit()'>
 </FORM>
+<FORM NAME = 'mainform' METHOD = 'post' ACTION = 'main.php'>
+</FORM>
+<SPAN ID='fin_but' CLASS='plain text' style='width: 150px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.finform.submit();"><SPAN STYLE='float: left;'>Finished - To Config</SPAN><IMG STYLE='float: right;' SRC='./images/config_small.png' BORDER=0></SPAN>
+<SPAN ID='main_but' CLASS='plain text' style='width: 150px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.mainform.submit();"><SPAN STYLE='float: left;'>Finished - To Situation</SPAN><IMG STYLE='float: right;' SRC='./images/t_small.png' BORDER=0></SPAN>
+</CENTER>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "fullscreen");
+tablewidth = viewportwidth * .8;
+$('listView').style.width = tablewidth + "px";
+</SCRIPT>
 </BODY>
 </HTML>
 <?php

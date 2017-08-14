@@ -30,7 +30,7 @@ $evenodd = array ("even", "odd");
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <SCRIPT>
 	function do_popup(id) {
@@ -70,7 +70,8 @@ $evenodd = array ("even", "odd");
 	}				// end if/else
 ?>
 </FORM>
-<BUTTON onclick = 'window.close()' STYLE = 'margin-top:32px;'>Finished</BUTTON>
+<SPAN ID='fin_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+
 <script>
 //	document.write("<BUTTON onclick = 'javascript:history.go(-1)' STYLE = 'margin-top:32px;'>Back</BUTTON>");
 	</script>

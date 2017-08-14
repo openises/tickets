@@ -19,7 +19,7 @@ require_once($_SESSION['fip']);		//7/28/10
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <STYLE>
@@ -55,7 +55,8 @@ if (empty($_POST) || $display_form) {
 		$smsg_id = $row['smsg_id'];
 		}
 ?>
-
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
 	var direcs = "";
 	
@@ -122,48 +123,85 @@ if (empty($_POST) || $display_form) {
 	</SCRIPT>
 	</HEAD>
 
-	<BODY onLoad = "populateData();"><CENTER>		<!-- 1/12/09 -->
-	<CENTER><H3>Mail to Unit</H3>
+	<BODY onLoad = "populateData();"><CENTER>
+	<CENTER>
+	<H3>Mail to <?php print get_text('Unit');?></H3>
 	<P>
 		<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
 		<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
 		<TABLE BORDER = 0>
-		<TR CLASS= 'even'>
-			<TD ALIGN='right'>To:</TD><TD><INPUT NAME='frm_name' SIZE=32 VALUE = '<?php print $contact_name;?>'></TD>
+			<TR CLASS= 'even'>
+				<TD CLASS='td_label text text_right'>To:</TD>
+				<TD CLASS='td_data text'>
+					<INPUT NAME='frm_name' SIZE=32 VALUE = '<?php print $contact_name;?>'>
+				</TD>
 			</TR>
 
-		<TR CLASS= 'odd'>
-			<TD ALIGN='right'>Addr:</TD><TD><INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $contact_email;?>'></TD>
-		</TR>
+			<TR CLASS= 'odd'>
+				<TD CLASS='td_label text text_right'>Addr:</TD>
+				<TD CLASS='td_data text'>
+					<INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $contact_email;?>'>
+				</TD>
+			</TR>
 <?php
-		if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {	//	10/23/12
+			if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {
 ?>
-			<TR CLASS='even'><TD ALIGN='right'><?php get_provider_name(get_msg_variable('smsg_provider'));?> Addrs: </TD>
-				<TD><INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsg_id;?>'></TD>
-			</TR>	
-			<TR CLASS='even'><TD>Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: </TD> <!-- 10/23/12 -->
-				<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="0" <? if ($smsg_id != "" && $contact_email == "") print "checked";?>></TD> <!-- 10/23/12 -->
-			</TR>			
+				<TR CLASS='even'>
+					<TD CLASS='td_label text text_right'><?php get_provider_name(get_msg_variable('smsg_provider'));?> Addrs: </TD>
+					<TD CLASS='td_data text'>
+						<INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsg_id;?>' />
+					</TD>
+				</TR>	
+				<TR CLASS='even'>
+					<TD CLASS='td_label text text_right'>Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: </TD>
+					<TD CLASS='td_data text'>
 <?php
-			} else {
+						if(($smsg_id != "" && $contact_email == "") || ($smsg_id != "" && get_msg_variable('default_sms') == "1")) {
+							$checked = "CHECKED";
+							} else {
+							$checked = "";
+							}
+?>
+						<INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="0" <?php print $checked;?> />
+					</TD>
+				</TR>			
+<?php
+				}
+?>
+			<TR CLASS='even'>
+				<TD CLASS='td_label text text_right'>Subject: </TD>
+				<TD COLSPAN=2 CLASS='td_data text'>
+					<INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60 VALUE = '<?php print $mail_subject;?>'>
+				</TD>
+			</TR>
+			<TR CLASS='odd'>
+				<TD CLASS='td_label text text_right'>Message:</TD>
+				<TD COLSPAN=2 CLASS='td_data text'>
+					<TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA>
+				</TD>
+			</TR>
+			<TR CLASS='even'>
+				<TD ALIGN='center' COLSPAN=3>
+					<SPAN id='send_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate();"><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+					<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.mail_form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+					<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+				</TD>
+			</TR>
+		</TABLE>
+<?php
+		if((get_variable('use_messaging') != 2) && (get_variable('use_messaging') != 3)) {
 ?>
 			<INPUT TYPE="hidden" NAME = 'frm_smsgaddrs' VALUE=""/> <!-- 10/23/12 -->
 			<INPUT TYPE='hidden' NAME = 'frm_use_smsg' VALUE = "0"> <!-- 10/23/12 -->
 <?php
 			}	
 ?>
-		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=2><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60 VALUE = '<?php print $mail_subject;?>'></TD></TR>		<!-- 10/29/09 -->
-		<TR CLASS='odd'><TD ALIGN='right'>Message:</TD><TD COLSPAN=2> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
-		<TR CLASS='even'><TD ALIGN='center' COLSPAN=3><BR /><BR />
 		<INPUT TYPE="hidden" NAME="frm_direcs" VALUE="">
 		<INPUT TYPE="hidden" NAME="frm_u_id" VALUE='<?php print $unit_id;?>'>
 		<INPUT TYPE="hidden" NAME="frm_mail_subject" VALUE="">
-		<INPUT TYPE="hidden" NAME="frm_scope" VALUE="">		<!-- 10/29/09 -->
-			<INPUT TYPE='button' 	VALUE='Send' onClick = "validate()">&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='reset' 	VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();'><BR /><BR />
-			</TD></TR>
-			</TABLE></FORM>
+		<INPUT TYPE="hidden" NAME="frm_scope" VALUE="">
+		</FORM>
+		</CENTER>
 <?php
 		}		// end if (empty($_POST)) {
 
@@ -178,10 +216,32 @@ if (empty($_POST) || $display_form) {
 		$direcs = $_POST['frm_direcs'];
 		$theCount = do_send ($the_addrs, $the_sms, $mail_subject, $direcs, 0, $unit_id);	// ($to_str, $subject_str, $text_str )
 ?>
-	<BODY><CENTER>		
-	<CENTER><BR /><BR /><BR /><H3><?php print $theCount;?> Mail sent</H3>
-	<BR /><BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();'><BR /><BR />
+	<BODY>
+	<CENTER>
+	<BR />
+	<BR />
+	<BR />
+	<H3><?php print $theCount;?> Mail sent</H3>
+	<BR />
+	<BR />
+	<BR />
+	<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+	</CENTER>
 <?php
 	}		// end else
-?> </BODY>
+?> 
+</BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

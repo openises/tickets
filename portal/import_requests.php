@@ -27,12 +27,12 @@ function get_user_name($the_id) {
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT type="text/javascript">
+	<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
+	<SCRIPT type="application/x-javascript">
 	function CngClass(obj, the_class){
 		$(obj).className=the_class;
 		return true;

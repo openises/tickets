@@ -37,7 +37,7 @@ function get_user_name($the_id) {
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="./portal/css/stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 <!--[if lte IE 8]>
@@ -51,8 +51,8 @@ function get_user_name($the_id) {
 	#sched_flag { font-family: verdana, arial, helvetica, sans-serif; font-size: 12px; color: #0080FF; font-weight: bold; cursor: pointer; }
 	table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
 	table.cruises td {overflow: hidden; }
-	div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
-	div.scrollableContainer2 { position: relative; padding-top: 2em; }
+	div.scrollableContainer { position: relative; border: 1px solid #999; }
+	div.scrollableContainer2 { position: relative; }
 	div.scrollingArea { max-height: 200px; overflow: auto; overflow-x: hidden; }
 	div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 	table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
@@ -71,9 +71,10 @@ function get_user_name($the_id) {
 	.plain_listheader 	{color:#000000; border: 1px outset #606060;	text-decoration: none; background-color: #CECECE; font-weight: bolder; cursor: pointer;	}
 	.hover_listheader 	{color:#000000; border: 1px inset #606060; text-decoration: none; background-color: #DEE3E7; font-weight: bolder; cursor: pointer; }
 </STYLE>
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 <script src="./js/proj4js.js"></script>
 <script src="./js/proj4-compressed.js"></script>
 <script src="./js/leaflet/leaflet.js"></script>
@@ -91,24 +92,36 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-<script type="text/javascript" src="./js/L.Graticule.js"></script>
-<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="./js/osgb.js"></script>
-<script type="text/javascript" src="./js/geotools2.js"></script>
+<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="./js/usng.js"></script>
+<script type="application/x-javascript" src="./js/osgb.js"></script>
+<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
 <SCRIPT>
 var doDebug = true;
 var changed_showhide = true;
+var changed_windowsize = true;
 var changed_mkrshowhide = true;
 var randomnumber;
 var viewportwidth;
 var viewportheight;
+var mapWidth;
+var mapHeight;
+var listWidth;	
+var listHeight;
+var controlsWidth;
+var controlsHeight;
+var bannerwidth;
+var outerWidth;
 var the_string;
 var theClass = "background-color: #CECECE";
 var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;
@@ -129,9 +142,9 @@ var point;
 var theLat;
 var theLng;
 var showhide = 1;
-var summary_interval;
-var msgs_interval;
-var markers_interval;
+var summary_interval = null;
+var msgs_interval = null;
+var markers_interval = null;
 var c_interval = null;
 var iwMaxWidth = 500;
 var sortby = '`date`';
@@ -217,6 +230,7 @@ function do_plain_listheader (the_id) {				// 8/21/10
 window.onresize=function(){set_size()};
 
 function set_size() {
+	window.changed_windowsize = true;
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
 		viewportheight = window.innerHeight
@@ -227,14 +241,14 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	var mapWidth = viewportwidth * .5;
-	var mapHeight = viewportheight * .5;
-	var listWidth = viewportwidth * .96;	
-	var listHeight = viewportheight * .35;
-	var controlsWidth = viewportwidth * .35;
-	var controlsHeight = viewportheight * .4;
-	var bannerwidth = viewportwidth * .96;
-	var outerWidth = viewportwidth * .97;
+	mapWidth = viewportwidth * .5;
+	mapHeight = viewportheight * .5;
+	listWidth = viewportwidth * .96;	
+	listHeight = viewportheight * .35;
+	controlsWidth = viewportwidth * .35;
+	controlsHeight = viewportheight * .4;
+	bannerwidth = viewportwidth * .96;
+	outerWidth = viewportwidth * .97;
 	$('outer').style.width = outerWidth + "px";
 	$('outer').style.height = viewportheight + "px";
 	$('map_canvas').style.width = mapWidth + "px";
@@ -258,6 +272,8 @@ function set_size() {
 	$('the_bottom').style.width = bannerwidth + "px";	
 	mapCenter = map.getCenter();
 	mapZoom = map.getZoom();
+	set_fontsizes(viewportwidth, "fullscreen");
+	loadIt();
 	}
 	
 function loadIt() {
@@ -338,7 +354,7 @@ function do_hover (the_id) {
 	}
 
 function do_plain (the_id) {
-	CngClass(the_id, 'plain');
+	CngClass(the_id, 'plain text');
 	return true;
 	}
 	
@@ -358,7 +374,7 @@ function do_window(id) {				// 1/19/09
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		newwindow=window.open("./portal/request.php?id=" + id, "view_request",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=100, top=100, screenX=100, screenY=100");
+		newwindow=window.open("./portal/request.php?id=" + id, "view_request",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=50, top=50, screenX=50, screenY=50");
 		if (isNull(newwindow)) {
 			alert ("Portal operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -375,7 +391,7 @@ function do_viewwindow(id) {				// 1/19/09
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		viewwindow=window.open("./portal/request.php?func=view&id=" + id, "view_request",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=100, top=100, screenX=100, screenY=100");
+		viewwindow=window.open("./portal/request.php?func=view&id=" + id, "view_request",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=50, top=50, screenX=50, screenY=50");
 		if (isNull(viewwindow)) {
 			alert ("Portal operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -392,7 +408,7 @@ function do_newreq() {				// 1/19/09
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		newreq=window.open("./portal/new_request.php", "new_request",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=100, top=300, screenX=100, screenY=300");
+		newreq=window.open("./portal/new_request.php", "new_request",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=50, top=50, screenX=50, screenY=50");
 		if (isNull(newreq)) {
 			alert ("Portal operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -409,7 +425,7 @@ function do_passwdchange() {				// 1/19/09
 	if (logged_in()) {
 		if(starting) {return;}						// 6/6/08
 		starting=true;	
-		dopasswd=window.open("./portal/profile.php", "change_password",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=100, top=300, screenX=100, screenY=300");
+		dopasswd=window.open("./portal/profile.php", "change_password",  "titlebar, location=0, resizable=1, scrollbars=yes, height=700, width=600, status=0, toolbar=0, menubar=0, location=0, left=50, top=50, screenX=50, screenY=50");
 		if (isNull(dopasswd)) {
 			alert ("Portal operation requires popups to be enabled. Please adjust your browser options.");
 			return;
@@ -435,19 +451,19 @@ function requests_cb2(req) {
 		var outputtext = "<TABLE id='requeststable' class='cruises scrollable' style='width: " + window.listWidth + "px;'>";
 		outputtext += "<thead>";
 		outputtext += "<TR style='width: " + window.listWidth + "px;'>";
-		outputtext += "<TH id='r13' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Request ID');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'id', '<?php print get_text('ID');?>')\">" + window.r13_text + "</TH>";
-		outputtext += "<TH id='r1' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Patient');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'patient', '<?php print get_text('Patient');?>')\">" + window.r1_text + "</TH>";
-		outputtext += "<TH id='r2' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Phone');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'phone', '<?php print get_text('Phone');?>')\">" + window.r2_text + "</TH>";
-		outputtext += "<TH id='r3' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Contact');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'contact', '<?php print get_text('Contact');?>')\">" + window.r3_text + "</TH>";
-		outputtext += "<TH id='r4' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Scope');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'scope', '<?php print get_text('Scope');?>')\">" + window.r4_text + "</TH>";
-		outputtext += "<TH id='r5' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('To Address');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'toaddress', '<?php print get_text('To Address');?>')\">" + window.r5_text + "</TH>";
-		outputtext += "<TH id='r6' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Postcode');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'postcode', '<?php print get_text('Postcode');?>')\">" + window.r6_text + "</TH>";
-		outputtext += "<TH id='r7' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Request Date');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'requestdate', '<?php print get_text('Request Date');?>')\">" + window.r7_text + "</TH>";
-		outputtext += "<TH id='r8' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Pickup');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'pickup', '<?php print get_text('Pickup');?>')\">" + window.r8_text + "</TH>";
-		outputtext += "<TH id='r9' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Arrival');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'arrival', '<?php print get_text('Arrival');?>')\">" + window.r9_text + "</TH>";
-		outputtext += "<TH id='r10' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Status');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'status', '<?php print get_text('Status');?>')\">" + window.r10_text + "</TH>";
-		outputtext += "<TH id='r11' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Updated');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'updated', '<?php print get_text('Updated');?>')\">" + window.r11_text + "</TH>";
-		outputtext += "<TH id='r12' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('By');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'by', '<?php print get_text('By');?>')\">" + window.r12_text + "</TH>";
+		outputtext += "<TH id='r13' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Request ID');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'id', '<?php print get_text('ID');?>')\">" + window.r13_text + "</TH>";
+		outputtext += "<TH id='r1' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Patient');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'patient', '<?php print get_text('Patient');?>')\">" + window.r1_text + "</TH>";
+		outputtext += "<TH id='r2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Phone');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'phone', '<?php print get_text('Phone');?>')\">" + window.r2_text + "</TH>";
+		outputtext += "<TH id='r3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Contact');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'contact', '<?php print get_text('Contact');?>')\">" + window.r3_text + "</TH>";
+		outputtext += "<TH id='r4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Scope');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'scope', '<?php print get_text('Scope');?>')\">" + window.r4_text + "</TH>";
+		outputtext += "<TH id='r5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('To Address');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'toaddress', '<?php print get_text('To Address');?>')\">" + window.r5_text + "</TH>";
+		outputtext += "<TH id='r6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Postcode');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'postcode', '<?php print get_text('Postcode');?>')\">" + window.r6_text + "</TH>";
+		outputtext += "<TH id='r7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Request Date');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'requestdate', '<?php print get_text('Request Date');?>')\">" + window.r7_text + "</TH>";
+		outputtext += "<TH id='r8' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Pickup');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'pickup', '<?php print get_text('Pickup');?>')\">" + window.r8_text + "</TH>";
+		outputtext += "<TH id='r9' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Arrival');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'arrival', '<?php print get_text('Arrival');?>')\">" + window.r9_text + "</TH>";
+		outputtext += "<TH id='r10' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Status');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'status', '<?php print get_text('Status');?>')\">" + window.r10_text + "</TH>";
+		outputtext += "<TH id='r11' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Updated');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'updated', '<?php print get_text('Updated');?>')\">" + window.r11_text + "</TH>";
+		outputtext += "<TH id='r12' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('By');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'by', '<?php print get_text('By');?>')\">" + window.r12_text + "</TH>";
 		outputtext += "</TR>";
 		outputtext += "</thead>";
 		outputtext += "<tbody>";
@@ -460,19 +476,19 @@ function requests_cb2(req) {
 				var canedit = 0;
 				}
 				outputtext += "<TR class='list_row' title='" + the_requests[key][13] + "' style='" + the_requests[key][17] + ";' onClick='myClick(" + req_id + ", " + canedit + ", " + the_requests[key][35] + ");'>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(4, the_requests[key][0], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][2], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(16, the_requests[key][3], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][4], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][13], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][31], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][32], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][18], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][33], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][34], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(15, the_requests[key][16], "\u00a0") + "</TD>";	
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][25], "\u00a0") + "</TD>";
-				outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][26], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(4, the_requests[key][0], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][2], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(16, the_requests[key][3], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][4], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][13], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][31], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][32], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][18], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][33], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][34], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(15, the_requests[key][16], "\u00a0") + "</TD>";	
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][25], "\u00a0") + "</TD>";
+				outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][26], "\u00a0") + "</TD>";
 				outputtext += "</TR>";
 				if(window.requests_updated[req_id]) {
 					if(window.requests_updated[req_id] != the_requests[key][9]) {
@@ -504,19 +520,9 @@ function requests_cb2(req) {
 				var headerRow = reqtbl.rows[0];
 				var tableRow = reqtbl.rows[1];
 				if(tableRow) {
-					if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
-					if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
-					if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
-					if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
-					if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
-					if(tableRow.cells[5] && headerRow.cells[5]) {headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";}
-					if(tableRow.cells[6] && headerRow.cells[6]) {headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";}
-					if(tableRow.cells[7] && headerRow.cells[7]) {headerRow.cells[7].style.width = tableRow.cells[7].clientWidth - 4 + "px";}
-					if(tableRow.cells[8] && headerRow.cells[8]) {headerRow.cells[8].style.width = tableRow.cells[8].clientWidth - 4 + "px";}
-					if(tableRow.cells[9] && headerRow.cells[9]) {headerRow.cells[9].style.width = tableRow.cells[9].clientWidth - 4 + "px";}
-					if(tableRow.cells[10] && headerRow.cells[10]) {headerRow.cells[10].style.width = tableRow.cells[10].clientWidth - 4 + "px";}
-					if(tableRow.cells[11] && headerRow.cells[11]) {headerRow.cells[11].style.width = tableRow.cells[11].clientWidth - 4 + "px";}
-					if(tableRow.cells[12] && headerRow.cells[12]) {headerRow.cells[12].style.width = tableRow.cells[12].clientWidth - 4 + "px";}
+					for (var i = 0; i < tableRow.cells.length; i++) {
+						if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -2 + "px";}
+						}
 					} else {
 					var cellwidthBase = window.listWidth / 52;
 					reqcell1 = cellwidthBase * 2;
@@ -546,39 +552,17 @@ function requests_cb2(req) {
 					headerRow.cells[11].style.width = reqcell12 + "px";
 					headerRow.cells[12].style.width = reqcell13 + "px";					
 					}
-				if(getHeaderHeight(headerRow) >= 20) {
+				var headerMaxHeight = 40;
+				if(getHeaderHeight(headerRow) >= headerMaxHeight) {
 					var theRow = reqtbl.insertRow(1);
 					theRow.style.height = "20px";
-					var no1 = theRow.insertCell(0);
-					var no2 = theRow.insertCell(1);
-					var no3 = theRow.insertCell(2);
-					var no4 = theRow.insertCell(3);
-					var no5 = theRow.insertCell(4);
-					var no6 = theRow.insertCell(5);
-					var no7 = theRow.insertCell(6);
-					var no8 = theRow.insertCell(7);
-					var no9 = theRow.insertCell(8);
-					var no10 = theRow.insertCell(9);
-					var no11 = theRow.insertCell(10);
-					var no12 = theRow.insertCell(11);
-					var no13 = theRow.insertCell(12);
-					no1.innerHTML = " ";
-					no2.innerHTML = " ";
-					no3.innerHTML = " ";
-					no4.innerHTML = " ";
-					no5.innerHTML = " ";
-					no6.innerHTML = " ";
-					no7.innerHTML = " ";
-					no8.innerHTML = " ";
-					no9.innerHTML = " ";
-					no10.innerHTML = " ";
-					no11.innerHTML = " ";
-					no12.innerHTML = " ";
-					no13.innerHTML = " ";
+					for (var i = 0; i < tableRow.cells.length; i++) {
+						var theCell = theRow.insertCell(i);
+						theCell.innerHTML = " ";
+						}
 					}
 				}
 			window.reqFin = true;
-			requests_get();
 			},500);
 		}				// end function requests_cb2()
 	}
@@ -819,6 +803,7 @@ function do_req_sort(id, field, header_text) {
 	}
 	
 function requests_get() {
+	if (msgs_interval!=null) {return;}
 	msgs_interval = window.setInterval('do_requests_loop()', 60000);
 	}
 	
@@ -830,11 +815,12 @@ function do_requests_loop() {
 	}
 	
 function get_requests(sort, dir) {
-	if(msgs_interval && !changed_showhide) {
-		return;
+	if(msgs_interval) {
+		if(!changed_showhide && !changed_windowsize && !changed_req_sort) {
+			return;
+			}
 		}
 	changed_showhide = false;
-	msgs_interval = false;
 	window.clearInterval(msgs_interval);
 	window.reqFin = false;
 	var outputtext = "";
@@ -867,19 +853,19 @@ function get_requests(sort, dir) {
 			var outputtext = "<TABLE id='requeststable' class='cruises scrollable' style='width: " + window.listWidth + "px;'>";
 			outputtext += "<thead>";
 			outputtext += "<TR style='width: " + window.listWidth + "px;'>";
-			outputtext += "<TH id='r13' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('ID');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'id', '<?php print get_text('ID');?>')\">" + window.r13_text + "</TH>";
-			outputtext += "<TH id='r1' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Patient');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'patient', '<?php print get_text('Patient');?>')\">" + window.r1_text + "</TH>";
-			outputtext += "<TH id='r2' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Phone');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'phone', '<?php print get_text('Phone');?>')\">" + window.r2_text + "</TH>";
-			outputtext += "<TH id='r3' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Contact');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'contact', '<?php print get_text('Contact');?>')\">" + window.r3_text + "</TH>";
-			outputtext += "<TH id='r4' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Scope');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'scope', '<?php print get_text('Scope');?>')\">" + window.r4_text + "</TH>";
-			outputtext += "<TH id='r5' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('To Address');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'toaddress', '<?php print get_text('To Address');?>')\">" + window.r5_text + "</TH>";
-			outputtext += "<TH id='r6' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Postcode');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'postcode', '<?php print get_text('Postcode');?>')\">" + window.r6_text + "</TH>";
-			outputtext += "<TH id='r7' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Request Date');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'requestdate', '<?php print get_text('Request Date');?>')\">" + window.r7_text + "</TH>";
-			outputtext += "<TH id='r8' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Pickup');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'pickup', '<?php print get_text('Pickup');?>')\">" + window.r8_text + "</TH>";
-			outputtext += "<TH id='r9' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Arrival');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'arrival', '<?php print get_text('Arrival');?>')\">" + window.r9_text + "</TH>";
-			outputtext += "<TH id='r10' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Status');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'status', '<?php print get_text('Status');?>')\">" + window.r10_text + "</TH>";
-			outputtext += "<TH id='r11' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Updated');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'updated', '<?php print get_text('Updated');?>')\">" + window.r11_text + "</TH>";
-			outputtext += "<TH id='r12' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('By');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'by', '<?php print get_text('By');?>')\">" + window.r12_text + "</TH>";
+			outputtext += "<TH id='r13' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('ID');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'id', '<?php print get_text('ID');?>')\">" + window.r13_text + "</TH>";
+			outputtext += "<TH id='r1' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Patient');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'patient', '<?php print get_text('Patient');?>')\">" + window.r1_text + "</TH>";
+			outputtext += "<TH id='r2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Phone');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'phone', '<?php print get_text('Phone');?>')\">" + window.r2_text + "</TH>";
+			outputtext += "<TH id='r3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Contact');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'contact', '<?php print get_text('Contact');?>')\">" + window.r3_text + "</TH>";
+			outputtext += "<TH id='r4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Scope');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'scope', '<?php print get_text('Scope');?>')\">" + window.r4_text + "</TH>";
+			outputtext += "<TH id='r5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('To Address');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'toaddress', '<?php print get_text('To Address');?>')\">" + window.r5_text + "</TH>";
+			outputtext += "<TH id='r6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Postcode');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'postcode', '<?php print get_text('Postcode');?>')\">" + window.r6_text + "</TH>";
+			outputtext += "<TH id='r7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Request Date');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'requestdate', '<?php print get_text('Request Date');?>')\">" + window.r7_text + "</TH>";
+			outputtext += "<TH id='r8' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Pickup');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'pickup', '<?php print get_text('Pickup');?>')\">" + window.r8_text + "</TH>";
+			outputtext += "<TH id='r9' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Arrival');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'arrival', '<?php print get_text('Arrival');?>')\">" + window.r9_text + "</TH>";
+			outputtext += "<TH id='r10' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Status');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'status', '<?php print get_text('Status');?>')\">" + window.r10_text + "</TH>";
+			outputtext += "<TH id='r11' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Updated');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'updated', '<?php print get_text('Updated');?>')\">" + window.r11_text + "</TH>";
+			outputtext += "<TH id='r12' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('By');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_req_sort(this.id, 'by', '<?php print get_text('By');?>')\">" + window.r12_text + "</TH>";
 			outputtext += "</TR>";
 			outputtext += "</thead>";
 			outputtext += "<tbody>";
@@ -892,19 +878,19 @@ function get_requests(sort, dir) {
 					var canedit = 0;
 					}
 					outputtext += "<TR class='list_row' title='" + the_requests[key][13] + "' style='" + the_requests[key][17] + ";' onClick='myClick(" + req_id + ", " + canedit + ", " + the_requests[key][35] + ");'>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(4, the_requests[key][0], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][2], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(16, the_requests[key][3], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][4], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][13], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][31], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][32], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][18], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][33], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][34], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(15, the_requests[key][16], "\u00a0") + "</TD>";	
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][25], "\u00a0") + "</TD>";
-					outputtext += "<TD class='list_entry' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][26], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(4, the_requests[key][0], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][2], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(16, the_requests[key][3], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(20, the_requests[key][4], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][13], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(25, the_requests[key][31], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][32], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][18], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][33], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(8, the_requests[key][34], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(15, the_requests[key][16], "\u00a0") + "</TD>";	
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][25], "\u00a0") + "</TD>";
+					outputtext += "<TD class='list_entry text bolder solidborder' style='" + the_requests[key][17] + ";'>" + pad(12, the_requests[key][26], "\u00a0") + "</TD>";
 					outputtext += "</TR>";
 					if(window.requests_updated[req_id]) {
 						if(window.requests_updated[req_id] != the_requests[key][9]) {
@@ -922,7 +908,7 @@ function get_requests(sort, dir) {
 			outputtext += "</tbody>";
 			outputtext += "</TABLE>";
 			setTimeout(function() {	
-				if(window.req_last_display == 0) {
+				if(window.req_last_display == 0 || window.changed_windowsize == true) {
 					$('all_requests').innerHTML = outputtext;
 					window.latest_request = request_number;
 					} else {
@@ -936,19 +922,9 @@ function get_requests(sort, dir) {
 					var headerRow = reqtbl.rows[0];
 					var tableRow = reqtbl.rows[1];
 					if(tableRow) {
-						if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
-						if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
-						if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
-						if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
-						if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
-						if(tableRow.cells[5] && headerRow.cells[5]) {headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";}
-						if(tableRow.cells[6] && headerRow.cells[6]) {headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";}
-						if(tableRow.cells[7] && headerRow.cells[7]) {headerRow.cells[7].style.width = tableRow.cells[7].clientWidth - 4 + "px";}
-						if(tableRow.cells[8] && headerRow.cells[8]) {headerRow.cells[8].style.width = tableRow.cells[8].clientWidth - 4 + "px";}
-						if(tableRow.cells[9] && headerRow.cells[9]) {headerRow.cells[9].style.width = tableRow.cells[9].clientWidth - 4 + "px";}
-						if(tableRow.cells[10] && headerRow.cells[10]) {headerRow.cells[10].style.width = tableRow.cells[10].clientWidth - 4 + "px";}
-						if(tableRow.cells[11] && headerRow.cells[11]) {headerRow.cells[11].style.width = tableRow.cells[11].clientWidth - 4 + "px";}
-						if(tableRow.cells[12] && headerRow.cells[12]) {headerRow.cells[12].style.width = tableRow.cells[12].clientWidth - 4 + "px";}
+						for (var i = 0; i < tableRow.cells.length; i++) {
+							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -2 + "px";}
+							}
 						} else {
 						var cellwidthBase = window.listWidth / 52;
 						reqcell1 = cellwidthBase * 2;
@@ -975,41 +951,21 @@ function get_requests(sort, dir) {
 						headerRow.cells[8].style.width = reqcell9 + "px";
 						headerRow.cells[9].style.width = reqcell10 + "px";						
 						headerRow.cells[10].style.width = reqcell11 + "px";
-						headerRow.cells[11].style.width = reqcell12 + "px";	
-						headerRow.cells[12].style.width = reqcell13 + "px";	
+						headerRow.cells[11].style.width = reqcell12 + "px";
+						headerRow.cells[12].style.width = reqcell13 + "px";					
 						}
-					if(getHeaderHeight(headerRow) >= 20) {
+					var headerMaxHeight = 40;
+					if(getHeaderHeight(headerRow) >= headerMaxHeight) {
 						var theRow = reqtbl.insertRow(1);
 						theRow.style.height = "20px";
-						var no1 = theRow.insertCell(0);
-						var no2 = theRow.insertCell(1);
-						var no3 = theRow.insertCell(2);
-						var no4 = theRow.insertCell(3);
-						var no5 = theRow.insertCell(4);
-						var no6 = theRow.insertCell(5);
-						var no7 = theRow.insertCell(6);
-						var no8 = theRow.insertCell(7);
-						var no9 = theRow.insertCell(8);
-						var no10 = theRow.insertCell(9);
-						var no11 = theRow.insertCell(10);
-						var no12 = theRow.insertCell(11);
-						var no13 = theRow.insertCell(12);
-						no1.innerHTML = " ";
-						no2.innerHTML = " ";
-						no3.innerHTML = " ";
-						no4.innerHTML = " ";
-						no5.innerHTML = " ";
-						no6.innerHTML = " ";
-						no7.innerHTML = " ";
-						no8.innerHTML = " ";
-						no9.innerHTML = " ";
-						no10.innerHTML = " ";
-						no11.innerHTML = " ";
-						no12.innerHTML = " ";
-						no13.innerHTML = " ";
+						for (var i = 0; i < tableRow.cells.length; i++) {
+							var theCell = theRow.insertCell(i);
+							theCell.innerHTML = " ";
+							}
 						}
 					}
 				window.reqFin = true;
+				changed_windowsize = false;
 				requests_get();
 				},500);
 			}
@@ -1029,19 +985,9 @@ function requestlist_setwidths() {
 		}
 	if(i != reqtbl.rows.length) {
 		var tableRow = reqtbl.rows[viewableRow];
-		if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
-		if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
-		if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
-		if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
-		if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
-		if(tableRow.cells[5] && headerRow.cells[5]) {headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";}
-		if(tableRow.cells[6] && headerRow.cells[6]) {headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";}
-		if(tableRow.cells[7] && headerRow.cells[7]) {headerRow.cells[7].style.width = tableRow.cells[7].clientWidth - 4 + "px";}
-		if(tableRow.cells[8] && headerRow.cells[8]) {headerRow.cells[8].style.width = tableRow.cells[8].clientWidth - 4 + "px";}
-		if(tableRow.cells[9] && headerRow.cells[9]) {headerRow.cells[9].style.width = tableRow.cells[9].clientWidth - 4 + "px";}
-		if(tableRow.cells[10] && headerRow.cells[10]) {headerRow.cells[10].style.width = tableRow.cells[10].clientWidth - 4 + "px";}
-		if(tableRow.cells[11] && headerRow.cells[11]) {headerRow.cells[11].style.width = tableRow.cells[11].clientWidth - 4 + "px";}
-		if(tableRow.cells[12] && headerRow.cells[12]) {headerRow.cells[12].style.width = tableRow.cells[12].clientWidth - 4 + "px";}
+		for (var i = 0; i < tableRow.cells.length; i++) {
+			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -2 + "px";}
+			}
 		} else {
 		var cellwidthBase = window.listWidth / 48;
 		reqcell1 = cellwidthBase * 2;
@@ -1071,35 +1017,14 @@ function requestlist_setwidths() {
 		headerRow.cells[11].style.width = reqcell12 + "px";	
 		headerRow.cells[12].style.width = reqcell13 + "px";	
 		}
-	if(getHeaderHeight(headerRow) >= 20) {
+	var headerMaxHeight = 40;
+	if(getHeaderHeight(headerRow) >= headerMaxHeight) {
 		var theRow = reqtbl.insertRow(1);
 		theRow.style.height = "20px";
-		var no1 = theRow.insertCell(0);
-		var no2 = theRow.insertCell(1);
-		var no3 = theRow.insertCell(2);
-		var no4 = theRow.insertCell(3);
-		var no5 = theRow.insertCell(4);
-		var no6 = theRow.insertCell(5);
-		var no7 = theRow.insertCell(6);
-		var no8 = theRow.insertCell(7);
-		var no9 = theRow.insertCell(8);
-		var no10 = theRow.insertCell(9);
-		var no11 = theRow.insertCell(10);
-		var no12 = theRow.insertCell(11);
-		var no13 = theRow.insertCell(12);
-		no1.innerHTML = " ";
-		no2.innerHTML = " ";
-		no3.innerHTML = " ";
-		no4.innerHTML = " ";
-		no5.innerHTML = " ";
-		no6.innerHTML = " ";
-		no7.innerHTML = " ";
-		no8.innerHTML = " ";
-		no9.innerHTML = " ";
-		no10.innerHTML = " ";
-		no11.innerHTML = " ";
-		no12.innerHTML = " ";
-		no13.innerHTML = " ";
+		for (var i = 0; i < tableRow.cells.length; i++) {
+			var theCell = theRow.insertCell(i);
+			theCell.innerHTML = " ";
+			}
 		}
 	}	
 	
@@ -1129,17 +1054,17 @@ function markers_cb2(req) {
 			var theStatus = the_markers[1][key].status;
 			var info_t = "<DIV class='infowindow-content'><CENTER><SPAN style='text-align: center; width: 100%; font-size: 1.5em; font-weight: bold;'><?php print get_text('Request');?> " + the_assoc_request + "</SPAN></CENTER><BR />";
 			info_t += "<CENTER><TABLE BORDER=1 style='font-size: 0.8em;' WIDTH='80%'>";
-			info_t += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Status');?></B></TD><TD class='td_data'>" + statusVals[theStatus] + "</TD></TR>";
-			info_t += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data'>" + the_scope + "</TD></TR>";
-			info_t += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + the_description + "</TD></TR>";
+			info_t += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Status');?></B></TD><TD class='td_data text'>" + statusVals[theStatus] + "</TD></TR>";
+			info_t += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data text'>" + the_scope + "</TD></TR>";
+			info_t += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data text'>" + the_description + "</TD></TR>";
 			if(the_markers[1][key].responders) {
 				for (var elements = 0; elements < the_markers[1][key].responders.length; elements++) { 	
 					var tr_handle = the_markers[1][key].responders[elements].handle;	
-					info_t += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Responder');?></B></TD><TD class='td_data'>" + tr_handle + "</TD></TR>";
+					info_t += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Responder');?></B></TD><TD class='td_data text'>" + tr_handle + "</TD></TR>";
 					}
 				}
 			info_t += "</TABLE></CENTER><BR />";
-			info_t += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_viewwindow(" + the_assoc_request + "); tmarkers[" + theTicketId + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
+			info_t += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain text' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_viewwindow(" + the_assoc_request + "); tmarkers[" + theTicketId + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
 			var tmarker = createMarker(the_lat, the_lng, theStatus, the_assoc_request, info_t, "Ticket for " + the_scope);
 			if(tmarker) {
 				tmarker.addTo(map);
@@ -1154,10 +1079,10 @@ function markers_cb2(req) {
 					var r_job = the_markers[1][key].responders[elements].jobtitle;
 					var info_r = "<DIV class='infowindow-content'><CENTER><SPAN style='text-align: center; width: 100%; font-size: 1.5em; font-weight: bold;'><?php print get_text('Responder');?></SPAN></CENTER><BR />";
 					info_r += "<CENTER><TABLE BORDER=1 style='font-size: 0.8em;' WIDTH='80%'>";
-					info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('On Job');?></B></TD><TD class='td_data'>" + the_scope + "</TD></TR>";
-					info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('Responder Handle');?></B></TD><TD class='td_data'>" + r_handle + "</TD></TR>";
-					info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('Assigned to Job');?></B></TD><TD class='td_data'>" + the_scope + "</TD></TR>";
-					info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + the_description + "</TD></TR></TABLE></CENTER><BR /><BR /></DIV>";
+					info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('On Job');?></B></TD><TD class='td_data text'>" + the_scope + "</TD></TR>";
+					info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Responder Handle');?></B></TD><TD class='td_data text'>" + r_handle + "</TD></TR>";
+					info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Assigned to Job');?></B></TD><TD class='td_data text'>" + the_scope + "</TD></TR>";
+					info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data text'>" + the_description + "</TD></TR></TABLE></CENTER><BR /><BR /></DIV>";
 					var rmarker = createMarker(r_lat, r_lng, 10, r_handle, info_r, r_handle + " assigned to " + r_job);
 					if(rmarker) {
 						rmarker.addTo(map);
@@ -1178,12 +1103,12 @@ function markers_cb2(req) {
 			var canedit = the_markers[0][key2].canedit;
 			var theStatus = the_markers[0][key2].status;
 			var info_req = "<DIV class='infowindow-content'><CENTER><SPAN style='text-align: center; width: 100%; font-size: 1.5em; font-weight: bold;'><?php print get_text('Request');?> " + req_id + "</SPAN></CENTER><BR />";
-			info_req += "<CENTER><TABLE BORDER=1 style='font-size: 0.8em;' WIDTH='80%'>";
-			info_req += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data'>" + req_scope + "</TD></TR>";
-			info_req += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Status');?></B></TD><TD class='td_data'>" + statusVals[theStatus] + "</TD></TR>";
-			info_req += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + req_description + "</TD></TR>";
+			info_req += "<CENTER><TABLE BORDER=1 WIDTH='80%'>";
+			info_req += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data text'>" + req_scope + "</TD></TR>";
+			info_req += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Status');?></B></TD><TD class='td_data text'>" + statusVals[theStatus] + "</TD></TR>";
+			info_req += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data text'>" + req_description + "</TD></TR>";
 			info_req += "</TABLE></CENTER><BR />";
-			info_req += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_window(" + req_id + "); reqmarkers[" + req_id + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
+			info_req += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain text' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_window(" + req_id + "); reqmarkers[" + req_id + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
 			var reqmarker = createMarker(req_lat, req_lng, theStatus, theSym, info_req, "Request " + req_scope);
 			if(reqmarker) {
 				reqmarker.addTo(map);
@@ -1194,6 +1119,7 @@ function markers_cb2(req) {
 	}
 	
 function markers_get() {
+	if (markers_interval!=null) {return;}
 	markers_interval = window.setInterval('do_markers_loop()', 60000);
 	}	
 	
@@ -1207,7 +1133,6 @@ function get_the_markers() {
 	if(markers_interval && !changed_mkrshowhide) {
 		return;
 		}
-	markers_interval = null;
 	changed_mkrshowhide = false;	
 	window.clearInterval(markers_interval);
 	randomnumber=Math.floor(Math.random()*99999999);
@@ -1228,18 +1153,18 @@ function get_the_markers() {
 				var the_assoc_request = the_markers[1][key].request;
 				var theStatus = the_markers[1][key].status;
 				var info_t = "<DIV class='infowindow-content'><CENTER><SPAN style='text-align: center; width: 100%; font-size: 1.5em; font-weight: bold;'><?php print get_text('Request');?> " + the_assoc_request + "</SPAN></CENTER><BR />";
-				info_t += "<CENTER><TABLE BORDER=1 style='font-size: 0.8em;' WIDTH='80%'>";
-				info_t += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Status');?></B></TD><TD class='td_data'>" + statusVals[theStatus] + "</TD></TR>";
-				info_t += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data'>" + the_scope + "</TD></TR>";
-				info_t += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + the_description + "</TD></TR>";
+				info_t += "<CENTER><TABLE BORDER=1 WIDTH='80%'>";
+				info_t += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Status');?></B></TD><TD class='td_data text'>" + statusVals[theStatus] + "</TD></TR>";
+				info_t += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data text'>" + the_scope + "</TD></TR>";
+				info_t += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data text'>" + the_description + "</TD></TR>";
 				if(the_markers[1][key].responders) {
 					for (var elements = 0; elements < the_markers[1][key].responders.length; elements++) { 	
 						var tr_handle = the_markers[1][key].responders[elements].handle;	
-						info_t += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Responder');?></B></TD><TD class='td_data'>" + tr_handle + "</TD></TR>";
+						info_t += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Responder');?></B></TD><TD class='td_data text'>" + tr_handle + "</TD></TR>";
 						}
 					}
 				info_t += "</TABLE></CENTER><BR />";
-				info_t += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_viewwindow(" + the_assoc_request + "); tmarkers[" + theTicketId + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
+				info_t += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain text' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_viewwindow(" + the_assoc_request + "); tmarkers[" + theTicketId + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
 				var tmarker = createMarker(the_lat, the_lng, theStatus, the_assoc_request, info_t, "Ticket for " + the_scope);
 				if(tmarker) {
 					tmarker.addTo(map);
@@ -1253,11 +1178,11 @@ function get_the_markers() {
 						var r_handle = the_markers[1][key].responders[elements].id;
 						var r_job = the_markers[1][key].responders[elements].jobtitle;
 						var info_r = "<DIV class='infowindow-content'><CENTER><SPAN style='text-align: center; width: 100%; font-size: 1.5em; font-weight: bold;'><?php print get_text('Responder');?></SPAN></CENTER><BR />";
-						info_r += "<CENTER><TABLE BORDER=1 style='font-size: 0.8em;' WIDTH='80%'>";
-						info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('On Job');?></B></TD><TD class='td_data'>" + the_scope + "</TD></TR>";
-						info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('Responder Handle');?></B></TD><TD class='td_data'>" + r_handle + "</TD></TR>";
-						info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('Assigned to Job');?></B></TD><TD class='td_data'>" + the_scope + "</TD></TR>";
-						info_r += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + the_description + "</TD></TR></TABLE></CENTER><BR /><BR /></DIV>";
+						info_r += "<CENTER><TABLE BORDER=1 WIDTH='80%'>";
+						info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('On Job');?></B></TD><TD class='td_data text'>" + the_scope + "</TD></TR>";
+						info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Responder Handle');?></B></TD><TD class='td_data text'>" + r_handle + "</TD></TR>";
+						info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Assigned to Job');?></B></TD><TD class='td_data text'>" + the_scope + "</TD></TR>";
+						info_r += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data text'>" + the_description + "</TD></TR></TABLE></CENTER><BR /><BR /></DIV>";
 						var rmarker = createMarker(r_lat, r_lng, 10, r_handle, info_r, r_handle + " assigned to " + r_job);
 						if(rmarker) {
 							rmarker.addTo(map);
@@ -1278,12 +1203,12 @@ function get_the_markers() {
 				var canedit = the_markers[0][key2].canedit;
 				var theStatus = the_markers[0][key2].status;
 				var info_req = "<DIV class='infowindow-content'><CENTER><SPAN style='text-align: center; width: 100%; font-size: 1.5em; font-weight: bold;'><?php print get_text('Request');?> " + req_id + "</SPAN></CENTER><BR />";
-				info_req += "<CENTER><TABLE BORDER=1 style='font-size: 0.8em;' WIDTH='80%'>";
-				info_req += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data'>" + req_scope + "</TD></TR>";
-				info_req += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Status');?></B></TD><TD class='td_data'>" + statusVals[theStatus] + "</TD></TR>";
-				info_req += "<TR class='even'><TD class='td_label'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data'>" + req_description + "</TD></TR>";
+				info_req += "<CENTER><TABLE BORDER=1 WIDTH='80%'>";
+				info_req += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Title');?></B></TD><TD class='td_data text'>" + req_scope + "</TD></TR>";
+				info_req += "<TR class='odd'><TD class='td_label text'><B><?php print get_text('Status');?></B></TD><TD class='td_data text'>" + statusVals[theStatus] + "</TD></TR>";
+				info_req += "<TR class='even'><TD class='td_label text'><B><?php print get_text('Job Description');?></B></TD><TD class='td_data text'>" + req_description + "</TD></TR>";
 				info_req += "</TABLE></CENTER><BR />";
-				info_req += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_window(" + req_id + "); reqmarkers[" + req_id + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
+				info_req += "<DIV style='width: 100%; text-align: center;'><SPAN id='theBut' class='plain text' style='vertical-align: middle; text-align: center; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_window(" + req_id + "); reqmarkers[" + req_id + "].closePopup();'>Open</SPAN></DIV><BR /></DIV>";
 				var reqmarker = createMarker(req_lat, req_lng, theStatus, theSym, info_req, "Request " + req_scope);
 				if(reqmarker) {
 					reqmarker.addTo(map);
@@ -1297,23 +1222,24 @@ function get_the_markers() {
 
 function summary_cb2(req) {
 	var the_summary=JSON.decode(req.responseText);
-	var the_output = "<TABLE style='font-size: 1.2em; text-align: center; border: 1px solid #707070; cursor: initial;'>";
-	the_output += "<TR style='font-size: 0.8em;'><TH style='background-color: #707070; border: 1px solid #707070; cursor: initial;'>&nbsp;</TH><TH style='border: 1px solid #707070;'><?php print get_text('Week');?></TH><TH style='border: 1px solid #707070;'><?php print get_text('Month');?></TH><TH style='border: 1px solid #707070;'><?php print get_text('Year');?></TH><TH style='border: 1px solid #707070;'><?php print get_text('Total')?></TH><TR>";
-	the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Requests');?></TD><TD style='border: 1px solid #707070;'>" + the_summary[0] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[1] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[2] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[3] + "</TD></TR>";
-	the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Accepted');?></TD><TD style='border: 1px solid #707070;'>" + the_summary[4] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[5] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[6] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[7] + "</TD></TR>";
-	the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Declined');?></TD><TD style='border: 1px solid #707070;'>" + the_summary[8] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[9] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[10] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[11] + "</TD></TR>";
-	the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Closed');?></TD><TD style='border: 1px solid #707070;'>" + the_summary[12] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[13] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[14] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[15] + "</TD></TR>";
+	var the_output = "<TABLE style='text-align: center; border: 1px solid #707070; cursor: initial;'>";
+	the_output += "<TR><TH CLASS='text' style='background-color: #707070; border: 1px solid #707070; cursor: initial;'>&nbsp;</TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Week');?></TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Month');?></TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Year');?></TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Total')?></TH><TR>";
+	the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Requests');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[0] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[1] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[2] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[3] + "</TD></TR>";
+	the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Accepted');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[4] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[5] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[6] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[7] + "</TD></TR>";
+	the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Declined');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[8] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[9] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[10] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[11] + "</TD></TR>";
+	the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Closed');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[12] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[13] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[14] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[15] + "</TD></TR>";
 	the_output += "</TABLE>";
 	$('summary_table').innerHTML = the_output;		
 	}
 	
 function summary_get() {
+	if (summary_interval!=null) {return;}
 	summary_interval = window.setInterval('do_summary_loop()', 60000);
 	}	
 	
 function do_summary_loop() {
 	randomnumber=Math.floor(Math.random()*99999999);
-	var url ="./portal/ajax/requests_summary?id=<?php print $_SESSION['user_id'];?>&version=" + randomnumber;
+	var url ="./portal/ajax/requests_summary.php?id=<?php print $_SESSION['user_id'];?>&version=" + randomnumber;
 	sendRequest (url, summary_cb2, "");
 	}
 	
@@ -1323,12 +1249,12 @@ function get_summary() {
 	sendRequest (url, summary_cb, "");
 	function summary_cb(req) {
 		var the_summary=JSON.decode(req.responseText);
-		var the_output = "<TABLE style='font-size: 1.2em; text-align: center; border: 1px solid #707070;'>";
-		the_output += "<TR style='font-size: 0.8em;'><TH style='background-color: #707070; border: 1px solid #707070;'>&nbsp;</TH><TH style='border: 1px solid #707070;'><?php print get_text('Week');?></TH><TH style='border: 1px solid #707070;'><?php print get_text('Month');?></TH><TH style='border: 1px solid #707070;'><?php print get_text('Year');?></TH><TH style='border: 1px solid #707070;'><?php print get_text('Total');?></TH><TR>";
-		the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Requests');?></TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[0] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[1] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[2] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[3] + "</TD></TR>";
-		the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Accepted');?></TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[4] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[5] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[6] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[7] + "</TD></TR>";
-		the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Declined');?></TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[8] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[9] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[10] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[11] + "</TD></TR>";
-		the_output += "<TR><TD style='text-align: left; border: 1px solid #707070; cursor: initial;'><?php print get_text('Closed');?></TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[12] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[13] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[14] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[15] + "</TD></TR>";
+		var the_output = "<TABLE style='text-align: center; border: 1px solid #707070; cursor: initial; width: 100%;'>";
+		the_output += "<TR><TH CLASS='text' style='background-color: #707070; border: 1px solid #707070; cursor: initial;'>&nbsp;</TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Week');?></TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Month');?></TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Year');?></TH><TH CLASS='text' style='border: 1px solid #707070;'><?php print get_text('Total')?></TH><TR>";
+		the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Requests');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[0] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[1] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[2] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[3] + "</TD></TR>";
+		the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Accepted');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[4] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[5] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[6] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[7] + "</TD></TR>";
+		the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Declined');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[8] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[9] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[10] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[11] + "</TD></TR>";
+		the_output += "<TR><TD CLASS='td_label text text_left'><?php print get_text('Closed');?></TD><TD CLASS='td_data text' style='border: 1px solid #707070;'>" + the_summary[12] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[13] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[14] + "</TD><TD style='border: 1px solid #707070; cursor: initial;'>" + the_summary[15] + "</TD></TR>";
 		the_output += "</TABLE>";
 		$('summary_table').innerHTML = the_output;		
 		}
@@ -1507,32 +1433,32 @@ if((!isset($_SESSION)) && (empty($_POST))) {
 
 	<BODY style='overflow: hidden;' onLoad="out_frames();" onUnload='do_unload();'>
 		<FORM NAME="go" action="#" TARGET = "main"></FORM>
-		<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+		<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 		<DIV id='outer' style='position: absolute; top: 0px; text-align: center;'>
 			<DIV id='tophalf' style='position: relative; top: 0px; width: 100%; font-size: 1em; z-index: 998; overflow: hidden; cursor: default;'>
 				<DIV id='banner' style='background-color: #707070; vertical-align: middle; cursor: default;'><SPAN class='heading' style='font-size: 1.5em; vertical-align: middle; cursor: default;'>Tickets <?php print get_text('Service User');?> <?php print get_text('Portal');?></SPAN>
-					<SPAN ID='gout' CLASS='plain' style='position: absolute; right: 60px; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="do_logout()"><?php print get_text('Logout');?></SPAN>
+					<SPAN ID='gout' CLASS='plain text' style='position: absolute; right: 60px; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="do_logout()"><?php print get_text('Logout');?></SPAN>
 				</DIV>
 				<DIV id='controls' style='position: absolute; top: 50px; left: 2%; cursor: initial;'>
-					<TABLE WIDTH='100%' HEIGHT='100%' style='font-size: 1em; border: 3px outset #707070; cursor: initial;'>
+					<TABLE WIDTH='100%' HEIGHT='100%' style='border: 3px outset #707070; cursor: initial;'>
 						<TR style='font-size: 1em; cursor: initial;'>
 							<TD WIDTH='50%' style='font-size: 1em; border: 3px outset #707070; vertical-align: top; cursor: initial;'>
 								<CENTER>
 								<TABLE style='width: 100%; cursor: initial;'>
 									<TR style='font-size: 1em; cursor: initial;'>
-										<TD style='font-size: 1em; cursor: initial;'><SPAN id='sub_but' CLASS ='plain' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_newreq();"><?php print get_text('New Request');?></SPAN></TD>
+										<TD style='font-size: 1em; cursor: initial;'><SPAN id='sub_but' CLASS ='plain text' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_newreq();"><?php print get_text('New Request');?></SPAN></TD>
 									</TR>
 									<TR style='font-size: 1em;'>
-										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='upload_but' CLASS='plain' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.open('./portal/import_requests.php','Import Requests','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, height=600,width=600,status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')" TITLE='Import Request from CSV File'><?php print get_text('Import');?></SPAN></TD>
+										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='upload_but' CLASS='plain text' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.open('./portal/import_requests.php','Import Requests','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, height=600,width=600,status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')" TITLE='Import Request from CSV File'><?php print get_text('Import');?></SPAN></TD>
 									</TR>
 									<TR style='font-size: 1em;'>
-										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='export_but' CLASS='plain' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.location.href='./portal/csv_export.php'"><?php print get_text('Export Requests to CSV');?></SPAN></TD>
+										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='export_but' CLASS='plain text' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.location.href='./portal/csv_export.php'"><?php print get_text('Export Requests to CSV');?></SPAN></TD>
 									</TR>
 									<TR style='font-size: 1em;'>
-										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='showhide_but' CLASS='plain' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_closed();"><?php print get_text('Show Closed');?></SPAN></TD>
+										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='showhide_but' CLASS='plain text' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_closed();"><?php print get_text('Show Closed');?></SPAN></TD>
 									</TR>
 									<TR style='font-size: 1em;'>
-										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='profile_but' CLASS='plain' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="do_passwdchange();"><?php print get_text('Change Password');?></SPAN></TD>
+										<TD style='font-size: 1em; cursor: initial;'><SPAN ID='profile_but' CLASS='plain text' style='font-size: 1em; vertical-align: middle; width: 150px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="do_passwdchange();"><?php print get_text('Change Password');?></SPAN></TD>
 									</TR>
 								</TABLE><BR /><BR />
 								<DIV style='border: 2px outset #707070; cursor: initial;'>
@@ -1543,31 +1469,31 @@ if((!isset($_SESSION)) && (empty($_POST))) {
 							</TD>
 							<TD WIDTH='50%' style='font-size: 1em; border: 3px outset #707070; text-align: left; cursor: initial;'>
 								<TABLE WIDTH='100%'style=' cursor: initial;'>
-									<TR CLASS="heading" style='font-size: 1em;'>
-										<TD CLASS='heading' style='font-size: 1.1em; cursor: initial;'><?php print get_text('Contact Us');?></TD>
+									<TR CLASS="heading">
+										<TD CLASS='heading text' style='cursor: initial;'><?php print get_text('Contact Us');?></TD>
 									<TR>
-									<TR style='font-size: 1em; cursor: initial;'>
-										<TD style='font-size: 1em; cursor: initial;'>&nbsp;</TD>
+									<TR style='cursor: initial;'>
+										<TD CLASS='td_label text' style='cursor: initial;'>&nbsp;</TD>
 									</TR>
-										<TD style='font-size: 1em; cursor: initial;'><?php print get_text('Telephone');?>: <?php print get_variable('portal_contact_phone');?></TD>
+										<TD CLASS='td_label text' style='cursor: initial;'><?php print get_text('Telephone');?>: <?php print get_variable('portal_contact_phone');?></TD>
 									</TR>
-									<TR style='font-size: 1em; cursor: initial;'>
-										<TD style='font-size: 1em; cursor: initial;'><?php print get_text('Email');?>: <?php print get_variable('portal_contact_email');?></TD>
+									<TR style='cursor: initial;'>
+										<TD CLASS='td_label text' style='cursor: initial;'><?php print get_text('Email');?>: <?php print get_variable('portal_contact_email');?></TD>
 									</TR>
-									<TR style='font-size: 1em; cursor: initial;'>
-										<TD style='font-size: 1em; cursor: initial;'>&nbsp;</TD>
+									<TR style='1em; cursor: initial;'>
+										<TD CLASS='td_label text' style='cursor: initial;'>&nbsp;</TD>
 									</TR>
-									<TR style='font-size: 1em; cursor: initial;'>
-										<TD style='font-size: 1em; cursor: initial;'>&nbsp;</TD>
+									<TR style='cursor: initial;'>
+										<TD CLASS='td_label text' style='cursor: initial;'>&nbsp;</TD>
 									</TR>
 									<TR class='heading' style='font-size: 1.1em; cursor: initial;'>
-										<TD class='heading' style='font-size: 1.1em; cursor: initial;'>Your Request Statistics - <?php print get_user_name($_SESSION['user_id']);?></TD>
+										<TD class='heading text' style='cursor: initial;'>Your Request Statistics - <?php print get_user_name($_SESSION['user_id']);?></TD>
 									</TR>
-									<TR style='font-size: 1em; cursor: initial;'>
-										<TD style='font-size: 1em; cursor: initial;'>&nbsp;</TD>
+									<TR style='cursor: initial;'>
+										<TD CLASS='td_label text' style='cursor: initial;'>&nbsp;</TD>
 									</TR>
 									<TR>
-										<TD id='summary_table' ALIGN='center' style=' cursor: initial;'></TD>
+										<TD CLASS='td_label text' id='summary_table' ALIGN='center' style=' cursor: initial;'></TD>
 									</TR>
 								</TABLE>
 							</TD>
@@ -1621,6 +1547,7 @@ if((!isset($_SESSION)) && (empty($_POST))) {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, "popup");	
 	var mapWidth = viewportwidth * .5;
 	var mapHeight = viewportheight * .5;
 	var listWidth = viewportwidth * .96;	

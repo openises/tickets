@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
@@ -122,7 +124,7 @@ if (my_is_float($row['lat'])) {		// 6/21/10
 	$temp_array[3] = htmlentities(shorten(str_replace($eols, " ", $row['tick_descr']), 256), ENT_QUOTES);
 	$street = empty($row['ticket_street'])? "" : replace_quotes($row['ticket_street']) . "<BR/>" . replace_quotes($row['ticket_city']) . " " . replace_quotes($row['ticket_state']) ;
 	$one_line_street = empty($row['ticket_street'])? "" : replace_quotes($row['ticket_street']) . " " . replace_quotes($row['ticket_city']) . " " . replace_quotes($row['ticket_state']) ;
-	$todisp = (is_guest()|| is_unit())? "": "<A id='disp_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['routesfile']}?ticket_id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";	// 7/27/10
+	$todisp = (is_guest()|| is_unit())? "": "<A id='disp_" . $the_id . "' CLASS='plain text'' style='float: none; color: #000000;' HREF='{$_SESSION['routesfile']}?ticket_id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";	// 7/27/10
 
 	$rand = ($istest)? "&rand=" . chr(rand(65,90)) : "";													// 10/21/08
 	$theTabs = "<div class='infowin'><BR />";
@@ -134,65 +136,65 @@ if (my_is_float($row['lat'])) {		// 6/21/10
 	$theTabs .= '</div>';
 	$theTabs .= '<div class="contentwrapper">';
 
-	$tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";
-	$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>$strike" . htmlentities(shorten($row['scope'], 48), ENT_QUOTES)  . "$strikend</B></TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>As of:</TD><TD ALIGN='left'>" . format_date_2(($row['updated'])) . "</TD></TR>";
+	$tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD style='text-align: center;'><TABLE width='98%'>";
+	$tab_1 .= "<TR CLASS='even'><TD CLASS='heading text' COLSPAN=2 ALIGN='center'><B>$strike" . htmlentities(shorten($row['scope'], 48), ENT_QUOTES)  . "$strikend</B></TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>As of:</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(($row['updated'])) . "</TD></TR>";
 	if (is_date($row['booked_date'])){
-		$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left' >Booked Date:</TD><TD ALIGN='left'>" . format_date_2($row['booked_date']) . "</TD></TR>";	//10/27/09, 3/15/11
+		$tab_1 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left' >Booked Date:</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2($row['booked_date']) . "</TD></TR>";	//10/27/09, 3/15/11
 		}
-	$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Reported by:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['contact'], 32)) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Phone:</TD><TD ALIGN='left'>" . format_phone($row['phone']) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Addr:</TD><TD ALIGN='left'>$address_street</TD></TR>";
+	$tab_1 .= "<TR CLASS='even'><TD class='td_label text' ALIGN='left'>Reported by:</TD><TD CLASS='td_data text' ALIGN='left'>" . replace_quotes(shorten($row['contact'], 32)) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>Phone:</TD><TD CLASS='td_data text' ALIGN='left'>" . format_phone($row['phone']) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='even'><TD class='td_label text' ALIGN='left'>Addr:</TD><TD CLASS='td_data text' ALIGN='left'>$address_street</TD></TR>";
 
 	$elapsed = get_elapsed_time ($row);
-	$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Status:</TD><TD ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
-	$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Receiving Facility:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
+	$tab_1 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>Status:</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
+	$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD class='td_label text' ALIGN='left'>Receiving Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
 	$utm = get_variable('UTM');
 	if ($utm==1) {
 		$coords =  $row['lat'] . "," . $row['lng'];																	// 8/12/09
-		$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>UTM grid:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD class='td_label text' ALIGN='left'>UTM grid:</TD><TD CLASS='td_data text' ALIGN='left'>" . toUTM($coords) . "</TD></TR>";
 		}
 	$tab_1 .= "</TABLE></TD></TR><TR><TD COLSPAN=99>&nbsp;</TD></TR>";
-	$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE><TR style='height: 25px;'><TD style='text-align: center;'>";
-	$tab_1 .= 	$todisp . "<A id='view_" . $the_id . "'  CLASS='plain' style='float: none; color: #000000;' HREF='main.php?id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Details</A>";		// 08/8/02
+	$tab_1 .= "<TR><TD COLSPAN=99 ALIGN='center'><TABLE style='width: 100%;'><TR style='height: 25px;'><TD CLASS='td_data text' style='text-align: center;'>";
+	$tab_1 .= 	$todisp . "<A id='view_" . $the_id . "'  CLASS='plain text'' style='float: none; color: #000000;' HREF='main.php?id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Details</A>";		// 08/8/02
 	if (!(is_guest() )) {
 		if (can_edit()) {							//8/27/10
-			$tab_1 .= 	"<A id='edit_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['editfile']}?id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";	
+			$tab_1 .= 	"<A id='edit_" . $the_id . "' CLASS='plain text'' style='float: none; color: #000000;' HREF='{$_SESSION['editfile']}?id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";	
 			}
 		$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD style='text-align: center;'>";
 		if(($internet) && ($locale == 1)) {
-			$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$the_id}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"ticket\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>" ;	// 7/7/09
+			$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<A id='osmap_but' class='plain text'' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$the_id}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"ticket\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>" ;	// 7/7/09
 			}
-		$tab_1 .= 	"<A id='popup_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#'  onClick = 'do_popup({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\");>Popup</A>" ;	// 7/7/09
-		$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD style='text-align: center;'>";
+		$tab_1 .= 	"<A id='popup_" . $the_id . "' CLASS='plain text'' style='float: none; color: #000000;' HREF='#'  onClick = 'do_popup({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\");>Popup</A>" ;	// 7/7/09
+		$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD CLASS='td_data text' style='text-align: center;'>";
 		if ((!(is_closed($the_id))) && (!is_unit()))  {		// 3/3/11
-			$tab_1 .= "<A id='close_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_close_tick({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">" . get_text("Close incident") . "</A>";  // 3/3/11
+			$tab_1 .= "<A id='close_" . $the_id . "' CLASS='plain text' text' style='float: none; color: #000000;' HREF='#' onClick = 'do_close_tick({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">" . get_text("Close incident") . "</A>";  // 3/3/11
 			}
-		$tab_1 .=   "<A id='mail_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_mail_all_win({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Contact Units</A>";					
-		$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD style='text-align: center;'>";				
-		$tab_1 .= 	"<A id='note_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_add_note ({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add note</A>" ;	// 7/7/09
+		$tab_1 .=   "<A id='mail_" . $the_id . "' CLASS='plain text' text' style='float: none; color: #000000;' HREF='#' onClick = 'do_mail_all_win({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Contact Units</A>";					
+		$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD CLASS='td_data text' style='text-align: center;'>";				
+		$tab_1 .= 	"<A id='note_" . $the_id . "' CLASS='plain text' text' style='float: none; color: #000000;' HREF='#' onClick = 'do_add_note ({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add note</A>" ;	// 7/7/09
 		if (can_edit()) {							//8/27/10
-			$tab_1 .= 	"<A id='pat_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='patient.php?ticket_id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add {$patient}</A>";	// 7/9/09
-			$tab_1 .= 	"<A id='act_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='action.php?ticket_id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add Action</A></TD></TR>";
+			$tab_1 .= 	"<A id='pat_" . $the_id . "' CLASS='plain text' text' style='float: none; color: #000000;' HREF='patient.php?ticket_id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add {$patient}</A>";	// 7/9/09
+			$tab_1 .= 	"<A id='act_" . $the_id . "' CLASS='plain text' text' style='float: none; color: #000000;' HREF='action.php?ticket_id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add Action</A></TD></TR>";
 			}
 		if ($use_twitter) {							//7/23/15
 
 			$theInformation = "Incident at " . $one_line_street . " <small>as of " . $updated . ". Latitude: " . $lat . ", Longitude: " . $lng . "</small>";
 			$tab_1 .= "<TR style='height: 25px;'>
-				<TD style='text-align: center;'>
-				<IMG id='twit_" . $the_id . "' class='plain' SRC='./buttons/tweetbutton.png' style='float: none; margin: 0px; padding: 0px; vertical-align: middle;' 
+				<TD CLASS='td_data text' style='text-align: center;'>
+				<IMG id='twit_" . $the_id . "' class='plain text'' SRC='./buttons/tweetbutton.png' style='float: none; margin: 0px; padding: 0px; vertical-align: middle;' 
 				onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'tweetInfo(\"" . $theInformation . "\");'>";			
 				}
 		$tab_1 .= "</TD></TR></TABLE>";
 		}
 	$tab_1 .= "</TD></TR>";
-	$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08	
+	$tab_1 .= 	"</TD></TR></TABLE>";			// 11/6/08	
 
 	$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
-	$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Description:</TD><TD ALIGN='left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
-	$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>" . get_text('911 Contacted') . ":</TD><TD ALIGN='left'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
-	$tab_2 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>{$disposition}:</TD><TD ALIGN='left'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
-	$tab_2 .= "<TR><TD COLSPAN=2 ALIGN='left'><DIV style='max-height: 200px; overflow-y: scroll;'>" . show_assigns(0, $the_id) . "</DIV></TD></TR>";
+	$tab_2 .= "<TR CLASS='even'><TD class='td_label text' ALIGN='left'>Description:</TD><TD CLASS='td_data text' ALIGN='left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
+	$tab_2 .= "<TR CLASS='even'><TD class='td_label text' ALIGN='left'>" . get_text('911 Contacted') . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
+	$tab_2 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>{$disposition}:</TD><TD CLASS='td_data text' ALIGN='left'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
+	$tab_2 .= "<TR><TD COLSPAN=2 ALIGN='left'><DIV CLASS='td_data text' style='max-height: 200px; overflow-y: scroll;'>" . show_assigns(0, $the_id) . "</DIV></TD></TR>";
 
 	$tab_2 .= "</TABLE>";			// 11/6/08			
 	
@@ -201,23 +203,23 @@ if (my_is_float($row['lat'])) {		// 6/21/10
 
 	switch($locale) { 
 		case "0":
-		$tab_3 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+		$tab_3 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoUSNG($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 		break;
 	
 		case "1":
-		$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+		$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>OSGB:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 		break;
 	
 		case "2":
 		$coords =  $row['lat'] . "," . $row['lng'];							// 8/12/09
-		$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+		$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>UTM:</TD><TD CLASS='td_data text' ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 		break;
 	
 		default:
 		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 		}
-	$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $row['lat'] . "</TD></TR>";
-	$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $row['lng'] . "</TD></TR>";
+	$tab_3 .= "<TR><TD class='td_label text'>Lat</TD><TD class='td_data text'>" . $row['lat'] . "</TD></TR>";
+	$tab_3 .= "<TR><TD class='td_label text'>Lng</TD><TD class='td_data text'>" . $row['lng'] . "</TD></TR>";
 	$tab_3 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 	$tab_3 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 	$tab_3 .= "</TABLE></TD</TR></TABLE>";

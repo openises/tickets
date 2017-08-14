@@ -24,6 +24,41 @@ if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restr
 	exit();
 	}
 	
+$sm_inc_icons = array("sm_blue.png", "sm_green.png", "sm_red.png");
+$inc_sev_names = array("Normal", "Medium", "High");
+$inc_severities = array();
+for ($i = 0;$i <= 2;$i++) {
+    $inc_severities[$i] = array($inc_sev_names[$i], $i);
+	}
+
+$icons = array("square_gold.png", "square_silver.png", "square_bronze.png");
+$sm_icons = array("sm_square_gold.png", "sm_square_silver.png", "sm_square_bronze.png");
+$mi_level_names = array("Gold", "Silver", "Bronze");
+$mi_levels = array();
+for ($i = 0;$i <= 2;$i++) {
+    $mi_levels[$i] = array($mi_level_names[$i], $i);
+	}
+
+function get_mi_level_icon_legend (){			// returns legend string - 1/1/09
+	global $mi_levels, $sm_icons;
+	$print = "";
+	foreach($mi_levels as $val) {
+		$temp = $val;
+		$print .= "\t\t<SPAN class='legend' style='height: 3em; text-align: center; vertical-align: middle; float: none;'> ". $temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$temp[1]] . "' STYLE = 'vertical-align: middle' BORDER=0 PADDING='10'>&nbsp;&nbsp;&nbsp;</SPAN>";
+		}
+	return $print;
+	}			// end function get_icon_legend ()
+	
+function get_inc_icon_legend (){			// returns legend string - 1/1/09
+	global $inc_severities, $sm_inc_icons;
+	$print = "";
+	foreach($inc_severities as $val) {
+		$temp = $val;
+		$print .= "\t\t<SPAN class='legend' style='height: 3em; text-align: center; vertical-align: middle; float: none;'> ". $temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_inc_icons[$temp[1]] . "' STYLE = 'vertical-align: middle' BORDER=0 PADDING='10'>&nbsp;&nbsp;&nbsp;</SPAN>";
+		}
+	return $print;
+	}			// end function get_icon_legend ()
+	
 $comm_arr = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
 $result = mysql_query($query);
@@ -60,15 +95,15 @@ function get_building($theName, $id = NULL) {
 	$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
 	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_num_rows($result_bldg) > 0) {
-		$sel_str = "<select name='" . $theName . "' onChange=\"bldg_change(this.value, '" . $theName . "');\">\n";
-		$sel_str .= "\t<option value = 0 selected>Select building</option>\n";
+		$sel_str = "<SELECT name='" . $theName . "' onChange='clear_data(document.mi_add_Form, \"" . $theName . "\", this.options[selectedIndex].value);'>\n";
+		$sel_str .= "\t<OPTION value = 0 selected>Select building</OPTION>\n";
 		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
 			if($id) {
 				$sel = ($row_bldg['id'] == $id) ? "SELECTED" : "";
 				} else {
 				$sel = "";
 				}
-			$sel_str .= "\t<option value = " . $row_bldg['id'] . " " . $sel . ">" . $row_bldg['name'] . "</option>\n";
+			$sel_str .= "\t<OPTION value = " . $row_bldg['id'] . " " . $sel . ">" . $row_bldg['name'] . "</OPTION>\n";
 			}		// end while ()
 
 		$sel_str .= "\t</SELECT>\n<BR />";
@@ -79,7 +114,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_gold_state";
 			$theLat = "frm_gold_lat";
 			$theLng = "frm_gold_lng";
-			$theDiv = "gold_loc";
+			$theDiv = "gold_address_data";
 			} elseif($theName == "frm_silver_loc") {
 			$theType = 'silver';
 			$theStreet = "frm_silver_street";
@@ -87,7 +122,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_silver_state";
 			$theLat = "frm_silver_lat";
 			$theLng = "frm_silver_lng";
-			$theDiv = "silver_loc";
+			$theDiv = "silver_address_data";
 			} elseif($theName == "frm_bronze_loc") {
 			$theType = 'bronze';
 			$theStreet = "frm_bronze_street";
@@ -95,7 +130,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_bronze_state";
 			$theLat = "frm_bronze_lat";
 			$theLng = "frm_bronze_lng";
-			$theDiv = "bronze_loc";			
+			$theDiv = "bronze_address_data";			
 			} elseif($theName == "frm_level4_loc") {
 			$theType = 'level4';
 			$theStreet = "frm_level4_street";
@@ -103,7 +138,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_level4_state";
 			$theLat = "frm_level4_lat";
 			$theLng = "frm_level4_lng";
-			$theDiv = "level4_loc";
+			$theDiv = "level4_address_data";
 			} elseif($theName == "frm_level5_loc") {
 			$theType = 'level5';
 			$theStreet = "frm_level5_street";
@@ -111,7 +146,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_level5_state";
 			$theLat = "frm_level5_lat";
 			$theLng = "frm_level5_lng";
-			$theDiv = "level5_loc";
+			$theDiv = "level5_address_data";
 			} elseif($theName == "frm_level6_loc") {
 			$theType = 'level6';
 			$theStreet = "frm_level6_street";
@@ -119,14 +154,21 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_level6_state";
 			$theLat = "frm_level6_lat";
 			$theLng = "frm_level6_lng";
-			$theDiv = "level6_loc";
+			$theDiv = "level6_address_data";
 			}
-		$sel_str .= "<DIV id='" . $theDiv . "'><BUTTON type='button' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /><BR />";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></BR>";
-		$sel_str .= "<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' /></DIV>";	
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLat . "' VALUE=''>";
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''>";
+		$sel_str .= "<DIV id='" . $theDiv . "' style='vertical-align: top;'><TABLE>";
+		$sel_str .= "<TR>";		
+		$sel_str .= "<TD CLASS='td_label text'>Street&nbsp;&nbsp;<BUTTON type='button' style='vertical-align: top;' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON></TD>";
+		$sel_str .= "<TD CLASS='td_data text'><INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>City</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>State</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>Lat / Lng</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLat . "' VALUE=''>";
+		$sel_str .= "<INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLng . "' VALUE=''></TD>";
+		$sel_str .= "</TR></TABLE>";
+		$sel_str .= "</DIV>";
 		} else {
 		if($theName == "frm_gold_loc") {
 			$theType = 'gold';
@@ -135,7 +177,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_gold_state";
 			$theLat = "frm_gold_lat";
 			$theLng = "frm_gold_lng";
-			$theDiv = "gold_loc";			
+			$theDiv = "gold_address_data";			
 			} elseif($theName == "frm_silver_loc") {
 			$theType = 'silver';
 			$theStreet = "frm_silver_street";
@@ -143,7 +185,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_silver_state";
 			$theLat = "frm_silver_lat";
 			$theLng = "frm_silver_lng";
-			$theDiv = "silver_loc";			
+			$theDiv = "silver_address_data";			
 			} elseif($theName == "frm_bronze_loc") {
 			$theType = 'bronze';
 			$theStreet = "frm_bronze_street";
@@ -151,7 +193,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_bronze_state";
 			$theLat = "frm_bronze_lat";
 			$theLng = "frm_bronze_lng";
-			$theDiv = "bronze_loc";						
+			$theDiv = "bronze_address_data";						
 			} elseif($theName == "frm_level4_loc") {
 			$theType = 'level4';
 			$theStreet = "frm_level4_street";
@@ -159,7 +201,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_level4_state";
 			$theLat = "frm_level4_lat";
 			$theLng = "frm_level4_lng";
-			$theDiv = "bronze_loc";
+			$theDiv = "level4_address_data";
 			} elseif($theName == "frm_level5_loc") {
 			$theType = 'level5';
 			$theStreet = "frm_level5_street";
@@ -167,7 +209,7 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_level5_state";
 			$theLat = "frm_level5_lat";
 			$theLng = "frm_level5_lng";
-			$theDiv = "level5_loc";
+			$theDiv = "level5_address_data";
 			} elseif($theName == "frm_level6_loc") {
 			$theType = 'level6';
 			$theStreet = "frm_level6_street";
@@ -175,14 +217,21 @@ function get_building($theName, $id = NULL) {
 			$theState = "frm_level6_state";
 			$theLat = "frm_level6_lat";
 			$theLng = "frm_level6_lng";
-			$theDiv = "level6_loc";
+			$theDiv = "level6_address_data";
 			}
-		$sel_str = "<DIV id='" . $theDiv . "'><BUTTON type='button' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /><BR />";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></BR>";
-		$sel_str .= "<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' /></DIV>";	
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLat . "' VALUE=''>";
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''>";
+		$sel_str = "<DIV id='" . $theDiv . "' style='vertical-align: top;'><TABLE>";
+		$sel_str .= "<TR>";		
+		$sel_str .= "<TD CLASS='td_label text'>Street&nbsp;&nbsp;<BUTTON type='button' style='vertical-align: top;' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON></TD>";
+		$sel_str .= "<TD CLASS='td_data text'><INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /></TD>";
+		$sel_str .= "</TR><TR>";		
+		$sel_str .= "<TD CLASS='td_label text'>City</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></TD>";
+		$sel_str .= "</TR><TR>";	
+		$sel_str .= "<TD CLASS='td_label text'>State</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>Lat / Lng</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLat . "' VALUE=''>";
+		$sel_str .= "<INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLng . "' VALUE=''></TD>";
+		$sel_str .= "</TR></TABLE>";	
+		$sel_str .= "</DIV>";	
 		}
 	return $sel_str;
 	}
@@ -246,31 +295,50 @@ function get_building_edit($theName, $id = NULL) {
 	$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
 	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_num_rows($result_bldg) > 0) {
-		$sel_str = "<select name='" . $theName . "' onChange='get_building(this.options[selectedIndex].value, \"" . $theType . "\", document.mi_edit_Form); tidyDiv(\"" . $theDiv . "\", this.options[selectedIndex].value, \"" . $theButton . "\");'>\n";
-		$sel_str .= "\t<option value = 0 selected>Select building</option>\n";
+		$sel_str = "<select name='" . $theName . "' onChange='get_building(this.options[selectedIndex].value, \"" . $theType . "\", document.mi_edit_Form); tidyDiv(\"" . $theDiv . "\", this.options[selectedIndex].value, \"" . $theButton . "\");'>";
+		$sel_str .= "<option value = 0 selected>Select building</option>";
 		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
 			if($id) {
 				$sel = ($row_bldg['id'] == $id) ? "SELECTED" : "";
 				} else {
 				$sel = "";
 				}
-			$sel_str .= "\t<option value = " . $row_bldg['id'] . " " . $sel . ">" . $row_bldg['name'] . "</option>\n";
+			$sel_str .= "<option value = " . $row_bldg['id'] . " " . $sel . ">" . $row_bldg['name'] . "</option>";
 			}		// end while ()
 
-		$sel_str .= "\t</SELECT>\n";
-		$sel_str .= "<BR /><DIV id='" . $theDiv . "' style='display: none;'><BUTTON type='button' onClick='mi_loc_lkup(document.mi_edit_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /><BR />";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></BR>";
-		$sel_str .= "<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' />";	
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLat . "' VALUE=''>";
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''></DIV>";
+		if($id > 0) {
+			$display = "display: none;";
+			} else {
+			$display = "";
+			}
+		$sel_str .= "</SELECT><BR />";
+		$sel_str .= "<DIV id='" . $theDiv . "' style='vertical-align: top;" . $display . "'><TABLE>";
+		$sel_str .= "<TR>";		
+		$sel_str .= "<TD CLASS='td_label text'>Street&nbsp;&nbsp;<BUTTON type='button' id='" . $theButton . "' style='vertical-align: middle; display: inline-block;' onClick='mi_loc_lkup(document.mi_edit_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON></TD>";
+		$sel_str .= "<TD CLASS='td_data text'><INPUT style='vertical-align: middle;' MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /></TD>";
+		$sel_str .= "</TR><TR>";	
+		$sel_str .= "<TD CLASS='td_label text'>City</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>State</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>Lat / Lng</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLat . "' VALUE=''>";
+		$sel_str .= "<INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLng . "' VALUE=''></TD>";
+		$sel_str .= "</TR></TABLE>";
+		$sel_str .= "</DIV>";	
 		} else {
-		$sel_str .= "<BR /><DIV id='" . $theDiv . "'><BUTTON type='button' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON>&nbsp;&nbsp;";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /><BR />";
-		$sel_str .= "<INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></BR>";
-		$sel_str .= "<INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' />";	
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLat . "' VALUE=''>";
-		$sel_str .= "<INPUT TYPE='hidden' NAME='" . $theLng . "' VALUE=''></DIV>";
+		$sel_str = "<DIV id='" . $theDiv . "' style='vertical-align: top;'><TABLE>";
+		$sel_str .= "<TR>";		
+		$sel_str .= "<TD CLASS='td_label text'>Street&nbsp;&nbsp;<BUTTON type='button' id='" . $theButton . "' style='vertical-align: middle; display: inline-block;' onClick='mi_loc_lkup(document.mi_add_Form, \"" . $theType . "\");return false;'><img src='./markers/glasses.png' alt='Lookup location.' /></BUTTON></TD>";
+		$sel_str .= "<TD CLASS='td_data text'><INPUT style='vertical-align: middle;' MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theStreet . "' VALUE='' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>City</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='64' SIZE='48' TYPE='text' NAME='" . $theCity . "' VALUE='" . get_variable('def_city') . "' /></TD>";
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>State</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='4' SIZE='4' TYPE='text' NAME='" . $theState . "' VALUE='" . get_variable('def_st') . "' /></TD>";	
+		$sel_str .= "</TR><TR>";
+		$sel_str .= "<TD CLASS='td_label text'>Lat / Lng</TD><TD CLASS='td_data text'><INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLat . "' VALUE=''>";
+		$sel_str .= "<INPUT MAXLENGTH='10' SIZE='10' TYPE='text' NAME='" . $theLng . "' VALUE=''></TD>";
+		$sel_str .= "</TR></TABLE>";
+		$sel_str .= "</DIV>";	
 		}
 	return $sel_str;
 	}
@@ -312,40 +380,19 @@ function get_loc_name($id) {
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
-	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 	<![endif]-->
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<STYLE>
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-		table.cruises td {overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 1.8em; border: 1px solid #999; }
-		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
-		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
-		div.tabBox {}
-		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; border-radius: .75em .75em 0em 0em;
-				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-				position: relative;	z-index: 101; cursor: auto; height: 250px;}
-		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: auto;}
-	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -357,24 +404,27 @@ function get_loc_name($id) {
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
 <?php
-	if ($_SESSION['internet']) {
+	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
-	<SCRIPT>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 	var sortby = '`date`';	//	11/18/13
 	var sort = "DESC";	//	11/18/13
 	var columns = "<?php print get_msg_variable('columns');?>";	//	11/18/13
@@ -390,7 +440,11 @@ function get_loc_name($id) {
 	var micell5 = 0;
 	var micell6 = 0;
 	var micell7 = 0;
+	var micell8 = 0;
+	var micell9 = 0;
+	var micell10 = 0;
 	var comm_arr = <?php echo json_encode($comm_arr); ?>;
+	var dzf = parseInt("<?php print get_variable('def_zoom_fixed');?>");
 	var colors = new Array ('odd', 'even');
 	var icons=[];
 	var goldmarker;
@@ -405,9 +459,9 @@ function get_loc_name($id) {
 	icons[4] =  4;	// white
 	
 	var loc_icons=[];
-	loc_icons[0] = 0;	// red
-	loc_icons[1] = 1;	// white
-	loc_icons[2] = 2;	// black	
+	loc_icons[0] = 0;	// Gold
+	loc_icons[1] = 1;	// Silver
+	loc_icons[2] = 2;	// Bronze	
 	
 	try {
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
@@ -464,7 +518,9 @@ function get_loc_name($id) {
 				if(goldmarker) {map.removeLayer(goldmarker);}			
 				if(theID == 0) {
 					my_form.frm_gold_street.style.visibility = my_form.frm_gold_city.style.visibility = my_form.frm_gold_state.style.visibility = $('gold_loc_button').style.visibility = 'visible';
+					$('gold_address_data').style.display = "inline-block";	
 					} else {
+					$('gold_address_data').style.display = "none";		
 					my_form.frm_gold_street.value = "";
 					my_form.frm_gold_city.value = "";
 					my_form.frm_gold_state.value = "";
@@ -476,7 +532,9 @@ function get_loc_name($id) {
 				if(silvermarker) {map.removeLayer(silvermarker);}		
 				if(theID == 0) {
 					my_form.frm_silver_street.style.visibility = my_form.frm_silver_city.style.visibility = my_form.frm_silver_state.style.visibility = $('silver_loc_button').style.visibility = 'visible';
-					} else {					
+					$('silver_address_data').style.display = "inline-block";	
+					} else {
+					$('silver_address_data').style.display = "none";			
 					my_form.frm_silver_street.value = "";
 					my_form.frm_silver_city.value = "";
 					my_form.frm_silver_state.value = "";
@@ -488,7 +546,9 @@ function get_loc_name($id) {
 				if(bronzemarker) {map.removeLayer(bronzemarker);}		
 				if(theID == 0) {
 					my_form.frm_bronze_street.style.visibility = my_form.frm_bronze_city.style.visibility = my_form.frm_bronze_state.style.visibility = $('bronze_loc_button').style.visibility = 'visible';
-					} else {						
+					$('bronze_address_data').style.display = "inline-block";	
+					} else {
+					$('bronze_address_data').style.display = "none";						
 					my_form.frm_bronze_street.value = "";
 					my_form.frm_bronze_city.value = "";
 					my_form.frm_bronze_state.value = "";
@@ -500,7 +560,9 @@ function get_loc_name($id) {
 				if(level4marker) {map.removeLayer(level4marker);}		
 				if(theID == 0) {
 					my_form.frm_level4_street.style.visibility = my_form.frm_level4_city.style.visibility = my_form.frm_level4_state.style.visibility = $('level4_loc_button').style.visibility = 'visible';
-					} else {						
+					$('level4_address_data').style.display = "inline-block";	
+					} else {
+					$('level4_address_data').style.display = "none";						
 					my_form.frm_level4_street.value = "";
 					my_form.frm_level4_city.value = "";
 					my_form.frm_level4_state.value = "";
@@ -512,7 +574,9 @@ function get_loc_name($id) {
 				if(level5marker) {map.removeLayer(level5marker);}		
 				if(theID == 0) {
 					my_form.frm_level5_street.style.visibility = my_form.frm_level5_city.style.visibility = my_form.frm_level5_state.style.visibility = $('level5_loc_button').style.visibility = 'visible';
-					} else {		
+					$('level5_address_data').style.display = "inline-block";
+					} else {
+					$('level5_address_data').style.display = "none";
 					my_form.frm_level5_street.value = "";
 					my_form.frm_level5_city.value = "";
 					my_form.frm_level5_state.value = "";
@@ -524,7 +588,9 @@ function get_loc_name($id) {
 				if(level6marker) {map.removeLayer(level6marker);}		
 				if(theID == 0) {
 					my_form.frm_level6_street.style.visibility = my_form.frm_level6_city.style.visibility = my_form.frm_level6_state.style.visibility = $('level6_loc_button').style.visibility = 'visible';
-					} else {		
+					$('level6_address_data').style.display = "inline-block";
+					} else {
+					$('level6_address_data').style.display = "none";
 					my_form.frm_level6_street.value = "";
 					my_form.frm_level6_city.value = "";
 					my_form.frm_level6_state.value = "";
@@ -539,6 +605,8 @@ function get_loc_name($id) {
 			$('level4_loc_button').style.visibility = 'visible';
 			$('level5_loc_button').style.visibility = 'visible';
 			$('level6_loc_button').style.visibility = 'visible';
+			my_form.gold_address_data,style.display = my_form.silver_address_data,style.display = my_form.bronze_address_data,style.display = "inline-block";
+			my_form.level4_address_data,style.display = my_form.level5_address_data,style.display = my_form.level6_address_data,style.display = "inline-block";
 			my_form.frm_gold_street.style.visibility = my_form.frm_gold_city.style.visibility = my_form.frm_gold_state.style.visibility = 'visible';
 			my_form.frm_silver_street.style.visibility = my_form.frm_silver_city.style.visibility = my_form.frm_silver_state.style.visibility = 'visible';
 			my_form.frm_bronze_street.style.visibility = my_form.frm_bronze_city.style.visibility = my_form.frm_bronze_state.style.visibility = 'visible';
@@ -600,6 +668,7 @@ function get_loc_name($id) {
 		}				// end function mi_loc_lkup()
 		
 	function get_building(id, theType, myForm) {
+		if(id == 0) {return;}
 		var randomnumber=Math.floor(Math.random()*99999999);
 		var sessID = "<?php print $_SESSION['id'];?>";
 		var url = './ajax/get_bldg_details.php?id='+id+'&version='+randomnumber+'&q='+sessID;
@@ -707,7 +776,6 @@ function get_loc_name($id) {
 			theSym = "L6";
 			}
 		if(commandType == "gold") {
-			alert("Gold Marker");
 			if(goldmarker) {map.removeLayer(goldmarker);}
 			goldmarker = createLocMarker(lat, lng, theAddress, iconNumber, "A", theSym, theAddress + theTitle);
 			goldmarker.addTo(map);
@@ -743,12 +811,12 @@ function get_loc_name($id) {
 		}
 		
 	function showtheDiv(theDiv) {
-		$(theDiv).style.display = "block";
+		$(theDiv).style.display = "inline-block";
 		}
 		
 	function tidyDiv(theDiv, id, theButton) {
 		if(id == 0) {
-			$(theDiv).style.display = "block";
+			$(theDiv).style.display = "inline-block";
 			$(theButton).style.visibility = 'visible';
 			} else {
 			$(theDiv).style.display = "none";
@@ -812,7 +880,14 @@ function get_loc_name($id) {
 				}
 			var point = new L.LatLng(lat, lon);
 			bounds.extend(point);
-			map.fitBounds(bounds);
+			if((dzf == 1) || (dzf == 3)) {
+				map_is_fixed = true;
+				} else {
+				map_is_fixed = false;
+				}
+			if(!map_is_fixed) {
+				map.fitBounds(bounds);
+				}
 			return marker;
 			} else {
 			return false;
@@ -831,7 +906,14 @@ function get_loc_name($id) {
 			tmarkers[theid][lon] = lon;
 			var point = new L.LatLng(lat, lon);
 			bounds.extend(point);
-			map.fitBounds(bounds);
+			if((dzf == 1) || (dzf == 3)) {
+				map_is_fixed = true;
+				} else {
+				map_is_fixed = false;
+				}
+			if(!map_is_fixed) {
+				map.fitBounds(bounds);
+				}
 			return marker;
 			} else {
 			return false;
@@ -842,14 +924,22 @@ function get_loc_name($id) {
 		if((isFloat(lat)) && (isFloat(lon))) {
 			var iconStr = sym;
 			var iconurl = "./our_icons/gen_icon.php?blank=4&text=" + iconStr;	
-			icon = new baseIcon({iconUrl: iconurl});	
-			var marker = L.marker([lat, lon], {icon: icon, title: tip, riseOnHover: true, riseOffset: 30000});
+			icon = new baseIcon({iconUrl: iconurl});
+			var info = "Responder";
+			var marker = L.marker([lat, lon], {icon: icon, title: tip, riseOnHover: true, riseOffset: 30000}).bindPopup(info).openPopup();
 			rmarkers[theid] = marker;
 			rmarkers[theid][lat] = lat;
 			rmarkers[theid][lon] = lon;
 			var point = new L.LatLng(lat, lon);
 			bounds.extend(point);
-			map.fitBounds(bounds);
+			if((dzf == 1) || (dzf == 3)) {
+				map_is_fixed = true;
+				} else {
+				map_is_fixed = false;
+				}
+			if(!map_is_fixed) {
+				map.fitBounds(bounds);
+				}
 			return marker;
 			} else {
 			return false;
@@ -861,7 +951,10 @@ function get_loc_name($id) {
 	var mi3_text = "<?php print get_text('Gold');?>"; 
 	var mi4_text = "<?php print get_text('Silver');?>"; 
 	var mi5_text = "<?php print get_text('Bronze');?>"; 
-	var mi6_text = "<?php print get_text('As of');?>"; 
+	var mi6_text = "<?php print get_text('Start');?>"; 
+	var mi7_text = "<?php print get_text('End');?>";
+	var mi8_text = "<?php print get_text('Status');?>";
+	var mi9_text = "<?php print get_text('As of');?>"; 
 	var changed_mi_sort = false;
 	var mi_direct = "ASC";
 	var mi_field = "id";
@@ -875,35 +968,50 @@ function get_loc_name($id) {
 			window.mi3_text = "<?php print get_text('Gold');?>";
 			window.mi4_text = "<?php print get_text('Silver');?>";
 			window.mi5_text = "<?php print get_text('Bronze');?>";
-			window.mi6_text = "<?php print get_text('As of');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
 			} else if(id == "mi2") {
 			window.mi2_text = header_text + the_bull;
 			window.mi1_text = "<?php print get_text('ID');?>";
 			window.mi3_text = "<?php print get_text('Gold');?>";
 			window.mi4_text = "<?php print get_text('Silver');?>";
 			window.mi5_text = "<?php print get_text('Bronze');?>";
-			window.mi6_text = "<?php print get_text('As of');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
 			} else if(id == "mi3") {
 			window.mi3_text = header_text + the_bull;
 			window.mi1_text = "<?php print get_text('ID');?>";
 			window.mi2_text = "<?php print get_text('Name');?>";
 			window.mi4_text = "<?php print get_text('Silver');?>";
 			window.mi5_text = "<?php print get_text('Bronze');?>";
-			window.mi6_text = "<?php print get_text('As of');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
 			} else if(id == "mi4") {
 			window.mi4_text = header_text + the_bull;
 			window.mi1_text = "<?php print get_text('ID');?>";
 			window.mi2_text = "<?php print get_text('Name');?>";
 			window.mi3_text = "<?php print get_text('Gold');?>";
 			window.mi5_text = "<?php print get_text('Bronze');?>";
-			window.mi6_text = "<?php print get_text('As of');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
 			} else if(id == "mi5") {
 			window.mi5_text = header_text + the_bull;
 			window.mi1_text = "<?php print get_text('ID');?>";
 			window.mi2_text = "<?php print get_text('Name');?>";
 			window.mi3_text = "<?php print get_text('Gold');?>";
 			window.mi4_text = "<?php print get_text('Silver');?>";
-			window.mi6_text = "<?php print get_text('As of');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
 			} else if(id == "mi6") {
 			window.mi6_text = header_text + the_bull;
 			window.mi1_text = "<?php print get_text('ID');?>";
@@ -911,6 +1019,39 @@ function get_loc_name($id) {
 			window.mi3_text = "<?php print get_text('Gold');?>";
 			window.mi4_text = "<?php print get_text('Silver');?>";
 			window.mi5_text = "<?php print get_text('Bronze');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
+			} else if(id == "mi7") {
+			window.mi6_text = header_text + the_bull;
+			window.mi1_text = "<?php print get_text('ID');?>";
+			window.mi2_text = "<?php print get_text('Name');?>";
+			window.mi3_text = "<?php print get_text('Gold');?>";
+			window.mi4_text = "<?php print get_text('Silver');?>";
+			window.mi5_text = "<?php print get_text('Bronze');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
+			} else if(id == "mi8") {
+			window.mi6_text = header_text + the_bull;
+			window.mi1_text = "<?php print get_text('ID');?>";
+			window.mi2_text = "<?php print get_text('Name');?>";
+			window.mi3_text = "<?php print get_text('Gold');?>";
+			window.mi4_text = "<?php print get_text('Silver');?>";
+			window.mi5_text = "<?php print get_text('Bronze');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi9_text = "<?php print get_text('As of');?>";
+			} else if(id == "mi9") {
+			window.mi6_text = header_text + the_bull;
+			window.mi1_text = "<?php print get_text('ID');?>";
+			window.mi2_text = "<?php print get_text('Name');?>";
+			window.mi3_text = "<?php print get_text('Gold');?>";
+			window.mi4_text = "<?php print get_text('Silver');?>";
+			window.mi5_text = "<?php print get_text('Bronze');?>";
+			window.mi6_text = "<?php print get_text('Start');?>";
+			window.mi7_text = "<?php print get_text('End');?>";
+			window.mi8_text = "<?php print get_text('Status');?>";
 			}
 		}
 		
@@ -968,16 +1109,19 @@ function get_loc_name($id) {
 				$('the_milist').innerHTML = outputtext;
 				window.latest_mi = 0;
 				} else {
-				var outputtext = "<TABLE id='majorincidentstable' class='cruises scrollable' style='width: " + window.listwidth + "px;'>";
+				var outputtext = "<TABLE id='majorincidentstable' class='fixedheadscrolling scrollable' style='width: " + window.leftcolwidth + "px;'>";
 				outputtext += "<thead>";
-				outputtext += "<TR style='width: " + window.listwidth + "px;'>";
-				outputtext += "<TH id='mi1' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('ID');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'id', '<?php print get_text('ID');?>')\">" + window.mi1_text + "</TH>";
-				outputtext += "<TH id='mi2' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Major Incident Name');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'name', '<?php print get_text('Name');?>')\">" + window.mi2_text + "</TH>";
-				outputtext += "<TH id='mi3' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Gold Command');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'gold', '<?php print get_text('Gold');?>')\">" + window.mi3_text + "</TH>";
-				outputtext += "<TH id='mi4' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Silver Command');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'silver', '<?php print get_text('Silver');?>')\">" + window.mi4_text + "</TH>";
-				outputtext += "<TH id='mi5' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Bronze Command');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'bronze', '<?php print get_text('Bronze');?>')\">" + window.mi5_text + "</TH>";
-				outputtext += "<TH id='mi6' class='plain_listheader' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Updated');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'updated', '<?php print get_text('As of');?>')\">" + window.mi6_text + "</TH>";
-				outputtext += "<TH id='mi7'>" + pad(5, " ", "\u00a0") + "</TH>";
+				outputtext += "<TR style='width: " + window.leftcolwidth + "px; background-color: #EFEFEF;'>";
+				outputtext += "<TH id='mi1' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('ID');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'id', '<?php print get_text('ID');?>')\">" + window.mi1_text + "</TH>";
+				outputtext += "<TH id='mi2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Major Incident Name');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'name', '<?php print get_text('Name');?>')\">" + window.mi2_text + "</TH>";
+				outputtext += "<TH id='mi3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Gold Command');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'gold', '<?php print get_text('Gold');?>')\">" + window.mi3_text + "</TH>";
+				outputtext += "<TH id='mi4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Silver Command');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'silver', '<?php print get_text('Silver');?>')\">" + window.mi4_text + "</TH>";
+				outputtext += "<TH id='mi5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Bronze Command');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'bronze', '<?php print get_text('Bronze');?>')\">" + window.mi5_text + "</TH>";
+				outputtext += "<TH id='mi6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Start Time');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'start', '<?php print get_text('Start');?>')\">" + window.mi6_text + "</TH>";
+				outputtext += "<TH id='mi7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('End Time');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'end', '<?php print get_text('End');?>')\">" + window.mi7_text + "</TH>";
+				outputtext += "<TH id='mi8' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Status');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'end', '<?php print get_text('Status');?>')\">" + window.mi8_text + "</TH>";
+				outputtext += "<TH id='mi9' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('<?php print get_tip('Updated');?>');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_mi_sort(this.id, 'updated', '<?php print get_text('As of');?>')\">" + window.mi9_text + "</TH>";
+				outputtext += "<TH id='mi10'>" + pad(5, " ", "\u00a0") + "</TH>";
 				outputtext += "</TR>";
 				outputtext += "</thead>";
 				outputtext += "<tbody>";
@@ -985,13 +1129,17 @@ function get_loc_name($id) {
 					if(key != 0) {
 						if(mi_arr[key][2]) {
 							var mi_id = mi_arr[key][10];
-							outputtext += "<TR id='" + mi_arr[key][10] + mi_id +"' CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;'>";
-							outputtext += "<TD onClick='mymiclick(" + mi_id + ");'>" + pad(6, mi_id, "\u00a0") + "</TD>";
-							outputtext += "<TD onClick='mymiclick(" + mi_id + ");' style='color: " + mi_arr[key][13] + "; background-color: " + mi_arr[key][12] + ";'>" + mi_arr[key][0] + "</TD>";
-							outputtext += "<TD onClick='mymiclick(" + mi_id + ");'>" + pad(15, mi_arr[key][6], "\u00a0") + "</TD>";
-							outputtext += "<TD onClick='mymiclick(" + mi_id + ");'>" + pad(15, mi_arr[key][7], "\u00a0") + "</TD>";
-							outputtext += "<TD onClick='mymiclick(" + mi_id + ");'>" + pad(15, mi_arr[key][8], "\u00a0") + "</TD>";
-							outputtext += "<TD onClick='mymiclick(" + mi_id + ");'>" + mi_arr[key][3] + "</TD>";
+							outputtext += "<TR id='" + mi_arr[key][10] + mi_id +"' CLASS='" + colors[i%2] +"' style='width: " + window.leftcolwidth + "px;'>";
+							outputtext += "<TD class='plain_list text' onClick='mymiclick(" + mi_id + ");'>" + pad(6, mi_id, "\u00a0") + "</TD>";
+							outputtext += "<TD class='plain_list text' onClick='mymiclick(" + mi_id + ");' style='color: " + mi_arr[key][13] + "; background-color: " + mi_arr[key][12] + ";'>" + mi_arr[key][0] + "</TD>";
+							outputtext += "<TD class='plain_list text' onClick='mymiclick(" + mi_id + ");'>" + pad(15, mi_arr[key][6], "\u00a0") + "</TD>";
+							outputtext += "<TD class='plain_list text' onClick='mymiclick(" + mi_id + ");'>" + pad(15, mi_arr[key][7], "\u00a0") + "</TD>";
+							outputtext += "<TD class='plain_list text' onClick='mymiclick(" + mi_id + ");'>" + pad(15, mi_arr[key][8], "\u00a0") + "</TD>";
+							var theStyle = (mi_arr[key][18] != "N/A") ? "style='background-color: red; color: #FFFFFF;'" : "";
+							outputtext += "<TD class='plain_list text' " + theStyle + " onClick='mymiclick(" + mi_id + ");'>" + mi_arr[key][17] + "</TD>";
+							outputtext += "<TD class='plain_list text' " + theStyle + " onClick='mymiclick(" + mi_id + ");'>" + mi_arr[key][18] + "</TD>";
+							outputtext += "<TD class='plain_list text' " + theStyle + " onClick='mymiclick(" + mi_id + ");'>" + mi_arr[key][19] + "</TD>";
+							outputtext += "<TD class='plain_list text' onClick='mymiclick(" + mi_id + ");'>" + mi_arr[key][3] + "</TD>";
 							outputtext += "<TD>" + pad(5, " ", "\u00a0") + "</TD>";
 							outputtext += "</TR>";
 							if(window.mis_updated[mi_arr[key][10]]) {
@@ -1121,29 +1269,41 @@ function get_loc_name($id) {
 						var headerRow = mitbl.rows[0];
 						var tableRow = mitbl.rows[1];
 						if(tableRow) {
-							if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
-							if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
-							if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
-							if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
-							if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
-							if(tableRow.cells[5] && headerRow.cells[5]) {headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";}
-							if(tableRow.cells[6] && headerRow.cells[6]) {headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";}
+//							alert(tableRow.cells.length);
+							for (var i = 0; i < tableRow.cells.length; i++) {
+								if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
+//								alert(headerRow.cells[i].clientWidth + ", " + tableRow.cells[i].clientWidth);
+								}
+							if(getHeaderHeight(headerRow) >= 30) {
+								var theRow = mitbl.insertRow(1);
+								theRow.style.height = "20px";
+								for (var i = 0; i < tableRow.cells.length; i++) {
+									var theCell = theRow.insertCell(i);
+									theCell.innerHTML = " ";
+									}
+								}
 							} else {
-							var cellwidthBase = window.listwidth / 28;
+							var cellwidthBase = window.leftcolwidth / 30;
 							micell1 = cellwidthBase * 3;
-							micell2 = cellwidthBase * 5;
-							micell3 = cellwidthBase * 4;
-							micell4 = cellwidthBase * 4;
-							micell5 = cellwidthBase * 4;
+							micell2 = cellwidthBase * 6;
+							micell3 = cellwidthBase * 2;
+							micell4 = cellwidthBase * 2;
+							micell5 = cellwidthBase * 2;
 							micell6 = cellwidthBase * 5;
 							micell7 = cellwidthBase * 3;
+							micell8 = cellwidthBase * 3;
+							micell9 = cellwidthBase * 3;
+							micell10 = cellwidthBase * 1;
 							headerRow.cells[0].style.width = micell1 + "px";
 							headerRow.cells[1].style.width = micell2 + "px";
 							headerRow.cells[2].style.width = micell3 + "px";
-							headerRow.cells[3].style.width = micell4 + "px";						
-							headerRow.cells[4].style.width = micell5 + "px";							
-							headerRow.cells[5].style.width = micell6 + "px";						
-							headerRow.cells[6].style.width = micell7 + "px";		
+							headerRow.cells[3].style.width = micell4 + "px";
+							headerRow.cells[4].style.width = micell5 + "px";
+							headerRow.cells[5].style.width = micell6 + "px";
+							headerRow.cells[6].style.width = micell7 + "px";
+							headerRow.cells[7].style.width = micell8 + "px";
+							headerRow.cells[8].style.width = micell9 + "px";
+							headerRow.cells[9].style.width = micell10 + "px";
 							}
 						}
 					window.mi_last_display = mi_number;
@@ -1169,31 +1329,31 @@ function get_loc_name($id) {
 				break;
 				}
 			}
-		if(i != mitbl.rows.length) {
-			var tableRow = mitbl.rows[viewableRow];
-			tableRow.cells[0].style.width = window.micell1 + "px";
-			tableRow.cells[1].style.width = window.micell2 + "px";
-			tableRow.cells[2].style.width = window.micell3 + "px";
-			tableRow.cells[3].style.width = window.micell4 + "px";
-			tableRow.cells[4].style.width = window.micell5 + "px";
-			tableRow.cells[5].style.width = window.micell6 + "px";
-			tableRow.cells[6].style.width = window.micell7 + "px";
-			headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";
-			headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";
-			headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";
-			headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";
-			headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";
-			headerRow.cells[5].style.width = tableRow.cells[5].clientWidth - 4 + "px";
-			headerRow.cells[6].style.width = tableRow.cells[6].clientWidth - 4 + "px";
+		var tableRow = mitbl.rows[viewableRow];
+		if(tableRow) {
+			for (var i = 0; i < tableRow.cells.length; i++) {
+				if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
+				}
+			if(getHeaderHeight(headerRow) >= 30) {
+				var theRow = mitbl.insertRow(1);
+				theRow.style.height = "20px";
+				for (var i = 0; i < tableRow.cells.length; i++) {
+					var theCell = theRow.insertCell(i);
+					theCell.innerHTML = " ";
+					}
+				}
 			} else {
-			var cellwidthBase = window.listwidth / 28;
+			var cellwidthBase = window.leftcolwidth / 28;
 			micell1 = cellwidthBase * 3;
-			micell2 = cellwidthBase * 5;
-			micell3 = cellwidthBase * 4;
-			micell4 = cellwidthBase * 4;
-			micell5 = cellwidthBase * 4;
+			micell2 = cellwidthBase * 6;
+			micell3 = cellwidthBase * 2;
+			micell4 = cellwidthBase * 2;
+			micell5 = cellwidthBase * 2;
 			micell6 = cellwidthBase * 5;
 			micell7 = cellwidthBase * 3;
+			micell8 = cellwidthBase * 3;
+			micell9 = cellwidthBase * 3;
+			micell10 = cellwidthBase * 1;
 			headerRow.cells[0].style.width = micell1 + "px";
 			headerRow.cells[1].style.width = micell2 + "px";
 			headerRow.cells[2].style.width = micell3 + "px";
@@ -1201,6 +1361,9 @@ function get_loc_name($id) {
 			headerRow.cells[4].style.width = micell5 + "px";
 			headerRow.cells[5].style.width = micell6 + "px";
 			headerRow.cells[6].style.width = micell7 + "px";
+			headerRow.cells[7].style.width = micell8 + "px";
+			headerRow.cells[8].style.width = micell9 + "px";
+			headerRow.cells[9].style.width = micell10 + "px";
 			}
 		}
 		
@@ -1234,13 +1397,26 @@ function get_loc_name($id) {
 		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		} else {
 		if ($_getgoedit == 'true') {
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id` = " . $_POST['frm_id'];
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$current_status = $row['mi_status'];
+			$current_end = $row['inc_endtime'];
+			if(!array_key_exists('frm_year_inc_endtime', $_POST) && $current_status == "Closed") {
+				$frm_miend = "0000-00-00 00:00:00";
+				$status = "Open";
+				} else {
+				$frm_miend = (array_key_exists('frm_year_inc_endtime', $_POST)) ? "$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00" : NULL;
+				$status = (array_key_exists('frm_status', $_POST) && $_POST['frm_status'] == "Open" || $_POST['frm_status'] == "Closed") ? $_POST['frm_status'] : "Open";
+				$status = ($frm_miend != NULL && $frm_miend != "0000-00-00 00:00:00") ? "Closed" : $status;
+				}
 			$frm_mistart = "$_POST[frm_year_inc_startime]-$_POST[frm_month_inc_startime]-$_POST[frm_day_inc_startime] $_POST[frm_hour_inc_startime]:$_POST[frm_minute_inc_startime]:00";
-			$frm_miend  = (array_key_exists('frm_year_inc_endtime', $_POST)) ? "$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00" : "NULL";
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
 			$mi_id = $_POST['frm_id'];
 			$by = $_SESSION['user_id'];
 			$from = $_SERVER['REMOTE_ADDR'];
 			$incs_arr = (isset($_POST['frm_inc'])) ? $_POST['frm_inc'] : array();
+
 			if(quote_smart(trim($_POST['frm_gold_loc'])) != 0) {
 				$_POST['frm_gold_street'] = $_POST['frm_gold_city'] = $_POST['frm_gold_state'] = $_POST['frm_gold_lat'] = $_POST['frm_gold_lng'] = "";
 				}
@@ -1281,6 +1457,7 @@ function get_loc_name($id) {
 				`name`= " . 			quote_smart(trim($_POST['frm_name'])) . ",
 				`description`= " . 		quote_smart(trim($_POST['frm_descr'])) . ",
 				`type`= " . 			quote_smart(trim($_POST['frm_type'])) . ",
+				`mi_status`= " . 		quote_smart(trim($status)) . ",
 				`gold`= " . 			quote_smart(trim($_POST['frm_gold'])) . ",
 				`silver`= " . 			quote_smart(trim($_POST['frm_silver'])) . ",
 				`bronze`= " . 			quote_smart(trim($_POST['frm_bronze'])) . ",
@@ -1445,7 +1622,8 @@ function get_loc_name($id) {
 		$frm_miend  = (array_key_exists('frm_year_inc_endtime', $_POST)) ? quote_smart("$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00") : "NULL";
 		$by = $_SESSION['user_id'];
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-		$from = $_SERVER['REMOTE_ADDR'];	
+		$from = $_SERVER['REMOTE_ADDR'];
+		$status = (array_key_exists('frm_status', $_POST) && $_POST['frm_status'] == "Open" || $_POST['frm_status'] == "Closed") ? $_POST['frm_status'] : "Open";
 		$incs_arr = (isset($_POST['frm_inc'])) ? $_POST['frm_inc'] : array();
 		$gold_loc = (isset($_POST['frm_gold_loc'])) ? $_POST['frm_gold_loc'] : 0;
 		$silver_loc = (isset($_POST['frm_silver_loc'])) ? $_POST['frm_silver_loc'] : 0;
@@ -1505,7 +1683,8 @@ function get_loc_name($id) {
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]major_incidents` 
 				(`name`, 
 				`description`, 
-				`type`, 
+				`type`,
+				`mi_status`,
 				`gold`, 
 				`silver`, 
 				`bronze`, 
@@ -1559,6 +1738,7 @@ function get_loc_name($id) {
 				quote_smart(trim($_POST['frm_name'])) . "," .
 				quote_smart(trim($_POST['frm_descr'])) . "," .
 				quote_smart(trim($_POST['frm_type'])) . "," .
+				quote_smart(trim($status)) . "," .
 				quote_smart(trim($_POST['frm_gold'])) . "," .
 				quote_smart(trim($_POST['frm_silver'])) . "," .
 				quote_smart(trim($_POST['frm_bronze'])) . "," .
@@ -1751,5 +1931,4 @@ function get_loc_name($id) {
 		require_once('./forms/mi_screen.php');
 		}
 	exit();
-    break;
 ?>

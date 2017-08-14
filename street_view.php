@@ -19,8 +19,8 @@ $api_key = get_variable('gmaps_api_key');
 	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
 	<title>Streetview for Tickets</title>
 	<script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;key=<?php print $api_key; ?>"
-			type="text/javascript"></script>
-	<script type="text/javascript">
+			type="application/x-javascript"></script>
+	<script type="application/x-javascript">
 
 	function $() {									// 1/19/09
 		var elements = new Array();

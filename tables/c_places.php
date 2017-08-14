@@ -205,8 +205,10 @@
 		var latLng;
 		var in_local_bool = "<?php print get_variable('local_maps');?>";
 		var theLocale = <?php print get_variable('locale');?>;
-		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, 1);
-		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+		var useOSMAP = <?php print get_variable('use_osmap');?>;
+		var initZoom = <?php print get_variable('def_zoom');?>;
+		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "");
+		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points
@@ -216,7 +218,7 @@
 			icon = new baseIcon({iconUrl: iconurl});	
 			marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
 			marker.addTo(map);
-			addrFromClick(e.latlng);
+			newGetAddress(e.latlng, "c");
 			};
 
 		map.on('click', onMapClick);

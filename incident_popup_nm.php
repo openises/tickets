@@ -58,7 +58,7 @@ $ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
@@ -171,8 +171,9 @@ echo "</B><BR><BR>";
 		}
 
 echo "<CENTER><br clear = 'both'/><br /><br /><SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;{$ticket_addr}&nbsp;</SPAN>" ;
-echo "<BR /><BR /&nbsp;><U><SPAN onClick = 'window.close();' STYLE='background-color:white; font-weight:bold; color:black; text-decoration:underline'>Finished</SPAN></U>&nbsp;</CENTER>";
+echo "<BR /><BR />";
 ?>
+<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.forms['fin_form'].submit();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 <FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_CLOSED'];?>'>
 </FORM>

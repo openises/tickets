@@ -9,170 +9,37 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 $alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 
 
 ?>
-BODY { 
-	background-color: <?php print get_css("page_background", $day_night);?>;
-	margin:0;
-	font-weight: normal; 
-	font-size: 12px; 
-	color: <?php print get_css("normal_text", $day_night);?>; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
+/* Core Elements */
+BODY 	{ background-color: <?php print get_css("page_background", $day_night);?>;	margin:0; font-weight: normal; font-style: normal; 
+		color: <?php print get_css("normal_text", $day_night);?>; font-family: Segoe, Tahoma, Verdana, Arial, Helvetica, sans-serif; text-decoration: none;}
+TABLE 	{border-collapse: collapse;}
+INPUT 	{background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal; font-size: 1em; 
+		color: <?php print get_css("form_input_text", $day_night);?>;}
+TEXTAREA {background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal; font-size: 1em; 
+		color: <?php print get_css("form_input_text", $day_night);?>; white-space: pre; word-wrap: break-word;}
+SELECT 	{background-color: <?php print get_css("select_menu_background", $day_night);?>; font-weight: normal; font-size: 0.7em; 
+		color: <?php print get_css("select_menu_text", $day_night);?>; text-decoration: underline;}
+OPTION 	{font-weight: normal; font-size: 0.7em;}
+A 		{font-weight: bold; font-size: 1em; color: <?php print get_css("links", $day_night);?>;}
+li.mylink {font-weight: bold; font-size: 24px; color: <?php print get_css("links", $day_night);?>;}
 
-TABLE {
-	border-collapse: collapse; 
-	}
-	
-INPUT { 
-	background-color: <?php print get_css("form_input_background", $day_night);?>;
-	font-weight: normal; 
-	font-size: .9em; 
-	color: <?php print get_css("form_input_text", $day_night);?>; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
+/* Tables */
+TD 		{background-color: inherit; font-size: .9em; color: #000000; vertical-align: top; word-wrap: break-all;}
+.print_TD {background-color: #FFFFFF; font-size: 1em; color: #000000;}
+.td_label {background-color: inherit; color: <?php print get_css("label_text", $day_night);?>; font-weight: bold; font-size: 1em;}
+.td_mand {font-weight: bold; font-size: 1em; color: #CC0000;}
+.td_data {white-space:nowrap; background-color: inherit; font-size: 1em; color: #000000;}
+.td_data_wrap {word-wrap: break-all; background-color: inherit; font-size: 1em; color: #000000;}
+#td_header {font-weight: bold; font-size: 1em; color: <?php print get_css("header_text", $day_night);?>;
+		background-color: <?php print get_css("header_background", $day_night);?>;}
+.td_link {font-weight: bold; font-size: 1em; color: #000099;}
 
-TEXTAREA { 
-	background-color: <?php print get_css("form_input_background", $day_night);?>;
-	font-weight: normal; 
-	font-size: .9em; 
-	color: <?php print get_css("form_input_text", $day_night);?>; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
+/* Severities /*
+.severity_high {font-weight: bold; font-size: .9em; color: #C00000;}
+.severity_medium {font-weight: bold; font-size: .9em; color: #008000;}
+.severity_normal {font-weight: bold; font-size: .9em; color: #0000FF;}
+.sev_counts {font-weight: bold; font-size: .8em; background-color: #CECECE; margin-left: 40px; margin-right: 40px;}
 
-SELECT {
-	background-color: <?php print get_css("select_menu_background", $day_night);?>; 
-	font-weight: normal; 
-	font-size: .9em; 
-	color: <?php print get_css("select_menu_text", $day_night);?>; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: underline; 
-	}
-	
-A { 
-	font-weight: bold; 
-	font-size: 0.75em; 
-	color: <?php print get_css("links", $day_night);?>; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-
-li.mylink { 
-	font-weight: bold; 
-	font-size: 1.2em; 
-	color: <?php print get_css("links", $day_night);?>; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-
-TD { 
-	background-color: inherit; 
-	font-weight: normal; 
-	font-size: 1em; 
-	color: #000000; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	VERTICAL-ALIGN: top;  
-	}
-	
-.print_TD { 
-	background-color: #FFFFFF; 
-	font-weight: normal; 
-	font-size: 0.75em; 
-	color: #000000; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
-	
-.td_label { 
-	background-color: inherit;
-	color: <?php print get_css("label_text", $day_night);?>; 
-	font-weight: bold; 
-	font-size: 1em; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	width: 40%;
-	}
-	
-.td_data {
-	white-space:nowrap; 
-	background-color: inherit;
-	font-size: 1em; 
-	color: #000000; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
-	
-#td_wrapper {
-	white-space:nowrap; 
-	background-color: inherit;
-	font-size: 1em; 
-	color: #000000; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
-
-.inside_td_label { 
-	background-color: inherit;
-	color: <?php print get_css("label_text", $day_night);?>; 
-	width: 35%;
-	font-weight: bold; 
-	font-size: 1em; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.inside_td_data { 
-	white-space:nowrap; 
-	background-color: inherit;
-	font-size: 1em; 
-	color: #000000; 
-	width: 65%;
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
-	
-.emph { 
-	background-color: #99b2cc;
-	font-size: 0.75em; 
-	color: #ffffff; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-
-
-#td_header { 
-	font-weight: bold; 
-	font-size: 0.8em;  
-	color: <?php print get_css("header_text", $day_night);?>;
-	background-color: <?php print get_css("header_background", $day_night);?>;
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.td_link { 
-	font-weight: bold; 
-	font-size: 0.8em; 
-	color: #000099; 
-	font-style: normal; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	}
-	
 .header { 
 	font-weight: bold; 
 	font-size: 0.75em; 
@@ -193,14 +60,6 @@ TD {
 	text-decoration: none;
 	}
 
-.text { 
-	font-weight: normal; 
-	font-size: 0.75em; 
-	color:	#000000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
 .warn { 
 	font-weight: normal; 
 	font-size: 0.75em; 
@@ -209,93 +68,51 @@ TD {
 	text-decoration: none;
 	}
 	
-.severity_high { 
-	font-weight: bold; 
-	font-size: 0.6em; 
-	color: #C00000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.severity_medium { 
-	font-weight: bold; 
-	font-size: 0.6em; 
-	color: #008000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.severity_normal { 
-	font-weight: bold; 
-	font-size: 0.6em; 
-	color: #0000FF; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none; 
-	}
-	
-.text_green { 
-	font-weight: normal; 
-	font-size: 0.6em; 
-	color: #009000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_orange { 
-	font-weight: normal; 
-	font-size: 0.6em; 
-	color: #EBA500; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_blue { 
-	font-weight: normal; 
-	font-size: 0.6em; 
-	color: #0000E0; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_red { 
-	font-weight: normal; 
-	font-size: 0.6em; 
-	color: #C00000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_black { 
-	font-weight: normal; 
-	font-size: 0.6em; 
-	color: #000000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_small { 
-	font-weight: normal; 
-	font-size: 0.5em; 
-	color: #000000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_medium { 
-	font-weight: normal; 
-	font-size: 0.6em; 
-	color: #000000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
-	
-.text_big { 
-	font-weight: normal; 
-	font-size: 9em; 
-	color: #000000; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	text-decoration: none;
-	}
+/* Text Colors */
+.text_green {color: #009000;}
+.text_orange {color: #EBA500;}
+.text_blue {color: #0000E0;}
+.text_red {color: #C00000;}	
+.text_black {color: #000000;}
+
+/* Text Sizes */
+.text_verysmall {font-size: .6em;}
+.text_small {font-size: .7em;}
+.text {font-size: 1em;}
+.text_medium {font-size: .8em;}
+.text_large {font-size: 1.1em;}
+.text_big {font-size: 1.2em;}
+.text_biggest {font-size: 2em;}
+
+/* Text Weight */
+.bold {font-weight: bold;}
+.bolder {font-weight: bolder;}
+
+/* Text Decoration */
+.italic {text-decoration: italic;}
+.underline {text-decoration: underline;}
+
+/* Text Wrap */
+.nowrap {white-space:nowrap;}
+
+/* Borders */
+.solidborder {border:1px solid gray;}
+.outsetborder {border:1px outset #707070;}
+.insetborder {border:1px inset #707070;}
+
+/* Text Overflow */
+.listoverflow {	overflow-y: auto; overflow-x: hidden;}
+
+/* Div and Span floats */
+.left {float: left;}
+.right {float: right;}
+.nofloat {float: none;}
+
+/* Text Alignment */
+.middle {vertical-align: middle;}
+.text_left {text-align: left;}
+.text_right {text-align: right;}
+.text_center {text-align: center;}
 	
 .scheduled {
 	white-space:nowrap; 
@@ -381,17 +198,10 @@ tr.heading {
 	}	
 	
 .list_entry {
-	font-size: 1em; 
-	font-weight: bold; 
-	font-family: Verdana, Arial, Helvetica, sans-serif; 
-	white-space: normal; 
-	word-wrap: break-word; 
-	-ms-word-wrap : sWrap;	
+	white-space:nowrap; 
 	}	
 	
 .list_row {
-	border-bottom: 2px solid #000000; 
-	height: 12px; 
 	text-align: left;	
 	}	
 
@@ -625,7 +435,6 @@ select.sit {
 	BACKGROUND-COLOR: #000000; 
 	FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;
 	}
-	
 .plain 	{ 
 	margin-left: 4px;  
 	font: normal 1em Arial, Helvetica, sans-serif; 
@@ -637,6 +446,7 @@ select.sit {
 	background-color: #EFEFEF;
 	font-weight: bolder;
 	cursor: pointer;
+	border-radius:.5em;
 	}		
 	
 .hover 	{ 
@@ -650,6 +460,7 @@ select.sit {
 	background-color: #DEE3E7;
 	font-weight: bolder;
 	cursor: pointer;
+	border-radius:.5em;
 	}
 
 #detailmap, #mapDiv { 

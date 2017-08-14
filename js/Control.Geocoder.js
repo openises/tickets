@@ -408,6 +408,8 @@
 				key : this.key
 			}, function(data) {
 				var results = [];
+				var theStatus = data.StatusCode;
+				alert(theStatus);
 				for (var i = data.resourceSets[0].resources.length - 1; i >= 0; i--) {
 					var resource = data.resourceSets[0].resources[i],
 						bbox = resource.bbox;
@@ -714,6 +716,7 @@
 							};
 						}
 					}
+					if(data.status != "OK") {alert("Google Geocoding says '" + data.status + "'");}
 					cb.call(context, results);
 			});
 		},

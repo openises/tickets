@@ -453,7 +453,7 @@ function OLD_show_assigns($which, $id) {				// 08/8/5, 4/30/10
 	}			// end function get_assigns()
 
 
-function show_actions ($the_id, $theSort="date", $links, $display) {			/* list actions and patient data belonging to ticket */
+function show_actions ($the_id, $theSort="date", $links, $display, $mode) {			/* list actions and patient data belonging to ticket */
 	if ($display) {
 		$evenodd = array ("even", "odd");		// class names for display table row colors
 		}
@@ -480,9 +480,12 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 		
 		$print .= ($pat_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD>" . nl2br($pat_row['description']) . "</TD>";
 		if ($links) {
-			$print .= "<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id=" . $pat_row['id'] . "&action=edit'>edit</A>|
-				<A HREF='patient.php?id=" . $pat_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD></TR>\n";	
+			if($mode == 0) {
+				$print .= "\t<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A>|<A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
+				} else {
+				$print .= "\t<TD>&nbsp;[<A HREF='patient_w.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A>|<A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
 				}
+			}
 		$caption = "";				// once only
 		$actr++;
 		}
@@ -491,8 +494,7 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if ((mysql_affected_rows() + $actr)==0) { 				// 8/6/08
 //		return "";	// 7/10/13 removed as it causes failure to show Patients if no actions present	
-		}				
-	else {
+		} else {
 		$caption = "Actions: &nbsp;&nbsp;";
 		$pctr=0;
 		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
@@ -511,8 +513,13 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 			$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
 			$print .= "</TD><TD WIDTH='100%'>" . nl2br($act_row['description']) . "</TD>";
 			if ($links) {
-				$print .= "<TD><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
-					<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD></TR>\n";	
+				if($mode == 0) {
+					$print .= "<TD><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
+						<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD>";
+					} else {
+					$print .= "\t<TD>&nbsp;[<A HREF='action_w.php?ticket_id=$the_id&id={$act_row['id']}&action=edit'>edit</A>|
+						<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
+					}
 				}
 			$caption = "";
 			$pctr++;

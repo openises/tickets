@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"> <!-- 7/7/09 -->
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <?php
@@ -125,12 +125,12 @@ $the_url = "http://www.google.com/latitude/apps/badge/api?user={$frm_badge}&type
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-    <script type="text/javascript">
+    <script type="application/x-javascript">
 
     function initialize() {
       if (GBrowserIsCompatible()) {

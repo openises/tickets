@@ -10,7 +10,7 @@
 
 
     <title>Google Maps</title>
-    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAPDUET0Qt7p2VcSk6JNU1sBSM5jMcmVqUpI7aqV44cW1cEECiThQYkcZUPRJn9vy_TWxWvuLoOfSFBw" type="text/javascript"></script>
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAPDUET0Qt7p2VcSk6JNU1sBSM5jMcmVqUpI7aqV44cW1cEECiThQYkcZUPRJn9vy_TWxWvuLoOfSFBw" type="application/x-javascript"></script>
   </head>
   <body onunload="GUnload()">
 
@@ -18,9 +18,9 @@
     <div id="map" style="width: 550px; height: 450px"></div>
     <a href="elabel.htm">Back to the tutorial page</a>
 
-    <script src="elabel.js" type="text/javascript"></script>
+    <script src="elabel.js" type="application/x-javascript"></script>
 
-    <script type="text/javascript">
+    <script type="application/x-javascript">
     //<![CDATA[
 
     if (GBrowserIsCompatible()) {

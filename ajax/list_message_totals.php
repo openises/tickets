@@ -3,6 +3,8 @@
 list messages totals.php - gets new message totals
 21/1/14 - new file
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 @session_start();
 session_write_close();
 require_once('../incs/functions.inc.php');
@@ -20,7 +22,7 @@ $where = "WHERE (`m`.`msg_type` = '1' OR `m`.`msg_type` = '2' OR `m`.`msg_type` 
 if(isset($ticket_id)) { $where .= " AND (`ticket_id` = '" . $ticket_id . "')"; }
 if(isset($responder_id)) { $where .= " AND (`resp_id` = '" . $responder_id . "')"; }
 	
-$the_user = $_SESSION['user_id'];	
+$the_user = $_SESSION['user_id'];
 
 $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`id` AS `message_id`,

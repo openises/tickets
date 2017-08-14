@@ -21,6 +21,23 @@ function get_status_name($val) {
 	return $the_name;
 	}
 
+function get_noreset_status($val) {
+	$theRet = "n";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $val;
+	$result = mysql_query($query);	
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		if($row['excl_from_reset'] == "y") {
+			$theRet = "y";
+			} else {
+			$theRet = "n";
+			}
+		} else {
+		$theRet = "n";
+		}
+	return $theRet;
+	}
+
 // get status control
 $the_status_sel = "";
 $the_status_sel .= "<SELECT name='frm_status'>";
@@ -35,11 +52,23 @@ $the_status_sel .= "</SELECT>";
 // end of status control
 
 if(!empty($_POST)) {
-	$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status']);			
-	$result = mysql_query($query);	
-	if($result) {
-		$caption = "Responder Status Values set to " . get_status_name($_POST['frm_status']);
-		} else {
+	$counter = 0;
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id`";	
+	$result = mysql_query($query);
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$exclFromReset = get_noreset_status(intval($row['un_status_id']));
+		if($exclFromReset == "n") {
+			$debug .= $row['un_status_id'];
+			$query2 = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status']) . " WHERE `id`= " . $row['id'];
+			$result2 = mysql_query($query2);	
+			if($result2) {
+				$counter++;
+				}
+			}
+		}
+	
+	$caption = $counter . " responder Status Values set to " . get_status_name($_POST['frm_status']);
+	if($counter == 0) {
 		$caption = "Could not set Responder Status Values to " . get_status_name($_POST['frm_status']);	
 		}
 	
@@ -53,7 +82,7 @@ if(!empty($_POST)) {
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" />
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
 		<TITLE>Tickets</TITLE>
 		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
@@ -88,7 +117,7 @@ if(!empty($_POST)) {
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" />
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
 		<TITLE>Tickets</TITLE>
 		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">

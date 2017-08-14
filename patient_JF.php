@@ -39,15 +39,15 @@ $get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) 
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="8/16/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <?php
 if ($get_action == 'add') {		
 	$api_key = get_variable('gmaps_api_key');		// empty($_GET) 
 ?>
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-<SCRIPT src="./js/graticule.js" type="text/javascript"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
+<SCRIPT src="./js/graticule.js" type="application/x-javascript"></SCRIPT>
 <?php
 	}	
 ?>

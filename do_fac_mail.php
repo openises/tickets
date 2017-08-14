@@ -9,12 +9,12 @@ error_reporting(E_ALL);		//
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);		//7/28/10
+require_once('./incs/functions.inc.php');
+require_once('./incs/messaging.inc.php');
 $evenodd = array ("even", "odd");
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
 <TITLE><?php print LessExtension(basename(__FILE__));?> </TITLE>
@@ -23,20 +23,28 @@ $evenodd = array ("even", "odd");
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <STYLE>
-#.plain 	{ background-color: #FFFFFF;}
+BODY {FONT-SIZE: 1vw;}
+INPUT {FONT-SIZE: 1vw;}
+SELECT {FONT-SIZE: 1vw;}
+OPTION {FONT-SIZE: 1vw;}
+TABLE {FONT-SIZE: 1vw;}
+TEXTAREA {FONT-SIZE: 1vw;}
+.td_label {FONT-SIZE: 1vw;}
+.plain {FONT-SIZE: 1vw;}
+.hover {FONT-SIZE: 1vw;}
 </STYLE>
 <?php
-
 //dump($_POST);
 
 if (empty($_POST)) {
 
 ?>
-
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
  
 	String.prototype.trim = function () {
@@ -57,7 +65,7 @@ if (empty($_POST)) {
 		}
 	
 	function reSizeScr(lines){
-		var the_width = 720;
+		var the_width = 1200;
 		var the_height = ((lines * 21)+400);				// values derived via trial/error (more of the latter, mostly)
 		window.resizeTo(the_width,the_height);	
 		}
@@ -89,7 +97,7 @@ if (empty($_POST)) {
 <?php
 
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ";		// (array_key_exists('first', $search_array)) 
-	$query .= (array_key_exists('fac_id', $_GET))? " WHERE `id` = " . quote_smart(trim($_GET['fac_id'])) . " LIMIT 1": "";
+	$query .= (array_key_exists('fac_id', $_GET))? " WHERE `id` = " . quote_smart(trim($_GET['fac_id'])) . " LIMIT 1": " WHERE `contact_email` != '' OR `security_email` != ''";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 //	dump($query);
 ?>
@@ -97,11 +105,11 @@ if (empty($_POST)) {
 
 	<CENTER>		<!-- 1/12/09 -->
 	<CENTER><H3>Mail Facilities </H3>
-<?PHP
+<?php
+	$i = 0;
 	if (mysql_affected_rows()>0) {
 		print "<FORM NAME='mail_form' METHOD='post' ACTION='" . basename(__FILE__) . "'>\n";
 		print "<TABLE BORDER = 0 ALIGN='center'>\n";
-		$i = 0;
 		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			if (is_email($row['contact_email'])) {
 				print "<TR CLASS = '{$evenodd[($i%2)]}'><TD><INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$row['contact_email']}' CHECKED></TD>
@@ -119,21 +127,37 @@ if (empty($_POST)) {
 	if ($i > 0 ) {							// 7/16/10
 				
 ?>
-		<TR><TD COLSPAN=5>&nbsp;</TD></TR>	
-		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=4><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
-		<TR CLASS='odd'><TD ALIGN='right'>Message:</TD><TD COLSPAN=4> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
-		<TR CLASS='even'><TD></TD><TD ALIGN='left' COLSPAN=3><BR /><BR />
-			<INPUT TYPE='button' 	VALUE='Send' onClick = "validate()"  STYLE =  'margin-left: 100px'>
-			<INPUT TYPE='reset' 	VALUE='Reset' STYLE =  'margin-left: 20px'>
-			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();'STYLE =  'margin-left: 20px'><BR /><BR />
-			</TD></TR>
-			</TABLE></FORM>
+		<TR>
+			<TD COLSPAN=5>&nbsp;</TD>
+		</TR>	
+		<TR CLASS='even'>
+			<TD CLASS="td_label" ALIGN='right'>Subject: </TD>
+			<TD COLSPAN=4>
+				<INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60>
+			</TD>
+		</TR>
+		<TR CLASS='odd'>
+			<TD CLASS="td_label" ALIGN='right'>Message:</TD>
+			<TD COLSPAN=4>
+				<TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA>
+			</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD></TD>
+			<TD ALIGN='center' COLSPAN=4>
+				<SPAN id='send_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate();"><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+				<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.mail_form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+				<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
+		</TABLE>
+		</FORM>
 <?php
 		}		// end if ($i > 0 )
 	else {
 ?>
 		<BR /><H3>No facility addresses available</H3><BR /><BR />
-		<INPUT TYPE='button'  VALUE = 'Close' onClick='window.close();' />
+			<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
 <?php
 	
 		}		// end if/else end if ($i > 0 )
@@ -152,8 +176,8 @@ if (empty($_POST)) {
 ?>
 	<BODY>
 	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3>
-	<BR /><BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();'><BR /><BR />
-
+	<BR /><BR />
+	<SPAN id='closebut' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 <?php
 
 	}		// end else

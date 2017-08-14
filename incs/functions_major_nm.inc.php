@@ -1612,7 +1612,7 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		print show_assigns(0, $row['tick_id']);				// 'id' ambiguity - 7/27/09 - 5/21/2013
 		print "</TD></TR>";
 		print "<TR><TD colspan=99 ALIGN='left'>";
-		print show_actions( $row['tick_id'], "date", FALSE, TRUE );		//  5/21/2013
+		print show_actions($row['tick_id'], "date", FALSE, TRUE, 0);		//  5/21/2013
 		print "</TD></TR>";
 		print "</TABLE>\n";
 
@@ -1635,13 +1635,12 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 	<DIV id='loc_warnings' style='z-index: 1000; display: none; height: 100px; width: 100%; font-size: 1.5em; font-weight: bold; border: 2px outset #707070;'></DIV>	
 <?php
 	print do_ticket($row, max(320, intval($_SESSION['scr_width']* 0.4)), $search) ;				// 2/25/09
-//	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
 	print "</TR>";
 	print "</TABLE>\n";
 
 
 ?>
-	<SCRIPT SRC='../js/usng.js' TYPE='text/javascript'></SCRIPT>
+	<SCRIPT SRC='../js/usng.js' TYPE='application/x-javascript'></SCRIPT>
 	<SCRIPT>
 	function isNull(val) {								// checks var stuff = null;
 		return val === null;
@@ -1745,7 +1744,7 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "<TR CLASS='odd'><TD ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
 		<TD ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
 	$print .= "<TR><TD colspan=99 ALIGN='left'>";
-	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE, 0);
 	$print .="</TD></TR>";
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
 	$print .= show_log ($theRow[0]);				// log
@@ -1828,7 +1827,7 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE);
+	$print .= show_actions($theRow[0], "date", FALSE, FALSE, 0);
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";	
 	$print .= list_messages($theRow[0], "date", FALSE, TRUE);
 	$print .= "</TD></TR>";
@@ -1915,7 +1914,7 @@ function do_ticket_extras($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, TRUE);
+	$print .= show_actions($theRow[0], "date", FALSE, TRUE, 0);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;

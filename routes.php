@@ -20,6 +20,7 @@ $from_left =  intval(floor( 0.4 * $_SESSION['scr_width']));		// 5/22/11
 
 
 $show_tick_left = FALSE;	// controls left-side vs. right-side appearance of incident details - 11/27/09
+$distunits = "imperial";
 
 /*
 5/23/08 per AD7PE - line 432
@@ -152,7 +153,7 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" /> 
 	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/> 
 	
@@ -161,7 +162,7 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 	<![endif]-->
-    <link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine_2.css" />
+    <link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine.css" />
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
     <STYLE TYPE="text/css">
@@ -180,17 +181,59 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		span.other_1		{margin-right: 32PX; text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
 		span.other_2		{margin-right: 8PX;  text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
 		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-
-		.box { background-color: transparent; border: none; color: #000000; padding: 0px; position: absolute; }
-		.bar { background-color: transparent; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em; }
-		.bar_header { height: 20px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}			
-		
-		.box2 { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:10000; width: 180px; }
-		.bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
-		.content { padding: 1em; text-align: center; }		
 	</STYLE>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 	<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT SRC="./js/json2.js"></SCRIPT>
 	<SCRIPT>
+	window.onresize=function(){set_size()};
+	var viewportwidth;
+	var viewportheight;
+	var mapWidth;
+	var mapHeight;
+	var leftcolheight;
+	var outerwidth;
+	var outerheight;
+	var colwidth;	
+	var colheight;
+	var distunits = "<?php print $distunits;?>";
+	
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth, "fullscreen");
+		mapWidth = viewportwidth * .40;
+		mapHeight = viewportheight * .55;
+		leftcolheight = viewportheight * .75;
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		colwidth = outerwidth * .42;
+		colheight = outerheight * .95;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
+		$('leftcol').style.width = colwidth + "px";
+		$('leftcol').style.height = colheight + "px";
+		$('side_bar').style.width = colwidth + "px";
+		$('side_bar').style.height = leftcolheight + "px";	
+		$('rightcol').style.width = colwidth + "px";
+		$('rightcol').style.height = colheight + "px";	
+		$('map_canvas').style.width = mapWidth + "px";
+		$('map_canvas').style.height = mapHeight + "px";
+		$('map_caption').style.width = mapWidth + "px";
+		$('bottom').style.width = mapWidth + "px";
+		$('loading').style.width = mapWidth + "px";
+		$('legend').style.width = mapWidth + "px";
+		$('inc_addr').style.width = mapWidth + "px";
+		}
+	
 	try {	
 		parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
@@ -217,33 +260,6 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		
 	var routesUnits = '<?php print $routesUnits;?>';
 
-	function $() {									// 2/11/09
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
-		
-	function CngClass(obj, the_class){
-		$(obj).className=the_class;
-		return true;
-		}	
-		
-	function do_hover (the_id) {
-		CngClass(the_id, 'hover');
-		return true;
-		}
-
-	function do_plain (the_id) {				// 8/21/10
-		CngClass(the_id, 'plain');
-		return true;
-		}
 	String.prototype.trim = function () {									// added 6/10/08
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
@@ -252,13 +268,13 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		return (in_str.substr(0,1)=="#")? in_str : "#" + in_str;
 		}			
 			
-	var to_visible = "visible";
-	var to_hidden = "hidden";
+	var to_visible = "inline-block";
+	var to_hidden = "none";
 	function show_butts(strValue) {								// 3/15/11
-		$('mail_dir_but').style.visibility = strValue;
-		$('reset_but').style.visibility = strValue;
-		$('can_but').style.visibility = strValue;
-		if ($('disp_but')) {$('disp_but').style.visibility = strValue;}
+		$('mail_dir_but').style.display = strValue;
+		$('reset_but').style.display = strValue;
+		$('can_but').style.display = strValue;
+		if ($('disp_but')) {$('disp_but').style.display = strValue;}
 		}
 
 	function hideDiv(div_area, hide_cont, show_cont) {	//	3/15/11
@@ -319,117 +335,6 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 		sendRequest (url, gb_handleResult, params);					
 		}
 </SCRIPT>	
-<script type="text/javascript">//<![CDATA[
-//*****************************************************************************
-// Do not remove this notice.
-//
-// Copyright 2001 by Mike Hall.
-// See http://www.brainjar.com for terms of use.
-//*****************************************************************************
-// Determine browser and version.
-function Browser() {
-	var ua, s, i;
-	this.isIE		= false;
-	this.isNS		= false;
-	this.version = null;
-	ua = navigator.userAgent;
-	s = "MSIE";
-	if ((i = ua.indexOf(s)) >= 0) {
-		this.isIE = true;
-		this.version = parseFloat(ua.substr(i + s.length));
-		return;
-		}
-	s = "Netscape6/";
-	if ((i = ua.indexOf(s)) >= 0) {
-		this.isNS = true;
-		this.version = parseFloat(ua.substr(i + s.length));
-		return;
-		}
-	// Treat any other "Gecko" browser as NS 6.1.
-	s = "Gecko";
-	if ((i = ua.indexOf(s)) >= 0) {
-		this.isNS = true;
-		this.version = 6.1;
-		return;
-		}
-	}
-var browser = new Browser();
-var dragObj = new Object();		// Global object to hold drag information.
-dragObj.zIndex = 0;
-function dragStart(event, id) {
-	var el;
-	var x, y;
-	if (id)										// If an element id was given, find it. Otherwise use the element being
-		dragObj.elNode = document.getElementById(id);	// clicked on.
-	else {
-		if (browser.isIE)
-			dragObj.elNode = window.event.srcElement;
-		if (browser.isNS)
-			dragObj.elNode = event.target;
-		if (dragObj.elNode.nodeType == 3)		// If this is a text node, use its parent element.
-			dragObj.elNode = dragObj.elNode.parentNode;
-		}
-	if (browser.isIE) {			// Get cursor position with respect to the page.
-		x = window.event.clientX + document.documentElement.scrollLeft
-			+ document.body.scrollLeft;
-		y = window.event.clientY + document.documentElement.scrollTop
-			+ document.body.scrollTop;
-		}
-	if (browser.isNS) {
-		x = event.clientX + window.scrollX;
-		y = event.clientY + window.scrollY;
-		}
-	dragObj.cursorStartX = x;		// Save starting positions of cursor and element.
-	dragObj.cursorStartY = y;
-	dragObj.elStartLeft	= parseInt(dragObj.elNode.style.left, 10);
-	dragObj.elStartTop	 = parseInt(dragObj.elNode.style.top,	10);
-	if (isNaN(dragObj.elStartLeft)) dragObj.elStartLeft = 0;
-	if (isNaN(dragObj.elStartTop))	dragObj.elStartTop	= 0;
-	dragObj.elNode.style.zIndex = ++dragObj.zIndex;		// Update element's z-index.
-	if (browser.isIE) {									// Capture mousemove and mouseup events on the page.
-		document.attachEvent("onmousemove", dragGo);
-		document.attachEvent("onmouseup",	 dragStop);
-		window.event.cancelBubble = true;
-		window.event.returnValue = false;
-		}
-	if (browser.isNS) {
-		document.addEventListener("mousemove", dragGo,	 true);
-		document.addEventListener("mouseup",	 dragStop, true);
-		event.preventDefault();
-		}
-	}
-function dragGo(event) {
-	var x, y;
-	if (browser.isIE) {	// Get cursor position with respect to the page.
-		x = window.event.clientX + document.documentElement.scrollLeft
-			+ document.body.scrollLeft;
-		y = window.event.clientY + document.documentElement.scrollTop
-			+ document.body.scrollTop;
-		}
-	if (browser.isNS) {
-		x = event.clientX + window.scrollX;
-		y = event.clientY + window.scrollY;
-		}
-	dragObj.elNode.style.left = (dragObj.elStartLeft + x - dragObj.cursorStartX) + "px";	// Move drag element by the same amount the cursor has moved.
-	dragObj.elNode.style.top	= (dragObj.elStartTop	+ y - dragObj.cursorStartY) + "px";
-	if (browser.isIE) {
-		window.event.cancelBubble = true;
-		window.event.returnValue = false;
-		}
-	if (browser.isNS)
-		event.preventDefault();
-	}
-function dragStop(event) {
-	if (browser.isIE) {	// Stop capturing mousemove and mouseup events.
-		document.detachEvent("onmousemove", dragGo);
-		document.detachEvent("onmouseup",	 dragStop);
-		}
-	if (browser.isNS) {
-		document.removeEventListener("mousemove", dragGo,	 true);
-		document.removeEventListener("mouseup",	 dragStop, true);
-		}
-	}
-//]]></script>
 <?php
 if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	// 		new, populate 10/2/08
 
@@ -528,7 +433,6 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 
 	function do_mail_win(addrs, smsgaddrs, ticket_id) {	
 		if(starting) {return;}					// dbl-click catcher
-//		alert(" <?php print __LINE__; ?> " +addrs);
 		starting=true;	
 		var url = "mail_edit.php?ticket_id=" + ticket_id + "&addrs=" + addrs + "&smsgaddrs=" + smsgaddrs + "&text=";	// no text
 		newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=360,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
@@ -583,12 +487,12 @@ else {
 <?php print (intval(get_variable("call_board")) == 1)? "See Call Board": "";?>	
 	</H3>
 	<NOBR>
-	<FORM NAME='more_form' METHOD = 'get' ACTION = "<?php print basename(__FILE__); ?>" style="display: inline;"><!-- 7/9/10 -->
-	<INPUT TYPE='button' VALUE='More' onClick = "document.more_form.submit()" />
+	<FORM NAME='more_form' METHOD = 'get' ACTION = "<?php print basename(__FILE__); ?>" style="display: inline;">
+	<SPAN ID='more_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.more_form.submit();'><SPAN STYLE='float: left;'><?php print get_text("More");?></SPAN><IMG STYLE='float: right;' SRC='./images/more_small.png' BORDER=0></SPAN>
 	<INPUT TYPE = 'hidden' NAME = 'ticket_id' VALUE="<?php print get_ticket_id ();?>">
 	</FORM>
-	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php" STYLE = 'margin-left:20px; display: inline;'><!-- 8/30/10  -->
-	<INPUT TYPE='button' VALUE='Finished' onClick = "document.cont_form.submit()" />
+	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php" STYLE = 'margin-left:20px; display: inline;'>
+	<SPAN ID='fin_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.cont_form.submit();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 	</FORM>
 	</NOBR>
 	</BODY></HTML>
@@ -603,6 +507,9 @@ else {
 
 	$the_ticket_id = get_ticket_id ();
 ?>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT SRC="./js/json2.js"></SCRIPT>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
@@ -621,18 +528,21 @@ else {
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
-<SCRIPT>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
+	<SCRIPT>
 	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 		iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 		}
@@ -788,7 +698,6 @@ function doReset() {
 	$lng = $row_ticket['lng'];
 	
 	print "var thelat = " . $lat . ";\nvar thelng = " . $lng . ";\n";		// set js-accessible location data
-//	unset ($result);
 
 	if ($rec_fac > 0) {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`=" . $rec_fac . "";			// 10/6/09
@@ -799,9 +708,16 @@ function doReset() {
 		$rf_name = $row_rec_fac['name'];		
 		
 		unset ($result_rfc);
-		} else {
-//		print "var thereclat;\nvar thereclng;\n";		// set js-accessible location data for receiving facility
-	}
+		}
+	
+	function get_addr(){				// returns incident address 11/27/09
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . get_ticket_id () . " LIMIT 1";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$row = stripslashes_deep(mysql_fetch_array($result));
+		return "{$row['street']} {$row['city']} {$row['state']}"; 
+		}		// end function get_addr()
+
+	$addr = get_addr();
 
 	if(empty($_SESSION)) {session_start();}		// 
 
@@ -945,11 +861,10 @@ function doReset() {
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "get_position(); do_notify(); ck_frames()" >
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>		<!-- 3/4/11 -->
-
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>		<!-- 3/4/11 -->
 <A NAME='page_top' />
-	<TABLE BORDER = 0 ID= 'main' STYLE='display:block;'>
-	<TR><TD VALIGN='top' STYLE = 'height: 1px;'>
+<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
+	<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 <?php
 		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder`";		// 5/12/10
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
@@ -961,26 +876,82 @@ function doReset() {
 		$disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 
 ?>
-		<DIV ID='side_bar' style="height:<?php print $the_height; ?>px;  width:<?php print $sidebar_width; ?>px;  overflow-y: auto; overflow-x: auto;"></DIV><!-- 5/12/10 -->
+		<DIV ID='side_bar' style="border: 1px outset #CECECE; overflow-y: auto; overflow-x: hidden;"></DIV><!-- 5/12/10 -->
 <?php
-		$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
-		if($unit_id=="") { 	// 11/18/10
+			$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
+			if($unit_id=="") { 	// 11/18/10
 ?>
-			<DIV ID='theform' style='position: relative; top: 10px; background-color: transparent; border-color: #000000;'><!-- 11/18/10 -->	
-			<TABLE ALIGN='center' BORDER='0'>
-			<TR class='heading'><TH class='heading'>FILTER BY CAPABILITIES</TH></TR>	<!-- 3/15/11 -->
-			<FORM NAME='filter_Form' METHOD="GET" ACTION="routes.php">
-			<TR class='odd'><TD ALIGN='center'>Filter Type: <b>OR </b><INPUT TYPE='radio' NAME='searchtype' VALUE='OR' checked><b>AND </b><INPUT TYPE='radio' NAME='searchtype' VALUE='AND'></TD></TR>	<!-- 3/15/11 -->
-			<TR class='even'><TD><INPUT SIZE='48' TYPE='text' NAME='capabilities' VALUE='<?php print $capabilities;?>' MAXLENGTH='64'></TD></TR>	<!-- 3/15/11 -->
-			<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print get_ticket_id (); ?>' />
-			<INPUT TYPE='hidden' NAME='unit_id' 	VALUE='<?php print $unit_id; ?>' />
-			<TR class='odd'><TD align="center"><input type="button" OnClick="filterSubmit();" VALUE="Filter"/>&nbsp;&nbsp;<input type="button" OnClick="filterReset();" VALUE="Reset Filter" <?php print $disabled;?>/></TD></TR>	<!-- 3/15/11 -->	
-			</FORM></TABLE></DIV></TD>
-		<?php }
-	?>
+				<DIV ID='theform' style='position: relative; top: 10px; background-color: transparent; border-color: #000000;'>
+					<FORM NAME='filter_Form' METHOD="GET" ACTION="routes.php">						
+					<TABLE ALIGN='center' BORDER='0'>
+						<TR CLASS='even'>
+							<TD COLSPAN=99 CLASS='td_data text text_center'>
+								<B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'><B>&bull;</B>
+								</FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'><B>&bull;</B></FONT>
+								&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'><B>&bull;</B></FONT>
+								&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'><B>&bull;</B></FONT>
+							</TD>
+						</TR>
+						<TR>
+							<TD COLSPAN=99>&nbsp;</TD>
+						</TR>
+						<TR class='heading'>
+							<TH class='heading text_big'>FILTER BY CAPABILITIES</TH>
+						</TR>
+						<TR class='odd'>
+							<TD CLASS='td_data text text_center'>Filter Type: <b>OR </b><INPUT TYPE='radio' NAME='searchtype' VALUE='OR' checked><b>AND </b><INPUT TYPE='radio' NAME='searchtype' VALUE='AND'></TD>
+						</TR>
+						<TR class='even'>
+							<TD CLASS='td_data text text_center'>
+								<INPUT SIZE='48' TYPE='text' NAME='capabilities' VALUE='<?php print $capabilities;?>' MAXLENGTH='64' />
+							</TD>
+						</TR>
+						<TR>
+							<TD COLSPAN=99>&nbsp;</TD>
+						</TR>
+						<TR>
+							<TD align="center" style='height: 30px;'>
+								<SPAN ID='filter_button' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='filterSubmit();'><SPAN STYLE='float: left;'><?php print get_text("Filter");?></SPAN><IMG STYLE='float: right;' SRC='./images/filter_small.png' BORDER=0></SPAN>
+								<SPAN ID='filter_reset' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='filterReset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+							</TD>
+						</TR>
+					</TABLE>
+					<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print get_ticket_id (); ?>' />
+					<INPUT TYPE='hidden' NAME='unit_id' 	VALUE='<?php print $unit_id; ?>' />
+					</FORM>
+				</DIV>
+<?php 
+				}
+?>
 
-</DIV>
+	</DIV>
+	<DIV ID="middle_col" style='position: relative; left: 20px; float: left; width: 100px; text-align: center; padding: 10px;'>
+		<DIV ID='buttons_outer' style='position: relative; top: 100px;'>
+<?php
 
+?>
+			<SPAN ID='mail_dir_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.email_form.submit();'><?php print get_text("Mail Dir");?><BR /><IMG SRC='./images/send.png' BORDER=0></SPAN>
+			<SPAN ID='reset_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='show_butts(to_hidden) ; doReset();'><?php print get_text("Reset");?><BR /><IMG SRC='./images/restore.png' BORDER=0></SPAN>
+			<SPAN ID='can_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG SRC='./images/cancel.png' BORDER=0></SPAN>
+<?php
+			$thefunc = (is_guest())? "guest()" : "validate()";		// disallow guest attempts
+			$nr_units = 1;
+			if ($nr_units>0) {
+?>
+				<SPAN ID='disp_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='<?php print $thefunc;?>;'><?php print get_text("DISPATCH UNITS");?><BR /><IMG SRC='./images/dispatch.png' BORDER=0></SPAN>
+<?php
+				}
+?>
+			<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);'>
+				<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />
+				<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />
+				<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident' />
+				<INPUT TYPE='hidden' NAME='frm_scope' VALUE='' />
+				<INPUT TYPE='hidden' NAME='frm_tick_id' VALUE='<?php print get_ticket_id();?>' />
+			</FORM>
+		</DIV>
+	</DIV>
+	<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 <?php
 	$the_width = get_variable('map_width');
 
@@ -989,53 +960,61 @@ function doReset() {
 		print do_ticket($row_ticket, $the_width, FALSE, FALSE); 
 		print "\n</DIV>\n";		
 		}
+		
+
 ?>
-		</TD>
-		<TD VALIGN="top">
-			<DIV ID='map_canvas' style='border-style: outset; display: inline-block; z-index: 1;'></DIV>
-			<span id='toggle_dirs' class='plain' style='position: fixed; top: 0px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('directions_outer', 'toggle_dirs', 'Directions')">Show Directions</span><BR />
-			<span id='toggle_tkt' class='plain' style='position: fixed; top: 25px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_ticket', 'toggle_tkt', 'Ticket')">Show Ticket</span><BR />
-			<span id='toggle_msgs' class='plain' style='position: fixed; top: 50px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_messages', 'toggle_msgs', 'Messages')">Show Messages</span><BR />
-			<span id='toggle_dispatch' class='plain' style='position: fixed; top: 75px; right: 0px; width: 100px; z-index: 9998;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('disp_details', 'toggle_dispatch', 'Disp details')">Show Disp Details</span><BR />
-			<DIV id='directions_outer' class='even' STYLE="position: fixed; top: 125px; right: 0px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; padding: 20px; z-index: 9999;">
-				<SPAN class='heading' style='height: 60px; width: 100%; display: block; font-size: 12px;'>Click stage to show on map, Click title to show alternative route</SPAN><BR />
-				<DIV ID="directions" style=' width: <?php print get_variable('map_width') * .55;?>px; height: <?php print get_variable('map_height');?>px;overflow-y: auto; overflow-x: auto;'>No Directions Available</DIV>
-			</DIV>
-			<DIV ID="disp_details" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; z-index: 9999;">
-				<?php print do_ticket_extras($row_ticket, $the_width, FALSE, FALSE);?>
-			</DIV>
-			<DIV ID="the_messages" STYLE="position: fixed; top: 125px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden; z-index: 9999;">
-				<?php print	do_ticket_messages($row_ticket, $the_width, FALSE, FALSE);?>
-			</DIV>			
-			<BR />
-			<BR />
-			<DIV CLASS="legend" STYLE="text-align: center; vertical-align: middle;"><?php print get_text("Units");?> Legend:</DIV><BR /><BR /><DIV CLASS="legend" ALIGN='center' VALIGN='middle' style='padding: 20px; text-align: center; vertical-align: middle; width: <?php print get_variable('map_width');?>px;'>	<!-- 3/15/11 -->
+		<DIV id = 'map_canvas' style = 'border: 1px outset #707070;'></DIV>
+		<SPAN id='map_caption' class='text_center bold text_big' style='display: inline-block;'><?php print get_variable('map_caption');?></SPAN>
+		<BR />
+		<BR />
+		<DIV ID='legend' CLASS="legend" STYLE="text-align: center; vertical-align: middle;">
+			<SPAN CLASS='header text_big'><?php print get_text("Units");?> Legend:</SPAN><BR />
 <?php
-		print get_icon_legend ();
+			print get_icon_legend ();
 ?>
 
-			</DIV>	<!-- 3/15/11 -->
-			<BR /><BR />
+		</DIV>
+		<BR />
+		<BR />
+		<SPAN id='inc_addr' class='text_center bold text_big' style='display: inline-block;'>Dispatching to: <I><?php print $addr;?></I></SPAN><BR /><BR />
+		<SPAN ID="loading" STYLE="display: 'inline-block'; text-align: center;">
+			<TABLE BGCOLOR='red' WIDTH='100%'>
+				<TR>
+					<TD><FONT COLOR='white'><B>Loading Directions, Please wait........</B></FONT></TD>
+				</TR>
+			</TABLE>
+		</SPAN>
+		<DIV ID='bottom' STYLE='display:none'>
+			<H3>Dispatching ... please wait ...</H3>
+		</DIV>		
+		<span id='toggle_dirs' class='plain text' style='position: fixed; top: 0px; right: 0px; width: 100px; z-index: 9998; height: 30px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('directions_outer', 'toggle_dirs', 'Directions')">Show Directions</span><BR />
+		<span id='toggle_tkt' class='plain text' style='position: fixed; top: 40px; right: 0px; width: 100px; z-index: 9998; height: 30px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_ticket', 'toggle_tkt', 'Ticket')">Show Ticket</span><BR />
+		<span id='toggle_msgs' class='plain text' style='position: fixed; top: 80px; right: 0px; width: 100px; z-index: 9998; height: 30px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('the_messages', 'toggle_msgs', 'Messages')">Show Messages</span><BR />
+		<span id='toggle_dispatch' class='plain text' style='position: fixed; top: 120px; right: 0px; width: 100px; z-index: 9998; height: 30px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="toggle_div('disp_details', 'toggle_dispatch', 'Disp details')">Show Disp Details</span><BR />
+		<DIV id='directions_outer' class='even' STYLE="position: fixed; top: 165px; right: 0px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; padding: 20px; z-index: 9999;">
+			<SPAN class='heading' style='height: 60px; width: 100%; display: block; font-size: 12px;'>Click stage to show on map, Click title to show alternative route</SPAN><BR />
+			<DIV ID="directions" style='width:100%; height: 80%; overflow-y: auto; overflow-x: hidden; padding: 10px;'>No Directions Available</DIV>
+		</DIV>
+		<DIV ID="disp_details" STYLE="position: fixed; top: 165px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; z-index: 9999;">
+			<?php print do_ticket_extras($row_ticket, $the_width, FALSE, FALSE);?>
+		</DIV>
+		<DIV ID="the_messages" STYLE="position: fixed; top: 165px; right: 0px; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden; z-index: 9999;">
+			<?php print	do_ticket_messages($row_ticket, $the_width, FALSE, FALSE);?>
+		</DIV>	
+
 <?php
-	if (!($show_tick_left)) {				// 11/27/09
-		print "\n<DIV ID='the_ticket' STYLE=\"position: fixed; top: 125px; right: 0px; width: " . get_variable('map_width') . "px; height: " . get_variable('map_height') . "px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden; z-index: 9999;\">\n";	
-		print do_ticket_only($row_ticket, $the_width, FALSE, FALSE); 
-		print "\n</DIV>\n";		
-		}
+		if (!($show_tick_left)) {				// 11/27/09
+			print "\n<DIV ID='the_ticket' STYLE=\"position: fixed; top: 165px; right: 0px; width: " . get_variable('map_width') . "px; height: " . get_variable('map_height') . "px; text-align: left; font-weight: bold; display: none; border: 2px outset #707070; overflow-y: scroll; overflow-x: hidden; z-index: 9999;\">\n";	
+			print do_ticket_only($row_ticket, $the_width, FALSE, FALSE); 
+			print "\n</DIV>\n";		
+			}
 ?>
-		</TD></TR></TABLE><!-- end outer -->
-	<DIV ID='bottom' STYLE='display:none'>
-	<CENTER>
-	<H3>Dispatching ... please wait ...</H3><BR /><BR /><BR />
 	</DIV>
-
-	
 	<FORM NAME='can_Form' ACTION="main.php" ><!-- 8/30/10 -->
 	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print get_ticket_id ();?>" />	
 	</FORM>	
 
 	<FORM NAME='routes_Form' METHOD='get' ACTION="<?php print basename( __FILE__); ?>"> <!-- 7/9/10 -->
-
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db' />
 	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print get_ticket_id (); ?>' />
 	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>" />
@@ -1046,67 +1025,19 @@ function doReset() {
 	<INPUT TYPE='hidden' NAME='frm_rec_facility_id' VALUE= "<?php print $rec_fac;?>" /> <!-- 10/6/09 -->
 	<INPUT TYPE='hidden' NAME='frm_comments' 	VALUE= "New" />
 	<INPUT TYPE='hidden' NAME='frm_allow_dirs' VALUE = <?php print $_SESSION['allow_dirs']; ?> />	<!-- 11/21/09 -->
-		</FORM>
-	<!-- 8/2/09 -->
-
-	<DIV STYLE="position:fixed; width:60px; height:auto; top:<?php print $from_top;?>px; left:<?php print $from_left;?>px; background-color: transparent; text-align:left">	<!-- 5/17/09, 7/7/09 -->
-		
+	</FORM>
+</DIV>		<!-- End of outer -->
 <?php
-			function get_addr(){				// returns incident address 11/27/09
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . get_ticket_id () . " LIMIT 1";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_array($result));
-				return "{$row['street']}<br />{$row['city']}<br /> {$row['state']}"; 
-				}		// end function get_addr()
+$user_level = is_super() ? 9999 : $_SESSION['user_id']; 
+$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
+$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
 
-			$thefunc = (is_guest())? "guest()" : "validate()";		// disallow guest attempts
-			$nr_units = 1;
-			$addr = get_addr();
-?>
-		<div id='boxB' class='box' style='left:<?php print $from_left;?>px; top:<?php print $from_top;?>px; position:fixed; background-color : rgba(0, 0, 0, 0.2);' > <!-- 9/23/10 -->
-		<div class="bar" STYLE="color:red; background-color: #FFFFFF; text-align: center "
-			 onmousedown="dragStart(event, 'boxB')"><I>Drag me</I></div><!-- drag bar - 2/5/11 -->
-		<div style = "margin-top:10px;">
-		</div>
-<?php
-			print "<SPAN ID='mail_button' STYLE='display: none'>";	//10/6/09
-			print "<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);'>";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident' />";	//10/6/09
-			print "<INPUT TYPE='hidden' NAME='frm_scope' VALUE='' />"; // 10/29/09
-			print "<INPUT TYPE='hidden' NAME='frm_tick_id' VALUE='" . get_ticket_id() . "' />"; // 3/29/2013	
-			print "<INPUT TYPE='submit' value='Mail Direcs' ID = 'mail_dir_but' STYLE = 'visibility: hidden;' />";	//10/6/09
-			print "</FORM>";	
-			print "<INPUT TYPE='button' VALUE='Reset' onClick = 'show_butts(to_hidden) ; doReset()' ID = 'reset_but' STYLE = 'visibility: hidden;'  />";
-			print "</SPAN>";
-			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'  ID = 'can_but'  STYLE = 'visibility: hidden;' />";
-			if ($nr_units>0) {			
-				print "<BR /><INPUT TYPE='button' value='DISPATCH\nUNITS' onClick = '" . $thefunc . "' ID = 'disp_but'  STYLE = 'visibility: hidden;' />\n";	// 6/14/09
-				}
-			print "<BR /><BR /><SPAN STYLE='display: inline-block; padding: 15px;' class='normal_text'><H3>to:<BR /><SPAN style='width: 200px; height: 200px;'><I>{$addr}</I></DIV></H3></SPAN>\n";
-?>
-		</div>	 <!-- end of outer -->
-<?php
-			print "<SPAN ID=\"loading\" STYLE=\"display: 'inline-block'\">";
-			print "<TABLE BGCOLOR='red' WIDTH='80%'><TR><TD><FONT COLOR='white'><B>Loading Directions, Please wait........</B></FONT></TD></TR></TABLE>";		// 10/28/09
-			print "</SPAN>";
-
-?>
-	</DIV>
-<?php
-
-		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 
-		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
-		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
-		
-		$al_groups = $_SESSION['user_groups'];
-?>				
-		<A NAME="page_bottom" /> <!-- 5/13/10 -->	
-		<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
-		<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print get_ticket_id (); ?>' />	<!-- 10/25/08 -->
-		</FORM>
-		
+$al_groups = $_SESSION['user_groups'];
+?>	
+<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="routes.php">
+<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print get_ticket_id (); ?>' />
+</FORM>			
+<A NAME="page_bottom" />	
 <SCRIPT>
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
@@ -1118,6 +1049,29 @@ function doReset() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	mapWidth = viewportwidth * .40;
+	mapHeight = viewportheight * .55;
+	leftcolheight = viewportheight * .75;
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	colwidth = outerwidth * .42;
+	colheight = outerheight * .95;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	$('leftcol').style.width = colwidth + "px";
+	$('leftcol').style.height = colheight + "px";
+	$('side_bar').style.width = colwidth + "px";
+	$('side_bar').style.height = leftcolheight + "px";	
+	$('rightcol').style.width = colwidth + "px";
+	$('rightcol').style.height = colheight + "px";	
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	$('map_caption').style.width = mapWidth + "px";
+	$('loading').style.width = mapWidth + "px";
+	$('bottom').style.width = mapWidth + "px";
+	$('legend').style.width = mapWidth + "px";
+	$('inc_addr').style.width = mapWidth + "px";
+	set_fontsizes(viewportwidth, "fullscreen");
 	var map;				// make globally visible
 	var minimap;
 	var thelevel = '<?php print $the_level;?>';
@@ -1129,10 +1083,6 @@ function doReset() {
 
 	var latLng;
 	var in_local_bool = "0";
-	var mapWidth = viewportwidth * .45;
-	var mapHeight = viewportheight * .75;
-	$('map_canvas').style.width = mapWidth + "px";
-	$('map_canvas').style.height = mapHeight + "px";
 	var theLocale = <?php print get_variable('locale');?>;
 	var useOSMAP = <?php print get_variable('use_osmap');?>;
 	init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "br");

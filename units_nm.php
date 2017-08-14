@@ -95,12 +95,15 @@ function get_user_details($rosterID) {	//	9/6/13
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
-	<SCRIPT  SRC='./js/misc_function.js' type='text/javascript'></SCRIPT>  <!-- 4/14/10 -->
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<SCRIPT >
+	<SCRIPT  SRC='./js/misc_function.js' type='application/x-javascript'></SCRIPT>  <!-- 4/14/10 -->
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
+	<SCRIPT>
 
 	try {
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
@@ -905,8 +908,10 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$query = "DELETE FROM $GLOBALS[mysql_prefix]responder WHERE `id`=" . $_POST['frm_id'];
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$caption = "<B>" . get_text("Units") . "<I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
-		}
-	else {
+		print $caption;
+		sleep(10);
+		$_getgoadd = $_getgoedit = $_getadd = $_getedit = $_postfrm_remove = $_postmap_clear = $_getview = $_dodisp = $_dodispfac = "";
+		} else {
 		if ($_getgoedit == 'true') {
 			$station = TRUE;			//
 			$the_lat = empty($_POST['frm_lat'])? "0.999999" : quote_smart(trim($_POST['frm_lat'])) ; // 2/24/09
@@ -978,6 +983,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				}			
 			$mobstr = (($frm_mobile) && ($frm_aprs)||($frm_instam))? "Mobile": get_text("Units");
 			$caption = "<B>" . $mobstr . " '<i>" . stripslashes_deep($_POST['frm_name']) . "</i>' data has been updated.</B><BR /><BR />";
+			$_getgoedit = "";
+			$_getview = "true";
+			$_GET['id'] = $resp_id;
 			}
 		}				// end else {}
 
@@ -1100,8 +1108,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 		$mobstr = ($frm_mobile)? "Mobile " . get_text("Units"): "Station ";
 		$caption = "<B>" . get_text("Units") . "<i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been updated.</B><BR /><BR />";
-
-		finished ($caption);		// wrap it up
+		$_getgoadd = "";
+		$_getview = "true";
+		$_GET['id'] = $new_id;
 		}							// end if ($_getgoadd == 'true')
 
 // add ===========================================================================================================================

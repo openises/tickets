@@ -10,13 +10,6 @@ $iw_width= "300px";					// map infowindow with
 
 @session_start();	
 session_write_close();
-if (!($_SESSION['internet'])) {
-	$host  = $_SERVER['HTTP_HOST'];
-	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	$extra = 'warn_locations_nm.php';
-	header("Location: http://$host$uri/$extra");								// to top of calling script		
-	exit();
-	}
 
 require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
@@ -40,6 +33,25 @@ function isempty($arg) {
 $usng = get_text('USNG');
 $osgb = get_text('OSGB');
 
+$wl_types = $GLOBALS['LOC_TYPES'];
+$wl_typenames = $GLOBALS['LOC_TYPES_NAMES'];
+foreach($wl_types AS $key => $var) {
+	$wl_types [$key] = array ($wl_typenames[$key], $key);
+	}
+
+$icons = $GLOBALS['fac_icons'];
+$sm_icons = $GLOBALS['wl_sm_icons'];	//	3/15/11
+
+function get_icon_legend (){			// returns legend string
+	global $wl_types, $sm_icons;
+	$print = "";											// output string
+	foreach($sm_icons as $key => $val) {
+		$temp = $wl_types[$key];
+		$print .= "\t\t<SPAN class='legend' style='height: 3em; text-align: center; vertical-align: middle; float: none;'> ". $temp[0] . " &raquo; <IMG SRC = './our_icons/" . $val . "' STYLE = 'vertical-align: middle' BORDER=0 PADDING='10'>&nbsp;&nbsp;&nbsp;</SPAN>";
+		}
+	return $print;
+	}			// end function get_icon_legend ()	
+
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -49,7 +61,7 @@ $osgb = get_text('OSGB');
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
@@ -58,32 +70,10 @@ $osgb = get_text('OSGB');
 	<![endif]-->
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<STYLE>
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-		table.cruises td {overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
-		div.scrollableContainer2 { position: relative; padding-top: 2em; }
-		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
-		div.tabBox {}
-		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
-				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-				position: relative;	z-index: 101; cursor: normal; height: 250px;}
-		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
-	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
-
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -94,25 +84,28 @@ $osgb = get_text('OSGB');
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
-	if ($_SESSION['internet']) {
+	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
-	<script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
+	<SCRIPT>
 	var map;		// note global
 	var layercontrol;
 	try {
@@ -131,6 +124,16 @@ $osgb = get_text('OSGB');
 
 	function get_new_colors() {
 		window.location.href = '<?php print basename(__FILE__);?>';
+		}
+		
+	function doView(id) {
+		document.view_Form.id.value=id;			// 10/16/08, 10/25/08
+		document.view_Form.submit();		
+		}
+		
+	function doEdit(id) {
+		document.edit_Form.id.value=id;			// 10/16/08, 10/25/08
+		document.edit_Form.submit();		
 		}
 		
 	var grid_bool = false;		
@@ -207,7 +210,7 @@ $osgb = get_text('OSGB');
 		$by = $_SESSION['user_id'];		//	4/14/11
 		$frm_lat = (empty($_POST['frm_lat']))? 'NULL': quote_smart(trim($_POST['frm_lat']));
 		$frm_lng = (empty($_POST['frm_lng']))? 'NULL': quote_smart(trim($_POST['frm_lng']));
-		$the_type = empty($_POST['frm_loc_type'])? 4 : $_POST['frm_loc_type'] ;
+		$the_type = $_POST['frm_loc_type'];
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));	
 		$by = $_SESSION['user_id'];					// 6/4/2013
 		$from = $_SERVER['REMOTE_ADDR'];			
@@ -247,8 +250,8 @@ $osgb = get_text('OSGB');
 // add ===========================================================================================================================
 	if ($_getadd == 'true') {
 		if (!($_SESSION['internet'])) {
-			print "Not usable in No-Maps mode<BR />";
-			exit();
+			require_once('./incs/links.inc.php');
+			require_once('./forms/wl_add_screen_NM.php');
 			} else {
 			require_once('./incs/links.inc.php');
 			require_once('./forms/wl_add_screen.php');
@@ -259,8 +262,8 @@ $osgb = get_text('OSGB');
 // edit =================================================================================================================
 	if ($_getedit == 'true') {
 		if (!($_SESSION['internet'])) {
-			print "Not usable in No-Maps mode<BR />";
-			exit();
+			require_once('./incs/links.inc.php');
+			require_once('./forms/wl_edit_screen_NM.php');
 			} else {
 			require_once('./incs/links.inc.php');
 			require_once('./forms/wl_edit_screen.php');
@@ -271,8 +274,8 @@ $osgb = get_text('OSGB');
 
 	if ($_getview == 'true') {
 		if (!($_SESSION['internet'])) {
-			print "Not usable in No-Maps mode<BR />";
-			exit();
+			require_once('./incs/links.inc.php');
+			require_once('./forms/wl_view_screen_NM.php');
 			} else {
 			require_once('./incs/links.inc.php');
 			require_once('./forms/wl_view_screen.php');
@@ -282,8 +285,8 @@ $osgb = get_text('OSGB');
 // ============================================= initial display =======================
 	if (!isset($mapmode)) {$mapmode="a";}
 	if (!($_SESSION['internet'])) {
-		print "Not usable in No-Maps mode<BR />";
-		exit();
+		require_once('./incs/links.inc.php');
+		require_once('./forms/wl_screen_NM.php');
 		} else {
 		require_once('./incs/links.inc.php');
 		require_once('./forms/wl_screen.php');

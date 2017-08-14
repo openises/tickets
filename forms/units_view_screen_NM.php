@@ -14,9 +14,11 @@ require_once($the_inc);
 
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
-
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var mapWidth;
 var mapHeight;
 var listHeight;
@@ -50,7 +52,8 @@ function set_size() {
 		}
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
-	colwidth = outerwidth;
+	leftcolwidth = outerwidth * .70;
+	rightcolwidth = outerwidth * .1;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .7;
 	listwidth = colwidth * .95
@@ -60,11 +63,12 @@ function set_size() {
 	fac_celwidth = listwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
-	$('leftcol').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
-	$('rightcol').style.width = colwidth + "px";
-	$('view_unit').style.width = colwidth + "px";
-	$('rightcol').style.height = colheight + "px";	
+	$('leftcol').style.width = leftcolwidth + "px";
+	$('leftcol').style.height = colheight + "px";
+	$('rightcol').style.width = rightcolwidth + "px";
+	$('view_unit').style.width = leftcolwidth + "px";
+	$('rightcol').style.height = colheight + "px";
+	set_fontsizes(viewportwidth);
 	}
 
 function do_disp(){												// show incidents for dispatch - added 6/7/08
@@ -146,20 +150,20 @@ $get_messages = ((get_variable('use_messaging') == 1) || (get_variable('use_mess
 </HEAD>
 <?php
 		if ($_dodisp == 'true') {				// dispatch
-			print "\t<BODY onLoad = 'set_size(); ck_frames(); do_disp();'> <!-- 3281 do_disp -->\n";
+			print "\t<BODY onLoad = 'ck_frames(); do_disp();'> <!-- 3281 do_disp -->\n";
 			require_once('./incs/links.inc.php');
 			}
 		if ($_dodispfac == 'true') {				// dispatch to facility
-			print "\t<BODY onLoad = 'set_size(); ck_frames(); do_dispfac();' ><!-- 3285 _dodispfac -->\n";
+			print "\t<BODY onLoad = 'ck_frames(); do_dispfac();' ><!-- 3285 _dodispfac -->\n";
 			require_once('./incs/links.inc.php');
 			}
 		else {
-			print "\t<BODY onLoad = 'set_size(); ck_frames()'><!-- 3289  view --> \n";
+			print "\t<BODY onLoad = 'ck_frames()'><!-- 3289  view --> \n";
 			require_once('./incs/links.inc.php');
 			}
 	
 ?>
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10, 10/23/12 -->
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10, 10/23/12 -->
 
 <A NAME='top'>		<!-- 11/11/09 -->
 <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></div>
@@ -169,58 +173,67 @@ $temp = $u_types[$row['type']];
 $the_type = $temp[0];			// name of type
 
 ?>
-
 <DIV ID='outer'>
-	<DIV id='leftcol' style='position: absolute; left: 30px;'>
-		<FONT CLASS="header">Unit&nbsp;'<?php print $row['name'] ;?>'</FONT> (#<?php print $row['id'];?>) <BR /><BR />
+	<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 		<DIV id = 'fence_flag'></DIV>
 		<FORM METHOD="POST" NAME= "res_view_Form" ACTION="<?php print basename(__FILE__);?>?func=responder">
-		<TABLE BORDER=0 ID='view_unit' STYLE='display: block; table-layout:fixed; width: 100%;'>
-			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+		<TABLE BORDER=0 ID='view_unit'>
+			<TR CLASS='even'>
+				<TD CLASS='odd' ALIGN='center' COLSPAN='2'>&nbsp;</TD>
 			</TR>
+			<TR CLASS='even'>
+				<TD CLASS='odd' ALIGN='center' COLSPAN='2'>
+					<SPAN CLASS='text_green text_biggest'>&nbsp;View '<?php print $row['name'];?>' data&nbsp;&nbsp;(#<?php print $id; ?>)</SPAN>
+					<BR />
+					<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
+					<BR />
+				</TD>
+			</TR>
+			<TR class='spacer'>
+				<TD class='spacer' COLSPAN=99></TD>
+			</TR>	
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Roster User: </TD>		
-				<TD><?php print get_user_details($row['roster_user']);?></TD>
+				<TD CLASS="td_label text">Roster User: </TD>		
+				<TD CLASS='td_data text'><?php print get_user_details($row['roster_user']);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label">Name: </TD>		
-				<TD><?php print $row['name'];?></TD>
+				<TD CLASS="td_label text">Name: </TD>		
+				<TD CLASS='td_data text'><?php print $row['name'];?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Handle: </TD>	
-				<TD><?php print $row['handle'];?>
-				<SPAN STYLE = 'margin-left:30px'  CLASS="td_label"> Icon: </SPAN>&nbsp;<?php print $row['icon_str'];?></TD>
+				<TD CLASS="td_label text">Handle: </TD>	
+				<TD CLASS='td_data text'><?php print $row['handle'];?>
+				<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<?php print $row['icon_str'];?></TD>
 			</TR>
 			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
 			<TR CLASS = 'even'>
-				<TD CLASS="td_label">Location: </TD>
-				<TD><?php print $row['street'] ;?></TD>
+				<TD CLASS="td_label text">Location: </TD>
+				<TD CLASS='td_data text'><?php print $row['street'] ;?></TD>
 			</TR>
 			<TR CLASS = 'odd'>
-				<TD CLASS="td_label">City: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
-				<TD><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
+				<TD CLASS="td_label text">City: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
+				<TD CLASS='td_data text'><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label">Phone: &nbsp;</TD>
-				<TD COLSPAN=3><?php print $row['phone'] ;?></TD>
+				<TD CLASS="td_label text">Phone: &nbsp;</TD>
+				<TD CLASS='td_data text' COLSPAN=3><?php print $row['phone'] ;?></TD>
 			</TR>
 			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Regions: </TD>			
-				<TD><?php print $un_names;?></TD>
+				<TD CLASS="td_label text">Regions: </TD>			
+				<TD CLASS='td_data text'><?php print $un_names;?></TD>
 			</TR>
 			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label">Type: </TD>
-				<TD><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<SPAN CLASS="td_label">
+				<TD CLASS="td_label text">Type: </TD>
+				<TD CLASS='td_data text'><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<SPAN CLASS="td_label text">
 						Mobile  &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" <?php print $mob_checked; ?> DISABLED />&nbsp;&nbsp;
 						Multiple  &raquo;<INPUT TYPE="checkbox" NAME="frm_multi_disp" <?php print $multi_checked; ?> DISABLED />&nbsp;&nbsp;
 						Directions &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp"<?php print $direcs_checked; ?> DISABLED />
@@ -228,71 +241,75 @@ $the_type = $temp[0];			// name of type
 				</TD>
 			</TR>
 			<TR CLASS = "odd" VALIGN='top'>
-				<TD CLASS="td_label" >Tracking:</TD>
-				<TD><?php print $GLOBALS['TRACK_NAMES'][$track_type];?></TD>
+				<TD CLASS="td_label text" >Tracking:</TD>
+				<TD CLASS='td_data text'><?php print $GLOBALS['TRACK_NAMES'][$track_type];?></TD>
 			</TR>
 			<TR CLASS = "even" VALIGN='top'>
-				<TD CLASS="td_label">Callsign/License/Key: </TD>	
-				<TD><?php print $row['callsign'];?></TD>
+				<TD CLASS="td_label text">Callsign/License/Key: </TD>	
+				<TD CLASS='td_data text'><?php print $row['callsign'];?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Ringfence: </TD>			
-				<TD><?php print $rf_name;?></TD>
+				<TD CLASS="td_label text">Ringfence: </TD>			
+				<TD CLASS='td_data text'><?php print $rf_name;?></TD>
 			</TR>
 			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+				<TD class='spacer' COLSPAN=99></TD>
 			</TR>			
 			<TR CLASS = "even">
-				<TD CLASS="td_label">Status:</TD>		
-				<TD>
+				<TD CLASS="td_label text">Status:</TD>		
+				<TD CLASS='td_data text'>
 					<SPAN STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};'><?php print $un_st_val;?></SPAN>
 <?php
 					$dispatch_arr = array("Yes", "No, not enforced", "No, enforced");
 ?>
-					<SPAN CLASS="td_label" STYLE='margin-left: 32px'>Dispatch:&nbsp;</SPAN><?php print $dispatch_arr[$row_st['dispatch']];?>
+					<SPAN CLASS="td_label text" STYLE='margin-left: 32px'>Dispatch:&nbsp;</SPAN><?php print $dispatch_arr[$row_st['dispatch']];?>
 				</TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label">About Status</TD> 
-				<TD><?php print $row['status_about'] ;?></TD>
+				<TD CLASS="td_label text">About Status</TD> 
+				<TD CLASS='td_data text'><?php print $row['status_about'] ;?></TD>
 			</TR>	<!-- 9/6/13 -->
 			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Description: </TD>	
-				<TD style='word-wrap: break-word;'><?php print $row['description'];?></TD>
+				<TD CLASS="td_label text">Description: </TD>	
+				<TD CLASS='td_data_wrap text'><?php print $row['description'];?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label">Capability: </TD>	
-				<TD><?php print $row['capab'];?></TD>
+				<TD CLASS="td_label text">Capability: </TD>	
+				<TD CLASS='td_data text'><?php print $row['capab'];?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Located at Facility: </TD>	
-				<TD><?php print get_facilityname($row['at_facility']);?></TD>
+				<TD CLASS="td_label text">Located at Facility: </TD>	
+				<TD CLASS='td_data text'><?php print get_facilityname($row['at_facility']);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label">Contact name:</TD>	
-				<TD><?php print $row['contact_name'] ;?></TD>
+				<TD CLASS="td_label text">Contact name:</TD>	
+				<TD CLASS='td_data text'><?php print $row['contact_name'] ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label">Contact via:</TD>	
-				<TD><?php print $row['contact_via'] ;?></TD>
+				<TD CLASS="td_label text">Contact via:</TD>	
+				<TD CLASS='td_data text'><?php print $row['contact_via'] ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID:</TD>	
-				<TD><?php print $row['smsg_id'] ;?></TD>
+				<TD CLASS="td_label text">Cellphone:</TD>	
+				<TD CLASS='td_data text'><?php print $row['cellphone'] ;?></TD>
 			</TR>
-			<TR CLASS = 'odd'>
-				<TD CLASS="td_label">As of:</TD>	
-				<TD><?php print format_date($row['updated']); ?></TD>
+			<TR CLASS = "odd">
+				<TD CLASS="td_label text"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID:</TD>	
+				<TD CLASS='td_data text'><?php print $row['smsg_id'] ;?></TD>
+			</TR>
+			<TR CLASS = 'even'>
+				<TD CLASS="td_label text">As of:</TD>	
+				<TD CLASS='td_data text'><?php print format_date($row['updated']); ?></TD>
 			</TR>
 <?php
 			if (my_is_float($lat)) {				// 7/10/09
 ?>		
-				<TR CLASS = "even">
-					<TD CLASS="td_label"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD>
-					<TD>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label text"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD>
+					<TD CLASS='td_data text'>
 						<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;
 						<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=11 disabled />&nbsp;
 
@@ -327,34 +344,18 @@ $the_type = $temp[0];			// name of type
 			</TR>
 <?php
 			if (isset($rowtr)) {																	// got tracks?
-				print "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>TRACKING</B></TD></TR>";
-				print "<TR CLASS='even'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
-				print "<TR CLASS='odd'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
-				print "<TR CLASS='even'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
-				print "<TR CLASS='odd'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
+				print "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>TRACKING</B></TD></TR>";
+				print "<TR CLASS='odd'><TD>Course: </TD><TD>" . $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude'] . "</TD></TR>";
+				print "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $rowtr['closest_city'] . "</TD></TR>";
+				print "<TR CLASS='odd'><TD>Status: </TD><TD>" . $rowtr['status'] . "</TD></TR>";
+				print "<TR CLASS='even'><TD>As of: </TD><TD>" . format_date($rowtr['packet_date']) . " (UTC)</TD></TR>";
 				$lat = $rowtr['latitude'];
 				$lng = $rowtr['longitude'];
 				}
 
 ?>
 			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=2>&nbsp;</TD>
-			</TR>
-			<TR CLASS = "odd">
-				<TD COLSPAN=2 ALIGN='center'>
-					<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>" onClick="document.can_Form.submit();" >
-<?php
-					print (is_administrator() || is_super())? 	"<INPUT TYPE=\"button\" VALUE=\"to Edit\" onClick= \"to_edit_Form.submit();\">\n": "" ;
-					$disp_allowed = ($row_st['dispatch']==3)?  "disabled='disabled'" : "";
-					if(!is_guest()) {
-?>
-						<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Dispatch" onClick="$('incidents').style.display='block'; $('view_unit').style.display='none';" />
-						<INPUT TYPE="button" <?php print $disp_allowed;?> VALUE="to Facility" onClick="to_fac_routes(<?php print $id;?>);">
-						<INPUT TYPE='button' VALUE='Log' onclick = 'unit_log(<?php print $id;?>);'>
-<?php
-						}
-?>
-				</TD>
+				<TD class='spacer' COLSPAN=2></TD>
 			</TR>
 			<TR class='even'>
 				<TD COLSPAN=2>
@@ -422,7 +423,7 @@ $the_type = $temp[0];			// name of type
 				}
 			} else {
 			if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 AND (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2)";
 				} else {					
 				$x=0;	//	6/10/11
 				$where2 = "AND (";	//	6/10/11
@@ -432,7 +433,7 @@ $the_type = $temp[0];			// name of type
 					$where2 .= $where3;
 					$x++;
 					}
-				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	//	6/10/11
+				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 AND (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2)";	//	6/10/11
 				}
 			}
 
@@ -468,10 +469,32 @@ $the_type = $temp[0];			// name of type
 			</TR>
 		</TABLE>
 	</DIV>
+	<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+		<DIV style='position: fixed; top: 50px; z-index: 9999;'>
+<?php
+			$oper_can_edit = ((is_user()) && (get_variable('oper_can_edit') == 1));
+			if(is_administrator() || is_super() || $oper_can_edit) {
+?>
+				<SPAN id='edit_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='to_edit_Form.submit();'><?php print get_text("Edit");?><BR /><IMG id='edit_img' SRC='./images/edit.png' /></SPAN>
+<?php
+				$disp_allowed = ($row_st['dispatch']==3)?  "disabled='disabled'" : "";
+				if(!is_guest()) {
+?>
+					<SPAN id='disp_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="$('incidents').style.display='block'; $('view_unit').style.display='none';"><?php print get_text("To Dispatch");?><BR /><IMG id='disp_img' SRC='./images/dispatch.png' /></SPAN>
+					<SPAN id='dispfac_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="to_fac_routes(<?php print $id;?>);"><?php print get_text("To Facility");?><BR /><IMG id='disf_img' SRC='./images/dispatch.png' /></SPAN>
+					<SPAN id='log_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='unit_log(<?php print $id;?>);'><?php print get_text("Log");?><BR /><IMG id='can_img' SRC='./images/edit.png' /></SPAN>
+<?php
+					}
+				}
+?>
+			<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+		</DIV>	
+	</DIV>
+	<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;</DIV>
 </DIV>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
-print add_sidebar(FALSE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, $id, 0, 0)
+print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, $id, 0, 0)
 ?>
 <FORM NAME='can_Form' METHOD="post" ACTION = "units.php"></FORM>
 <FORM NAME="to_edit_Form" METHOD="post" ACTION = "units.php?func=responder&edit=true&id=<?php print $id; ?>"></FORM>
@@ -486,6 +509,37 @@ print add_sidebar(FALSE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, $id, 0, 0
 </FORM>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+leftcolwidth = outerwidth * .70;
+rightcolwidth = outerwidth * .1;
+colheight = outerheight * .95;
+listHeight = viewportheight * .7;
+listwidth = colwidth * .95
+inner_listwidth = listwidth *.9;
+celwidth = listwidth * .20;
+res_celwidth = listwidth * .15;
+fac_celwidth = listwidth * .15;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('leftcol').style.width = leftcolwidth + "px";
+$('leftcol').style.height = colheight + "px";
+$('rightcol').style.width = rightcolwidth + "px";
+$('view_unit').style.width = leftcolwidth + "px";
+$('rightcol').style.height = colheight + "px";
+set_fontsizes(viewportwidth);
+</SCRIPT>
 </BODY>
 </HTML>
 <?php

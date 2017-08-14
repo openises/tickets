@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
 set_time_limit(0);
@@ -7,28 +9,37 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
-$iw_width= "300px";					// map infowindow with
-$nature = get_text("Nature");			// 12/03/10
+$screen = 
+$iw_width= "300px";
+$nature = get_text("Nature");
 $disposition = get_text("Disposition");
 $patient = get_text("Patient");
 $incident = get_text("Incident");
 $incidents = get_text("Incidents");
 $gt_status = get_text("Status");
 $ret_arr = array();
-$curr_cats = get_category_butts();	//	get current categories.
-$cat_sess_stat = get_session_status($curr_cats);	//	get session current status categories.
+$curr_cats = get_category_butts();
+$cat_sess_stat = get_session_status($curr_cats);
 $hidden = find_hidden($curr_cats);
 $shown = find_showing($curr_cats);
 $un_stat_cats = get_all_categories();
-$sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : $_GET['sort'];
+
+/* $screen = (!(array_key_exists('screen', $_GET))) ? "sit" : $_GET['screen'];
+$def_srt_arr = ($screen == "sit") ? array('icon','handle','mail','incidents','status','m','asof') : array('icon','name','handle','mail','incidents','status','sa','m','asof');;
+$def_sort = (get_variable('responder_list_sort') != "") ? get_variable('responder_list_sort') : "1,1";
+$temp = explode(",", $def_sort);
+$def_sort_sit = $temp[0] -1;
+$def_sort_resp = $temp[1] -1;
+$def_sort = ($screen == "sit") ? $def_sort_sit : $def_sort_resp; */
+$sortby = (!(array_key_exists('sort', $_GET))) ? 'icon' : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
-$u_sb_indx = 0;	//	12/23/13
-$u_types = array();												// 1/1/09
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
+$u_sb_indx = 0;
+$u_types = array();
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
+	$u_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 unset($result);
 
@@ -49,45 +60,35 @@ function subval_sort($a, $subkey, $dd) {
 
 function can_do_dispatch($the_row) {
 	if (intval($the_row['multi'])==1) return TRUE;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";	// all dispatches this unit
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";
 	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
-		if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
+	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {
+		if (!(is_date($row_temp['clear']))) {
 			unset ($result_temp, $row_temp); 
 			return FALSE;
 			}
-		}		// end while ($row_temp ...)
+		}
 	unset ($result_temp, $row_temp); 
-	return TRUE;					// none found, can dispatch
-	}		// end function can do_dispatch()
+	return TRUE;
+	}
 	
 function unit_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;	// all dispatches this unit
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	$row = stripslashes_deep(mysql_fetch_array($result));
 	return $row['name'];
 	}
 
-function valid_status($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		return true;
-		} else {
-		return false;
-		}
-	}	
-
-function is_ok_coord($inval) {				// // 3/14/12
+function is_ok_coord($inval) {
 	return ((abs(floatval($inval) != 0.0)) && (floatval($inval) != $GLOBALS['NM_LAT_VAL']));
 	}
 
 //	Categories for Unit status
 
-$categories = array();													// 12/03/10
-$categories = $curr_cats;											// 12/03/10
-$assigns = array();					// 8/3/08
-$tickets = array();					// ticket id's
+$categories = array();
+$categories = $curr_cats;
+$assigns = array();
+$tickets = array();
 
 $query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, 
 	`$GLOBALS[mysql_prefix]assigns`.`responder_id`, 
@@ -119,39 +120,39 @@ unset($result_st);
 $assigns_ary = array();				// construct array of responder_id's on active calls
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-		WHERE `t`.`status` = '{$GLOBALS['STATUS_OPEN']}' AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
+		WHERE (`t`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `t`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}') AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$assigns_ary[$row['responder_id']] = TRUE;
 	}
-$order_values = array(1 => "`nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC", 2 => "`type_descr` ASC, `handle` ASC",  3 => "`stat_descr` ASC, `handle` ASC" , 4 => "`handle` ASC");	// 6/24/10
+$numAssigns = count($assigns_ary);	
+$order_values = array(1 => "`nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC", 2 => "`type_descr` ASC, `handle` ASC",  3 => "`stat_descr` ASC, `handle` ASC" , 4 => "`handle` ASC");
 
-if ((array_key_exists ('order' , $_POST)) && (isset($_POST['order'])))	{$_SESSION['unit_flag_2'] =  $_POST['order'];}		// 8/12/10
+if ((array_key_exists ('order' , $_POST)) && (isset($_POST['order'])))	{$_SESSION['unit_flag_2'] =  $_POST['order'];}
 elseif (empty ($_SESSION['unit_flag_2'])) 	{$_SESSION['unit_flag_2'] = 1;}
 
-//	$order_str = $order_values[$_SESSION['unit_flag_2']];		// 6/11/10
-$order_str = $order_values[1];		// 6/11/10
+$order_str = $order_values[1];
 $al_groups = $_SESSION['user_groups'];
 
 if(array_key_exists('viewed_groups', $_SESSION)) {
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 	}
-if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+if(count($al_groups) == 0) {	
 	$where2 = "WHERE `a`.`type` = 2";
 	} else {	
 	if(!isset($curr_viewed)) {	
-		$x=0;	//	4/18/11
-		$where2 = "WHERE (";	//	4/18/11
-		foreach($al_groups as $grp) {	//	4/18/11
+		$x=0;
+		$where2 = "WHERE (";
+		foreach($al_groups as $grp) {
 			$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
 			$where2 .= "`a`.`group` = '{$grp}'";
 			$where2 .= $where3;
 			$x++;
 			}
 		} else {
-		$x=0;	//	4/18/11
-		$where2 = "WHERE (";	//	4/18/11
-		foreach($curr_viewed as $grp) {	//	4/18/11
+		$x=0;
+		$where2 = "WHERE (";
+		foreach($curr_viewed as $grp) {
 			$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
 			$where2 .= "`a`.`group` = '{$grp}'";
 			$where2 .= $where3;
@@ -193,57 +194,55 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
 	LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
 	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
-	{$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";											// 2/1/10, 3/15/10, 6/10/11
+	{$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";
 
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $units_ct = mysql_affected_rows();			// 1/4/10
 if ($units_ct==0){
 //	print "\n\t\tside_bar_html += \"<TR CLASS='odd'><TH></TH><TH ALIGN='center' COLSPAN=99><I><B>No units!</I></B></TH></TR>\"\n";
-	}
-else {
+	} else {
 	$checked = array ("", "", "", "");
 	$checked[$_SESSION['unit_flag_2']] = " CHECKED";
 	}
 
-$aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = $followmee = FALSE;		//7/23/09
+$aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = $followmee = FALSE;
 
-$utc = gmdate ("U");				// 3/25/09
+$utc = gmdate ("U");
 
 // ===========================  begin major while() for RESPONDER ==========
 
-$chgd_unit = $_SESSION['unit_flag_1'];					// possibly 0 - 4/8/10
-$_SESSION['unit_flag_1'] = 0;							// one-time only - 4/11/10
+$chgd_unit = $_SESSION['unit_flag_1'];
+$_SESSION['unit_flag_1'] = 0;
 $i = 1;
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
-	$resp_gps = get_allocates(2, $row['unit_id']);	//	6/10/11
-	$the_color = ($row['mobile']=="1")? 4 : 0;		// icon color black, white		-- 4/18/09
-	$grp_names = "Groups Assigned: ";	//	6/10/11
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$resp_gps = get_allocates(2, $row['unit_id']);
+	$the_color = ($row['mobile']=="1")? 4 : 0;
+	$grp_names = "Groups Assigned: ";
 	$y=0;	//	6/10/11
-	foreach($resp_gps as $value) {	//	6/10/11
+	foreach($resp_gps as $value) {
 		$counter = (count($resp_gps) > ($y+1)) ? ", " : "";
 		$grp_names .= get_groupname($value);
 		$grp_names .= $counter;
 		$y++;
 		}
 
-	$tip =  addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));		// tooltip string - 1/3/10
+	$tip =  addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));
 		
-	$latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');		// 7/18/10		
-	$longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');		// 7/18/10
+	$latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');	
+	$longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');
 
 	$got_point = FALSE;
 
 	$index = $row['icon_str'];	// 4/27/11
-	$track_type = get_remote_type($row) ;				// 7/8/11		
-										// 2/13/09
+	$track_type = get_remote_type($row) ;
 	$callsign = ($track_type == 8) ? "999_" . $row['unit_id']: $row['callsign'];
-	$hide_unit = ($row['hide']=="y")? "1" : "0" ;		// 3/8/10
+	$hide_unit = ($row['hide']=="y")? "1" : "0" ;
 	$fac_type_name = $row['un_type_name'];
 	
 	$type = $row['icon'];
 
 	$row_track = FALSE;
-	if ($track_type > 0 ) {				// get most recent mobile track data
+	if ($track_type > 0 ) {
 		$do_legend = TRUE;
 		$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
 			WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
@@ -252,61 +251,68 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 		$aprs_updated = $row_track['updated'];
 		$aprs_speed = $row_track['speed'];
 		if (($row_track) && (my_is_float($row_track['latitude']))) {
-			$latitude = $row_track['latitude'];  $longitude = $row_track['longitude'];			// 7/7/10
+			$latitude = $row_track['latitude'];  $longitude = $row_track['longitude'];
 			$got_point = TRUE;
 			}
 		unset($result_tr);
 		}
 
-	$the_bull = "";											// define the bullet
-	$update_error = strtotime('now - 6 hours');				// set the time for silent setting
+	$the_bull = "";
+	$update_error = strtotime('now - 6 hours');
 // NAME
-	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 2/1/10
+	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];
 	$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
 	$tempname = explode("/", $row['name']);
 	$name = htmlentities($tempname[0],ENT_QUOTES);
 	$handle = htmlentities($row['handle'],ENT_QUOTES);
 
 // MAIL						
-	if ((!is_guest()) && (is_email($row['contact_via']) || $row["smsg_id"] !="" || is_twitter($row['contact_via']))) {		// 2/1/10
+	if ((!is_guest()) && (is_email($row['contact_via']) || $row["smsg_id"] !="" || is_twitter($row['contact_via']))) {
 		$mail_link = $row['contact_via'] . $row['smsg_id'];
 		} else {
 		$mail_link = "";
 		}
 
-// DISPATCHES 3/16/09
+// DISPATCHES
 
 	$units_assigned = 0;
-	if(array_key_exists ($row['unit_id'] , $assigns_ary)) {
+	if(array_key_exists($row['unit_id'] , $assigns_ary)) {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-			WHERE `responder_id` = '{$row['unit_id']}' AND `t`.`status`='{$GLOBALS['STATUS_OPEN']}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	03/26/15
+			WHERE `responder_id` = '{$row['unit_id']}' AND (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}') AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 		$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$units_assigned = mysql_num_rows($result_as);
-		}		// end if(array_key_exists ()
+		}
 
 	switch ($units_assigned) {		
 		case 0:
 			$ass_td = " ";
+			$flaginfo = "";
 			break;			
 		case 1:
 			$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as));
 			$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 			$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
+			$addrs = $row_assign['street'] . " " . $row_assign['city'] . " " . $row_assign['state'];
+			$flaginfo = $row_assign['scope'] . "<BR />";
+//			$flaginfo .= "Address: " . $addrs . "<BR />";
+//			$flaginfo .= ($row['contact_via'] != "") ? "Contact: " . $row['contact_via'] . "<BR />" : "";
+//			$flaginfo .= ($row['smsg_id'] != "") ? "SMSG ID: " . $row['smsg_id'] . "<BR />" : "";
 			switch($row_assign['severity'])		{		//color tickets by severity
 				case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
 				default: 							$severityclass='severity_normal'; break;
 				}		// end switch()
-			$ass_td = shorten($row_assign['scope'], 20);
+			$ass_td = "<SPAN CLASS='" . $severityclass . "'>" . shorten($row_assign['scope'], 20) . "</SPAN>";
 			break;
-		default:							// multiples
+		default:
 			$ass_td = $units_assigned;
+			$flaginfo = "";
 			break;
-		}						// end switch(($units_assigned))
+		}
 
 // STATUS
-	$status = (valid_status($row['un_status_id'])) ? get_status_sel($row['unit_id'], $row['un_status_id'], "u") : "Status Error";		// status
+	$status = (valid_status($row['un_status_id'])) ? get_status_sel($row['unit_id'], $row['un_status_id'], "u") : "Status Error";
 	$status_name = (valid_status($row['un_status_id'])) ? $status_vals[$row['un_status_id']] : "Status Error" ;
 	$status_id = $row['un_status_id'];
 	$statusTemp = ($row['status_about'] != "") ? addslashes($row['status_about']): "";
@@ -346,20 +352,19 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 
 	$resp_cat = $un_stat_cats[$row['unit_id']];
 	$the_time = $row['r_updated'];
-	$tofac = (is_guest())? 													"" : "<A id='tofac_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&dispfac=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
-	$todisp = ((is_guest()) || (!(can_do_dispatch($row))))?					"" : "<A id='disp_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&disp=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";
-	$toedit = (!(can_edit()))?				 								"" : "<A id='edit_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&edit=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
-	$the_callsign = ($track_type == 8) ? "999_" . $row['unit_id']: $row['callsign'];	//	9/6/13
-	$totrack  = ((intval($row['mobile'])==0) || (($track_type != 8) && (empty($row['callsign'])))) ? "" : "&nbsp;&nbsp;<SPAN id='tracks_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = do_track('" .$the_callsign  . "');>Tracks</SPAN>" ;	//	9/6/13
+	$tofac = (is_guest())? "" : "<A id='tofac_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&dispfac=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">To Facility</A>";
+	$todisp = ((is_guest()) || (!(can_do_dispatch($row))))? "" : "<A id='disp_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&disp=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";
+	$toedit = (!(can_edit()))? "" : "<A id='edit_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&edit=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
+	$the_callsign = ($track_type == 8) ? "999_" . $row['unit_id']: $row['callsign'];
+	$totrack  = ((intval($row['mobile'])==0) || (($track_type != 8) && (empty($row['callsign'])))) ? "" : "&nbsp;&nbsp;<SPAN id='tracks_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = do_track('" .$the_callsign  . "');>Tracks</SPAN>" ;
 	$to_home = (is_guest() || (!(is_ok_coord($row['lat'])))) ?			 	"" : "<SPAN id='home_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onclick = 'go_home({$i});'>To quarters</SPAN>";
 	$to_log = (is_guest()) ? "" : "<SPAN id='log_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onclick = 'unit_log({$row['unit_id']});'>Log</SPAN>";	//	9/10/13
 	$temp = $row['un_status_id'] ;
-	$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
+	$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";
 	$theTabs = "";
 	$lat = $row['lat'];
 	$lng = $row['lng'];
-	$locale = get_variable('locale');	// 08/03/09	
-
+	$locale = get_variable('locale');
 	$ret_arr[$i][0] = $name;
 	$ret_arr[$i][1] = $handle;
 	$ret_arr[$i][2] = $index;
@@ -386,36 +391,39 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$ret_arr[$i][26] = htmlentities($status_about, ENT_QUOTES);
 	$ret_arr[$i][27] = $the_flag;
 	$ret_arr[$i][28] = $row['excl_zone'];
-	$ret_arr[$i][29] = $row['ring_fence'];	
+	$ret_arr[$i][29] = $row['ring_fence'];
+	$ret_arr[$i][30] = $flaginfo;
+	$ret_arr[$i][31] = $units_assigned;
 	$i++;
 	}				// end  ==========  while() for RESPONDER ==========
 
 $col_width= max(320, intval($_SESSION['scr_width']* 0.45));
 $ctrls_width = $col_width * .75;
 
-$cats_buttons = "<TABLE style='width: 200px;'><TR class='heading_2'><TH ALIGN='center'>" . get_text("Units") . "</TH></TR><TR class='odd'><TD COLSPAN=99 CLASS='td_label' ><form action='#'>";
+$cats_buttons = "<form action='#'><TABLE WIDTH='100%'><TR class='heading_2'><TH ALIGN='center'>" . get_text("Units") . "</TH></TR><TR class='odd'><TD COLSPAN=99 CLASS='td_label' >";
 
 if($units_ct > 0) {
 	foreach($categories as $key => $value) {
-		$cats_buttons .= "<DIV class='cat_button' onClick='set_buttons(\"category\"); set_chkbox(\"" . $value . "\")'>" . $value . ": <input type=checkbox id='" . $value . "' onClick='set_buttons(\"category\"); set_chkbox(\"" . $value . "\")'/>&nbsp;&nbsp;&nbsp;</DIV>";
+		$cats_buttons .= "<DIV class='cat_button text'>" . $value . ": <input type=checkbox id='" . $value . "' onChange='set_buttons(\"category\"); set_chkbox(\"" . $value . "\");'/>&nbsp;&nbsp;</DIV>";
 		}
-		$all="RESP_ALL";
-		$none="RESP_NONE";
-		$cats_buttons .= "<DIV ID = 'RESP_ALL_BUTTON' class='cat_button' onClick='set_buttons(\"all\"); set_chkbox(\"" . $all . "\")'><FONT COLOR = 'red'>ALL</FONT><input type=checkbox id='" . $all . "' onClick='set_buttons(\"all\"); set_chkbox(\"" . $all . "\")'/></FONT></DIV>";
-		$cats_buttons .= "<DIV ID = 'RESP_NONE_BUTTON' class='cat_button'  onClick='set_buttons(\"none\"); set_chkbox(\"" . $none . "\")'><FONT COLOR = 'red'>NONE</FONT><input type=checkbox id='" . $none . "' onClick='set_buttons(\"none\"); set_chkbox(\"" . $none . "\")'/></FONT></DIV>";
-		$cats_buttons .= "<DIV ID = 'go_can' style='float:right; padding:2px;'><SPAN ID = 'go_button' onClick='do_go_button()' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: green;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);'>Next</SPAN>";
-		$cats_buttons .= "<SPAN ID = 'can_button'  onClick='cancel_buttons()' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: red;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);''>Cancel</SPAN></DIV>";
-		$cats_buttons .= "</form></TD></TR></TABLE>";
+	$cats_buttons .= "</TD></TR><TR CLASS='odd'><TD COLSPAN=99 CLASS='td_label'>";
+	$all="RESP_ALL";
+	$none="RESP_NONE";
+	$cats_buttons .= "<DIV ID = 'RESP_ALL_BUTTON' class='cat_button text'><FONT COLOR = 'red'>ALL</FONT><input type=checkbox id='" . $all . "' onChange='set_buttons(\"all\"); set_chkbox(\"" . $all . "\");'/></FONT></DIV>";
+	$cats_buttons .= "<DIV ID = 'RESP_NONE_BUTTON' class='cat_button text'><FONT COLOR = 'red'>NONE</FONT><input type=checkbox id='" . $none . "' onChange='set_buttons(\"none\"); set_chkbox(\"" . $none . "\");'/></FONT></DIV>";
+	$cats_buttons .= "<DIV ID = 'go_can' style='float:right; padding:2px;'><SPAN ID = 'go_button' onClick='do_go_button();' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: green;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);'>Next</SPAN>";
+	$cats_buttons .= "<SPAN ID = 'can_button'  onClick='cancel_buttons();' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: red;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);''>Can</SPAN></DIV>";
+	$cats_buttons .= "</TD></TR></TABLE></form>";
 	} else {
 	foreach($categories as $key => $value) {
-		$cats_buttons .= "<DIV class='cat_button' STYLE='display: none;' onClick='set_buttons(\"category\"); set_chkbox(\"" . $value . "\")'>" . $value . ": <input type=checkbox id='" . $value . "' onClick='set_buttons(\"category\"); set_chkbox(\"" . $value . "\")'/>&nbsp;&nbsp;&nbsp;</DIV>";
+		$cats_buttons .= "<DIV class='cat_button text' STYLE='display: none;'>" . $value . ": <input type=checkbox id='" . $value . "' onChange='set_buttons(\"category\"); set_chkbox(\"" . $value . "\");'/>&nbsp;&nbsp;</DIV>";
 		}
-		$all="RESP_ALL";
-		$none="RESP_NONE";
-		$cats_buttons .= "<DIV class='cat_button' style='color: red;'>None Defined ! </DIV>";
-		$cats_buttons .= "<DIV ID = 'RESP_ALL_BUTTON' class='cat_button' STYLE='display: none;' onClick='set_buttons(\"all\"); set_chkbox(\"" . $all . "\")'><FONT COLOR = 'red'>ALL</FONT><input type=checkbox id='" . $all . "' onClick='set_buttons(\"all\"); set_chkbox(\"" . $all . "\")'/></FONT></DIV>";
-		$cats_buttons .= "<DIV ID = 'RESP_NONE_BUTTON' class='cat_button' STYLE='display: none;' onClick='set_buttons(\"none\"); set_chkbox(\"" . $none . "\")'><FONT COLOR = 'red'>NONE</FONT><input type=checkbox id='" . $none . "' onClick='set_buttons(\"none\"); set_chkbox(\"" . $none . "\")'/></FONT></DIV>";
-		$cats_buttons .= "</form></TD></TR></TABLE></DIV>";
+	$all="RESP_ALL";
+	$none="RESP_NONE";
+	$cats_buttons .= "<DIV class='cat_button text' style='color: red;'>None Defined ! </DIV>";
+	$cats_buttons .= "<DIV ID = 'RESP_ALL_BUTTON' class='cat_button text' STYLE='display: none;'><FONT COLOR = 'red'>ALL</FONT><input type=checkbox id='" . $all . "' onChange='set_buttons(\"all\"); set_chkbox(\"" . $all . "\");'/></FONT></DIV>";
+	$cats_buttons .= "<DIV ID = 'RESP_NONE_BUTTON' class='cat_button text' STYLE='display: none;'><FONT COLOR = 'red'>NONE</FONT><input type=checkbox id='" . $none . "' onChange='set_buttons(\"none\"); set_chkbox(\"" . $none . "\");'/></FONT></DIV>";
+	$cats_buttons .= "</form></TD></TR></TABLE></DIV>";
 	}
 
 
@@ -450,6 +458,9 @@ switch($sortby) {
 	case 'asof':
 		$sortval = 16;
 		break;
+	case 'name':
+		$sortval = 0;
+		break;
 	default:
 		$sortval = 2;
 	}
@@ -473,6 +484,7 @@ if($units_ct > 0 ) {
 $the_output[0][21] = $cats_buttons;
 $the_output[0][22] = $units_ct;	
 $the_output[0][23] = $latest_id;
+$the_output[0][24] = $numAssigns;
 
 //dump($the_output);
 print json_encode($the_output);

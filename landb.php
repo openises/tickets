@@ -71,7 +71,7 @@ if (array_key_exists("id", $_POST) && (!(empty($_POST['id'])))) {
 <META HTTP-EQUIV="Expires" CONTENT="0"/>
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE"/>
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE"/>
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript"/>
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript"/>
 <META HTTP-EQUIV="Script-date" CONTENT="12/15/10 3:55"> <!-- 7/7/09 -->
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <STYLE>
@@ -89,7 +89,7 @@ tr.front 					{height: 18px; }
 <?php
 $_func = (empty($_POST)) ?  "l" : $_POST['_func'];							// list mode as default	
 ?>
-<SCRIPT SRC="./js/jscolor/jscolor.js"  type="text/javascript"></SCRIPT>
+<SCRIPT SRC="./js/jscolor/jscolor.js"  type="application/x-javascript"></SCRIPT>
 <?php
 if ($_SESSION['internet']) {
 	$api_key = get_variable('gmaps_api_key');
@@ -97,19 +97,19 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
-<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
-<SCRIPT SRC='./js/graticule_V3.js' type='text/javascript'></SCRIPT> 
-<SCRIPT SRC='./js/misc_function.js' type='text/javascript'></SCRIPT>  <!-- 4/14/10 -->
-<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>
-<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></script>
+<SCRIPT SRC="./js/usng.js" TYPE="application/x-javascript"></SCRIPT>	<!-- 8/23/08 -->
+<SCRIPT SRC="./js/lat_lng.js" TYPE="application/x-javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/geotools2.js" TYPE="application/x-javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/osgb.js" TYPE="application/x-javascript"></SCRIPT>	<!-- 11/8/11 -->	
+<SCRIPT SRC='./js/graticule_V3.js' type='application/x-javascript'></SCRIPT> 
+<SCRIPT SRC='./js/misc_function.js' type='application/x-javascript'></SCRIPT>  <!-- 4/14/10 -->
+<SCRIPT SRC="./js/domready.js"		TYPE="application/x-javascript" ></script>
+<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="application/x-javascript" ></script>
 <SCRIPT src = "./js/elabel_v3.js"></SCRIPT>
 <SCRIPT>
 var map, poly;					// Global variables
@@ -559,7 +559,7 @@ switch ($_func) {
 	case "l":				// list
 ?>
 <BODY onLoad = "buildMap_l()">			<!-- <?php echo basename(__FILE__); ?> -->
-<SCRIPT TYPE='text/javascript' src='./js/wz_tooltip.js'></SCRIPT>
+<SCRIPT TYPE='application/x-javascript' src='./js/wz_tooltip.js'></SCRIPT>
 <TABLE ID = 'outer' ALIGN='center' BORDER = 0 STYLE = 'margin-left:20px;margin-top:20px;'>
 <TR CLASS='even'><TH colspan=2>Map Markup</TH></TR>
 <TR VALIGN='top'><TD>

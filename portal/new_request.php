@@ -15,9 +15,57 @@ if (empty($_SESSION)) {
 	}
 require_once '../incs/functions.inc.php';
 do_login(basename(__FILE__));
-
+$isGuest = (is_guest()) ? 1 : 0;
+$sess_id = $_SESSION['id'];
 $requester = get_owner($_SESSION['user_id']);
+$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
+$showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
+$api_key = get_variable('gmaps_api_key');
+$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$gmaps_ok = ($key_str) ? 1 : 0;
+/*$mandatoryFields = array(
+					"Approver",
+					"Your Email",
+					"Your Contact",
+					"Request Date",
+					"Company Name",
+					"Company Manager",
+					"Company Manager Phone",
+					"Patient",
+					"Patient Phone",
+					"Patient ID",
+					"Pickup or Arrival Time",
+					"Start Street",
+					"Start City",
+					"Start Postcode",
+					"Start State",
+					"Destination Street",
+					"Destination City",
+					"Destination Postcode",
+					"Destination State",
+					"Return Journey",
+					"Return Pickup Time",
+					"Return Start street",
+					"Return Start City",
+					"Return Start Postcode",
+					"Return Start State",
+					"Return Destination Street",
+					"Return Destination City",
+					"Return Destination Postcode",
+					"Return Destination State",
+					"Description"
+					);*/
+					
+$mandatoryFields = array(true,true,true,true,true,true,true,true,true,false,true,true,true,false,true,true,true,false,true,true,true,true,true,false,true,true,true,false,true,true);
 
+function isMandatory($id) {
+	global $mandatoryFields;
+	if($mandatoryFields[$id]) {
+		return "<FONT COLOR='RED' SIZE='-1'>*</FONT>";
+		} else {
+		return "";
+		}
+	}
 
 function get_user_name($the_id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
@@ -41,6 +89,27 @@ function get_city($the_id) {
 	return $the_ret;
 	}
 	
+function generate_time_dropdown($fieldname, $hour=00, $minute=00, $disabled = FALSE) {			// 'extra allows 'disabled'
+	$dis_str = ($disabled)? " disabled" : "" ;
+	$output = "<SELECT name='frm_hour_$fieldname' $dis_str onChange='setPickupDropoffHour(\"" . $fieldname . "\", this.options[selectedIndex].value);'>";
+	for($i = 0; $i < 25; $i++){
+		if($i < 10) {$di = "0" . $i;} else {$di = $i;}
+		$output .= "<OPTION VALUE='$i'";
+		$output .= ($hour == $di) ? " SELECTED>$di</OPTION>" : ">$di</OPTION>";
+		}
+	$output .= "</SELECT>";
+	$output .= "&nbsp;<SELECT name='frm_minute_$fieldname' $dis_str onChange='setPickupDropoffMinute(\"" . $fieldname . "\", this.options[selectedIndex].value);'>";
+	for($i = 0; $i < 60; $i++){
+		if(count(strval($i)) < 2) {$di = "0" . $i;} else {$di = $i;}
+		if($i < 10) {$di = "0" . $i;} else {$di = $i;}
+		$output .= "<OPTION VALUE='$i'";
+		$output .= ($minute == $di) ? " SELECTED>$di</OPTION>" : ">$di</OPTION>";
+		}
+	$output .= "</SELECT>";
+	$output .= "<INPUT TYPE='hidden' NAME='frm_" . $fieldname . "' VALUE = '' />";
+	return $output;
+	}		// end function generate_time_dropdown(
+	
 
 $now = time() - (intval(get_variable('delta_mins')*60));
 $api_key = trim(get_variable('gmaps_api_key'));
@@ -53,13 +122,14 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="./css/stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <style type="text/css">
 body {overflow:hidden}
 </style>
-<SCRIPT TYPE="text/javascript" SRC="../js/misc_function.js"></SCRIPT>	
-<SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
+<SCRIPT TYPE="application/x-javascript" SRC="../js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>	
+<SCRIPT TYPE="application/x-javascript" SRC="../js/domready.js"></script>
 <script src="../js/leaflet/leaflet.js"></script>
 <script src="../js/proj4js.js"></script>
 <script src="../js/proj4-compressed.js"></script>
@@ -70,21 +140,39 @@ body {overflow:hidden}
 <script src="../js/leaflet-openweathermap.js"></script>
 <script src="../js/esri-leaflet.js"></script>
 <script src="../js/Control.Geocoder.js"></script>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="./js/osgb.js"></script>
+<script type="application/x-javascript" src="../js/usng.js"></script>
+<script type="application/x-javascript" src="../js/osgb.js"></script>
 <?php
 if($key_str) {
 ?>
 	<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-	<script type="text/javascript" src="../js/Google.js"></script>
+	<script type="application/x-javascript" src="../js/Google.js"></script>
 <?php 
 	}
 ?>
-<script type="text/javascript" src="../js/osm_map_functions.js.php"></script>
-<script type="text/javascript" src="../js/L.Graticule.js"></script>
-<script type="text/javascript" src="../js/leaflet-providers.js"></script>
-<script type="text/javascript" src="../js/geotools2.js"></script>
+<script type="application/x-javascript" src="../js/osm_map_functions.js"></script>
+<script type="application/x-javascript" src="../js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="../js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="../js/geotools2.js"></script>
 <SCRIPT>
+var thelevel = '<?php print $the_level;?>';
+var locale = <?php print get_variable('locale');?>;
+var my_Local = <?php print get_variable('local_maps');?>;
+var def_lon = <?php print get_variable('def_lng');?>;
+var def_lat = <?php print get_variable('def_lat');?>;
+var def_zoom = <?php print get_variable('def_zoom');?>;
+var zoom = <?php print get_variable('def_zoom');?>;
+var guest = <?php print $isGuest;?>;
+var sess_id = "<?php print $sess_id;?>";
+var good_gmapsapi = <?php print $gmaps_ok;?>;
+var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
+var icons=[];
+icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;	// blue
+icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;	// yellow
+icons[<?php echo $GLOBALS['SEVERITY_HIGH']; ?>] =  3;	// red
+var setZoom = 1;
+var theZoom = 1;
+var max_zoom = 1;
 var randomnumber;
 var the_string;
 var theClass = "background-color: #CECECE";
@@ -115,10 +203,50 @@ var the_link = "";
 var isReturn = 0;
 var gotLatLng = false;
 var gotRetLatLng = false;
+var mandatoryFields = <?php echo json_encode($mandatoryFields); ?>;
+var viewportwidth;
+var viewportheight;
+function set_size() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	set_fontsizes(viewportwidth, "popup");
+	}
 
 function out_frames() {		//  onLoad = "out_frames()"
 	if (top.location != location) top.location.href = document.location.href;
 	}		// end function out_frames()
+	
+function setPickupDropoffHour(formfield, theHour) {
+	var theForm = document.forms['add'];
+	theHour = (theHour.length < 2) ? "0" + theHour : theHour;
+	if(formfield == "pickup") {
+		theForm.frm_pickup.value = theHour;
+		} else if(formfield == "arrival") {
+		theForm.frm_arrival.value = theHour;
+		} else if(formfield == "ret_time") {
+		theForm.frm_ret_time.value = theHour;
+		}
+	}
+	
+function setPickupDropoffMinute(formfield, theMinute, theForm) {
+	var theForm = document.forms['add'];
+	theMinute = (theMinute.length < 2) ? "0" + theMinute : theMinute;
+	if(formfield == "pickup") {
+		theForm.frm_pickup.value += ":" + theMinute;
+		} else if(formfield == "arrival") {
+		theForm.frm_arrival.value += ":" + theMinute;
+		} else if(formfield == "ret_time") {
+		theForm.frm_ret_time.value += ":" + theMinute;
+		}
+	}
 
 function show_return(selector) {
 	var theForm = document.forms['add'];
@@ -169,27 +297,27 @@ function new_line() {
 	the_text += '<TD class="inside_td_label" COLSPAN=99><SPAN class="inside_td_label" style="float: left; display: inline; vertical-align: middle;">Additional Address Number ' + theNumber + '</SPAN><SPAN id="a_line' + ct + '" class="plain" style="display: inline; vertical-align: middle; float: right;" onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="delIt(\'extra_address' + ct + '\')">Delete</SPAN></TD>';
 	the_text +=	"</TR>";
 	the_text +=	"<TR class='even'>";	
-	the_text +=	"<TD class='inside_td_label' style='text-align: left;' TITLE='<?php print get_text('Patient');?> name'><?php print get_text('Patient');?></TD>";
+	the_text +=	"<TD class='inside_td_label' style='text-align: left;' TITLE='<?php print get_text('Patient');?> name'><?php print get_text('Patient');?>:</TD>";
 	the_text += "<TD class='inside_td_data' style='text-align: left;'><INPUT NAME='frm_patient_extra[]' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=''></TD>";
 	the_text += "</TR>";
 	the_text += "<TR class='odd'>";
-	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='<?php print get_text('Patient');?> ID'><?php print get_text('Patient');?> ID</TD>";
+	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='<?php print get_text('Patient');?> ID'><?php print get_text('Patient');?> ID:</TD>";
 	the_text += "<TD class='inside_td_data' style='text-align: left;'><INPUT NAME='frm_patient_id_extra[]' TYPE='TEXT' SIZE='12' MAXLENGTH='12' VALUE=''></TD>";
 	the_text += "</TR>";
 	the_text +=	"<TR class='even'>";	
-	the_text +=	"<TD class='inside_td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?></TD>";
+	the_text +=	"<TD class='inside_td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:</TD>";
 	the_text += "<TD class='inside_td_data' style='text-align: left;'><INPUT NAME='frm_to_street_extra[]' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=''></TD>";
 	the_text += "</TR>";
 	the_text += "<TR class='odd'>";	
-	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?></TD>";
+	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='City'>City:</TD>";
 	the_text += "<TD class='inside_td_data' style='text-align: left;'><INPUT NAME='frm_to_city_extra[]' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE='" + defCity + "'></TD>";
 	the_text += "</TR>";
 	the_text += "<TR class='even'>";	
-	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD>";
+	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?>:</TD>";
 	the_text += "<TD class='inside_td_data' style='text-align: left;'><INPUT NAME='frm_to_postcode_extra[]' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=''></TD>";
 	the_text += "</TR>";		
 	the_text += "<TR class='odd'>";
-	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?></TD>";
+	the_text += "<TD class='inside_td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:</TD>";
 	the_text += "<TD class='inside_td_data' style='text-align: left;'><INPUT NAME='frm_to_state_extra[]' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE='" + defSt + "'></TD>";
 	the_text += "</TR>";
 	the_text +=	"<TR class='spacer'>";
@@ -225,6 +353,10 @@ function addressLookup(address) {
 	}				// end function loc_lkup()
 	
 function sub_request() {
+	var lat;
+	var lng;
+	var retlat;
+	var retlng;
 	var theForm = document.forms['add'];
 	var theAddAddress = "";
 	var theDescVal = "\r\n" + theForm.frm_description.value + "\r\n";
@@ -284,11 +416,15 @@ function sub_request() {
 		}
 	var theTimeDet = "";
 	if(thePickup != "") {
+		var pickupArr = thePickup.split(":");
+		if(!pickupArr[1]) {thePickup = pickupArr[0] + ":00";}
 		theTimeDet += "Pickup Time: ";		
 		theTimeDet += thePickup;
 		theTimeDet += "\r\n";
 		}
 	if(theArrival != "") {
+		var arriveArr = theArrival.split(":");
+		if(!arriveArr[1]) {theArrival = arriveArr[0] + ":00";}
 		theTimeDet += "Arrival Time: ";	
 		theTimeDet += theArrival;
 		theTimeDet += "\r\n";
@@ -309,33 +445,55 @@ function sub_request() {
 	var patDetails = "Passenger Name: " + thePatient + "\r\nPassenger Contact: " + thePhone + "\r\n\r\n";
 	var theDescription = patDetails + thePatientID + theTimeDet + theAddAddress + theDescVal + theAuthDet;
 	var requestDate = theForm.frm_year_request_date.value + "-" + theForm.frm_month_request_date.value + "-" + theForm.frm_day_request_date.value;
-	var ToAddress = encodeURI(theForm.frm_to_street.value + ", " + theForm.frm_to_city.value + ", " + theForm.frm_to_state.value);
+	var toStreet = theForm.frm_to_street.value;
+	var toCity = theForm.frm_to_city.value;
+	var toPostcode = theForm.frm_to_postcode.value;
+	var toState = theForm.frm_to_state.value;
+	if(theForm.frm_to_postcode != "") {
+		var ToAddress = encodeURI(theForm.frm_to_street.value + ", " + theForm.frm_to_city.value + ", " + theForm.frm_to_postcode.value + ", " + theForm.frm_to_state.value);
+		} else {
+		var ToAddress = encodeURI(theForm.frm_to_street.value + ", " + theForm.frm_to_city.value + ", " + theForm.frm_to_state.value);
+		}
 	var dest_address_array = ToAddress.split(",");
 	if(dest_address_array[0] == "") {
 		ToAddress = "";
 		}
 	var theUserName = "<?php print addslashes(get_user_name($_SESSION['user_id']));?>";
-	var thePickup = theForm.frm_pickup.value;
-	var theArrival = theForm.frm_arrival.value;
 	var origFac = theForm.frm_orig_fac.value;
 	var recFac = theForm.frm_rec_fac.value;	
 	var theScope = theForm.frm_patient.value + " " + requestDate;
 	var theComments = "";
-/*	if(theApprover == "") { err_msg += "\tYour name as Approver required\n"; }
-	if(appEmail == "") { err_msg += "\tYour email address is required for updates\n"; }
-	if(theAppContact == "") { err_msg += "\tYour contact phone number required\n"; }	*/
-//	thePhone = theAppContact;
-	if(thePatient == "") { err_msg += "\tName of Person required\n"; }
-/*	if(thePhone == "") { err_msg += "\tContact number of Person required\n"; }
-	if(theCompany == "") { err_msg += "\tName of Company required\n"; }
-	if(theManager == "") { err_msg += "\tName of Company Manager required\n"; }	*/
-	if(street == "") { err_msg += "\t<?php print get_text('Street Address');?> required\n"; }
-	if(city == "") { err_msg += "\t<?php print get_text('City');?> is required\n"; }
-	if(state == "") { err_msg += "\t<?php print get_text('State');?> is required, for UK State is UK\n"; }
-	if(theForm.frm_description.value == "") { err_msg += "\t<?php print get_text('Description');?> is required\n"; }
-	if(requestDate == "") { err_msg += "\tRequest date required\n"; }
-	if((thePickup == "") && (theArrival == "")) { err_msg += "\tEither a Pickup or Arrival Time is required\n"; }
-	if(retJourney == 1 && theForm.frm_ret_time.value == "") { err_msg += "\tReturn journey requested but no return pickup time set\n"; }
+	if(mandatoryFields[0] && theApprover == "") { err_msg += "Your name as Approver required\n"; }
+	if(mandatoryFields[1] && appEmail == "") { err_msg += "Your email address is required for updates\n"; }
+	if(mandatoryFields[2] && theAppContact == "") { err_msg += "Your contact phone number required\n"; }
+	if(mandatoryFields[3] && requestDate == "") { err_msg += "Request date required\n"; }	
+	if(mandatoryFields[4] && theCompany == "") { err_msg += "Name of Company required\n"; }
+	if(mandatoryFields[5] && theManager == "") { err_msg += "Name of Company Manager required\n"; }
+	if(mandatoryFields[6] && theManagerPhone == "") { err_msg += "Contact Number for Company Manager required\n"; }
+	if(mandatoryFields[7] && thePatient == "") { err_msg += "Name of Person required\n"; }
+	if(mandatoryFields[8] && thePhone == "") { err_msg += "Contact number of Person required\n"; }
+	if(mandatoryFields[9] && thePatientID == "") { err_msg += "Person ID required\n"; }
+	if(mandatoryFields[10] && thePickup == "" && theArrival == "") { err_msg += "Either a Pickup or Arrival Time is required\n"; }
+	if(mandatoryFields[11] && street == "") { err_msg += "<?php print get_text('Street Address');?> required\n"; }
+	if(mandatoryFields[12] && city == "") { err_msg += "City is required\n"; }
+	if(mandatoryFields[13] && postcode == "") { err_msg += "<?php print get_text('Postcode');?> is required\n"; }
+	if(mandatoryFields[14] && state == "") { err_msg += "<?php print get_text('State');?> is required, for UK State is UK\n"; }
+	if(mandatoryFields[15] && toStreet == "") { err_msg += "Destination <?php print get_text('Street Address');?> required\n"; }
+	if(mandatoryFields[16] && toCity == "") { err_msg += "Destination City is required\n"; }
+	if(mandatoryFields[17] && toPostcode == "") { err_msg += "Destination <?php print get_text('Postcode');?> is required\n"; }
+	if(mandatoryFields[18] && toState == "") { err_msg += "Destination <?php print get_text('State');?> is required, for UK State is UK\n"; }
+	if(mandatoryFields[19] && retJourney == 1) {
+		if(mandatoryFields[20] && theForm.frm_ret_time.value == "") {err_msg += "Return journey requested but no return pickup time provided\n";}
+		if(mandatoryFields[21] && theForm.frm_ret_street.value == "") {err_msg += "Return journey requested but no pickup street address provided\n";}
+		if(mandatoryFields[22] && theForm.frm_ret_city.value == "") {err_msg += "Return journey requested but no pickup city provided\n";}
+		if(mandatoryFields[23] && theForm.frm_ret_postcode.value == "") {err_msg += "Return journey requested but no pickup postcode provided\n";}
+		if(mandatoryFields[24] && theForm.frm_ret_state.value == "") {err_msg += "Return journey requested but no pickup state provided\n";}	
+		if(mandatoryFields[25] && theForm.frm_retto_street.value == "") {err_msg += "Return journey requested but no destination street address provided\n";}
+		if(mandatoryFields[26] && theForm.frm_retto_city.value == "") {err_msg += "Return journey requested but no destination city provided\n";}
+		if(mandatoryFields[27] && theForm.frm_retto_postcode.value == "") {err_msg += "Return journey requested but no destination postcode provided\n";}
+		if(mandatoryFields[28] && theForm.frm_retto_state.value == "") {err_msg += "Return journey requested but no destination state provided\n";}			
+		}
+	if(mandatoryFields[29] && theForm.frm_description.value == "") { err_msg += "<?php print get_text('Description');?> is required\n"; }
 	if(err_msg != "") {
 		alert ("Please correct the following and re-submit:\n\n" + err_msg);
 		return;
@@ -343,78 +501,44 @@ function sub_request() {
 		$('the_form').style.display="none";
 		$('waiting').style.display='block';
 		$('waiting').innerHTML = "Please Wait, Inserting Request<BR /><IMG style='vertical-align: middle;' src='../images/progressbar3.gif'/>";
-		var myAddress = theForm.frm_street.value.trim() + ", " +theForm.frm_city.value.trim() + ", " + theForm.frm_postcode.value.trim() + ", " + theForm.frm_state.value.trim();
-		var address1 = addressLookup(myAddress);
-		if (address1) {
-			window.theLat = address1[0];
-			window.theLng = address1[1];
-			if(window.isReturn == 1) {
-				var myRetAddress = theForm.frm_ret_street.value.trim() + ", " + theForm.frm_ret_city.value.trim() + ", " + theForm.frm_ret_postcode.value.trim() + ", " + theForm.frm_ret_state.value.trim();
-				var address2 = addressLookup(myRetAddress);
-				if (address2) {
-					window.theRetLat = address2[0];
-					window.theRetLng = address2[0];
-					var params = "frm_street=" + street;
-					params += "&frm_app_email=" + appEmail
-					params += "&frm_city=" + city;
-					params += "&frm_postcode=" + postcode;			
-					params += "&frm_state=" + state;
-					params += "&frm_lat=" + theLat;
-					params += "&frm_lng=" + theLng;
-					params += "&frm_description=" + theDescription;
-					params += "&frm_request_date=" + requestDate;
-					params += "&frm_phone=" + thePhone;
-					params += "&frm_toaddress=" + ToAddress;
-					params += "&frm_pickup=" + thePickup;
-					params += "&frm_arrival=" + theArrival;			
-					params += "&frm_username=" + theApprover;
-					params += "&frm_patient=" + thePatient;
-					params += "&frm_orig_fac=" + origFac;
-					params += "&frm_rec_fac=" + recFac;
-					params += "&frm_scope=" + theScope;
-					params += "&frm_comments=" + theComments;
-					var paramsEncoded = encodeURI(params);
-					var url = './ajax/insert_request.php?'+paramsEncoded;
-					sendRequest (url,local_handleResult, "");			// does the work via POST
-					} else {
-					alert("Geocode lookup failed: " + status);
-					$('the_form').style.display="block";
-					$('waiting').style.display='none';
-					alert("Couldn't insert your request at this time due to an error, please try again.");
-					return
-					}
-				} else {
-				var params = "frm_street=" + street;
-				params += "&frm_app_email=" + appEmail
-				params += "&frm_city=" + city;
-				params += "&frm_postcode=" + postcode;			
-				params += "&frm_state=" + state;
-				params += "&frm_lat=" + theLat;
-				params += "&frm_lng=" + theLng;
-				params += "&frm_description=" + theDescription;
-				params += "&frm_request_date=" + requestDate;
-				params += "&frm_phone=" + thePhone;
-				params += "&frm_toaddress=" + ToAddress;
-				params += "&frm_pickup=" + thePickup;
-				params += "&frm_arrival=" + theArrival;			
-				params += "&frm_username=" + theApprover;
-				params += "&frm_patient=" + thePatient;
-				params += "&frm_orig_fac=" + origFac;
-				params += "&frm_rec_fac=" + recFac;
-				params += "&frm_scope=" + theScope;
-				params += "&frm_comments=" + theComments;
-				var paramsEncoded = encodeURI(params);
-				var url = './ajax/insert_request.php?'+paramsEncoded;
-				sendRequest (url,local_handleResult, "");			// does the work via POST
-				}
-			} else { 
-			alert("Geocode lookup failed: " + status);
-			$('the_form').style.display="block";
-			$('waiting').style.display='none';
-			alert("Couldn't insert your request at this time due to an error, please try again.");
-			return
+		if(postcode != "") {
+			var address = street.trim() + ", " +city.trim() + ", " + postcode.trim() + ", " + state.trim();
+			} else {
+			var address = street.trim() + ", " +city.trim() + ", " + state.trim();				
 			}
-		}
+		control.options.geocoder.geocode(address, function(results) {
+			if(!results[0]) {
+				window.theLat = lat = "<?php print get_variable('def_lat');?>";
+				window.theLng = lng = "<?php print get_variable('def_lng');?>";
+				} else {
+				var r = results[0]['center'];
+				window.theLat = lat = r.lat;
+				window.theLng = lng = r.lng;
+				}
+			var params = "frm_street=" + street;
+			params += "&frm_app_email=" + appEmail
+			params += "&frm_city=" + city;
+			params += "&frm_postcode=" + postcode;			
+			params += "&frm_state=" + state;
+			params += "&frm_lat=" + lat;
+			params += "&frm_lng=" + lng;
+			params += "&frm_description=" + theDescription;
+			params += "&frm_request_date=" + requestDate;
+			params += "&frm_phone=" + thePhone;
+			params += "&frm_toaddress=" + ToAddress;
+			params += "&frm_pickup=" + thePickup;
+			params += "&frm_arrival=" + theArrival;			
+			params += "&frm_username=" + theApprover;
+			params += "&frm_patient=" + thePatient;
+			params += "&frm_orig_fac=" + origFac;
+			params += "&frm_rec_fac=" + recFac;
+			params += "&frm_scope=" + theScope;
+			params += "&frm_comments=" + theComments;
+			var paramsEncoded = encodeURI(params);
+			var url = './ajax/insert_request.php?'+paramsEncoded;
+			sendRequest (url,local_handleResult, "");			// does the work via POST				
+			});
+		}	
 	}
 	
 function sub_retrequest() {
@@ -477,11 +601,15 @@ function sub_retrequest() {
 		}
 	var theTimeDet = "";
 	if(thePickup != "") {
+		var pickupArr = thePickup.split(":");
+		if(!pickupArr[1]) {thePickup = pickupArr[0] + ":00";}
 		theTimeDet += "Pickup Time: ";		
 		theTimeDet += thePickup;
 		theTimeDet += "\r\n";
 		}
 	if(theArrival != "") {
+		var arriveArr = theArrival.split(":");
+		if(!arriveArr[1]) {theArrival = arriveArr[0] + ":00";}
 		theTimeDet += "Arrival Time: ";	
 		theTimeDet += theArrival;
 		theTimeDet += "\r\n";
@@ -512,31 +640,46 @@ function sub_retrequest() {
 	var recFac = theForm.frm_rec_fac.value;	
 	var theScope = theForm.frm_patient.value + " " + requestDate + " - Return Journey";
 	var theComments = "";
-	$('the_form').style.display="none";
-	$('waiting').style.display='block';
-	$('waiting').innerHTML = "Please Wait, Inserting Return Request<BR /><IMG style='vertical-align: middle;' src='../images/progressbar3.gif'/>";
-	var params = "frm_street=" + street;
-	params += "&frm_app_email=" + appEmail
-	params += "&frm_city=" + city;
-	params += "&frm_postcode=" + postcode;			
-	params += "&frm_state=" + state;
-	params += "&frm_lat=" + theRetLat;
-	params += "&frm_lng=" + theRetLng;
-	params += "&frm_description=" + theDescription;
-	params += "&frm_request_date=" + requestDate;
-	params += "&frm_phone=" + thePhone;
-	params += "&frm_toaddress=" + ToAddress;
-	params += "&frm_pickup=" + thePickup;
-	params += "&frm_arrival=" + theArrival;			
-	params += "&frm_username=" + theApprover;
-	params += "&frm_patient=" + thePatient;
-	params += "&frm_orig_fac=" + origFac;
-	params += "&frm_rec_fac=" + recFac;
-	params += "&frm_scope=" + theScope;
-	params += "&frm_comments=" + theComments;
-	var paramsEncoded = encodeURI(params);
-	var url = './ajax/insert_request.php?'+paramsEncoded;
-	sendRequest (url,local_handleResult2, "");			// does the work via POST
+	if(postcode != "") {
+		var RetAddress = theForm.frm_ret_street.value.trim() + ", " + theForm.frm_ret_city.value.trim() + ", " + theForm.frm_ret_postcode.value.trim() + ", " + theForm.frm_ret_state.value.trim();
+		} else {
+		var RetAddress = theForm.frm_ret_street.value.trim() + ", " + theForm.frm_ret_city.value.trim() + ", " + theForm.frm_ret_state.value.trim();
+		}
+	control.options.geocoder.geocode(RetAddress, function(results) {
+		if(!results[0]) {
+			theRetLat = "<?php print get_variable('def_lat');?>";
+			theRetLng = "<?php print get_variable('def_lng');?>";
+			} else {
+			var r = results[0]['center'];
+			theRetLat = r.lat;
+			theRetLng = r.lng;
+			}
+		$('the_form').style.display="none";
+		$('waiting').style.display='block';
+		$('waiting').innerHTML = "Please Wait, Inserting Return Request<BR /><IMG style='vertical-align: middle;' src='../images/progressbar3.gif'/>";
+		var params = "frm_street=" + street;
+		params += "&frm_app_email=" + appEmail
+		params += "&frm_city=" + city;
+		params += "&frm_postcode=" + postcode;			
+		params += "&frm_state=" + state;
+		params += "&frm_lat=" + theRetLat;
+		params += "&frm_lng=" + theRetLng;
+		params += "&frm_description=" + theDescription;
+		params += "&frm_request_date=" + requestDate;
+		params += "&frm_phone=" + thePhone;
+		params += "&frm_toaddress=" + ToAddress;
+		params += "&frm_pickup=" + thePickup;
+		params += "&frm_arrival=" + theArrival;			
+		params += "&frm_username=" + theApprover;
+		params += "&frm_patient=" + thePatient;
+		params += "&frm_orig_fac=" + origFac;
+		params += "&frm_rec_fac=" + recFac;
+		params += "&frm_scope=" + theScope;
+		params += "&frm_comments=" + theComments;
+		var paramsEncoded = encodeURI(params);
+		var url = './ajax/insert_request.php?'+paramsEncoded;
+		sendRequest (url,local_handleResult2, "");			// does the work via POST
+		});
 	}
 
 function pausejs(millis) {
@@ -555,7 +698,7 @@ function local_handleResult(req) {			// the called-back function
 		$('waiting').style.display='none';					
 		$('result').style.display = 'inline-block';
 		the_link = "Could not insert new Ticket, please try again<BR /><BR /><BR /><BR />";		
-		the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+		the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.loadIt(); window.close();'>Close</SPAN>";
 		$('done').innerHTML = the_link;	
 		} else {
 		if(retJourney == 0) {
@@ -589,11 +732,11 @@ function local_handleResult(req) {			// the called-back function
 				var url ="../do_send_mail.php?to_str=" + to_str3 + "&smsg_to_str=" + smsg_to_str3 + "&subject_str=" + subject_str3 + "&text_str=" + encodeURI(text_str3) + "&version=" + randomnumber;
 				}
 			the_link = "<SPAN>Your request has been inserted successfully</SPAN><BR /><BR /><BR /><BR />";		
-			the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+			the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.loadIt(); window.close();'>Close</SPAN>";
 			if($('waiting')) {$('waiting').style.display='none';}
 			$('result').style.display = 'inline-block';
 			$('done').innerHTML = the_link;
-			window.opener.get_requests();
+			window.opener.loadIt();
 			} else {
 			pausejs(3000);
 			sub_retrequest();
@@ -610,7 +753,7 @@ function local_handleResult2(req) {			// the called-back function for the return
 		$('waiting').style.display='none';					
 		$('result').style.display = 'inline-block';
 		the_link = "Could not insert new Ticket, please try again<BR /><BR /><BR /><BR />";		
-		the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+		the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.loadIt(); window.close();'>Close</SPAN>";
 		$('done').innerHTML = the_link;	
 		} else {
 		var to_str1 = the_response[1];
@@ -643,11 +786,11 @@ function local_handleResult2(req) {			// the called-back function for the return
 			var url ="../do_send_mail.php?to_str=" + to_str3 + "&smsg_to_str=" + smsg_to_str3 + "&subject_str=" + subject_str3 + "&text_str=" + encodeURI(text_str3) + "&version=" + randomnumber;
 			}
 		the_link = "<SPAN>Your request has been inserted successfully</SPAN><BR /><BR /><BR /><BR />";		
-		the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+		the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.loadIt(); window.close();'>Close</SPAN>";
 		if($('waiting')) {$('waiting').style.display='none';}
 		$('result').style.display = 'inline-block';
 		$('done').innerHTML = the_link;
-		window.opener.get_requests();
+		window.opener.loadIt();
 		}
 	}			// end function local handleResult
 	
@@ -821,8 +964,8 @@ $orig_fac_menu .= "<SELECT>";
 	<DIV id='outer' style='position: absolute; width: 95%; text-align: center; margin: 10px; height: 690px; overflow: hidden;'>
 		<DIV id='the_form' style='height: 100%; overflow: hidden;'>
 			<DIV id='the_heading' class='heading' style='font-size: 1.25em; line-height: 40px;'>ADD A NEW REQUEST
-				<SPAN id='sub_but' CLASS ='plain' style='float: none; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "sub_request();">Submit</SPAN>
-				<SPAN id='can_but' CLASS ='plain' style='float: none; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.close();">Cancel</SPAN>		
+				<SPAN id='sub_but' CLASS ='plain text' style='float: none; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "sub_request();">Submit</SPAN>
+				<SPAN id='can_but' CLASS ='plain text' style='float: none; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.opener.loadIt(); window.close();">Cancel</SPAN>		
 			</DIV>
 			<DIV id='inner' style='z-index: 1; overflow-y: scroll; height: 660px;'>
 				<FORM NAME='add' METHOD='POST' ACTION = "<?php print basename( __FILE__); ?>">
@@ -834,121 +977,121 @@ $orig_fac_menu .= "<SELECT>";
 						<TD class='spacer' COLSPAN=99></TD>
 					</TR>							
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Your name as the service approver'><?php print get_text('Approver');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_approver' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Your name as the service approver'><?php print get_text('Approver');?>:&nbsp;<?php print isMandatory(0);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_approver' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Your contact email, all updates will be provided to this address'><?php print get_text('Your Email');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_app_email' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Your contact email, all updates will be provided to this address'><?php print get_text('Your Email');?>:&nbsp;<?php print isMandatory(1);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_app_email' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Your contact phone number'><?php print get_text('Your Contact');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_app_contact' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Your contact phone number'><?php print get_text('Your Contact');?>:&nbsp;<?php print isMandatory(2);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_app_contact' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='When job is required'>When Required:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',0,FALSE);?></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='When job is required'>When Required:&nbsp;<?php print isMandatory(3);?></TD><TD class='td_data' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',0,FALSE);?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Your organisation name OR the private Homecare / Carehome agency name for recharging later'><?php print get_text('Company Name');?>: </TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_company' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Your organisation name OR the private Homecare / Carehome agency name for recharging later'><?php print get_text('Company Name');?>:&nbsp;<?php print isMandatory(4);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_company' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Homecare / Carehome manager name for recharging later'><?php print get_text('Company Manager');?>: </TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_contact' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Homecare / Carehome manager name for recharging later'><?php print get_text('Company Manager');?>:&nbsp;<?php print isMandatory(5);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_contact' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Homecare / Carehome manager number for contact if required'><?php print get_text('Contact Manager Phone');?>: </TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_contactno' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Homecare / Carehome manager number for contact if required'><?php print get_text('Contact Manager Phone');?>:&nbsp;<?php print isMandatory(6);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_contactno' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Who is the service user - if this is a pickup, who is being picked up'><?php print get_text('Patient');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_patient' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Who is the service user - if this is a pickup, who is being picked up'><?php print get_text('Patient');?>:&nbsp;<?php print isMandatory(7);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_patient' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Contact number of person being served'><?php print get_text('Patient');?> <?php print get_text('Phone');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_phone' TYPE='TEXT' SIZE='16' MAXLENGTH='16' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Contact number of person being served'><?php print get_text('Patient');?> <?php print get_text('Phone');?>:&nbsp;<?php print isMandatory(8);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_phone' TYPE='TEXT' SIZE='16' MAXLENGTH='16' VALUE=""></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='<?php print get_text('Patient');?> ID'><?php print get_text('Patient');?> ID</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_patient_id' TYPE='TEXT' SIZE='12' MAXLENGTH='12' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='<?php print get_text('Patient');?> ID'><?php print get_text('Patient');?> ID:&nbsp;<?php print isMandatory(9);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_patient_id' TYPE='TEXT' SIZE='12' MAXLENGTH='12' VALUE=""></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Pickup time from start address'><?php print get_text('Pickup Time');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_pickup' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Pickup time from start address'><?php print get_text('Pickup Time');?>:&nbsp;<?php print isMandatory(10);?></TD><TD class='td_data' style='text-align: left;'><?php print generate_time_dropdown('pickup', 0, 0, FALSE);?></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Arrival time at destination'>(OR)&nbsp;&nbsp;<?php print get_text('Arrival Time');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_arrival' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Arrival time at destination'>(OR)&nbsp;&nbsp;<?php print get_text('Arrival Time');?>:</TD><TD class='td_data' style='text-align: left;'><?php print generate_time_dropdown('arrival', 0, 0, FALSE);?></TD>
 					</TR>
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Start Address');?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<?php print isMandatory(11);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_city($_SESSION['user_id']);?>"></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='City'>City:&nbsp;<?php print isMandatory(12);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_city($_SESSION['user_id']);?>"></TD>
 					</TR>		
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?>:&nbsp;<?php print isMandatory(13);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
 					</TR>					
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<?php print isMandatory(14);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
 					</TR>	
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Destination');?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>&nbsp;<?php print isMandatory(15);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_variable('def_city');?>"></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='City'>City:&nbsp;<?php print isMandatory(16);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_variable('def_city');?>"></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?>:&nbsp;<?php print isMandatory(17);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
 					</TR>						
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<?php print isMandatory(18);?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_to_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
 					</TR>
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;' TITLE='Select whether return journey required.'><?php print get_text('Return Journey');?></TD>
+						<TD class='td_label' style='text-align: left;' TITLE='Select whether return journey required.'><?php print get_text('Return Journey');?>:&nbsp;<?php print isMandatory(19);?></TD>
 						<TD class='td_data' style='text-align: left;'>
 							<INPUT type='radio' name='frm_return_journey' value = 0 onClick = "show_return(this);" CHECKED>No
 							<INPUT type='radio' name='frm_return_journey' value = 1 onClick = "show_return(this);">Yes						
 						</TD>
 					</TR>
 					<TR id='ret9' class='even' style='display: none;'>	
-						<TD id='ret9A' class='td_label' style='text-align: left;' TITLE='Pickup Time for return Journey'><?php print get_text('Pickup Time');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
-						<TD id='ret9B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_time' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+						<TD id='ret9A' class='td_label' style='text-align: left;' TITLE='Pickup Time for return Journey'><?php print get_text('Pickup Time');?>:&nbsp;<?php print isMandatory(20);?></TD>
+						<TD id='ret9B' class='td_data' style='text-align: left;'><?php print generate_time_dropdown('ret_time', 0, 0, FALSE);?></TD>
 					</TR>
 					<TR id='retA' class='spacer' style='display: none;'>
 						<TD id='retA2' class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Start Address');?></TD>
 					</TR>
 					<TR id='ret1' class='even' style='display: none;'>	
-						<TD id='ret1A' class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret1A' class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<?php print isMandatory(21);?></TD>
 						<TD id='ret1B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
 					</TR>	
 					<TR id='ret2' class='odd' style='display: none;'>	
-						<TD id='ret2A' class='td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret2A' class='td_label' style='text-align: left;' TITLE='City'>City:&nbsp;<?php print isMandatory(22);?></TD>
 						<TD id='ret2B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_city($_SESSION['user_id']);?>"></TD>
 					</TR>		
 					<TR id='ret3' class='even' style='display: none;'>	
-						<TD id='ret3A' class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD>
+						<TD id='ret3A' class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?>:&nbsp;<?php print isMandatory(23);?></TD>
 						<TD id='ret3B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
 					</TR>					
 					<TR id='ret4' class='odd' style='display: none;'>	
-						<TD id='ret4A' class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret4A' class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<?php print isMandatory(24);?></TD>
 						<TD id='ret4B' class='td_data' style='text-align: left;'><INPUT NAME='frm_ret_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
 					</TR>
 					<TR id='retB' class='spacer' style='display: none;'>
 						<TD id='retB2'  class='spacer' COLSPAN=99 style='height: 15px; font-size: 14px;'><?php print get_text('Destination');?></TD>
 					</TR>
 					<TR id='ret5' class='even' style='display: none;'>	
-						<TD id='ret5A' class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret5A' class='td_label' style='text-align: left;' TITLE='Street Address including building number or name'><?php print get_text('Street');?>:&nbsp;<?php print isMandatory(25);?>*</FONT></TD>
 						<TD id='ret5B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_street' TYPE='TEXT' SIZE='48' MAXLENGTH='128' VALUE=""></TD>
 					</TR>	
 					<TR id='ret6' class='odd' style='display: none;'>	
-						<TD id='ret6A' class='td_label' style='text-align: left;' TITLE='City'><?php print get_text('City');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret6A' class='td_label' style='text-align: left;' TITLE='City'>City:&nbsp;<?php print isMandatory(26);?></TD>
 						<TD id='ret6B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_city' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE="<?php print get_city($_SESSION['user_id']);?>"></TD>
 					</TR>		
 					<TR id='ret7' class='even' style='display: none;'>	
-						<TD id='ret7A' class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?></TD>
+						<TD id='ret7A' class='td_label' style='text-align: left;' TITLE='Postcode'><?php print get_text('Postcode');?>:&nbsp;<?php print isMandatory(27);?></TD>
 						<TD id='ret7B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_postcode' TYPE='TEXT' SIZE='48' MAXLENGTH='48' VALUE=""></TD>
 					</TR>					
 					<TR id='ret8' class='odd' style='display: none;'>	
-						<TD id='ret8A' class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+						<TD id='ret8A' class='td_label' style='text-align: left;' TITLE='State - for UK this is UK'><?php print get_text('State');?>:&nbsp;<?php print isMandatory(28);?></TD>
 						<TD id='ret8B' class='td_data' style='text-align: left;'><INPUT NAME='frm_retto_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print get_variable('def_st');?>"></TD>
 					</TR>
 					<TR class='spacer'>
@@ -962,7 +1105,7 @@ $orig_fac_menu .= "<SELECT>";
 					</TR>
 					<TR class='even'>
 						<TD class='td_label' style='line-height: 30px;' COLSPAN=99>
-							&nbsp;<SPAN id='add_newline' class='plain' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='new_line();'>Add Line</SPAN>&nbsp;
+							&nbsp;<SPAN id='add_newline' class='plain text' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='new_line();'>Add Line</SPAN>&nbsp;
 						</TD>
 					</TR>
 					<TR class='spacer'>
@@ -975,7 +1118,7 @@ $orig_fac_menu .= "<SELECT>";
 						<TD class='td_label' style='text-align: left;'><?php print get_text('Receiving Facility');?></TD><TD class='td_data' style='text-align: left;'><?php print $rec_fac_menu;?></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'>Free Text <?php print get_text('Description');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><TEXTAREA NAME="frm_description" COLS="45" ROWS="10" WRAP="virtual"></TEXTAREA></TD>
+						<TD class='td_label' style='text-align: left;'>Free Text <?php print get_text('Description');?>:&nbsp;<?php print isMandatory(29);?></TD><TD class='td_data' style='text-align: left;'><TEXTAREA NAME="frm_description" COLS="45" ROWS="10" WRAP="virtual"></TEXTAREA></TD>
 					</TR>		
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99></TD>
@@ -985,6 +1128,8 @@ $orig_fac_menu .= "<SELECT>";
 					</TR>
 				</TABLE><BR /><BR />	
 				<INPUT NAME='requester' TYPE='hidden' SIZE='24' VALUE="<?php print $_SESSION['user_id'];?>">
+				<INPUT TYPE='hidden' NAME = 'frm_lat' VALUE = "" />
+				<INPUT TYPE='hidden' NAME = 'frm_lng' VALUE = "" />
 				</FORM>
 				<FORM METHOD='POST' NAME="gout_form" action="index.php">
 				<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />
@@ -1000,7 +1145,18 @@ $orig_fac_menu .= "<SELECT>";
 	<SCRIPT>
 	var map;				// make globally visible
 	var mapWidth = <?php print get_variable('map_width');?>;
-	var mapHeight = <?php print get_variable('map_height');?>;;
+	var mapHeight = <?php print get_variable('map_height');?>;
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	set_fontsizes(viewportwidth, "popup");
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	var theLocale = <?php print get_variable('locale');?>;

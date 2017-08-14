@@ -27,20 +27,28 @@ if ((mysql_affected_rows())==0) {		// copy user's date format
 	}
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
+<!DOCTYPE html>
+<HTML>	<!-- 171 -->
 <HEAD>
-<TITLE><?php echo basename(__FILE__) ; ?></TITLE>
-<META NAME="Generator" CONTENT="TextPad 4.6">
+<TITLE><?php echo LessExtension(basename(__FILE__));?></TITLE>
+<META NAME="Description" CONTENT="<?php print basename(__FILE__);?>">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<META HTTP-EQUIV="Expires" CONTENT="0">
+<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<META HTTP-EQUIV="Script-date" CONTENT="6/13/09">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <STYLE>
-table		{ width: 10in; font-family: "verdana"; font-weight: normal; border-style: solid; border-width: 2px; border-color: black;}
+table		{ width: 10in; border-style: solid; border-width: 2px; border-color: black;}
 td			{ text-align:left;}
 .bordered		{border-style: solid 2px black;}
 .bordered_top	{border-top: solid 2px black;}
 .bordered_left	{border-left: solid 2px black;}
 </STYLE>
 <script src = "./js/jquery-1.4.2.min.js"></script>
-<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
+<script src="./js/jss.js" TYPE="application/x-javascript"></script>
+<script src="./js/misc_function.js" TYPE="application/x-javascript"></script>
 
 </HEAD>
 <?php
@@ -364,21 +372,10 @@ switch ($step) {
 
 echo template ($item);
 ?>
-<STYLE TYPE="text/css">
-.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
-.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
-.content { padding: 1em; }
-</STYLE>
-
-<!-- 12/27/2014 -->
-<div id="boxB" class="box" style="left:5px; top:20px;">
-  <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
-       onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag us</i></div>
-  <div class="content" style="width:auto;">
-	<input type = 'button' value = 'Next' onclick = 'validate(this.form)' 	style = 'margin-left: 0px;' />
-	<input type = 'button' value = 'Reset' onclick = 'this.form.reset()' 	style = 'margin-left: 5px;' />
-	<input type = 'button' value = 'Cancel' onclick = 'window.close()' 		style = 'margin-left: 5px;' />
-	</div>
+<div class="text" style="position: fixed; top: 20px; left: 10px; width:auto;">
+ 	<SPAN ID='reset_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="this.form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN><BR />
+	<SPAN ID='can_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
+	<SPAN ID='sub_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate(this.form);"><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN><BR />
 </div>
 <input type = 'hidden' name = 'step' value = 2 />
 <input type = 'hidden' name = 'frm_add_str' value = '<?php echo $_POST["frm_add_str"];?>'/>
@@ -393,8 +390,6 @@ echo template ($item);
 			}
 		}		// end function validate()
 </script>
-
-</form>
 
 <?php
 
@@ -470,4 +465,17 @@ default:
 </BODY>
 </HTML>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

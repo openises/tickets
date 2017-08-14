@@ -27,7 +27,7 @@ if(!is_administrator() && !is_user()) {
 .wrap_label { width: 100px; background-color: #707070; font-size: 12px; color: #FFFFFF; font-weight: bold; font-style: normal; font-family: Verdana, Arial, Helvetica, sans-serif; text-decoration: none; }
 .tab_row { border: 1px solid #CECECE; width: 300px; }
 </STYLE>	
-<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 function ck_frames() {		// onLoad = "ck_frames()"
 	}		// end function ck_frames()

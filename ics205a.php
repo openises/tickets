@@ -99,20 +99,17 @@ function template_205a ($item) {
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <script src = "./js/jquery-1.4.2.min.js"></script>
-<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
-
+<script src="./js/jss.js" TYPE="application/x-javascript"></script>
+<script src="./js/misc_function.js" TYPE="application/x-javascript"></script>
 <SCRIPT>
-
-	String.prototype.trim = function () {
-		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-		};
+String.prototype.trim = function () {
+	return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+	};
 
 </SCRIPT>
-<STYLE>
-Body	{ BACKGROUND-COLOR: #EFEFEF; MARGIN:0; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-</STYLE>
 </HEAD>
 <?php
 $step = (array_key_exists( 'step', $_POST )) ?  $_POST['step']: "one";
@@ -167,22 +164,11 @@ switch ($step) {
 
 
 ?>
-<!-- 1/1/2015 -->
-<STYLE TYPE="text/css">
-.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
-.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
-.content { padding: 1em; }
-</STYLE>
-
-<BODY onload = "document.form_205a.f3.focus();">		<!-- <?php echo __LINE__ ; ?> -->
-<div id="boxB" class="box" style="left:5px; top:20px;">
-  <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
-       onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag us</i></div>
-  <div class="content" style="width:auto;">
-	<input type = "reset" onclick = "document.form_205a.reset();"><br />
-	<input type = "button" value = 'Cancel'  style = 'margin-top: 20px;' onclick = "document.can_form.submit()" /><br />
-	<input type = "button" value = 'OK - Mail this'  style = 'margin-top: 20px;' onclick = "validate(document.form_205a);"/>
-	</div>
+<BODY onload = "document.form_205a.f3.focus();">
+<div class="text" style="position: fixed; top: 20px; left: 10px; width:auto;">
+ 	<SPAN ID='reset_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.form_205a.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN><BR />
+	<SPAN ID='can_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
+	<SPAN ID='mail_but' TITLE='OK - Mail this' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate(document.form_205a);"><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN><BR />
 </div>
 <center><br />
 <h3>COMMUNICATIONS LIST (ICS 205A)</h3>
@@ -278,4 +264,17 @@ default:
 <form name = "can_form" method = 'post' action = 'ics213.php'>
 </form>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

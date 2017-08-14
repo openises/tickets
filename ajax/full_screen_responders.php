@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
 @session_start();
@@ -278,22 +280,29 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	switch ($units_assigned) {		
 		case 0:
 			$ass_td = " ";
+			$flaginfo = "";
 			break;			
 		case 1:
 			$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as));
 			$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 			$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
+			$addrs = $row_assign['street'] . " " . $row_assign['city'] . " " . $row_assign['state'];
+			$flaginfo = $row_assign['scope'] . "<BR />";
+//			$flaginfo .= "Address: " . $addrs . "<BR />";
+//			$flaginfo .= ($row['contact_via'] != "") ? "Contact: " . $row['contact_via'] . "<BR />" : "";
+//			$flaginfo .= ($row['smsg_id'] != "") ? "SMSG ID: " . $row['smsg_id'] . "<BR />" : "";
 			switch($row_assign['severity'])		{		//color tickets by severity
 				case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
 				default: 							$severityclass='severity_normal'; break;
 				}		// end switch()
-			$ass_td = shorten($row_assign['scope'], 20);
+			$ass_td = "<SPAN CLASS='" . $severityclass . "'>" . shorten($row_assign['scope'], 20) . "</SPAN>";
 			break;
-		default:							// multiples
+		default:
 			$ass_td = $units_assigned;
+			$flaginfo = "";
 			break;
-		}						// end switch(($units_assigned))
+		}
 
 // STATUS
 	$status = get_status_sel($row['unit_id'], $row['un_status_id'], "u");		// status
@@ -456,6 +465,11 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$ret_arr[$i][24] = intval($row['nr_assigned']);
 	$ret_arr[$i][25] = $type;
 	$ret_arr[$i][26] = $status_about;
+	$ret_arr[$i][27] = $the_flag;
+	$ret_arr[$i][28] = $row['excl_zone'];
+	$ret_arr[$i][29] = $row['ring_fence'];
+	$ret_arr[$i][30] = $flaginfo;
+	$ret_arr[$i][31] = $units_assigned;
 	$i++;
 	}				// end  ==========  while() for RESPONDER ==========
 

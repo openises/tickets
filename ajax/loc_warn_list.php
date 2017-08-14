@@ -4,6 +4,8 @@
 11/18/13 - Fixed inccorrect <DENTER> !!
 */
 //	error_reporting(E_ALL);
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
@@ -88,7 +90,7 @@ foreach($ret_arr as $val) {
 	}
 if(empty($out_arr)) { $out_arr[0] = "No Warnings Found"; $count = 0;} else { $count = count($out_arr); }
 
-$print = "<CENTER><TABLE width='90%'>";
+$print = "<CENTER><TABLE width='100%'>";
 if($out_arr[0] == "No Warnings Found") {
 	$print .= "<TR><TD>No Warnings Found</TD></TR>";
 	} else {

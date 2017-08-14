@@ -16,8 +16,21 @@ $disposition = get_text("Disposition");				// 12/1/10
 
 ?>
 <HTML>
-<HEAD>
-<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<HEAD><TITLE>Tickets - Help Module</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+<META HTTP-EQUIV="Expires" CONTENT="0" />
+<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
+<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+<!--[if lte IE 8]>
+	 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+<![endif]-->
+<link rel="stylesheet" href="./js/Control.Geocoder.css" />
+<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
 function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
@@ -43,21 +56,23 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 
 </SCRIPT>
 
-</HEAD><BODY onLoad = "ck_frames()">
-<FONT CLASS="header">Tickets Help</FONT><BR /><BR />
-<LI> <A HREF="help.php?q=tickets">Background</A>
-<LI> <A HREF="help.php?q=osw">On-scene Watch</A>
-<LI> <A HREF="help.php?q=mi">Major Incidents</A>
-<LI> <A HREF="help.php?q=tickets"><?php print $patient; ?>, Actions, and <?php print $patient; ?> Data</A>
-<LI> <A HREF="help.php?q=config">Configuration</A>
-<LI> <A HREF="help.php?q=notify">Notifies</A>
-<LI> <A HREF="help.php?q=develop">Developer Notes</A>
+</HEAD>
+<BODY onLoad = "ck_frames()">
+<DIV ID='outer' style='position: relative; left: 5%; top: 5%; width: 90%;'>
+<FONT CLASS="header text">Tickets Help</FONT><BR /><BR />
+<LI><A CLASS="text" HREF="help.php?q=tickets">Background</A>
+<LI><A CLASS="text" HREF="help.php?q=osw">On-scene Watch</A>
+<LI><A CLASS="text" HREF="help.php?q=mi">Major Incidents</A>
+<LI><A CLASS="text" HREF="help.php?q=tickets"><?php print $patient; ?>, Actions, and <?php print $patient; ?> Data</A>
+<LI><A CLASS="text" HREF="help.php?q=config">Configuration</A>
+<LI><A CLASS="text" HREF="help.php?q=notify">Notifies</A>
+<LI><A CLASS="text" HREF="help.php?q=develop">Developer Notes</A>
 <!-- <LI> <A HREF="help.php?q=changelog">ChangeLog</A> -->
-<LI> <A HREF="help.php?q=install">Installing/Upgrading</A>
-<LI> <A HREF="help.php?q=readme">ReadMe</A>
-<LI> <A HREF="help.php?q=todo">ToDo</A>
-<LI> <A HREF="help.php?q=licensing">Licensing</A>
-<LI> <A HREF="help.php?q=credits">Credits</A>
+<LI><A CLASS="text" HREF="help.php?q=install">Installing/Upgrading</A>
+<LI><A CLASS="text" HREF="help.php?q=readme">ReadMe</A>
+<LI><A CLASS="text" HREF="help.php?q=todo">ToDo</A>
+<LI><A CLASS="text" HREF="help.php?q=licensing">Licensing</A>
+<LI><A CLASS="text" HREF="help.php?q=credits">Credits</A>
 <BR /><BR />
 <?php
 	if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'tickets')) {
@@ -239,4 +254,19 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 <?php
 		}
 ?>
+</DIV>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "fullscreen");
+</SCRIPT>
 </BODY></HTML>

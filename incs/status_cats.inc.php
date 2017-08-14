@@ -22,14 +22,14 @@ function get_category_butts() {
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			if(($row['group']=="") || ($row['group']==NULL) || ($row['group']=="NULL")) {
 				$category_name = "?";
-			} else {
+				} else {
 				$category_name = $row['group'];
-			}				
+				}				
 			$category_butts[$i] = $category_name;
 			$i++;
 			}
 		unset($result);
-	} else {
+		} else {
 		$category_butts[$i] = "Available";
 		$i++;
 		$category_butts[$i] = "Not Available";
@@ -56,21 +56,21 @@ function get_category($unit) {
 			while ($row = stripslashes_deep(mysql_fetch_array($result))) {
 				$status_id = $row['un_status_id'];
 				$status_hide = $row['hide'];
-			}
+				}
 			unset($result);
 				if($status_id != 0) {
 					if($status_hide == "y") {
 						$status_category = "Not Available";
-					} else {
+						} else {
 						$status_category = "Available";
-					}
-				} else {
+						}
+					} else {
 					$status_category = "Status Error";	
-				}
-		} else {
+					}
+			} else {
 			$status_category = "Dispatched";
-		}
-	} else {
+			}
+		} else {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = $unit AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$deployed = mysql_num_rows($result);

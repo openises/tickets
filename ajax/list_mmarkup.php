@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 
 @session_start();
@@ -30,8 +32,13 @@ function get_usergroups() {
 function get_categoryName($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $id . " LIMIT 1";
 	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
-	return $row['category'];
+	if(mysql_num_rows($result) != 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$ret = $row['category'];
+		} else {
+		$ret = "unk";
+		}
+	return $ret;
 	}
 	
 function subval_sort($a,$subkey, $dd) {

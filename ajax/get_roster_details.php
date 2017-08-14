@@ -3,6 +3,8 @@
 9/10/13 - New file, lists personnel for Roster user functionality
 */
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 
 if(empty($_GET)) {

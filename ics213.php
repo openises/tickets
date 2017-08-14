@@ -33,7 +33,7 @@ function html_mail ($to, $subject, $html_message, $from_address, $from_display_n
 
 function template_213_t () {	// table-only portion of page
 	global $item;
-	$out_str = "<TABLE DIR='LTR' BORDER=1 BORDERCOLOR='#000000' CELLPADDING=0 CELLSPACING=0 STYLE='width: 20.32cm;'>";
+	$out_str = "<TABLE DIR='LTR' BORDER=1 BORDERCOLOR='#000000' CELLPADDING=0 CELLSPACING=0 STYLE='width: 20.32cm; border:2px solid black; background-color: white;'>";
 	$out_str .= "\n<FORM NAME = 'ics213_form' METHOD = 'post' ACTION = '" . basename(__FILE__) . "' >\n";
 	$out_str .= "\n<INPUT TYPE = 'hidden' NAME = 'frm_add_str' VALUE = '{$_POST['frm_add_str']}'/>\n";
 	$out_str .= "<INPUT TYPE = 'hidden' NAME = 'step' VALUE = 2>
@@ -81,7 +81,7 @@ function template_213_t () {	// table-only portion of page
 			<TD WIDTH=30%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;DATE:&nbsp;{$item[12]}</FONT></P>  </TD> <TD WIDTH=20%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;TIME:&nbsp;{$item[13]}</FONT></P>  </TD>
 			<TD COLSPAN=4 WIDTH=50%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SIGNATURE/POSITION:&nbsp;{$item[14]}</FONT></P>  </TD>
 		</TR>
-		</TABLE><BR />";
+		</TABLE></FORM><BR />";
 	return $out_str;
 	}							// end function template_213_t ()
 
@@ -125,41 +125,29 @@ function template_213_t () {	// table-only portion of page
 // do_login(basename(__FILE__));
 ?>
 <!DOCTYPE html>
-<HTML>	<!-- 171 -->
+<HTML>
 <HEAD>
-<TITLE><?php echo LessExtension(basename(__FILE__));?></TITLE>
-<META NAME="Description" CONTENT="<?php print basename(__FILE__);?>">
+<TITLE><?php echo basename(__FILE__); ?></TITLE>
+<META NAME="Author" CONTENT="">
+<META NAME="Keywords" CONTENT="">
+<META NAME="Description" CONTENT="<?php echo basename(__FILE__); ?>">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<META HTTP-EQUIV="Script-date" CONTENT="6/13/09">
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <script src = "./js/jquery-1.4.2.min.js"></script>
-<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
+<script src="./js/jss.js" TYPE="application/x-javascript"></script>
+<script src="./js/misc_function.js" TYPE="application/x-javascript"></script>
 
 <?php
-
 $step = (array_key_exists ("step", $_POST))? $_POST['step']: 0 ;
 switch ($step) {
 	case 0:								/*  collect addresses */
 ?>
 
-<script type="application/javascript">
-
-	function $() {
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
+	<script type="application/x-javascript">
 
 	function do_mail_str(in_action) {		// argument is scriptname as string - 3/8/2014
 		sep = "";
@@ -186,7 +174,7 @@ switch ($step) {
 				}
 			}		// end for ()
 		$('clr_spn').style.display = "none";
-		$('chk_spn').style.display = "block";
+		$('chk_spn').style.display = "inline-block";
 		}		// end function do_clear
 
 	function do_check(){
@@ -195,12 +183,12 @@ switch ($step) {
 				document.mail_form.elements[i].checked = true;
 				}
 			}		// end for ()
-		$('clr_spn').style.display = "block";
+		$('clr_spn').style.display = "inline-block";
 		$('chk_spn').style.display = "none";
 		}		// end function do_clear
 
 	</SCRIPT>
-	</HEAD> <!-- 217 c a s e  0 -->
+	</HEAD>
 	<BODY><CENTER><BR /><BR />
 <?php
 	$i=0;		// 3/6/2014
@@ -221,49 +209,47 @@ switch ($step) {
 
 ?>
 	<P>
-		<TABLE ALIGN='center'>
-		<TR CLASS = 'even'><TH>ICS Form to Contacts</TH></TR>
-		<TR CLASS = 'odd'><TD ALIGN = 'center'><BR />
-			<SPAN ID='clr_spn' STYLE = 'display:block' onClick = 'do_clear()'>&raquo; <U>Un-check all</U></SPAN>
-			<SPAN ID='chk_spn' STYLE = 'display:none'  onClick = 'do_check()'>&raquo; <U>Check all</U></SPAN><BR />
-		</TD></TR>
-
-
-		<FORM NAME='mail_form' METHOD='post' ACTION='void(0)'>
-		<INPUT TYPE='hidden' NAME='step' VALUE='1'>
-		<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
+	<FORM NAME='mail_form' METHOD='post' ACTION='void(0)'>
+	<TABLE ALIGN='center'>
+		<TR CLASS = 'even'>
+			<TH>ICS Form to Contacts</TH>
+		</TR>
+		<TR CLASS = 'odd'>
+			<TD ALIGN = 'center'><BR />
+				<SPAN id='clr_spn' CLASS='plain text' style='width: 120px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_clear();"><SPAN STYLE='float: left;'><?php print get_text("Uncheck All");?></SPAN><IMG STYLE='float: right;' SRC='./images/unselect_all_small.png' BORDER=0></SPAN>
+				<SPAN id='chk_spn' CLASS='plain text' style='width: 120px; display: none; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_check();"><SPAN STYLE='float: left;'><?php print get_text("Check All");?></SPAN><IMG STYLE='float: right;' SRC='./images/select_all_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
 <?php
-	while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
-																				// count valid addresses
-		if (is_email($row['email']))	{ echo do_row($i, $row['email'], $row['name'], $row['organization']);$i++;}
-		if (is_email($row['mobile'])) 	{ echo do_row($i, $row['mobile'], $row['name'], $row['organization']);$i++;}
-		if (is_email($row['other'])) 	{ echo do_row($i, $row['other'], $row['name'], $row['organization']);$i++;}
-		}		// end while()
-
+		while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+																					// count valid addresses
+			if (is_email($row['email']))	{ echo do_row($i, $row['email'], $row['name'], $row['organization']);$i++;}
+			if (is_email($row['mobile'])) 	{ echo do_row($i, $row['mobile'], $row['name'], $row['organization']);$i++;}
+			if (is_email($row['other'])) 	{ echo do_row($i, $row['other'], $row['name'], $row['organization']);$i++;}
+			}		// end while()
 ?>
-		<TR CLASS='<?php print $evenodd[($i)%2]; ?>'><TD ALIGN='center' COLSPAN=3><BR /><BR />&nbsp;
-			<INPUT TYPE='button' 	VALUE='ICS205' 		onClick = "do_mail_str('ics205.php');">
-			<INPUT TYPE='button' 	VALUE='ICS205-A' 	onClick = "do_mail_str('ics205a.php');"  style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS213' 		onClick = "do_mail_str('ics213.php');"   style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS213-RR' 	onClick = "do_mail_str('ics213rr.php');" style = "margin-left:20px;">	<!-- 10/2/2014 -->
-			<INPUT TYPE='button' 	VALUE='ICS214' 		onClick = "do_mail_str('ics214.php');"   style = "margin-left:20px;">
-			<p>
-			<INPUT TYPE='reset' 	VALUE='Reset'>
-			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();' style = "margin-left:60px;">
-			</p>
-			</TD></TR>
-			</FORM></TABLE>
-
+		<TR CLASS='<?php print $evenodd[($i)%2]; ?>'>
+			<TD ALIGN='center' COLSPAN=3>
+				<SPAN ID='ics205_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_mail_str('ics205.php');"><SPAN STYLE='float: left;'><?php print get_text("ICS205");?></SPAN><IMG STYLE='float: right;' SRC='./images/list_small.png' BORDER=0></SPAN>
+				<SPAN ID='ics205A_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_mail_str('ics205a.php');"><SPAN STYLE='float: left;'><?php print get_text("ICS205-A");?></SPAN><IMG STYLE='float: right;' SRC='./images/list_small.png' BORDER=0></SPAN>
+				<SPAN ID='ics213_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_mail_str('ics213.php');"><SPAN STYLE='float: left;'><?php print get_text("ICS213");?></SPAN><IMG STYLE='float: right;' SRC='./images/list_small.png' BORDER=0></SPAN>
+				<SPAN ID='ics213rr_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_mail_str('ics213rr.php');"><SPAN STYLE='float: left;'><?php print get_text("ICS213-RR");?></SPAN><IMG STYLE='float: right;' SRC='./images/list_small.png' BORDER=0></SPAN>
+				<SPAN ID='ics214_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_mail_str('ics214.php');"><SPAN STYLE='float: left;'><?php print get_text("ICS214");?></SPAN><IMG STYLE='float: right;' SRC='./images/list_small.png' BORDER=0></SPAN>
+				<SPAN ID='reset_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.mail_form.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+				<SPAN ID='can_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
+	</TABLE>
+	<INPUT TYPE='hidden' NAME='step' VALUE='1'>
+	<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
+	</FORM>
 <?php
 			}		// end if(mysql_affected_rows()>0)
 		if (($i==0) || (mysql_affected_rows()==0)){
 ?>
-	<H3>No Contact e-mail addresses!</H3><BR /><BR />
-	<INPUT TYPE='button' VALUE='Cancel' onClick = 'window.close();'><BR /><BR />
-
+			<H3>No Contact e-mail addresses!</H3><BR /><BR />
+			<INPUT TYPE='button' VALUE='Cancel' onClick = 'window.close();'><BR /><BR />
 <?php
-			}
-		else {
 			}
 // ------------------------------
 		break;		// end case 0
@@ -277,9 +263,6 @@ switch ($step) {
 		$the_from = "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
 		$temp = $row['name_l'].$row['name_f'].$row['name_mi'];
 		$the_from = (empty($temp))? "" : "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
-
-//		$the_from = (empty($row['name_l'].$row['name_f'].$row['name_mi']))? "" :
-//								"{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
 
 		function in_str( $name, $size, $tabindex, $data = "") {
 			return "<input type=text id='f{$name}'  name='f{$name}' size={$size} maxlength={$size} value='{$data}' tabindex={$tabindex} />";
@@ -297,7 +280,6 @@ switch ($step) {
 		$item[6] =  in_str  (6, 16, 6, $the_date);
 		$item[7] =  in_str  (7, 12, 7, $the_time);
 		$item[8] =  in_text (8, 90, 4, 8); // $name, $cols, $rows, $tabindex
-//		$item[8] =  $_POST['frm_add_str']; // $name, $cols, $rows, $tabindex
 		$item[9] =  in_str  (9, 36, 9, $the_from);
 		$item[10] = in_str  (10, 32, 10);
 		$item[11] = in_text (11, 90, 4, 11);
@@ -306,44 +288,38 @@ switch ($step) {
 		$item[14] = in_str  (14, 34, 14);
 ?>
 
-<SCRIPT type='text/javascript'>
-	function validate(theForm) {						// form contents validation
-		var errmsg='';
-		if (theForm.f1.value.trim()=='')	{errmsg+='TO is required.\n';}
-		if (theForm.f3.value.trim()=='')	{errmsg+='FROM is required.\n';}
-		if (theForm.f5.value.trim()=='')	{errmsg+='SUBJECT is required.\n';}
-		if (theForm.f8.value.trim()=='')	{errmsg+='MESSAGE is required.\n';}
-		if (errmsg!='') {
-			alert ('Please correct the following and re-submit:\n\n' + errmsg);
-			return false;
-			}
-		else {			// good to go!
-			return true;
-			}
-		}				// end function validate(theForm)
+		<SCRIPT type='application/x-javascript'>
+			function validate(theForm) {						// form contents validation
+				var errmsg='';
+				if (theForm.f1.value.trim()=='')	{errmsg+='TO is required.\n';}
+				if (theForm.f3.value.trim()=='')	{errmsg+='FROM is required.\n';}
+				if (theForm.f5.value.trim()=='')	{errmsg+='SUBJECT is required.\n';}
+				if (theForm.f8.value.trim()=='')	{errmsg+='MESSAGE is required.\n';}
+				if (errmsg!='') {
+					alert ('Please correct the following and re-submit:\n\n' + errmsg);
+					return false;
+					}
+				else {			// good to go!
+					return true;
+					}
+				}				// end function validate(theForm)
 
-</SCRIPT>
-<!-- 1/1/2015 -->
-<STYLE TYPE="text/css">
-.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
-.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
-.content { padding: 1em; }
-</STYLE>
-
+		</SCRIPT>
+		</HEAD>
+		<BODY><CENTER><BR /><BR />
 <?php
 		echo "\n<center>\n";
 		echo template_213_t();
 ?>
-<div id="boxB" class="box" style="left:5px; top:20px;  background-color : transparent;">
-  <div class="bar" STYLE="color:red; background-color : transparent; width:60px;"
-       onmousedown="dragStart(event, 'boxB')"><i>Drag us</i></div>
-  <div class="content" style="width:auto; text-align: left">
-		<input type = 'button' value= 'Submit' onclick = 'if(validate(document.ics213_form)) {document.ics213_form.submit();}' /><br />
-		<input type = 'reset'  value= 'Reset'  onclick = 'document.ics213_form.reset();'  style='margin-top: 10px;'/><br />
-		<input type = 'button' value= 'Cancel' onclick = 'window.close();' style='margin-top: 10px;' />
+		<div class="text" style="position: fixed; top: 20px; left: 10px; width: auto;">
+			<SPAN ID='reset_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.ics213_form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN><BR />
+			<SPAN ID='can_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
+			<SPAN ID='mail_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="if(validate(document.ics213_form)) {document.ics213_form.submit();}"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN><BR />
 		</div>
-	</div>
-
+		<form name = "can_form" method = 'post' action = 'ics213.php'>
+		<INPUT TYPE='hidden' NAME='step' VALUE='0'>
+		<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>
+		</form>
 <?php
 		break;		// end case 1
 
@@ -384,10 +360,10 @@ switch ($step) {
 
 //		do_log($GLOBALS['LOG_ICS213_MESSAGE_SEND'], 0, 0, $item[5], 0, 0,0);	// subject line as info column
 ?>
-</HEAD> <!-- 399 case 2 -->
+		</HEAD> <!-- 399 case 2 -->
 
-<BODY onLoad = "setTimeout('window.close()',3500);">	<!-- 379 -->
-<DIV style = 'margin-left:400px; margin-top100px;'><H2>ICS-213 MAIL SENT - window closing ... </H2></DIV>
+		<BODY onLoad = "setTimeout('window.close()',3500);">	<!-- 379 -->
+		<DIV style = 'margin-left:400px; margin-top100px;'><H2>ICS-213 MAIL SENT - window closing ... </H2></DIV>
 
 <?php
 
@@ -398,4 +374,17 @@ switch ($step) {
 	}				// end switch
 ?>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

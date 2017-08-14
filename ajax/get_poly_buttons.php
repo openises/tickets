@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
 @session_start();
@@ -304,8 +306,8 @@ $mmarkup = $output_arr;
 $output = "";
 if(count($mmarkup) == 0) {
 	$output .= "<TABLE><TR class='heading_2'><TH width = '" . $ctrls_width . "px' ALIGN = 'center'>Map Markup</TH></TR>";
-	$output .= "<TR class='odd'><TD COLSPAN=99 CLASS='td_label' ><form action='#'>";
-	$output .= "<DIV class='cat_button' style='color: red;'>None Defined ! </DIV>";
+	$output .= "<TR class='odd'><TD COLSPAN=99 CLASS='td_label text' ><form action='#'>";
+	$output .= "<DIV class='cat_button text' style='color: red;'>None Defined ! </DIV>";
 	$output .= "</form></TD></TR></TABLE></DIV>";
 	} else {
 	$output .= "<form action='#'><TABLE><TR class='heading_2'><TH width = '" . $ctrls_width . "px' ALIGN = 'center'>Map Markup</TH></TR><TR class='spacer'><TD class='spacer'>&nbsp;</TD></TR>";
@@ -318,8 +320,8 @@ if(count($mmarkup) == 0) {
 				}
 			foreach($theMarkup as $key => $value) {
 				if(array_key_exists('name', $value)) {
-					$output .= "<TR class='odd'><TD COLSPAN=99 CLASS='td_label' >";		
-					$output .= "<DIV class='cat_button' onClick='set_bnd_chkbox(\"" . $value['name'] . "\")'>" . $value['name'] . ": <input type=checkbox id='" . $value['name'] . "' onClick='set_bnd_chkbox(\"" . $value['name'] . "\")' CHECKED/>&nbsp;&nbsp;&nbsp;</DIV></TD></TR>";
+					$output .= "<TR class='odd'><TD COLSPAN=99 CLASS='td_label text' >";		
+					$output .= "<DIV class='cat_button text' onClick='set_bnd_chkbox(\"" . $value['name'] . "\")'>" . $value['name'] . ": <input type=checkbox id='" . $value['name'] . "' onClick='set_bnd_chkbox(\"" . $value['name'] . "\")' CHECKED/>&nbsp;&nbsp;&nbsp;</DIV></TD></TR>";
 					}
 				}
 			}
@@ -327,8 +329,8 @@ if(count($mmarkup) == 0) {
 	$output .= "</TD></TR></TABLE></form>";
 	$all="BND_ALL";
 	$none="BND_NONE";
-	$output .= "<DIV ID = 'BND_ALL_BUTTON' class='cat_button' onClick='set_bnd_chkbox(\"" . $all . "\")' STYLE = 'display:none;'><FONT COLOR = 'red'>ALL</FONT><input type=checkbox id='" . $all . "' onClick='set_bnd_chkbox(\"" . $all . "\")'/></FONT></DIV>";
-	$output .= "<DIV ID = 'BND_NONE_BUTTON' class='cat_button'  onClick='set_bnd_chkbox(\"" . $none . "\")'><FONT COLOR = 'red'>NONE</FONT><input type=checkbox id='" . $none . "' onClick='set_bnd_chkbox(\"" . $none . "\")'/></FONT></DIV>";
+	$output .= "<DIV ID = 'BND_ALL_BUTTON' class='cat_button text' onClick='set_bnd_chkbox(\"" . $all . "\")' STYLE = 'display:none;'><FONT COLOR = 'red'>ALL</FONT><input type=checkbox id='" . $all . "' onClick='set_bnd_chkbox(\"" . $all . "\")'/></FONT></DIV>";
+	$output .= "<DIV ID = 'BND_NONE_BUTTON' class='cat_button text'  onClick='set_bnd_chkbox(\"" . $none . "\")'><FONT COLOR = 'red'>NONE</FONT><input type=checkbox id='" . $none . "' onClick='set_bnd_chkbox(\"" . $none . "\")'/></FONT></DIV>";
 	$output .= "<DIV ID = 'bnd_go_can' style='float:right; padding:2px;'><SPAN ID = 'bnd_go_button' onClick='do_go_bnd_button()' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: green;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);'>Next</SPAN>";
 	$output .= "<SPAN ID = 'bnd_can_button'  onClick='bnd_cancel_button()' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: red;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);'>Cancel</SPAN></DIV>";
 	}

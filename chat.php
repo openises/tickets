@@ -54,10 +54,11 @@ $signals_list .= "</SELECT>\n";
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08" />
-	<LINK REL=StyleSheet HREF="stylesheet.php" TYPE="text/css" />	<!-- 3/15/11 -->
-	<script src="./js/misc_function.js" type="text/javascript"></script>	
+	<LINK REL=StyleSheet HREF="stylesheet.php" TYPE="text/css" />
+	<script src="./js/jss.js" type="application/x-javascript"></script>	
+	<script src="./js/misc_function.js" type="application/x-javascript"></script>	
 <SCRIPT>
 
 	try {
@@ -260,7 +261,7 @@ $signals_list .= "</SELECT>\n";
 		}
 
 	function wr_invite(target) {							// write chat message via ajax xfer
-		var url = "chat_invite.php?frm_to=" + target.trim() + "&frm_user=" + document.chat_form.frm_user.value;		// user id or broadcast
+		var url = "chat_invite.php?frm_to=" + target + "&frm_user=" + document.chat_form.frm_user.value;
 		var payload = syncAjax(url);						// send lookup url
 		if (payload.substring(0,1)=="-") {					// stringObject.substring(start,stop)
 			alert ("chat failed -  <?php print __LINE__;?>");
@@ -343,7 +344,6 @@ $signals_list .= "</SELECT>\n";
 		}
 		
 	function getMessages(ignore){
-//		alert(<?php print __LINE__;?>)
 		clear_to();
 		rd_chat_msg();
 		set_to();												// set timeout again
@@ -394,47 +394,48 @@ $signals_list .= "</SELECT>\n";
 
 	</SCRIPT>
 </HEAD>
-<BODY onLoad = "if (!(window.opener)) {window.close();};announce();getMessages(true); set_to(); do_focus();" onUnload="wr_chat_msg(document.chat_form_2); clearTimeout(the_to);"> 
-<TABLE ID="person" border="0" width='60%' STYLE = 'margin-left:100px;'>
-</TABLE>
-		<DIV  STYLE = 'margin-left:100px;'>
-		<FONT CLASS="header">Chat</FONT> <I>(logged-in: <span id='whos_chatting'></span>)</I><BR /><BR />		
+<BODY onLoad = "if (!(window.opener)) {window.close();};announce();getMessages(true); set_to(); do_focus();" onUnload="wr_chat_msg(document.chat_form_2); clearTimeout(the_to);">
+	<DIV id='button_bar' class='but_container'>
+		<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>Chat
+		<SPAN ID='can_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='clear_to(); opener.chat_win_close(); self.close();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
+	</DIV>
+	<DIV id='chatwindow' style='position: relative; left: 10%; top: 60px; width: 80%; height: 200px; overflow-y: auto; background-color: #FFFFFF; border: 1px outset #707070;'>
+		<TABLE ID="person" border="0" width='98%'>
+		</TABLE>
+	</DIV>
+	<DIV  STYLE = 'margin-left:10%; position: relative; top: 70px;'>
+		<FONT CLASS="header text">Chat</FONT> <I>(logged-in: <span id='whos_chatting'></span>)</I><BR /><BR />		
 		<FORM METHOD="post" NAME='chat_form' onSubmit="return false;">
 		<NOBR>
-		<INPUT TYPE="text" NAME="frm_message" SIZE=80 value = "" onChange = "clear_to()"; onBlur = 'set_to()'; >
-
-		<INPUT TYPE="button" VALUE = "Send" onClick="wr_chat_msg(document.forms[0]);set_to()"  style='margin-left:20px;' >
-		<INPUT TYPE="Reset" VALUE = "Reset" style='margin-left:20px;'  onClick="this.form.reset(); document.chat_form.frm_message.value='';" />
-		<BR /><NOBR>
-<?php print  $signals_list; ?><br />
-
-		<INPUT TYPE='hidden' NAME = 'frm_room' VALUE='0'>
-		<INPUT TYPE='hidden' NAME = 'frm_user' VALUE='<?php print $_SESSION['user_id'];?>'>
-		<INPUT TYPE='hidden' NAME = 'frm_from' VALUE='<?php print $_SERVER['REMOTE_ADDR']; ?>'>
-
-		<SPAN ID = 'botton_row' STYLE='margin-left:120px;'>
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		<B>Invite </B><SELECT NAME='chat_invite' 
-				onFocus = "pause_messages(); $('can_butt').style.display='inline';" onChange = "$('send_butt').style.display='inline';"> 
-		<OPTION VALUE="" SELECTED>Select</OPTION>	
-		<OPTION VALUE=0>All</OPTION>	
-
+		<INPUT CLASS='text' style='vertical-align: middle;' TYPE="text" NAME="frm_message" SIZE=60 value = "" onChange = "clear_to()"; onBlur = 'set_to()'; >
+		<SPAN ID='send_but' class='plain text' style='float: none; width: 80px; display: inline-block; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='wr_chat_msg(document.forms[0]);set_to();'><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+		<SPAN ID='reset_but' class='plain text' style='float: none; width: 80px; display: inline-block; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.chat_form.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+		<BR /><BR /><NOBR>
+		<?php print  $signals_list; ?><br />
+		<BR /><BR />
+		<DIV ID = 'botton_row' style='width: 90%; text-align: left; vertical-align: middle; display: block;'>
+			<SPAN CLASS='text text_bold'>Invite</SPAN>
+			<SELECT style='vertical-align: middle;' NAME='chat_invite' onFocus = "pause_messages(); $('can_butt').style.display='inline-block';" onChange = "$('send_butt').style.display='inline-block';"> 
+				<OPTION VALUE="" SELECTED>Select</OPTION>	
+				<OPTION VALUE=0>All</OPTION>	
 <?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` != {$_SESSION['user_id']} ";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` != {$_SESSION['user_id']} ";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		print "\t\t<OPTION VALUE={$row['id']}>{$row['user']}</OPTION>\n";	
-		}
-	print "\t</SELECT>\n";
+				while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+					print "\t\t<OPTION VALUE={$row['id']}>{$row['user']}</OPTION>\n";	
+					}
 ?>
-		<INPUT ID = 'send_butt' TYPE='button' VALUE = 'Send invite' style='margin-left:10px; display:none' onClick = "do_send_inv(document.chat_form.chat_invite.value);">
-		<SPAN ID= 'help' STYLE = 'margin-left:60px; color: red;'><B></B></span>		
-		<SPAN ID= 'sent_msg' STYLE = 'margin-left:60px; display:none;'><B>Invitation Sent!</B></span>
-		<INPUT ID = 'can_butt' TYPE='button' VALUE = 'Cancel' style='margin-left:10px; display:none' onClick = "do_can();">
-		<INPUT TYPE="button" VALUE = "Close"  style='margin-left:60px;'onClick = "this.disabled=true; clear_to(); opener.chat_win_close(); self.close()">
-		<NOBR></CENTER>
-		</SPAN>
+			</SELECT>
+			<SPAN ID='send_butt' class='plain text' style='float: none; width: 80px; display: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_send_inv(document.chat_form.chat_invite.value);'><SPAN STYLE='float: left;'><?php print get_text("Invite");?></SPAN><IMG STYLE='float: right;' SRC='./images/invite_small.png' BORDER=0></SPAN>
+			<SPAN ID= 'help' STYLE = 'width: 60px; margin-left: 10px; color: red;'><B></B></span>		
+			<SPAN ID= 'sent_msg' STYLE = 'margin-left:60px; display:none;'><B>Invitation Sent!</B></span>
+			<SPAN ID='can_butt' class='plain text' style='float: none; width: 80px; display: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_can();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+			<NOBR>
+			<BR />
+			<BR />
+		</DIV>
+		<INPUT TYPE='hidden' NAME = 'frm_user' VALUE='<?php print $_SESSION['user_id'];?>'>
 		</FORM>
 		<FORM METHOD="post" NAME='chat_form_2' onSubmit="return false;">
 		<INPUT TYPE="hidden" NAME = "frm_message" VALUE=' has left this chat.'>
@@ -443,6 +444,20 @@ $signals_list .= "</SELECT>\n";
 		<INPUT TYPE='hidden' NAME = 'frm_from' VALUE='<?php print $_SERVER['REMOTE_ADDR']; ?>'>
 		</FORM>
 		<A NAME="bottom"></A>
-		</DIV>
+	</DIV>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

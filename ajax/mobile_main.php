@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 session_start();
 session_write_close();	
@@ -100,6 +102,7 @@ function ticket_details($id, $theWidth, $search=FALSE, $dist=TRUE) {						// ret
 		`$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,		
 		`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
 		`$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
+		`$GLOBALS[mysql_prefix]ticket`.`owner` AS `owner`,
 		`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,		
 		`rf`.`name` AS `rec_fac_name`,
 		`rf`.`street` AS `rec_fac_street`,
@@ -148,9 +151,10 @@ function ticket_details($id, $theWidth, $search=FALSE, $dist=TRUE) {						// ret
 	$elapsed = get_elapsed_time ($theRow);			
 	$elapsed_str = get_elapsed_time ($theRow);			
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
-	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
-	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2($theRow['date']) . $by_str;
-	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2($theRow['updated']) . "</TD></TR>\n";
+	$owner_str = ($theRow['owner'] == 0) ? "&nbsp;&nbsp;by unk(" . $theRow['owner'] . ")" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
+	$by_str = ($theRow['call_taker'] == 0) ? "&nbsp;&nbsp;by unk(" . $theRow['call_taker'] . ")" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
+	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2($theRow['date']) . $owner_str;
+	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2($theRow['updated']) . $by_str . "</TD></TR>\n";
 	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD ALIGN='left'>Scheduled date:</TD>		<TD ALIGN='left'>" . format_date_2($theRow['booked_date']) . "</TD></TR>\n";	// 10/6/09
 	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
 	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>{$incident} at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
@@ -190,7 +194,7 @@ function ticket_details($id, $theWidth, $search=FALSE, $dist=TRUE) {						// ret
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE, 1);
+	$print .= show_actions($theRow[0], "date", TRUE, TRUE, 2);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;

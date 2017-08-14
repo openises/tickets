@@ -65,20 +65,57 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="8/16/08">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-<SCRIPT>
-function ck_frames() {		//  onLoad = "ck_frames()"
-<?php	if (array_key_exists('in_win', $_GET)) {echo "\n return;\n";} ?>	// 6/10/11
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>	<!-- 6/10/11 -->
+	<SCRIPT>
+	window.onresize=function(){set_size()};
 
-	if(self.location.href==parent.location.href) {
-		self.location.href = 'index.php';
+	var viewportwidth;
+	var viewportheight;
+	var outerwidth;
+	var outerheight;
+	var listHeight;
+	var listwidth;
+	var colwidth;
+	var colheight;
+
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth, "fullscreen");
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		listHeight = viewportheight * .25;
+		colwidth = outerwidth * .42;
+		colheight = outerheight * .95;
+		listHeight = viewportheight * .5;
+		listwidth = colwidth;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
 		}
-	else {
-		parent.upper.show_butts();										// 1/21/09
-		}
-	}		// end function ck_frames()
+		
+	function ck_frames() {		//  onLoad = "ck_frames()"
+<?php	
+		if (array_key_exists('in_win', $_GET)) {echo "\n return;\n";} 
+?>
+		if(self.location.href==parent.location.href) {
+			self.location.href = 'index.php';
+			}
+		else {
+			parent.upper.show_butts();										// 1/21/09
+			}
+		}		// end function ck_frames()
 	
 	if(document.all && !document.getElementById) {		// accomodate IE							
 		document.getElementById = function(id) {							
@@ -215,17 +252,14 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		}
 ?>
 	</HEAD>
+	<BODY onLoad='ck_frames();'>
 <?php
-
-	print (($get_action == "add")||($get_action == "update"))? "<BODY onLoad = 'ck_frames();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]' LIMIT 1"))
+		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]' LIMIT 1")) {
 			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
-//		elseif ($_POST['frm_description'] == '')
-//			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
-		else {
+			} else {
 			$_POST['frm_description'] = strip_html($_POST['frm_description']); 				//fix formatting, custom tags etc.
 
 			$post_frm_meridiem_asof = empty($_POST['frm_meridiem_asof'])? "" : $_POST['frm_meridiem_asof'] ;
@@ -270,30 +304,20 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 				$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'  LIMIT 1") or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
 				}
 
-			add_header($_GET['ticket_id']);
 			$id = $_GET['ticket_id'];
-			print "<BR><BR><FONT CLASS='header'>" . get_text("Patient") ." record has been added</FONT><BR /><BR />";
-			print "<A HREF='main.php'><U>Continue</U></A>";
+			print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">' . get_text("Patient") . ' record has been added.</SPAN><BR /><BR /><BR />';
+			print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
+			print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
+			print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+			print "</DIV>";
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_PERSON_CHG']);		// returns array or FALSE
 			if ($addrs) {
 				$theTo = implode("|", array_unique($addrs));
 				$theText = "TICKET - PATIENT: ";
 				mail_it ($theTo, "", $theText, $id, 1 );
 				}				// end if ($addrs)
-			if($_SESSION['internet']) {
-				require_once('./forms/ticket_view_screen.php');
-				} else {
-				require_once('./forms/ticket_view_screen_NM.php');
-				}
-			print "</BODY>";				// 10/19/08			
-			print "</HTML>";				// 10/19/08
 			}		// end else ...
-// ________________________________________________________		
-			exit();
-			
-		}			// end if ($get_action == 'add')
-		
-	else if ($get_action == 'delete') {
+		} else if ($get_action == 'delete') {			// end if ($get_action == 'add')
 		if (array_key_exists('confirm', ($_GET))) {
 			do_log($GLOBALS['LOG_PATIENT_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 3/18/10
 //			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
@@ -303,21 +327,19 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			$col_width= max(320, intval($_SESSION['scr_width']* 0.45));
 			add_header($_GET['ticket_id']);				// 8/16/08
 			show_ticket($_GET['ticket_id']);
-			}
-		else {
+			} else {
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `id`='$_GET[id]' LIMIT 1";
 			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
 			$row = stripslashes_deep(mysql_fetch_assoc($result));
 			print "<FONT CLASS='header'>Really delete " . get_text("Patient") . " record ' " .shorten($row['description'], 24) . "' ?</FONT><BR /><BR />";
 			print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=$_GET[id]&ticket_id=$_GET[ticket_id]&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='do_cancel();'></FORM>";
+			print "<SPAN ID='close_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_cancel();'><SPAN STYLE='float: left;'><?php print get_text('Cancel);?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
+			print "</FORM>";
 			}
-		}
-	else if ($get_action == 'update') {		//update patient record and show ticket
+		} else if ($get_action == 'update') {		//update patient record and show ticket
 		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
 
 		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
-//		$query = "UPDATE `$GLOBALS[mysql_prefix]patient` SET `description`='$_POST[frm_description]' , `name`='$_POST[frm_name]', `updated` = '$frm_asof' WHERE id='$_GET[id]' LIMIT 1";
 		$now = mysql_format_date(now());
 		if ((array_key_exists ('frm_fullname', $_POST))) {		// 6/22/11
 			$ins_data = "
@@ -326,20 +348,21 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 				`gender`	= " .			quote_smart(addslashes(trim($_POST['frm_gender_val']))) . ",
 				`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",";
 
+			} else { 
+			$ins_data = "";
 			}
-		else { $ins_data = "";}
-	    $query 	= "UPDATE `$GLOBALS[mysql_prefix]patient` SET 
-	    	{$ins_data}
-	    	`description`= " .  quote_smart(addslashes(trim($_POST['frm_description']))) . ",
-	    	`ticket_id`= " .  	quote_smart(addslashes(trim($_GET['ticket_id']))) .	",
-	    	`date`= " .  		quote_smart(addslashes(trim($frm_asof))) . ",
-	    	`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
-	    	`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
-	    	`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ",
+		$query 	= "UPDATE `$GLOBALS[mysql_prefix]patient` SET 
+			{$ins_data}
+			`description`= " .  quote_smart(addslashes(trim($_POST['frm_description']))) . ",
+			`ticket_id`= " .  	quote_smart(addslashes(trim($_GET['ticket_id']))) .	",
+			`date`= " .  		quote_smart(addslashes(trim($frm_asof))) . ",
+			`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
+			`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
+			`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ",
 			`facility_id` =" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",
 			`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",			
-	    	`updated` = " .  	quote_smart(addslashes(trim($now))) . "
-	    	WHERE id= " . 		quote_smart($_GET['id']) . " LIMIT 1";
+			`updated` = " .  	quote_smart(addslashes(trim($now))) . "
+			WHERE id= " . 		quote_smart($_GET['id']) . " LIMIT 1";
 
 		$result = mysql_query($query) or do_error($query,'mysql_query',mysql_error(), basename( __FILE__), __LINE__);
 
@@ -376,11 +399,20 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 				}					
 			}
 		
-		print '<br><br><FONT CLASS="header">' . get_text("Patient") . ' record updated</FONT><BR /><BR />';
-		add_header($_GET['ticket_id']);				// 8/16/08
-		show_ticket($row['ticket_id']);
-		}
-	else if ($get_action == 'edit') {		//get and show action to update
+		$id = $_GET['ticket_id'];
+		print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">' . get_text("Patient") . ' record has been added.</SPAN><BR /><BR /><BR />';
+		print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
+		print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
+		print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+		print "</DIV>";
+		$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+
+		if ($addrs) {
+			$theTo = implode("|", array_unique($addrs));
+			$theText = "TICKET - ACTION: ";
+			mail_it ($theTo, "", $theText, $id, 1 );
+			}				// end if/else ($addrs)
+		} else if ($get_action == 'edit') {		//get and show action to update
 
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id` = " . $_GET['id'];
 		$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
@@ -434,124 +466,165 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 ?>
-		<FONT CLASS="header">Edit <?php print get_text("Patient");?> Record</FONT><BR /><BR />
+		<SPAN STYLE='margin-left:83px;'><FONT CLASS="header">Edit <?php print get_text('Patient');?> Record</FONT></SPAN><BR /><BR />
 		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
-
-		<TR CLASS='even' ><TD CLASS='td_label'><B><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></B></TD><TD><INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32"></TD></TR>
+		<TABLE BORDER="0">
+			<TR CLASS='even'>
+				<TD CLASS='td_label text'>
+					<?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font>
+				</TD>
+				<TD CLASS='td_data text'>
+					<INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32" />
+				</TD>
+			</TR>
 <?php
-	$checks = array("", "", "", "", "");		// gender checks
-	$row_gender = ($row['gender'] != 0) ? $row['gender'] : 4;	//	7/12/13
-	$checks[intval($row_gender)] = "CHECKED";	//	7/12/13
+			$checks = array("", "", "", "", "");		// gender checks
+			$row_gender = ($row['gender'] != 0) ? $row['gender'] : 4;	//	7/12/13
+			$checks[intval($row_gender)] = "CHECKED";	//	7/12/13
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
-	$result = mysql_query($query);
-	if(@mysql_num_rows($result) > 0) {
-		$ins_sel_str = "<SELECT CLASS='sit' name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
-		
-		while ($row_ins = stripslashes_deep(mysql_fetch_assoc($result))) {
-			$sel = (($row['insurance_id'] != 0) && (intval($row['insurance_id']) == intval($row_ins['id'])))? "SELECTED": "";	//	7/12/13
-			$ins_sel_str .= "\t\t\t<OPTION VALUE={$row_ins['id']} {$sel}>{$row_ins['ins_value']}</OPTION>\n";		
-			}		// end while()
-		$ins_sel_str .= "</SELECT>\n";
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
+			$result = mysql_query($query);
+			if(@mysql_num_rows($result) > 0) {
+				$ins_sel_str = "<SELECT CLASS='sit' name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
+				while ($row_ins = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$sel = (($row['insurance_id'] != 0) && (intval($row['insurance_id']) == intval($row_ins['id'])))? "SELECTED": "";	//	7/12/13
+					$ins_sel_str .= "\t\t\t<OPTION VALUE={$row_ins['id']} {$sel}>{$row_ins['ins_value']}</OPTION>\n";		
+					}		// end while()
+				$ins_sel_str .= "</SELECT>\n";
 ?>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $fullname;?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='<?php print $row['fullname'];?>' SIZE = '64' /></TD></TR>
-		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='<?php print $row['dob'];?>' SIZE = '24' /></TD></TR>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  
+				<TR CLASS='odd' VALIGN='bottom'>
+					<TD CLASS="td_label text">
+						<?php echo $fullname;?>: &nbsp;&nbsp;
+					</TD>
+					<TD CLASS='td_data text'>
+						<INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='<?php print $row['fullname'];?>' SIZE = '64' />
+					</TD>
+				</TR>
+				<TR CLASS='even' VALIGN='bottom'>
+					<TD CLASS="td_label text">
+						<?php echo $dateofbirth;?>: &nbsp;&nbsp;
+					</TD>
+					<TD CLASS='td_data text'>
+						<INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='<?php print $row['dob'];?>' SIZE = '24' />
+					</TD>
+				</TR>
+				<TR CLASS='odd' VALIGN='bottom'>
+					<TD CLASS="td_label text">
+						<?php echo $gender;?>:  
 <?php
-		if(get_variable('locale') != 1) {
+					if(get_variable('locale') != 1) {
 ?>				
-			<font color='red' size='-1'>*</font>
+						<font color='red' size='-1'>*</font>
 <?php
-			}
+						}
 ?>
-			</B>&nbsp;&nbsp;</TD>
-			<TD>			
-				&nbsp;&nbsp;
-				M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[1];?> />
-				&nbsp;&nbsp;F&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 2 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[2];?> />
-				&nbsp;&nbsp;T&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 3 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[3];?>/>
-				&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[4];?>/>
-			</TD></TR>
+						</B>&nbsp;&nbsp;
+					</TD>
+					<TD CLASS='td_data text'>			
+						&nbsp;&nbsp;
+						M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[1];?> />
+						&nbsp;&nbsp;F&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 2 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[2];?> />
+						&nbsp;&nbsp;T&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 3 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[3];?>/>
+						&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' <?php echo $checks[4];?>/>
+					</TD>
+				</TR>
 <?php
-		if(get_variable('locale') != 1) {
+				if(get_variable('locale') != 1) {
 ?>		
-			<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
-				<TD><?php echo $ins_sel_str;?></TD></TR>
+					<TR CLASS='even' VALIGN='bottom'>
+						<TD CLASS="td_label text">
+							<?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;
+						</TD>
+						<TD CLASS='td_data text'>
+							<?php echo $ins_sel_str;?>
+						</TD>
+					</TR>
 <?php
-			}
-		$query_fac = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
-			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )		
-			$where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";		
-		$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$pulldown = '<option value = 0 selected>Select</option>\n'; 	// 3/18/10
-			while ($row_fac = mysql_fetch_array($result_fac, MYSQL_ASSOC)) {
-				$sel = ($row_fac['fac_id'] == $row['facility_id']) ? "SELECTED" : "";
-				$pulldown .= "<option value=\"{$row_fac['fac_id']}\" {$sel}>" . $row_fac['name'] . "</option>\n";
-				}	
+					}
+				$query_fac = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
+					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )		
+					$where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";		
+				$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				$pulldown = '<option value = 0 selected>Select</option>\n'; 	// 3/18/10
+					while ($row_fac = mysql_fetch_array($result_fac, MYSQL_ASSOC)) {
+						$sel = ($row_fac['fac_id'] == $row['facility_id']) ? "SELECTED" : "";
+						$pulldown .= "<option value=\"{$row_fac['fac_id']}\" {$sel}>" . $row_fac['name'] . "</option>\n";
+						}	
 ?>
-		<TR CLASS='odd'>
-			<TD CLASS="td_label">Facility:</TD><TD COLSPAN='2' class='td_label'>
-				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>
-			</TD>
-		</TR>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $facilitycontact;?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='<?php print $row['facility_contact'];?>' SIZE = '64' /></TD>
-		</TR>
+				<TR CLASS='odd'>
+					<TD CLASS="td_label text">Facility:</TD>
+					<TD COLSPAN='2' class='td_data text'>
+						<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>
+					</TD>
+				</TR>
+				<TR CLASS='odd' VALIGN='bottom'>
+					<TD CLASS="td_label text"><?php echo $facilitycontact;?>: &nbsp;&nbsp;</TD>
+					<TD CLASS='td_data text'>
+						<INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='<?php print $row['facility_contact'];?>' SIZE = '64' />
+					</TD>
+				</TR>
 <?php
-		}		// end 	if($num_rows>0) 
+				}		// end 	if($num_rows>0) 
 ?>		
-		<TR CLASS='odd'  VALIGN='top'><TD><B>Description:</B> </TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD></TR>
-		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
-			<TD ALIGN='right' CLASS="td_label">Signal: </TD><TD>
-
-				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
-				<OPTION VALUE=0 SELECTED>Select</OPTION>
+			<TR CLASS='odd'  VALIGN='top'>
+				<TD><B>Description:</B> </TD>
+					<TD CLASS='td_data text'><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA>
+				</TD>
+			</TR>
+			<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
+				<TD ALIGN='right' CLASS="td_label text">Signal: </TD>
+				<TD CLASS='td_data text'>
+					<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
-					}
+						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+						while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+							print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+							}
 ?>
-			</SELECT>
-			</TD>
-		</TR>
-		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
-			<TD ALIGN='right' CLASS="td_label">Add to Assign: </TD><TD>
-
-				<SELECT NAME='assigns'>
-				<OPTION VALUE=0 SELECTED>Select</OPTION>
+					</SELECT>
+				</TD>
+			</TR>
+			<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
+				<TD ALIGN='right' CLASS="td_label text">Add to Assign: </TD>
+				<TD CLASS='td_data text'>
+					<SELECT NAME='assigns'>
+						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $row['ticket_id'] . " AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_ass = stripslashes_deep(mysql_fetch_assoc($result))) {
-					$sel = ($row_ass['id'] == $assigned_to) ? "SELECTED" : "";
-					print "\t<OPTION VALUE='{$row_ass['id']}' {$sel}>{$responder_details[$row_ass['responder_id']]}&nbsp;|&nbsp;{$row_ass['as_of']}</OPTION>\n";		// pipe separator
-					}
+						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $row['ticket_id'] . " AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+						while ($row_ass = stripslashes_deep(mysql_fetch_assoc($result))) {
+							$sel = ($row_ass['id'] == $assigned_to) ? "SELECTED" : "";
+							print "\t<OPTION VALUE='{$row_ass['id']}' {$sel}>{$responder_details[$row_ass['responder_id']]}&nbsp;|&nbsp;{$row_ass['as_of']}</OPTION>\n";		// pipe separator
+							}
 ?>
-			</SELECT>
-			</TD>
-		</TR>
+					</SELECT>
+				</TD>
+			</TR>
 <?php
-			print "\n<TR CLASS='even'><TD CLASS='td_label'>As of:</TD><TD>";
+			print "\n<TR CLASS='even'><TD CLASS='td_label text'>As of:</TD><TD>";
 			print  generate_date_dropdown("asof",$row['date'], TRUE);
 			print "&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.patientEd);'></TD></TR>\n";
 
 ?>
-
-		<TR CLASS='odd' ><TD></TD><TD ALIGN='center'><INPUT TYPE="button" VALUE="Cancel" onClick="do_cancel();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="Reset" VALUE="Reset"  onClick = "do_lock(this.form); this.form.reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="Submit" VALUE="Submit"></TD></TR>
-		</TABLE><BR />
-			<INPUT TYPE = 'hidden' NAME = 'frm_gender_val' VALUE = <?php print $row['gender'];?> />
-			<INPUT TYPE = 'hidden' NAME = 'frm_ins_id' VALUE = <?php print $row['insurance_id'];?> />
+			<TR CLASS='odd' >
+				<TD COLSPAN=2>&nbsp;</TD>
+			</TR>
+			<TR CLASS='odd' >
+				<TD COLSPAN=2 ALIGN='center'>
+					<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+					<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_lock(document.patientEd); document.patientEd.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+					<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate(document.patientEd);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+				</TD>
+			</TR>
+		</TABLE>
+		<BR />
+		<INPUT TYPE = 'hidden' NAME = 'frm_gender_val' VALUE = <?php print $row['gender'];?> />
+		<INPUT TYPE = 'hidden' NAME = 'frm_ins_id' VALUE = <?php print $row['insurance_id'];?> />
 		</FORM>
-		
 <?php
-		}
-	else {
+		} else {
 		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
 		$regions_inuse = get_regions_inuse($user_level);	//	5/4/11
 		$group = get_regions_inuse_numbers($user_level);	//	5/4/11		
@@ -614,91 +687,137 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 				$pulldown .= "<option value=\"{$row_fc['id']}\">" . $row_fc['name'] . "</option>\n";
 				}		
 ?>
-		<TABLE BORDER="0">
-		<TR CLASS='header'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'>Add <?php print get_text("Patient");?> Record</FONT></TD></TR>	<!-- 5/4/11 -->
-		<TR CLASS='spacer'><TD CLASS='spacer' COLSPAN='99' ALIGN='center'>&nbsp;</TD></TR>				<!-- 5/4/11 -->			
 		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="patient.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
-		<TR CLASS='even'><TD class='td_label'><B><?php print get_text("Patient ID");?>:</B> <font color='red' size='-1'>*</font></TD><TD><INPUT TYPE="text" NAME="frm_name" value="" size="32"></TD></TR>
+		<TABLE BORDER="0">
+			<TR CLASS='header'>
+				<TD COLSPAN='99' ALIGN='center'>
+					<FONT CLASS='header text' STYLE='background-color: inherit;'>Add <?php print get_text("Patient");?> Record</FONT>
+				</TD>
+			</TR>
+			<TR CLASS='spacer'>
+				<TD CLASS='spacer' COLSPAN='99' ALIGN='center'>&nbsp;</TD>
+			</TR>	
+			<TR CLASS='even'>
+				<TD class='td_label text'><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></TD>
+				<TD CLASS='td_data text'>
+					<INPUT TYPE="text" NAME="frm_name" value="" size="32">
+				</TD>
+			</TR>
 <?php
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
-	$result = mysql_query($query);
-	if(@mysql_num_rows($result) > 0) {
-		$ins_sel_str = "<SELECT name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
-		$ins_sel_str .= "\t\t\t<OPTION VALUE=0 SELECTED >Select</OPTION>\n";		// 7/27/11
-		
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			$ins_sel_str .= "\t\t\t<OPTION VALUE={$row['id']}>{$row['ins_value']}</OPTION>\n";		
-			}		// end while()
-		$ins_sel_str .= "</SELECT>\n";
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
+			$result = mysql_query($query);
+			if(@mysql_num_rows($result) > 0) {
+				$ins_sel_str = "<SELECT name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
+				$ins_sel_str .= "\t\t\t<OPTION VALUE=0 SELECTED >Select</OPTION>\n";		// 7/27/11
+				
+				while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$ins_sel_str .= "\t\t\t<OPTION VALUE={$row['id']}>{$row['ins_value']}</OPTION>\n";		
+					}		// end while()
+				$ins_sel_str .= "</SELECT>\n";
 ?>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $fullname;?>: &nbsp;&nbsp;</TD>
-			<TD CLASS='td_data'><INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='' SIZE = '64' /></TD></TR>
-		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
-			<TD CLASS='td_data'><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='' SIZE = '24' /></TD></TR>
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  
+				<TR CLASS='odd' VALIGN='bottom'>
+					<TD CLASS="td_label text"><?php echo $fullname;?>: &nbsp;&nbsp;</TD>
+					<TD CLASS='td_data text'>
+						<INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='' SIZE = '64' />
+					</TD>
+				</TR>
+				<TR CLASS='even' VALIGN='bottom'>
+					<TD CLASS="td_label text"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
+					<TD CLASS='td_data text'>
+						<INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='' SIZE = '24' />
+					</TD>
+				</TR>
+				<TR CLASS='odd' VALIGN='bottom'>
+					<TD CLASS="td_label text"><?php echo $gender;?>:  
 <?php
-		if(get_variable('locale') != 1) {
+						if(get_variable('locale') != 1) {
 ?>		
-		<font color='red' size='-1'>*</font>
+							<font color='red' size='-1'>*</font>
 <?php
-			}
+							}
 ?>
-			</B>&nbsp;&nbsp;</TD>
-			<TD class='td_label'>			
-				&nbsp;&nbsp;M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' />
-				&nbsp;&nbsp;F&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 2 onClick = 'this.form.frm_gender_val.value=this.value;' />
-				&nbsp;&nbsp;T&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 3 onClick = 'this.form.frm_gender_val.value=this.value;' />
-				&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' />
-			</TD></TR>
+						</B>&nbsp;&nbsp;</TD>
+					<TD class='td_data text'>			
+						&nbsp;&nbsp;M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' />
+						&nbsp;&nbsp;F&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 2 onClick = 'this.form.frm_gender_val.value=this.value;' />
+						&nbsp;&nbsp;T&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 3 onClick = 'this.form.frm_gender_val.value=this.value;' />
+						&nbsp;&nbsp;U&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 4 onClick = 'this.form.frm_gender_val.value=this.value;' />
+					</TD>
+				</TR>
 <?php
-		if(get_variable('locale') != 1) {
+				if(get_variable('locale') != 1) {
 ?>
-			<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;</TD>
-				<TD CLASS='td_data'><?php echo $ins_sel_str;?></TD></TR>
+					<TR CLASS='even' VALIGN='bottom'>
+						<TD CLASS="td_label text">
+							<?php echo $insurance;?>: <font color='red' size='-1'>*</font></B> &nbsp;&nbsp;
+						</TD>
+						<TD CLASS='td_data text'>
+							<?php echo $ins_sel_str;?>
+						</TD>
+					</TR>
 <?php
-			}
-?>
-		<TR CLASS='odd'>
-			<TD CLASS="td_label">Facility:</TD><TD COLSPAN='2' class='td_label'>
-				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>
-			</TD>
-		</TR>
-		<TR CLASS='odd'>
-			<TD CLASS="td_label"><?php echo $facilitycontact;?>:&nbsp;&nbsp;</TD>		
-			<TD CLASS='td_data'>
-				<INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='' SIZE = '32' />
-			</TD>
-		</TR>
-<?php
-		}		// end 	if($num_rows>0) 
-?>		
-
-		<TR VALIGN = 'TOP' CLASS='even'>		<!-- 11/15/10 -->
-			<TD ALIGN='right' CLASS="td_label">Signal: </TD><TD>
-
-				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
-				<OPTION VALUE=0 SELECTED>Select</OPTION>
-<?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
 					}
 ?>
-			</SELECT>
-			</TD></TR>
+				<TR CLASS='odd'>
+					<TD CLASS="td_label text">Facility:</TD>
+					<TD COLSPAN='2' class='td_data text'>
+						<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())">
+							<?php print $pulldown; ?>
+						</SELECT>
+					</TD>
+				</TR>
+				<TR CLASS='odd'>
+					<TD CLASS="td_label text"><?php echo $facilitycontact;?>:&nbsp;&nbsp;</TD>		
+					<TD CLASS='td_data text'>
+						<INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='' SIZE = '32' />
+					</TD>
+				</TR>
+<?php
+				}		// end 	if($num_rows>0) 
+?>		
 
-		<TR CLASS='even' ><TD class='td_label'><B>Description: </B></TD><TD><TEXTAREA ROWS="6" COLS="62" NAME="frm_description" WRAP="virtual"></TEXTAREA></TD></TR> <!-- 10/19/08 -->
-
-		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label">As of: &nbsp;&nbsp;</TD><TD><?php print generate_date_dropdown('asof',0,TRUE);?>&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.patientAdd);'></TD></TR>
-
-		<TR CLASS='odd'><TD></TD><TD><INPUT TYPE="button" VALUE="Cancel"  onClick="do_cancel();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE="Reset" VALUE="Reset" onClick = "do_reset(this.form);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE="button" VALUE="Next" onclick = "validate(this.form);"></TD></TR>
-		</TABLE><BR />
-			<INPUT TYPE = 'hidden' NAME = 'frm_ins_id' VALUE = 0 />
-			<INPUT TYPE = 'hidden' NAME = 'frm_gender_val' VALUE = 0 />
+			<TR VALIGN = 'TOP' CLASS='even'>		<!-- 11/15/10 -->
+				<TD ALIGN='right' CLASS="td_label text">Signal: </TD>
+				<TD CLASS='td_data text'>
+					<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+						<OPTION VALUE=0 SELECTED>Select</OPTION>
+<?php
+						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+						while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+							print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+							}
+?>
+					</SELECT>
+				</TD>
+			</TR>
+			<TR CLASS='even' >
+				<TD class='td_label text'>Description: </TD>
+				<TD CLASS='td_data text'>
+					<TEXTAREA ROWS="6" COLS="62" NAME="frm_description" WRAP="virtual"></TEXTAREA>
+				</TD>
+			</TR>
+			<TR CLASS='odd' VALIGN='bottom'>
+				<TD CLASS="td_label text">As of: &nbsp;&nbsp;</TD>
+				<TD CLASS='td_data text'>
+					<?php print generate_date_dropdown('asof',0,TRUE);?>&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.patientAdd);'>
+				</TD>
+			</TR>
+			<TR CLASS='odd' >
+				<TD COLSPAN=2>&nbsp;</TD>
+			</TR>
+			<TR CLASS='odd'>
+				<TD COLSPAN=2 ALIGN='center'>
+					<SPAN ID='can_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+					<SPAN ID='reset_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.patientAdd.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+					<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate(document.patientAdd);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+				</TD>
+			</TR>
+		</TABLE>
+		<BR />
+		<INPUT TYPE = 'hidden' NAME = 'frm_ins_id' VALUE = 0 />
+		<INPUT TYPE = 'hidden' NAME = 'frm_gender_val' VALUE = 0 />
 		</FORM>
 <?php
 		}
@@ -706,4 +825,28 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 <FORM NAME='can_Form' ACTION="main.php">
 <INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
 </FORM>
+<SCRIPT LANGUAGE="Javascript">
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "fullscreen");
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+listHeight = viewportheight * .25;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+listHeight = viewportheight * .5;
+listwidth = colwidth;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+</SCRIPT>
+</BODY>
 </HTML>

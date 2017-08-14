@@ -30,7 +30,7 @@ do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $frm_responder_id, $frm_status_id);
 	
 set_sess_exp();				// update session time
 session_write_close();
-print date("H:i", $now) ;
+print date("j H:i", $now) ;
 
 //date("H:i", $row['as_of']) 
 ?>

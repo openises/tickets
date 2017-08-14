@@ -44,10 +44,30 @@ $jc_911 = mysql_table_exists("$GLOBALS[mysql_prefix]jc_911");
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
+window.onresize=function(){set_size()};
+var viewportwidth;
+var viewportheight;
+var searchlistwidth;
+function set_size() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	searchlistwidth = viewportwidth * .9;
+	searchtable_setwidths();
+	set_fontsizes(viewportwidth, "fullscreen");
+	}
 
 function ck_frames() {		//  onLoad = "ck_frames()"
 	if(self.location.href==parent.location.href) {
@@ -70,18 +90,49 @@ function get_new_colors() {								// 4/5/11
 	window.location.href = '<?php print basename(__FILE__);?>';
 	}
 
-
-function $() {									// 2/11/09
-	var elements = new Array();
-	for (var i = 0; i < arguments.length; i++) {
-		var element = arguments[i];
-		if (typeof element == 'string')
-			element = document.getElementById(element);
-		if (arguments.length == 1)
-			return element;
-		elements.push(element);
+function isViewable(element){
+	return (element.clientHeight > 0);
+	}
+	
+function searchtable_setwidths() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	return elements;
+	searchlistwidth = viewportwidth * .9;
+	$('searchlist').style.width = searchlistwidth + "px";
+	$('the_searchlist').style.width = searchlistwidth + "px";
+	$('searchtable').style.width = searchlistwidth + "px";
+	var viewableRow = 1;
+	var searchtbl = document.getElementById('searchtable');
+	var headerRow = searchtbl.rows[0];
+	for (i = 1; i < searchtbl.rows.length; i++) {
+		if(!isViewable(searchtbl.rows[i])) {
+			} else {
+			viewableRow = i;
+			break;
+			}
+		}
+	var tableRow = searchtbl.rows[viewableRow];
+	if(tableRow &&i != searchtbl.rows.length) {
+		for (var i = 0; i < tableRow.cells.length; i++) {
+			if(tableRow.cells[i] && headerRow.cells[i]) {
+				var thewidth = tableRow.cells[i].clientWidth +2;
+				headerRow.cells[i].style.width = thewidth + "px";
+				}
+			}
+		} else {
+		var cellwidthBase = window.listwidth / 6;
+		for (var i = 0; i < headerRow.cells.length; i++) {
+			headerRow.cells[i].style.width = cellwidthbase + "px";
+			}
+		}
 	}
 
 function validate(theForm) {
@@ -99,69 +150,77 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 ?>
 <BODY onLoad = "ck_frames(); <?php echo $do_str; ?>">
 <?php
-	if ($jc_911){
+	if ($jc_911) {
 ?>
 <script>
-function do_db () {
-	$("db").style.display = "inline";
-	$("pa").style.display = "none";
-	$("fa").style.display = "none";
-	$("po").style.display = "none";
-	document.queryForm.frm_query.focus();
-	}
+		function do_db () {
+			$("db").style.display = "inline";
+			$("pa").style.display = "none";
+			$("fa").style.display = "none";
+			$("po").style.display = "none";
+			document.queryForm.frm_query.focus();
+			}
 
-function do_pa () {
-	$("db").style.display = "none";
-	$("pa").style.display = "inline";
-	$("fa").style.display = "none";
-	$("po").style.display = "none";
-	}
+		function do_pa () {
+			$("db").style.display = "none";
+			$("pa").style.display = "inline";
+			$("fa").style.display = "none";
+			$("po").style.display = "none";
+			}
 
-function do_fa () {
-	$("db").style.display = "none";
-	$("pa").style.display = "none";
-	$("fa").style.display = "inline";
-	$("po").style.display = "none";
-	document.getElementById("addr_list").innerHTML = "";
-	document.fa_form.frm_street.value = "";
-	document.fa_form.frm_street.focus();
-	}
+		function do_fa () {
+			$("db").style.display = "none";
+			$("pa").style.display = "none";
+			$("fa").style.display = "inline";
+			$("po").style.display = "none";
+			document.getElementById("addr_list").innerHTML = "";
+			document.fa_form.frm_street.value = "";
+			document.fa_form.frm_street.focus();
+			}
 
-function do_po () {				// not implemented
-	$("db").style.display = "inline";
-	$("pa").style.display = "inline";
-	$("fa").style.display = "inline";
-	$("po").style.display = "none";
-	}
+		function do_po () {				// not implemented
+			$("db").style.display = "inline";
+			$("pa").style.display = "inline";
+			$("fa").style.display = "inline";
+			$("po").style.display = "none";
+			}
 
 </script>
-	<span style = "margin-left:40px;"><b>Search &raquo;</b>
-	<button style = "margin-left:20px;margin-top:10px" onclick = "do_db()">Incidents</button>
-	<button style = "margin-left:20px;margin-top:10px" onclick = "do_pa()">Partial address</button>
-	<button style = "margin-left:20px;margin-top:10px" onclick = "do_fa()">Full address</button>
-	<button style = "display:none; margin-left:20px;margin-top:10px" onclick = "do_po()">Position</button>
-	</span>
-	<div id   = 'db' style = 'display:inline;'>
-	<?php
+		<span style = "margin-left:40px;"><b>Search &raquo;</b>
+		<button style = "margin-left:20px;margin-top:10px" onclick = "do_db()">Incidents</button>
+		<button style = "margin-left:20px;margin-top:10px" onclick = "do_pa()">Partial address</button>
+		<button style = "margin-left:20px;margin-top:10px" onclick = "do_fa()">Full address</button>
+		<button style = "display:none; margin-left:20px;margin-top:10px" onclick = "do_po()">Position</button>
+		</span>
+		<div id   = 'db' style = 'display:inline;'>
+<?php
 		}		// end 	if ($jc_911)
 
 	$post_frm_query = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type'] == 'db') ) ? strip_tags($_POST['frm_query']) : FALSE ;		// 1/6/2013
+	if($post_frm_query) {
+		$year_text = ($_POST['frm_year'] == 0) ? " for all years" : " in year " . $_POST['frm_year'];
+		} else {
+		$year_text = "";
+		}
 
 	if ($post_frm_query) {
-
-//		$query_str = quote_smart(trim($_POST['frm_query']));		// 7/20/10
-//		CAST(field AS CHAR) REGEXP 'search_term'.
-
-		print "<BR /><BR /><BR /><BR /><SPAN STYLE = 'margin-left:80px;'><FONT CLASS='header'>Search results for '$_POST[frm_query]' in year $_POST[frm_year]</FONT></SPAN><BR /><BR />\n";
+?>
+		<BR />
+		<BR />
+		<BR />
+		<BR />
+		<SPAN STYLE = 'margin-left:80px;'><FONT CLASS='header'>Search results for '<?php print $_POST['frm_query'];?>' <?php print $year_text;?></FONT></SPAN>
+		<BR />
+		<BR />
+<?php
 		$_POST['frm_query'] = str_replace(' ', '|', $_POST['frm_query']);
 		$query_str = quote_smart(trim(str_replace(' ', '|', $_POST['frm_query'])));
 		if($_POST['frm_search_in'])	{								//what field are we searching?
 			$search_fields = "CAST({$_POST['frm_search_in']} AS CHAR) REGEXP '$_POST[frm_query]'";	//
-			}
-		else {							//list fields and form the query to search all of them
+			} else {							//list fields and form the query to search all of them
 			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`");
 			$search_fields = "";
-			$ok_types = array("string", "blob");
+			$ok_types = array("string", "blob", "VAR_STRING", "CHAR", "LONG", "LONGLONG", "BLOB");
 			for ($i = 0; $i < mysql_num_fields($result); $i++) {
 				if (in_array (mysql_field_type($result, $i), $ok_types )) {
     				$search_fields .= "CAST(`" . mysql_field_name($result, $i) ."` AS CHAR) REGEXP {$query_str} OR ";
@@ -169,9 +228,9 @@ function do_po () {				// not implemented
     			}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);		// drop trailing OR
 			}
-		if (get_variable('restrict_user_tickets') && !(is_administrator()))		//is user restricted to his/her own tickets?
+		if (get_variable('restrict_user_tickets') && !(is_administrator()))	{	//is user restricted to his/her own tickets?
 			$restrict_ticket = "AND owner='{$_SESSION['user_id']}'";
-		else{
+			} else {
 			$restrict_ticket = "";
 			}
 		$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";		// 9/19/08
@@ -204,8 +263,7 @@ function do_po () {				// not implemented
 
 		if (empty($id_stack )){
 			print "<SPAN STYLE = 'margin-left:80px'><B>No matches found</B></SPAN><BR /><BR />";
-			}
-		else {
+			} else {
 			$id_stack = array_unique($id_stack);		// at least one
 			$in_str = $sep = "";
 			for ($i=0; $i< count($id_stack); $i++) {
@@ -216,32 +274,33 @@ function do_po () {				// not implemented
 				}
 
 		$acts_ary = $pats_ary = array();				// 4/12/2015
+		
+		$where = ($_POST['frm_year'] != 0) ? "WHERE year(`date`) = " . quote_smart($_POST["frm_year"]) : "";
 
-		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` WHERE year(`date`) = " . quote_smart($_POST["frm_year"] ) . " GROUP BY `ticket_id`";
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` {$where} GROUP BY `ticket_id`";
 		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
 			$acts_ary[$row['ticket_id']] = $row['the_count'];
 			}
 
-		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` WHERE year(`date`) = " . quote_smart($_POST["frm_year"] ) . "  GROUP BY `ticket_id`";
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` {$where} GROUP BY `ticket_id`";
 		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
 			$pats_ary[$row['ticket_id']] = $row['the_count'];
 			}
+		
+		$where2 = ($where == "") ? "WHERE `status` <> {$GLOBALS['STATUS_RESERVED']}" : "AND `status` <> {$GLOBALS['STATUS_RESERVED']}";
 
 //								1/1/2015
 			$query = "SELECT `id`, UNIX_TIMESTAMP(`problemstart`) AS `problemstart`, UNIX_TIMESTAMP(`updated`) AS `updated`, `scope`, `status`, `severity`,
 				CONCAT_WS(' ',`street`,`city`,`state`) AS `addr`
 				FROM `$GLOBALS[mysql_prefix]ticket`
-				WHERE year(`problemstart`) = " . quote_smart($_POST["frm_year"] ) . " AND `status` <> {$GLOBALS['STATUS_RESERVED']}
+				{$where} {$where2}
 				AND `id` IN ({$in_str})
 				AND `status` LIKE " . quote_smart($_POST['frm_querytype']) . "
 				ORDER BY `severity` DESC, `problemstart` ASC";
 
 			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-
-//			dump(mysql_num_rows($result));
-
 			if(mysql_num_rows($result) == 1) {	//	revised to redirect to main.php rather than show ticket in search.php	4/29/13
 				$row = stripslashes_deep(mysql_fetch_assoc($result));
 				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
@@ -254,22 +313,21 @@ function do_po () {				// not implemented
 				redir($url);
 				exit();
 
-				}
-			elseif (mysql_num_rows($result) == 0) {
-				print "<SPAN STYLE = 'margin-left:80px'><B>No matches found</B></SPAN><BR /><BR />";
-
-				}
-			else {		//  more than one, list them
-				print "<SPAN STYLE = 'margin-left:80px'><B>Matches</B>: tickets {$tick_hits}, actions {$act_hits}, persons {$per_hits}</SPAN><BR /><BR />";
-
-				print "<TABLE BORDER='0' style = 'margin-left:80px;'><TR CLASS='even'>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:2px;'>Ticket</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Opened</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Description</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Location</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>A</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>P</SPAN></TD>
-					</TR>";
+				} elseif (mysql_num_rows($result) == 0) {
+				print "<SPAN CLASS='text' STYLE = 'margin-left:80px'><B>No matches found</B></SPAN><BR /><BR />";
+				} else {		//  more than one, list them
+				print "<SPAN CLASS='text' STYLE = 'margin-left: 80px'><B>Matches</B>: tickets {$tick_hits}, actions {$act_hits}, persons {$per_hits}</SPAN><BR /><BR />";
+				print "<DIV class='scrollableContainer' id='searchlist' style='position: relative; left: 2%;'>";
+				print "<DIV class='scrollingArea' id='the_searchlist' style='width: 100%;'>";
+				print "<TABLE BORDER='0' id='searchtable' class='fixedheadscrolling scrollable' style='width: 100%;'><thead>";
+				print "<TR style='width: 99%;'>";
+				print "<TH CLASS='plain_listheader text text_left'>Ticket</TH>";
+				print "<TH CLASS='plain_listheader text text_left'>Opened</TH>";
+				print "<TH CLASS='plain_listheader text text_left'>Description</TH>";
+				print "<TH CLASS='plain_listheader text text_left'>Location</TH>";
+				print "<TH CLASS='plain_listheader text text_left'>Actions</TH>";
+				print "<TH CLASS='plain_listheader text text_left'>Patients</TH>";
+				print "</TR></thead><tbody>";
 				$counter = 0;
 
 				while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
@@ -283,19 +341,20 @@ function do_po () {				// not implemented
 						default: 				$severityclass='severity_normal'; break;
 						}
 
-					$acts = (array_key_exists($row['id'], $acts_ary)) ? $acts_ary[$row['id']] : "";
-					$pats = (array_key_exists($row['id'], $pats_ary)) ? $pats_ary[$row['id']] : "";
-					print "<TR CLASS='{$evenodd[$counter%2]}' onClick = \"Javascript: self.location.href = 'main.php?id={$row['id']}';\">
-						<TD CLASS='$severityclass'>#{$row['id']}</TD>
-						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>" . format_date($row['problemstart'])."</SPAN></TD>
-						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['scope']), 120) . "{$strikend}</SPAN></TD>
-						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['addr']), 120) . "{$strikend}</SPAN></TD>
-						<TD >{$acts}</TD>
-						<TD >{$pats}</TD>
-						</TR>\n";				// 2/25/09
+					$acts = (array_key_exists($row['id'], $acts_ary)) ? strval($acts_ary[$row['id']]) : "0";
+					$pats = (array_key_exists($row['id'], $pats_ary)) ? strval($pats_ary[$row['id']]) : "0";
+					print "<TR CLASS='{$evenodd[$counter%2]}' style='width: 100%;' onClick = \"Javascript: self.location.href = 'main.php?id={$row['id']}';\">";
+					print "<TD CLASS='plain_list $severityclass text text_left'>#{$row['id']}</TD>";
+					print "<TD CLASS='plain_list $severityclass text text_left'>" . format_date($row['problemstart'])."</TD>";
+					print "<TD CLASS='plain_list $severityclass text text_left'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['scope']), 120) . "{$strikend}</TD>";
+					print "<TD CLASS='plain_list $severityclass text text_left'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['addr']), 120) . "{$strikend}</TD>";
+					print "<TD CLASS='plain_list $severityclass text text_left'>" . $acts . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>";
+					print "<TD CLASS='plain_list $severityclass text text_left'>" . $pats . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>";
+					print "</TR>";
 					$counter++;
 					}
-				print '</TABLE><BR /><BR />';
+				print '</tbody></TABLE></DIV></DIV>';
+				print '<SCRIPT>searchtable_setwidths();</SCRIPT>';
 				}			// end if/else
 			}			// end if/else (empty($id_stack ))
 		}				// end if ($_POST['frm_query'])
@@ -309,61 +368,84 @@ function do_po () {				// not implemented
 <FORM METHOD="post" NAME="queryForm" ACTION="<?php echo basename(__FILE__); ?>" onSubmit="return validate(document.queryForm)">
 <input type = hidden name = "search_type" value = "db" />
 <TABLE CELLPADDING="2" BORDER="0" STYLE = 'margin-left:80px;'>
-<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Search for: &nbsp;</TD>
-<TD><INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print $post_frm_query;?>" NAME="frm_query"></TD></TR>
-<TR CLASS = "odd"><TD VALIGN="top" CLASS="td_label">In: &nbsp;</TD><TD>
-	<SELECT NAME="frm_search_in">
-	<OPTION VALUE="" checked>All fields</OPTION>
-	<OPTION VALUE="contact">Reported by</OPTION>
-	<OPTION VALUE="street">Address</OPTION>
-	<OPTION VALUE="city">City</OPTION>
-	<OPTION VALUE="state">State</OPTION>
-	<OPTION VALUE="description">Description</OPTION>
-	<OPTION VALUE="comments">Comments</OPTION>
-	<OPTION VALUE="owner">Owner</OPTION>
-	<OPTION VALUE="date">Issue Date</OPTION>
-	<OPTION VALUE="problemstart">Problem Starts</OPTION>
-	<OPTION VALUE="problemend">Problem Ends</OPTION>
-	</SELECT></TD></TR>
+	<TR CLASS = "even">
+		<TD VALIGN="top" CLASS="td_label text">Search for: &nbsp;</TD>
+		<TD CLASS='td_data text'><INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print $post_frm_query;?>" NAME="frm_query"></TD>
+	</TR>
+	<TR CLASS = "odd">
+		<TD VALIGN="top" CLASS="td_label text">In: &nbsp;</TD>
+		<TD CLASS='td_data text'>
+			<SELECT NAME="frm_search_in">
+				<OPTION VALUE="" checked>All fields</OPTION>
+				<OPTION VALUE="contact">Reported by</OPTION>
+				<OPTION VALUE="street">Address</OPTION>
+				<OPTION VALUE="city">City</OPTION>
+				<OPTION VALUE="state">State</OPTION>
+				<OPTION VALUE="description">Description</OPTION>
+				<OPTION VALUE="comments">Comments</OPTION>
+				<OPTION VALUE="owner">Owner</OPTION>
+				<OPTION VALUE="date">Issue Date</OPTION>
+				<OPTION VALUE="problemstart">Problem Starts</OPTION>
+				<OPTION VALUE="problemend">Problem Ends</OPTION>
+			</SELECT>
+		</TD>
+	</TR>
 <?php						// 1/1/2015
 	$query ="SELECT DISTINCT year(`problemstart`) AS `the_year` FROM `$GLOBALS[mysql_prefix]ticket` WHERE (year(`problemstart`) != 0) ORDER BY `the_year` DESC";
 	$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
 	
 	$thisYear = date("Y");
 ?>
-
-<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Year:</TD><TD>
-	<SELECT NAME="frm_year">
+	<TR CLASS = "even">
+		<TD VALIGN="top" CLASS="td_label text">Year:</TD>
+		<TD CLASS='td_data text'>
+			<SELECT NAME="frm_year">
+				<OPTION VALUE=0 SELECTED>All</OPTION>
 <?php
-	if(mysql_num_rows($result) > 0) {
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			echo "\t<OPTION VALUE=\"{$row['the_year']}\">{$row['the_year']}</OPTION>\n";
-			}
-		} else {
-		echo "\t<OPTION VALUE=\"{$thisYear}\">{$thisYear}</OPTION>\n";
-		}
+				if(mysql_num_rows($result) > 0) {
+					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+						echo "\t<OPTION VALUE=\"{$row['the_year']}\">{$row['the_year']}</OPTION>\n";
+						}
+					} else {
+					echo "\t<OPTION VALUE=\"{$thisYear}\">{$thisYear}</OPTION>\n";
+					}
 ?>
-	</SELECT></TD></TR>
-<TR CLASS = "odd"><TD VALIGN="top" CLASS="td_label">Order By: &nbsp;</TD><TD>
-	<SELECT NAME="frm_ordertype">
-	<OPTION VALUE="date">Issue Date</OPTION>
-	<OPTION VALUE="problemstart">Problem Starts</OPTION>
-	<OPTION VALUE="problemend">Problem Ends</OPTION>
-	<OPTION VALUE="affected">Affected</OPTION>
-	<OPTION VALUE="scope">Incident</OPTION>
-	<OPTION VALUE="owner">Owner</OPTION>
-	</SELECT>&nbsp;Descending: <INPUT TYPE="checkbox" NAME="frm_order_desc" VALUE="DESC" CHECKED></TD></TR>
-<TR CLASS = "even"><TD VALIGN="top" CLASS="td_label">Status: &nbsp;</TD><TD>
-	<INPUT TYPE="radio" NAME="frm_querytype" VALUE="%" CHECKED> All<BR />
-	<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_OPEN;?>"> Open<BR />
-	<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_CLOSED;?>"> Closed<BR />
-	</TD></TR>
-<TR CLASS = "odd"><TD></TD><TD ALIGN = "left"><INPUT TYPE="button" VALUE="Cancel"  onClick="history.back()" / ><INPUT TYPE="reset" VALUE="Reset" STYLE ="margin-left:20px" /><INPUT TYPE="submit" VALUE="Next"  STYLE ="margin-left:20px" /></TD></TR>
-</TABLE></FORM>
+			</SELECT>
+		</TD>
+	</TR>
+	<TR CLASS = "odd">
+		<TD VALIGN="top" CLASS="td_label text">Order By: &nbsp;</TD>
+		<TD CLASS='td_data text'>
+			<SELECT NAME="frm_ordertype">
+				<OPTION VALUE="date">Issue Date</OPTION>
+				<OPTION VALUE="problemstart">Problem Starts</OPTION>
+				<OPTION VALUE="problemend">Problem Ends</OPTION>
+				<OPTION VALUE="affected">Affected</OPTION>
+				<OPTION VALUE="scope">Incident</OPTION>
+				<OPTION VALUE="owner">Owner</OPTION>
+			</SELECT>
+			&nbsp;Descending: <INPUT TYPE="checkbox" NAME="frm_order_desc" VALUE="DESC" CHECKED>
+		</TD>
+	</TR>
+	<TR CLASS = "even">
+		<TD VALIGN="top" CLASS="td_label">Status: &nbsp;</TD>
+		<TD>
+			<INPUT TYPE="radio" NAME="frm_querytype" VALUE="%" CHECKED> All<BR />
+			<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_OPEN;?>"> Open<BR />
+			<INPUT TYPE="radio" NAME="frm_querytype" VALUE="<?php print $STATUS_CLOSED;?>"> Closed<BR />
+		</TD>
+	</TR>
+	<TR CLASS = "even">
+		<TD COLSPAN=2 ALIGN = "center">
+			<SPAN ID='can_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+			<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.queryForm.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+			<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.queryForm.submit();'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+		</TD>
+	</TR>
+</TABLE>
+</FORM>
 
-</div>		<!-- end 'db' -->
-<!-- new jc_911 stuff - 9/25/2014 -->
-
+</div>
 <?php
 	if ($jc_911) {
 ?>
@@ -579,5 +661,18 @@ function do_po () {				// not implemented
 <?php
 	}		// end if (jc_911)
 ?>
-
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+searchlistwidth = viewportwidth * .9;
+set_fontsizes(viewportwidth, "fullscreen");
+</SCRIPT>
 </BODY></HTML>

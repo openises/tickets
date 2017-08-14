@@ -1,9 +1,11 @@
 <?php
-// $failed = "failed";
-// if(empty($_GET)) {
-	// print $failed;
-	// exit();
-	// }
+$failed = "failed";
+if(empty($_GET)) {
+	print $failed;
+	exit();
+	}
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 
 do_login(basename(__FILE__));

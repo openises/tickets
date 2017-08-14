@@ -3,6 +3,8 @@
 del_message.php - deletes single message - called from messages window.
 10/23/12 - new file
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 
 $id = (isset($_GET['id'])) ? clean_string($_GET['id']) : NULL;

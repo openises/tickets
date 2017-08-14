@@ -2,6 +2,8 @@
 /*
 4/25/16 initial release Sets local maps to 1 once all map tiles are downloaded.
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 
 require_once('../incs/functions.inc.php');

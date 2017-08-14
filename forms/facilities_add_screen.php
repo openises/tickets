@@ -32,7 +32,11 @@ print do_calls();		// call signs to JS array for validation
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 window.onload = function(){set_size();};
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
@@ -64,6 +68,32 @@ var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20
 	});
 
 var colors = new Array ('odd', 'even');
+var fields = ["name",
+			"about",
+			"location",
+			"description",
+			"beds_info",
+			"capability",
+			"contact_name",
+			"contact_email",
+			"contact_phone",
+			"sec_contact",
+			"sec_email",
+			"sec_phone",
+			"access_rules",
+			"sec_reqs",
+			"pager_prim",
+			"pager_sec",
+			"notify_email",
+			"filename"];
+var medfields = ["city",
+				"handle",
+				"grid",
+				"file"];
+var smallfields = ["beds_o",
+				"beds_a",
+				"show_lat",
+				"show_lng"];
 
 function set_size() {
 	if (typeof window.innerWidth != 'undefined') {
@@ -88,6 +118,9 @@ function set_size() {
 	celwidth = listwidth * .20;
 	res_celwidth = listwidth * .15;
 	fac_celwidth = listwidth * .15;
+	fieldwidth = colwidth * .6;
+	medfieldwidth = colwidth * .3;		
+	smallfieldwidth = colwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
@@ -96,12 +129,23 @@ function set_size() {
 	$('rightcol').style.height = colheight + "px";	
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
+	$('map_legend').style.width = mapWidth + "px";
 	$('icon_legend').style.width = mapWidth + "px";
+	for (var i = 0; i < fields.length; i++) {
+		 $(fields[i]).style.width = fieldwidth + "px";
+		} 
+	for (var i = 0; i < medfields.length; i++) {
+		 $(medfields[i]).style.width = medfieldwidth + "px";
+		}
+	for (var i = 0; i < smallfields.length; i++) {
+		 $(smallfields[i]).style.width = smallfieldwidth + "px";
+		}
 	load_exclusions();
 	load_ringfences();
 	load_basemarkup();
 	load_groupbounds();
 	map.invalidateSize();
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 	
 var fac_icons=[];
@@ -124,8 +168,10 @@ var columns = "<?php print get_msg_variable('columns');?>";	//	10/23/12
 var the_columns = new Array(<?php print get_msg_variable('columns');?>);	//	10/23/12
 var thescreen = 'ticket';	//	10/23/12
 var thelevel = '<?php print $the_level;?>';
-var rmarkers = new Array();			//	Responder Markers array
-var cmarkers = new Array();			//	conditions markers array
+var rmarkers = [];			//	Responder Markers array
+var cmarkers = [];			//	conditions markers array
+var boundary = [];			//	exclusion zones array
+var bound_names = [];
 var the_icon;
 var currentPopup;
 var marker;
@@ -266,23 +312,39 @@ function check_days(id) {
 </HEAD>
 <BODY onLoad='set_size();'>
 	<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
-	<DIV id='outer' style='position: absolute; left: 0px;'>
-		<DIV id='leftcol' style='position: absolute; left: 10px;'>
+	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<A NAME='top'>
 			<FORM NAME= "res_add_Form" METHOD="POST" ACTION="facilities.php?func=responder&goadd=true">
 			<TABLE BORDER="0" ID='addform' WIDTH='98%'>
-				<TR>
-					<TD ALIGN='center' COLSPAN='2'><FONT CLASS='header'><FONT SIZE=-1><FONT COLOR='green'><?php print get_text("Add Facility"); ?></FONT></FONT><BR /><BR />
-						<FONT SIZE=-1>(mouseover caption for help information)</FONT></FONT><BR /><BR />
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>
+				</TR>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
+						<SPAN CLASS='text_green text_biggest'>Add <?php print get_text("Facility"); ?></SPAN>
+						<BR />
+						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
+						<BR />
 					</TD>
-				</TR>		
-
-				<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name"); ?></A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
-					<TD COLSPAN=3 ><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" /></TD></TR>
-				<TR CLASS = "odd"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle"); ?></A>:&nbsp;</TD>
-					<TD COLSPAN=3 ><INPUT MAXLENGTH="48" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" />
-						<SPAN STYLE = "margin-left:40px;" CLASS="td_label" TITLE="A 3-letter value to be used in the map icon">Icon:</SPAN>&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;
-							<INPUT TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="" />			
+				</TR>
+				<TR class='spacer'>
+					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+				</TR>				
+				<TR CLASS = "even">
+					<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name"); ?></A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 >
+						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" />
+					</TD>
+				</TR>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle"); ?></A>:&nbsp;</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 >
+						<INPUT id='handle' MAXLENGTH="48" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" />
+						<SPAN STYLE = "margin-left:40px;" CLASS="td_label_text" TITLE="A 3-letter value to be used in the map icon">Icon:</SPAN>&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;
+						<INPUT id='icon' TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="" />			
 					</TD>
 				</TR>
 <?php
@@ -290,8 +352,8 @@ function check_days(id) {
 					if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {
 ?>		
 						<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-							<TD CLASS="td_label">
-								<A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
+							<TD CLASS="td_label_text">
+								<A CLASS="td_label_text" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
 								<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
@@ -310,8 +372,8 @@ function check_days(id) {
 						} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {
 ?>		
 						<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-							<TD CLASS="td_label">
-								<A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
+							<TD CLASS="td_label_text">
+								<A CLASS="td_label_text" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
 								<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
@@ -331,8 +393,8 @@ function check_days(id) {
 						} elseif(COUNT(get_allocates(4, $_SESSION['user_id'])) > 1) {	//	6/10/11
 ?>
 						<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-							<TD CLASS="td_label">
-								<A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
+							<TD CLASS="td_label_text">
+								<A CLASS="td_label_text" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
 								<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
@@ -361,10 +423,11 @@ function check_days(id) {
 				if(is_administrator()) {	//	6/10/11
 ?>
 					<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
-						<TD CLASS="td_label">
-							<A CLASS="td_label" HREF="#" TITLE="Sets Facility Boundary"><?php print get_text("Boundary");?></A>:
+						<TD CLASS="td_label_text">
+							<A CLASS="td_label_text" HREF="#" TITLE="Sets Facility Boundary"><?php print get_text("Boundary");?></A>:
 						</TD>
-						<TD>
+						<TD>&nbsp;</TD>
+						<TD COLSPAN=2 CLASS='td_data text'>
 							<SELECT NAME="frm_boundary" onChange = "this.value=JSfnTrim(this.value)">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
@@ -384,10 +447,11 @@ function check_days(id) {
 					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 				</TR>			
 				<TR CLASS = "even" VALIGN='middle'>
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility Type - Select from pulldown menu"><?php print get_text("Type"); ?></A>:&nbsp;<font color='red' size='-1'>*</font>
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Type - Select from pulldown menu"><?php print get_text("Type"); ?></A>:&nbsp;<font color='red' size='-1'>*</font>
 					</TD>
-					<TD ALIGN='left'>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
 						<SELECT NAME='frm_type'>
 							<OPTION VALUE=0>Select one</OPTION>
 <?php
@@ -397,15 +461,16 @@ function check_days(id) {
 								}
 ?>
 						</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-						<A CLASS="td_label" HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked />
+						<A CLASS="td_label_text" HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked />
 					</TD>
 				</TR>
 
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility Status - Select from pulldown menu"><?php print get_text("Status"); ?></A>:&nbsp;<font color='red' size='-1'>*</font>
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Status - Select from pulldown menu"><?php print get_text("Status"); ?></A>:&nbsp;<font color='red' size='-1'>*</font>
 					</TD>
-					<TD ALIGN ='left'>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
 						<SELECT NAME="frm_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
 							<OPTION VALUE=0 SELECTED>Select one</OPTION>
 <?php
@@ -429,156 +494,171 @@ function check_days(id) {
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="About Facility status - information about particular status values for this facility">About Status</A>
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="About Facility status - information about particular status values for this facility">About Status</A>
 					</TD>
-					<TD>
-						<INPUT SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="" MAXLENGTH="512">
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='about' SIZE="48" TYPE="text" NAME="frm_status_about" VALUE="" MAXLENGTH="512">
 					</TD>
 				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 				</TR>	
 				<TR CLASS='even'>
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Location - type in location in fields or click location on map "><?php print get_text("Location"); ?></A>:
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Location - type in location in fields or click location on map "><?php print get_text("Location"); ?></A>:
 					</TD>
-					<TD>
-						<INPUT SIZE="61" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="61">
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='location' SIZE="48" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="61">
 					</TD>
 				</TR> <!-- 7/5/10 -->
 				<TR CLASS='odd'>
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.res_add_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:
 					</TD>
 					<TD>
-						<INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
-						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A CLASS="td_label" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;
+						<button type="button" onClick="Javascript:loc_lkup(document.res_add_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
+					</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A CLASS="td_label_text" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;
 						<INPUT SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="<?php print $st_size;?>">
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
 					</TD>	
-					<TD COLSPAN=3 >
-						<TEXTAREA NAME="frm_descr" COLS=60 ROWS=2></TEXTAREA>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Facility beds "><?php print get_text("Beds"); ?></A>&nbsp;</TD>
-					<TD COLSPAN=3 >
-						<SPAN  CLASS = "td_label" STYLE = "margin-left:20px;">Available: </SPAN><INPUT SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_a" VALUE="" />			
-						<SPAN  CLASS = "td_label" STYLE = "margin-left:20px;">Occupied: </SPAN><INPUT SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_o" VALUE="" />			
+					<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Facility beds "><?php print get_text("Beds"); ?></A>&nbsp;</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<SPAN CLASS = "td_label_text">Available: </SPAN><INPUT id='beds_a' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_a" VALUE="" />			
+						<SPAN CLASS = "td_label_text">Occupied: </SPAN><INPUT id='beds_o' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_o" VALUE="" />			
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Beds information"><?php print get_text("Beds"); ?> information</A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Beds information"><?php print get_text("Beds"); ?> information</A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<TEXTAREA NAME="frm_beds_info" COLS=60 ROWS=2></TEXTAREA>			
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<TEXTAREA id='beds_info' NAME="frm_beds_info" COLS=60 ROWS=2></TEXTAREA>			
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility Capability - e.g ER, Cells, Medical distribution"><?php print get_text("Capability"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Capability - e.g ER, Cells, Medical distribution"><?php print get_text("Capability"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<TEXTAREA NAME="frm_capab" COLS=60 ROWS=2></TEXTAREA>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<TEXTAREA id='capability' NAME="frm_capab" COLS=60 ROWS=2></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility main contact name"><?php print get_text("Contact name"); ?></A>:&nbsp;
-					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" />
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility main contact name"><?php print get_text("Contact name"); ?></A>:&nbsp;
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility contact email - main contact email address"><?php print get_text("Contact email"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility contact email - main contact email address"><?php print get_text("Contact email"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_email" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='contact_email' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_email" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility contact phone number - main contact phone number"><?php print get_text("Contact phone"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility contact phone number - main contact phone number"><?php print get_text("Contact phone"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_phone" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='contact_phone' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_phone" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility security contact"><?php print get_text("Security contact"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility security contact"><?php print get_text("Security contact"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_contact" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='sec_contact' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_contact" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility security contact email"><?php print get_text("Security email"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility security contact email"><?php print get_text("Security email"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_email" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='sec_email' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_email" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility security contact phone number"><?php print get_text("Security phone"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility security contact phone number"><?php print get_text("Security phone"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_phone" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='sec_phone' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_phone" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc."><?php print get_text("Opening hours"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc."><?php print get_text("Opening hours"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
 						<TABLE style='width: 100%;'>
 							<TR>
-								<TH style='text-align: left;'><A CLASS="td_label" HREF="#" TITLE="Day of the Week"><?php print get_text("Day"); ?></A></TH>
-								<TH style='text-align: left;'><A CLASS="td_label" HREF="#" TITLE="Opening Time"><?php print get_text("Opening"); ?></A></TH>
-								<TH style='text-align: left;'><A CLASS="td_label" HREF="#" TITLE="Opening Time"><?php print get_text("Closing"); ?></A></TH>
+								<TH style='text-align: left;'><A CLASS="td_label_text" HREF="#" TITLE="Day of the Week"><?php print get_text("Day"); ?></A></TH>
+								<TH style='text-align: left;'><A CLASS="td_label_text" HREF="#" TITLE="Opening Time"><?php print get_text("Opening"); ?></A></TH>
+								<TH style='text-align: left;'><A CLASS="td_label_text" HREF="#" TITLE="Opening Time"><?php print get_text("Closing"); ?></A></TH>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='monday' TYPE="CHECKBOX" NAME="frm_opening_hours[0][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Monday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='monday' TYPE="CHECKBOX" NAME="frm_opening_hours[0][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Monday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='monday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[0][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='monday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[0][2]" VALUE="23:59" /></TD>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='tuesday' TYPE="CHECKBOX" NAME="frm_opening_hours[1][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Tuesday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='tuesday' TYPE="CHECKBOX" NAME="frm_opening_hours[1][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Tuesday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='tuesday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[1][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='tuesday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[1][2]" VALUE="23:59" /></TD>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='wednesday' TYPE="CHECKBOX" NAME="frm_opening_hours[2][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Wednesday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='wednesday' TYPE="CHECKBOX" NAME="frm_opening_hours[2][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Wednesday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='wednesday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[2][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='wednesday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[2][2]" VALUE="23:59" /></TD>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='thursday' TYPE="CHECKBOX" NAME="frm_opening_hours[3][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Thursday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='thursday' TYPE="CHECKBOX" NAME="frm_opening_hours[3][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Thursday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='friday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[3][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='friday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[3][2]" VALUE="23:59" /></TD>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='friday' TYPE="CHECKBOX" NAME="frm_opening_hours[4][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Friday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='friday' TYPE="CHECKBOX" NAME="frm_opening_hours[4][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Friday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='friday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[4][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='friday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[4][2]" VALUE="23:59" /></TD>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='saturday' TYPE="CHECKBOX" NAME="frm_opening_hours[5][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Saturday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='saturday' TYPE="CHECKBOX" NAME="frm_opening_hours[5][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Saturday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='saturday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[5][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='saturday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[5][2]" VALUE="23:59" /></TD>
 							</TR>
 							<TR>
-								<TD style='text-align: left;'><INPUT ID='sunday' TYPE="CHECKBOX" NAME="frm_opening_hours[6][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label'>Sunday</SPAN></TD>
+								<TD style='text-align: left;'><INPUT ID='sunday' TYPE="CHECKBOX" NAME="frm_opening_hours[6][0]" CHECKED onClick = 'check_days(this.id);'><SPAN CLASS='td_label text'>Sunday</SPAN></TD>
 								<TD style='text-align: left;'><INPUT ID='sunday_start' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[6][1]" VALUE="00:00" /></TD>
 								<TD style='text-align: left;'><INPUT ID='sunday_end' SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[6][2]" VALUE="23:59" /></TD>
 							</TR>
@@ -586,73 +666,86 @@ function check_days(id) {
 					</TD>			
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility access rules - e.g enter by main entrance, enter by ER entrance, call first etc"><?php print get_text("Access rules"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility access rules - e.g enter by main entrance, enter by ER entrance, call first etc"><?php print get_text("Access rules"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<TEXTAREA NAME="frm_access_rules" COLS=60 ROWS=5></TEXTAREA>
-					</TD>
-				</TR>
-				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility securtiy requirements - e.g. phone security first, visitors must be security cleared etc."><?php print get_text("Security reqs"); ?></A>:&nbsp;
-					</TD>
-					<TD COLSPAN=3 >
-						<TEXTAREA NAME="frm_security_reqs" COLS=60 ROWS=5></TEXTAREA>
-					</TD>
-				</TR>
-				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility contact primary pager number"><?php print get_text("Primary pager"); ?></A>:&nbsp;
-					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_p" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<TEXTAREA id='access_rules' NAME="frm_access_rules" COLS=60 ROWS=5></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Facility contact secondary pager number"><?php print get_text("Secondary pager"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility securtiy requirements - e.g. phone security first, visitors must be security cleared etc."><?php print get_text("Security reqs"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_s" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<TEXTAREA id='sec_reqs' NAME="frm_security_reqs" COLS=60 ROWS=5></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Latitude and Longitude - set from map click">
-						<SPAN onClick = 'javascript: do_coords(document.res_add_Form.frm_lat.value ,document.res_add_Form.frm_lng.value)'>
-							<?php print get_text("Lat/Lng"); ?></A></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-							<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle'
-								onClick = 'do_unlock_pos(document.res_add_Form);'>
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility contact primary pager number"><?php print get_text("Primary pager"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3>
-						<INPUT TYPE="text" NAME="show_lat" SIZE=11 VALUE="" disabled />
-						<INPUT TYPE="text" NAME="show_lng" SIZE=11 VALUE="" disabled />&nbsp;&nbsp;
-<?php
-						$locale = get_variable('locale');
-						switch($locale) { 
-							case "0":
-?>
-								<SPAN ID = 'usng_link' onClick = "do_usng_conv(res_add_Form)" style='font-weight: bold;'>USNG:</SPAN><INPUT TYPE="text" SIZE=19 NAME="frm_ngs" VALUE="" disabled />
-<?php
-								break;
-
-							case "1":
-?>
-								<SPAN ID = 'osgb_link' style='font-weight: bold;'>OSGB:</SPAN><INPUT TYPE="text" SIZE=19 NAME="frm_ngs" VALUE="" disabled />
-<?php
-								break;
-	
-							default:
-?>
-								<SPAN ID = 'utm_link' style='font-weight: bold;'>UTM:</SPAN><INPUT TYPE="text" SIZE=19 NAME="frm_utm" VALUE="" disabled />
-<?php
-
-							}
-?>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='pager_prim' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_p" VALUE="" />
+					</TD>
+				</TR>
+				<TR CLASS = "even">
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility contact secondary pager number"><?php print get_text("Secondary pager"); ?></A>:&nbsp;
+					</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='pager_sec' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_s" VALUE="" />
 					</TD>
 				</TR>
 <?php
+				if($good_internet) {
+?>
+					<TR CLASS = "odd">
+						<TD CLASS="td_label_text">
+							<A CLASS="td_label_text" HREF="#" TITLE="Latitude and Longitude - set from map click">
+							<SPAN onClick = 'javascript: do_coords(document.res_add_Form.frm_lat.value ,document.res_add_Form.frm_lng.value)'>
+								<?php print get_text("Lat/Lng"); ?></A></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_add_Form);' />
+						</TD>
+						<TD>&nbsp;</TD>
+						<TD COLSPAN=2 CLASS='td_data text text_left'>
+							<INPUT id='show_lat' TYPE="text" NAME="show_lat" SIZE=11 VALUE="" disabled />
+							<INPUT id='show_lng' TYPE="text" NAME="show_lng" SIZE=11 VALUE="" disabled />&nbsp;&nbsp;
+						</TD>
+					</TR>
+<?php
+					$locale = get_variable('locale');
+					switch($locale) { 
+						case "0":
+							$label = "<SPAN ID = 'usng_link' onClick = 'do_usng_conv(res_add_Form)' style='font-weight: bold;'>USNG:</SPAN>";
+							$input = "<INPUT id='grid' TYPE='text' SIZE=19 NAME='frm_ngs' VALUE='' disabled />";
+							break;
+
+						case "1":
+							$label = "<SPAN ID = 'osgb_link' style='font-weight: bold;'>OSGB:</SPAN>";
+							$input = "<INPUT id='grid' TYPE='text' SIZE=19 NAME='frm_ngs' VALUE='' disabled />";
+							break;
+
+						default:
+							$label = "<SPAN ID = 'utm_link' style='font-weight: bold;'>UTM:</SPAN>";
+							$input = "<INPUT id='grid' TYPE='text' SIZE=19 NAME='frm_utm' VALUE='' disabled />";
+						}
+?>
+					<TR CLASS = "odd">
+						<TD CLASS="td_label_text">
+							<?php print $label;?>
+						</TD>
+						<TD>&nbsp;</TD>
+						<TD COLSPAN=2 CLASS='td_data text text_left'>
+							<?php print $input;?>
+						</TD>
+					</TR>
+<?php
+					}
 				$mg_select = "<SELECT NAME='frm_notify_mailgroup'>";	//	8/28/13
 				$mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";	//	8/28/13
 				$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup`";	//	8/28/13
@@ -663,24 +756,29 @@ function check_days(id) {
 				$mg_select .= "</SELECT>";
 ?>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Notify Facility with selected mail list"><?php print get_text("Notify Mail List"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Notify Facility with selected mail list"><?php print get_text("Notify Mail List"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 ><?php print $mg_select;?></TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<?php print $mg_select;?>
+					</TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Notify Facility with this email address"><?php print get_text("Notify Email Address"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Notify Facility with this email address"><?php print get_text("Notify Email Address"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
-						<INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='notify_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Notify when?"><?php print get_text("Notify when"); ?></A>:&nbsp;
+					<TD CLASS="td_label_text">
+						<A CLASS="td_label_text" HREF="#" TITLE="Notify when?"><?php print get_text("Notify when"); ?></A>:&nbsp;
 					</TD>
-					<TD COLSPAN=3 >
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
 						<SELECT NAME="frm_notify_when">
 							<OPTION VALUE=1 SELECTED>All</OPTION>
 							<OPTION VALUE=2 SELECTED>Incident Open</OPTION>
@@ -694,16 +792,21 @@ function check_days(id) {
 				<TR class='spacer'>
 					<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
 				</TR>
-				<TR class='heading'>
-					<TD COLSPAN='4' class='heading' style='text-align: center;'>File Upload</TD>
+				<TR class='heading text'>
+					<TD COLSPAN='4' class='heading text' style='text-align: center;'>File Upload</TD>
 				</TR>
 				<TR class='even'>
-					<TD class='td_label' style='text-align: left;'>Choose a file to upload:</TD>
-					<TD COLSPAN='3' class='td_data' style='text-align: left;'><INPUT NAME="frm_file" TYPE="file" /></TD>
+					<TD class='td_label text' style='text-align: left;'>Choose a file to upload:</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+						<INPUT id='file' NAME="frm_file" TYPE="file" />
+					</TD>
 				</TR>
 				<TR class='odd'>
-					<TD class='td_label' style='text-align: left;'>File Name</TD>
-					<TD COLSPAN='3'  class='td_data' style='text-align: left;'><INPUT NAME="frm_file_title" TYPE="text" SIZE="48" MAXLENGTH="128" VALUE=""></TD>
+					<TD class='td_label text' style='text-align: left;'>File Name</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text text_left'>
+					<INPUT id='filename' NAME="frm_file_title" TYPE="text" SIZE="48" MAXLENGTH="128" VALUE=""></TD>
 				</TR>
 				<TR class='spacer'>
 					<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
@@ -714,13 +817,9 @@ function check_days(id) {
 				<TR>
 					<TD COLSPAN=4 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD>
 				</TR>
-				<TR CLASS="odd" style='height: 30px; vertical-align: middle;'>
-					<TD COLSPAN="2" ALIGN="center" style='vertical-align: middle;'>
-						<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Cancel</SPAN>
-						<SPAN id='reset_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_add_reset(this.form);'>Reset</SPAN>
-						<SPAN id='sub_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate(document.res_add_Form);'>Submit</SPAN>
-					</TD>
-				</TR>
+			<TR>
+				<TD>&nbsp;</TD>
+			</TR>
 				<INPUT TYPE='hidden' NAME = 'frm_lat' VALUE=''/>
 				<INPUT TYPE='hidden' NAME = 'frm_lng' VALUE=''/>
 				<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
@@ -728,7 +827,14 @@ function check_days(id) {
 			</TABLE>
 			</FORM>
 		</DIV>
-		<DIV id='rightcol' style='position: absolute; right: 170px;'>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
+				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+				<SPAN id='reset_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='do_add_reset(this.form);'><?php print get_text("Reset");?><BR /><IMG id='can_img' SRC='./images/restore.png' /></SPAN>
+				<SPAN id='sub_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='validate(document.res_add_Form);'><?php print get_text("Submit");?><BR /><IMG id='can_img' SRC='./images/submit.png' /></SPAN>
+			</DIV>
+		</DIV>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 			<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
 			<DIV id= 'map_legend' style = "text-align: center;">
 				<B>Map click to set location, drag / click to change location</B>
@@ -747,36 +853,79 @@ function check_days(id) {
 	<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 		
 <SCRIPT>
-	var latLng;
-	var boundary = [];			//	exclusion zones array
-	var bound_names = [];
-	var mapWidth = <?php print get_variable('map_width');?>+20;
-	var mapHeight = <?php print get_variable('map_height');?>+20;;
-	$('map_canvas').style.width = mapWidth + "px";
-	$('map_canvas').style.height = mapHeight + "px";
-	var theLocale = <?php print get_variable('locale');?>;
-	var useOSMAP = <?php print get_variable('use_osmap');?>;
-	init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-	var bounds = map.getBounds();	
-	var zoom = map.getZoom();
-	var got_points = false;	// map is empty of points
-	var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
-	function onMapClick(e) {
-		if(doReverse == 0) {return;}
-		if(marker) {map.removeLayer(marker); }
-		var iconurl = "./our_icons/yellow.png";
-		icon = new baseIcon({iconUrl: iconurl});	
-		marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
-		marker.addTo(map);
-		newGetAddress(e.latlng, "a");
-		};
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+mapWidth = viewportwidth * .40;
+mapHeight = mapWidth * .9;
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+listHeight = viewportheight * .7;
+listwidth = colwidth * .95
+inner_listwidth = listwidth *.9;
+celwidth = listwidth * .20;
+res_celwidth = listwidth * .15;
+fac_celwidth = listwidth * .15;
+fieldwidth = colwidth * .6;
+medfieldwidth = colwidth * .3;		
+smallfieldwidth = colwidth * .15;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('leftcol').style.width = colwidth + "px";
+$('leftcol').style.height = colheight + "px";	
+$('rightcol').style.width = colwidth + "px";
+$('rightcol').style.height = colheight + "px";	
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+$('map_legend').style.width = mapWidth + "px";
+$('icon_legend').style.width = mapWidth + "px";
+for (var i = 0; i < fields.length; i++) {
+	 $(fields[i]).style.width = fieldwidth + "px";
+	} 
+for (var i = 0; i < medfields.length; i++) {
+	 $(medfields[i]).style.width = medfieldwidth + "px";
+	}
+for (var i = 0; i < smallfields.length; i++) {
+	 $(smallfields[i]).style.width = smallfieldwidth + "px";
+	}
+load_exclusions();
+load_ringfences();
+load_basemarkup();
+load_groupbounds();
+set_fontsizes(viewportwidth, "fullscreen");
+var latLng;
+var theLocale = <?php print get_variable('locale');?>;
+var useOSMAP = <?php print get_variable('use_osmap');?>;
+init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
+var bounds = map.getBounds();	
+var zoom = map.getZoom();
+var got_points = false;	// map is empty of points
+var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
+function onMapClick(e) {
+	if(doReverse == 0) {return;}
+	if(marker) {map.removeLayer(marker); }
+	var iconurl = "./our_icons/yellow.png";
+	icon = new baseIcon({iconUrl: iconurl});	
+	marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
+	marker.addTo(map);
+	newGetAddress(e.latlng, "a");
+	};
 
-	map.on('click', onMapClick);
+map.on('click', onMapClick);
 <?php
-	do_kml();
+do_kml();
 ?>
-	</SCRIPT>
-	</BODY>
-	</HTML>
+</SCRIPT>
+</BODY>
+</HTML>
 <?php
-	exit();
+exit();

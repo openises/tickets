@@ -37,9 +37,9 @@ function do_logout($return=FALSE){						/* logout - destroy session data */
 		`expires` = NULL 
 		WHERE `$GLOBALS[mysql_prefix]user`.`sid` = '{$sid}' LIMIT 1 ;";	 // 8/10/10
 	$result = mysql_query($query);				// toss any error
-
+	$browser = checkBrowser(FALSE);
 	$the_id = array_key_exists ('user_id', $_SESSION)? $_SESSION['user_id'] : 0;	// possibly already logged out
-	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $the_id);								// log this logout	
+	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $browser);								// log this logout	
 
 	if (isset($_COOKIE[session_name()])) { setcookie(session_name(), '', time()-42000, '/'); }		// 8/25/10
 	unset ($sid);
@@ -210,11 +210,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$i++;
 				}
 			unset($result);
-
 			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` 
 				WHERE `user`=" . quote_smart($_POST['frm_user']). " 	 
-				AND (`passwd`=PASSWORD(" . quote_smart($_POST['frm_passwd']) . ") 
-				OR `passwd`=MD5(" . quote_smart(strtolower($_POST['frm_passwd'])) . " ))  
+				AND (`passwd`=PASSWORD('" . $_POST['frm_passwd'] . "') 
+				OR `passwd`=MD5('" . strtolower($_POST['frm_passwd']) . "') OR `passwd`=MD5('" . $_POST['frm_passwd'] . "')) 
 				LIMIT 1";
 			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			if (mysql_affected_rows()==1) {
@@ -354,14 +353,33 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<META HTTP-EQUIV="Expires" CONTENT="0">
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 		<META HTTP-EQUIV="Script-date" CONTENT="1/23/10">
 		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
 		<STYLE type="text/css">
 		input		{background-color:transparent;}		/* Benefit IE radio buttons */
 	  	</STYLE>
-		<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
+		<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+		<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 		<SCRIPT defer="defer">	<!-- 11/18/10 -->
+		window.onresize=function(){set_size()};
+		var viewportwidth;
+		var viewportheight;
+		
+		function set_size() {
+			if (typeof window.innerWidth != 'undefined') {
+				viewportwidth = window.innerWidth,
+				viewportheight = window.innerHeight
+				} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+				viewportwidth = document.documentElement.clientWidth,
+				viewportheight = document.documentElement.clientHeight
+				} else {
+				viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+				viewportheight = document.getElementsByTagName('body')[0].clientHeight
+				}
+			set_fontsizes(viewportwidth,"fullscreen");
+			}		
+		
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 			};
@@ -465,21 +483,80 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			catch (e) {
 				}
 <?php
-	//		print "\tparent.calls.location.href = 'board.php';\n";				// reload to show 'waiting' message 6/19/09
 			}
 		print "\tparent.upper.location.href = 'top.php';\n";					// reload and initialize top frame 6/19/09
 ?>
 		window.setTimeout("document.forms[0].frm_user.focus()", 1000);
+		var selected = [];
+		selected['show_maps_but'] = true;
+		selected['hide_maps_but'] = false;		
+		selected['day_but'] = true;
+		selected['night_but'] = false;	
+		
+		function do_is_set(the_id) {
+			CngClass(the_id, 'isselected text')
+			return true;
+			}
+			
+		function do_not_set(the_id) {
+			CngClass(the_id, 'plain_centerbuttons text')
+			return true;			
+			}
+			
+		function set_maps(val) {
+			if(val == 1) {
+				do_is_set("show_maps_but"); 
+				do_not_set("hide_maps_but"); 
+				selected['show_maps_but'] = true; 
+				selected['hide_maps_but'] = false;
+				document.login_form.frm_maps.value="Show";
+				} else {
+				do_is_set("hide_maps_but"); 
+				do_not_set("show_maps_but"); 
+				selected['show_maps_but'] = false; 
+				selected['hide_maps_but'] = true;
+				document.login_form.frm_maps.value="Hide";				
+				}
+			}
+			
+		function set_daynight(val) {
+			if(val == 1) {
+				do_is_set("day_but"); 
+				do_not_set("night_but"); 
+				selected['day_but'] = true; 
+				selected['night_but'] = false;
+				document.login_form.frm_daynight.value="Day";
+				} else {
+				do_is_set("night_but"); 
+				do_not_set("day_but"); 
+				selected['day_but'] = false; 
+				selected['night_but'] = true;
+				document.login_form.frm_daynight.value="Night";				
+				}
+			}
+			
+		function do_hover_centerbuttons(the_id) {
+			if(selected[the_id]) {return;}
+			CngClass(the_id, 'hover_centerbuttons text');
+			return true;
+			}
+
+		function do_plain_centerbuttons(the_id) {
+			if(selected[the_id]) {return;}
+			CngClass(the_id, 'plain_centerbuttons text');
+			return true;
+			}
+			
 		</SCRIPT>
 		</HEAD>
 <?php
-		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload();'>\n" : "\n\t<BODY onLoad = 'do_onload();'>\n";		// 2/24/09
-?>	
-		
-<!--	<BODY onLoad = "do_onload()"> 11/6/10 -->
-		<CENTER><BR />
+		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload(); set_size();'>\n" : "\n\t<BODY onLoad = 'do_onload(); set_size();'>\n";		// 2/24/09
+?>		
+		<CENTER>
+		<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
+		<DIV CLASS='even' style='position: absolute; top: 5%; right: 20%; width: 60%; border: 1px outset #707070;'><BR /><BR />
 <?php
-		if(get_variable('_version') != '') print "<SPAN style='FONT-WEIGHT: bold; FONT-SIZE: 15px; COLOR: #000000;'>" . get_variable('login_banner')."</SPAN><BR /><BR />";
+		if(get_variable('_version') != '') print "<SPAN CLASS='text_large text_bold text_black'>" . get_variable('login_banner')."</SPAN><BR /><BR />";
 ?>
 		</FONT>
 		
@@ -494,8 +571,6 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			}
 		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
 		$my_click = ($_SERVER["HTTP_HOST"] == "127.0.0.1")? " onClick = \"document.login_form.frm_user.value='admin';document.login_form.frm_passwd.value='admin';\"" : "" ;
-//	print (array_key_exists ('frm_user', $_POST))? 		$_POST['frm_user'] . "/" : "";
-//	print (array_key_exists ('frm_passwd', $_POST))? 	$_POST['frm_passwd']: "";
 
 //	6/1/12
 		$query_guest 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`='guest' LIMIT 1";
@@ -505,30 +580,50 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 // End of code to check for guest account existence
 ?>
 		<TR CLASS='even'>
-			<TD ROWSPAN=7 VALIGN='middle' ALIGN='left' bgcolor=#EFEFEF><BR /><BR />&nbsp;&nbsp;<IMG BORDER=0 SRC='open_source_button.png' <?php print $my_click; ?>><BR /><BR />
-			&nbsp;&nbsp;<img src="php.png" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD CLASS="td_label"><?php print get_text("User"); ?>:</TD>
-			<TD><INPUT TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE=""></TD>
+			<TD CLASS="td_label text_large">
+				<?php print get_text("User"); ?>:
+			</TD>
+			<TD>
+				<INPUT CLASS='text_large' TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE="">
+			</TD>
 		</TR>
 		<TR CLASS='even'>
-			<TD CLASS="td_label"><?php print get_text("Password"); ?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"  VALUE=""></TD>
+			<TD CLASS="td_label text_large">
+				<?php print get_text("Password"); ?>: &nbsp;&nbsp;
+			</TD>
+			<TD>
+				<INPUT CLASS='text_large' TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();$('login_but').focus();"  VALUE="">
+			</TD>
 		</TR>
 		<TR CLASS="even">
-			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
+			<TD COLSPAN=2>
+				&nbsp;&nbsp;
+			</TD>
+		</TR>
+		<TR CLASS="even">
+			<TD COLSPAN=2>
+				&nbsp;&nbsp;
+			</TD>
 		</TR>
 		<TR CLASS='even'>
-			<TD CLASS="td_label">Colors: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE="radio" NAME="frm_daynight" VALUE="Day" checked>Day&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="radio" NAME="frm_daynight" value="Night">Night</TD>
+			<TD COLSPAN=99 STYLE='text-align: center;'>
+				<SPAN ID='day_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Day Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(1);"><IMG id='can_img' SRC='./images/sun.png' /></SPAN>
+				<SPAN ID='night_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Night Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(0);"><IMG id='can_img' SRC='./images/moon.png' /></SPAN>		
+			</TD>
 		</TR>
 		<TR CLASS="even">
-			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
+			<TD COLSPAN=2>
+				&nbsp;&nbsp;
+			</TD>
 		</TR>
 <?php
 	if(get_variable("internet") != 2) {
 ?>
-		<TR CLASS='even'>
-			<TD CLASS="td_label">Maps: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE="radio" NAME="frm_maps" VALUE="Show" checked>Show Maps&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="radio" NAME="frm_maps" value="Hide">Hide Maps</TD>
+		<TR CLASS='even' STYLE='text-align: center;'>
+			<TD COLSPAN=99>
+				<SPAN ID='show_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Show Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(1);"><IMG id='can_img' SRC='./images/maps.png' /></SPAN>
+				<SPAN ID='hide_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Hide Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(0);"><IMG id='can_img' SRC='./images/no_maps.png' /></SPAN>			
+			</TD>
 		</TR>
 <?php
 		} else {
@@ -541,12 +636,12 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
 		</TR>
 		<TR CLASS='even'>
-			<TD COLSPAN=3 ALIGN='center'>
-				<INPUT id='login_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' TYPE="submit" VALUE="<?php print get_text("Log In"); ?>">
+			<TD COLSPAN=2 ALIGN='center'>
+				<SPAN id='login_but' tabindex=0 class='plain text' style='width: 100px; float: none; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.login_form.submit();'><?php print get_text("Log In"); ?></SPAN>
 			</TD>
 		</TR>
 		<TR CLASS='even'>
-			<TD COLSPAN=3 ALIGN='center' style='height: 30px;'>
+			<TD COLSPAN=2 ALIGN='center' style='height: 30px;'>
 				&nbsp;
 			</TD>
 		</TR>
@@ -560,32 +655,71 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			</TR>
 <?php
 			}
-?>
-		<TR CLASS='even'>
-			<TD COLSPAN=3 ALIGN='center' style='height: 30px;'>
-				&nbsp;
-			</TD>
-		</TR>
-<?php
 		if($guest_exists) {	//	6/1/12
 ?>
-			<TR CLASS='even'><TD COLSPAN=3 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD></TR>
+			<TR CLASS='even'>
+				<TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+			</TR>
 <?php
 			}			
 ?>
-		<TR CLASS='even'><TD CLASS='text_small' COLSPAN=99 ALIGN='CENTER'><BR />
-			<A HREF="mailto:<?php echo get_contact_addr ();?>?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
-		</TD></TR>
-		<TR CLASS='even'><TD COLSPAN=3>&nbsp;</TD></TR>
-		<TR CLASS='even'><TD COLSPAN=3>&nbsp;</TD></TR>
+		<TR CLASS='even'>
+			<TD CLASS='text_medium' COLSPAN=99 ALIGN='CENTER'><BR />
+				<A HREF="mailto:<?php echo get_contact_addr ();?>?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
+			</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD COLSPAN=2>&nbsp;</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD COLSPAN=2>&nbsp;</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD CLASS='text_medium' COLSPAN=99 ALIGN='CENTER'>
+				<IMG BORDER=0 SRC='open_source_button.png' />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="php.png" />
+			</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD COLSPAN=2>&nbsp;</TD>
+		</TR>
 	 	</TABLE>
 		<INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
+		<INPUT TYPE='hidden' NAME = 'frm_maps' VALUE=''>
+		<INPUT TYPE='hidden' NAME = 'frm_daynight' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
 		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE=<?php print $no_autoforward; ?>>
 		</FORM><BR /><BR />
 <!--		<a href="<?php echo get_contact_addr ();?>/"><SPAN CLASS='text_small'>Contact us</SPAN></a>	 6/1/2013 --> 
-		</CENTER></HTML>
+		</DIV>
+		</CENTER>
+<SCRIPT>
+		document.addEventListener("keyup", function(event) {	//	Captures return key click on login button to simulate it being an input button
+			event.preventDefault();
+			if (event.keyCode == 13) {
+				if(document.login_form.frm_user.value.length >=1 && document.login_form.frm_passwd.value.length >=5) {
+					$('login_but').click();
+					} else {
+					alert("User or password length is too short, please try again");
+					}
+				}
+			});
+			
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth, "fullscreen");	
+		set_maps(1);
+		set_daynight(1);
+</SCRIPT>
+		</HTML>
 <?php
 			exit();		// no return value
 			}

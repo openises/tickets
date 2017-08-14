@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 4/23/11 - no JSON decode for instamapper, include NULL in UPDATE test
 4/24/11 - aprs error suppress added
 4/25/11 - glat - check position or time change, sane() added
-6/10/11 - Internal Tickets Tracker added (do_t_tracker)
+6/10/11 - Internal Tickets Tracker added (<!-- do_t_tracker -->)
 7/6/11 -  do_ogts() added
 9/25/11 - do_ogts() revised to accommodate 3-element 'ogts_info' setting
 11/15/11 - fixes to GLat(), LocateA(), do_gtrack() - correct $result => $temp_result
@@ -19,7 +19,7 @@ error_reporting(E_ALL);
 4/2/12 - accommodate absence of OGTS address data
 4/18/12 - APRS SQL  and data type corrections applied
 4/20/12 fix to accommodate empty json element, per KB email - snap(__FUNCTION__, __LINE__);
-4/29/12 add'l ogts and aprs error detection and logging
+4/29/12 addl ogts and aprs error detection and logging
 6/21/2013 glat track writing conditioned on unit movement
 6/24/2013 removed date range check from sane()
 7/2/2013 revisions to APRS, Glat to apply server time on responder position update
@@ -30,6 +30,14 @@ error_reporting(E_ALL);
 5/12/2014 - revised to handle movement detection
 3/3/2015 - revised aprs movement detection, like_ify() lookup
 6/20/2015 - major do_aprs() refactoring
+
+5/30/2017 - added Traccar and javAPRSSrvr server capabilities - see below
+Traccar - Traccar server must use MySQL database and not the default database, and must be accessible from server Tickets is on.
+          Client should use callsign in Device Identifier if a Ham. If not, it is recommended to use telephone number without any '-' 
+          Presently uses server, database, user, and password for xastir configuration.    
+javAPRSSrvr - javAPRSSrvr must be accessible from the server Tickets is on.
+              javAPRSSrvr must use dbgate client of javAPRSSrvr
+              Presently uses server, database, user, and password for xastir configuration.
 */
 
 $thirty_days = 30*24*60*60;							// seconds - 7/4/2013
@@ -69,36 +77,42 @@ function get_current() {		// 3/16/09, 6/10/11, 7/25/09  2/14/2014
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 
-	$aprs = $instam = $locatea = $gtrack = $glat = $ogts = $t_tracker = $mob_tracker = $xastir_tracker = $followmee_tracker = FALSE;		// 6/10/11, 7/6/11, 1/30/14
+	$aprs = $instam = $locatea = $gtrack = $glat = $ogts = $t_tracker = $mob_tracker = $xastir_tracker = $followmee_tracker = $traccar = $javaprssrvr = FALSE;		// 6/10/11, 7/6/11, 1/30/14
 	$ts_threshold = strtotime('now - 24 hour');				// discard inputs older than this - 4/25/11
 
-	$query = "SELECT `id`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `ogts`, `t_tracker`, `mob_tracker`, `xastir_tracker`, `followmee_tracker` FROM `$GLOBALS[mysql_prefix]responder` WHERE ((`aprs` = 1) OR (`instam` = 1) OR (`locatea` = 1) OR (`gtrack` = 1) OR (`glat` = 1) OR (`ogts` = 1) OR (`t_tracker` = 1) OR (`followmee_tracker` = 1))";
+	$query = "SELECT `id`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `ogts`, `t_tracker`, `mob_tracker`, `xastir_tracker`, `followmee_tracker`, `traccar`, `javaprssrvr` 
+		FROM `$GLOBALS[mysql_prefix]responder` 
+		WHERE ((`aprs` = 1) OR (`instam` = 1) OR (`locatea` = 1) OR (`gtrack` = 1) OR (`glat` = 1) OR (`ogts` = 1) OR (`t_tracker` = 1) OR (`xastir_tracker` = 1) OR (`followmee_tracker` = 1) OR (`traccar` = 1) OR (`javaprssrvr` = 1))";
 	$result = mysql_query($query) or do_error($query, ' mysql error=', mysql_error(), basename( __FILE__), __LINE__);
 
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		if ($row['aprs'] == 1) 	{ $aprs = TRUE;}
-		if ($row['instam'] == 1) { $instam = TRUE;}
-		if ($row['locatea'] == 1) { $locatea = TRUE;}		//7/29/09
-		if ($row['gtrack'] == 1) { $gtrack = TRUE;}		//7/29/09
-		if ($row['glat'] == 1) { $glat = TRUE;}			//7/29/09
-		if ($row['ogts'] == 1) { $ogts = TRUE;}					// 7/6/11
-		if ($row['t_tracker'] == 1) { $t_tracker = TRUE;}		// 6/10/11
-		if ($row['mob_tracker'] == 1) { $mob_tracker = TRUE;}		// 9/6/11
-		if ($row['xastir_tracker'] == 1) { $xastir_tracker = TRUE;}		// 1/30/14
+		if ($row['aprs'] == 1)				{ $aprs = TRUE;}
+		if ($row['instam'] == 1)			{ $instam = TRUE;}
+		if ($row['locatea'] == 1)			{ $locatea = TRUE;}		//7/29/09
+		if ($row['gtrack'] == 1)			{ $gtrack = TRUE;}		//7/29/09
+		if ($row['glat'] == 1)				{ $glat = TRUE;}			//7/29/09
+		if ($row['ogts'] == 1)				{ $ogts = TRUE;}					// 7/6/11
+		if ($row['t_tracker'] == 1)			{ $t_tracker = TRUE;}		// 6/10/11
+		if ($row['mob_tracker'] == 1)		{ $mob_tracker = TRUE;}		// 9/6/11
+		if ($row['xastir_tracker'] == 1)	{ $xastir_tracker = TRUE;}		// 1/30/14
 		if ($row['followmee_tracker'] == 1) { $followmee_tracker = TRUE;}		// 1/30/14
+		if ($row['traccar'] == 1)			{ $traccar = TRUE;}		// 6/29/17
+		if ($row['javaprssrvr'] == 1)		{ $javaprssrvr = TRUE;}		// 6/29/17
 		}		// end while ()
 	unset($result);
-	if ($aprs) 		{do_aprs();}
-	if ($instam) 	{do_instam();}					// 2/14/2014
-	if ($locatea) 	{do_locatea();}					//7/29/09
-	if ($gtrack) 	{do_gtrack();}					//7/29/09
-	if ($glat) 		{do_glat();}					//7/29/09
-	if ($ogts) 		{do_ogts();}					// 7/6/11
-	if ($t_tracker) {do_t_tracker();}				// 6/10/11
-	if ($mob_tracker) {do_mob_tracker();}				// 6/10/11
-	if ($xastir_tracker) {do_xastir();}				// 6/10/11
-	if ($followmee_tracker) {do_followmee();}				// 6/10/11
-	return array("aprs" => $aprs, "instam" => $instam, "locatea" => $locatea, "gtrack" => $gtrack, "glat" => $glat, "ogts" => $ogts, "t_tracker" => $t_tracker, "mob_tracker" => $mob_tracker, "xastir_tracker" => $xastir_tracker, "followmee_tracker" => $followmee_tracker);		//7/29/09, 7/6/11, 6/10/11
+	if ($aprs)					{do_aprs();}
+	if ($instam)				{do_instam();}					// 2/14/2014
+	if ($locatea)				{do_locatea();}					//7/29/09
+	if ($gtrack)				{do_gtrack();}					//7/29/09
+	if ($glat)					{do_glat();}					//7/29/09
+	if ($ogts)					{do_ogts();}					// 7/6/11
+	if ($t_tracker)				{do_t_tracker();}				// 6/10/11
+	if ($mob_tracker)			{do_mob_tracker();}				// 6/10/11
+	if ($xastir_tracker)		{do_xastir();}				// 6/10/11
+	if ($followmee_tracker)		{do_followmee();}		// 6/10/11
+	if ($traccar)				{do_traccar();}					// 6/10/11
+	if ($javaprssrvr)			{do_javaprssrvr();}				// 5/30/17
+	return array("aprs" => $aprs, "instam" => $instam, "locatea" => $locatea, "gtrack" => $gtrack, "glat" => $glat, "ogts" => $ogts, "t_tracker" => $t_tracker, "mob_tracker" => $mob_tracker, "xastir_tracker" => $xastir_tracker, "followmee_tracker" => $followmee_tracker, "traccar" => $traccar, "javaprssrvr" => $javaprssrvr);		//7/29/09, 7/6/11, 6/10/11
 	}		// end get_current()
 
 function get_instam_device($key) {				// 2/14/2014
@@ -346,7 +360,6 @@ function aprs_date_ok ($indate) {	// checks for date/time within 48 hours
 	}
 
 function do_aprs() {				// 7/2/2013 - 6/20/2015 -  populates the APRS tracks table and updates responder position data
-
 	function log_aprs_err($message) {								// error logger - 4/29/12
 		@session_start();
 		if (!(array_key_exists ( "aprs_err", $_SESSION ))) {		// limit to once per session
@@ -374,64 +387,55 @@ function do_aprs() {				// 7/2/2013 - 6/20/2015 -  populates the APRS tracks tab
 
 	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`= 1 AND `aprs`= 1 AND `callsign` <> ''";  // work each call sign, 8/10/09
 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-
-	if (mysql_num_rows($result) > 0) {			//
-		$call_str = $sep = "";
+	if (mysql_num_rows($result) > 0) {			//	
+		$call_arr = array();
 		while ($row = @mysql_fetch_assoc($result)) {
-			$call_str .= $sep . $row['callsign'];
-			$sep = ",";
+			$call_arr[] = $row['callsign'];
 			}
-		$the_url = "http://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
-
-		$data=get_remote($the_url);				// returns JSON-decoded values
-		if ((!(is_array($data))) && (!(is_object($data)))) {				// 4/29/12
-			log_aprs_err("APRS JSON data format error");
-			}
-		$temp = $data->result;
-
-		if (strtoupper($temp) == "OK"){
-			$time_offset = 6*60*60;							// 6 hours - determined from aprs.fi site observation
-			$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-
-			for ( $i=0; $i< ($data->found ) ; $i++) {		// extract fields from each entry
-				$entry = (object) $data->entries[$i];
-				$callsign_in = $entry->name;
-				$callsign_in_rev = like_ify($callsign_in);		// 3/3/2015 - revise callsign for LIKE lookup
-
-				$lat = $entry->lat;
-				$lng = $entry->lng;
-				$updated =  $entry->time;
-				@($course = $entry->course);				// 4/24/11
-				@($mph = $entry->speed);
-				@($alt = @$entry->altitude);
-				$packet_date = $entry->lasttime;
-				if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) && ( is_recent($packet_date) ) ) {
-					$the_time = mysql_format_date($packet_date - $time_offset);		// adjust per aprs.fi observation
-
-					$query = "UPDATE `$GLOBALS[mysql_prefix]responder`
-						SET `lat` = '{$lat}', `lng` = '{$lng}'
-						WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
-
-					$result = @mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
-					if ( mysql_affected_rows() > 0 ) {									// movement ?
-
-						$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `updated` = '{$now_ts}'
+		$allcall_arr = array_chunk($call_arr, 20);
+		foreach($allcall_arr as $temp_arr) {	//	Each group of 20 callsigns	
+			$call_str = implode(",", $temp_arr);			
+			$the_url = "http://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
+			$data=get_remote($the_url);				// returns JSON-decoded values
+			if ((!(is_array($data))) && (!(is_object($data)))) {				// 4/29/12
+				log_aprs_err("APRS JSON data format error");
+				}
+			$temp = $data->result;
+			if (strtoupper($temp) == "OK"){
+				$time_offset = 6*60*60;							// 6 hours - determined from aprs.fi site observation
+				$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+				for ( $i=0; $i< ($data->found ) ; $i++) {		// extract fields from each entry
+					$entry = (object) $data->entries[$i];
+					$callsign_in = $entry->name;
+					$callsign_in_rev = like_ify($callsign_in);		// 3/3/2015 - revise callsign for LIKE lookup
+					$lat = $entry->lat;
+					$lng = $entry->lng;
+					$updated =  $entry->time;
+					@($course = $entry->course);				// 4/24/11
+					@($mph = $entry->speed);
+					@($alt = @$entry->altitude);
+					$packet_date = $entry->lasttime;
+					if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) && ( is_recent($packet_date) ) ) {
+						$the_time = mysql_format_date($packet_date - $time_offset);		// adjust per aprs.fi observation
+						$query = "UPDATE `$GLOBALS[mysql_prefix]responder`
+							SET `lat` = '{$lat}', `lng` = '{$lng}'
 							WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
-
-						$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;	// a hash - use tbd
-
-						$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
-							`packet_id`, `source`, `latitude`, `longitude`, `speed`, `course`, `altitude`, `packet_date`, `updated`)
-							VALUES (
-							'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$mph}', '{$course}', '{$alt}', FROM_UNIXTIME({$packet_date}), '{$now}')";
-
-						$result = @mysql_query($query);		// 6/17/2015
-						}
-
-					}			// end if (sane( ... ))
-				}			// end for ($i...)
-			}			// end ( JSON data OK)
+						$result = @mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
+						if ( mysql_affected_rows() > 0 ) {									// movement ?
+							$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `updated` = '{$now_ts}'
+								WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
+							$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;	// a hash - use tbd
+							$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
+								`packet_id`, `source`, `latitude`, `longitude`, `speed`, `course`, `altitude`, `packet_date`, `updated`)
+								VALUES (
+								'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$mph}', '{$course}', '{$alt}', FROM_UNIXTIME({$packet_date}), '{$now}')";
+							$result = @mysql_query($query);		// 6/17/2015
+							}
+						}			// end if (sane( ... ))
+					}			// end for ($i...)
+				}			// end ( JSON data OK)
+			}	//	End foreach 20 callsigns
 		}			// end (mysql_affected_rows() > 0) - any APRS units?
 	}			// end function do_aprs()
 
@@ -446,7 +450,7 @@ function do_ogts() {			// 3/24/12
 		}		// end function
 
 	error_reporting(E_ALL);
-//		target	http://track.kmbnet.net:8080/events/data.json?a=sysadmin&p=12test34&g=all&limit=1";
+//		target	http://track.kmbnet.net:8080/events/data.json?a=sysadmin&p=12test34&g=all&limit=1;
 //	                   000000000000000000000                    11111111   22222222
 	$ogts_info = explode("/", get_variable('ogts_info')); 		// url/account
 	if (count($ogts_info) != 3) {
@@ -695,7 +699,7 @@ function do_xastir() {				// 1/30/14 - track responder locations with Xastir ser
 		}			// end while $row1
 	}			// end function do_xastir()
 
-function do_followmee() {				// 7/2/2013 - 6/20/2015 -  populates the APRS tracks table and updates responder position data
+function do_followmee() {
 	function log_followmee_err($message) {								// error logger - 4/29/12
 		@session_start();
 		if (!(array_key_exists ( "followmee_err", $_SESSION ))) {		// limit to once per session
@@ -714,11 +718,11 @@ function do_followmee() {				// 7/2/2013 - 6/20/2015 -  populates the APRS track
 	$the_key = trim(get_variable('followmee_key'));
 	$fmusername = trim(get_variable('followmee_username'));
 	if (empty($the_key)) {
-		log_followmee_err("Follow Mee key required for aprs operation") ;
+		log_followmee_err("Follow Mee key required for Follow Mee operation") ;
 		return FALSE;
 		}
 	if (empty($fmusername)) {
-		log_followmee_err("Follow Mee username required for aprs operation") ;
+		log_followmee_err("Follow Mee username required for Follow Mee operation") ;
 		return FALSE;
 		}
 
@@ -755,7 +759,7 @@ function do_followmee() {				// 7/2/2013 - 6/20/2015 -  populates the APRS track
 				$alt = $entry->{'Altitude(m)'};
 				$packet_date = $entry->Date;
 				if ( sane ( floatval ($lat), floatval ($lng), intval (strtotime($updated)) ) && ( is_recent($packet_date) ) ) {
-					$the_time = mysql_format_date(strtotime($packet_date) - $time_offset);		// adjust per aprs.fi observation
+					$the_time = mysql_format_date(strtotime($packet_date) - $time_offset);
 					$query = "UPDATE `$GLOBALS[mysql_prefix]responder`
 						SET `lat` = '{$lat}', `lng` = '{$lng}'
 						WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
@@ -780,6 +784,193 @@ function do_followmee() {				// 7/2/2013 - 6/20/2015 -  populates the APRS track
 					}			// end if (sane( ... ))
 				}			// end ( JSON data OK)
 			}
-		}			// end (mysql_affected_rows() > 0) - any APRS units?
-	}			// end function do_aprs()
+		}			// end (mysql_affected_rows() > 0) - any units?
+	}			// end function do_followmee()
+ 
+
+function do_traccar() {				// 5/30/17 - track responder locations with Traccar server - uses Traccar mysql DB. (Traccar must be configured to use MySQL and not its default database)
+	global $istest;
+
+ // Do we want to create a unique error function for Traccar?
+	function log_traccar_err($message) {					// error logger
+		@session_start();
+		if (!(array_key_exists ( "traccar_err", $_SESSION ))) {		// limit to once per session
+			do_log($GLOBALS['LOG_ERROR'], 0, 0, $message);
+			$_SESSION['traccar_err'] = TRUE;
+			}
+		}		// end function
+
+// Need to create configuration lines for Traccar server
+	$traccar_server = get_variable("traccar_server");
+	$traccar_db = get_variable("traccar_db");
+	$traccar_user = get_variable("traccar_dbuser");
+	$traccar_pass = get_variable("traccar_dbpass");
+
+	if(($traccar_server == "") || ($traccar_db == "") || ($traccar_user == "") || ($traccar_pass == "")) {
+		log_traccar_err("traccar settings not complete, check in settings");
+		return FALSE;
+		}
+
+// added to test tracks_length
+   $tracks_length = get_variable("tracks_length");
+
+	$query  = "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL " . $tracks_length . " HOUR)";         // altered for hours in settings instead of days
+//	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL 7 DAY)";
+	$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	unset($resultd);
+
+	$query = "SELECT `callsign`, `traccar`, `mobile` FROM `$GLOBALS[mysql_prefix]responder`
+		WHERE (	( `mobile`= 1 )
+		AND  	(`traccar`= 1 )
+		AND 	(`callsign` <> ''))";
+	$result1 = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	while ($row1 = mysql_fetch_assoc($result1)) {
+		$callsign_in = $row1['callsign'];
+		if(!mysql_connect($traccar_server, $traccar_user, $traccar_pass)) {
+			exit();
+			}
+		if(!mysql_select_db($traccar_db)){
+			exit();
+			}
+// Find position id
+		$query = 'select uniqueid, positionid from devices where uniqueid = "' . $row1['callsign'] . '" limit 1';
+		$result2 = mysql_query($query);
+		$row2 = mysql_fetch_assoc($result2);
+		$positionid = $row2['positionid'];
+
+// Use position ID to query last position
+		$query = 'select latitude, longitude, speed, course, altitude, devicetime from positions where id = "' . $positionid . '"';
+		$result3 = mysql_query($query);
+  
+		while ($row3 = mysql_fetch_assoc($result3)) {
+			$lat = $row3['latitude'];
+			$lng = $row3['longitude'];
+			$course = $row3['course'];
+			$speed = $row3['speed'];
+			$altitude = $row3['altitude'];
+			$updated =  mysql2timestamp($row3['devicetime']);
+			$packet_date =  mysql2timestamp($row3['devicetime']);
+//			$p_d_timestamp = mysql_format_date($row3['devicetime']); 
+			$p_d_timestamp = $row3['devicetime'];
+
+			if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) ) {
+				$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+				if(!mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd'])) {
+					exit();
+					}
+				if(!mysql_select_db($GLOBALS['mysql_db'])) {
+					exit();
+					}
+				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+					`lat` = '$lat', `lng` = '$lng'
+					WHERE ( (`traccar` = 1 )
+					AND (`callsign` = '{$callsign_in}' ) )";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	//									any movement?
+				if (mysql_affected_rows() > 0 ) {
+					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+						`updated` = '" . now_ts() . "'
+						WHERE ( (`traccar` = 1)
+						AND (`callsign` = '{$callsign_in}'))";
+					$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;				// a hash - for dupe prevention
+
+					$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
+						packet_id, source, latitude, longitude, speed, course, altitude, packet_date, updated) VALUES (
+						'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$speed}', '{$course}', '{$altitude}', '{$p_d_timestamp}', '{$now}')";
+					$result = mysql_query($query);				// ignore duplicate/errors
+					}				// end if (mysql_affected_rows() > 0 )
+				}			// end if (sane())
+			}			// end while $row2
+		}			// end while $row1
+	}			// end function do_traccar()
+ 
+ 
+function do_javaprssrvr() {				// 5/30/17 - track responder locations with javAPRSSrvr server - uses dbgate client of javAPRSSrvr.
+	global $istest;
+	function log_javaprssrvr_err($message) {					// error logger
+		@session_start();
+		if (!(array_key_exists ( "javaprssrvr_err", $_SESSION ))) {		// limit to once per session
+			do_log($GLOBALS['LOG_ERROR'], 0, 0, $message);
+			$_SESSION['javaprssrvr_err'] = TRUE;
+			}
+		}		// end function
+
+// Do we want similar configuration lines for javaprssrvr server?
+	$javaprssrvr_server = get_variable("javaprssrvr_server");
+	$javaprssrvr_db = get_variable("javaprssrvr_db");
+	$javaprssrvr_user = get_variable("javaprssrvr_dbuser");
+	$javaprssrvr_pass = get_variable("javaprssrvr_dbpass");
+
+	if(($javaprssrvr_server == "") || ($javaprssrvr_db == "") || ($javaprssrvr_user == "") || ($javaprssrvr_pass == "")) {
+		log_javaprssrvr_err("Javaprssrvr settings not complete, check in settings");
+		return FALSE;
+		}
+
+// added to test tracks_length
+   $tracks_length = get_variable("tracks_length");
+   
+	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL " . $tracks_length . " HOUR)";         // altered for hours in settings instead of days
+//	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL 7 DAY)";
+	$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	unset($resultd);
+
+	$query = "SELECT `callsign`, `javaprssrvr`, `mobile` FROM `$GLOBALS[mysql_prefix]responder`
+		WHERE (	( `mobile`= 1 )
+		AND  	(`javaprssrvr`= 1 )
+		AND 	(`callsign` <> ''))";
+	$result1 = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	while ($row1 = mysql_fetch_assoc($result1)) {
+		$callsign_in = $row1['callsign'];
+		if(!mysql_connect($javaprssrvr_server, $javaprssrvr_user, $javaprssrvr_pass)) {
+			exit();
+			}
+		if(!mysql_select_db($javaprssrvr_db)){
+			exit();
+			}
+
+// query positions for callsign
+		$query = "SELECT * FROM `APRSPosits` WHERE `CallsignSSID` = '{$row1['callsign']}' ORDER BY `ReportTime` DESC LIMIT 1";	// possibly none
+		$result2 = mysql_query($query);
+		while ($row2 = mysql_fetch_assoc($result2)) {
+			$lat = $row2['Latitude'];
+			$lng = $row2['Longitude'];
+			$speed = $row2['Speed'];
+			$course = $row2['Course'];
+			$altitude = $row2['Altitude'];
+			$updated =  mysql2timestamp($row2['ReportTime']);
+			$packet_date =  mysql2timestamp($row2['ReportTime']);
+//			$p_d_timestamp = mysql_format_date($row2['ReportTime']);
+			$p_d_timestamp = $row2['ReportTime'];
+			if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) ) {
+				$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+				if(!mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd'])) {
+					exit();
+					}
+				if(!mysql_select_db($GLOBALS['mysql_db'])) {
+					exit();
+					}
+				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+					`lat` = '$lat', `lng` = '$lng'
+					WHERE ( (`javaprssrvr` = 1 )
+					AND (`callsign` = '{$callsign_in}' ) )";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+//									any movement?
+				if (mysql_affected_rows() > 0 ) {
+					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+						`updated` = '" . now_ts() . "'
+						WHERE ( (`javaprssrvr` = 1)
+						AND (`callsign` = '{$callsign_in}'))";
+					$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;				// a hash - for dupe prevention
+
+					$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
+						packet_id, source, latitude, longitude, speed, course, altitude, packet_date, updated) VALUES (
+						'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$speed}', '{$course}', '{$altitude}', '{$p_d_timestamp}', '{$now}')";
+					$result = mysql_query($query);				// ignore duplicate/errors
+					}				// end if (mysql_affected_rows() > 0 )
+				}			// end if (sane())
+			}			// end while $row2
+		}			// end while $row1
+	}			// end function do_javaprssrvr()
 ?>

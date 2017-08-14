@@ -20,7 +20,7 @@ require_once($_SESSION['fip']);		//7/28/10
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <STYLE>
@@ -35,10 +35,10 @@ if (empty($_POST)) {
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row = mysql_fetch_assoc($result);
 ?>
-
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
- 
-	String.prototype.trim = function () {
+ 	String.prototype.trim = function () {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
 
@@ -79,22 +79,39 @@ if (empty($_POST)) {
 		<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
 		<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
 		<TABLE BORDER = 0>
-		<TR CLASS= 'even'>
-			<TD ALIGN='right'>To:</TD><TD><INPUT NAME='frm_name' SIZE=32 VALUE = '<?php print $row['contact_name'];?>'></TD>
+			<TR CLASS= 'even'>
+				<TD ALIGN='right'>To:</TD>
+				<TD>
+					<INPUT NAME='frm_name' SIZE=32 VALUE = '<?php print $row['contact_name'];?>'>
+				</TD>
 			</TR>
-
-		<TR CLASS= 'odd'>
-			<TD ALIGN='right'>Addr:</TD><TD><INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $row['contact_via'];?>'></TD>
+			<TR CLASS= 'odd'>
+				<TD ALIGN='right'>Addr:</TD>
+				<TD>
+					<INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $row['contact_via'];?>'>
+				</TD>
 			</TR>
-	
-		<TR CLASS='even'><TD ALIGN='right'>Subject: </TD><TD COLSPAN=2><INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60></TD></TR>
-		<TR CLASS='odd'><TD ALIGN='right'>Message:</TD><TD COLSPAN=2> <TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA></TD></TR>
-		<TR CLASS='even'><TD ALIGN='center' COLSPAN=3><BR /><BR />
-			<INPUT TYPE='button' 	VALUE='Send' onClick = "validate()">&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='reset' 	VALUE='Reset'>&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();'><BR /><BR />
-			</TD></TR>
-			</TABLE></FORM>
+			<TR CLASS='even'>
+				<TD ALIGN='right'>Subject: </TD>
+				<TD COLSPAN=2>
+					<INPUT TYPE = 'text' NAME = 'frm_subj' SIZE = 60>
+				</TD>
+			</TR>
+			<TR CLASS='odd'>
+				<TD ALIGN='right'>Message:</TD>
+				<TD COLSPAN=2>
+					<TEXTAREA NAME='frm_text' COLS=60 ROWS=4></TEXTAREA>
+				</TD>
+			</TR>
+			<TR CLASS='even'>
+				<TD ALIGN='center' COLSPAN=3>
+					<SPAN id='send_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate();"><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+					<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.mail_form.reset();;"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+					<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+				</TD>
+			</TR>
+		</TABLE>
+		</FORM>
 <?php
 		}		// end if (empty($_POST)) {
 
@@ -103,9 +120,8 @@ if (empty($_POST)) {
 			do_send ($_POST['frm_addr'], "", $_POST['frm_subj'], $_POST['frm_text'], 0, quote_smart(trim($_GET['the_id'])));	// ($to_str, $subject_str, $text_str )
 ?>
 	<BODY><CENTER>		
-	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3>
-	<BR /><BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();'><BR /><BR />
-
+	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3><BR /><BR />
+		<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 <?php
 
 	}		// end else

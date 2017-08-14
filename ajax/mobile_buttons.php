@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 session_start();
 session_write_close();	
@@ -175,39 +177,39 @@ for ($i = 0; $i<count($assigns_stack); $i++) {
 	}
 
 	if (is_date($time_disp)) { 
-		$ret_arr[0] ="<INPUT ID='disp_btn' TYPE= 'button' CLASS='btn_chkd' VALUE='Disp @ " . adj_time($time_disp) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[0] ="<INPUT ID='disp_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE='Disp @ " . adj_time($time_disp) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 		} else {
-		$ret_arr[0] = "<INPUT ID='disp_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE='Dispatched' onClick = 'set_assign(\'d\');' STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[0] = "<INPUT ID='disp_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE='Dispatched' onClick = 'set_assign(\'d\');' STYLE = 'display:" . $display_val . ";' />";
 		} 
 	if (is_date($time_resp)) { 
-		$ret_arr[1] ="<INPUT ID='resp_btn' TYPE= 'button' CLASS='btn_chkd' VALUE='Resp @ " . adj_time($time_resp) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[1] ="<INPUT ID='resp_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE='Resp @ " . adj_time($time_resp) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 		} else { 
-		$ret_arr[1] ="<INPUT ID='resp_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE='Responding' onClick = \"set_assign('r');\" STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[1] ="<INPUT ID='resp_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE='Responding' onClick = \"set_assign('r');\" STYLE = 'display:" . $display_val . ";' />";
 		} 
 	if (is_date($time_onsc)) { 
-		$ret_arr[2] ="<INPUT ID='onsc_btn' TYPE= 'button' CLASS='btn_chkd' VALUE='On-scene @ " . adj_time($time_onsc) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[2] ="<INPUT ID='onsc_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE='On-scene @ " . adj_time($time_onsc) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 		} else { 
-		$ret_arr[2] ="<INPUT ID='onsc_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE='On-scene' onClick = \"set_assign('s');\" STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[2] ="<INPUT ID='onsc_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE='On-scene' onClick = \"set_assign('s');\" STYLE = 'display:" . $display_val . ";' />";
 		} 
 	if ($assigns_stack[$selected_indx]['rec_facility_id']>0) {
 		if (is_date($time_fenr)) { 
-			$ret_arr[3] ="<INPUT ID='f_enr_btn' TYPE= 'button' CLASS='btn_chkd' VALUE=\"Fac'y enr @ " . adj_time($time_fenr) . "\" onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
+			$ret_arr[3] ="<INPUT ID='f_enr_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE=\"Fac'y enr @ " . adj_time($time_fenr) . "\" onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 			} else { 
-			$ret_arr[3] ="<INPUT ID='f_enr_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE=\"Fac'y enroute\" onClick = \"set_assign('e');\" STYLE = 'display:" . $display_val . ";' />";
+			$ret_arr[3] ="<INPUT ID='f_enr_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE=\"Fac'y enroute\" onClick = \"set_assign('e');\" STYLE = 'display:" . $display_val . ";' />";
 			}
 		if (is_date($time_farr)) { 		// 5/19/11
-			$ret_arr[4] ="<INPUT ID='f_arr_btn' TYPE= 'button' CLASS='btn_chkd' VALUE=\"Fac'y arr @ " . adj_time($time_farr) . "\" onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
+			$ret_arr[4] ="<INPUT ID='f_arr_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE=\"Fac'y arr @ " . adj_time($time_farr) . "\" onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 			} else { 
-			$ret_arr[4] ="<INPUT ID='f_arr_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE=\"Fac'y arrive\" onClick = \"set_assign('a');\" STYLE = 'display:" . $display_val . ";' />";
+			$ret_arr[4] ="<INPUT ID='f_arr_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE=\"Fac'y arrive\" onClick = \"set_assign('a');\" STYLE = 'display:" . $display_val . ";' />";
 			}
 		} else {
 		$ret_arr[3] = "";
 		$ret_arr[4] = "";
 		}
 	if (is_date($time_clear)) { 
-		$ret_arr[5] ="<INPUT ID='clear_btn' TYPE= 'button' CLASS='btn_chkd' VALUE='Clear @ " . adj_time($time_clear) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
+		$ret_arr[5] ="<INPUT ID='clear_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE='Clear @ " . adj_time($time_clear) . "' onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 		} else { 
-		$ret_arr[5] ="<INPUT ID='clear_btn' TYPE= 'button' CLASS='btn_not_chkd' VALUE='Clear' onClick = \"set_assign('c');\" STYLE = 'display:" . $display_val . ";' />";	
+		$ret_arr[5] ="<INPUT ID='clear_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE='Clear' onClick = \"set_assign('c');\" STYLE = 'display:" . $display_val . ";' />";	
 		}		// end if (is_date($time_clear))
 
 	if ((is_unit()) || ((has_admin())&&(intval($unit_id)>0))) {				// do/do-not allow status change - 2/7/12

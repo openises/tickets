@@ -15,7 +15,7 @@ require_once('./incs/functions.inc.php');
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" />
 	<SCRIPT>
 		function depart() {location.href = "index.php";  }
@@ -65,8 +65,7 @@ if (array_key_exists('initialize', $_POST)) {
 	<h2>
 	Classes database initialization complete!
 	</h2>
-	<input type = button value = "Finished" onClick = "setTimeout('depart()',750);" />
-	
+	<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 <?php
 	}
 else {

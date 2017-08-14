@@ -123,9 +123,9 @@ $get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_valu
 		}
 	else if ($get_id) {
 		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
-			add_header($get_id, FALSE, TRUE);
+//			add_header($get_id, FALSE, TRUE);
 			require_once('./forms/ticket_view_screen.php');
-			print "<BR /><P ALIGN='left'>";
+//			print "<BR /><P ALIGN='left'>";
 			} else {
 			add_header($get_id, FALSE, TRUE);
 			require_once('./forms/ticket_view_screen_NM.php');

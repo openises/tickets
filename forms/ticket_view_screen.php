@@ -61,7 +61,7 @@ unset($result_as);
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -91,9 +91,10 @@ unset($result_as);
 				position: relative;	z-index: 101; cursor: normal; height: 250px;}
 		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 <?php 
 
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
@@ -110,8 +111,8 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
@@ -124,14 +125,17 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
@@ -194,6 +198,7 @@ function set_size() {
 	$('rightcol').style.height = colheight + "px";	
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function do_tab(tabid, suffix, lat, lng) {
@@ -244,9 +249,12 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
-<DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
-	<DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
+	<DIV id='button_bar' class='but_container'>
+	<?php print add_header($id, TRUE, TRUE);?>
+	</DIV>
+	<DIV id = "leftcol" style='position: relative; top: 70px; left: 30px; float: left;'>
 <?php
 
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
@@ -332,13 +340,15 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 
 <?php
 
-	print do_ticket($row, $col_width, FALSE) ;				// 2/25/09
-	print show_actions($row['id'], "date", FALSE, TRUE, 0);		/* lists actions and patient data belonging to ticket */
+	print do_ticket_only($row, $col_width, FALSE) ;				// 2/25/09
+	print show_actions($row['tick_id'], "date", FALSE, FALSE, 1);		/* lists actions and patient data belonging to ticket */
 	print "</TD></TR></TABLE>\n";	
 	$lat = $row['lat']; $lng = $row['lng'];
 ?>
 	</DIV>
-	<DIV id='rightcol' style='position: absolute; right: 60px; top: 10px; z-index: 3;'>
+	<DIV ID="middle_col" style='position: relative; left: 40px; width: 110px; float: left;'>&nbsp;
+	</DIV>
+	<DIV id='rightcol' style='position: relative; top: 70px;  left: 40px; float: left;'>
 		<DIV ID='map_canvas' style='border: 1px outset #707070; z-index: 2'></DIV>
 	</DIV>
 <SCRIPT>
@@ -455,23 +465,23 @@ do_kml();
 					$locale = get_variable('locale');	// 08/03/09
 					switch($locale) { 
 						case "0":
-						$tab_2 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+						$tab_2 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 						break;
 					
 						case "1":
-						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row_unit['lat'], $row_unit['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 						break;
 					
 						case "2":
 						$coords =  $row_unit['lat'] . "," . $row_unit['lng'];							// 8/12/09
-						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
+						$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 						break;
 					
 						default:
 						print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 						}
-					$tab_2 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $row_unit['lat'] . "</TD></TR>";
-					$tab_2 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $row_unit['lng'] . "</TD></TR>";
+					$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lat</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_unit['lat'] . "</TD></TR>";
+					$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lng</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_unit['lng'] . "</TD></TR>";
 					$tab_2 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 					$tab_2 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 					$tab_2 .= "</TABLE></TD</TR></TABLE>";
@@ -513,6 +523,34 @@ var incs_icons=[];
 incs_icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;	// blue
 incs_icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;	// yellow
 incs_icons[<?php echo $GLOBALS['SEVERITY_HIGH']; ?>] =  3;	// red
+
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+mapWidth = viewportwidth * .40;
+mapHeight = viewportheight * .65;
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('leftcol').style.width = colwidth + "px";
+$('leftcol').style.height = colheight + "px";	
+$('leftTable').style.width = colwidth + "px";	
+$('left').style.width = colwidth + "px";
+$('rightcol').style.width = colwidth + "px";
+$('rightcol').style.height = colheight + "px";	
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+set_fontsizes(viewportwidth, "fullscreen");
 
 function createMarkerInc(lat, lon, info, color, stat, theid, sym, category, region, tip, z) {
 	if((isFloat(lat)) && (isFloat(lon))) {

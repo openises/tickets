@@ -80,7 +80,7 @@ if(!empty($_POST)) {
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" />
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
 		<TITLE>Tickets</TITLE>
 		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
@@ -115,7 +115,7 @@ if(!empty($_POST)) {
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" />
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
 		<TITLE>Tickets</TITLE>
 		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">

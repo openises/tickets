@@ -5,9 +5,9 @@
 */
 error_reporting(0);
 require_once('../incs/functions.inc.php');
-$temp1  = get_variable('socketserver_url');
+$temp1  = (get_variable('socketserver_url') != "") ? get_variable('socketserver_url') : "localhost";
 $temp2 = get_variable('socketserver_port');
-$serveraddress = ($temp1 == "") ? "{$_SERVER['SERVER_NAME']}" : $temp1;
+$serveraddress = (array_key_exists("SERVER_NAME", $_SERVER) && $temp1 == "") ? "{$_SERVER['SERVER_NAME']}" : $temp1;
 $serverport = ($temp2 == "") ? "1337" : $temp2;
 $serverstring = "tcp://" . $serveraddress . ":" . $serverport;
 
@@ -125,11 +125,11 @@ function handshake($connect) {
     $address = explode(':', stream_socket_get_name($connect, true));
     $info['ip'] = $address[0];
     $info['port'] = $address[1];
-
+	dump($info);
     if (empty($info['Sec-WebSocket-Key'])) {
         return false;
 		}
-/* 	if(!$info['Origin'] == "http://localhost") {
+/*  if(!$info['origin'] == "http://localhost") {
 		echo "Intrusion attempt<BR />";
 		return false;
 		} */
@@ -446,6 +446,7 @@ while(true) {
         $new_client = stream_socket_accept($server);
 		$current_users = count($client_socks);
 		if(($new_client) && ($info = handshake($new_client))) {
+			dump($info);
             //print remote client information, ip and port number
             echo "Connection accepted from " . stream_socket_get_name($new_client, true) . "\n";
             $client_socks[] = $new_client;

@@ -3,6 +3,8 @@
 list_arch_messages.php - gets archive messages from stored csv files for display in message window and ticket view and unit view
 10/23/12 - new file
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 include('../incs/html2text.php');
 $filter = "";

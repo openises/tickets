@@ -35,7 +35,8 @@ $files = array();
 $files = read_directory(getcwd().'/message_archives/'); 
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 <HEAD>
 <TITLE>Messages</TITLE>
@@ -44,18 +45,20 @@ $files = read_directory(getcwd().'/message_archives/');
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <STYLE type="text/css">
-.signal_w { margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 2px; border-STYLE: inset; border-color: #3366FF;
+BODY {font-size: 0.9vw;}
+.signal_w { margin-left: 4px; font-size: 1em; color:#FFFFFF; border-width: 2px; border-STYLE: inset; border-color: #3366FF;
 			  padding: 1px 0.5em;text-decoration: none;float: left;color: white;background-color: #3366FF;font-weight: bolder;}
 </STYLE>
 <SCRIPT>
 var thelevel = "<?php print $_SESSION['level'];?>";
 </SCRIPT>
-<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>
-<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
+<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
+window.onresize=function(){set_heights()};
 var columns = "<?php print get_msg_variable('columns');?>";
 
 var screen = 'msg_win';
@@ -215,22 +218,33 @@ function get_sent() {
 	light_butt('sent');
 	archive = "";	
 	get_sentmessages();
-	}	
+	}
+	
+function set_heights() {
+	var outsideHeight = $('view_messages').clientHeight;
+	var headerHeight = $('header1').clientHeight;
+	var remainHeight = outsideHeight - headerHeight - 15;
+	var folderlHeight = outsideHeight - 15;
+	var messagesHeight = remainHeight + "px";
+	var folderlistHeight = folderlHeight + "px";
+	$('message_list').style.height = messagesHeight;
+	$('folderlist').style.height = folderlistHeight;
+	}
 	
 thelevel = "<?php print can_delete_msg();?>";
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad="get_inbox();light_butt('inbox');">
+<BODY onLoad="get_inbox();light_butt('inbox'); set_heights();">
 <DIV style='background-color: #CECECE; height: 100%;'>
 	<DIV id='folderlist' style='position: absolute; left: 0px; top: 0px; width: 18%; height: 100%;'>
-		<SPAN id='folders_header' class='heading' style='margin-left: 2%; width: 96%; float: none; display: inline-block; font-size: 18px; border: 4px outset #FFFFFF;'>MESSAGE FOLDERS</SPAN><BR /><BR />	
-		<SPAN id='inbox_header' class='heading' style='margin-left: 2%; width: 97%; float: none; display: inline-block;'>Current Messages</SPAN><BR /><BR />	
-		<SPAN id='inbox' class='plain' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_inbox();'>Inbox<SPAN id='inbox_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
-		<SPAN id='sent' class='plain' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_sent();'>Sent Messages<SPAN id='sent_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
-		<SPAN id='deleted' class='plain' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_wastebin();'>Deleted Items</SPAN><BR /><BR />
-		<SPAN id='archive_header' class='heading' style='margin-left: 2%; width: 97%; float: none; display: inline-block;'>Archive</SPAN><BR /><BR />
-		<DIV id='archivelist' style='position: relative; left: 0px; top: 0px; width: 95%; height: 75%; overflow-y: scroll;'>
+		<SPAN id='folders_header' class='heading' style='margin-left: 2%; width: 96%; float: none; display: inline-block; font-size: 1.6em; border: 4px outset #FFFFFF;'>MESSAGE FOLDERS</SPAN><BR /><BR />	
+		<SPAN id='inbox_header' class='heading' style='padding-left: 2%; width: 97%; float: none; display: inline-block; font-size: 1.5em;'>Current Messages</SPAN><BR /><BR />	
+		<SPAN id='inbox' class='plain' style='font-size: 1.2em; margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_inbox();'>Inbox<SPAN id='inbox_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
+		<SPAN id='sent' class='plain' style='font-size: 1.2em; margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_sent();'>Sent Messages<SPAN id='sent_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
+		<SPAN id='deleted' class='plain' style='font-size: 1.2em; margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_wastebin();'>Deleted Items</SPAN><BR /><BR />
+		<SPAN id='archive_header' class='heading' style='padding-left: 2%; width: 95%; float: none; display: inline-block; font-size: 1.5em;'>Archive</SPAN><BR /><BR />
+		<DIV id='archivelist' style='position: relative; left: 0px; top: 0px; width: 95%; height: 70%; overflow-y: auto;'>
 <?php
 			foreach($files AS $val) {
 				$temp = explode(".", $val);
@@ -255,22 +269,22 @@ thelevel = "<?php print can_delete_msg();?>";
 	<DIV id='view_messages' style='position: absolute; right: 0px; top: 0px; width: 82%; height: 100%; border: 4px outset #FFFFFF;'>
 		<DIV id='header1' style='position: relative; width: 100%;'>
 			<DIV style='background-color: #808080; position: relative; text-align: center;'>
-				<SPAN id='close_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='window.close();'>Close</SPAN>
-				<SPAN id='sel_read_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status_selected("read", 0, "messages");'>Mark Sel Read</SPAN>	
-				<SPAN id='sel_unread_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status_selected("unread", 0, "messages");'>Mark Sel Unread</SPAN>	
-				<SPAN id='rest_sel_but' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='rest_selected_messages();'>Restore Sel</SPAN>	
+				<SPAN id='close_but' class='plain text' style='float: none; width: 11em; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='window.close();'>Close</SPAN>
+				<SPAN id='sel_read_but' class='plain text' style='float: none; width: 11em; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status_selected("read", 0, "messages");'>Mark Sel Read</SPAN>	
+				<SPAN id='sel_unread_but' class='plain text' style='float: none; width: 11em; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='read_status_selected("unread", 0, "messages");'>Mark Sel Unread</SPAN>	
+				<SPAN id='rest_sel_but' class='plain text' style='float: none; width: 11em; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='rest_selected_messages();'>Restore Sel</SPAN>	
 <?php
 				if(is_super()) {
 ?>
-					<SPAN id='del_sel' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='del_selected_messages();'>Delete Sel</SPAN>	
-					<SPAN id='empty_waste' class='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='empty_waste();'>Empty Waste</SPAN>	
+					<SPAN id='del_sel' class='plain text' style='float: none; width: 11em; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='del_selected_messages();'>Delete Sel</SPAN>	
+					<SPAN id='empty_waste' class='plain text' style='float: none; width: 11em; display: inline-block;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick='empty_waste();'>Empty Waste</SPAN>	
 <?php
 					}
 ?>	
 			</DIV>
-			<DIV style='background-color: #707070; color: #FFFFFF; position: relative; text-align: center;'>
-				<SPAN style='vertical-align: middle; text-align: center; font-size: 22px; color: #FFFFFF;'>Messages</SPAN>
-				<SPAN style='font-size: 10px;'>Click Column Heading to sort</SPAN><BR />
+			<DIV style='width: 100%;background-color: #707070; color: #FFFFFF; position: relative; text-align: center; display: table;'>
+				<SPAN style='display: table-cell; vertical-align: middle; text-align: right; font-size: 22px; color: #FFFFFF;'>Messages&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+				<SPAN style='display: table-cell; vertical-align: middle; text-align: left; font-size: 10px;'>Click Column Heading to sort</SPAN><BR />
 			</DIV>
 			<DIV style='background-color: #707070; color: #FFFFFF; position: relative; text-align: center;'>
 				<FORM NAME='the_filter'>			
@@ -300,7 +314,7 @@ thelevel = "<?php print can_delete_msg();?>";
 				</TR>
 			</TABLE>
 		</DIV>
-		<DIV ID = 'message_list' style='position: relative; background-color: #CECECE; overflow-y: scroll; overflow-x: hidden; height: 75%; width: 100%;'></DIV>
+		<DIV ID = 'message_list' style='position: relative; overflow-y: scroll; overflow-x: hidden; height: 75%; width: 100%;'></DIV>
 	</DIV>
 </DIV>
 </BODY>

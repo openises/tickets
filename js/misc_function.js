@@ -7,42 +7,44 @@ function syncAjax - - functions_major.inc.php
 1/6/11 json decode added
 2/19/11 drag function added
 */
-	function do_sel_update (in_unit, in_val) {							// 12/17/09
-		to_server(in_unit, in_val);
+	function do_sel_update (in_unit, in_val, theIcon) {							// 12/17/09
+		to_server(in_unit, in_val, theIcon);
 		}
 
-	function to_server(the_unit, the_status) {							// write unit status data via ajax xfer
+	function to_server(the_unit, the_status, theIcon) {							// write unit status data via ajax xfer
 		var querystr = "frm_responder_id=" + the_unit;
 		querystr += "&frm_status_id=" + the_status;
-	
 		var url = "as_up_un_status.php?" + querystr;			// 
 		var payload = syncAjax(url);						// 
 		if (payload.substring(0,1)=="-") {	
 			alert ("<php print __LINE__;?>: msg failed ");
 			return false;
-			}
-		else {
-			parent.frames['upper'].show_msg ('Unit status update applied!')
+			} else {
+			parent.frames['upper'].show_msg ('Unit ' + theIcon + ' status update applied!');
+			$("rsupd_" + the_unit).style.color = "#FFFFFF";
+			$("rsupd_" + the_unit).style.backgroundColor = "#000000";
+			$("rsupd_" + the_unit).innerHTML = payload;
 			return true;
 			}				// end if/else (payload.substring(... )
 		}		// end function to_server()
 		
-	function do_sel_update_fac (in_unit, in_val) {							// 3/15/11
-		to_server_fac(in_unit, in_val);
+	function do_sel_update_fac (in_unit, in_val, theIcon) {							// 3/15/11
+		to_server_fac(in_unit, in_val, theIcon);
 		}
 		
-	function to_server_fac(the_unit, the_status) {		//	3/15/11							// 3/15/11
+	function to_server_fac(the_unit, the_status, theIcon) {		//	3/15/11							// 3/15/11
 		var querystr = "frm_responder_id=" + the_unit;
 		querystr += "&frm_status_id=" + the_status;
-	
 		var url = "as_up_fac_status.php?" + querystr;
 		var payload = syncAjax(url); 
 		if (payload.substring(0,1)=="-") {	
 			alert ("<?php print __LINE__;?>: msg failed ");
 			return false;
-			}
-		else {
-			parent.frames['upper'].show_msg ('Facility status update applied!')
+			} else {
+			parent.frames['upper'].show_msg ('Facility ' + theIcon + ' status update applied!');
+			$("fsupd_" + the_unit).style.color = "#FFFFFF";
+			$("fsupd_" + the_unit).style.backgroundColor = "#000000";
+			$("fsupd_" + the_unit).innerHTML = payload;
 			return true;
 			}				// end if/else (payload.substring(... )
 		}		// end function to_server_fac()
@@ -836,42 +838,120 @@ function $() {									// 1/21/09, 7/18/10
 	}
 	
 function do_hover (the_id) {
-	CngClass(the_id, 'hover');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'hover text_small');
+		} else {
+		CngClass(the_id, 'hover text');
+		}
 	return true;
 	}
 
 function do_plain (the_id) {				// 8/21/10
-	CngClass(the_id, 'plain');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'plain text_small');
+		} else {
+		CngClass(the_id, 'plain text');
+		}
+	return true;
+	}
+	
+function do_hover_mi (the_id) {
+	CngClass(the_id, 'hovermi text_bold text_biggest');
+	return true;
+	}
+
+function do_plain_mi (the_id) {				// 8/21/10
+	CngClass(the_id, 'plainmi text_bold text_biggest');
+	return true;
+	}
+	
+function do_hover_squarebuttons (the_id) {
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'hover_square text_small');
+		} else {
+		CngClass(the_id, 'hover_square text');
+		}
+	return true;
+	}
+
+function do_plain_squarebuttons (the_id) {				// 8/21/10
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'plain_square text_small');
+		} else {
+		CngClass(the_id, 'plain_square text');
+		}
+	return true;
+	}
+	
+function do_hover_centerbuttons (the_id) {
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'hover_centerbuttons text_small');		
+		} else {
+		CngClass(the_id, 'hover_centerbuttons text');
+		}
+	return true;
+	}
+
+function do_plain_centerbuttons (the_id) {				// 8/21/10
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'plain_centerbuttons text_small');		
+		} else {
+		CngClass(the_id, 'plain_centerbuttons text');
+		}
 	return true;
 	}
 	
 function do_hover_listheader (the_id) {
-	CngClass(the_id, 'hover_listheader');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'hover_listheader text_small');
+		} else {
+		CngClass(the_id, 'hover_listheader text');
+		}
 	return true;
 	}
 
 function do_plain_listheader (the_id) {				// 8/21/10
-	CngClass(the_id, 'plain_listheader');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'plain_listheader text_small');		
+		} else {
+		CngClass(the_id, 'plain_listheader text');
+		}
 	return true;
 	}
 	
 function do_hover_vert (the_id) {
-	CngClass(the_id, 'hover_vert');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'hover_vert text_small');		
+		} else {
+		CngClass(the_id, 'hover_vert text');
+		}
 	return true;
 	}
 
 function do_plain_vert (the_id) {
-	CngClass(the_id, 'plain_vert');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'plain_vert text_small');		
+		} else {
+		CngClass(the_id, 'plain_vert text');
+		}
 	return true;
 	}
 	
 function do_lo_hover (the_id) {
-	CngClass(the_id, 'lo_hover');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'lo_hover text_small');		
+		} else {
+		CngClass(the_id, 'lo_hover text');
+		}
 	return true;
 	}
 
 function do_lo_plain (the_id) {
-	CngClass(the_id, 'lo_plain');
+	if($(the_id).classList.contains("text_small")) {
+		CngClass(the_id, 'lo_plain text_small');
+		} else {
+		CngClass(the_id, 'lo_plain text');
+		}
 	return true;
 	}
 
@@ -1070,11 +1150,13 @@ function twitter_window() {										// 9/10/13
 
 var starting = false;
 
-function do_mail_win(the_id) {	
+function do_mail_win(the_id) {
 	if(starting) {return;}					// dbl-click catcher
 	starting=true;
-	var url = "do_unit_mail.php?name=" + escape(the_id);	//
-	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=320,width=720,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+	var the_height = window.screen.height * 0.7;
+	var the_width = window.screen.width * 0.5;
+	var url = (isNullOrEmpty(the_id))? "do_unit_mail.php?name=0" : "do_unit_mail.php?name=" + escape(the_id);	//
+	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height="+the_height+",width="+the_width+",status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
 	if (isNull(newwindow_mail)) {
 		alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
 		return;
@@ -1086,8 +1168,10 @@ function do_mail_win(the_id) {
 function do_fac_mail_win(the_name, the_addrs) {			// 3/8/10
 	if(starting) {return;}					// dbl-click catcher
 	starting=true;
+	var the_height = window.screen.height * 0.7;
+	var the_width = window.screen.width * 0.5;
 	var url = (isNullOrEmpty(the_name))? "do_fac_mail.php?" : "do_fac_mail.php?name=" + escape(the_name) + "&addrs=" + escape(the_addrs);	//
-	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=320,width=720,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height="+the_height+",width="+the_width+",status=0,toolbar=0,menubar=0,location=0, left=50,top=100,screenX=50,screenY=100");
 	if (isNull(newwindow_mail)) {
 		alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
 		return;
@@ -1098,9 +1182,11 @@ function do_fac_mail_win(the_name, the_addrs) {			// 3/8/10
 	
 function do_mail_in_win(id) {			// individual email 8/17/09
 	if(starting) {return;}					
-	starting=true;	
+	starting=true;
+	var the_height = window.screen.height * 0.4;
+	var the_width = window.screen.width * 0.4;
 	var url = "do_indiv_mail.php?the_id=" + id;	
-	newwindow_in=window.open (url, 'Email_Window',  'titlebar, resizable=1, scrollbars, height=300,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300');
+	newwindow_in=window.open (url, 'Email_Window',  'titlebar, resizable=1, scrollbars, height='+the_height+',width='+the_width+',status=0,toolbar=0,menubar=0,location=0, left=50,top=100,screenX=50,screenY=100');
 	if (isNull(newwindow_in)) {
 		alert ("This requires popups to be enabled. Please adjust your browser options.");
 		return;
@@ -1132,7 +1218,7 @@ function view_log_entry(id) {										// 9/10/13
 function do_mail_all_win(the_ticket) {
 	if(starting) {return;}					
 	starting=true;	
-	newwindow_um=window.open("do_unit_mail.php?the_ticket=" + the_ticket, "Email",  "titlebar, resizable=1, scrollbars, height=640,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=150,screenX=100,screenY=300");
+	newwindow_um=window.open("do_unit_mail.php?the_ticket=" + the_ticket, "Email",  "titlebar, resizable=1, scrollbars, height=640,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
 	if (isNull(newwindow_um)) {
 		alert ("This requires popups to be enabled. Please adjust your browser options.");
 		return;
@@ -1438,4 +1524,112 @@ function asyncAJAX(url) {
 	obj.open("POST", url, true);
 	obj.send(null);
 	}
-		
+	
+function set_fontsizes(screenwidth, screenFormat) {
+	var theFonts = {verylarge:"18px",large:"16px",normal:"14px",medium:"12px",small:"10px",verysmall:"8px"};
+	var theScreen = ($('screenname')) ? $('screenname').innerHTML : "undefined";
+	var listPadding = "1.5em";
+	var theScreenSize;
+	if(screenFormat == "popup") {
+		if(screenwidth > 1000) {
+			theFonts.verylarge = "18px";
+			theFonts.large = "16px";
+			theFonts.normal = "12px";
+			theFonts.medium = "11px";
+			theFonts.small = "10px";
+			theFonts.verysmall = "8px";
+			listPadding = "2em";
+			theScreenSize = "popup";
+			} else {
+			theFonts.verylarge = "15px";
+			theFonts.large = "14px";
+			theFonts.normal = "12px";
+			theFonts.medium = "11px";
+			theFonts.small = "10px";
+			theFonts.verysmall = "8px";
+			listPadding = "2em";
+			theScreenSize = "popup";			
+			}
+		} else {
+		if(screenwidth > 1900) {
+			theFonts.verylarge = "20px";
+			theFonts.large = "18px";
+			theFonts.normal = "14px";
+			theFonts.medium = "12px";
+			theFonts.small = "10px";
+			theFonts.verysmall = "8px";
+			listPadding = "2em";
+			theScreenSize = "Extralarge";
+			} else if(screenwidth.between(1600, 1900)) {
+			theFonts.verylarge = "18px";
+			theFonts.large = "14px";
+			theFonts.normal = "12px";
+			theFonts.medium = "10px";
+			theFonts.small = "9px";
+			theFonts.verysmall = "7px";
+			listPadding = "2em";
+			theScreenSize = "Large";
+			} else if(screenwidth.between(1200, 1599)) {
+			theFonts.verylarge = "15px";
+			theFonts.large = "12px";
+			theFonts.normal = "11px";
+			theFonts.medium = "10px";
+			theFonts.small = "8px";
+			theFonts.verysmall = "7px";
+			listPadding = "1.5em";
+			theScreenSize = "Normal";
+			} else if(screenwidth.between(1024, 1199)) {
+			theFonts.verylarge = "14px";
+			theFonts.large = "11px";
+			theFonts.normal = "10px";
+			theFonts.medium = "9px";
+			theFonts.small = "8px";
+			theFonts.verysmall = "7px";
+			listPadding = "1.5em";
+			theScreenSize = "Small";
+			} else if(screenwidth < 1024) {
+			theFonts.verylarge = "12px";
+			theFonts.large = "11px";
+			theFonts.normal = "10px";
+			theFonts.medium = "9px";
+			theFonts.small = "7px";
+			theFonts.verysmall = "7px";
+			listPadding = "1em";
+			theScreenSize = "Extrasmall";		
+			}
+		}
+	jss.set('BODY', { "font-size": theFonts.normal });
+	jss.set('SELECT', { "font-size": theFonts.normal });
+	jss.set('OPTION', { "font-size": theFonts.normal });
+	jss.set('INPUT', { "font-size": theFonts.normal });
+	jss.set('TEXTAREA', { "font-size": theFonts.normal });
+	jss.set('.text_verysmall', { "font-size": theFonts.verysmall });
+	jss.set('.text_small', { "font-size": theFonts.small });
+	jss.set('.text_medium', { "font-size": theFonts.medium });
+	jss.set('.text', { "font-size": theFonts.normal });
+	jss.set('.text_large', { "font-size": theFonts.large });
+	jss.set('.text_big', { "font-size": theFonts.large });
+	jss.set('.text_biggest', { "font-size": theFonts.verylarge });
+	jss.set('.heading', { "font-size": theFonts.large });
+	if(theScreen != "responders") {
+		jss.set('div.scrollingArea', { "padding-top": listPadding });
+		jss.set('div.scrollingArea2', { "padding-top": listPadding });
+		} else {
+		jss.set('div.scrollingArea', { "padding-top": "1em" });
+		jss.set('div.scrollingArea2', { "padding-top": "1em" });			
+		}
+	window.screensize = theScreenSize;
+	return theFonts;
+	}
+	
+Number.prototype.between = function(first,last){
+    return (first < last ? this >= first && this <= last : this >= last && this <= first);
+	}
+
+function pausecomp(millis) {
+	var date = new Date();
+	var curDate = null;
+
+	do { curDate = new Date(); } 
+	while(curDate-date < millis);
+	} 

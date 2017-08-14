@@ -120,8 +120,9 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		var current_unit;
 		
 		function setDirections(fromLat, fromLng, toLat, toLng, recLat, recLng, locale, unit_id, lineCalled) {
-			$('mail_dir_but').style.visibility = "hidden";			// 11/12/09	
-			$("mail_button").style.display = "none";	//10/6/09
+			$('mail_dir_but').style.display = "none";
+			$('loading').style.display = "inline-block";
+//			$("mail_button").style.display = "none";	//10/6/09
 			if(window.theDirections) { window.theDirections.removeFrom(map);}
 			window.current_unit = unit_id;
 			window.theDirections = L.Routing.control({
@@ -138,7 +139,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					  // Center
 					  {color: 'orange', opacity: 1, weight: 4}
 					],
-				}
+				},routeWhileDragging: true
 			});
 			window.theDirections.on('routingerror', function(o) { console.log(o); });
 			window.theDirections.addTo(map);
@@ -146,9 +147,9 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			direcs = $('directions').innerHTML;
 			document.email_form.frm_direcs.value = textDirections;
 			document.email_form.frm_u_id.value = current_unit;	
-			$('mail_dir_but').style.visibility = "visible";			// 11/12/09	
-			$("mail_button").style.display = "inline-block";	//10/6/09
-			},3000);
+			$('mail_dir_but').style.display = "inline-block";
+			$('loading').style.display = "none";
+			},500);
 			}
 
 		function mail_direcs(f) {	//10/6/09
@@ -281,10 +282,10 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				}
 				});
 
-			$("mail_button").style.display = "none";		// 10/28/09
+//			$("mail_button").style.display = "none";		// 10/28/09
 			$("loading").style.display = "none";		// 10/28/09		
 			
-			var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders' STYLE = 'WIDTH: <?php print $sidebar_width;?>px;'>";
+			var side_bar_html = "<TABLE border=0 CLASS='sidebar' ID='tbl_responders' STYLE = 'WIDTH: 100%;'>";
 	
 			var gmarkers = [];
 			var infoTabs = [];
@@ -380,8 +381,8 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					$capt = "mi";
 					break;
 				case 1:
-					$nm_to_what = 1.1515*1.609344;		// UK - km
-					$capt = "km";
+					$nm_to_what = 1.1515;				// UK - mi
+					$capt = "mi";
 					break;
 				case 2:
 					$nm_to_what = 1.1515*1.609344;		// ROW - km
@@ -413,8 +414,11 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 
 			$order = (($sortby_distance)&& ($have_position))? "ORDER BY `distance` ASC ": "ORDER BY `dispatch` ASC, `calls_assigned` ASC, `handle` ASC, `unit_name` ASC, `unit_id` ASC";
 							
-			$query = "(SELECT *, UNIX_TIMESTAMP(`updated`) AS `updated`, `r`.`handle` AS `unit_handle`, `r`.`name` AS `unit_name`, `t`.`name` AS `type_name`, `r`.`type` AS `type`, `r`.`icon_str` AS `icon_str`, `t`.`icon` AS `icon`,
+			$query = "(SELECT *, UNIX_TIMESTAMP(`updated`) AS `updated`, `r`.`handle` AS `unit_handle`,
+				`r`.`name` AS `unit_name`, `t`.`name` AS `type_name`, `r`.`type` AS `type`, 
+				`r`.`icon_str` AS `icon_str`, `t`.`icon` AS `icon`,
 				`r`.`id` AS `unit_id`, `r`.`capab` AS `capab`, `r`.`status_about` AS `status_about`,
+				`s`.`bg_color` AS `status_bg`, `s`.`text_color` AS `status_text`,
 				`s`.`status_val` AS `unitstatus`, `contact_via`, 
 				(((acos(sin(({$latitude}*pi()/180)) * sin((`r`.`lat`*pi()/180))+cos(({$latitude}*pi()/180)) * cos((`r`.`lat`*pi()/180)) * cos((({$longitude} - `r`.`lng`)*pi()/180))))*180/pi())*60*{$nm_to_what}) AS `distance`,
 				(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
@@ -428,8 +432,11 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON (`r`.`id` = `a`.`resource_id`)					
 				 WHERE  `dispatch` = 0 $where $where2 $where3 GROUP BY unit_id )
 			UNION DISTINCT
-				(SELECT *, UNIX_TIMESTAMP(`updated`) AS `updated`, `r`.`handle` AS `unit_handle`, `r`.`name` AS `unit_name`, `t`.`name` AS `type_name`, `r`.`type` AS `type`, `r`.`icon_str` AS `icon_str`, `t`.`icon` AS `icon`,
+				(SELECT *, UNIX_TIMESTAMP(`updated`) AS `updated`, `r`.`handle` AS `unit_handle`,
+				`r`.`name` AS `unit_name`, `t`.`name` AS `type_name`, `r`.`type` AS `type`,
+				`r`.`icon_str` AS `icon_str`, `t`.`icon` AS `icon`,
 				`r`.`id` AS `unit_id`, `r`.`capab` AS `capab`, `r`.`status_about` AS `status_about`,
+				`s`.`status_val` AS `unitstatus`, `contact_via`, 
 				`s`.`status_val` AS `unitstatus`, `contact_via`, 
 				9999 AS `distance`,
 				(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
@@ -444,7 +451,6 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				 WHERE  `dispatch` > 0 $where $where2 $where3 GROUP BY unit_id )
 				{$order}";		//	6/17/13				 
 				 
-				 
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	
 			if(mysql_affected_rows()>0) {
@@ -456,10 +462,10 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 ?>
 			var start = 1;
 			var current_id= "R"+start;			//
-			side_bar_html += "<TR class='even'>	<TD CLASS='<?php print $severityclass; ?>' COLSPAN=99 ALIGN='center'><B>Routes to Incident: <I><?php print shorten($row_ticket['scope'], 20) . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" . $elapsed; ?>)</I></B></TD></TR>\n";
+			side_bar_html += "<TR class='even'>	<TD CLASS='<?php print $severityclass; ?> text_big' COLSPAN=99 ALIGN='center'><B>Routes to Incident: <I><?php print shorten($row_ticket['scope'], 20) . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(" . $elapsed; ?>)</I></B></TD></TR>\n";
 			side_bar_html += "<?php print $search_arg;?>";
-			side_bar_html += "<TR class='odd'>	<TD COLSPAN=99 ALIGN='center'>Click line, icon or map for route</TD></TR>\n";
-			side_bar_html += "<TR class='even' STYLE = 'white-space:nowrap;'><TD COLSPAN=3></TD><TD ALIGN='left'><?php print get_text("Handles");?></TD><TD ALIGN='left'><?php print get_text("Units");?></TD><TD ALIGN='right'>SLD&nbsp;(<?php print $capt;?>)</TD><TD ALIGN='center'>Call</TD><TD ALIGN='left'>Status</TD><TD>M</TD><TD ALIGN='left'>As of</TD></TR>\n";
+			side_bar_html += "<TR class='odd'>	<TD COLSPAN=99 CLASS='text_small text_center'>Click line, icon or map for route</TD></TR>\n";
+			side_bar_html += "<TR class='even' STYLE = 'white-space:nowrap;'><TD COLSPAN=3></TD><TD CLASS='header text text_left'><?php print get_text("Handles");?></TD><TD CLASS='header text text_left'><?php print get_text("Units");?></TD><TD CLASS='header text text_right'>SLD&nbsp;(<?php print $capt;?>)</TD><TD CLASS='header text text_center'>Call</TD><TD CLASS='header text text_left'>Status</TD><TD>M</TD><TD CLASS='header text text_left'>As of</TD></TR>\n";
 			
 <?php
 // major while ... for RESPONDER data starts here
@@ -592,7 +598,9 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 						}									// END IF/ELSE (rem_source)
 				    $the_disp_str = "";			
 					if ($unit_row['dispatch']==2) {
-						print "\tsidebar_line = '<TD ALIGN=center><INPUT TYPE=checkbox disabled STYLE = \"visibility: hidden;\"></TD>'";
+?>
+						sidebar_line = "<TD CLASS='text text_center'><INPUT TYPE=checkbox disabled STYLE = 'visibility: hidden;'></TD>";
+<?php
 						$can_dispatch = false;
 						}
 					else {
@@ -615,34 +623,36 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 							}			// end switch ()
 						$can_dispatch = true;
 ?>				
-						sidebar_line = "<TD ALIGN='center'><INPUT TYPE='checkbox' <?php print get_cd_str($unit_row); ?>ID='C_" + <?php print $i;?> + "' NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='show_butts(to_visible); unit_sets[<?php print $i; ?>]=this.checked;' /></TD>";
+						sidebar_line = "<TD CLASS='text text_center'><INPUT TYPE='checkbox' <?php print get_cd_str($unit_row); ?>ID='C_" + <?php print $i;?> + "' NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='show_butts(to_visible); unit_sets[<?php print $i; ?>]=this.checked;' /></TD>";
 <?php
 						}
-?>	
-<!-- 6/17/13 Added Handle to list fields -->
-					sidebar_line += "<TD TITLE = \"<?php print addslashes($unit_row['unit_handle']);?>\">";
-<?php
 					$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$unit_row['icon']];
 					$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$unit_row['icon']];
+					$status_bgcolor = $unit_row['status_bg'];
+					$status_textcolor = $unit_row['status_text'];
+?>	
+<!-- 6/17/13 Added Handle to list fields -->
+					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>;  opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($unit_row['unit_handle']);?>\">";
+<?php
 					$strike = ($can_dispatch) ? "": "color:red;text-decoration:line-through;" ;	//	6/17/13	Added check for Dispatch disallowed to strikethrough check
-					$the_style = "<SPAN STYLE='" . $strike . " background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>";
+					$the_style = "<SPAN STYLE='" . $strike . "'>";
 ?>
-					sidebar_line += "<NOBR><?php print $the_style . shorten($unit_row['unit_handle'], 10);?></SPAN></NOBR></TD>";
+					sidebar_line += "<NOBR><?php print shorten($unit_row['unit_handle'], 10);?></SPAN></NOBR></TD>";
 
 <!-- End of Handle -->					
 <?php
 					$str_dist = ($have_position)? number_format(round($unit_row['distance'], 1), 1): "" ;		// 3/5/11
 ?>
-					sidebar_line += "<TD TITLE = \"<?php print addslashes($unit_row['unit_name']);?>\">";
-					sidebar_line += "<NOBR><?php print $the_style . shorten($unit_row['unit_name'], 20);?></SPAN></NOBR></TD>";
-					sidebar_line += "<TD ALIGN='right'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
+					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>;  opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($unit_row['unit_name']);?>\">";
+					sidebar_line += "<NOBR><?php print shorten($unit_row['unit_name'], 20);?></SPAN></NOBR></TD>";
+					sidebar_line += "<TD CLASS='text text_center'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
 					sidebar_line += "<?php print get_assigned_td($unit_row['unit_id']); ?>";		// 3/15/11
-<?php				$the_style = "<SPAN STYLE='{$strike}background-color:{$unit_row['bg_color']}; color:{$unit_row['text_color']};'>"; 
+<?php
 					$statusTemp = ($unit_row['status_about'] != "") ? htmlentities($unit_row['status_about'],ENT_QUOTES) : "No further status information available";
 ?>
-					sidebar_line += "<TD TITLE = \"<?php print $statusTemp;?>\" CLASS='td_data' onMouseover=\"Tip('<?php print $statusTemp;?>');\" onMouseout='UnTip();'><?php print $the_style . shorten($unit_row['unitstatus'], 12);?></SPAN></TD>";
-					sidebar_line += "<TD CLASS='td_data'><?php print $thespeed;?></TD>";
-					sidebar_line += "<TD CLASS='td_data'><?php print substr(format_sb_date($unit_row['updated']), 4);?></TD>";
+					sidebar_line += "<TD CLASS='td_data text text_left' style='background-color: <?php print $status_bgcolor;?>;  opacity: .7; color: <?php print $status_textcolor;?>;' onMouseover=\"Tip('<?php print $statusTemp;?>');\" onMouseout='UnTip();'><?php print $the_style . shorten($unit_row['unitstatus'], 12);?></SPAN></TD>";
+					sidebar_line += "<TD CLASS='td_data text'><?php print $thespeed;?></TD>";
+					sidebar_line += "<TD CLASS='td_data text'><?php print substr(format_sb_date($unit_row['updated']), 4);?></TD>";
 					var unit_id = <?php print $unit_row['unit_id'];?>;
 <?php
 					if (($has_coords)) {		//  2/25/09
@@ -700,9 +710,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			if (nr_units==0) {
 				side_bar_html +="<TR CLASS='odd'><TD ALIGN='center' COLSPAN=99><BR /><BR /><H3>No <?php print get_text("Units");?>!</H3></TD></TR>";	
 				map.setView([<?php echo $row_ticket['lat']; ?>, <?php echo $row_ticket['lng']; ?>], <?php echo get_variable('def_zoom'); ?>);
-				}
-			else {
-			
+				} else {
 				center = bounds.getCenter();
 				zoom = map.getZoom();
 				try{bounds.extend(point);}
@@ -714,7 +722,6 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 
 				map.setView(center,zoom);
 				side_bar_html+= "<TR CLASS='" + colors[i%2] +"'><TD COLSPAN=99>&nbsp;</TD></TR>\n";
-				side_bar_html+= "<TR CLASS='" + colors[(i+1)%2] +"'><TD COLSPAN=99 ALIGN='center'><B>M</B>obility:&nbsp;&nbsp; stopped: <FONT COLOR='red'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;moving: <FONT COLOR='green'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;fast: <FONT COLOR='white'><B>&bull;</B></FONT>&nbsp;&nbsp;&nbsp;silent: <FONT COLOR='black'><B>&bull;</B></FONT></TD></TR>\n";
 				side_bar_html+= "<TR><TD>&nbsp;</TD></TR>\n";
 				}
 					

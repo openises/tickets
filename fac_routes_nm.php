@@ -52,7 +52,7 @@ function get_day() {
 	}
 	
 
-function valid_status($id) {
+function valid_facstatus($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $id;
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if(mysql_num_rows($result) > 0) {
@@ -191,7 +191,7 @@ function do_fac($id) {
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if(mysql_num_rows($result) > 0) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$print = "<TABLE BORDER='0'ID='left' width='60%'>\n";		//
+		$print = "<TABLE ID='fac_inner_table' BORDER='0'ID='left' width='60%'>\n";		//
 		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD><TD CLASS='td_data'>" . $row['facility_description'] . "</TD></TR>\n";
 		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Capability:</TD><TD CLASS='td_data'>" . nl2br($row['capab']) . "</TD></TR>\n";
 		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Status:</TD><TD CLASS='td_data'>" . $row['status_val'] . "</TD></TR>\n";
@@ -269,7 +269,7 @@ function do_fac($id) {
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -319,10 +319,10 @@ function do_fac($id) {
 		#directions { background-color: white;}
 		#fac_table { overflow-y: auto; }
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/json2.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/json2.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
@@ -341,17 +341,17 @@ function do_fac($id) {
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 var map;
 var minimap;
@@ -397,7 +397,7 @@ function isNull(arg) {
 	return arg===null;
 	}
 </SCRIPT>	
-<script type="text/javascript">//<![CDATA[
+<script type="application/x-javascript">//<![CDATA[
 //*****************************************************************************
 // Do not remove this notice.
 //
@@ -674,8 +674,8 @@ function go_there(id) {
 <?php
 if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('id', $_GET) && $_GET['id'] != 0) {		//	List Facilities
 ?>
-	<DIV ID='outer' style='position: absolute; left: 0px; top: 0px; width: 100%; height: 98%; display: block;'>
-		<DIV ID='leftcol' style='position: absolute; left: 20px; top: 20px; width: 45%; height: 98%; display: block;'>
+	<DIV id = "outer" style='position: absolute; left: 0px;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<SPAN>
 <?php
 				//	 user groups
@@ -811,9 +811,48 @@ if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('
 					</DIV>
 			</SPAN>
 		</DIV>
-		<DIV ID='rightcol' style='position: absolute; right: 100px; top: 20px; width: 45%; height: 98%; display: block;'>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
+				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+			</DIV>
+		</DIV>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;
 		</DIV>
 	</DIV>
+<SCRIPT>
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	leftcolwidth = outerwidth * .70;
+	rightcolwidth = outerwidth * .1;
+	colwidth = outerwidth * .70;
+	colheight = outerheight * .95;
+	fieldwidth = colwidth * .6;
+	medfieldwidth = colwidth * .3;		
+	smallfieldwidth = colwidth * .15;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	$('leftcol').style.width = leftcolwidth + "px";
+	$('leftcol').style.height = colheight + "px";
+	$('rightcol').style.width = rightcolwidth + "px";
+	$('editform').style.width = leftcolwidth + "px";
+	$('rightcol').style.height = colheight + "px";
+</SCRIPT>
+	<FORM NAME="can_Form" METHOD="get" ACTION = "units.php?func=responder&edit=false&view=true&id=5">
+	<INPUT TYPE="hidden" NAME="func" VALUE='responder'>
+	<INPUT TYPE="hidden" NAME="edit" VALUE='false'>
+	<INPUT TYPE="hidden" NAME="view" VALUE='true'>	
+	<INPUT TYPE="hidden" NAME="id" VALUE=<?php print $_GET['id'];?> />
+	</FORM>
 	<FORM NAME="to_stage2" METHOD="get" ACTION = "fac_routes_nm.php">
 	<INPUT TYPE="hidden" NAME="stage" 	VALUE=2>
 	<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">
@@ -831,46 +870,80 @@ if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('
 	<DIV ID='finished' style='display: none;'>
 	<CENTER>		
 	<BR /><BR /><BR /><H3>Responder <?php print $respName[0];?> Location Updated</H3>
-	<BR /><BR /><BR /><SPAN ID='fin_but' class='plain' style='float: none;' onMouseover="do_hover(this.id);" onMouseout="do_plain(this.id);" onClick="document.forms['fin_form'].submit();" />Finished</SPAN><BR /><BR />
+	<BR /><BR /><BR />
+	<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.forms['fin_form'].submit();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 	</DIV>
-	<DIV ID='outer' style='position: absolute; left: 0px; top: 0px; width: 100%; height: 98%; display: block;'>
-		<DIV ID='leftcol' style='position: absolute; left: 0px; top: 0px; width: 45%; height: 98%; display: block;'>
+	<DIV id = "outer" style='position: absolute; left: 0px;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<SPAN CLASS='heading' style='width: 100%; display: block;'>Dispatching <?php print $respName[0];?> to <?php print $facName[0];?></SPAN>
-			<DIV ID='fac_table'><?php print do_fac($_GET['fac_id']);?></DIV><BR /><BR />
+			<DIV ID='fac_table' style='width: 100%;'><?php print do_fac($_GET['fac_id']);?></DIV><BR /><BR />
 			<DIV ID='map_canvas' style='height: 500px; width: 500px; display: block;'></DIV>
 		</DIV>
-		<DIV ID='middlecol' style='width: 10%;'>
-		</DIV>
-		<DIV ID='rightcol' style='position: absolute; right: 100px; top: 0px; width: 45%; height: 98%; display: block;'>
-			<BR />
-			<SPAN ID = 'disp_but' CLASS='plain' STYLE="display: block" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="$('disp_but').style.display='none'; $('un_status').style.display='inline-block'; $('disp2_but').style.display='inline-block';" />Move Unit to Facility</SPAN>
-			<SPAN ID = 'un_status' style='display: none;'>
-				<SELECT ID="frm_status_sel" NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
+				<SPAN ID = 'disp_but' CLASS='plain_centerbuttons text' STYLE="float: none; width: 80px; display: block;" onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="$('disp_but').style.display='none'; $('un_status').style.display='inline-block'; $('disp2_but').style.display='inline-block';" />To <?php print get_text("Facility");?><BR /><IMG id='sub1_img' SRC='./images/submit.png' /></SPAN>
+				<SPAN ID = 'un_status' style='display: none; float: right;'><BR />
+					<SELECT ID="frm_status_sel" NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
 <?php
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
-					$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
+						$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-					$the_grp = strval(rand());			//  force initial optgroup value
-					$i = 0;
-					while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
-					if ($the_grp != $row_st['group']) {
-						print ($i == 0)? "": "</OPTGROUP>\n";
-						$the_grp = $row_st['group'];
-						print "\t\t<OPTGROUP LABEL='$the_grp'>\n";
+						$the_grp = strval(rand());			//  force initial optgroup value
+						$i = 0;
+						while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+						if ($the_grp != $row_st['group']) {
+							print ($i == 0)? "": "</OPTGROUP>\n";
+							$the_grp = $row_st['group'];
+							print "\t\t<OPTGROUP LABEL='$the_grp'>\n";
+							}
+						$sel = (get_unit_status($_GET['unit_id'])== $row_st['id'])? " SELECTED" : "";
+						print "\t\t<OPTION VALUE=" . $row_st['id'] . $sel ." STYLE='background-color:{$row_st['bg_color']}; color:{$row_st['text_color']};'  >" . $row_st['status_val']. "</OPTION>\n";	// 3/15/10
+						$i++;
 						}
-					$sel = (get_unit_status($_GET['unit_id'])== $row_st['id'])? " SELECTED" : "";
-					print "\t\t<OPTION VALUE=" . $row_st['id'] . $sel ." STYLE='background-color:{$row_st['bg_color']}; color:{$row_st['text_color']};'  >" . $row_st['status_val']. "</OPTION>\n";	// 3/15/10
-					$i++;
-					}
 ?>
-				</SELECT>
-				<SPAN ID = 'disp2_but' CLASS='plain' STYLE="display: none; float: right;" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="update_location(facID, respID);" />Submit Move</SPAN>
-			</SPAN>
-			<SPAN ID='can_but' class='plain' onMouseover="do_hover(this.id);" onMouseout="do_plain(this.id);" onClick="document.forms['can_form'].submit();" />Cancel</SPAN><BR /><BR /><BR /><BR />
+					</SELECT>
+				</SPAN>
+				<SPAN ID='disp2_but' CLASS='plain_centerbuttons text' STYLE="float: none; width: 80px; display: none;" onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="update_location(facID, respID);"><?php print get_text("Submit");?> Move<BR /><IMG id='sub2_img' SRC='./images/submit.png' /></SPAN>
+				<SPAN ID='can_but' class='plain_centerbuttons text' STYLE='float: none; width: 80px; display: block;' onMouseover="do_hover_centerbuttons(this.id);" onMouseout="do_plain_centerbuttons(this.id);" onClick="document.forms['can_form'].submit();"><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+			</DIV>
+		</DIV>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;
+		</DIV>
+
 		</DIV>
 
 	</DIV>
-	<FORM NAME="can_form" METHOD="get" ACTION = "new_fac_routes.php">
+<SCRIPT>
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	leftcolwidth = outerwidth * .70;
+	rightcolwidth = outerwidth * .1;
+	colwidth = outerwidth * .70;
+	colheight = outerheight * .95;
+	fieldwidth = colwidth * .6;
+	medfieldwidth = colwidth * .3;		
+	smallfieldwidth = colwidth * .15;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	$('leftcol').style.width = leftcolwidth + "px";
+	$('fac_table').style.width = leftcolwidth + "px";
+	$('fac_inner_table').style.width = leftcolwidth + "px";	
+	$('leftcol').style.height = colheight + "px";
+	$('rightcol').style.width = rightcolwidth + "px";
+	$('editform').style.width = leftcolwidth + "px";
+	$('rightcol').style.height = colheight + "px";
+</SCRIPT>
+	<FORM NAME="can_form" METHOD="get" ACTION = "fac_routes_nm.php">
 	<INPUT TYPE="hidden" NAME="stage" 	VALUE=1>
 	<INPUT TYPE="hidden" NAME="id" VALUE=<?php print $_GET['unit_id'];?> />
 	</FORM>

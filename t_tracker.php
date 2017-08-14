@@ -22,7 +22,7 @@ $api_key = get_variable('gmaps_api_key');
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="stylesheet.php" TYPE="text/css">	<!-- 3/15/11 -->
 <?php
@@ -32,13 +32,13 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<SCRIPT SRC='../js/usng.js' TYPE='text/javascript'></SCRIPT>
-<SCRIPT SRC="../js/graticule.js" type="text/javascript"></SCRIPT>
+<SCRIPT SRC='../js/usng.js' TYPE='application/x-javascript'></SCRIPT>
+<SCRIPT SRC="../js/graticule.js" type="application/x-javascript"></SCRIPT>
 
 <SCRIPT>
 	function $() {								// 1/23/09

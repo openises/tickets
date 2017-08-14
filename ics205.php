@@ -12,7 +12,7 @@ require_once('incs/functions.inc.php');		//7/28/10
 //dump($_POST);
 
 function template_205 ($item) {
-		$body_style	= ' MARGIN:0; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none ';
+		$body_style	= ' MARGIN:0; FONT-WEIGHT: normal; COLOR: #000000; TEXT-DECORATION: none ';
 		$table_style	= 'width:auto; border:2px solid black;  border-collapse: collapse;';
 		$table_upper_style= 'width:auto; border-collapse: collapse; border:none; ';
 
@@ -175,32 +175,17 @@ function template_205 ($item) {
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <script src = "./js/jquery-1.4.2.min.js"></script>
-<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
+<script src="./js/jss.js" TYPE="application/x-javascript"></script>
+<script src="./js/misc_function.js" TYPE="application/x-javascript"></script>
 
 <SCRIPT>
 	String.prototype.trim = function () {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
 </SCRIPT>
-<STYLE>
-Body 		{ BACKGROUND-COLOR: #EFEFEF; MARGIN:0; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-table 		{ width:auto; border-collapse: collapse; border:2px solid black; }
-table.upper	{ width:auto; border-collapse: collapse; border:none; }
-tr.fat 		{ background-color: white; height: 40px; vertical-align:text-top;}
-tr.thin 	{ background-color: white; height: 21px; vertical-align:middle;}
-tr.plain 	{ background-color: white; height: 21px; }
-
-td.heading	{ FONT-WEIGHT: 900; FONT-SIZE: 10px; }
-td.heading_3	{ FONT-WEIGHT: 400; FONT-SIZE: 12px;  border:2px solid black; text-align: left; }
-td.heading_4	{ FONT-WEIGHT: 900; FONT-SIZE: 10px;  text-align: right; }
-td.plain	{ FONT-WEIGHT: 400; FONT-SIZE: 10px; text-align: center; }
-
-input[type='text'] { font-size: 12px; font-family: monospace; }
-textarea  { font-size: 12px; font-family: monospace; }
-
-</STYLE>
 </HEAD>
 <?php
 $step = (array_key_exists( 'step', $_POST )) ?  $_POST['step']: 1;
@@ -255,50 +240,37 @@ switch ($step) {
 		$item[62] =  in_text  (62, 5, 62, $the_time);
 
 ?>
-<!-- 1/1/2015 -->
-<STYLE TYPE="text/css">
-.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
-.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
-.content { padding: 1em; }
-</STYLE>
+		<BODY onload = "document.form_205.f1.focus();">		<!-- <?php echo __LINE__ ; ?> -->
+		<div class="text" style="position: fixed; top: 20px; left: 10px; width:auto;">
+			<SPAN ID='reset_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.form_205.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN><BR />
+			<SPAN ID='can_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
+			<SPAN ID='mail_but' TITLE='OK - Mail this' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate(document.form_205);"><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN><BR />
+		</div>
 
-<BODY onload = "document.form_205.f1.focus();">		<!-- <?php echo __LINE__ ; ?> -->
-
-<div id="boxB" class="box" style="left:5px; top:20px;">
-  <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
-       onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag us</i></div>
-  <div class="content" style="width:auto;">
-	<input type = "reset"><br /><br />
-	<input type = "button" value = 'Cancel' onclick = "document.can_form.submit()" />
-	<br /><br />
-	<input type = "button" value = 'OK - Mail this' onclick = "validate(document.form_205);"/>
-	</div>
-</div>
-
-<center><br />
-<h3> INCIDENT RADIO COMMUNICATIONS PLAN (ICS 205)</h3>
-<form name = "form_205" method = "post" action = "<?php echo basename(__FILE__); ?>" >
-<input type = 'hidden' name = 'f0' value = "" />
+		<center><br />
+		<h3> INCIDENT RADIO COMMUNICATIONS PLAN (ICS 205)</h3>
+		<form name = "form_205" method = "post" action = "<?php echo basename(__FILE__); ?>" >
+		<input type = 'hidden' name = 'f0' value = "" />
 
 <?php
-	echo template_205 ($item);		// fills form with default $item entries
+		echo template_205 ($item);		// fills form with default $item entries
 ?>
-<p style = 'margin-top:20px;'>
-	<input type = 'hidden' name = 'step' value = 2 />
-	<input type = 'hidden' name = 'frm_add_str' value = '<?php echo $_POST['frm_add_str'];?>'/>
-	</form>
-</p>
+		<p style = 'margin-top:20px;'>
+			<input type = 'hidden' name = 'step' value = 2 />
+			<input type = 'hidden' name = 'frm_add_str' value = '<?php echo $_POST['frm_add_str'];?>'/>
+			</form>
+		</p>
 
-<script>
-	function validate(our_form) {		// ics form name check
-		if (our_form.f1.value.trim().length > 0) {our_form.submit();}		// incident name required
-		else {
-			alert("Incident Name is required");
-			our_form.f1.focus();
-			return false;
-			}
-		}		// end function validate()
-</script>
+		<script>
+			function validate(our_form) {		// ics form name check
+				if (our_form.f1.value.trim().length > 0) {our_form.submit();}		// incident name required
+				else {
+					alert("Incident Name is required");
+					our_form.f1.focus();
+					return false;
+					}
+				}		// end function validate()
+		</script>
 
 <?php
 
@@ -378,4 +350,17 @@ default:
 <form name = "can_form" method = 'post' action = 'ics213.php'>
 </form>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

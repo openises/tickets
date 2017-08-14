@@ -147,6 +147,7 @@ $the_resp_id = (isset($_GET['id']))? $_GET['id']: 0;	//	11/18/13
 11/18/13 Fix to include previously removed (in error) messaging code
 11/18/13 Fixed extra spurious assigned count at top of units list.
 1/30/14 Added tracking for APRS via XASTIR.
+6/30/17 Added tracking for APRS via TRACCAR and JAVAPRSSRVR.
 */
 
 @session_start();	
@@ -204,7 +205,7 @@ $sm_icons = $GLOBALS['sm_icons'];
 
 function get_icon_legend (){			// returns legend string - 1/1/09
 	global $u_types, $sm_icons;
-	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";
+	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `type`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$print = "";											// output string
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
@@ -217,7 +218,7 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 function get_roster($current=null) {	//	9/6/13
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` ORDER BY `person_identifier`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$the_ret = "<SELECT NAME='frm_roster_id' onChange = 'get_roster_details(this.form, this.options[this.selectedIndex].value);' >";
+	$the_ret = "<SELECT CLASS='text' NAME='frm_roster_id' onChange = 'get_roster_details(this.form, this.options[this.selectedIndex].value);' >";
 	$the_ret .= "<OPTION VALUE='0' SELECTED>Select a Person</OPTION>";	
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$sel = (($current) && ($current == $row['id'])) ? "SELECTED " : "";
@@ -244,7 +245,10 @@ function get_user_details($rosterID) {	//	9/6/13
 		}
 	return $the_ret;
 	}
-
+	
+if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
+	require_once('./incs/modules.inc.php');
+	}	
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -254,7 +258,7 @@ function get_user_details($rosterID) {	//	9/6/13
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
@@ -263,31 +267,10 @@ function get_user_details($rosterID) {	//	9/6/13
 	<![endif]-->
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<STYLE>
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-		table.cruises td {overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 1.8em; border: 1px solid #999; }
-		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
-		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background-color: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
-		div.tabBox {}
-		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; border-radius: .75em .75em 0em 0em;
-				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-				position: relative;	z-index: 101; cursor: auto; height: 250px;}
-		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: auto;}
-	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -298,25 +281,27 @@ function get_user_details($rosterID) {	//	9/6/13
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
-	if ($_SESSION['internet']) {
+	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-
-	<script type="text/javascript" src="./js/geotools2.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
 	<SCRIPT>
 	var sortby = '`date`';	//	11/18/13
 	var sort = "DESC";	//	11/18/13
@@ -433,8 +418,7 @@ function get_user_details($rosterID) {	//	9/6/13
 			unblink.style.color = "";			
 				}
 			}
-		}					
-
+		}
 	</SCRIPT>
 
 
@@ -469,8 +453,10 @@ function get_user_details($rosterID) {	//	9/6/13
 		$query = "DELETE FROM $GLOBALS[mysql_prefix]responder WHERE `id`=" . $_POST['frm_id'];
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
-		}
-	else {
+		print $caption;
+		sleep(10);
+		$_getgoadd = $_getgoedit = $_getadd = $_getedit = $_postfrm_remove = $_postmap_clear = $_getview = $_dodisp = $_dodispfac = "";
+		} else {
 		if ($_getgoedit == 'true') {
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
 			$station = TRUE;			//
@@ -483,10 +469,9 @@ function get_user_details($rosterID) {	//	9/6/13
 			$resp_stat = $_POST['frm_un_status_id'];
 			$by = $_SESSION['user_id'];
 			$theFac = 0;
-//			if (($_POST['frm_clr_pos'])=='on') {$the_lat = $the_lng = "NULL";}			// 11/15/09
-
-			if ($_postmap_clear=='on') {$the_lat = $the_lng = "NULL";}					// 11/19/09
-			else {
+			if ($_postmap_clear=='on') {
+				$the_lat = $the_lng = "NULL";
+				} else {
 				if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
 					$theFac = $_POST['frm_facility_sel'];
 					$query_fac = "SELECT `lat`, `lng`, `id` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
@@ -525,6 +510,8 @@ function get_user_details($rosterID) {	//	9/6/13
 				`mob_tracker`= " . 	quote_smart(trim($_POST['frm_mob_tracker'])) . ",
 				`xastir_tracker`= " . 	quote_smart(trim($_POST['frm_xastir_tracker'])) . ",
 				`followmee_tracker`= " . 	quote_smart(trim($_POST['frm_followmee_tracker'])) . ",
+				`traccar`= " . 		quote_smart(trim($_POST['frm_traccar'])) . ",
+				`javaprssrvr`= " . 	quote_smart(trim($_POST['frm_javaprssrvr'])) . ",
 				`ring_fence`= " . 	quote_smart(trim($_POST['frm_ringfence'])) . ",		
 				`excl_zone`= " . 	quote_smart(trim($_POST['frm_excl_zone'])) . ",						
 				`direcs`= " . 		quote_smart(trim($_POST['frm_direcs'])) . ",
@@ -532,13 +519,14 @@ function get_user_details($rosterID) {	//	9/6/13
 				`lng`= " . 			$the_lng . ",
 				`contact_name`= " . quote_smart(trim($_POST['frm_contact_name'])) . ",
 				`contact_via`= " . 	quote_smart(trim($_POST['frm_contact_via'])) . ",
-				`smsg_id`= " . 		quote_smart(trim($_POST['frm_smsg_id'])) . ",				
+				`smsg_id`= " . 		quote_smart(trim($_POST['frm_smsg_id'])) . ",
+				`cellphone`= " . 	quote_smart(trim($_POST['frm_cell'])) . ",	
 				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
 				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
 				`at_facility`= " . 	$theFac . ",
 				`updated`= " . 		quote_smart(trim($now)) . ",
 				`status_updated`= '" . $status_updated . "'
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	5/11/11 added internal Tickets tracker, 6/21/13 added field status_updated for auto status function. 9/6/13, 11/18/13, 1/30/14 added xastir tracker
+				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	5/11/11 added internal Tickets tracker, 6/21/13 added field status_updated for auto status function. 9/6/13, 11/18/13, 1/30/14 added xastir tracker, 6/30/17 added Traccar and javaprssrvr
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			
@@ -573,6 +561,9 @@ function get_user_details($rosterID) {	//	9/6/13
 			
 			$mobstr = (($frm_mobile) && ($frm_aprs)||($frm_instam))? "Mobile": "Unit ";
 			$caption = "<B>Unit<i> " . stripslashes_deep($_POST['frm_handle']) . "</i>' data has been updated </B><BR /><BR />";
+			$_getgoedit = "";
+			$_getview = "true";
+			$_GET['id'] = $resp_id;
 			}
 		}				// end else {}
 
@@ -581,16 +572,18 @@ function get_user_details($rosterID) {	//	9/6/13
 		$frm_lat = (empty($_POST['frm_lat']))? 'NULL': quote_smart(trim($_POST['frm_lat']));					// 9/3/08 7/22/10
 		$frm_lng = (empty($_POST['frm_lng']))? 'NULL': quote_smart(trim($_POST['frm_lng']));
 
-		$aprs = 	(empty($_POST['frm_aprs']))? 		0: quote_smart(trim($_POST['frm_aprs']));				// 8/13/10
-		$instam = 	(empty($_POST['frm_instam']))? 		0: quote_smart(trim($_POST['frm_instam']));
-		$locatea = 	(empty($_POST['frm_locatea']))? 	0: quote_smart(trim($_POST['frm_locatea']));
-		$gtrack = 	(empty($_POST['frm_gtrack']))? 		0: quote_smart(trim($_POST['frm_gtrack']));
-		$glat = 	(empty($_POST['frm_glat']))? 		0: quote_smart(trim($_POST['frm_glat'])) ;
-		$t_tracker = (empty($_POST['frm_t_tracker']))? 		0: quote_smart(trim($_POST['frm_t_tracker'])) ;	//	5/11/11
-		$ogts = 	(empty($_POST['frm_ogts']))? 		0: quote_smart(trim($_POST['frm_ogts'])) ;
-		$mob_tracker = 	(empty($_POST['frm_mob_tracker']))? 		0: quote_smart(trim($_POST['frm_mob_tracker'])) ;	//	9/6/13
-		$xastir_tracker = 	(empty($_POST['frm_xastir_tracker']))? 		0: quote_smart(trim($_POST['frm_xastir_tracker'])) ;	//	1/30/14
-		$followmee_tracker = 	(empty($_POST['frm_followmee_tracker']))? 		0: quote_smart(trim($_POST['frm_followmee_tracker'])) ;	//	1/30/14
+		$aprs =					(empty($_POST['frm_aprs']))?				0: quote_smart(trim($_POST['frm_aprs']));				// 8/13/10
+		$instam =				(empty($_POST['frm_instam']))?				0: quote_smart(trim($_POST['frm_instam']));
+		$locatea =				(empty($_POST['frm_locatea']))?				0: quote_smart(trim($_POST['frm_locatea']));
+		$gtrack =				(empty($_POST['frm_gtrack']))?				0: quote_smart(trim($_POST['frm_gtrack']));
+		$glat =					(empty($_POST['frm_glat']))?				0: quote_smart(trim($_POST['frm_glat'])) ;
+		$t_tracker =			(empty($_POST['frm_t_tracker']))? 			0: quote_smart(trim($_POST['frm_t_tracker'])) ;			//	5/11/11
+		$ogts =					(empty($_POST['frm_ogts']))?				0: quote_smart(trim($_POST['frm_ogts'])) ;
+		$mob_tracker =			(empty($_POST['frm_mob_tracker']))?			0: quote_smart(trim($_POST['frm_mob_tracker'])) ;		//	9/6/13
+		$xastir_tracker = 		(empty($_POST['frm_xastir_tracker']))?		0: quote_smart(trim($_POST['frm_xastir_tracker'])) ;	//	1/30/14
+		$followmee_tracker = 	(empty($_POST['frm_followmee_tracker']))?	0: quote_smart(trim($_POST['frm_followmee_tracker'])) ;	//	1/30/14
+		$traccar =				(empty($_POST['frm_traccar']))?				0: quote_smart(trim($_POST['frm_traccar'])) ;			//	6/30/17
+		$javaprssrvr =			(empty($_POST['frm_javaprssrvr']))? 		0: quote_smart(trim($_POST['frm_javaprssrvr'])) ;		//	6/30/17
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
 		$theFac = 0;
 		if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
@@ -606,7 +599,7 @@ function get_user_details($rosterID) {	//	9/6/13
 
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`, `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, 
-			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `followmee_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `at_facility`, `updated`, `status_updated` )
+			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `followmee_tracker`, `traccar`, `javaprssrvr`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `cellphone`, `lat`, `lng`, `type`, `user_id`, `at_facility`, `updated`, `status_updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_roster_id'])) . "," .
 				quote_smart(trim($_POST['frm_name'])) . "," .
@@ -633,12 +626,15 @@ function get_user_details($rosterID) {	//	9/6/13
 				quote_smart(trim($_POST['frm_mob_tracker'])) . "," .
 				quote_smart(trim($_POST['frm_xastir_tracker'])) . "," .
 				quote_smart(trim($_POST['frm_followmee_tracker'])) . "," .
+				quote_smart(trim($_POST['frm_traccar'])) . "," .
+				quote_smart(trim($_POST['frm_javaprssrvr'])) . "," .
 				quote_smart(trim($_POST['frm_ringfence'])) . "," .	
 				quote_smart(trim($_POST['frm_excl_zone'])) . "," .					
 				quote_smart(trim($_POST['frm_direcs'])) . "," .
 				quote_smart(trim($_POST['frm_contact_name'])) . "," .
 				quote_smart(trim($_POST['frm_contact_via'])) . "," .
-				quote_smart(trim($_POST['frm_smsg_id'])) . "," .				
+				quote_smart(trim($_POST['frm_smsg_id'])) . "," .
+				quote_smart(trim($_POST['frm_cell'])) . "," .					
 				$frm_lat . "," .
 				$frm_lng . "," .
 				quote_smart(trim($_POST['frm_type'])) . "," .
@@ -730,7 +726,10 @@ function get_user_details($rosterID) {	//	9/6/13
 
 		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, mysql_insert_id(), $_POST['frm_un_status_id']);	// 6/2/08
 
-		$caption = "<B>Unit  <i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been applied </B><BR /><BR />";
+		$caption = "<B>Unit  <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been added </B><BR /><BR />";
+		$_getgoadd = "";
+		$_getview = "true";
+		$_GET['id'] = $new_id;
 		}							// end if ($_getgoadd == 'true')
 
 // add ===========================================================================================================================

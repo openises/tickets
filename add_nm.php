@@ -300,7 +300,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			<META HTTP-EQUIV="Expires" CONTENT="0" />
 			<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 			<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-			<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+			<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 			<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" /> <!-- 7/7/09 -->
 			<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" />
 
@@ -450,7 +450,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css" />
 <?php
 if ($_SESSION['internet']) {
@@ -459,14 +459,14 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
-<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>		<!-- coordinate conversion 12/10/10 -->	
-<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT> <!-- 7/22/10 -->
+<SCRIPT SRC="./js/usng.js" TYPE="application/x-javascript"></SCRIPT>
+<SCRIPT SRC='./js/jscoord.js' TYPE="application/x-javascript"></SCRIPT>		<!-- coordinate conversion 12/10/10 -->	
+<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT> <!-- 7/22/10 -->
 
 <SCRIPT>
 	var colors = new Array ('odd', 'even');
@@ -1421,7 +1421,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 </HEAD>
 
 <BODY onLoad="ck_frames();do_lock_pe(document.add); document.add.frm_street.focus(); load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>)" onUnload="GUnload()">  <!-- <?php print __LINE__;?> -->		<!-- // 8/23/08 -->
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 
 <?php
 require_once('./incs/links.inc.php');

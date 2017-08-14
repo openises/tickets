@@ -41,7 +41,7 @@ if($success) {
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<STYLE type="text/css">	
@@ -53,7 +53,7 @@ if($success) {
 	LEGEND { font-weight: bold; font-size: 14px; padding: 5px; background: #0000FF; border: 3px inset #FFFFFF; color: #FFFFFF; border-radius: 20px 20px;  }
 	TEXTAREA { clear: both;	font-size: 1em; }
 	</STYLE>
-	<script src="./js/misc_function.js" type="text/javascript"></script>	
+	<script src="./js/misc_function.js" type="application/x-javascript"></script>	
 <SCRIPT>
 
 function $() {

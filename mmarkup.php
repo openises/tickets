@@ -53,7 +53,7 @@ extract($_POST);
 	<META HTTP-EQUIV="Expires" CONTENT="0">
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
@@ -62,32 +62,9 @@ extract($_POST);
 	<![endif]-->
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<STYLE>
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-		table.cruises td {overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
-		div.scrollableContainer2 { position: relative; padding-top: 2em; }
-		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
-		div.tabBox {}
-		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
-				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-				position: relative;	z-index: 101; cursor: normal; height: 250px;}
-		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
-		#Test {position: absolute; visibility: hidden; height: auto; width: auto; white-space: nowrap;}
-		.textLabelclass{ width: auto;}
-	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></SCRIPT>
 	<SCRIPT src="./js/usng.js"></SCRIPT>
 	<SCRIPT src="./js/proj4js.js"></SCRIPT>
 	<SCRIPT src="./js/proj4-compressed.js"></SCRIPT>
@@ -99,8 +76,8 @@ extract($_POST);
 	<SCRIPT src="./js/esri-leaflet.js"></SCRIPT>
 	<SCRIPT src="./js/OSOpenspace.js"></SCRIPT>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
@@ -108,15 +85,19 @@ extract($_POST);
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<SCRIPT type="text/javascript" src="./js/osm_map_functions.js.php"></SCRIPT>
-	<SCRIPT type="text/javascript" src="./js/L.Graticule.js"></SCRIPT>
-	<SCRIPT SRC="./js/jscolor/jscolor.js"  type="text/javascript"></SCRIPT>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<SCRIPT type="application/x-javascript" src="./js/osm_map_functions.js"></SCRIPT>
+	<SCRIPT type="application/x-javascript" src="./js/L.Graticule.js"></SCRIPT>
+	<SCRIPT SRC="./js/jscolor/jscolor.js"  type="application/x-javascript"></SCRIPT>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
 	<SCRIPT>
 	var map, label;
 	var layercontrol;

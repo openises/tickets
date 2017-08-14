@@ -26,7 +26,7 @@ class MIME5 {
 
 	const LE = "\r\n";
 	const HLEN = 52;
-	const MLEN = 73;
+	const MLEN = 72;
 
 	const HCHARSET = 'utf-8';
 	const MCHARSET = 'us-ascii';

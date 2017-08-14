@@ -1,4 +1,8 @@
 <?php
+error_reporting(E_ALL ^ E_STRICT);
+
+$theTimezone = date_default_timezone_get();
+date_default_timezone_set($theTimezone);
 /*
 5/23/08 added function do_kml() - generates JS for kml files - 
 5/31/08 added function do_log() default values
@@ -362,9 +366,11 @@ $GLOBALS['TRACK_T_TRACKER']		=7;  	 	//	5/11/11
 $GLOBALS['TRACK_MOBILE']		=8;  	 	//	9/6/13
 $GLOBALS['TRACK_XASTIR']		=9;  	 	//	1/30/14
 $GLOBALS['TRACK_FOLLOWMEE']		=10;
+$GLOBALS['TRACK_TRACCAR']		=11;
+$GLOBALS['TRACK_JAVAPRSSRVR']	=12;
 
-$GLOBALS['TRACK_2L']		= array("", "AP", "IN", "GT", "LO", "GL", "OG", "TT", "MT", "XA", "FM" ); 	// 7/6/11, 9/6/13, 1/30/14
-$GLOBALS['TRACK_NAMES']		= array("", "APRS", "Instamapper", "GTrack", "LocateA", "Latitude", "OpenGTS", "Internal", "Mobile Tracker", "Xastir", "FollowMee" ); 	// 7/6/11, 9/16/13, 1/30/14
+$GLOBALS['TRACK_2L']		= array("", "AP", "IN", "GT", "LO", "GL", "OG", "TT", "MT", "XA", "FM", "TR", "JA" ); 	// 7/6/11, 9/6/13, 1/30/14
+$GLOBALS['TRACK_NAMES']		= array("", "APRS", "Instamapper", "GTrack", "LocateA", "Latitude", "OpenGTS", "Internal", "Mobile Tracker", "Xastir", "FollowMee", "Traccar", "Javaprssrvr" ); 	// 7/6/11, 9/16/13, 1/30/14
 
 $GLOBALS['UNIT_TYPES_BG']	= array("#000000", "#5A59FF", "#63DB63", "#FF3C4A", "#FFFFFF", "#F7F363", "#C6C3C6", "#00FFFF");	// keyed to unit_types - 2/8/10
 $GLOBALS['UNIT_TYPES_TEXT']	= array("#FFFFFF", "#FFFFFF", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");	// 2/8/10
@@ -390,21 +396,34 @@ $GLOBALS['NM_LAT_VAL'] 		= 0.999999;												// 3/27/2013
 
 $GLOBALS['LOC_TYPES_NAMES']	= array('Violence','Frequent','Health','Environmental','General');
 $GLOBALS['LOC_TYPES'] = array(0,1,2,3,4);		//	11/10/14
-$GLOBALS['LOC_TYPES_BG']	= array('#FF0000','#FFFFFF','#0000CC','#00CC00','#FF0000');		//	11/10/14
-$GLOBALS['LOC_TYPES_TEXT']	= array('#FFFFFF','#FF0000','#FFFFFF','#000000','#FFFFFF');		//	11/10/14
+$GLOBALS['LOC_TYPES_BG']	= array('#FF0000','#000000','#FFFFFF','#FFFF00','#0000FF ');		//	11/10/14
+$GLOBALS['LOC_TYPES_TEXT']	= array('#FFFFFF','#FFFFFF','#000000','#000000','#FFFFFF');		//	11/10/14
+$GLOBALS['wl_icons'] = array("square_red.png", "square_black.png", "square_white.png", "square_yellow.png", "square_blue.png");
+$GLOBALS['wl_sm_icons']	= array("sm_square_red.png", "sm_square_black.png", "sm_square_white.png", "sm_square_yellow.png", "sm_square_blue.png");
+
 
 $evenodd = array ("even", "odd", "heading");	// class names for alternating table row css colors
 
 /* connect to mysql database */
 
-if (!mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd'])) {
+mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd']);
+/* if (!$connect) {
+	die ("Connection attempt to MySQL failed - correction required in order to continue.");
+	} */
+
+mysql_select_db($GLOBALS['mysql_db']);
+/* if (!$db_selected) {
+	print "Connection attempt to database failed. Please run <a href=\"install.php\">install.php</a> with valid  database configuration information.";
+	} */
+
+/* if (!mysql_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd'])) {
 	die ("Connection attempt to MySQL failed - correction required in order to continue.");
 	}
 
 if (!mysql_select_db($GLOBALS['mysql_db'])) {
 	print "Connection attempt to database failed. Please run <a href=\"install.php\">install.php</a> with valid  database configuration information.";
 	exit();
-	}
+	} */
 
 /* check for mysql tables, if non-existent, point to install.php */
 $failed = 0;
@@ -416,8 +435,14 @@ if ($failed) {
 
 $expiry = expires();		// note global
 
+$timezone = get_variable('timezone');
+date_default_timezone_set($timezone);
+
 require_once ('login.inc.php');				// 8/21/10
 require_once('status_cats.inc.php');				// 12/03/10
+
+$timezone = get_variable('timezone');
+date_default_timezone_set($timezone);
 
 function remove_nls($instr) {                // 10/20/09
 	$nls = array("\r\n", "\n", "\r");        // note order
@@ -505,12 +530,13 @@ function show_assigns($which, $id_in){				// 10/20/12
 		start_miles AS start_m,
 		on_scene_miles AS os_miles,
 		end_miles AS end_m,
-		miles AS miles,		
+		miles AS miles,
+		`a`.`comments` AS `assigns_comments`,
 		`r`.`handle`, 
 		`t`.`problemstart` AS `problemstart_i`
 		FROM `$GLOBALS[mysql_prefix]assigns` `a`
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r`	ON (`r`.`id` = `a`.`responder_id`)
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t`	ON (`t`.`id` = `a`.`ticket_id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`t`.`id` = `a`.`ticket_id`)
 		WHERE `a`.`{$which_ar[$which]}` = {$id_in} ORDER BY `problemstart_i` DESC LIMIT 50";
 	$as_result	= mysql_query($as_query) or do_error($as_query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 	$out_str = $the_handle = "";
@@ -519,11 +545,12 @@ function show_assigns($which, $id_in){				// 10/20/12
 		$tags_arr = explode("/", get_variable('disp_stat'));
 		if (count($tags_arr)<6) {$tags_arr = explode("/", "Disp/Resp/OnS/FEnr/FArr/Clear");}		// protect against bad user setting
 		
-		$out_str = "\n<TABLE WIDTH='100%' ALIGN = 'center'><TR><TD COLSPAN=4 CLASS = 'heading' ALIGN='center'><U>" . get_text("Dispatched") . "</U></TD></TR>\n";
+		$out_str = "\n<TABLE WIDTH='100%' ALIGN = 'center'><TR><TD COLSPAN=4 CLASS = 'heading text' ALIGN='center'><U>" . get_text("Dispatch") . " history</U></TD></TR>\n";
 		while($row = stripslashes_deep(mysql_fetch_assoc($as_result))) {
 			$start_miles = ($row['start_m'] != NULL) ? $row['start_m'] : "NA";
 			$os_miles = ($row['os_miles'] != NULL) ? $row['os_miles'] : "NA";
 			$end_miles = ($row['end_m'] != NULL) ? $row['end_m'] : "NA";
+			$notes = $row['assigns_comments'];
 			if($row['miles'] != NULL) {
 				$tot_miles = $row['miles'];
 				} elseif(($row['miles'] == NULL) && (($start_miles != "NA") && ($end_miles != "NA"))) {
@@ -531,32 +558,31 @@ function show_assigns($which, $id_in){				// 10/20/12
 				} else {
 				$tot_miles = "NA";
 				}
-			if ($the_handle != $row['handle']) {
-				$the_handle = $row['handle'];
-				$out_str .= "<TR><TD COLSPAN=4 CLASS='odd' ALIGN='center'><B>{$the_handle}</B></TD></TR>\n";
-				$i=0;
-				}			
-			$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>Start</TD><TD  ALIGN='right'>" . format_date_2(strtotime($row['problemstart_i'])) . "</TD><TD></TD></TR>\n"; $i++; 
+			$out_str .= "<TR><TD COLSPAN=4 CLASS = 'header text' ALIGN='center'>" . $row['scope'] . "</TD></TR>\n";				
+			$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>Start</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['problemstart_i'])) . "</TD></TR>\n"; $i++; 
 			if (is_date($row['dispatched'])) 	{
 				$delta  = my_date_diff($row['problemstart_i'], $row['dispatched_i']);
-				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>{$tags_arr[0]}</TD><TD ALIGN='right'>" . format_date_2(strtotime($row['dispatched_i'])) . 	"</TD><TD>&nbsp;({$delta})</TD></TR>\n"; $i++;}
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>{$tags_arr[0]}</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['dispatched_i'])) . "&nbsp;(" . $delta . ")</TD></TR>\n"; $i++;}
 			if (is_date($row['responding'])) 	{
 				$delta  = my_date_diff($row['problemstart_i'], $row['responding_i']);
-				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>{$tags_arr[1]}</TD><TD ALIGN='right'>" . format_date_2(strtotime($row['responding_i'])) . 	"</TD><TD>&nbsp;({$delta})</TD></TR>\n"; $i++;}
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>{$tags_arr[1]}</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['responding_i'])) . "&nbsp;(" . $delta . ")</TD></TR>\n"; $i++;}
 			if (is_date($row['on_scene'])) 		{
 				$delta  = my_date_diff($row['problemstart_i'], $row['on_scene_i']);
-				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>{$tags_arr[2]}</TD><TD ALIGN='right'>" . format_date_2(strtotime($row['on_scene_i'])) . 		"</TD><TD>&nbsp;({$delta})</TD></TR>\n"; $i++;}
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>{$tags_arr[2]}</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['on_scene_i'])) . "&nbsp;(" . $delta . ")</TD></TR>\n"; $i++;}
 			if (is_date($row['u2fenr'])) 		{
 				$delta  = my_date_diff($row['problemstart_i'], $row['u2fenr_i']);
-				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>{$tags_arr[3]}</TD><TD ALIGN='right'>" . format_date_2(strtotime($row['u2fenr_i'])) . 		"</TD><TD>&nbsp;({$delta})</TD></TR>\n"; $i++;}
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>{$tags_arr[3]}</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['u2fenr_i'])) . "&nbsp;(" . $delta . ")</TD></TR>\n"; $i++;}
 			if (is_date($row['u2farr'])) 		{
 				$delta  = my_date_diff($row['problemstart_i'], $row['u2farr_i']);
-				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>{$tags_arr[4]}</TD><TD ALIGN='right'>" . format_date_2(strtotime($row['u2farr_i'])) . 		"</TD><TD>&nbsp;({$delta})</TD></TR>\n"; $i++;}
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>{$tags_arr[4]}</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['u2farr_i'])) . "&nbsp;(" . $delta . ")</TD></TR>\n"; $i++;}
 			if (is_date($row['clear'])) 		{
 				$delta  = my_date_diff($row['problemstart_i'], $row['clear_i']);
-				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD>{$tags_arr[5]}</TD><TD ALIGN='right'>" . format_date_2(strtotime($row['clear_i'])) . 		"</TD><TD>&nbsp;({$delta})</TD></TR>\n"; $i++;}
-			$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD COLSPAN = '3'>Start Miles: {$start_miles}&nbsp;&nbsp;On Scene Miles: {$os_miles}&nbsp;&nbsp;End Miles: {$end_miles}</TD></TR>\n"; $i++;	//	1/28/13
-			$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD COLSPAN = '3'>TOTAL MILES: {$tot_miles}</TD></TR>\n"; $i++;	//	1/28/13				
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>{$tags_arr[5]}</TD><TD CLASS='text text_normal text_left' COLSPAN=3>" . format_date_2(strtotime($row['clear_i'])) . "&nbsp;(" . $delta . ")</TD></TR>\n"; $i++;}
+			if($notes != "" && $notes != "New") {
+				$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_left' style='width: 25%;'>Notes:</TD><TD CLASS='td_data_wrap text text_normal text_left' COLSPAN=3>" . $notes . "</TD></TR>\n"; $i++;
+				}
+			$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_center' COLSPAN = '3'>Start Miles: {$start_miles}&nbsp;&nbsp;On Scene Miles: {$os_miles}&nbsp;&nbsp;End Miles: {$end_miles}</TD></TR>\n"; $i++;	//	1/28/13
+			$out_str .= "<TR CLASS = '{$evenodd[$i%2]}'><TD CLASS='td_label text text_normal text_center' COLSPAN = '3'>TOTAL MILES: {$tot_miles}</TD></TR>\n"; $i++;	//	1/28/13				
 			}
 		$out_str .= "</TABLE>\n";
 		}
@@ -564,12 +590,11 @@ function show_assigns($which, $id_in){				// 10/20/12
 	}		// end function show_assigns()
 
 
-function show_actions ($the_id, $theSort="date", $links, $display, $mode) {			/* list actions and patient data belonging to ticket */
-	if ($display) {
-		$evenodd = array ("even", "odd");		// class names for display table row colors
-		}
-	else {
-		$evenodd = array ("plain", "plain");	// print
+function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			/* list actions and patient data belonging to ticket */
+	$print = "";
+	$evenodd = array("even", "odd");
+	if($display) {
+		$evenodd = array ("plain", "plain");
 		}
 	$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder`";
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
@@ -578,8 +603,7 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode) {			/*
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$responderlist[$act_row['id']] = $act_row['handle'];
 		}
-	$print = "<TABLE style='width: 100%;' ID='patients'>";
-																	/* list patients */
+															/* list patients */
 	$query = "SELECT *, `p`.`id` AS `pat_id` 
 		FROM `$GLOBALS[mysql_prefix]patient` `p` 
  		LEFT JOIN `$GLOBALS[mysql_prefix]insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
@@ -590,65 +614,73 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode) {			/*
 	$pctr=0;
 	$genders = array("", "M", "F", "T", "U");
 	if(mysql_num_rows($result) > 0) {
-		$print .= "<TR style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
-		}
-	while ($pat_row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$the_gender = ($pat_row['gender'] != 0) ? $genders[$pat_row['gender']] : $genders[4];	//	7/12/13
-		$tipstr = addslashes("Name: {$pat_row['name']}<br> Fullname: {$pat_row['fullname']}<br> DOB: {$pat_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$pat_row['ins_value']}<br>    Facility_contact: {$pat_row['facility_contact']}<br>    Date: {$pat_row['date']}<br>Description:{$pat_row['description']}");
-		$print .= "<TR CLASS='{$evenodd[$pctr%2]}' style='width: 98%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">\n";
-		$print .= "<TD NOWRAP>{$pat_row['name']}</TD>\n
-			\t<TD NOWRAP>Z". format_date_2($pat_row['updated']) . "</TD>\n";
-		$print .= "\t<TD NOWRAP> by <B>". get_owner($pat_row['user'])."</B>";
-		$print .= ($pat_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD>\n
-			\t<TD>" . shorten($pat_row['description'], 24) . "</TD>\n";
-		if ($links) {
-			if($mode == 0) {
-				$print .= "\t<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A>|<A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
+		$print .= "<TABLE style='width: 98%;' ID='patients'>";	//	Patients Table
+		$print .= "<TR CLASS='heading' style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
+		while ($pat_row = stripslashes_deep(mysql_fetch_assoc($result))){
+			$the_gender = ($pat_row['gender'] != 0) ? $genders[$pat_row['gender']] : $genders[4];	//	7/12/13
+			$tipstr = addslashes("Name: {$pat_row['name']}<br> Fullname: {$pat_row['fullname']}<br> DOB: {$pat_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$pat_row['ins_value']}<br>    Facility_contact: {$pat_row['facility_contact']}<br>    Date: {$pat_row['date']}<br>Description:{$pat_row['description']}");
+			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' style='width: 98%; vertical-align: middle;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
+			$print .= "<TD CLASS='text text_left' NOWRAP>{$pat_row['name']}</TD><TD CLASS='text text_left' NOWRAP> Z ". format_date_2($pat_row['updated']) . "</TD>";
+			$print .= "<TD CLASS='text text_left text_bolder' NOWRAP> by ". get_owner($pat_row['user']);
+			$print .= ($pat_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD CLASS='text text_left'>" . shorten($pat_row['description'], 24) . "</TD>";
+			if ($links) {
+				if($mode == 0) {
+					$print .= "\<TD CLASS='text'>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A> | <A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>";	
+					} elseif($mode ==1) {
+					$print .= "<TD CLASS='text'>&nbsp;[<A HREF='patient_w.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A> | <A HREF='patient_w.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>";	
+					} else {
+					$print .= "<TD CLASS='text'>&nbsp;[<A HREF='#' onClick=\"open_pat_window(ticket_id=$the_id, {$pat_row['pat_id']}, 'edit');\">edit</A> | <A HREF='#' onClick=\"open_pat_window(ticket_id=$the_id, {$pat_row['pat_id']}, 'delete');\">delete</A>]</TD>";	
+					}
 				} else {
-				$print .= "\t<TD>&nbsp;[<A HREF='patient_w.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A>|<A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
+				$print .= "<TD>&nbsp;</TD>";
 				}
+			$print .=  "<TD CLASS='text text_left'> Y ({$genders[$pat_row['gender']]}) - {$pat_row['fullname']} - Z{$pat_row['dob']}</TD><TD CLASS='text text_left'> A {$pat_row['ins_value']} - B{$pat_row['facility_contact']}</TD></TR>";
+			$caption = "";				// once only
+			$pctr++;
 			}
-		$print .=  "\t<TD></TD><TD>Y({$genders[$pat_row['gender']]}) - {$pat_row['fullname']} -
-					 Z{$pat_row['dob']}</TD>\n
-				\t<TD></TD><TD>A{$pat_row['ins_value']} -
-				B{$pat_row['facility_contact']}</TD>\n
-			</TR>\n";
-		$caption = "";				// once only
-		$pctr++;
+		$print .= "</TABLE>";	//	End of Patients Table
 		}
+
 																	/* list actions */
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = '$the_id' ORDER BY `date`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$caption = get_text("Actions");
 	$actr=0;	
-	if ((mysql_num_rows($result)) > 0) { 				// 8/6/08
-		$print .= "<TR style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";		
-		}
-	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$tipstr = addslashes(replace_newline($act_row['description']));		
-		$print .= "<TR CLASS='{$evenodd[$actr%2]}' style='width: 98%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
-		$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array
-		$sep = $respstring = "";
-		for ($i=0 ;$i< count($responders);$i++) {				// build string of responder names
-			if (array_key_exists($responders[$i], $responderlist)) {
-				$respstring .= $sep . "&bull; " . $responderlist[$responders[$i]];
-				$sep = "<BR />";
+	if ((mysql_num_rows($result)) > 0) {
+		$print .= "<TABLE style='width: 100%;' ID='actions'>";	//	Actions Table
+		$print .= "<TR CLASS='heading' style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";		
+		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
+			$tipstr = addslashes(replace_newline($act_row['description']));		
+			$print .= "<TR CLASS='{$evenodd[$actr%2]}' style='width: 98%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
+			$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array
+			$sep = $respstring = "";
+			for ($i=0 ;$i< count($responders);$i++) {				// build string of responder names
+				if (array_key_exists($responders[$i], $responderlist)) {
+					$respstring .= $sep . "&bull; " . $responderlist[$responders[$i]];
+					$sep = "<BR />";
+					} else {
+					$respstring .= "&nbsp;";	
+					}
 				}
-			}
 
-		$print .= "<TD CLASS='normal_text' NOWRAP>" . $respstring . "</TD><TD CLASS='normal_text' NOWRAP>". format_date_2($act_row['updated']) ."</TD>";	//	3/15/11
-		$print .= "<TD CLASS='normal_text' NOWRAP>by <B>".get_owner($act_row['user'])."</B> ";	//	3/15/11
-		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
-		$print .= "</TD><TD CLASS='normal_text'>" . replace_newline($act_row['description']) . "</TD>";	//	3/15/11
-		if ($links) {
-			$print .= "<TD><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A>|
-				<A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD>";	
-			}
-		$print .= "</TR>\n";
-		$caption = "";
-		$actr++;
-		}				// end while (...)
-	$print .= "</TABLE>\n";	// 7/10/13 moved out of actions if/else as it fails to close the table if there are no actions.
+			$print .= "<TD CLASS='text text_left' NOWRAP>" . $respstring . "</TD><TD CLASS='text text_left' NOWRAP> ". format_date_2($act_row['updated']) ." </TD>";	//	3/15/11
+			$print .= "<TD CLASS='text text_left' NOWRAP> by <B>".get_owner($act_row['user'])." </B> ";	//	3/15/11
+			$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
+			$print .= "</TD><TD CLASS='text text_left'>" . replace_newline($act_row['description']) . "</TD>";	//	3/15/11
+			if ($links) {
+				if($mode == 0) {
+					$print .= "<TD CLASS='text'><NOBR>&nbsp;[<A HREF='action.php?ticket_id=$the_id&id=" . $act_row['id'] . "&action=edit'>edit</A> | <A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</NOBR></TD>";
+					} elseif($mode ==1) {
+					$print .= "<TD CLASS='text'>&nbsp;[<A HREF='action_w.php?ticket_id=$the_id&id={$act_row['id']}&action=edit'>edit</A> | <A HREF='action.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
+					} else {
+					$print .= "<TD CLASS='text'>&nbsp;[<A HREF='#' onClick=\"open_act_window(ticket_id=$the_id, {$act_row['id']}, 'edit');\">edit</A> | <A HREF='#' onClick=\"open_act_window(ticket_id=$the_id, {$act_row['id']}, 'delete');\">delete</A>]</TD>\n";	
+					}
+				}
+			$caption = "";
+			$actr++;
+			}				// end while (...)
+		$print .= "</TABLE>";	//	End of Actions Table
+		}
 	return $print;
 	}			// end function show_actions
 	
@@ -656,10 +688,10 @@ function list_messages($the_id, $theSort="date", $links, $display) {
 	$print = "";
 	if(get_variable('use_messaging') != 0) {
 		$evenodd = array ("even", "odd");		// class names for display table row colors
-		$actr=0;		
+		$actr=1;		
 		$print = "<TABLE WIDTH='100%'>";
-		$print .= "<TR><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>Messages</U></TD></TR>";
-		$print .= "<TR CLASS='{$evenodd[$actr%2]}'><TD WIDTH='10%'><B>Type</B></TD><TD WIDTH='15%'><B>To</B></TD><TD WIDTH='15%'><B>From</B></TD><TD WIDTH='20%'><B>Subject</B></TD><TD WIDTH='30%'><B>Message</B></TD><TD WIDTH='10%'><B>Date</B></TD></TR>";
+		$print .= "<TR><TD CLASS='heading text text_center text_bold' COLSPAN=99><U>Messages</U></TD></TR>";
+		$print .= "<TR CLASS='odd' STYLE='width: 98%;'><TD CLASS='td_label text text_left text_bold'>Type</TD><TD CLASS='td_label text text_left text_bold'>To</TD><TD CLASS='td_label text text_left text_bold'>From</TD><TD CLASS='td_label text text_left text_bold'>Subject</TD><TD CLASS='td_label text text_left text_bold'>Message</TD><TD CLASS='td_label text text_left text_bold' WIDTH='10%'>Date</TD></TR>";
 		$actr++;		
 		$query_messages = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `ticket_id`= " . $the_id . " ORDER BY '" . $theSort . "' ASC;";
 		$result_messages = mysql_query($query_messages) or do_error($query_messages, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
@@ -688,12 +720,12 @@ function list_messages($the_id, $theSort="date", $links, $display) {
 					$type_flag = "?";
 					$type = 99;
 					}	
-				$print .= "<TR CLASS='{$evenodd[$actr%2]}'><TD WIDTH='10%'>" . $type_flag . "</TD>";
-				$print .= "<TD WIDTH='15%'>" . stripslashes_deep(shorten($row_messages['recipients'], 18)) . "</TD>";
-				$print .= "<TD WIDTH='15%'>" . $row_messages['fromname'] . "</TD>";
-				$print .= "<TD WIDTH='20%'>" . stripslashes_deep(shorten($row_messages['subject'], 18)) . "</TD>";
-				$print .= "<TD WIDTH='30%'>" . stripslashes_deep(shorten($row_messages['message'], 100)) . "</TD>";
-				$print .= "<TD WIDTH='10%'>" . format_date_2(strtotime($row_messages['date'])) . "</TD></TR>";
+				$print .= "<TR CLASS='{$evenodd[$actr%2]}'><TD CLASS='td_data_wrap text text_normal text_left'>" . $type_flag . "</TD>";
+				$print .= "<TD CLASS='td_data_wrap text text_normal text_left'>" . stripslashes_deep(shorten($row_messages['recipients'], 18)) . "</TD>";
+				$print .= "<TD CLASS='td_data_wrap text text_normal text_left'>" . $row_messages['fromname'] . "</TD>";
+				$print .= "<TD CLASS='td_data_wrap text text_normal text_left'>" . stripslashes_deep(shorten($row_messages['subject'], 18)) . "</TD>";
+				$print .= "<TD CLASS='td_data_wrap text text_normal text_left'>" . stripslashes_deep(shorten($row_messages['message'], 100)) . "</TD>";
+				$print .= "<TD CLASS='td_data text text_normal text_left'>" . format_date_2(strtotime($row_messages['date'])) . "</TD></TR>";
 				$actr++;
 				}
 			}
@@ -891,10 +923,51 @@ function get_un_status_name($id) {
 		return "unk";
 		}
 	}
+	
+function get_un_status_cols($id) {
+	$stat_cols = array();
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
+	$result = mysql_query($query);
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$stat_cols[0] = $row['bg_color'];
+		$stat_cols[1] = $row['text_color'];
+		} else {
+		$stat_cols[0] = "#FFFFFF";
+		$stat_cols[1] = "#000000";
+		}
+	return $stat_cols;
+	}
+	
+function get_fac_status_name($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $id;
+	$result = mysql_query($query);
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		return $row['status_val'];
+		} else {
+		return "unk";
+		}
+	}
+	
+function get_fac_status_cols($id) {
+	$stat_cols = array();
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $id;
+	$result = mysql_query($query);
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$stat_cols[0] = $row['bg_color'];
+		$stat_cols[1] = $row['text_color'];
+		} else {
+		$stat_cols[0] = "#FFFFFF";
+		$stat_cols[1] = "#000000";
+		}
+	return $stat_cols;
+	}
 
 function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/14
 	global $evenodd ;	// class names for alternating table row colors
-	require('./incs/log_codes.inc.php'); 									// 9/29/10
+	require('log_codes.inc.php'); 									// 9/29/10
 	$query = "
 		SELECT `$GLOBALS[mysql_prefix]log`.`id` AS `log_id`,
 		`$GLOBALS[mysql_prefix]log`.`who` AS `who`,
@@ -916,30 +989,30 @@ function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/
 		WHERE `$GLOBALS[mysql_prefix]log`.`ticket_id` = " . $theid . " ORDER BY `when` ASC";								// 10/2/12
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$i = 0;
-	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
+	$print = "<TABLE style='width: 100%;' ID='theLog'>";
 
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
 		$code = $row['code'];
 		if ($i==0) {				// 11/20/09
-			$print .= "<TR CLASS='heading'><TD CLASS='heading' TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><U>Log: <I>". shorten($row['tickname'], 32) . "</I></U></TD></TR>";
-			$cfs_head = ($show_cfs)? "<TD ALIGN='center'>CFS</TD>" : ""  ;
-			$print .= "<TR CLASS='odd'><TD ALIGN='left'>Code</TD>" . $cfs_head . "<TD ALIGN='left'>Unit</TD><TD ALIGN='left'>Status</TD><TD ALIGN='left'>When</TD><TD ALIGN='left'>By</TD><TD ALIGN='left'>From</TD></TR>";
+			$print .= "<TR CLASS='heading' STYLE='width: 98%;'><TD CLASS='heading text text_bold' TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><U>Log: <I>". shorten($row['tickname'], 32) . "</I></U></TD></TR>";
+			$cfs_head = ($show_cfs)? "<TD CLASS='td_label text text_center text_bold'>CFS</TD>" : ""  ;
+			$print .= "<TR CLASS='odd' STYLE='width: 98%;'><TD CLASS='td_label text text_left text_bold' ALIGN='left'>Code</TD>" . $cfs_head . "<TD CLASS='td_label text text_left text_bold'>Unit</TD><TD CLASS='td_label text text_left text_bold'>Status</TD><TD CLASS='td_label text text_left text_bold'>When</TD><TD CLASS='td_label text text_left text_bold'>By</TD><TD CLASS='td_label text text_left text_bold'>From</TD></TR>";
 			}
-	
-		$print .= "<TR CLASS='" . $evenodd[$i%2] . "'>" .				// 11/20/09
-			"<TD TITLE =\"{$types[$row['code']]}\">". shorten($types[$row['code']], 20) . "</TD>"; // 
+		if($code ==3) {$theTitle = $row['info'];} else {$theTitle = $types[$row['code']];} 
+		$print .= "<TR CLASS='" . $evenodd[$i%2] . "' onClick = 'view_log_entry({$row['log_id']});'>" . 
+			"<TD CLASS='td_data text text_left text_normal' TITLE =\"{$theTitle}\">". shorten($types[$row['code']], 20) . "</TD>";
 		if ($show_cfs) {
-			$print .= "<TD TITLE =\"{$row['tickname']}\">". shorten($row['tickname'], 16) . "</TD>";	// 2009-11-07 22:37:41 - substr($row['when'], 11, 5)
+			$print .= "<TD CLASS='td_data text text_left text_normal' TITLE =\"{$row['tickname']}\">". shorten($row['tickname'], 16) . "</TD>";	// 2009-11-07 22:37:41 - substr($row['when'], 11, 5)
 			}
-		$print .= "<TD TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>";
+		$print .= "<TD CLASS='td_data text text_left text_normal' TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>";
 		if($code == 20) {
-			$print .= "<TD TITLE =\"{$row['theinfo']}\">". 	shorten(get_un_status_name($row['info']), 16) . "</TD>";
+			$print .= "<TD CLASS='td_data text text_left text_normal' TITLE =\"{$row['theinfo']}\">". 	shorten(get_un_status_name($row['info']), 16) . "</TD>";
 			} else {
-			$print .= "<TD>&nbsp;</TD>";
+			$print .= "<TD CLASS='td_data text text_left text_normal'>&nbsp;</TD>";
 			}
-		$print .= "<TD TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_sb_date_2($row['when']) . "</TD>";
-		$print .= "<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>";
-		$print .= "<TD TITLE =\"{$row['from']}\">". 		substr($row['from'], -4) . "</TD>";
+		$print .= "<TD CLASS='td_data text text_left text_normal' TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_date_2(strtotime($row['when'])) . "</TD>";
+		$print .= "<TD CLASS='td_data text text_left text_normal' TITLE =\"{$row['thename']}\">". 	$row['thename'] . "</TD>";
+		$print .= "<TD CLASS='td_data text text_left text_normal' TITLE =\"{$row['from']}\">". $row['from'] . "</TD>";
 			"</TR>";
 			$i++;
 		}
@@ -1424,38 +1497,35 @@ function do_error($err_function, $err, $custom_err='', $file='', $line=''){ /* r
 	}
 
 function add_header($ticket_id, $no_edit = FALSE, $show_ed_button = FALSE) {		// 11/27/09, 3/30/10, 8/27/10
-//	global {$_SESSION['fip']}, $fmp, {$_SESSION['editfile']}, {$_SESSION['addfile']}, {$_SESSION['unitsfile']}, {$_SESSION['facilitiesfile']}, {$_SESSION['routesfile']}, {$_SESSION['facroutesfile']};
-//	print "<A HREF='{$_SESSION['editfile']}?id=$ticket_id&delete=1'>" . get_text("Delete") . " </A> | ";
 	$win_height =  get_variable('map_height') + 240;
 	$win_width = get_variable('map_width') + 80;
-
-//	$oper_can_edit = ((is_user()) && (get_variable('oper_can_edit') == 1));		// 8/27/10
-	print "<BR /><SPAN STYLE = 'margin-left:40px'><NOBR><FONT SIZE='2'>This Call: ";	
-	print "<A HREF='#' onClick = \"var popWindow = window.open('incident_popup.php?id=$ticket_id', 'PopWindow', 'resizable=1, scrollbars, height={$win_height}, width={$win_width}, left=50,top=50,screenX=50,screenY=50'); popWindow.focus();\">" . get_text("Popup") . "</A> |"; // 7/3/10
+	print "<SPAN STYLE='margin-left: 40px;'><NOBR><SPAN class='text_large text_bold text_white'>This Call: </SPAN>";	
+	print "<A id='pop_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='#' onClick = \"var popWindow = window.open('incident_popup.php?id=$ticket_id', 'PopWindow', 'resizable=1, scrollbars, height={$win_height}, width={$win_width}, left=50,top=50,screenX=50,screenY=50'); popWindow.focus();\"><SPAN STYLE='float: left;'>" . get_text("Popup") . "</SPAN><IMG STYLE='float: right;' SRC='./images/popup_small.png' BORDER=0></A>"; // 7/3/10
 
 	if (can_edit()){
 		if($show_ed_button) {
-			print "<A HREF='{$_SESSION['editfile']}?id=$ticket_id'>" . get_text("Edit") . " </A> | ";
+			print "<A id='ed_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='{$_SESSION['editfile']}?id=$ticket_id'><SPAN STYLE='float: left;'>" . get_text("Edit") . "</SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></A>";
 			}
 
 		if (!is_closed($ticket_id)) {
-			print "<A HREF='action.php?ticket_id=$ticket_id'>Add " . get_text("Action") . "</A> | ";
-			print "<A HREF='patient.php?ticket_id=$ticket_id'>Add " . get_text("Patient") . "</A> | ";
+			print "<A id='act_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"do_add_action('" . $ticket_id . "');\" HREF='#'><SPAN STYLE='float: left;'>+ " . get_text("Action") . "</SPAN><IMG STYLE='float: right;' SRC='./images/action_small.png' BORDER=0></A>";
+			print "<A id='pat_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"do_add_patient('" . $ticket_id . "');\" HREF='#'><SPAN STYLE='float: left;'>+ " . get_text("Patient") . "</SPAN><IMG STYLE='float: right;' SRC='./images/patient_small.png' BORDER=0></A>";
 			}
-		print "<A HREF='config.php?func=notify&id=$ticket_id'>" . get_text("Notify") . " </A> | ";
+		print "<A id='notify_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='config.php?func=notify&id=$ticket_id'><SPAN STYLE='float: left;'>" . get_text("Notify") . "</SPAN><IMG STYLE='float: right;' SRC='./images/message_small.png' BORDER=0></A>";
 		}
-	print "<A HREF='main.php?print=true&id=$ticket_id'>" . get_text("Print") . " </A> | ";
+	print "<A id='prt_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"do_print_ticket('" . $ticket_id . "');\" HREF='#'><SPAN STYLE='float: left;'>" . get_text("Print") . "</SPAN><IMG STYLE='float: right;' SRC='./images/print_small.png' BORDER=0></A>";
 	if (!is_guest()) {				// 2/1/10
-		print "<A HREF='#' onClick = \"var mailWindow = window.open('mail.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\">" . get_text("E-mail") . " </A> |"; // 2/1/10
-		print "<A HREF='#' onClick = \"var mailWindow = window.open('add_note.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"> " . get_text("Add note") . " </A>"; // 10/8/08
+		print "<A id='email_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='#' onClick = \"var mailWindow = window.open('mail.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"><SPAN STYLE='float: left;'>" . get_text("E-mail") . "</SPAN><IMG STYLE='float: right;' SRC='./images/message_small.png' BORDER=0></A>"; // 2/1/10
+		print "<A id='mail_" . $ticket_id . "' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' HREF='#' onClick = 'do_mail_all_win({$ticket_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\"><SPAN STYLE='float: left;'>" . get_text("Contact Units") . "</SPAN><IMG STYLE='float: right;' SRC='./images/message_small.png' BORDER=0></A>";
+		print "<A id='note_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='#' onClick = \"var mailWindow = window.open('add_note.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"><SPAN STYLE='float: left;'>+ " . get_text("Note") . "</SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></A>"; // 10/8/08
 		if ((!(is_closed($ticket_id))) && (!is_unit()))  {		// 7/27/10
-			print "  | <A HREF='#' onClick = \"var mailWindow = window.open('close_in.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=700, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"> " . get_text("Close incident") . " </A> ";  // 8/20/09
+			print "<A id='closein_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='#' onClick = \"var mailWindow = window.open('close_in.php?ticket_id=$ticket_id', 'mailWindow', 'resizable=1, scrollbars, height=300, width=700, left=100,top=100,screenX=100,screenY=100'); mailWindow.focus();\"><SPAN STYLE='float: left;'>" . get_text("Close inc") . "</SPAN><IMG STYLE='float: right;' SRC='./images/close_small.png' BORDER=0></A> ";  // 8/20/09
 			}
 		if (!is_unit()) {				// 7/27/10
-			print " | <A HREF='{$_SESSION['routesfile']}?ticket_id=$ticket_id'> " . get_text("Dispatch Unit") . "</A>";		// 3/30/10
+			print "<A id='disp_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='{$_SESSION['routesfile']}?ticket_id=$ticket_id'><SPAN STYLE='float: left;'>" . get_text("Dispatch") . "</SPAN><IMG STYLE='float: right;' SRC='./images/dispatch_small.png' BORDER=0></A>";		// 3/30/10
 			}
 		}
-	print "</FONT></NOBR></SPAN><BR />";
+	print "</FONT></NOBR></SPAN>";
 	}				// function add_header()
 
 function is_closed($id){/* is ticket closed? */
@@ -1577,7 +1647,7 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
 		
-			print "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+			print "\n<!-- default:$default_date,$day-$month-$year $hour:$minute -->\n";
 			break;
 		case "2":				// 11/29/10
 			print "<SELECT name='frm_day_$date_suffix' $dis_str>";
@@ -1601,7 +1671,7 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
 		
-			print "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+			print "\n<!-- default:$default_date,$day-$month-$year $hour:$minute -->\n";
 			break;
 																						// 8/10/09
 		default:
@@ -1893,7 +1963,6 @@ require_once('remotes.inc.php');	// 8/21/10
 
 function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
 	@session_start();							// 4/4/10
-//	$who = (array_key_exists($_SESSION, 'user_id'))? $_SESSION['user_id']: 0;		// 11/14/10
 	$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 	$info = substr($info, 0, 2047);
 	$from = $_SERVER['REMOTE_ADDR'];
@@ -2542,7 +2611,7 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
 			if (count($to_smsg_array)>0) {		// got sms gateway addresses?
 				$addressess = "";
 				$cell_text_str = stripLabels($text_str);								// strip labels 5/10/10
-				$count_smsg = do_smsg_send(get_msg_variable('smsg_orgcode'),get_msg_variable('smsg_apipin'),"Dispatch Message",$cell_text_str,"CALLSIGNS",$smsg_to_str,"standard_priority",get_msg_variable('smsg_replyto'),"SENDXML", $ticket_id, $messageid, $server);			
+				$count_smsg = do_smsg_send(get_msg_variable('smsg_orgcode'),get_msg_variable('smsg_apipin'),$subject_str,$cell_text_str,"CALLSIGNS",$smsg_to_str,"standard_priority",get_msg_variable('smsg_replyto'),"SENDXML", $ticket_id, $messageid, $server);			
 				}	// end if (count($to_smsg_array)>0)
 			}	// end if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3))
 		}	//	end if($smsg_to_str != "")
@@ -2976,8 +3045,33 @@ function expires() {
 //	return mysql_format_date($now + $GLOBALS['SESSION_TIME_LIMIT']);
 	return $now + $GLOBALS['SESSION_TIME_LIMIT'];				// 8/25/10
 	}
+	
+function get_unit_icon($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$icon_str = $row['icon_str'];
+		} else {
+		$icon_str = "UNK";
+		}
+	return $icon_str;
+	}
+	
+function get_facility_icon($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $id;
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$icon_str = $row['icon_str'];
+		} else {
+		$icon_str = "UNK";
+		}
+	return $icon_str;
+	}
 
 function get_status_sel($unit_in, $status_val_in, $tbl_in) {					// returns select list as click-able string - 2/6/10
+	$icon_str = ($tbl_in == "u") ? get_unit_icon($unit_in) : get_facility_icon($unit_in);
 	switch ($tbl_in) {
 		case ("u") :
 			$tablename = "responder";
@@ -3015,16 +3109,16 @@ function get_status_sel($unit_in, $status_val_in, $tbl_in) {					// returns sele
 	$dis = ($guest)? " DISABLED": "";								// 9/17/08
 	$the_grp = strval(rand());			//  force initial OPTGROUP value
 	$i = 0;
-	$outstr = ($tbl_in == "u") ? "\t\t<SELECT CLASS='sit' id='frm_status_id_u_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color};' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update({$unit_in}, this.value)' >" :
-	"\t\t<SELECT CLASS='sit' id='frm_status_id_f_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color}; width: 90%;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update_fac({$unit_in}, this.value)' >";	// 12/19/09, 1/1/10. 3/15/11
+	$outstr = ($tbl_in == "u") ? "\t\t<SELECT CLASS='sit text' id='frm_status_id_u_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color};' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update({$unit_in}, this.value, \"{$icon_str}\")' >" :
+	"\t\t<SELECT CLASS='sit text' id='frm_status_id_f_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color}; width: 90%;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update_fac({$unit_in}, this.value, \"{$icon_str}\")' >";	// 12/19/09, 1/1/10. 3/15/11
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result_st))) {
 		if ($the_grp != $row['group']) {
 			$outstr .= ($i == 0)? "": "\t</OPTGROUP>";
 			$the_grp = $row['group'];
-			$outstr .= "\t\t<OPTGROUP LABEL='$the_grp'>";
+			$outstr .= "\t\t<OPTGROUP CLASS='text' LABEL='$the_grp'>";
 			}
 		$sel = ($row['id']==$status_val_in)? " SELECTED": "";
-		$outstr .= "\t\t\t<OPTION VALUE=" . $row['id'] . $sel ." STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};'  onMouseover = 'style.backgroundColor = this.backgroundColor;'>$row[$status_field] </OPTION>";		
+		$outstr .= "\t\t\t<OPTION CLASS='text' VALUE=" . $row['id'] . $sel ." STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};' onMouseover = 'style.backgroundColor = this.backgroundColor;'>$row[$status_field] </OPTION>";		
 		$i++;
 		}		// end while()
 	$outstr .= "\t\t</OPTGROUP>\t\t</SELECT>";
@@ -3092,15 +3186,15 @@ function get_recfac_sel($unit_in, $tickid, $assign_id) {					// 10/18/11 - Gets 
 	$guest = is_guest();
 	$dis = ($guest)? " DISABLED": "";
 	$i = 0;
-	$outstr = "\t\t<SELECT CLASS='sit' style='width: 90%;' name='frm_rec_fac' {$dis} ONCHANGE = 'set_rec_fac(this.value)' >";
+	$outstr = "\t\t<SELECT CLASS='sit text' style='width: 90%;' name='frm_rec_fac' {$dis} ONCHANGE = 'set_rec_fac(this.value)' >";
 	if($curr_fac == 0) {
-		$outstr .= "\t\t\t<OPTION VALUE=0 SELECTED>None Selected</OPTION>";	
+		$outstr .= "\t\t\t<OPTION CLASS='text' VALUE=0 SELECTED>None Selected</OPTION>";	
 		} else {
-		$outstr .= "\t\t\t<OPTION VALUE=0>None Selected</OPTION>";			
+		$outstr .= "\t\t\t<OPTION CLASS='text' VALUE=0>None Selected</OPTION>";			
 		}
 	while ($row02 = stripslashes_deep(mysql_fetch_assoc($result02))) {
 		$sel = ($row02['fac_id'] == $curr_fac)? " SELECTED": "";
-		$outstr .= "\t\t\t<OPTION VALUE=" . $row02['fac_id'] . $sel .">" . $row02['name'] . "</OPTION>";		
+		$outstr .= "\t\t\t<OPTION CLASS='text' VALUE=" . $row02['fac_id'] . $sel .">" . $row02['name'] . "</OPTION>";		
 		$i++;
 		}		// end while()
 	$outstr .= "\t\t</SELECT>";
@@ -3112,17 +3206,17 @@ function get_units_legend() {		// returns string as centered span - 2/8/10
 		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` ON `$GLOBALS[mysql_prefix]unit_types`.`id` = `$GLOBALS[mysql_prefix]responder`.`type` ORDER BY `mytype`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-	$out_str = "<SPAN CLASS = 'even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN = 'center'> Units: </SPAN>&nbsp;";
+	$out_str = "<SPAN CLASS = 'even text' ALIGN = 'center'><SPAN CLASS = 'even text' ALIGN = 'center'> Units Types: </SPAN>&nbsp;";
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$the_bg_color = array_key_exists($row['icon'], $GLOBALS['UNIT_TYPES_BG']) ?	$GLOBALS['UNIT_TYPES_BG'][$row['icon']] : "#FFFFFF";	
 		$the_text_color = array_key_exists($row['icon'], $GLOBALS['UNIT_TYPES_TEXT']) ?	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']] : "000000";		
-		$out_str .= "<SPAN STYLE='background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$row['mytype']}</SPAN>&nbsp;";
+		$out_str .= "<SPAN CLASS='text' STYLE='padding: 2px; border: 1px outset #707070; background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$row['mytype']}</SPAN>&nbsp;";
 		}
 	return $out_str .= "</SPAN>";	
 	}										// end function get_units_legend()
 	
 function get_wl_legend() {		// returns string as centered span - 2/8/10
-	$out_str = "<SPAN class = 'even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN='center'> Warn Location Types: </SPAN>&nbsp;";	//	3/15/11
+	$out_str = "<SPAN class = 'even text' ALIGN = 'center'><SPAN CLASS = 'even text' ALIGN='center'> Warn Location Types: </SPAN>&nbsp;";	//	3/15/11
 	$warn_types = array();
 	foreach($GLOBALS['LOC_TYPES'] as $val) {
 		$warn_types[$val] = $GLOBALS['LOC_TYPES_NAMES'][$val];
@@ -3131,7 +3225,7 @@ function get_wl_legend() {		// returns string as centered span - 2/8/10
 		$the_bg_color = array_key_exists($key, $GLOBALS['LOC_TYPES_BG']) ? 	$GLOBALS['LOC_TYPES_BG'][$key]: "#FFFFFF";
 		$the_text_color = array_key_exists($key, $GLOBALS['LOC_TYPES_TEXT']) ? $GLOBALS['LOC_TYPES_TEXT'][$key] : "#000000";
 		$theName = array_key_exists($key, $GLOBALS['LOC_TYPES_NAMES']) ? $GLOBALS['LOC_TYPES_NAMES'][$key] : "Error";
-		$out_str .= "<SPAN STYLE='background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$theName}</SPAN>&nbsp;";
+		$out_str .= "<SPAN CLASS='text' STYLE='padding: 2px; border: 1px outset #707070; background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$theName}</SPAN>&nbsp;";
 		}
 	return $out_str .= "</SPAN>";	
 	}										// end function get_units_legend()
@@ -3141,11 +3235,11 @@ function get_facilities_legend() {		// returns string as centered row - 2/8/10
 		LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]fac_types`.`id` = `$GLOBALS[mysql_prefix]facilities`.`type` ORDER BY `mytype`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-	$out_str = "<SPAN class = 'even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN='center'> Facilities: </SPAN>&nbsp;";	//	3/15/11
+	$out_str = "<SPAN class = 'even text' ALIGN = 'center'><SPAN CLASS = 'even text' ALIGN='center'> Facilitiy types: </SPAN>&nbsp;";	//	3/15/11
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
 		$the_bg_color = array_key_exists($row['icon'], $GLOBALS['FACY_TYPES_BG']) ? $GLOBALS['FACY_TYPES_BG'][$row['icon']] : "#FFFFFF";
 		$the_text_color = array_key_exists($row['icon'], $GLOBALS['FACY_TYPES_TEXT']) ? $GLOBALS['FACY_TYPES_TEXT'][$row['icon']] : "#000000";
-		$out_str .= "<SPAN STYLE='background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$row['mytype']} </SPAN>&nbsp;";
+		$out_str .= "<SPAN CLASS='text' STYLE='padding: 2px; border: 1px outset #707070; background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$row['mytype']} </SPAN>&nbsp;";
 		}
 	return $out_str .= "</SPAN>";	
 	}										// end function get_facilities_legend()
@@ -3161,11 +3255,11 @@ function is_phone ($instr) {		// 3/13/10
 function get_unit_status_legend() {		// returns string as div - 3/21/10
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$out_str = "<DIV><SPAN CLASS = 'even' ALIGN = 'center'> Status legend: </SPAN>&nbsp;";
+	$out_str = "<DIV style='width: 100%;'><DIV STYLE='width: 5%; display: inline-block; vertical-align: top;'> Status legend: </DIV>&nbsp;<DIV STYLE='width: 92%; display: inline-block;'>";
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$out_str .= "<SPAN STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']}'>&nbsp;{$row['status_val']}&nbsp;</SPAN>&nbsp;";
+		$out_str .= "<SPAN STYLE='padding: 2px; border: 1px outset #707070; display: inline-block; background-color:{$row['bg_color']}; color:{$row['text_color']}; word-break: normal; padding: 3px; white-space: nowrap; padding: 2px;'>{$row['status_val']}</SPAN>&nbsp;";
 		}
-	return $out_str .= "</DIV>";	
+	return $out_str .= "</DIV></DIV>";
 	}										// end function get_unit_status_legend()
 
 function get_un_div_height ($in_max) {				//	compute pixels min 260, max .5 x screen height - 2/8/10
@@ -3379,7 +3473,7 @@ function get_disp_status ($row_in) {			// 4/26/11
 	if (is_date($dispatched))	{ return "<SPAN CLASS='disp_stat'>&nbsp;{$tags_arr[0]}&nbsp;" . elapsed ($dispatched) . "</SPAN>";}
 	}
 	
-function auto_disp_status($disp_status, $responder) {	//	8/22/13
+function auto_disp_status($disp_status, $responder, $tick_id=0) {	//	8/22/13
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_disp_status` WHERE `id` = " . $disp_status . " LIMIT 1";
 	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -3390,6 +3484,7 @@ function auto_disp_status($disp_status, $responder) {	//	8/22/13
 		$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
 		if($result2) {
 			$the_ret = $the_val;
+			do_log($GLOBALS['LOG_UNIT_STATUS'], $tick_id, $responder, $the_val);
 			} else {
 			$the_ret = 0;
 			}
@@ -3556,17 +3651,19 @@ function get_buttons_inner2(){		//	4/12/12, 4/2/14
 	}	
 
 function get_remote_type ($inrow) { 							// returns type of remote - 12/3/10
-	if ($inrow['aprs'] == 1) 				 { return $GLOBALS['TRACK_APRS']; }
-	elseif ((int)$inrow['instam'] == 1) 	 { return $GLOBALS['TRACK_INSTAM']; }
-	elseif ((int)$inrow['locatea'] == 1)	 { return $GLOBALS['TRACK_LOCATEA']; }
-	elseif ((int)$inrow['gtrack'] == 1)		 { return $GLOBALS['TRACK_GTRACK']; }
-	elseif ((int)$inrow['glat'] == 1)		 { return $GLOBALS['TRACK_GLAT']; }
-	elseif ((int)$inrow['t_tracker'] == 1)	 { return $GLOBALS['TRACK_T_TRACKER']; }
-	elseif ((int)$inrow['ogts'] == 1)		 { return $GLOBALS['TRACK_OGTS']; }		// 7/5/11
-	elseif ((int)$inrow['mob_tracker'] == 1) { return $GLOBALS['TRACK_MOBILE']; }		// 9/6/13
-	elseif ((int)$inrow['xastir_tracker'] == 1) { return $GLOBALS['TRACK_XASTIR']; }		// 1/30/14
-	elseif ((int)$inrow['followmee_tracker'] == 1) { return $GLOBALS['TRACK_FOLLOWMEE']; }		// 1/30/14
-	else 									 { return $GLOBALS['TRACK_NONE']; }
+	if ($inrow['aprs'] == 1) 				 		{ return $GLOBALS['TRACK_APRS']; }
+	elseif ((int)$inrow['instam'] == 1) 	 		{ return $GLOBALS['TRACK_INSTAM']; }
+	elseif ((int)$inrow['locatea'] == 1)	 		{ return $GLOBALS['TRACK_LOCATEA']; }
+	elseif ((int)$inrow['gtrack'] == 1)		 		{ return $GLOBALS['TRACK_GTRACK']; }
+	elseif ((int)$inrow['glat'] == 1)		 		{ return $GLOBALS['TRACK_GLAT']; }
+	elseif ((int)$inrow['t_tracker'] == 1)	 		{ return $GLOBALS['TRACK_T_TRACKER']; }
+	elseif ((int)$inrow['ogts'] == 1)		 		{ return $GLOBALS['TRACK_OGTS']; }			// 7/5/11
+	elseif ((int)$inrow['mob_tracker'] == 1) 		{ return $GLOBALS['TRACK_MOBILE']; }		// 9/6/13
+	elseif ((int)$inrow['xastir_tracker'] == 1) 	{ return $GLOBALS['TRACK_XASTIR']; }		// 1/30/14
+	elseif ((int)$inrow['followmee_tracker'] == 1) 	{ return $GLOBALS['TRACK_FOLLOWMEE']; }		// 1/30/14
+	elseif ((int)$inrow['traccar'] == 1) 			{ return $GLOBALS['TRACK_TRACCAR']; }		// 1/30/14
+	elseif ((int)$inrow['javaprssrvr'] == 1) 		{ return $GLOBALS['TRACK_JAVAPRSSRVR']; }	// 6/30/17
+	else 									 		{ return $GLOBALS['TRACK_NONE']; }			// 6/30/17
 	}  				// end function
 
 function is_cloud() {						// 12/4/10
@@ -3591,6 +3688,7 @@ function get_unit(){									//			returns unit index string - 3/19/11
 		}		// end function get_unit()
 
 function get_respondername($id) {
+	if(!$id) {return "N/A";}
 	$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`=" . $id . " LIMIT 1";
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	if ((mysql_num_rows($result))==0)  {
@@ -3614,6 +3712,19 @@ function get_facilityname($id) {
 		} else {
 		$row = stripslashes_deep(mysql_fetch_array($result));
 		$temp = explode("/", $row['name']);
+		$ret_val = $temp[0];
+		}
+	return $ret_val;
+	}
+	
+function get_facilityhandle($id) {
+	$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`=" . $id . " LIMIT 1";
+	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+	if ((mysql_num_rows($result))==0)  {
+		$ret_val = "NA";
+		} else {
+		$row = stripslashes_deep(mysql_fetch_array($result));
+		$temp = explode("/", $row['handle']);
 		$ret_val = $temp[0];
 		}
 	return $ret_val;
@@ -3772,7 +3883,7 @@ function list_files($ticket_id=0, $responder_id=0, $facility_id=0, $type=0, $por
 	return $print;
 	}
 	
-function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls = TRUE, $more=false, $allowedit=FALSE, $ticket_id = 0, $responder_id = 0, $facility_id = 0, $mi_id = 0) {
+function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls = TRUE, $more=FALSE, $allowedit=FALSE, $ticket_id = 0, $responder_id = 0, $facility_id = 0, $mi_id = 0) {
 	$theHeight = $_SESSION['scr_height'] / 2.5;
 	$theHeight2 = $theHeight * .8;
 	$theHeight3 = $theHeight * .65;
@@ -3781,28 +3892,28 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 	if((!(is_guest())) && $regions) {
 		if(get_num_groups()) {
 			$print .= "<DIV id='regions_control_outer' style='position: fixed; top: 30px; right: 0px; height: 400px; font-size: 1.2em; z-index: 9999;'>
-				<SPAN id='s_rc' class='plain' TITLE='Regions' style='position: fixed; top: 30px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
+				<SPAN id='s_rc' class='plain text' TITLE='Regions' style='position: fixed; top: 30px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 				onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 				onClick=\"sidebar_buttonactions('s_rc');\">
 				<IMG src='./buttons/regions.png' ALT='Regions'></SPAN>
-				<SPAN id='h_rc' class='plain' TITLE='Hide' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+				<SPAN id='h_rc' class='plain text' TITLE='Hide' style='z-index: 9999; width: 50px; display: none; cursor: pointer;' 
 				onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 				onClick=\"sidebar_buttonactions('h_rc');\">
-				<IMG src='./images/hide_butt.jpg' ALT='Hide'></SPAN>
+				<IMG src='./images/close_large.png' ALT='Hide'></SPAN>
 				<DIV class='even' ID = 'regions_control' style='padding: 3px; border: 1px outset #707070; height: 380px; width: 250px; display: none; overflow-y: auto; overflow-x: hidden; font-size: 0.8em; float: right;'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>
 			</DIV>";
 			}
 		}
 	if((!(is_guest())) && $files) {
 		$print .= "<DIV id='file_list_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
-			<SPAN id='s_fl' class='plain' TITLE='Files' style='position: fixed; top: 100px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
+			<SPAN id='s_fl' class='plain text' TITLE='Files' style='position: fixed; top: 100px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_fl'); load_files(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", " . $allowedit . ", 'name', 'ASC', 1)\">
 			<IMG src='./buttons/files.png' ALT='Files'></SPAN>
-			<SPAN id='h_fl' class='plain' TITLE='Hide' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+			<SPAN id='h_fl' class='plain text' TITLE='Hide' style='z-index: 9999; width: 50px; display: none; cursor: pointer;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_fl');\">
-			<IMG src='./images/hide_butt.jpg' ALT='Hide'></SPAN>
+			<IMG src='./images/close_large.png' ALT='Hide'></SPAN>
 			<DIV class='even' ID = 'fileList' style='position: relative; height: " . $theHeight . "px; width: 500px; float: right; display: none; border: 1px outset #707070;'>
 				<SPAN class='heading' style='width: 500px; text-align: center; display: inline-block;'>Files</SPAN></BR>
 				<DIV style='margin: 10px;'>
@@ -3811,26 +3922,26 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 					</DIV>
 				</DIV>
 				<CENTER>
-				<SPAN id='delSelected' class='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='delfiles(document.filesForm);' style='text-align: center; float: none;'>Delete Selected</SPAN>
+				<SPAN id='delSelected' class='plain text' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='delfiles(document.filesForm);' style='text-align: center; float: none;'>Delete Selected</SPAN>
 				</CENTER>
 			</DIV>
 		</DIV>";
 		}
 	if((!(is_guest())) && $messages) {
 		$print .= "<DIV id='msgs_list_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
-			<SPAN id='s_ms' class='plain' TITLE='Messages' style='position: fixed; top: 170px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;'
+			<SPAN id='s_ms' class='plain text' TITLE='Messages' style='position: fixed; top: 170px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;'
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_ms'); get_mainmessages(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">
 			<IMG src='./buttons/messages.png' ALT='Messages'></SPAN>
-			<SPAN id='h_ms' class='plain' TITLE='Hide' style='z-index: 9999; width: 26px; display: none; cursor: pointer;'
+			<SPAN id='h_ms' class='plain text' TITLE='Hide' style='z-index: 9999; width: 50px; display: none; cursor: pointer;'
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_ms');\">
-			<IMG src='./images/hide_butt.jpg' ALT='Hide'></SPAN>
+			<IMG src='./images/close_large.png' ALT='Hide'></SPAN>
 			<DIV ID = 'message_list' class='even' style='position: relative; height: " . $theHeight2 . "px; width: 810px; float: right; display: none; border: 1px outset #707070;'>
 				<SPAN class='heading' style='width: 810px; text-align: center; display: inline-block;'>Messages&nbsp;&nbsp;<SPAN id='foldername'>Inbox</SPAN></SPAN></BR>
 				<DIV id='folderlist' class='odd' style='width: 90px; border: 1px outset #707070; display: inline-block; float: left; height: " . $theHeight3 . "px;'>
-				<SPAN id='in_but' class='plain' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
-				<SPAN id='sent_but' class='plain' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
+				<SPAN id='in_but' class='plain text_small' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
+				<SPAN id='sent_but' class='plain text_small' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
 				</DIV>
 				<DIV id='messages' style='width: 710px; border: 1px outset #707070;  display: inline-block; float: right;'>
 					<DIV class=\"scrollableContainer2\" id='messageslist' style='display: none; float: right;'>
@@ -3842,27 +3953,27 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 		}
 	if($controls) {
 		$print .= "<DIV id='controls_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
-			<SPAN id='s_ct' class='plain' TITLE='Map Controls' style='position: fixed; top: 240px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
+			<SPAN id='s_ct' class='plain text' TITLE='Map Controls' style='position: fixed; top: 240px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_ct');\">
 			<IMG src='./buttons/controls.png' ALT='Map Controls'></SPAN>
-			<SPAN id='h_ct' class='plain' TITLE='Hide' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+			<SPAN id='h_ct' class='plain text' TITLE='Hide' style='z-index: 9999; width: 50px; display: none; cursor: pointer;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_ct');\">
-			<IMG src='./images/hide_butt.jpg' ALT='Hide'></SPAN>
+			<IMG src='./images/close_large.png' ALT='Hide'></SPAN>
 			<DIV class='even' id='controls' style='padding: 3px; border: 1px outset #707070; height: " . $theHeight . "px; width: 250px; display: none; font-size: 0.8em; float: right; overflow-y: scroll;'></DIV>
 		</DIV>";
 		}
-	if((!(is_guest())) && $more) {
+	if((!(is_guest())) && $more && $use_twitter) {
 		$print .= "<DIV id='more_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
-			<SPAN id='s_mo' class='plain' TITLE='More Controls' style='position: fixed; top: 310px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
+			<SPAN id='s_mo' class='plain text' TITLE='More Controls' style='position: fixed; top: 310px; right: 0px; width: 55px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_mo');\">
 			<IMG src='./buttons/more.png' ALT='More'></SPAN>
-			<SPAN id='h_mo' class='plain' TITLE='Hide' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+			<SPAN id='h_mo' class='plain text' TITLE='Hide' style='z-index: 9999; width: 50px; display: none; cursor: pointer;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_mo');\">
-			<IMG src='./images/hide_butt.jpg' ALT='Hide'></SPAN>
+			<IMG src='./images/close_large.png' ALT='Hide'></SPAN>
 			<DIV class='even' id='more' style='padding: 3px; border: 1px outset #707070; height: " . $theHeight . "px; width: 500px; display: none; font-size: 0.8em; float: right; overflow-y: scroll;'>
 			<SPAN class='heading' style='width: 100%; text-align: center; display: inline-block;'>More...</SPAN></BR>";
 			if($use_twitter) {
@@ -3872,9 +3983,9 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 					<DIV style='height: 60px; width: 80%; float: left;'><DIV style='width: 30%; display: inline-block; font-size: .9em;'>User ID: </DIV><DIV style='width: 70%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;; 'TYPE = 'text' NAME = 'frm_userid' SIZE='24' MAXLENGTH='64' VALUE = '' style='display: inline; vertical-align: middle;'></DIV>
 					<DIV style='width: 30%; display: inline-block; font-size: .9em;'>Screen Name: </DIV><DIV style='width: 70%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;; TYPE = 'text' NAME = 'frm_screenname' SIZE='24' MAXLENGTH='64' VALUE = '' style='display: inline; vertical-align: middle;'></DIV>
 					<DIV style='width: 30%; display: inline-block; font-size: .9em;'>Message: </DIV><DIV style='width: 55%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;; TYPE = 'text' NAME = 'frm_message' SIZE='32' MAXLENGTH='140' VALUE = '' style='display: inline; vertical-align: middle;'></DIV></DIV>
-					<DIV style='height: 60px; width: 20%: float: right;'><BR /><BR /><IMG id='sub_tweet' class='plain' TITLE='Submit Tweet to Twitter account.' SRC='./buttons/tweetbutton.png' style='float: right; margin: 0px; padding: 0px; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'doTweet(document.tweetForm);'></DIV>
+					<DIV style='height: 60px; width: 20%: float: right;'><BR /><BR /><IMG id='sub_tweet' class='plain text' TITLE='Submit Tweet to Twitter account.' SRC='./buttons/tweetbutton.png' style='float: right; margin: 0px; padding: 0px; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'doTweet(document.tweetForm);'></DIV>
 					<DIV style='width: 96%; height: 25px; display: inline-block;'><SPAN id='theFlag' style='margin-left: 20px; width: 100%; height: 25px; display: inline-block; float: left;'></SPAN></DIV></FORM>
-					<DIV style='width: 100%; display: inline-block; text-align: center;'><SPAN id='tweets_but' class='plain' style='float: none; text-align: center;' TITLE='Show Twitter Account Timeline - last 40 tweets' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick='twitter_window();'>Timeline</SPAN></DIV>
+					<DIV style='width: 100%; display: inline-block; text-align: center;'><SPAN id='tweets_but' class='plain text' style='float: none; text-align: center;' TITLE='Show Twitter Account Timeline - last 40 tweets' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick='twitter_window();'>Timeline</SPAN></DIV>
 					<BR /></DIV>
 					<hr>";
 				}
@@ -3906,12 +4017,10 @@ function do_tweet($message) {
 	
 function show_tweets() {
 	require_once './lib/twitter/twitter.class.php';
-
 	$consumerKey = get_variable('twitter_consumerkey');
 	$consumerSecret = get_variable('twitter_consumersecret');
 	$accessToken = get_variable('twitter_accesstoken');
 	$accessTokenSecret = get_variable('twitter_accesstokensecret');
-
 	$twitter = new Twitter($consumerKey, $consumerSecret, $accessToken, $accessTokenSecret);
 	$statuses = $twitter->load(Twitter::ME_AND_FRIENDS);
 	$print = "";
@@ -3933,14 +4042,13 @@ function show_rec_direc($count = 20) {
 	$consumerSecret = get_variable('twitter_consumersecret');
 	$accessToken = get_variable('twitter_accesstoken');
 	$accessTokenSecret = get_variable('twitter_accesstokensecret');
-
 	$twitter = new Twitter($consumerKey, $consumerSecret, $accessToken, $accessTokenSecret);
 	$messages = $twitter->rec_direct($count);
 	$print = "";
 	$print .= "<ul>";
 	foreach($messages as $message) {
-		$print .= "<li><a href='http://twitter.com/" . $message->user->screen_name . "' target='_blank'>";
-		$print .= htmlspecialchars($message->user->name) . "</a>&nbsp;&nbsp;";
+		$print .= "<li><a href='http://twitter.com/" . $message->recipient->screen_name . "' target='_blank'>";
+		$print .= htmlspecialchars($message->recipient->name) . "</a>&nbsp;&nbsp;";
 		$print .= Twitter::clickable($message);
 		$print .= "<small> at " . date('j.n.Y H:i', strtotime($message->created_at)) . "</small>";
 		$print .= "</li>";
@@ -4030,35 +4138,40 @@ function is_dir_empty($dir) {
 	
 function get_tile_bounds ($repository) {
 	if(is_dir_empty($repository)) {return false;}
-	function tile2long( $x, $z) {
-		$n = pow(2, $z);
-		return $x / $n * 360.0 - 180.0;
-		}
-	function tile2lat( $y, $z) {
-		$n = pow(2, $z);
-		return rad2deg(atan(sinh(pi() * (1 - 2 * $y / $n))));
-		}
-	function low_high_dir ($path, $low = TRUE) {
-		$dh  = opendir($path);
-		if ($low) {		// find min
-			$return = 99999;					// starter - see below
-			while (false !== ($filename = readdir($dh))  ) {
-				if ( intval($filename) > 0 && intval ($filename) < intval ($return ) ) {
-					$return = $filename ;		// retain extension if file
-					}
-				}		// end while ()
+	if (!function_exists('tile2long')) {
+		function tile2long( $x, $z) {
+			$n = pow(2, $z);
+			return $x / $n * 360.0 - 180.0;
 			}
-		else {			//find max
-			$return = 0;						// starter - see below
-			while (false !== ($filename = readdir($dh))  ) {
+		}
+	if (!function_exists('tile2lat')) {
+		function tile2lat( $y, $z) {
+			$n = pow(2, $z);
+			return rad2deg(atan(sinh(pi() * (1 - 2 * $y / $n))));
+			}
+		}
+	if (!function_exists('low_high_dir')) {
+		function low_high_dir ($path, $low = TRUE) {
+			$dh  = opendir($path);
+			if ($low) {		// find min
+				$return = 99999;					// starter - see below
+				while (false !== ($filename = readdir($dh))  ) {
+					if ( intval($filename) > 0 && intval ($filename) < intval ($return ) ) {
+						$return = $filename ;		// retain extension if file
+						}
+					}		// end while ()
+				} else {			//find max
+				$return = 0;						// starter - see below
+				while (false !== ($filename = readdir($dh))  ) {
 
-				if ( intval($filename) > 0 && intval ($filename) > intval ($return ) ) {
-					$return = $filename ;
-					}
-				}		// end while ()
-			}		// end else
-		return $return;
-		}		// end function
+					if ( intval($filename) > 0 && intval ($filename) > intval ($return ) ) {
+						$return = $filename ;
+						}
+					}		// end while ()
+				}		// end else
+			return $return;
+			}		// end function
+		}
 	//	1.  compute zoom
 	$dir = $repository;
 	$dh  = opendir($dir);
@@ -4119,6 +4232,77 @@ function get_standard_messages() {
 		}
 	return $ret_arr;
 	}
+	
+function get_standard_messages_sel() {
+	$sms_provider = get_msg_variable('smsg_provider');
+	$count = 0;
+	switch($sms_provider) {
+		case "0":
+				$chosen = "";
+				break;
+		case "1":
+				$chosen = "OR `smsresponder` = 1";
+				break;
+		case "2":
+				$chosen = "OR `txtlocal` = 1";
+				break;
+		case "3":
+				$chosen = "OR `mototrbo` = 1";
+				break;
+		case "4":
+				$chosen = "OR `smsbroadcast` = 1";
+				break;
+		default:
+				$chosen = "";
+		}
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]std_msgs` WHERE `email` = 1 {$chosen} ORDER BY `groupby`, `id` ASC";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$ret = "";
+	$the_grp = "";
+	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+		if ($the_grp != $row['groupby']) {
+			if($the_grp != "") {$ret .= "</OPTGROUP>";}
+			$the_grp = $row['groupby'];
+			$ret .= "<OPTGROUP LABEL='{$row['groupby']}'>\n";
+			}
+		$ret .=  "\t<OPTION VALUE=' {$row['id']}'> {$row['name']} </OPTION>\n";
+		}		// end while()
+	$ret .= "\n</OPTGROUP>\n";
+	return $ret;
+	}
+	
+function multi_array_key_exists($key, $array) {
+    if (array_key_exists($key, $array)) {
+        return true;
+		} else {
+        foreach ($array as $nested) {
+            if (is_array($nested) && multi_array_key_exists($key, $nested)) {
+                return true;
+				}
+			}
+		}
+    return false;
+	}
+	
+function valid_status($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_num_rows($result) > 0) {
+		return true;
+		} else {
+		return false;
+		}
+	}
+	
+function valid_fac_status($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $id;
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_num_rows($result) > 0) {
+		return true;
+		} else {
+		return false;
+		}
+	}	
 
 if(checkColExists('std_msgs', 'name')) {$std_messages = get_standard_messages();}
 ?>

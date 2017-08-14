@@ -45,9 +45,9 @@ if(mysql_num_rows($result) != 0) {
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 function $() {									// 1/21/09
 	var elements = new Array();

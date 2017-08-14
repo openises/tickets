@@ -17,7 +17,7 @@ require_once('./incs/functions.inc.php');
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css"> <!-- 3/15/11 -->
 </HEAD>
 <BODY>
@@ -77,21 +77,23 @@ require_once('./incs/functions.inc.php');
 	<FORM NAME = 'course_form' METHOD = 'post' ACTION = '<?php echo basename(__FILE__)?>'>
 	<INPUT TYPE = 'hidden' NAME = 'user_id' VALUE = ''>
 	</FORM>
-	<SPAN STYLE='text-align: center; display: block;'><BR />
-	Another &raquo; <SELECT NAME='frm_user_id' onChange = "document.course_form.user_id.value=this.options[this.selectedIndex].value; document.course_form.submit();">
-				<OPTION VALUE='' selected>Select</OPTION>
-				<OPTION VALUE='0' >All users</OPTION>
+	<SPAN STYLE='text-align: center; display: block;'>
+	<BR />
+	Another &raquo; 
+		<SELECT NAME='frm_user_id' onChange = "document.course_form.user_id.value=this.options[this.selectedIndex].value; document.course_form.submit();">
+			<OPTION VALUE='' selected>Select</OPTION>
+			<OPTION VALUE='0' >All users</OPTION>
 <?php
-	$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$the_opt = shorten("({$row['user']}) {$row['name_l']}, {$row['name_f']} {$row['name_mi']} ", 48);
-		echo "\t\t<OPTION VALUE='{$row['id']}'>{$the_opt}</OPTION>\n";
-		}				// end while()
+			$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
+			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$the_opt = shorten("({$row['user']}) {$row['name_l']}, {$row['name_f']} {$row['name_mi']} ", 48);
+				echo "\t\t<OPTION VALUE='{$row['id']}'>{$the_opt}</OPTION>\n";
+				}				// end while()
 ?>
-			</SELECT>
+		</SELECT>
 
-<INPUT TYPE = 'button' VALUE= "Finished" onClick = "window.close();" STYLE = 'margin-left: 40px;'>
-</span>
+	</SPAN>
+<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
 </BODY>
 </HTML>

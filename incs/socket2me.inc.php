@@ -286,10 +286,10 @@ while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
 	    }		// end function broadcast
 
 	function do_audio()	{
-		if (typeof(do_audible) == "function") {do_audible();}					// if in top
+		if (typeof(do_audible) == "function") {do_audible('incident');}					// if in top
 		else if ( (window.opener) && ( window.opener.parent.frames["upper"] ) )
-			{ window.opener.parent.frames["upper"].do_audible(); }				// if in lower frame
-		else	{ parent.frames["upper"].do_audible();	}						// if in board 
+			{ window.opener.parent.frames["upper"].do_audible('incident'); }				// if in lower frame
+		else	{ parent.frames["upper"].do_audible('incident');	}						// if in board 
 		}		// end function do_audio()
 		
 	function do_respalert(id) {

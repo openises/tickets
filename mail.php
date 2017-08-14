@@ -33,8 +33,20 @@ extract ($_GET);
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT>
+var viewportwidth;
+var viewportheight;
+var outerwidth;
+var outerheight;
+var listHeight;
+var listwidth;
+var colwidth;
+var colheight;
+</SCRIPT>
 <?php
 
 if (empty ($_POST)) {
@@ -42,9 +54,6 @@ if (empty ($_POST)) {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$ticket_id' LIMIT 1";
 		$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
-//		if (!$reply_to = get_variable("email_reply_to"))  {
-//			$reply_to = "<INPUT TYPE='text' NAME='frm_reply_to' SIZE=36 VALUE=''>";
-//			}
 		$text = mail_it ("", "", "", $ticket_id, 2, TRUE) ;		// returns msg text **ONLY**
 		$temp = explode("\n", $text);
 		$nr_lines = intval(count($temp) + 2);
@@ -73,10 +82,6 @@ if (empty ($_POST)) {
 		}		// end function do_more ()
 		
 	function do_val(theForm) {
-//		for (i=0;i<document.forms[0].elements.length; i++) {
-//			alert("72 " + document.forms[0].elements[i].name + " " +document.forms[0].elements[i].type);
-//			}
-
 		var j = 0;
 		var sep="";
 		for (var i=0; i<theForm.elements.length;i++) {
@@ -86,15 +91,12 @@ if (empty ($_POST)) {
 				j++;
 				}
 			}
-//		alert("84 " + theForm.frm_to_str.value);
 		var errmsg="";
 		if (j==0) 				{errmsg+= "\tAt least one address is required\n";}
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
-			}
-		else {
-//			theForm.frm_text.value = escape(theForm.frm_text.value);
+			} else {
 			theForm.submit();
 			}
 		}				// end function val idate()
@@ -102,165 +104,116 @@ if (empty ($_POST)) {
 	</SCRIPT>
 	</HEAD>
 	<BODY>
-	<DIV ID='first' STYLE='display:block'>
-	<FORM METHOD="post" ACTION="<?php print basename( __FILE__); ?>" NAME="mail_Form" >
-	<INPUT TYPE='hidden' NAME = 'frm_ticket_id' VALUE='<?php print $ticket_id; ?>'>
-	<TABLE>
-	<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><BR /><B>Edit Message<BR /><BR /></TD></TR>
-	<TR CLASS='odd'><TD>Ticket:</TD><TD><B><?php print shorten($t_row['scope'], 48); ?></B></TD></TR>
-	<TR CLASS='even'><TD>Message:</TD>		<TD><TEXTAREA ROWS = <?php print $nr_lines; ?> COLS=60 NAME='frm_text' WRAP="virtual"><?php print $text; ?></TEXTAREA></TD></TR>
+	<DIV ID='outer' STYLE='position: absolute; top: 0px; left: 5%;'>
+		<FORM METHOD="post" ACTION="<?php print basename( __FILE__); ?>" NAME="mail_Form" >
+		<INPUT TYPE='hidden' NAME = 'frm_ticket_id' VALUE='<?php print $ticket_id; ?>'>
+		<TABLE ID='mail_table' BORDER="0" STYLE='position: relative; top: 70px;'>
+			<TR CLASS='even'>
+				<TD COLSPAN=2 CLASS='heading text_large text_center'>Edit Message</TD>
+			</TR>
+			<TR CLASS='odd'>
+				<TD CLASS='td_label text'>Ticket:</TD>
+				<TD CLASS='td_data text'><?php print shorten($t_row['scope'], 48); ?></TD>
+			</TR>
+			<TR CLASS='even'>
+				<TD CLASS='td_label text'>Message:</TD>
+				<TD CLASS='td_data text'>
+					<TEXTAREA ROWS = <?php print $nr_lines; ?> COLS=60 NAME='frm_text' WRAP="virtual"><?php print $text; ?></TEXTAREA>
+				</TD>
+			</TR>
 <?php														//			generate dropdown menu of contacts
-
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
-		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		if (mysql_affected_rows()>0) {				// 9/17/08
-			$got_addr = TRUE;
-			$height = (mysql_affected_rows() + 1) * 16;
-			print "<TR CLASS='odd'><TD>To:</TD>";
-			print "<TD><SELECT NAME='frm_to[]' style='width: 250px; height: " . $height ."px;' multiple >\n";
-	    	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-	    		if ((!((trim($row['email']))) == "") && (is_email(trim($row['email'])))) {
-					print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(email)</I></OPTION>\n";
-					}
-	    		if ((!((trim($row['mobile']))) == "") && (is_email(trim($row['mobile'])))) {
-					print "\t<OPTION VALUE='" . $row['mobile'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(mobile)</I></OPTION>\n";
-					}
-	    		if ((!((trim($row['other']))) == "") && (is_email(trim($row['other'])))) {
-					print "\t<OPTION VALUE='" . $row['other'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(other)</I></OPTION>\n";
-					}
-				}
-			print "\t</SELECT>\n</TD></TR>";
-			}				// end (mysql_affected_rows()>0)
-		else {
-			print "<TR CLASS='even'><TD COLSPAN=2 align='CENTER'><B>No addresses.<BR /> Populate 'Contacts' table via Configuration link.</TD></TR>";
-			$got_addr = FALSE;
-			}
-		
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
+			$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			if (mysql_affected_rows()>0) {
+				$got_addr = TRUE;
+				$height = (mysql_affected_rows() + 1) * 16;
 ?>
+				<TR CLASS='odd'>
+					<TD CLASS='td_label text'>To:</TD>
+					<TD CLASS='td_data text'>
+						<SELECT NAME='frm_to[]' style='width: 100%; height: " . $height ."px;' multiple />
+<?php
+							while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+								if ((!((trim($row['email']))) == "") && (is_email(trim($row['email'])))) {
+									print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(email)</I></OPTION>\n";
+									}
+								if ((!((trim($row['mobile']))) == "") && (is_email(trim($row['mobile'])))) {
+									print "\t<OPTION VALUE='" . $row['mobile'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(mobile)</I></OPTION>\n";
+									}
+								if ((!((trim($row['other']))) == "") && (is_email(trim($row['other'])))) {
+									print "\t<OPTION VALUE='" . $row['other'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(other)</I></OPTION>\n";
+									}
+								}
+?>
+						</SELECT>
+					</TD>
+				</TR>
+<?php
+				} else {
+?>
+				<TR CLASS='even'>
+					<TD COLSPAN=2 CLASS='td_data text text_center'><B>No addresses.<BR /> Populate 'Contacts' table via Configuration link.</TD>
+				</TR>
+<?php
+				$got_addr = FALSE;
+				}	
+?>
+			<TR CLASS='even'>
+				<TD COLSPAN=2 CLASS='td_label text'>&nbsp;</TD>
+			</TR>
+		</TABLE>
 		<INPUT TYPE = "hidden" NAME="frm_to_str" VALUE="">
 		<INPUT TYPE = "hidden" NAME="frm_subj" VALUE= "<?php print shorten($t_row['scope'], 48); ?>">
 		</FORM>
-	<FORM NAME='dummy' METHOD='get'>
-	<TR CLASS='even'><TD COLSPAN=2 ALIGN="center"><BR />
-<?php if ($got_addr) { ?>
-
-		<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_Form.reset();">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button" VALUE="Send" onClick="do_val(document.mail_Form);">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<?php	} ?>
-
-		<INPUT TYPE="button" VALUE="Cancel"  onClick="self.close();" >
-		</FORM>
-		</TD></TR>
-	</TABLE>
 	</DIV>
-	
-	<DIV ID='second' STYLE='display:none'>
-	<CENTER>
-	<H3>Sending mail ...</H3><BR /><BR /><BR />
-	<IMG SRC="./markers/spinner.gif" BORDER=0>
-	</DIV>
-	
-	</BODY></HTML>
+	<DIV id='button_bar' class='but_container'>
+		<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>Send Email</SPAN>
+		<SPAN ID='can_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 <?php
-	}		// end if (empty ($_POST))
-else {
-//	print __LINE__;				// 7/19/10
-//	snap(basename(__FILE__) . __LINE__, $_POST['frm_to_str'] );
-//	snap(basename(__FILE__) . __LINE__, $_POST['frm_subj'] );
-//	snap(basename(__FILE__) . __LINE__, $_POST['frm_text']);
-
+		if ($got_addr) { 
+?>
+			<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.mail_Form.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+			<SPAN ID='send_but' CLASS='plain text' STYLE='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_val(document.mail_Form);'><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+<?php
+			} 
+?>
+	</DIV>
+<?php
+	} else {
 	do_send ($_POST['frm_to_str'], "", $_POST['frm_subj'], $_POST['frm_text'], $_POST['frm_ticket_id'], 0) ;		// ($to, $subject, $text) ;
 ?>
-<SCRIPT>
-/*
-function sendRequest(url,callback,postData) {		// 10/15/08
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-	//	Useage:
-	//
-	//	sendRequest('file.txt',handleResult, argument);
-	//
-	// Now the file file.txt is fetched, and when that's done the function handleResult() is called.
-	// This function receives the XMLHttpRequest object as an argument, which I traditionally call
-	// req (though, of course, you can use any variable name you like). Typically, this function reads out
-	// the responseXML or responseText and does something with it.
-	//
-	
-	function handleResult(req) {				// the called-back function
-//		alert("191 " + req.responseText);
-//		var writeroot = [some element];
-//		writeroot.innerHTML = req.responseText;
-		}
-//	var params = "lorem=abcdef&name=binny";
-//	sendRequest('_sleep.php',handleResult, params);
-	
-	function domail() {
-		var theAddresses = "<?php print implode("|", $_POST['frm_to']);?>";		// 10/17/08
-		var theText="<?php print $_POST['frm_text'];?>";
-//		alert ("202 " + theText);
-		var theId = "<?php print $_POST['frm_ticket_id'];?>";
-		
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
-//			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
-
-		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-//		alert ("208 " + params);
-*/	
-		}
-
-</SCRIPT>
-
 	</HEAD>
 	<BODY>
-	<CENTER><BR /><BR /><BR /><BR /><BR /><h3>Sent!</h3><BR /><BR />
+	<CENTER><BR /><BR /><h3>Sent!</h3><BR /><BR />
 	<FORM NAME='can_Form' METHOD="get" ACTION = "<?php print basename( __FILE__); ?>" >
-	<INPUT TYPE="button" VALUE = "Close" onClick = "self.close()"></CENTER>
+	<SPAN ID='fin_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+	</CENTER>
 	</FORM>		
-	</BODY></HTML>
+
 <?php
 	}		// end else ...
 	
 ?>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+outerwidth = viewportwidth * .95;
+outerheight = viewportheight * .90;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('mail_table').style.width = colwidth + "px";
+$('mail_table').style.height = colheight + "px";	
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
+</BODY>
+</HTML>

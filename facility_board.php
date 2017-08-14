@@ -36,7 +36,7 @@ function get_user_name($the_id) {
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 <!--[if lte IE 8]>
@@ -59,19 +59,19 @@ function get_user_name($the_id) {
 	.btn_not_chkd 	{ height: 50px; color:#050; font: bold 16px 'trebuchet ms',helvetica,sans-serif; background-color:#DEE3E7; border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center;} 
 	.btn_hover	 	{ height: 50px; color:#050; font: bold 16px 'trebuchet ms',helvetica,sans-serif; background-color:#DEDEDE; border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: inset;text-align: center;} 
 </STYLE>
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
 <script src="./js/proj4js.js"></script>
 <script src="./js/proj4-compressed.js"></script>
 <script src="./js/leaflet/leaflet.js"></script>
 <script src="./js/leaflet/leaflet-routing-machine.js"></script>
 <script src="./js/proj4leaflet.js"></script>
-<script type="text/javascript" src="./js/leaflet/KML.js"></script>
-<script type="text/javascript" src="./js/leaflet/gpx.js"></script>  
-<script type="text/javascript" src="./js/osopenspace.js"></script>
-<script type="text/javascript" src="./js/leaflet-openweathermap.js"></script>
-<script type="text/javascript" src="./js/esri-leaflet.js"></script>
-<script type="text/javascript" src="./js/Control.Geocoder.js"></script>
+<script type="application/x-javascript" src="./js/leaflet/KML.js"></script>
+<script type="application/x-javascript" src="./js/leaflet/gpx.js"></script>  
+<script type="application/x-javascript" src="./js/osopenspace.js"></script>
+<script type="application/x-javascript" src="./js/leaflet-openweathermap.js"></script>
+<script type="application/x-javascript" src="./js/esri-leaflet.js"></script>
+<script type="application/x-javascript" src="./js/Control.Geocoder.js"></script>
 <?php
 if ($_SESSION['internet']) {
 	$api_key = get_variable('gmaps_api_key');
@@ -79,18 +79,21 @@ if ($_SESSION['internet']) {
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="./js/Google.js"></script>
+		<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 		}
 	}
 ?>
-<script type="text/javascript" src="./js/L.Graticule.js"></script>
-<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="./js/osgb.js"></script>
-<script type="text/javascript" src="./js/geotools2.js"></script>
-<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="./js/usng.js"></script>
+<script type="application/x-javascript" src="./js/osgb.js"></script>
+<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
 
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
 <SCRIPT>
 var doDebug = true;
 var changed_showhide = true;
@@ -581,7 +584,7 @@ if((!isset($_SESSION)) && (empty($_POST))) {
 
 	<BODY style='overflow: hidden;' onLoad="out_frames();" onUnload='do_unload();'>
 
-		<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+		<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 		<DIV id='outer' style='position: absolute; top: 0px; left: 1%; text-align: center;'>
 			<DIV id='banner' style='padding-left: 30%; text-align: left; background-color: #707070; vertical-align: middle; cursor: default;'><SPAN class='heading' style='font-size: 3em; vertical-align: middle; cursor: default;'>Tickets <?php print get_text('Facility');?> <?php print get_text('Portal');?></SPAN>
 				<SPAN ID='gout' CLASS='plain' style='float: right; font-size: 1em; vertical-align: middle;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="do_logout()"><?php print get_text('Logout');?></SPAN>

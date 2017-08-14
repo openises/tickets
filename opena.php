@@ -20,7 +20,7 @@ $call = (empty($_GET))? "": $_GET['frm_call'];				// 10/1/08
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <STYLE>
 td { background-color: inherit; FONT-WEIGHT: normal; FONT-SIZE: x-small; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Courier new, Arial, Helvetica, sans-serif; TEXT-DECORATION: none; VERTICAL-ALIGN: top;  }
@@ -83,6 +83,7 @@ $the_key = trim(get_variable('aprs_fi_key'));
 <FORM NAME = "aprs_form" METHOD="get" ACTION="<?php print basename(__FILE__); ?>">
 <B>aprs.fi key:&nbsp;&nbsp;</B><INPUT TYPE="text" NAME="frm_key" SIZE="30" VALUE="<?php print trim($the_key);?>" /><BR /><BR /><BR />
 <B>Callsign:&nbsp;&nbsp;</B> <INPUT TYPE="text" NAME="frm_call" SIZE="16" VALUE="" /><BR /><BR /><BR />
-<INPUT TYPE="button" VALUE = "Finished" onClick = "self.close()">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-<INPUT TYPE="submit" VALUE='Do test'> 
+<SPAN ID='fin_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+<SPAN ID='sub_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='this.form.submit();'><SPAN STYLE='float: left;'><?php print get_text("Do Test");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+</FORM>
 </BODY></HTML>

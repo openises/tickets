@@ -2,7 +2,7 @@
 ?>
 <html>
 <body>
-<script type="text/javascript"><!--
+<script type="application/x-javascript"><!--
 function do_Post(the_table) {
 	document.tables.tablename.value=the_table;
 	document.tables.submit();

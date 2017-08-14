@@ -3,6 +3,8 @@
 list_sent_messages.php - gets sent messages from messages table for display in message window and ticket view and unit view
 10/23/12 - new file
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 @session_start();
 session_write_close();
 require_once('../incs/functions.inc.php');

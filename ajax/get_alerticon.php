@@ -2,6 +2,8 @@
 /*
 1/3/14 - new file, lists road condition alerts for plotting on situation screen map
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 
 $ret_arr = array();

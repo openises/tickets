@@ -4,6 +4,21 @@
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}	
 error_reporting (E_ALL  ^ E_DEPRECATED);
+
+function tz_list() {
+    $zones_array = array();
+    $timestamp = time();
+    foreach(timezone_identifiers_list() as $key => $zone) {
+//		date_default_timezone_set($zone);
+		$zones_array[$key]['zone'] = $zone;
+		$zones_array[$key]['offset'] = (int) ((int) date('O', $timestamp))/100;
+		$zones_array[$key]['diff_from_GMT'] = 'UTC/GMT ' . date('P', $timestamp);
+		}
+    return $zones_array;
+	}
+	
+$theTimezones = tz_list();
+
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
 $result	= mysql_query($query);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
@@ -39,7 +54,9 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
 			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_dfz]' WHERE `name`='def_zoom_fixed';";
 			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-
+			if($_POST['frm_timezone'] == "") {$_POST['frm_timezone'] = "America/New_York";}
+			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_timezone]' WHERE `name`='timezone';";
+			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
 			$top_notice = "Settings saved to database.";
 			}
 		else {
@@ -203,7 +220,9 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 				var theState = r.state;
 				}
 			document.cen_Form.show_lat.value = lat; 
-			document.cen_Form.show_lng.value = lng; 
+			document.cen_Form.show_lng.value = lng;
+			document.cen_Form.frm_lat.value = lat; 
+			document.cen_Form.frm_lng.value = lng; 
 			if(theCity != "" && theCity != "Unknown" && theState != "") {
 				var theContent = theCity + ", " + theState;
 				popup.setLatLng(latlng).setContent(theContent).openOn(map);
@@ -235,64 +254,132 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 			$checks_ar = array("","","","");
 			$which = get_variable('def_zoom_fixed');
 			$checks_ar[$which] = " CHECKED ";
-?>	
-			<TABLE BORDER=0 ID='outer'>
-			<TR><TD COLSPAN=2 ALIGN='center'><FONT CLASS="header">Select Map Center/Zoom and Caption</FONT><BR /><BR /></TD></TR>
-			<TR><TD>
-			<TABLE BORDER="0">
-			<FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
-			<TR class='odd' VALIGN='baseline'>
-				<TD CLASS="td_label" ALIGN='right'>Use Network or Local Maps:</TD>
-				<TD ALIGN='center' COLSPAN=2>
-					&nbsp;&nbsp;Network &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick = "swap_source(0);">
-					&nbsp;&nbsp;Local &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' onClick = "swap_source(1);">
-				</TD>
-			</TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Lookup:</TD><TD COLSPAN=3>&nbsp;&nbsp;City:&nbsp;<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_city" VALUE="" />
-			&nbsp;&nbsp;&nbsp;&nbsp;State:&nbsp;<INPUT MAXLENGTH="2" SIZE="2" TYPE="text" NAME="frm_st" VALUE="" /></TD></TR>
-			<TR CLASS = "odd"><TD COLSPAN=4 ALIGN="center"><button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></TD></TR> <!-- 1/21/09 -->
-			<TR><TD><BR /><BR /><BR /><BR /><BR /></TD></TR>
-			<TR CLASS = "even"><TD CLASS="td_label">Caption:</TD><TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD></TR>
-			<TR CLASS = "odd" VALIGN='baseline'>
-				<TD CLASS="td_label" ROWSPAN=6>Map:</TD>
-				<TD ALIGN='right'>&nbsp;&nbsp;Lat:&nbsp;</TD>
-				<TD colspan=2><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12 DISABLED />
-				<SPAN STYLE='margin-left:20px'>Long:</SPAN>&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
-			<TR>
-<?php
-				$coords = "{$lat},{$lng}";
 ?>
-				<TD ALIGN='right' onClick = "usng_to_map()">USNG:&nbsp;</TD>
-				<TD COLSPAN=2><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=22 DISABLED />
-				</TD></TR>
-			<TR>
-				<TD ALIGN='right' onClick = "utm_to_map()">OSGB:&nbsp;</TD>
-				<TD COLSPAN=2><INPUT TYPE="text" NAME="frm_osgb" VALUE="<?php print LLtoOSGB($lat,$lng);?>" SIZE=22 DISABLED />
-				</TD></TR>
-			<TR>
-				<TD ALIGN='right' onClick = "utm_to_map()">UTM:&nbsp;</TD>
-				<TD COLSPAN=2><INPUT TYPE="text" NAME="frm_utm" VALUE="<?php print toUTM($coords);?>" SIZE=22 DISABLED />
-				</TD></TR>
-			<TR CLASS = "odd">
-				<TD ALIGN='right'>&nbsp;&nbsp;Zoom:&nbsp;</TD>
-				<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4 disabled /></TD></TR>	<!-- 4/5/09 -->
-			<TR VALIGN='baseline'><TD CLASS="td_label" ALIGN='right'>Dynamic zoom:</TD><TD ALIGN='center' COLSPAN=2>&nbsp;&nbsp;
-			 		Yes &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0";> &nbsp;&nbsp;
-					<B>Situation</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1";>&nbsp;&nbsp;
-					<B>Units</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2";>&nbsp;&nbsp;
-					<B>Both</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3";></TD></TR>
-						
-			<TR><TD>&nbsp;</TD></TR>
-			<TR CLASS = "even"><TD COLSPAN=5 ALIGN='center'>
-				<INPUT TYPE='button' VALUE='Cancel' onClick='history.back();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='reset' VALUE='Reset' onClick = "map_cen_reset();">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE='submit' VALUE='Submit'></TD></TR>
-				<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">				<!-- // 9/16/08 -->
-				<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
-				<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
-			</FORM></TABLE>
-			</TD><TD><DIV id='map_outer'><DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV></DIV>
-			<BR><CENTER><FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT></CENTER>
-			</TD></TR>
+			<FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
+			<TABLE BORDER=0 ID='outer'>
+				<TR>
+					<TD style='vertical-align: top;'>
+						<TABLE BORDER="0">
+							<TR CLASS='even'>
+								<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>
+							</TR>
+							<TR CLASS='even'>
+								<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
+									<SPAN CLASS='text_green text_biggest'>Select Map Center/Zoom, Caption and Timezone</SPAN>
+									<BR />
+									<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
+									<BR />
+									<BR />
+								</TD>
+							</TR>
+							<TR class='even' VALIGN='baseline'>
+								<TD COLSPAN=99></TD>
+							</TR>
+							<TR class='spacer' VALIGN='baseline'>
+								<TD CLASS="spacer" COLSPAN=99></TD>
+							</TR>
+							<TR class='odd' VALIGN='baseline'>
+								<TD CLASS='td_label text text_left'>Timezone:</TD>
+								<TD CLASS='td_data text text_left' COLSPAN=2>
+									<SELECT name="frm_timezone" CLASS='text'>
+										<OPTION value="">Select a time zone</OPTION>
+<?php
+										$currentTZ = date_default_timezone_get();
+										foreach($theTimezones as $t) { 
+											$sel = ($t['zone'] == $currentTZ) ? "SELECTED" : "";
+?>
+											<OPTION value="<?php print $t['zone'];?>" <?php print $sel;?>><?php echo $t['zone'];?></OPTION>
+<?php 
+											} 
+?>
+									</SELECT>
+								</TD>
+							</TR>
+							<TR class='spacer' VALIGN='baseline'>
+								<TD CLASS="spacer" COLSPAN=99></TD>
+							</TR>
+							<TR class='odd' VALIGN='baseline'>
+								<TD CLASS="td_label" ALIGN='right'>Use Network or Local Maps:</TD>
+								<TD ALIGN='center' COLSPAN=2>
+									&nbsp;&nbsp;Network &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick = "swap_source(0);">
+									&nbsp;&nbsp;Local &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' onClick = "swap_source(1);">
+								</TD>
+							</TR>
+							<TR CLASS = "even">
+								<TD CLASS="td_label">Lookup:</TD>
+								<TD COLSPAN=3>
+									<button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;&nbsp;City:&nbsp;
+									<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_city" VALUE="" />&nbsp;&nbsp;&nbsp;&nbsp;
+									State:&nbsp;<INPUT MAXLENGTH="2" SIZE="2" TYPE="text" NAME="frm_st" VALUE="" />
+								</TD>
+							</TR>
+							<TR CLASS = "even"><TD CLASS="td_label">Caption:</TD><TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD></TR>
+							<TR CLASS = "odd" VALIGN='baseline'>
+								<TD CLASS="td_label" ROWSPAN=6>Map:</TD>
+								<TD ALIGN='right'>&nbsp;&nbsp;Lat:&nbsp;</TD>
+								<TD colspan=2><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12 DISABLED />
+								<SPAN STYLE='margin-left:20px'>Long:</SPAN>&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
+							<TR>
+<?php
+								$coords = "{$lat},{$lng}";
+?>
+								<TD ALIGN='right' onClick = "usng_to_map()">USNG:&nbsp;</TD>
+								<TD COLSPAN=2>
+									<INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=22 DISABLED />
+								</TD>
+							</TR>
+							<TR>
+								<TD ALIGN='right' onClick = "utm_to_map()">OSGB:&nbsp;</TD>
+								<TD COLSPAN=2>
+									<INPUT TYPE="text" NAME="frm_osgb" VALUE="<?php print LLtoOSGB($lat,$lng);?>" SIZE=22 DISABLED />
+								</TD>
+							</TR>
+							<TR>
+								<TD ALIGN='right' onClick = "utm_to_map()">UTM:&nbsp;</TD>
+								<TD COLSPAN=2>
+									<INPUT TYPE="text" NAME="frm_utm" VALUE="<?php print toUTM($coords);?>" SIZE=22 DISABLED />
+								</TD>
+							</TR>
+							<TR CLASS = "odd">
+								<TD ALIGN='right'>&nbsp;&nbsp;Zoom:&nbsp;</TD>
+								<TD>
+									<INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4/>
+								</TD>
+							</TR>	<!-- 4/5/09 -->
+							<TR VALIGN='baseline'>
+								<TD CLASS="td_label" ALIGN='right'>Dynamic zoom:</TD>
+								<TD ALIGN='center' COLSPAN=2>&nbsp;&nbsp;
+									Yes &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0";> &nbsp;&nbsp;
+									<B>Situation</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1";>&nbsp;&nbsp;
+									<B>Units</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2";>&nbsp;&nbsp;
+									<B>Both</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3";></TD></TR>
+										
+							<TR><TD>&nbsp;</TD></TR>
+								<TD COLSPAN="99" ALIGN="center">
+									<SPAN id='can_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="history.back();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+									<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="map_cen_reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+									<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.cen_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+								</TD>
+							</TR>
+						</TABLE>
+
+					</TD>
+					<TD>&nbsp;</TD>
+					<TD>
+						<DIV id='map_outer'>
+							<DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
+						</DIV>
+						<BR />
+						<CENTER>
+							<FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT>
+						</CENTER>
+					</TD>
+				</TR>
 			</TABLE>
+			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">				<!-- // 9/16/08 -->
+			<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
+			<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
+			</FORM>
 			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
 <SCRIPT>
 			var baseIcon = L.Icon.extend({options: {iconSize: [32, 32],	iconAnchor: [16, 16], popupAnchor: [6, -5]
@@ -375,10 +462,16 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 				var zoom = map.getZoom();
 				document.cen_Form.frm_zoom.value = zoom;
 				};
+				
+			function getZoomLevel() {
+				var zoom = map.getZoom();
+				document.cen_Form.frm_zoom.value = zoom;
+				}
 			
 			do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, 0);
 			map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 10);
 			map.on('click', onMapClick);
+			map.on('zoomend', getZoomLevel);
 			var bounds = map.getBounds();	
 			var zoom = map.getZoom();
 			

@@ -23,7 +23,8 @@ if (empty($_POST)) {
 	unset($result);
 	}
 $title = (isset($row)) ? substr(stripslashes($row['scope']), 0, 60): $_POST['frm_title'];		// 7/19/10 
-	
+$smsg_provider = return_provider_name(get_msg_variable('smsg_provider'));
+$using_smsg = ((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) ? true : false;	
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -34,8 +35,10 @@ $title = (isset($row)) ? substr(stripslashes($row['scope']), 0, 60): $_POST['frm
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
 
 String.prototype.trim = function () {
@@ -106,7 +109,7 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 	function set_message(id) {	//	10/23/12
 		var randomnumber=Math.floor(Math.random()*99999999);
 		var theMessages = <?php echo json_encode($std_messages);?>;
-		var message = theMessages[id]['message'];
+		var message = theMessages[parseInt(id)]['message'];
 		var tick_id = <?php print $tick_id;?>;
 		var url = './ajax/get_replacetext.php?tick=' + tick_id + '&version=' + randomnumber + '&text=' + encodeURIComponent(message);
 		sendRequest (url,replacetext_cb, "");			
@@ -137,42 +140,67 @@ function do_val(theForm) {										// 2/28/09, 10/23/12
 <?php
 $use_messaging = get_variable('use_messaging');
 $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'] : "";
+$heading = "Dispatch message";
+
 ?>
-<H3>Revise message to suit</H3>
+<DIV id='button_bar' class='but_container'>
+	<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'><?php echo $heading;?></SPAN>
+	<SPAN ID='send_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_val(document.mail_frm);'><SPAN STYLE='float: left;'>OK - mail this</SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+	<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.mail_frm.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+	<SPAN ID='nosend_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="if(confirm('Confirm_do_not_send?')) {<?php print $finished_str;?>};"><SPAN STYLE='float: left;'>Do Not Send</SPAN><IMG STYLE='float: right;' SRC='./images/nosend_small.png' BORDER=0></SPAN>
+</DIV>
 <FORM NAME="mail_frm" METHOD="post" ACTION = "<?php print basename( __FILE__); ?>">
-<TABLE ALIGN='center' BORDER=0>
+<TABLE ALIGN='center' BORDER="0" STYLE='position: relative; top: 70px;'>
 	<TR CLASS='even'>
-		<TD COLSPAN=2><TEXTAREA NAME="frm_text" COLS=80 ROWS=<?php print count($temp)*2; ?>><?php print $text ;?></TEXTAREA></TD>
+		<TH CLASS='heading' COLSPAN=2>Revise message to suit</TH>
+	</TR>
+	<TR CLASS='even'>
+		<TD COLSPAN=2>
+			<TEXTAREA CLASS='text' NAME="frm_text" COLS=80 ROWS=<?php print count($temp)*1.1; ?> wrap='soft'><?php print $text ;?></TEXTAREA>
+		</TD>
 	</TR>
 	<TR VALIGN = 'TOP' CLASS='even'> <!-- 10/23/12 -->
-		<TD ALIGN='right' CLASS="td_label">Standard Message: </TD><TD> <!-- 10/23/12 -->
+		<TD CLASS="td_label text text_left">
+			Standard Message: 
+		</TD>
+		<TD CLASS="td_data text text_left">
 
 			<SELECT NAME='signals' onChange = 'set_message(this.options[this.selectedIndex].value);'>	<!--  11/17/10, 10/23/12 -->
 			<OPTION VALUE=0 SELECTED>Select</OPTION> <!-- 10/23/12 -->
 <?php
-//				dump(__LINE__);
-				foreach($std_messages as $val) {
-					print "\t<OPTION VALUE='{$val['id']}'>{$val['name']}</OPTION>\n";
-					}
+				print get_standard_messages_sel();
 ?>
 			</SELECT>
-			<BR />
 		</TD>
 	</TR>	
 	<TR CLASS='even'>
-		<TD>Email Addresses: </TD>
-		<TD><INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'></TD> <!-- 10/23/12 -->
+		<TD CLASS="td_label text text_left">
+			Email Addresses: 
+		</TD>
+		<TD CLASS="td_data text text_left">
+			<INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'>
+		</TD>
 	</TR>
 <?php
 	if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {	//	10/23/12
 		$smsgaddrs = ((isset($_GET['smsgaddrs'])) && ($_GET['smsgaddrs'] != "")) ? $_GET['smsgaddrs'] : "";
 
 ?>
-		<TR CLASS='even'><TD><?php get_provider_name(get_msg_variable('smsg_provider'));?> Addresses: </TD>
-			<TD><INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsgaddrs;?>'></TD>
+		<TR CLASS='even'>
+			<TD CLASS="td_label text">
+				<?php get_provider_name(get_msg_variable('smsg_provider'));?> Addresses: 
+			</TD>
+			<TD CLASS="td_data text text_left">
+				<INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsgaddrs;?>' />
+			</TD>
 		</TR>	
-		<TR CLASS='even'><TD>Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: </TD> <!-- 10/23/12 -->
-			<TD><INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="1" <? if($_GET['addrs'] == "" && $smsgaddrs != "") { print "checked"; } ?>></TD> <!-- 10/23/12 -->
+		<TR CLASS='even'>
+			<TD CLASS="td_label text">
+				Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?: 
+			</TD>
+			<TD CLASS="td_data text text_left">
+				<INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="1" <?php if(($_GET['addrs'] == "" && $smsgaddrs != "") || ($smsgaddrs != "" && get_msg_variable('default_sms') == "1")) { print "checked"; } ?> />
+			</TD>
 		</TR>			
 		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $the_other;?>"/> <!-- 10/23/12 -->
 <?php
@@ -180,17 +208,14 @@ $the_other = ((isset($_GET['other'])) && ($_GET['other'] != "")) ? $_GET['other'
 ?>
 		<INPUT TYPE="hidden" NAME = 'frm_smsgaddrs' VALUE=""/> <!-- 10/23/12 -->
 		<INPUT TYPE='hidden' NAME = 'frm_use_smsg' VALUE = "0"> <!-- 10/23/12 -->
-		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $the_other;?>"/> <!-- 10/23/12 -->
+		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $the_other;?>"/>
 <?php
 	}
 ?>
 	<TR CLASS='odd'>
 		<TD COLSPAN=2 ALIGN = 'center'>
-			<INPUT TYPE="hidden" NAME = 'ticket_id' VALUE="<?php print $_GET['ticket_id'];?>"/> <!-- 10/23/12 -->
+			<INPUT TYPE="hidden" NAME = 'ticket_id' VALUE="<?php print $_GET['ticket_id'];?>"/>
 			<INPUT TYPE="hidden" NAME = 'frm_title' VALUE="<?php print $row['scope'];?>"/>
-			<INPUT TYPE="button" VALUE="OK - mail this" onClick = "do_val(document.mail_frm);">&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE="button" VALUE="Reset" onClick = "document.mail_frm.reset();">&nbsp;&nbsp;&nbsp;&nbsp;
-			<INPUT TYPE="button" VALUE="Dont send" onClick = "if(confirm('Confirm_do_not_send?')) {<?php print $finished_str;?>}">
 		</TD>
 	</TR>
 </TABLE>
@@ -226,6 +251,20 @@ else {
 <?php
 	}				// end else
 ?>
+<SCRIPT LANGUAGE="Javascript">
 
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </BODY>
 </HTML>

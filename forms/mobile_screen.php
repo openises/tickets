@@ -16,11 +16,12 @@ $dispWin_width = round (0.8 * ($_SESSION['scr_width']));
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 $ticket_id = (array_key_exists('ticket_id', $_GET) ) ? $_GET['ticket_id'] : "";
+$currentSelected = (array_key_exists('mobile_selected', $_SESSION) && $_SESSION['mobile_selected'] != 0) ? $_SESSION['mobile_selected'] : 0;
 define("UNIT", 0);
 define("MINE", 1);
 define("ALL", 2);
 $initScreen = "";
-$selected = (array_key_exists('mobile_selected', $_SESSION)) ? $_SESSION['mobile_selected'] : 0;
+$selected = (array_key_exists('mobile_selected', $_SESSION) && $_SESSION['mobile_selected'] != "undefined") ? $_SESSION['mobile_selected'] : 0;
 
 if (array_key_exists('frm_mode', $_GET)) {
 	$mode =  $_GET['frm_mode'];
@@ -73,28 +74,30 @@ function get_butts($ticket_id, $unit_id) {
 	$win_height =  get_variable('map_height') + 120;
 	$win_width = get_variable('map_width') + 10;
 	if ($_SESSION['internet']) {
-		print "<INPUT TYPE='button' ID='map_but' CLASS = 'btn_smaller' VALUE = 'Map' onClick  = \"open_map_window();\" />\n";
+		print "<INPUT TYPE='button' ID='map_but' CLASS = 'btn_smaller text_big' VALUE = 'Map' onClick  = \"open_map_window();\" />\n";
 		}
 	if (can_edit()) {		// 5/23/11
-		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'New' onClick = \"open_add_window();\" />\n";
-		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Edit' onClick = \"open_edit_window();\" />\n";
+		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'New' onClick = \"open_add_window();\" />\n";
+		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Edit' onClick = \"open_edit_window();\" />\n";
 
 		if (!is_closed($ticket_id)) {
-			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Close' onClick = \"open_closein_window();\" />\n";
+			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Close' onClick = \"open_closein_window();\" />\n";
 			}
 		} 		// end if ($can_edit())
 	if (is_administrator() || is_super() || is_unit()){
 		if (!is_closed($ticket_id)) {
-			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Action' onClick  = \"open_action_window();\" />\n";
-			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = '{$patient}' onClick  = \"open_patient_window();\" />\n";
+			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Action' onClick  = \"open_action_window();\" />\n";
+			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = '{$patient}' onClick  = \"open_patient_window();\" />\n";
 			}
-		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Notify' onClick  = \"open_notify_window();\" />\n";
-		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Email " . get_text("Units") . "' onClick = 'do_mail_win();' />\n";
+		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Notify' onClick  = \"open_notify_window();\" />\n";
+		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Email " . get_text("Units") . "' onClick = 'do_mail_win();' />\n";
 		}
-	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Note' onClick = \"open_note_window();\" />\n";
-	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'E-mail' onClick = \"open_mail_window();\" />\n";
-	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Dispatch' onClick = \"open_dispatch_window();\" />\n";
-
+	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Note' onClick = \"open_note_window();\" />\n";
+	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'E-mail' onClick = \"open_mail_window();\" />\n";
+	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Dispatch' onClick = \"open_dispatch_window();\" />\n";
+	if (is_administrator() || is_super() || is_unit()){
+		print "<BR /><INPUT TYPE='button' ID='all_switch' CLASS = 'btn_smaller text_big' VALUE = 'All " . get_text("Calls") . "' onClick = 'switch_allcalls();' />\n";
+		}		
 	}				// end function get butts()
 
 
@@ -108,7 +111,7 @@ function get_butts($ticket_id, $unit_id) {
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 <!--[if lte IE 8]>
@@ -117,39 +120,18 @@ function get_butts($ticket_id, $unit_id) {
 <link rel="stylesheet" href="./js/Control.Geocoder.css" />
 <link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
 <STYLE>
-	div#has_line {z-index: 100; position: fixed; bottom: 50%; left: 10%; width: 80%; line-height: 40px; background-color: yellow; border: 2px outset #707070;}
-	#has_wrapper {color: black; font-size: 20px; font-weight: bold; width: 80%; display: inline-block; line-height: 40px; vertical-align: middle;}
-	#closeHas {display: inline-block; vertical-align: middle; float: right;}
-	.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-	#regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
-	#sched_flag { font-family: verdana, arial, helvetica, sans-serif; font-size: 12px; color: #0080FF; font-weight: bold; cursor: pointer; }
-	#leftcol {float: left; text-align: center;}
-	#middlecol {float: left; padding: 10px; text-align: center; margin-right: 30px;}
-	#rightcol {float: left; text-align: center;}
-	.text-labels {font-size: 2em; font-weight: 700;}
-	.box { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:1000; width: 180px; }
-	.bar { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
-	/* 3/26/2013
-	.bar_header { height: 20px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
-	*/
-	.bar_header { height: 30px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
-	.content { padding: 1em; }
-	input.btn_chkd 		{ margin-top: 5px; width: 160px; height: 50px; color:#050;  font: bold 120% 'trebuchet ms',helvetica,sans-serif; background-color:#EFEFEF;  border:1px solid;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: inset;text-align: center;} 
-	input.btn_not_chkd 	{ margin-top: 5px; width: 160px; height: 50px; color:#050;  font: bold 120% 'trebuchet ms',helvetica,sans-serif; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center;} 
-	input.btn_smaller 	{ margin-top: 5px; width: 160px; height: 50px; color:#050;  font: bold 120% 'trebuchet ms',helvetica,sans-serif; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center;} 
-	input:hover 		{ background-color: white; border-width: 4px; border-STYLE: outset;}
-	div.sel 			{ margin-top: 5px; width: 160px; height: 50px; color:#050;  font: bold 120% 'trebuchet ms',helvetica,sans-serif; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; } 
-	select.sit 			{ font: 11px Verdana, Geneva, Arial, Helvetica, sans-serif; background-color: white; color: #102132; border: none;}
-	A 					{ FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000099; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none}
-	.disp_stat 			{ FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-	option				{ FONT-SIZE: 16px;}
-	input				{background-color:transparent;}		/* Benefit IE radio buttons */
-	.calls 				{font:15px arial,sans-serif;}
-	.tablecell 			{text-align: left; font-size: 11px;}
+#leftcol {float: left; text-align: center;}
+#middlecol {float: left; padding: 10px; text-align: center; margin-right: 30px;}
+#rightcol {float: left; text-align: center;}
+input.btn_chkd {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#EFEFEF;  border:1px solid;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: inset;text-align: center; border-radius:.5em; } 
+input.btn_not_chkd {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; border-radius:.5em;} 
+input.btn_smaller {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; border-radius:.5em;} 
+input:hover {background-color: white; border-width: 4px; border-STYLE: outset;}
 </STYLE>
-<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 <script src="./js/proj4js.js"></script>
 <script src="./js/proj4-compressed.js"></script>
 <script src="./js/leaflet/leaflet.js"></script>
@@ -160,8 +142,8 @@ function get_butts($ticket_id, $unit_id) {
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
-<script type="text/javascript" src="./js/usng.js"></script>
-<script type="text/javascript" src="./js/osgb.js"></script>
+<script type="application/x-javascript" src="./js/usng.js"></script>
+<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 if ($_SESSION['internet']) {
 	$api_key = get_variable('gmaps_api_key');
@@ -174,12 +156,17 @@ if ($_SESSION['internet']) {
 		}
 	} 
 ?>
-<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-<script type="text/javascript" src="./js/L.Graticule.js"></script>
-<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<script type="text/javascript" src="./js/geotools2.js"></script>
+<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+<script type="application/x-javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var theTickets = [];
 var theTicket = 0;
@@ -203,7 +190,8 @@ var colheight;
 var outerwidth;
 var outerheight;
 var t_interval = null;
-var latest_ticket = 0;
+var tkts_interval = null;
+var num_tickets = 0;
 var latest_responder = 0;
 var latest_facility = 0;
 var inc_last_display = 0;
@@ -222,8 +210,12 @@ var mapCenter;
 var mapZoom;
 var colors = new Array ('odd', 'even');
 var is_messaging = parseInt("<?php print get_variable('use_messaging');?>");
-var current_selected = <?php print $selected;?>;
+var current_selected = <?php print $currentSelected;?>;;
 var topisHidden = false;
+var theMode = 0;
+
+parent.frames["upper"].$("gout").style.display  = "inline-block";
+parent.frames["upper"].mu_init ();
 
 function do_logout() {
 	show_topframe();
@@ -234,7 +226,7 @@ function do_save_handleResult(req) {			// the called-back function
 	}			// end function handle Result()
 	
 function mobile_selected(in_val) {
-	current_selected = in_val;
+	window.current_selected = in_val;
 	var params = "f_n=mobile_selected&v_n=" + in_val + "&sess_id=<?php print get_sess_key(__LINE__); ?>";
 	var url = "persist2.php";
 	sendRequest (url, do_save_handleResult, params);
@@ -426,6 +418,7 @@ function set_assign(which) {
 		parent.frames['upper'].show_msg (btn_labels_full[which] + curr_time);
 		}
 	if(which == "c") {
+		current_selected = 0;
 		load_tickets();
 		} else {
 		load_ticket(theTicket, theAssign);
@@ -511,10 +504,8 @@ function set_size() {
 	$('middlecol').style.width = middlecolwidth + "px";
 	$('middlecol').style.height = middlecolheight + "px";
 	$('rightcol').style.width = colwidth + "px";
-	$('rightcol').style.height = colheight + "px";	
-//	$('ticketlist').style.maxHeight = listHeight + "px";
-//	$('ticketlist').style.width = listwidth + "px";
-//	$('ticketheading').style.width = listwidth + "px";
+	$('rightcol').style.height = colheight + "px";
+	set_fontsizes(viewportwidth, "fullscreen");
 	load_buttons(theTicket, theAssign);
 	load_tickets();
 	}
@@ -543,7 +534,8 @@ function loadData() {
 	$('middlecol').style.width = middlecolwidth + "px";
 	$('middlecol').style.height = middlecolheight + "px";
 	$('rightcol').style.width = colwidth + "px";
-	$('rightcol').style.height = colheight + "px";	
+	$('rightcol').style.height = colheight + "px";
+	set_fontsizes(viewportwidth, "fullscreen");
 	load_buttons(theTicket, theAssign);
 	load_tickets();
 	}
@@ -570,12 +562,24 @@ function out_frames() {		//  onLoad = "out_frames()"
 function ck_frames() {
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
-		}
-	else {
-		parent.upper.theConnection();
-		parent.upper.show_butts();
+		} else {
+		try {
+			parent.upper.show_butts();
+			} 
+		catch (e) {
+			}
 		parent.upper.do_day_night("<?php print $_SESSION['day_night'];?>")
+		try {
+			parent.upper.theConnection();
+			} 
+		catch (e) {
+			}
 		}
+	}
+	
+function switch_allcalls() {
+	if(!window.theMode) {window.theMode = 1; $('all_switch').value="My Calls";} else {window.theMode = 0; $('all_switch').value="All Calls";}
+	load_tickets();
 	}
 	
 function load_buttons(tick_id, assign_id) {
@@ -603,10 +607,12 @@ function load_buttons(tick_id, assign_id) {
 	
 function load_tickets() {
 	var selected = window.current_selected;
-	$('m_top').innerHTML = "";
-	$('m_bottom').innerHTML = "";
 	var randomnumber=Math.floor(Math.random()*99999999);
-	var url = './ajax/mobile_tktlist.php?selected=' + selected + '&version=' + randomnumber;
+	if(window.theMode ==0) {
+		var url = './ajax/mobile_tktlist.php?selected=' + selected + '&version=' + randomnumber;
+		} else {
+		var url = './ajax/mobile_tktlist.php?frm_mode=2&selected=' + selected + '&version=' + randomnumber;			
+		}
 	sendRequest (url,tktlst_cb, "");
 	function tktlst_cb(req) {
 		var theOutput = "";
@@ -617,23 +623,46 @@ function load_tickets() {
 			theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>No Current calls for " + unitStr + "</TH></TR>";	
 			theOutput += "</TABLE>";
 			$('m_top').innerHTML = theOutput;
+			$('m_middle').innerHTML = "";
+			$('m_bottom') .innerHTML = "";
 			$('rightcol').innerHTML = "";
+			tickets_get();
 			} else {
-			theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Current calls for " + unitStr + "</TH></TR>";	
-			theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";	
-			theOutput += "<TR CLASS = 'even' WIDTH='100%'><TH class='heading' style='text-align: left;'>&nbsp;</TH><TH class='heading' style='text-align: left;'>Unit</TH><TH class='heading' style='text-align: left;'>Assigns</TH><TH class='heading' style='text-align: left;'>Scope</TH><TH class='heading' style='text-align: left;'>Address</TH><TH class='heading' style='text-align: left;'>Date</TH><TH class='heading' style='text-align: left;'></TH><TH class='heading' style='text-align: left;'>Type</TH></TR>";	
-			for (i = 0; i < tkts_arr.length; i++) {
-				theOutput += tkts_arr[i][3];
-				var tickId = tkts_arr[i][0];
-				theTickets[tickId] = tkts_arr[i][2];
+			if(num_tickets != tkts_arr[0][5]) {
+				theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Current calls for " + unitStr + "</TH></TR>";	
+				theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";	
+				theOutput += "<TR CLASS = 'even' WIDTH='100%'>";
+				theOutput += "<TH class='heading text_large text_left'>&nbsp;&nbsp;</TH>";
+				theOutput += "<TH class='heading text_large text_left'>Unit</TH>";
+				theOutput += "<TH class='heading text_large text_left'>Assigns</TH>";
+				theOutput += "<TH class='heading text_large text_left'>Scope</TH>";
+				theOutput += "<TH class='heading text_large text_left'>Address</TH>";
+				theOutput += "<TH class='heading text_large text_left'>Date</TH>";
+				theOutput += "<TH class='heading text_large text_left'>&nbsp;</TH>";
+				theOutput += "<TH class='heading text_large text_left'>Type</TH></TR>";	
+				for (i = 0; i < tkts_arr.length; i++) {
+					theOutput += tkts_arr[i][3];
+					var tickId = tkts_arr[i][0];
+					theTickets[tickId] = tkts_arr[i][2];
+					}
+				theOutput += "</TABLE>";
+				$('m_top').innerHTML = theOutput;
+				var TheAssign = (tkts_arr[selected][1] == "") ? 0 : tkts_arr[selected][1];
+				load_ticket(tkts_arr[selected][0], TheAssign, selected);
+				num_tickets = tkts_arr[0][5];
 				}
-			theOutput += "</TABLE>";
-			$('m_top').innerHTML = theOutput;
-			var TheAssign = (tkts_arr[selected][1] == "") ? 0 : tkts_arr[selected][1];
-			load_ticket(tkts_arr[selected][0], TheAssign, selected);
 			}
 		}				// end function tktlst_cb()	
 	}
+	
+function tickets_get() {
+	if (tkts_interval!=null) {return;}
+	tkts_interval = window.setInterval('tickets_loop()', 5000);
+	}			// end function mu get()
+	
+function tickets_loop() {
+	load_tickets();
+	}			// end function do_loop()
 	
 function load_messages() {
 	if(is_messaging == 0) {
@@ -663,15 +692,14 @@ function load_messages() {
 			$('m_middle').innerHTML = theOutput;
 			} else {
 			var theClass = "odd";
-			theOutput += "<TR CLASS = 'even'><TH class='heading' style='text-align: left;'>Type</TH><TH class='heading' style='text-align: left;'>From</TH><TH class='heading' style='text-align: left;'>Subject</TH><TH class='heading' style='text-align: left;'>Message</TH><TH class='heading' style='text-align: left;'>Date</TH></TR>";	
+			theOutput += "<TR CLASS = 'even'><TH class='heading text text_left' style='text-align: left;'>Type</TH><TH class='heading text text_left' style='text-align: left;'>From</TH><TH class='heading text text_left' style='text-align: left;'>Subject</TH><TH class='heading text text_left' style='text-align: left;'>Message</TH><TH class='heading text text_left' style='text-align: left;'>Date</TH></TR>";	
 			for (i = 0; i < msgs_arr.length; i++) {
-//				theOutput += "<TR CLASS = '" + theClass + "' style='text-align: center;' onClick='load_message(" + msgs_arr[i][0] + ");'>";
-				theOutput += "<TR CLASS = '" + theClass + "' style='text-align: center;' onClick=\"window.open('message.php?id=" + msgs_arr[i][0] + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
-				theOutput += "<TD class='td_data, tablecell' style='" + msgs_arr[i][8] + "'>" + msgs_arr[i][2] + "</TD>";
-				theOutput += "<TD class='td_data, tablecell'>" + msgs_arr[i][3] + "</TD>";
-				theOutput += "<TD class='td_data, tablecell'>" + msgs_arr[i][4] + "</TD>";
-				theOutput += "<TD class='td_data, tablecell'>" + msgs_arr[i][5] + "</TD>";
-				theOutput += "<TD class='td_data, tablecell'>" + msgs_arr[i][6] + "</TD>";
+				theOutput += "<TR CLASS = '" + theClass + "' style='text-align: center;' onClick=\"window.open('message.php?mode=1&id=" + msgs_arr[i][0] + "&screen=mobile&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
+				theOutput += "<TD class='td_data tablecell text' style='" + msgs_arr[i][8] + "'>" + msgs_arr[i][2] + "</TD>";
+				theOutput += "<TD class='td_data tablecell text'>" + msgs_arr[i][3] + "</TD>";
+				theOutput += "<TD class='td_data tablecell text'>" + msgs_arr[i][4] + "</TD>";
+				theOutput += "<TD class='td_data tablecell text'>" + msgs_arr[i][5] + "</TD>";
+				theOutput += "<TD class='td_data tablecell text'>" + msgs_arr[i][6] + "</TD>";
 				theClass = (theClass == "even") ? "odd" : "even";
 				}
 			theOutput += "</TABLE>";
@@ -692,12 +720,12 @@ function load_message(id) {
 		theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Message " + id + "</TH></TR>";	
 		theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";	
 		var theClass = "odd";
-		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label'>Message Type</TD><TD class='td_data' style='" + msg_arr[8] + "'>" + msg_arr[2] + "</TD></TR>";
-		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label'>Ticket Number</TD><TD>" + msg_arr[2] + "</TD></TR>";
-		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label'>From</TD><TD>" + msg_arr[3] + "</TD></TR>";
-		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label'>Date</TD><TD>" + msg_arr[6] + "</TD></TR>";
-		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label'>Subject</TD><TD>" + msg_arr[4] + "</TD></TR>";
-		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label'>Message</TD><TD>" + msg_arr[5] + "</TD></TR>";
+		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Message Type</TD><TD class='td_data' style='" + msg_arr[8] + "'>" + msg_arr[2] + "</TD></TR>";
+		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Ticket Number</TD><TD>" + msg_arr[2] + "</TD></TR>";
+		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>From</TD><TD>" + msg_arr[3] + "</TD></TR>";
+		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Date</TD><TD>" + msg_arr[6] + "</TD></TR>";
+		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Subject</TD><TD>" + msg_arr[4] + "</TD></TR>";
+		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Message</TD><TD>" + msg_arr[5] + "</TD></TR>";
 		theClass = (theClass == "even") ? "odd" : "even";
 		theOutput += "</TABLE>";
 		$('message_details').innerHTML = theOutput;
@@ -713,10 +741,11 @@ function refresh_ticket(id, assign_id) {
 	sendRequest (url,tkt_cb2, "");
 	function tkt_cb2(req) {
 		var tkt_arr2 = JSON.decode(req.responseText);
-		if(theTickets[id] && (theTickets[id] != tkt_arr2[1])) {
+		if(theTickets[id] && (theTickets[id] == tkt_arr2[1])) {
 			theTickets[id] = tkt_arr2[1];
-			$('m_bottom').innerHTML = tkt_arr[0];
-			load_buttons(id, assign_id);				
+			$('m_bottom').innerHTML = tkt_arr2[0];
+			load_buttons(id, assign_id);
+			load_tickets();
 			}
 		}				// end function tkt_cb2()		
 	}
@@ -754,6 +783,22 @@ function open_map_window () {
 	popWindow.focus();
 	}
 	
+function open_act_window(ticket_id, id, action) {
+	var url = "action_w.php?mode=1&ticket_id=" + ticket_id + "&id=" + id + "&action=" + action;
+	var theHeight = window.theWinHeight;
+	var theWidth = window.theWinWidth;
+	var popWindow = window.open(url, 'addWindow', 'resizable=1, scrollbars, height=640, width=800, left=100,top=100,screenX=100,screenY=100');
+	popWindow.focus();
+	}
+
+function open_pat_window(ticket_id, id, action) {
+	var url = "patient_w.php?mode=1&ticket_id=" + ticket_id + "&id=" + id + "&action=" + action;
+	var theHeight = window.theWinHeight;
+	var theWidth = window.theWinWidth;
+	var popWindow = window.open(url, 'addWindow', 'resizable=1, scrollbars, height=640, width=800, left=100,top=100,screenX=100,screenY=100');
+	popWindow.focus();
+	}
+
 function open_add_window () {
 	var url = "add.php?mode=1";
 	var theHeight = window.theWinHeight;
@@ -782,7 +827,7 @@ function open_action_window () {
 	var url = "action_w.php?mode=1&ticket_id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
 	var theWidth = window.theWinWidth;
-	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=480, width=900, left=100,top=100,screenX=100,screenY=100');
+	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=800, width=800, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
 	
@@ -835,7 +880,6 @@ function checkWS() {
 		}
 	if(parent.frames["upper"].isLocal == 1) {
 		if(!parent.frames["upper"].checkConn) {
-			alert(parent.frames["upper"].checkConn);
 			if(parent.frames["main"].$('has_button')) {parent.frames["main"].$('has_button').style.display = "none";}
 			if($('help_but')) {$('help_but').style.display = 'none';}	
 			} else {
@@ -857,13 +901,13 @@ function checkWS() {
 </HEAD>
 <?php
 
-	$gunload = "pageUnload();";
+$gunload = "pageUnload();";
 ?>
 <BODY onLoad = "checkWS(); <?php print $initScreen;?> loadData(); ck_frames(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <A NAME='top'></A>
 <DIV ID = "to_bottom" style='position:fixed; top: 2px; left:5 0px; height: 12px; width: 10px; z-index: 99;' onclick = "location.href = '#bottom';"><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
 <DIV id='screenname' style='display: none;'>situation</DIV>
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 
 <DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>
 <DIV ID = "div_assign_id" STYLE="display:none;"></DIV>
@@ -877,19 +921,19 @@ function checkWS() {
 	</DIV>
 	<DIV id = "middlecol">
 		<DIV id='logout_line' style='width: 100%; display: inline-block; text-align: center; padding: 10px;'>
-			<INPUT id='logout_but' style='display: none;' TYPE='button' CLASS = 'btn_smaller' VALUE = 'Logout' onClick="do_logout();" />
+			<INPUT id='logout_but' style='display: none;' TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Logout' onClick="do_logout();" />
 		</DIV>
 
 		<DIV id='top_line' style='width: 100%; display: inline-block; text-align: center; padding: 10px;'>
 <?php
 			if($unit_id != 0) {
 ?>
-				<INPUT TYPE='button' ID='help_but' CLASS = 'btn_smaller' STYLE='display: none; background-color: red; color: white;' VALUE = 'Help' onClick = "parent.frames['upper'].broadcast('Responder <?php print $unitname;?> Needs Assistance',99);" />
+				<INPUT TYPE='button' ID='help_but' CLASS = 'btn_smaller text_big' STYLE='display: none; background-color: red; color: white;' VALUE = 'Help' onClick = "parent.frames['upper'].broadcast('Responder <?php print $unitname;?> Needs Assistance',99);" />
 <?php
 				}
 ?>
-			<INPUT id='hide_topbar' style='display: inline-block;' TYPE='button' CLASS = 'btn_smaller' VALUE = 'Hide Top Menu' onClick="hide_topframe(); $('show_topbar').style.display='inline-block'; $('hide_topbar').style.display='none';" />
-			<INPUT id='show_topbar' style='display: none;' TYPE='button' CLASS = 'btn_smaller' VALUE = 'Show Top Menu' onClick="show_topframe(); $('show_topbar').style.display='none'; $('hide_topbar').style.display='inline-block';" />
+			<INPUT id='hide_topbar' style='display: inline-block; width: 200px' TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Hide Top Menu' onClick="hide_topframe(); $('show_topbar').style.display='inline-block'; $('hide_topbar').style.display='none';" />
+			<INPUT id='show_topbar' style='display: none; width: 200px' TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Show Top Menu' onClick="show_topframe(); $('show_topbar').style.display='none'; $('hide_topbar').style.display='inline-block';" />
 		</DIV>
 		<DIV id = "m_top" style='max-height: 20%; overflow-y: auto; border: 2px inset #CECECE; padding: 10px;'>
 		</DIV>
@@ -914,7 +958,7 @@ function checkWS() {
 <FORM NAME="gout_form" action="main.php" TARGET = "main">
 <INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />
 </FORM>
-<div id='has_line' style='display: none;'>
+<DIV id='has_line' style='display: none;'>
 	<SPAN id='closeHas' class='plain' onMouseover='do_hover(this.id)' onMouseout='do_plain(this.id)' onClick="$('has_line').style.display = 'none';">Close</SPAN>
 	<SPAN id='has_wrapper'><marquee id='has_text' behavior="scroll" direction="left"></marquee></SPAN>
 <DIV>	

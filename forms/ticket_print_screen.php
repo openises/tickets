@@ -61,7 +61,7 @@ unset($result_as);
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -93,9 +93,9 @@ unset($result_as);
 		.but_container{border: 1px solid black; text-align: center; position: fixed; top: 10px; left: 1px; z-index: 999; padding: 5px; background-color: rgb(0%,0%,0%); background-color: rgba(0%, 0%, 0%, 0.5);}
 		.midline {vertical-align: middle; display: inline-block; width: 100px;}
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -106,8 +106,8 @@ unset($result_as);
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
@@ -120,13 +120,19 @@ unset($result_as);
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
+	<script type="application/x-javascript" src="./js/jss.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
 window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];			//	Responder Markers array
@@ -173,17 +179,18 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	outerwidth = viewportwidth * .99;
-	mapWidth = outerwidth * .9;
+	outerwidth = viewportwidth * .95;
+	mapWidth = outerwidth;
 	mapHeight = outerwidth * .9;
 	colwidth = outerwidth * .9;
 	$('outer').style.width = outerwidth + "px";
-	$('leftcol').style.width = colwidth + "px";
-	$('leftTable').style.width = colwidth + "px";
-	$('button_bar').style.width = colwidth + "px";	
-	$('left').style.width = colwidth + "px";
+	$('leftcol').style.width = outerwidth + "px";
+	$('leftTable').style.width = outerwidth + "px";	
+	$('button_bar').style.width = viewportwidth *.97 + "px";
+	$('left').style.width = outerwidth + "px";
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
+	set_fontsizes(viewportwidth, "popup");
 	}
 
 function do_tab(tabid, suffix, lat, lng) {
@@ -233,8 +240,8 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 	}
 </SCRIPT>
 </HEAD>
-<BODY onLoad = "set_size(); location.href = '#top';">
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<BODY onLoad = "location.href = '#top';">
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
 	<DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>
 	<DIV id='button_bar' class='but_container'>
@@ -320,7 +327,7 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 
 
 ?>
-	<TABLE id='leftTable' style='width: <?php print $col_width;?>; border: 1px solid #707070; position: relative; top: 40px;'>
+	<TABLE id='leftTable' style='width: 98%; border: 1px solid #707070; position: relative; top: 40px;'>
 	<TR VALIGN="top" style='width: 100%;'>
 		<TD COLSPAN=99 class='header' style='text-align: center;'>Ticket: <?php print $scope;?></TD>
 	</TR>
@@ -334,9 +341,9 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 
 <?php
 
-	print do_ticket($row, $col_width, FALSE) ;				// 2/25/09
-	print show_actions($row['id'], "date", FALSE, TRUE);		/* lists actions and patient data belonging to ticket */
-	print "</TD></TR></TABLE>\n";	
+	print do_ticket_only($row, $col_width, FALSE) ;				// 2/25/09
+	print show_actions($row['tick_id'], "date", FALSE, FALSE, 0);		/* lists actions and patient data belonging to ticket */
+	print "</TD></TR></TABLE><BR /><BR /><BR />\n";	
 	$lat = $row['lat']; $lng = $row['lng'];
 ?>
 	</DIV>
@@ -353,17 +360,18 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-outerwidth = viewportwidth * .99;
-mapWidth = outerwidth * .9;
+outerwidth = viewportwidth * .95;
+mapWidth = outerwidth;
 mapHeight = outerwidth * .9;
 colwidth = outerwidth * .9;
 $('outer').style.width = outerwidth + "px";
-$('leftcol').style.width = colwidth + "px";
-$('leftTable').style.width = colwidth + "px";	
-$('button_bar').style.width = colwidth + "px";
-$('left').style.width = colwidth + "px";
+$('leftcol').style.width = outerwidth + "px";
+$('leftTable').style.width = outerwidth + "px";	
+$('button_bar').style.width = viewportwidth *.97 + "px";
+$('left').style.width = outerwidth + "px";
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
+set_fontsizes(viewportwidth, "popup");
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 var theLat = "<?php print $lat;?>";

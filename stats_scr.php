@@ -105,7 +105,7 @@ function found_user() {
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<STYLE>
 		.header_wrapper	{ position: absolute; left: 2%; top: 2%; display: table; width: 94%;}	
@@ -131,7 +131,7 @@ function found_user() {
 		.config_cell_butts	{ align: center; display: table-cell; border: 1px solid; padding: 3px; color: #000000; background: #FFFFFF;}		
 		.error_page	{ text-align: center; font-weight: bold; font-size: 2em; position: absolute; left: 2%; top: 50%; width: 96%;}		
 		</STYLE>	
-	<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>
+	<SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>
 <SCRIPT>
 	function out_frames() {		//  onLoad = "out_frames()"
 		if (top.location != location) top.location.href = document.location.href;

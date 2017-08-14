@@ -55,8 +55,8 @@ $name = ($row_callsign['name']);
 	<![endif]-->
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></SCRIPT>
 	<SCRIPT src="./js/usng.js"></SCRIPT>
 	<SCRIPT src="./js/proj4js.js"></SCRIPT>
 	<SCRIPT src="./js/proj4-compressed.js"></SCRIPT>
@@ -75,19 +75,23 @@ $name = ($row_callsign['name']);
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<SCRIPT type="text/javascript" src="./js/osm_map_functions.js.php"></SCRIPT>
-	<SCRIPT type="text/javascript" src="./js/L.Graticule.js"></SCRIPT>
-	<SCRIPT SRC="./js/jscolor/jscolor.js"  type="text/javascript"></SCRIPT>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+	<SCRIPT type="application/x-javascript" src="./js/osm_map_functions.js"></SCRIPT>
+	<SCRIPT type="application/x-javascript" src="./js/L.Graticule.js"></SCRIPT>
+	<SCRIPT SRC="./js/jscolor/jscolor.js"  type="application/x-javascript"></SCRIPT>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
 window.onload=function(){set_size()};
-
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var viewportwidth;
 var viewportheight;
 var colheight;

@@ -3,7 +3,8 @@
 get_replacetext.php, gets replacement text data for standard messages
 2/4/13	New File
 */
-
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/messaging.inc.php');
 
@@ -141,6 +142,11 @@ function get_owner_unit_handle($id){								/* get owner unit name from id */
 	return (mysql_affected_rows()==0 )? "" : $row['handle'];
 	}	
 	
+function splitMessage($message, $delimiter) {
+	$ret_arr = array();
+	$ret_arr = explode($delimiter, $message);
+	return $ret_arr;
+	}
 
 function replace_content_inside_delimiters($start, $end, $new, $source) {
 	$thetxt = preg_replace('#('.preg_quote($start).')(.*)('.preg_quote($end).')#si', '$1'.$new.'$3', $source);
@@ -394,31 +400,10 @@ function get_replacement_text($val) {
 		}
 	}
 	
-$ret_arr = array();
-$foundtext = GetBetween($text_to_replace,$start_tag,$end_tag);
-$rep_val = get_replacement_text($foundtext);
-
-if($rep_val) {
+function getfinalmessage($rep_val) {
+	global $start_tag, $end_tag, $ticket, $text_to_replace, $infotype;
 	$tags = array($start_tag,$end_tag);
 	$ret_text = ((isset($rep_val[0])) && ($rep_val[0] != "")) ? $rep_val[0] : "Nothing Found";
-	$the_replaced_text = $rep_val[0];
-	$the_replaced_text .= ($rep_val[1] == "Yes") ? " " . $ticket : "";
-	$the_replaced_text .= ($rep_val[2] == "Yes") ? " " . $user_name : "";
-	$the_replaced_text .= ($rep_val[3] == "Yes") ? " " . get_owner_unit_handle(get_owner_unit($user)) : "";
-	$the_replaced_text .= ($rep_val[4] == "Yes") ? " " . $time : "";	
-	$the_replaced_text .= ($rep_val[5] == "Yes") ? " " . $date : "";
-	$thesummary = ($rep_val[6] == "Yes") ? tkt_summary($ticket) . "\n" : "";	
-	$theshortsummary = ($rep_val[7] == "Yes") ? tkt_shortSummary($ticket) . "\n" : "";	
-	$thedescsumm = ($rep_val[8] == "Yes") ? tkt_description($ticket) . "\n" : "";
-	$thephone = ($rep_val[9] == "Yes") ? tkt_phone($ticket) . "\n" : "";	
-	$thestreet = ($rep_val[10] == "Yes") ? tkt_street($ticket) . "\n" : "";
-	$thecity = ($rep_val[11] == "Yes") ? tkt_city($ticket) . "\n" : "";
-	$thetoaddress = ($rep_val[12] == "Yes") ? tkt_toaddress($ticket) . "\n" : "";
-	$thedispnotes = ($rep_val[13] == "Yes") ? tkt_dispnotes($ticket) . "\n" : "";
-	$theNature = ($rep_val[14] == "Yes") ? tkt_nature($ticket) . "\n" : "";	
-	$thePriority = ($rep_val[15] == "Yes") ? tkt_severity($ticket) . "\n" : "";	
-	$warningsText = ($rep_val[16] == "Yes") ? get_warnlocs($ticket) . "\n" : "";
-	$the_output = replace_content_inside_delimiters($start_tag, $end_tag, $the_replaced_text, $text_to_replace) . "\n";
 	$add_tkt_order = array_keys($infotype, 'add_ticket');
 	$add_user_order = array_keys($infotype, 'add_user');
 	$add_user_unit_order = array_keys($infotype, 'add_user_unit');
@@ -432,10 +417,9 @@ if($rep_val) {
 	$app_city_order = array_keys($infotype, 'app_city');
 	$app_toaddress_order = array_keys($infotype, 'app_toaddress');
 	$app_dispnotes_order = array_keys($infotype, 'app_dispnotes');
-	$app_nature = 14;
-	$app_priority = 15;
-	$app_warnings = 16;
-	$output[0] = $the_output;
+	$app_nature[0] = 14;
+	$app_priority[0] = 15;
+	$app_warnings[0] = 16;
 	$output[$add_tkt_order[0]] = ($rep_val[1] == "Yes") ? "" . $ticket : "";
 	$output[$add_user_order[0]] = ($rep_val[2] == "Yes") ? "" . $user_name : "";
 	$output[$add_user_unit_order[0]] = ($rep_val[3] == "Yes") ? "" . get_owner_unit_handle(get_owner_unit($user)) : "";
@@ -456,11 +440,25 @@ if($rep_val) {
 	foreach($output as $val) {
 		$theText .= $val;
 		}
-	$ret_arr[0] = $theText;
-	} else {
-	$ret_arr[0] = "";
+	return $theText;
 	}
-
+	
+$ret_arr = array();
+$msg_arr = splitMessage($text_to_replace, $start_tag);
+$msgtxt = "";
+$temp = array();
+foreach($msg_arr as $val) {
+	if($val != "") {
+		if(isTag($val)) {
+			$temp = get_replacement_text($val);
+			$msgtxt .= getfinalmessage($temp);
+			} else {
+			$msgtxt .= $val;
+			}
+		}
+	}
+$ret_arr[0] = $msgtxt; 
+		
 print json_encode($ret_arr);
 exit();
 ?>

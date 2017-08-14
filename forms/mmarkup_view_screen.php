@@ -59,8 +59,11 @@ $theRadius = (($row['line_type'] == "c") && (($temp[1]) && ($temp[1] != 0))) ? $
 
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var polygon;
 var polyline;
@@ -72,20 +75,11 @@ var mapHeight;
 var listHeight;
 var colwidth;
 var listwidth;
-var inner_listwidth;
-var celwidth;
-var res_celwidth;
-var fac_celwidth;
 var viewportwidth;
 var viewportheight;
 var colheight;
 var outerwidth;
 var outerheight;
-var r_interval = null;
-var latest_responder = 0;
-var do_resp_update = true;
-var responders_updated = new Array();
-var rmarkers = [];
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 	}
@@ -150,7 +144,7 @@ function change_type(id) {
 function set_fieldview() {
 	var filled = <?php print $filled;?>;
 	if(filled == 1) {
-		$('fill_cb_tr').style.display = 'inline-block';
+		$('fill_cb_tr').style.display = '';
 		} else {
 		$('fill_cb_tr').style.display = 'none';
 		}
@@ -174,91 +168,88 @@ function set_size() {
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
 	colheight = outerheight * .95;
-	listHeight = viewportheight * .7;
+	leftcolwidth = viewportwidth * .45;
+	rightcolwidth = viewportwidth * .40;
 	listwidth = colwidth * .95
-	inner_listwidth = listwidth *.9;
-	celwidth = listwidth * .20;
-	res_celwidth = listwidth * .15;
-	fac_celwidth = listwidth * .15;
+	fieldwidth = colwidth * .6;
+	medfieldwidth = colwidth * .3;		
+	smallfieldwidth = colwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
-	$('leftcol').style.width = colwidth + "px";
+	$('leftcol').style.width = leftcolwidth + "px";
 	$('leftcol').style.height = colheight + "px";	
-	$('rightcol').style.width = colwidth + "px";
+	$('markup_form_table').style.width = leftcolwidth + "px";
+	$('rightcol').style.width = rightcolwidth + "px";
 	$('rightcol').style.height = colheight + "px";	
-	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.width = rightcolwidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	change_type(theType);
 	set_fieldview();
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 </SCRIPT>
 </HEAD>
 <BODY>
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10, 10/23/12 -->		
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10, 10/23/12 -->		
 	<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
-	<DIV id='outer' style='position: absolute; left: 0px;'>
-		<DIV id='leftcol' style='position: absolute; left: 10px;'>
+	<DIV id = "outer" style='position: absolute; left: 0px;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<A NAME='top'>	
 			<TABLE id='markup_form_table' BORDER="0" ALIGN="center" width='100%'>
-				<TR CLASS="even" VALIGN="top" >
-					<TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">View <SPAN id='type_flag'></SPAN> "<i><?php print $row['line_name'];?></i>"</SPAN></FONT><BR /><BR />
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>
+				</TR>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
+						<SPAN CLASS='text_green text_biggest'>View <SPAN id='type_flag'></SPAN> "<?php print $row['line_name'];?>" Map Markup</SPAN>
+						<BR />
 					</TD>
 				</TR>
-				<TR CLASS="spacer" VALIGN="top" >
-					<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
-				</TR>
-				<TR CLASS="spacer" VALIGN="top" >
-					<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
+				<TR class='spacer'>
+					<TD class='spacer' COLSPAN=99></TD>
 				</TR>
 				<TR VALIGN="baseline" CLASS="odd">
-					<TD CLASS="td_label" ALIGN="left">Description:</TD>
-					<TD CLASS='td_data'><?php print $row['line_name'];?>
-						<SPAN STYLE = 'margin-left:20px' CLASS="td_label" >Visible&nbsp;&raquo;&nbsp;</SPAN>
-						<SPAN STYLE = 'margin-left:20px' CLASS="td_data" ><?php print $isVisible;?></SPAN>
+					<TD CLASS="td_label text text_left">Description:</TD>
+					<TD CLASS='td_data text text_left'><?php print $row['line_name'];?>
+						<SPAN STYLE = 'margin-left:20px' CLASS="td_label text text_left" >Visible&nbsp;&raquo;&nbsp;</SPAN>
+						<SPAN STYLE = 'margin-left:20px' CLASS="td_data text text_left" ><?php print $isVisible;?></SPAN>
 					</TD>
 				</TR>
 				<TR VALIGN="baseline" CLASS="even">
-					<TD CLASS="td_label" ALIGN="left">Ident:</TD>
-					<TD CLASS='td_data'><?php print $row['line_ident'];?>
-						<SPAN STYLE = 'margin-left:20px'  CLASS="td_label">Category:&nbsp;&raquo;&nbsp;</SPAN><SPAN STYLE = 'margin-left:20px' CLASS="td_data" ><?php print $cat_name;?></SPAN>
-						<SPAN ID='radius' CLASS="td_label" STYLE = 'margin-left:20px; display: none;'>Radius&nbsp;&raquo;&nbsp;<?php print $theRadius;?>&nbsp;&nbsp; <i>(mi)</i></SPAN>
-						<SPAN ID='ban_text' CLASS="td_label" STYLE = 'margin-left:20px; display: none;'>Banner text:&nbsp;&raquo;&nbsp;<?php print $banner_text;?></SPAN>
+					<TD CLASS="td_label text text_left">Ident:</TD>
+					<TD CLASS='td_data text text_left'><?php print $row['line_ident'];?>
+						<SPAN STYLE = 'margin-left:20px'  CLASS="td_label text text_left">Category:&nbsp;&raquo;&nbsp;</SPAN><SPAN STYLE = 'margin-left:20px' CLASS="td_data text text_left" ><?php print $cat_name;?></SPAN>
+						<SPAN ID='radius' CLASS="td_label text text_left" STYLE = 'margin-left:20px; display: none;'>Radius&nbsp;&raquo;&nbsp;<?php print $theRadius;?>&nbsp;&nbsp; <i>(mi)</i></SPAN>
+						<SPAN ID='ban_text' CLASS="td_label text text_left" STYLE = 'margin-left:20px; display: none;'>Banner text:&nbsp;&raquo;&nbsp;<?php print $banner_text;?></SPAN>
 
 					</TD>
 				</TR>
-				<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="left">Apply to:</TD>
-					<TD CLASS='td_data'><?php print $applyto;?></TD>
+				<TR VALIGN="baseline" CLASS="odd">
+					<TD CLASS="td_label text text_left" ALIGN="left">Apply to:</TD>
+					<TD CLASS='td_data text text_left'><?php print $applyto;?></TD>
 				</TR>
-				<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="left"><SPAN id='type_flag2'></SPAN>:</TD>
-					<TD CLASS='td_data'>
-						<SPAN CLASS="td_label">Color &raquo;&nbsp;</SPAN>
+				<TR VALIGN="baseline" CLASS="even">
+					<TD CLASS="td_label text text_left"><SPAN id='type_flag2'></SPAN>:</TD>
+					<TD CLASS='td_data text text_left'>
+						<SPAN CLASS="td_label text text_left">Color &raquo;&nbsp;</SPAN>
 						<SPAN style='background-color: #<?php print $row['line_color'];?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
-						<SPAN CLASS="td_label" id='line_opacity'>&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
-						<SPAN CLASS='td_data' id='line_opacity2'><?php print $row['line_opacity'];?>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
-						<SPAN id='line_width' CLASS="td_label" style='display: none;'>Width &raquo;&nbsp;</SPAN>
-						<SPAN id='line_width2' CLASS='td_data'><?php print $row['line_width'];?>(px)</SPAN>
-						<SPAN CLASS='td_label' id='font_size' style='display: none;'>Font Size &raquo;&nbsp;</SPAN>
-						<SPAN CLASS='td_data' id='font_size2' style='display: none;'><?php print $row['line_width'];?>(px)</SPAN>
+						<SPAN CLASS="td_label text text_left" id='line_opacity'>&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
+						<SPAN CLASS='td_data text text_left' id='line_opacity2'><?php print $row['line_opacity'];?>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+						<SPAN id='line_width' CLASS="td_label text text_left" style='display: none;'>Width &raquo;&nbsp;</SPAN>
+						<SPAN id='line_width2' CLASS='td_data text text_left'><?php print $row['line_width'];?>(px)</SPAN>
+						<SPAN CLASS='td_label text text_left' id='font_size' style='display: none;'>Font Size &raquo;&nbsp;</SPAN>
+						<SPAN CLASS='td_data text text_left' id='font_size2' style='display: none;'><?php print $row['line_width'];?>(px)</SPAN>
 					</TD>
 				</TR>
-				<TR VALIGN="baseline" CLASS="odd" ID='fill_cb_tr' style='display: none;'>
-					<TD CLASS="td_label" ALIGN="left">Fill:&nbsp;&nbsp;&nbsp;</TD>
-					<TD CLASS='td_data'>
+				<TR VALIGN="baseline" CLASS="odd" ID='fill_cb_tr' style='display: none; width: 100%;'>
+					<TD CLASS="td_label text text_left">Fill:&nbsp;&nbsp;</TD>
+					<TD CLASS='td_data text text_left'>
 						<SPAN ID='fill_details'>
-							<SPAN CLASS="td_label">Color &raquo;&nbsp;</SPAN>
+							<SPAN CLASS="td_label text text_left">Color &raquo;&nbsp;</SPAN>
 							<SPAN style='background-color: #<?php print $row['fill_color'];?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
-							<SPAN CLASS="td_label" >&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
-							<SPAN CLASS="td_data" ><?php print $row['fill_opacity'];?></SPAN>
+							<SPAN CLASS="td_label text text_left" >&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
+							<SPAN CLASS="td_data text text_left" ><?php print $row['fill_opacity'];?></SPAN>
 						</SPAN>
-					</TD>
-				</TR>
-				<TR CLASS="spacer" VALIGN="top" >
-					<TD CLASS='spacer' COLSPAN="2" ALIGN="CENTER">&nbsp;</TD>
-				</TR>
-				<TR CLASS="odd" style='height: 30px; vertical-align: middle;'>
-					<TD COLSPAN="2" ALIGN="center" style='vertical-align: middle;'>
-						<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Cancel</SPAN>
-						<SPAN id='edit_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.edit_Form.submit();'>Edit</SPAN>
 					</TD>
 				</TR>
 				<TR CLASS="spacer" VALIGN="top" >
@@ -266,8 +257,15 @@ function set_size() {
 				</TR>
 			</TABLE>			
 		</DIV>
-		<DIV id='rightcol' style='position: absolute; right: 170px;'>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: relative; top: 50px; z-index: 1;'>
+				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+				<SPAN id='ed_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.edit_Form.submit();'><?php print get_text("Edit");?><BR /><IMG id='can_img' SRC='./images/edit.png' /></SPAN>
+			</DIV>
+		</DIV>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 			<DIV id= 'map_canvas' style = 'border: 1px outset #707070;'></DIV>
+			<SPAN id='map_caption' CLASS='text_blue text text_bold' style='width: 100%; text-align: center; display: block;'><?php print get_variable('map_caption');?></SPAN><BR />
 		</DIV>
 	</DIV>
 	<div id="Test"></div>
@@ -301,18 +299,46 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		var locale = <?php print get_variable('locale');?>;
 		var my_Local = <?php print get_variable('local_maps');?>;
 		var latLng;
-		var mapWidth = <?php print get_variable('map_width');?>+20;
-		var mapHeight = <?php print get_variable('map_height');?>+20;;
-		$('map_canvas').style.width = mapWidth + "px";
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		mapWidth = viewportwidth * .40;
+		mapHeight = viewportheight * .55;
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		colwidth = outerwidth * .42;
+		colheight = outerheight * .95;
+		leftcolwidth = viewportwidth * .40;
+		rightcolwidth = viewportwidth * .45;
+		listwidth = colwidth * .95
+		fieldwidth = colwidth * .6;
+		medfieldwidth = colwidth * .3;		
+		smallfieldwidth = colwidth * .15;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
+		$('leftcol').style.width = leftcolwidth + "px";
+		$('leftcol').style.height = colheight + "px";	
+		$('markup_form_table').style.width = leftcolwidth + "px";
+		$('rightcol').style.width = rightcolwidth + "px";
+		$('rightcol').style.height = colheight + "px";	
+		$('map_canvas').style.width = rightcolwidth + "px";
 		$('map_canvas').style.height = mapHeight + "px";
+		set_fontsizes(viewportwidth, "fullscreen");
 		var theLocale = <?php print get_variable('locale');?>;
 		var useOSMAP = <?php print get_variable('use_osmap');?>;
-		init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+		var initZoom = <?php print get_variable('def_zoom');?>;
+		init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
 		var bounds = map.getBounds();	
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points
-
 		if(theType =="p") {
 			draw_polygon("<?php print $row['line_name'];?>", 
 					"#<?php print $row['line_color'];?>", 
@@ -422,7 +448,6 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 			var point = new L.LatLng(lat, lng);
 			var font_size = width;
 			var the_color = (typeof color == 'undefined')? "000000" : color ;	// default to black
-
 			$('Test').innerHTML = theBanner;
 			$('Test').style.fontSize = font_size;
 			var test = document.getElementById("Test");

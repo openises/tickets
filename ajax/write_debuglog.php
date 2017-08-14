@@ -2,6 +2,8 @@
 /*
 4/22/16 initial release
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 
 require_once('../incs/functions.inc.php');

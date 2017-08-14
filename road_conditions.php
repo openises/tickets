@@ -49,7 +49,7 @@ unset($result);
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <?php
@@ -59,18 +59,18 @@ unset($result);
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<SCRIPT SRC="./js/usng.js" 			TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/lat_lng.js" 		TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/geotools2.js" 	TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/osgb.js" 			TYPE="text/javascript"></SCRIPT>		
-	<SCRIPT SRC='./js/misc_function.js' TYPE='text/javascript'></SCRIPT>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<SCRIPT SRC="./js/domready.js"		TYPE="text/javascript" ></script>
+	<SCRIPT SRC="./js/usng.js" 			TYPE="application/x-javascript"></SCRIPT>
+	<SCRIPT SRC="./js/lat_lng.js" 		TYPE="application/x-javascript"></SCRIPT>
+	<SCRIPT SRC="./js/geotools2.js" 	TYPE="application/x-javascript"></SCRIPT>
+	<SCRIPT SRC="./js/osgb.js" 			TYPE="application/x-javascript"></SCRIPT>		
+	<SCRIPT SRC='./js/misc_function.js' TYPE='application/x-javascript'></SCRIPT>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<SCRIPT SRC="./js/domready.js"		TYPE="application/x-javascript" ></script>
 	<SCRIPT>
 	var map;		// note global
 	var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
@@ -1490,8 +1490,8 @@ var buttons_html = "";
 ?>
 		</HEAD>
 		<BODY onLoad = "ck_frames();" ><!-- <?php echo __LINE__ ;?> -->
-		<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
-		<SCRIPT TYPE="text/javascript" src="./js/elabel_v3.js"></SCRIPT>		
+		<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
+		<SCRIPT TYPE="application/x-javascript" src="./js/elabel_v3.js"></SCRIPT>		
 		<A NAME='top'>		<!-- 11/11/09 -->
 <?php
 		print "<SPAN STYLE = 'margin-left:100px;'>{$caption}</SPAN>";

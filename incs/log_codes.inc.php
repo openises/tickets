@@ -47,6 +47,7 @@ $types = array();
 	
 	$types[$GLOBALS['LOG_FACILITY_ADD']]					="{$facility} added";
 	$types[$GLOBALS['LOG_FACILITY_CHANGE']]					="{$facility} changed";
+	$types[$GLOBALS['LOG_FACILITY_STATUS']]					="{$facility} status changed";
 	
 	$types[$GLOBALS['LOG_FACILITY_INCIDENT_OPEN']]			="{$facility} {$incident} opened";
 	$types[$GLOBALS['LOG_FACILITY_INCIDENT_CLOSE']]			="{$facility} {$incident} closed";

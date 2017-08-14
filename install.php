@@ -73,7 +73,7 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 </HEAD><BODY>
 <FONT CLASS="header">Installing <?php print $version; ?> </FONT><BR /><BR />
@@ -1237,6 +1237,42 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		else {
 ?>
 			Complete this form to install Tickets version <?php print $version;?>. Make sure to read through the <A HREF="install.php?help=1"><U>help</U></A> information.<BR /><BR />
+<?php
+			if (extension_loaded('gd') && function_exists('gd_info')) {
+				$gd = "<FONT COLOR='green'>GD Installed</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>";
+				} else {
+				$gd = "<FONT COLOR='red'>GD not Installed</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>";
+				}
+
+			if (strnatcmp(phpversion(),'5.2.0') >= 0) { 
+				$php = "<FONT COLOR='green'>PHP 5.2 or higher is installed, this is OK, you have at least the recommended version</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>"; 
+				} else { 
+				$php = "<FONT COLOR='red'>PHP is less than version 5.2. You need to upgrade PHP to at least version 5.2.0</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>"; 
+				} 
+			
+			$docRoot = substr(getenv("DOCUMENT_ROOT"), -4);
+			$curr = getcwd() . "/";
+			$curr_dir = substr($curr , -4);
+			if ($docRoot == $curr_dir) {
+				$dir = "<FONT COLOR='red'>You need to Install the application in a directory off the web root not in the web root itself.</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>";
+				} else {
+				$dir = "<FONT COLOR='green'>The installation location is OK.</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>";
+				}
+				
+			ob_start(); 
+			phpinfo(INFO_MODULES); 
+			$info = ob_get_contents(); 
+			ob_end_clean(); 
+			$info = stristr($info, 'Client API version '); 
+			preg_match('/[1-9].[0-9].[1-9]/', $info, $match); 
+			$md = $match[0];
+			
+			if (strnatcmp($md,'5.0.0') >= 0) {
+				$mysql = "<FONT COLOR='green'>MYSQL 5.0 or better is installed</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>"; 
+				} else {
+				$mysql = "<FONT COLOR='red'>MYSQL version is lower than 5.0</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>"; 	
+				}
+?>
 			<FORM NAME = 'install_frm' METHOD="post" ACTION="install.php?go=1"  onSubmit='return validate(document.install_frm)' >
 			<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;From your MySQL installation&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
 			<TABLE BORDER="0">

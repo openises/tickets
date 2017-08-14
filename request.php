@@ -21,10 +21,10 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<SCRIPT TYPE="text/javascript" SRC="../js/misc_function.js"></SCRIPT>	
-	<SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
+	<SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>	
+	<SCRIPT TYPE="application/x-javascript" SRC="../js/domready.js"></script>
 	<script src="../js/leaflet/leaflet.js"></script>
 	<script src="../js/proj4js.js"></script>
 	<script src="../js/proj4-compressed.js"></script>
@@ -35,20 +35,23 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<script src="../js/leaflet-openweathermap.js"></script>
 	<script src="../js/esri-leaflet.js"></script>
 	<script src="../js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="../js/Google.js"></script>
+		<script type="application/x-javascript" src="../js/Google.js"></script>
 <?php 
 		}
 ?>
-	<script type="text/javascript" src="../js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="../js/L.Graticule.js"></script>
-	<script type="text/javascript" src="../js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="../js/geotools2.js"></script>
+	<script type="application/x-javascript" src="../js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="../js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="../js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="../js/geotools2.js"></script>
+<?php
+	require_once('./incs/all_forms_js_variables.inc.php');
+?>
 	<SCRIPT>
 	var the_link = "";
 	var countmail = 0;

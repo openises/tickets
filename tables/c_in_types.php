@@ -54,13 +54,13 @@
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Notify Mailgroup:</TD><TD><?php print $mg_select;?></TD></TR>
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Notify Email:</TD><TD><INPUT ID="ID11" MAXLENGTH=256 SIZE=60 TYPE="text" NAME="frm_notify_email" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Notify When:</TD><TD><INPUT ID="ID12" MAXLENGTH=1 SIZE=1 TYPE= "number" min="1" max="3" NAME="frm_notify_when" VALUE=1 onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >1,2 or 3 for All, Open or Close</SPAN></TD></TR>
-		<TR><TD COLSPAN="99" ALIGN="center">
-		<BR />
-		<INPUT TYPE="button"	VALUE="Cancel" onClick = "Javascript: document.retform.func.value='r';document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="reset"		VALUE="Reset"/>&nbsp;&nbsp;&nbsp;&nbsp;
-		<INPUT TYPE="button" NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this);"/>
-
-		</TD></TR>
+		<TR>
+			<TD COLSPAN="99" ALIGN="center">
+				<SPAN id='can_but' CLASS='plain text' style='width: 80px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="Javascript: document.retform.func.value='r';document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+				<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.c.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnCheckInput(document.c, this );"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
 		</FORM>
 
 		</TD></TR></TABLE>

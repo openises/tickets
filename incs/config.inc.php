@@ -265,17 +265,17 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='even'><TD CLASS='td_label'>Server OS:</TD><TD ALIGN='left'>" . php_uname() . "</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
 	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
-
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Timezone set:</TD><TD ALIGN='left'>" . date_default_timezone_get() . "</TD></TR>";
 	$fmt = "m/d/Y H:i:s";
 	$now =  date($fmt,time());											// 8/26/08
 	$adj =  date($fmt, (time() - (get_variable('delta_mins')*60)));
 //	$nist = date($fmt, ntp_time());
 	$nist = "NA";
 
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Server time:</TD>
+	print "<TR CLASS='even'><TD CLASS='td_label'>Server time:</TD>
 		<TD ALIGN='left'>" . $now . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Adjusted:</B> $adj  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>NIST:</B> $nist</TD></TR>";
 
-	print "<TR CLASS='even'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$rsvd_str $ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db - $ticket_rsvd_in_db)." closed, $ticket_in_db total</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>$rsvd_str $ticket_open_in_db open, ".($ticket_in_db - $ticket_open_in_db - $ticket_rsvd_in_db)." closed, $ticket_in_db total</TD></TR>";
 
 	$type_color=array();												// 1/28/09
 	$type_color[0] = "Error";
@@ -298,28 +298,27 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	$show_str = $out_str . $total . " total";
 	unset($result);
 
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>" . $show_str . "</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>" . $show_str . "</TD></TR>";
 
-	print "<TR CLASS='even'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, $stats_in_db Statistics ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db+$stats_in_db)." total</TD></TR>";	//	11/07/11
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, $stats_in_db Statistics ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db+$stats_in_db)." total</TD></TR>";	//	11/07/11
 
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	$nr_logs = mysql_affected_rows();
 	unset($result);
 
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Log records in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>{$nr_logs}</TD></TR>";		// 4/5/09
+	print "<TR CLASS='even'><TD CLASS='td_label'>Log records in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>{$nr_logs}</TD></TR>";		// 4/5/09
 
-	print "<TR CLASS='even'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
 	print $_SESSION['user'] . ", " .	get_level_text ($_SESSION['level']);
 
-//	print "</TD></TR><TR CLASS='even'><TD CLASS=\"td_label\">Sorting:</TD><TD ALIGN=\"left\">";	//
 	$_SESSION['ticket_per_page'] == 0 ? print ", unlimited " : print $_SESSION['ticket_per_page'];
 	print " tickets/page, order by '".str_replace('DESC','descending', $_SESSION['sortorder'])."'</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
 	print $_SERVER["HTTP_USER_AGENT"];
 	print  "</TD></TR>";
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 
@@ -532,6 +531,8 @@ function get_setting_help($setting){/* get help for settings */
 		case "facboard_hide_patient": 	return "Show (0) or Hide (1) Patient Name on facility board";	break;
 		case "debug": 					return "Debug on (1) or off (0) (default) for situation screen and other lists";	break;
 		case "log_days": 				return "Number of days to show the recent events for on the Situation screen, 3 is the default";	break;
+		case "responder_list_sort": 	return "Default Column to sort by for responder list for situation and unit screen. 2 numbers separated by comma, first is sit, second is units";	break;
+		case "facility_list_sort": 		return "Default Column to sort by for facility list for situation and facility screen. 2 numbers separated by comma, first is sit, second is facilities";	break;
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}
 	}
@@ -609,6 +610,13 @@ function get_msg_settings_help($setting){/* get help for color settings	3/15/11 
 		case "use_autostat": 				return "Whether to use automatic status updates for responders who send reply messages with specific text in the message. Delimiters for the special text are set in start and end tag."; break;
 		case "start_tag": 					return "Start delimiter. Text in incoming SMS messages between the start tag and end tag will be used to drive specific responder status changes."; break;
 		case "end_tag": 					return "The end tag for the special text in SMS incoming messages that delimits the end of the special text. Text between the start tag and this will be used for auto status updates."; break;
+		case "default_sms": 				return "When sending messages default to SMS gateway if configured (1) or default to email (0)."; break;
+		case "txtlocal_icserver": 			return "Textlocal incoming server address for getting messages."; break;
+		case "txtlocal_hash": 				return "Textlocal password hash."; break;
+		case "txtlocal_username": 			return "Textlocal username."; break;
+		case "txtlocal_ogserver": 			return "Textlocal outgoing server address for sending messages."; break;
+		case "txtlocal_inserver": 			return "Textlocal server address for getting inbox overview."; break;
+		case "append_timestamp":			return "Append (1) or not (0) Sent Time Timestamp to end of each SMS message"; break;
 		default: 							return "No help for '$setting'"; break;	//		default: 						return "No help for '$setting'"; break;	//
 		}
 	}

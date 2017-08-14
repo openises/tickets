@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 session_start();
 session_write_close();	
@@ -41,10 +43,8 @@ if (array_key_exists('frm_mode', $_GET)) {$mode =  $_GET['frm_mode'];
 if (($mode == UNIT) || ($mode == MINE)){
 	$my_unit = (empty($user_row['name_f']) && empty($user_row['name_l']))? "(NA)": $user_row['name_f'] . " " . $user_row['name_l'];
 	$unit_str = "{$my_unit}";
-	}
-else {
+	} else {
 	$unit_str = "";
-
 	}	
 	
 if ((($mode==0) || ($mode==1))) {									// pull $the_unit, $the_unit_name, this user
@@ -56,12 +56,10 @@ if ((($mode==0) || ($mode==1))) {									// pull $the_unit, $the_unit_name, thi
 	$user_row = stripslashes_deep(mysql_fetch_assoc($result));
 	$the_unit = $user_row['responder_id'];
 	$the_unit_name = (empty($user_row['name']))? "NA": $user_row['name'];	// 'NA' if no responder this user
+	} else {
+	$the_unit_name = "NA";
 	}
-else {
-	 $the_unit_name = "NA";
-	}
-
-$restrict = ((($mode==UNIT) ) || ($mode==MINE))? " (`responder_id` = {$the_unit}) AND ": "";		// 8/20/10, 9/3/10 
+$restrict = (($mode==UNIT) || ($mode==MINE)) ? " (`responder_id` = {$the_unit}) AND ": "";		// 8/20/10, 9/3/10 
 
 $mob_show_cleared = intval(get_variable('mob_show_cleared'));
 
@@ -101,7 +99,7 @@ if (mysql_affected_rows()==0) {
 	$assigns_stack = array();
 	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
 //		dump($in_row);
-		array_push($assigns_stack, $in_row);									// stack it up		
+		array_push($assigns_stack, $in_row);									// stack it up	
 		if (empty($_GET['assign_id']) && empty($_GET['ticket_id'])) {
 			if (empty($_GET) && ($i==0)) {
 				$selected_indx = $i;
@@ -161,7 +159,7 @@ if (mysql_affected_rows()==0) {
 			}
 		else {$checked = "";}
 		$theAssign_id = ($assigns_stack[$i]['assign_id'] == "") ? 0 : $assigns_stack[$i]['assign_id'];
-		$print .= "\t<TD><INPUT TYPE = 'radio' NAME = 'others' VALUE='{$i}' {$checked} onClick = 'load_ticket(" . $assigns_stack[$i]['tick_id'] . ", " . $theAssign_id . ", " . $i . ")' /></TD>\n";
+		$print .= "\t<TD class='td_data text text_left'><INPUT TYPE = 'radio' NAME = 'others' VALUE='{$i}' {$checked} onClick = 'load_ticket(" . $assigns_stack[$i]['tick_id'] . ", " . $theAssign_id . ", " . $i . ")' /></TD>\n";
 		switch($assigns_stack[$i]['severity'])		{					//set cell color by severity
 			case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; 	break;
 			case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; 	break;
@@ -172,12 +170,12 @@ if (mysql_affected_rows()==0) {
 		$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$the_icon];
 		$unit_handle = addslashes($assigns_stack[$i]['handle']);
 		$the_disp_stat = get_disp_status ($assigns_stack[$i]);			// 8/29/10
-		$print .= "\t<TD>&nbsp;<SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>{$unit_handle}</SPAN></TD>\n";		// column 2 - handle 
-		$print .= "\t<TD style='text-align: left;'>&nbsp;{$the_disp_stat}</TD>\n";		// column 3-  disp status
+		$print .= "\t<TD class='td_data text text_left'><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>{$unit_handle}</SPAN></TD>\n";		// column 2 - handle 
+		$print .= "\t<TD class='td_data text text_left'>&nbsp;{$the_disp_stat}</TD>\n";		// column 3-  disp status
 		$the_ticket = shorten("{$assigns_stack[$i]['scope']}", 24); 					
-		$print .= "\t<TD CLASS='{$severityclass}' style='text-align: left;'>&nbsp;{$blinkst}{$the_ticket}{$blinkend}</TD>\n";						// column 5 - ticket
+		$print .= "\t<TD CLASS='td_data text text_left {$severityclass}' style='text-align: left;'>&nbsp;{$blinkst}{$the_ticket}{$blinkend}</TD>\n";						// column 5 - ticket
 		$the_addr = shorten("{$assigns_stack[$i]['tick_street']}, {$assigns_stack[$i]['tick_city']}", 24); 					
-		$print .= "\t<TD CLASS='{$severityclass}' style='text-align: left;'>&nbsp;{$the_addr}</TD>\n";							// column 6 - address
+		$print .= "\t<TD CLASS='td_data text text_left {$severityclass}' style='text-align: left;'>&nbsp;{$the_addr}</TD>\n";							// column 6 - address
 		if($assigns_stack[$i]['tick_status'] == $GLOBALS['STATUS_SCHEDULED']) {
 			$the_date = $assigns_stack[$i]['booked_date'];					
 			$booked_symb = "<IMG SRC = 'markers/clock.png'/> &nbsp;";
@@ -187,9 +185,9 @@ if (mysql_affected_rows()==0) {
 			$booked_symb = "";
 			}
 		$incType = $assigns_stack[$i]['inc_type'];
-		$print .= "<TD CLASS='{$severityclass}' style='text-align: left;'>" .  format_date_time($the_date) . "</TD>\n";			// column 4 - date
-		$print .= "\t<TD>&nbsp;{$booked_symb}</TD>\n";						// column 7 - booked symb
-		$print .= "\t<TD CLASS='{$severityclass}' style='text-align: left;'>&nbsp;{$incType}</TD>\n";						// column 7 - booked symb
+		$print .= "<TD CLASS='td_data text text_left {$severityclass}' style='text-align: left;'>" .  format_date_time($the_date) . "</TD>\n";			// column 4 - date
+		$print .= "\t<TD class='td_data text text_left'>&nbsp;{$booked_symb}</TD>\n";						// column 7 - booked symb
+		$print .= "\t<TD CLASS='td_data text text_left {$severityclass}' style='text-align: left;'>&nbsp;{$incType}</TD>\n";						// column 7 - booked symb
 		$print .= "</TR>\n";
 		$ret_arr[$i][0] = $assigns_stack[$i]['tick_id'];
 		$ret_arr[$i][1] = $assigns_stack[$i]['assign_id'];

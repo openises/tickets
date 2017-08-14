@@ -14,8 +14,11 @@ require_once($the_inc);
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};
-
-window.onload = function(){set_size();};
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var minimap;
 var mapWidth;
@@ -62,32 +65,30 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .40;
 	mapHeight = viewportheight * .55;
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
+	leftcolwidth = viewportwidth * .45;
+	rightcolwidth = viewportwidth * .40;
 	colheight = outerheight * .95;
 	listHeight = viewportheight * .7;
-	listwidth = colwidth * .95
-	inner_listwidth = listwidth *.9;
-	celwidth = listwidth * .20;
-	res_celwidth = listwidth * .15;
-	fac_celwidth = listwidth * .15;
+	listwidth = leftcolwidth;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
-	$('titlebar').style.width = outerwidth + "px";	
-	$('leftcol').style.width = colwidth + "px";
+	$('leftcol').style.width = leftcolwidth + "px";
 	$('leftcol').style.height = colheight + "px";	
-	$('rightcol').style.width = colwidth + "px";
+	$('rightcol').style.width = rightcolwidth + "px";
 	$('rightcol').style.height = colheight + "px";	
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	$('mmarkuplist').style.maxHeight = listHeight + "px";
-	$('mmarkuplist').style.width = listwidth + "px";
+	$('mmarkuplist').style.width = leftcolwidth + "px";
 	$('the_mmarkuplist').style.maxHeight = listHeight + "px";
-	$('the_mmarkuplist').style.width = listwidth + "px";
-	$('mmarkupheading').style.width = listwidth + "px";
+	$('the_mmarkuplist').style.width = leftcolwidth + "px";
+	$('mmarkupheading').style.width = leftcolwidth + "px";
 	load_markup('id', 'ASC');
 	load_regions();
 	}
@@ -135,7 +136,7 @@ function do_tab(tabid, suffix, lat, lng) {
 	$from_right = 20;	//	5/3/11
 	$from_top = 10;		//	5/3/11
 ?>
-<BODY onLoad = "set_size(); ck_frames(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
+<BODY onLoad = "ck_frames(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <?php
 	include("./incs/links.inc.php");		// 8/13/10
 ?>
@@ -143,33 +144,35 @@ function do_tab(tabid, suffix, lat, lng) {
 <A NAME='top'></A>
 <DIV id='screenname' style='display: none;'>Map Markup</DIV>
 <DIV ID='to_bottom' style="position: fixed; top: 20px; left: 20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 ID = "down"/></div>
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10 -->
-	<DIV id = "outer" style='position: absolute; left: 0px;'>
-		<DIV id = "titlebar" style='height: 30px; text-align: center; border: 3px outset #DFDFDF; background-color: #FEFEFE; color: #707070; font-size: 2em;'>Map Markup</DIV> 
-		<DIV id = "leftcol" style='position: absolute; left: 10px;'>
-			<DIV id = "mmarkupheading" class = 'heading'>
-				<DIV style='text-align: center;'>Map Markup Items <SPAN ID='sched_flag'></SPAN><BR />
-					<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>click on item to view / edit, Click headers to sort</SPAN></EM></FONT>
-				</DIV>
-			</DIV>				
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10 -->
+	<DIV id='outer' style='position: relative; left: 0px;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
+			<DIV id='mmarkupheading' class = 'heading' style='border: 1px outset #707070;'>
+				<DIV CLASS='heading text' style='text-align: center;'>Map Markup Items</DIV>
+				<SPAN class='text_medium text_center text_italic' style='color: #FFFFFF; width: 100%; display: block;' id='caption'>click on item to view / edit, Click headers to sort</SPAN>
+			</DIV>
 			<DIV class="scrollableContainer" id='mmarkuplist' style='border: 1px outset #707070;'>
 				<DIV class="scrollingArea" id='the_mmarkuplist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 			</DIV>
 			<BR />
-			<DIV style='z-index: 1; position: relative; text-align: center;'>
+		</DIV>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
 <?php
 				if (!(is_guest())) {
+					if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
 ?>
-					<SPAN id='add_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='do_add();'>Add <?php print get_text("Markup");?></SPAN>
+						<SPAN id='add_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseOver='do_hover_centerbuttons(this.id);' onMouseOut='do_plain_centerbuttons(this.id);' onClick='do_add();'>Add <?php print get_text("Markup");?><BR /><IMG id='show_asgn_img' SRC='./images/plus.png' /></SPAN>
+<?php
+						}
+?>
+					<SPAN id='can_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseOver='do_hover_centerbuttons(this.id);' onMouseOut='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'>Back to Config<BR /><IMG id='show_asgn_img' SRC='./images/cancel.png' /></SPAN>
 <?php
 					}
 ?>
-				<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Back to Config</SPAN>
-
-			</DIV>				
+			</DIV>
 		</DIV>
-
-		<DIV id='rightcol' style='position: absolute; right: 170px;'>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 			<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
 		</DIV>
 <?php
@@ -187,14 +190,47 @@ var thelevel = '<?php print $the_level;?>';
 var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var latLng;
-var mapWidth = <?php print get_variable('map_width');?>+20;
-var mapHeight = <?php print get_variable('map_height');?>+20;;
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "fullscreen");
+mapWidth = viewportwidth * .40;
+mapHeight = viewportheight * .55;
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+colwidth = outerwidth * .42;
+leftcolwidth = viewportwidth * .45;
+rightcolwidth = viewportwidth * .40;
+colheight = outerheight * .95;
+listHeight = viewportheight * .7;
+listwidth = leftcolwidth;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('leftcol').style.width = leftcolwidth + "px";
+$('leftcol').style.height = colheight + "px";	
+$('rightcol').style.width = rightcolwidth + "px";
+$('rightcol').style.height = colheight + "px";	
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
+$('mmarkuplist').style.maxHeight = listHeight + "px";
+$('mmarkuplist').style.width = leftcolwidth + "px";
+$('the_mmarkuplist').style.maxHeight = listHeight + "px";
+$('the_mmarkuplist').style.width = leftcolwidth + "px";
+$('mmarkupheading').style.width = leftcolwidth + "px";
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
+load_markup('id', 'ASC');
+load_regions();
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 var got_points = false;	// map is empty of points

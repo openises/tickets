@@ -42,18 +42,17 @@ function get_categoryName($id) {
 ?>
 <SCRIPT>
 window.onresize=function(){set_size();}
-
-window.onload = function(){set_size();}
+</SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
+<SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
 var mapHeight;
 var listHeight;
 var colwidth;
 var listwidth;
-var inner_listwidth;
-var celwidth;
-var res_celwidth;
-var fac_celwidth;
 var viewportwidth;
 var viewportheight;
 var colheight;
@@ -100,12 +99,6 @@ function set_size() {
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
 	colheight = outerheight * .95;
-	listHeight = viewportheight * .7;
-	listwidth = colwidth * .95;
-	inner_listwidth = listwidth *.9;
-	celwidth = listwidth * .20;
-	res_celwidth = listwidth * .15;
-	fac_celwidth = listwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
@@ -117,6 +110,7 @@ function set_size() {
 	$('viewform').style.width = colwidth + "px";
 	$('incs_table').style.width = mapWidth + "px";
 	$('incs_heading').style.width = mapWidth + "px";
+	set_fontsizes(viewportwidth, "fullscreen");
 	map.invalidateSize();
 	}
 	
@@ -208,49 +202,61 @@ if(!$bronze_command) {
 	}
 ?>
 <BODY>
-<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
-<A NAME='top'></A>
-	<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
-	<DIV id='outer' style='position: absolute; left: 0px; top: 20px;'>
-		<DIV id='leftcol' style='position: absolute; left: 10px;'>
-			<A NAME='top'>		<!-- 11/11/09 -->
+<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
+	<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px; z-index: 999;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
+	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
+		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
+			<A NAME='top'></A>
 			<TABLE ID='viewform'>
-				<TR>
-					<TD ALIGN='center' COLSPAN='2'><FONT CLASS='header'><FONT SIZE=-1><FONT COLOR='green'>&nbsp;View Major Incident '<?php print $row['name'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></FONT><BR /><BR />
-						<FONT SIZE=-1>(mouseover caption for help information)</FONT></FONT>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>
+				</TR>
+				<TR CLASS='even'>
+					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;View Major Incident '<?php print $row['name'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></SPAN>
+						<BR />
+						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
+						<BR />
 					</TD>
 				</TR>
 				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+					<TD class='spacer' COLSPAN=99></TD>
 				</TR>	
 				<TR CLASS = "odd">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Major Incident Name">Major Incident Name</A>:
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Name">Major Incident Name</A>:
 					</TD>			
-					<TD CLASS='td_data'><?php print $row['name'] ;?></TD>
-				</TR>
-				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+					<TD CLASS='td_data text'><?php print $row['name'] ;?></TD>
 				</TR>
 				<TR CLASS = "odd">
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident Start Time / Date">Start Date/Time</A>:&nbsp;</TD>
-					<TD CLASS="td_data"><?php print format_date_2(strtotime($row['inc_startime']));?></TD>
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Start Time / Date">Start Date/Time</A>:&nbsp;
+					</TD>
+					<TD CLASS="td_data text"><?php print format_date_2(strtotime($row['inc_startime']));?></TD>
 				</TR>
 				<TR CLASS = "even">
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident End Time / Date">End Date/Time</A>:&nbsp;</TD>
-					<TD CLASS="td_data">
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Status">Status</A>:&nbsp;
+					</TD>
+					<TD CLASS="td_data text">
 <?php 
 						if(is_date($row['inc_endtime'])) {
 							print format_date_2(strtotime($row['inc_endtime']));
 							} else {
-							print "Not Closed";
+							print "N/A";
 							}
 ?>
 					</TD>
 				</TR>
-				<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Boundary for this Major Incident"><?php print get_text("Boundary");?></A>:</TD>
-					<TD CLASS="td_data">
+				<TR CLASS = "odd">
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Major Incident End Time / Date">End Date/Time</A>:&nbsp;</TD>
+					<TD CLASS="td_data text">
+						<?php print $row['mi_status'];?>
+					</TD>
+				</TR>
+				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Boundary for this Major Incident"><?php print get_text("Boundary");?></A>:</TD>
+					<TD CLASS="td_data text">
 <?php
 						if($row['boundary'] > 0) {
 							$boundary = get_markup($row['boundary']);
@@ -261,19 +267,31 @@ if(!$bronze_command) {
 ?>
 					</TD>
 				</TR>
+				<TR CLASS = "odd">
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="MI Description - additional details about Major Incident">Description</A>:
+					</TD>	
+					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print $row['description'];?></TD>
+				</TR>
+				<TR CLASS = "even">
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="Incident / Closure Notes - actions and other information noted during Incident and when closing">Incident Notes</A>:
+					</TD>	
+					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print $row['incident_notes'];?></TD>
+				</TR>
 				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+					<TD class='spacer' COLSPAN=99></TD>
 				</TR>
 <?php
 				if($row['gold'] != 0) {
 ?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Gold Command");?>"><?php print get_text("Gold Command");?></A>:</TD>
-					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['gold']);?></SPAN>
-						<TABLE>
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Gold Command");?>"><?php print get_text("Gold Command");?></A>:</TD>
+					<TD CLASS="td_data text"><SPAN class='heading' style='width: 100%; display: block; text-align: center;'><?php print get_owner($row['gold']);?></SPAN>
+						<TABLE style='width: 100%; background-color: gold;'>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][4];
@@ -282,8 +300,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][5];
@@ -292,8 +310,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][6];
@@ -302,8 +320,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['gold']])) {
 										print $comm_arr[$row['gold']][7];
@@ -312,16 +330,16 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Location</TD>
+								<TD class='td_label text_blue'>Location</TD>
 <?php 							
 								if($row['gold_loc'] != 0) {
 ?>
-									<TD class='td_data'><?php print get_loc_name($row['gold_loc']);?></TD>
+									<TD class='td_data text'><?php print get_loc_name($row['gold_loc']);?></TD>
 <?php
 									} else {
 									$gold_loc_details = $row['gold_street'] . "<BR />" . $row['gold_city'] . " " . $row['gold_state'];
 ?>
-									<TD class='td_data'><?php print $gold_loc_details;?></TD>
+									<TD class='td_data text'><?php print $gold_loc_details;?></TD>
 <?php
 									}
 ?>
@@ -334,12 +352,12 @@ if(!$bronze_command) {
 				if($row['silver'] != 0) {
 ?>
 				<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Silver Command");?>"><?php print get_text("Silver Command");?></A>:</TD>
-					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['silver']);?></SPAN>
-						<TABLE>
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Silver Command");?>"><?php print get_text("Silver Command");?></A>:</TD>
+					<TD CLASS="td_data text"><SPAN class='heading' style='width: 100%; display: block; text-align: center;'><?php print get_owner($row['silver']);?></SPAN>
+						<TABLE style='width: 100%; background-color: silver;'>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][4];
@@ -348,8 +366,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][5];
@@ -358,8 +376,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][6];
@@ -368,8 +386,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['silver']])) {
 										print $comm_arr[$row['silver']][7];
@@ -378,16 +396,16 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Location</TD>
+								<TD class='td_label text text_blue'>Location</TD>
 <?php 							
 								if($row['silver_loc'] != 0) {
 ?>
-									<TD class='td_data'><?php print get_loc_name($row['silver_loc']);?></TD>
+									<TD class='td_data text'><?php print get_loc_name($row['silver_loc']);?></TD>
 <?php
 									} else {
 									$silver_loc_details = $row['silver_street'] . "<BR />" . $row['silver_city'] . " " . $row['silver_state'];
 ?>
-									<TD class='td_data'><?php print $silver_loc_details;?></TD>
+									<TD class='td_data text'><?php print $silver_loc_details;?></TD>
 <?php
 									}
 ?>
@@ -400,12 +418,12 @@ if(!$bronze_command) {
 				if($row['bronze'] != 0) {
 ?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Bronze Command");?>"><?php print get_text("Bronze Command");?></A>:</TD>
-					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['bronze']);?></SPAN>
-						<TABLE>
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Bronze Command");?>"><?php print get_text("Bronze Command");?></A>:</TD>
+					<TD CLASS="td_data text"><SPAN class='heading' style='width: 100%; display: block; text-align: center;'><?php print get_owner($row['bronze']);?></SPAN>
+						<TABLE style='width: 100%; background-color: #cd7f32;'>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['bronze']])) {
 										print $comm_arr[$row['bronze']][4];
@@ -414,8 +432,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['bronze']])) {
 										print $comm_arr[$row['bronze']][5];
@@ -424,8 +442,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['bronze']])) {
 										print $comm_arr[$row['bronze']][6];
@@ -434,8 +452,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['bronze']])) {
 										print $comm_arr[$row['bronze']][7];
@@ -444,16 +462,16 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Location</TD>
+								<TD class='td_label text text_blue'>Location</TD>
 <?php 							
 								if($row['bronze_loc'] != 0) {
 ?>
-									<TD class='td_data'><?php print get_loc_name($row['bronze_loc']);?></TD>
+									<TD class='td_data text'><?php print get_loc_name($row['bronze_loc']);?></TD>
 <?php
 									} else {
 									$bronze_loc_details = $row['bronze_street'] . "<BR />" . $row['bronze_city'] . " " . $row['bronze_state'];
 ?>
-									<TD class='td_data'><?php print $bronze_loc_details;?></TD>
+									<TD class='td_data text'><?php print $bronze_loc_details;?></TD>
 <?php
 									}
 ?>
@@ -466,12 +484,12 @@ if(!$bronze_command) {
 				if($row['level4'] != 0) {
 ?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 4 Command");?>"><?php print get_text("Level 4 Command");?></A>:</TD>
-					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['level4']);?></SPAN>
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Level 4 Command");?>"><?php print get_text("Level 4 Command");?></A>:</TD>
+					<TD CLASS="td_data text"><SPAN class='heading' style='width: 100%; display: block; text-align: center;'><?php print get_owner($row['level4']);?></SPAN>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level4']])) {
 										print $comm_arr[$row['level4']][4];
@@ -480,8 +498,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level4']])) {
 										print $comm_arr[$row['level4']][5];
@@ -490,8 +508,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level4']])) {
 										print $comm_arr[$row['level4']][6];
@@ -500,8 +518,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level4']])) {
 										print $comm_arr[$row['level4']][7];
@@ -510,16 +528,16 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Location</TD>
+								<TD class='td_label text text_blue'>Location</TD>
 <?php 							
 								if($row['level4_loc'] != 0) {
 ?>
-									<TD class='td_data'><?php print get_loc_name($row['level4_loc']);?></TD>
+									<TD class='td_data text'><?php print get_loc_name($row['level4_loc']);?></TD>
 <?php
 									} else {
 									$level4_loc_details = $row['level4_street'] . "<BR />" . $row['level4_city'] . " " . $row['level4_state'];
 ?>
-									<TD class='td_data'><?php print $level4_loc_details;?></TD>
+									<TD class='td_data text'><?php print $level4_loc_details;?></TD>
 <?php
 									}
 ?>
@@ -532,12 +550,12 @@ if(!$bronze_command) {
 				if($row['level5'] != 0) {
 ?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 5 Command");?>"><?php print get_text("Level 5 Command");?></A>:</TD>
-					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['level5']);?></SPAN>
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Level 5 Command");?>"><?php print get_text("Level 5 Command");?></A>:</TD>
+					<TD CLASS="td_data text"><SPAN class='heading' style='width: 100%; display: block; text-align: center;'><?php print get_owner($row['level5']);?></SPAN>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level5']])) {
 										print $comm_arr[$row['level5']][4];
@@ -546,8 +564,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level5']])) {
 										print $comm_arr[$row['level5']][5];
@@ -556,8 +574,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level5']])) {
 										print $comm_arr[$row['level5']][6];
@@ -566,8 +584,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level5']])) {
 										print $comm_arr[$row['level5']][7];
@@ -576,16 +594,16 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Location</TD>
+								<TD class='td_label text text_blue'>Location</TD>
 <?php 							
 								if($row['level5_loc'] != 0) {
 ?>
-									<TD class='td_data'><?php print get_loc_name($row['level5_loc']);?></TD>
+									<TD class='td_data text'><?php print get_loc_name($row['level5_loc']);?></TD>
 <?php
 									} else {
 									$level5_loc_details = $row['level5_street'] . "<BR />" . $row['level5_city'] . " " . $row['level5_state'];
 ?>
-									<TD class='td_data'><?php print $level5_loc_details;?></TD>
+									<TD class='td_data text'><?php print $level5_loc_details;?></TD>
 <?php
 									}
 ?>
@@ -598,12 +616,12 @@ if(!$bronze_command) {
 				if($row['level6'] != 0) {
 ?>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
-					<TD CLASS="td_label"><A CLASS="td_label" HREF="#"  TITLE="<?php print get_text("Level 6 Command");?>"><?php print get_text("Level 6 Command");?></A>:</TD>
-					<TD CLASS="td_data"><SPAN class='heading' style='width: 100%; display: block;'><?php print get_owner($row['level6']);?></SPAN>
+					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Level 6 Command");?>"><?php print get_text("Level 6 Command");?></A>:</TD>
+					<TD CLASS="td_data text"><SPAN class='heading' style='width: 100%; display: block; text-align: center;'><?php print get_owner($row['level6']);?></SPAN>
 						<TABLE>
 							<TR>
-								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level6']])) {
 										print $comm_arr[$row['level6']][4];
@@ -612,8 +630,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Email 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level6']])) {
 										print $comm_arr[$row['level6']][5];
@@ -622,8 +640,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 1</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level6']])) {
 										print $comm_arr[$row['level6']][6];
@@ -632,8 +650,8 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'>
+								<TD class='td_label text text_blue'>Phone 2</TD>
+								<TD class='td_data text'>
 <?php 
 									if(isset($comm_arr[$row['level6']])) {
 										print $comm_arr[$row['level6']][7];
@@ -642,16 +660,16 @@ if(!$bronze_command) {
 								</TD>
 							</TR>
 							<TR>
-								<TD class='td_label'>Location</TD>
+								<TD class='td_label text text_blue'>Location</TD>
 <?php 							
 								if($row['level6_loc'] != 0) {
 ?>
-									<TD class='td_data'><?php print get_loc_name($row['level6_loc']);?></TD>
+									<TD class='td_data text'><?php print get_loc_name($row['level6_loc']);?></TD>
 <?php
 									} else {
 									$level6_loc_details = $row['level6_street'] . "<BR />" . $row['level6_city'] . " " . $row['level6_state'];
 ?>
-									<TD class='td_data'><?php print $level6_loc_details;?></TD>
+									<TD class='td_data text'><?php print $level6_loc_details;?></TD>
 <?php
 									}
 ?>
@@ -663,28 +681,23 @@ if(!$bronze_command) {
 				}
 ?>				
 				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+					<TD class='spacer' COLSPAN=99></TD>
 				</TR>		
-				<TR CLASS = "even">
-					<TD CLASS="td_label">
-						<A CLASS="td_label" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
-					</TD>	
-					<TD CLASS="td_data_wrap"COLSPAN=3><?php print $row['description'];?></TD>
-				</TR>
+
 				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
+					<TD class='spacer' COLSPAN=99></TD>
 				</TR>	
-				<TR CLASS="odd" style='height: 30px; vertical-align: middle;'>
-					<TD COLSPAN="2" ALIGN="center" style='vertical-align: middle;'>
-						<SPAN id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'>Cancel</SPAN>
-						<SPAN id='ed_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_edit_Form.submit();'>Edit</SPAN>
-					</TD>
-				</TR>
 			</TABLE>
 		</DIV>
-		<DIV id='rightcol' style='position: absolute; right: 2%; z-index: 1;'>
+		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+			<DIV style='position: relative; top: 50px; z-index: 1;'>
+				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+				<SPAN id='ed_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.to_edit_Form.submit();'><?php print get_text("Edit");?><BR /><IMG id='edit_img' SRC='./images/edit.png' /></SPAN>
+			</DIV>
+		</DIV>
+		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 			<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
-			<BR /><BR />
+			<CENTER><SPAN CLASS='text_blue text text_bold' style='width: 100%; text-align: center;'><?php print get_variable('map_caption');?></SPAN></CENTER><BR />
 			<DIV id='incs_heading' class='heading' style='text-align: center;'>Incidents to be managed as part of the Major Incident (click to view)</DIV>
 			<DIV id= 'incs_table' style = 'max-height: 400px; border: 1px outset #707070; overflow-y: scroll;'>
 				<TABLE style='width: 100%;'>
@@ -733,16 +746,40 @@ print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, $r
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 <SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+mapWidth = viewportwidth * .40;
+mapHeight = viewportheight * .55;
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+colwidth = outerwidth * .42;
+colheight = outerheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+$('leftcol').style.width = colwidth + "px";
+$('leftcol').style.height = colheight + "px";	
+$('rightcol').style.width = colwidth + "px";
+$('rightcol').style.height = colheight + "px";	
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+$('viewform').style.width = colwidth + "px";
+$('incs_table').style.width = mapWidth + "px";
+$('incs_heading').style.width = mapWidth + "px";
+set_fontsizes(viewportwidth, "fullscreen");
 var latLng;
 var tmarkers = [];	//	Incident markers array
 var rmarkers = [];	//	Responder markers array
 var lmarkers = [];	//	Control locations markers array
 var boundary = [];			//	exclusion zones array
 var bound_names = [];
-var mapWidth = <?php print get_variable('map_width');?>+20;
-var mapHeight = <?php print get_variable('map_height');?>+20;
-$('map_canvas').style.width = mapWidth + "px";
-$('map_canvas').style.height = mapHeight + "px";
 var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var theLocale = <?php print get_variable('locale');?>;

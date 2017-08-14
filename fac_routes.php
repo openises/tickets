@@ -51,17 +51,6 @@ function get_day() {
 	return strftime("%A",$timestamp);
 	}
 	
-
-function valid_status($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		return true;
-		} else {
-		return false;
-		}
-	}	
-
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;	
 $conversion = get_dist_factor();				// KM vs mi - 11/23/10
 $_GET = stripslashes_deep($_GET);
@@ -269,13 +258,13 @@ function do_fac($id) {
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 	<![endif]-->
-	<link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine_2.css" />
+    <link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine.css" />
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
 	<STYLE>
@@ -319,14 +308,13 @@ function do_fac($id) {
 		#directions { background-color: white;}
 		#fac_table { overflow-y: auto; }
 	</STYLE>
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/json2.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+	<SCRIPT SRC="./js/misc_function.js"></SCRIPT>
+	<SCRIPT SRC="./js/json2.js"></SCRIPT>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/leaflet/leaflet-routing-machine_2.js"></script>
+	<script src="./js/leaflet/leaflet-routing-machine.js"></script>
 	<script src="./js/proj4leaflet.js"></script>
 	<script src="./js/leaflet/KML.js"></script>
 	<script src="./js/leaflet/gpx.js"></script>  
@@ -341,17 +329,20 @@ function do_fac($id) {
 		if($key_str) {
 ?>
 			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="text/javascript" src="./js/Google.js"></script>
+			<script type="application/x-javascript" src="./js/Google.js"></script>
 <?php 
 			}
 		}
 ?>
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
-	<script type="text/javascript" src="./js/geotools2.js"></script>
+	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+?>
 <SCRIPT>
 var map;
 var minimap;
@@ -398,7 +389,7 @@ function isNull(arg) {
 	return arg===null;
 	}
 </SCRIPT>	
-<script type="text/javascript">//<![CDATA[
+<script type="application/x-javascript">//<![CDATA[
 //*****************************************************************************
 // Do not remove this notice.
 //
@@ -679,7 +670,6 @@ function setDirections(fromLat, fromLng, toLat, toLng, recLat, recLng, locale, u
 	$("disp_but").style.display = "none";
 	if(window.theDirections) { window.theDirections.removeFrom(map); $('directions').innerHTML = "";}
 	window.current_unit = unit_id;
-
 	window.theDirections = L.Routing.control({
 		waypoints: [
 			L.latLng(fromLat,fromLng),
@@ -694,12 +684,13 @@ function setDirections(fromLat, fromLng, toLat, toLng, recLat, recLng, locale, u
 			  // Center
 			  {color: 'orange', opacity: 1, weight: 4}
 			],
-		}
+		},routeWhileDragging: true
 	});
+	window.theDirections.on('routingerror', function(o) { console.log(o); });
 	window.theDirections.addTo(map);
 	setTimeout(function() {
-	var theDirections = $('directions').innerHTML;
-	document.email_form.frm_direcs.value = theDirections;
+	Direcs = $('directions').innerHTML;
+	document.email_form.frm_direcs.value = document.textDirections;
 	document.email_form.frm_u_id.value = current_unit;	
 	$('mail_dir_but').style.display = "inline-block";			// 11/12/09	
 	$("disp_but").style.display = "inline-block";	//10/6/09
@@ -989,7 +980,8 @@ var got_points = false;
 	<DIV ID='finished' style='display: none;'>
 	<CENTER>		
 	<BR /><BR /><BR /><H3>Responder <?php print $respName[0];?> Location Updated</H3>
-	<BR /><BR /><BR /><SPAN ID='fin_but' class='plain' style='float: none;' onMouseover="do_hover(this.id);" onMouseout="do_plain(this.id);" onClick="document.forms['fin_form'].submit();" />Finished</SPAN><BR /><BR />
+	<BR /><BR /><BR />
+	<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.forms['fin_form'].submit();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
 	</DIV>
 	<DIV ID='outer' style='position: absolute; left: 0px; top: 0px; width: 100%; height: 98%; display: block;'>
 		<DIV ID='leftcol' style='position: absolute; left: 0px; top: 0px; width: 45%; height: 98%; display: block;'>

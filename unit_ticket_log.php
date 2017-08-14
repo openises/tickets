@@ -38,16 +38,32 @@ if(!isset($_POST)) {
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
-<STYLE>
-.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
-.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
-.content { padding: 1em; }
-</STYLE>
-<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>
-
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>
 <SCRIPT>
+window.onresize=function(){set_size()};
+
+function set_size() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+		
+	set_fontsizes(viewportwidth, "popup");
+	outerwidth = viewportwidth * .99;
+	outerheight = viewportheight * .95;
+	$('outer').style.width = outerwidth + "px";
+	$('outer').style.height = outerheight + "px";
+	}
+
 function validate_del() {
 	if (document.del_form.frm_days_val.value==0) { 
 		alert("check days value");
@@ -61,35 +77,6 @@ function validate_del() {
 function get_new_colors() {								// 4/5/11
 	window.location.href = '<?php print basename(__FILE__);?>';
 	}
-
-function $() {															// 12/20/08
-	var elements = new Array();
-	for (var i = 0; i < arguments.length; i++) {
-		var element = arguments[i];
-		if (typeof element == 'string')
-			element = document.getElementById(element);
-		if (arguments.length == 1)
-			return element;
-		elements.push(element);
-		}
-	return elements;
-	}
-	
-function CngClass(obj, the_class){
-	$(obj).className=the_class;
-	return true;
-	}
-
-function do_hover (the_id) {
-	CngClass(the_id, 'hover');
-	return true;
-	}
-	
-function do_plain (the_id) {				// 8/21/10
-	CngClass(the_id, 'plain');
-	return true;
-	}
-
 </SCRIPT>
 </HEAD>
 <BODY>
@@ -99,15 +86,11 @@ if (empty($_POST)) {
 ?>
 		<CENTER><BR /><BR /><BR /><BR /><BR /><H3>Guests not allowed Log access. </CENTER><BR /><BR />
 
-		<INPUT TYPE='button' value='Cancel' onClick = 'window.exit();'>
+		<SPAN CLASS='plain text' style='float: none; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'>Cancel</SPAN>
 <?php
-		} 
-?>
-
-
-	<FORM NAME="log_form" METHOD = "post" ACTION="<?php print basename(__FILE__); ?>">
-	<TABLE>
-<?php
+		exit();
+		}
+		
 	if(($responder != 0) && ($ticket == 0)) {
 		$theTag = get_text('Unit');
 		} elseif(($ticket != 0) && ($responder == 0)) {
@@ -116,29 +99,104 @@ if (empty($_POST)) {
 		$theTag = "";
 		}
 ?>
-	<TR CLASS = 'even' ><TH COLSPAN=2><?php print $theTag;?> Log</TH></TR>
-	<TR CLASS = 'odd'><TD>Log entry:</TD><TD><TEXTAREA NAME="frm_comment" COLS="70" ROWS="10" WRAP="virtual"></TEXTAREA></TD></TR>
-	<TR CLASS = 'even'><TD COLSPAN=2 ALIGN='center'>
-	<INPUT TYPE = 'button' VALUE='Submit' onClick="document.log_form.submit()" />&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE = 'button' VALUE='Reset' onClick="document.log_form.reset()" />&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE = 'button' VALUE='Cancel' onClick="window.close()" />
-	</TD></TR>
-	</TABLE>
-	<INPUT TYPE='hidden' NAME='func' VALUE='add'>
-	<INPUT TYPE='hidden' NAME='responder' VALUE=<?php print $responder;?>>
-	<INPUT TYPE='hidden' NAME='ticket' VALUE=<?php print $ticket;?>>
-	</FORM>
+	<DIV ID='outer'>
+		<DIV id='button_bar' class='but_container'>
+			<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'><?php print $theTag;?> Log</SPAN>
+			<SPAN ID='can_but' class='plain text' style='float: right; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+			<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.log_form.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+			<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.log_form.submit();'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+		</DIV>
+		<FORM NAME="log_form" METHOD = "post" ACTION="<?php print basename(__FILE__); ?>">
+		<TABLE STYLE='margin-left: 50px; position: relative; top: 100px;'>
+<?php
+			if(intval($responder) != 0) {
+				$al_groups = $_SESSION['user_groups'];
+				
+				if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+					$where2 = "";
+					} else {
+					if(array_key_exists('viewed_groups', $_SESSION)) {		//	6/10/11
+						$curr_viewed= explode(",",$_SESSION['viewed_groups']);
+						}
+
+					if(!isset($curr_viewed)) {			//	6/10/11
+						$x=0;
+						$where2 = "AND (";
+						foreach($al_groups as $grp) {
+							$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
+							$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+							$where2 .= $where3;
+							$x++;
+							}
+						} else {
+						$x=0;
+						$where2 = "AND (";
+						foreach($curr_viewed as $grp) {
+							$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
+							$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+							$where2 .= $where3;
+							$x++;
+							}
+						}
+					}		
+
+				$query = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
+						FROM `$GLOBALS[mysql_prefix]ticket`
+						LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
+						WHERE (`status` = {$GLOBALS['STATUS_OPEN']} OR `status` = {$GLOBALS['STATUS_SCHEDULED']}) {$where2}
+						GROUP BY `tick_id` ORDER BY `severity` DESC, `problemstart` ASC "; // highest severity, oldest open
+				$result = mysql_query($query);
+				if (mysql_num_rows($result) >= 1) {			// if a single, do it
+					$row = mysql_fetch_assoc($result);
+					$inc_ctr = mysql_num_rows($result);
+					print "<TR CLASS='even'><TD CLASS='td_label text'>Select Ticket</TD><TD class='td_label text'>";	
+					print "<SELECT CLASS='text' NAME='frm_ticket_sel' onChange='document.log_form.ticket.value=this.value;'>";
+					print "<OPTION CLASS='text' VALUE='0' SELECTED>Ignore</OPTION>";
+					while ($row = mysql_fetch_array($result))  {
+						$addr = substr($row['street'] . " " . $row['city'] . " " . $row['state'], 0, 24);
+						$descr = substr($row['scope'] , 0, 24) . " - " . $addr ;
+						print "<OPTION CLASS='text' value='{$row['tick_id']}'> {$descr}</OPTION>";
+						}
+					print "</SELECT></TD></TR><TR CLASS='even'><TD COLSPAN=2>&nbsp;</TD></TR>";
+					}
+				}
+?>
+			<TR CLASS = 'even'><TD CLASS='td_label text'>Log entry:</TD><TD CLASS='td_data text'><TEXTAREA NAME="frm_comment" COLS="50" ROWS="20" WRAP="virtual"></TEXTAREA></TD></TR>
+		</TABLE>
+		<INPUT TYPE='hidden' NAME='func' VALUE='add'>
+		<INPUT TYPE='hidden' NAME='responder' VALUE=<?php print $responder;?>>
+		<INPUT TYPE='hidden' NAME='ticket' VALUE=<?php print $ticket;?>>
+		</FORM>
+	</DIV>
 <?php 
 	} else {										// not empty
 	extract($_POST);
-	do_log($GLOBALS['LOG_COMMENT'], $ticket, $responder, strip_tags(trim($_POST['frm_comment'])));
+	do_log($GLOBALS['LOG_UNIT_COMMENT'], $ticket, $responder, strip_tags(trim($_POST['frm_comment'])));
 ?>
-	<DIV style='width: 100%; text-align: center;'><BR /><BR /><BR /><BR /><BR /><BR />Log entry inserted<script>window.close()</script>
-	<BR /><BR /><BR /><SPAN id='close_but' class='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.close()" />Close</SPAN>
+	<DIV style='width: 100%; text-align: center;'><BR /><BR /><BR /><BR /><BR /><BR />Log entry inserted
+	<BR /><BR /><BR /><SPAN id='close_but' class='plain text' style='float: none; width: 100px;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick="window.close()" />Close</SPAN>
 	</DIV>
 <?php
 	} 
 	
 ?>
+<SCRIPT LANGUAGE="Javascript">
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	
+set_fontsizes(viewportwidth, "popup");
+outerwidth = viewportwidth * .99;
+outerheight = viewportheight * .95;
+$('outer').style.width = outerwidth + "px";
+$('outer').style.height = outerheight + "px";
+</SCRIPT>
 </BODY>
 </HTML>

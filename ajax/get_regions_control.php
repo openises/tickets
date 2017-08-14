@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/functions_major.inc.php');
 @session_start();
@@ -16,9 +18,9 @@ function get_user_regions() {
 		$output .= get_regions_buttons($user_id);
 		$output .= "</DIV>";
 		$output .= "<BR />";
-		$output .= "<DIV style='text-align: center;'><SPAN ID='clr_spn' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = \"do_clear(document.region_form, 'chk_spn', 'clr_spn')\">Un-check all</SPAN>";
-		$output .= "<SPAN ID='chk_spn' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = \"do_check(document.region_form, 'chk_spn', 'clr_spn')\">Check all</SPAN></DIV><BR />";
-		$output .= "<CENTER><SPAN id='reg_sub_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='form_validate(document.region_form);'>Update</SPAN></CENTER></DIV></form>";
+		$output .= "<DIV style='text-align: center;'><SPAN ID='clr_spn' class='plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = \"do_clear(document.region_form, 'chk_spn', 'clr_spn')\">Un-check all</SPAN>";
+		$output .= "<SPAN ID='chk_spn' class='plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = \"do_check(document.region_form, 'chk_spn', 'clr_spn')\">Check all</SPAN></DIV><BR />";
+		$output .= "<CENTER><SPAN id='reg_sub_but' class='plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='form_validate(document.region_form);'>Update</SPAN></CENTER></DIV></form>";
 		} else {
 		$output = "No User Regions in use";
 		}

@@ -72,9 +72,9 @@ $tiles = dirToArray('./_osm/tiles');
 	.mapcanvas {border: 2px outset #CECECE; display: block;}
 	.bannertext {position: relative; left: 5%; background: #707070; color: #FFFFFF; font-size: 24px; font-weight: bold; text-align: center;}
 </style>
-<script src="./js/misc_function.js" type="text/javascript"></script>
+<script src="./js/misc_function.js" type="application/x-javascript"></script>
 <script src="./js/leaflet/leaflet.js"></script>
-<script type="text/javascript" src="./js/L.Graticule.js"></script>
+<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
 <SCRIPT>
 	window.onresize=function(){set_size()};
 	window.onload=function(){set_size()};

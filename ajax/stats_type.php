@@ -5,6 +5,8 @@
 /*
 6/14/11	First version
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 error_reporting(0);
 require_once('../incs/functions.inc.php');
 $type = (isset($type)) ? clean_string($type) : "";

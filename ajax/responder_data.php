@@ -2,6 +2,8 @@
 /*
 9/10/13 - new file, lists responder locations
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 
 if(empty($_GET)) {

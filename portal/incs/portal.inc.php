@@ -25,11 +25,15 @@ function get_status_selection($the_id, $status_val_in) {					// returns select l
 		} else {
 		$the_values = array("{$row['status']}");	
 		}
-	$outstr = "<SELECT id='frm_status_" . $the_id . "' name='frm_status_id' {$dis} style='font-size: .9em; width: 100%;' ONCHANGE = 'do_sel_update({$the_id}, this.value)' >";
-	foreach($the_values AS $val) {
-		$sel = ($row['status'] == $val)? " SELECTED": "";
-		$outstr .= "<OPTION VALUE=" . $val . $sel .">$val</OPTION>";		
-		}		// end foreach()
-	$outstr .= "</SELECT>";
+	if(count($the_values) > 1) {
+		$outstr = "<SELECT id='frm_status_" . $the_id . "' name='frm_status_id' {$dis} style='font-size: .9em; width: 100%;' ONCHANGE = 'do_sel_update({$the_id}, this.value)' >";
+		foreach($the_values AS $val) {
+			$sel = ($row['status'] == $val)? " SELECTED": "";
+			$outstr .= "<OPTION VALUE=" . $val . $sel .">$val</OPTION>";		
+			}		// end foreach()
+		$outstr .= "</SELECT>";
+		} else {
+		$outstr = $the_values[0];
+		}
 	return $outstr;
 	}

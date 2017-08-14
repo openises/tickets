@@ -44,9 +44,9 @@ $help7 .= "Your own operation will determine what these are and how many you wil
 <META HTTP-EQUIV="Expires" CONTENT="0" />
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT SRC="./js/jscolor/jscolor.js"></SCRIPT>
 <STYLE type="text/css">
 .hover 	{ margin-left: 4px; font-size: 14px; color: #000000; border: 2px inset #FFFFFF; float: none; background: #DEE3E7; font-weight: bold; cursor: pointer;}

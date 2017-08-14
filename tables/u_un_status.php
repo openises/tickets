@@ -60,9 +60,7 @@
 		<TD><INPUT MAXLENGTH="60" SIZE="60" type="text" NAME="frm_description" VALUE="<?php print $row['description'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
 
 <?php
-$row_hide = $row['hide'];
-
-	switch($row_hide) {
+	switch($row['hide']) {
 		case "n":	$checked1_value = "CHECKED"; 	$checked2_value = ""; 			break;
 		case "y":	$checked1_value = ""; 			$checked2_value = "CHECKED"; 	break;
 		default: 	$checked1_value = "CHECKED"; 	$checked2_value = "";
@@ -73,6 +71,19 @@ $row_hide = $row['hide'];
 		<TD VALIGN='baseline'><B>
 			<SPAN STYLE = 'margin-left:20px;'>No &raquo; <INPUT TYPE='radio' NAME="frm_hide" VALUE= "n" <?php print $checked1_value;?>/>
 			<SPAN STYLE = 'margin-left:20px;'>Yes &raquo; <INPUT TYPE='radio' NAME="frm_hide" VALUE= "y" <?php print $checked2_value;?>/>
+			</TD></TR>
+<?php
+	switch($row['excl_from_reset']) {
+		case "n":	$checked1_value = "CHECKED"; 	$checked2_value = ""; 			break;
+		case "y":	$checked1_value = ""; 			$checked2_value = "CHECKED"; 	break;
+		default: 	$checked1_value = "CHECKED"; 	$checked2_value = "";
+		}
+?>
+	<TR VALIGN="baseline" CLASS="odd">
+		<TD CLASS="td_label" ALIGN="right">Exclude from Status Reset:</TD>
+		<TD VALIGN='baseline'><B>
+			<SPAN STYLE = 'margin-left:20px;'>No &raquo; <INPUT TYPE='radio' NAME="frm_excl_from_reset" VALUE= "n" <?php print $checked1_value;?>/>
+			<SPAN STYLE = 'margin-left:20px;'>Yes &raquo; <INPUT TYPE='radio' NAME="frm_excl_from_reset" VALUE= "y" <?php print $checked2_value;?>/>
 			</TD></TR>
 
 <?php						// 3/13/2015
@@ -136,13 +147,14 @@ $row_hide = $row['hide'];
 				<OPTION VALUE=19 STYLE='background-color:blue; 			color:white;'  <?php print $sel; ?> >Blue</OPTION>
 				</SELECT>
 			</TD></TR>
-
-		<TR><TD COLSPAN="99" ALIGN="center">
-	<BR />
-	<INPUT TYPE="button" 	VALUE="Cancel" onClick = "Javascript: document.retform.submit();"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="reset"		VALUE="Reset"  onClick = "do_reset(this.form)"; />&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" 	NAME="sub_but" VALUE="               Submit                " onclick="this.disabled=true; JSfnCheckInput(this.form, this )"/>&nbsp;&nbsp;&nbsp;&nbsp;
-	<INPUT TYPE="button" 	NAME="del_but" VALUE="Delete this entry" onclick="if (confirm('Please confirm DELETE action')) {this.form.func.value='d'; this.form.submit();}"/></TD></TR>
+		<TR>
+			<TD COLSPAN="99" ALIGN="center">
+				<SPAN id='can_but' CLASS='plain text' style='width: 80px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+				<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_reset(document.u); "><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnCheckInput(document.u, this );"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+				<SPAN id='del_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="if (confirm('Please confirm DELETE action')) {this.form.func.value='d'; this.form.submit();}"><SPAN STYLE='float: left;'><?php print get_text("Delete");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
+			</TD>
+		</TR>
 	<INPUT TYPE="hidden" NAME="def_bg_color"  	VALUE="<?php print $row['bg_color'];?>" /> <!-- default values see reset button -->
 	<INPUT TYPE="hidden" NAME="def_text_color"	VALUE="<?php print $row['text_color'];?>" />
 

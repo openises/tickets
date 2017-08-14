@@ -10,9 +10,14 @@ if (empty($_SESSION)) {
 	}
 require_once '../incs/functions.inc.php';
 do_login(basename(__FILE__));
-	
-$api_key = trim(get_variable('gmaps_api_key'));
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+$isGuest = (is_guest()) ? 1 : 0;
+$sess_id = $_SESSION['id'];
+$requester = get_owner($_SESSION['user_id']);
+$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
+$showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
+$api_key = get_variable('gmaps_api_key');
+$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$gmaps_ok = ($key_str) ? 1 : 0;
 ?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml">
@@ -21,10 +26,12 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<SCRIPT TYPE="text/javascript" SRC="../js/misc_function.js"></SCRIPT>	
-	<SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
+	<SCRIPT TYPE="application/x-javascript" SRC="../js/jss.js"></SCRIPT>
+	<script type="application/x-javascript" src="../js/osm_map_functions.js"></script>
+	<SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>	
+	<SCRIPT TYPE="application/x-javascript" SRC="../js/domready.js"></script>
 	<script src="../js/leaflet/leaflet.js"></script>
 	<script src="../js/proj4js.js"></script>
 	<script src="../js/proj4-compressed.js"></script>
@@ -35,21 +42,38 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<script src="../js/leaflet-openweathermap.js"></script>
 	<script src="../js/esri-leaflet.js"></script>
 	<script src="../js/Control.Geocoder.js"></script>
-	<script type="text/javascript" src="./js/usng.js"></script>
-	<script type="text/javascript" src="./js/osgb.js"></script>
+	<script type="application/x-javascript" src="./js/usng.js"></script>
+	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 	if($key_str) {
 ?>
 		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="text/javascript" src="../js/Google.js"></script>
+		<script type="application/x-javascript" src="../js/Google.js"></script>
 <?php 
 		}
 ?>
-	<script type="text/javascript" src="../js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="../js/L.Graticule.js"></script>
-	<script type="text/javascript" src="../js/leaflet-providers.js"></script>
-	<script type="text/javascript" src="../js/geotools2.js"></script>
+	<script type="application/x-javascript" src="../js/L.Graticule.js"></script>
+	<script type="application/x-javascript" src="../js/leaflet-providers.js"></script>
+	<script type="application/x-javascript" src="../js/geotools2.js"></script>
 	<SCRIPT>
+	var thelevel = '<?php print $the_level;?>';
+	var locale = <?php print get_variable('locale');?>;
+	var my_Local = <?php print get_variable('local_maps');?>;
+	var def_lon = <?php print get_variable('def_lng');?>;
+	var def_lat = <?php print get_variable('def_lat');?>;
+	var def_zoom = <?php print get_variable('def_zoom');?>;
+	var zoom = <?php print get_variable('def_zoom');?>;
+	var guest = <?php print $isGuest;?>;
+	var sess_id = "<?php print $sess_id;?>";
+	var good_gmapsapi = <?php print $gmaps_ok;?>;
+	var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
+	var icons=[];
+	icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;	// blue
+	icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;	// yellow
+	icons[<?php echo $GLOBALS['SEVERITY_HIGH']; ?>] =  3;	// red
+	var setZoom = 1;
+	var theZoom = 1;
+	var max_zoom = 1;
 	var the_link = "";
 	var countmail = 0;
 	var randomnumber;
@@ -65,6 +89,17 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	var rec_fac_street = [];
 	var rec_fac_city = [];
 	var rec_fac_state = [];
+	
+	function refresh_opener() {
+		try {
+			window.opener.loadIt();
+			} catch (err) {
+			}
+		try {
+			window.opener.get_requests();
+			} catch (err) {
+			}
+		}
 
 	function addressLookup(address) {
 		var ret_arr = [];
@@ -198,7 +233,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 				$('waiting').style.display='none';			
 				$('result').style.display = 'inline-block';
 				the_link = "Request could not be cancelled, please try again.<BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
 				$('done').innerHTML = the_link;
 				} else {
 				var to_str1 = the_response[1];
@@ -230,9 +265,8 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 					sendRequest (url,mail_handleResult, "");
 					}
 				the_link = "<SPAN>The Request has been cancelled and the controllers have been informed. You will receive an email confirmation.</SPAN><BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
-//				the_link += "<BR /><BR />" + countmail + " messages have been sent";
-				window.opener.get_requests(window.opener.req_field, window.opener.req_direct);	
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
+				refresh_opener();	
 				}
 			}
 		}	
@@ -252,7 +286,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 				$('waiting').style.display='none';		
 				$('result').style.display = 'inline-block';
 				the_link = "Could not insert new Ticket, please try again<BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
 				$('done').innerHTML = the_link;
 				} else {
 				var to_str1 = the_response[1];
@@ -284,10 +318,9 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 					sendRequest (url,mail_handleResult, "");
 					}
 				the_link = "<SPAN>A New Ticket has been inserted. click the link below to view</SPAN><BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='the_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.parent.frames[\"main\"].location=\"../edit.php?id=" + the_response[0] + "\"; window.close();'>Go to Ticket</SPAN>";			
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
-//				the_link += "<BR /><BR />" + countmail + " messages have been sent";
-				window.opener.get_requests(window.opener.req_field, window.opener.req_direct);
+				the_link += "<SPAN id='the_but' class='plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.parent.frames[\"main\"].location=\"../edit.php?id=" + the_response[0] + "\"; window.close();'>Go to Ticket</SPAN>";			
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
+				refresh_opener();	
 				}
 			}
 		}
@@ -312,9 +345,9 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 			$('waiting').style.display='none';				
 			$('result').style.display = 'inline-block';
 			the_link = "<SPAN>Status has been updated</SPAN><BR /><BR /><BR /><BR />";		
-			the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+			the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
 			$('done').innerHTML = the_link;
-			window.opener.get_requests(window.opener.req_field, window.opener.req_direct);
+			refresh_opener();	
 			}
 		}		// end function status_update()
 		
@@ -333,7 +366,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 				$('waiting').style.display='none';					
 				$('result').style.display = 'inline-block';
 				the_link = "Could not insert new Ticket, please try again<BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
 				$('done').innerHTML = the_link;
 				} else {
 				var to_str1 = the_response[1];
@@ -365,10 +398,9 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 					sendRequest (url,mail_handleResult, "");
 					}
 				the_link = "<SPAN>A New Ticket has been inserted. click the link below to view</SPAN><BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='the_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.parent.frames[\"main\"].location=\"../edit.php?id=" + the_response[0] + "\"; window.close();'>Go to Ticket</SPAN>";			
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
-//				the_link += "<BR /><BR />" + countmail + " messages have been sent";
-				window.opener.get_requests(window.opener.req_field, window.opener.req_direct);
+				the_link += "<SPAN id='the_but' class='plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.opener.parent.frames[\"main\"].location=\"../edit.php?id=" + the_response[0] + "\"; window.close();'>Go to Ticket</SPAN>";			
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
+				refresh_opener();	
 				}
 			}
 		}
@@ -389,7 +421,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 				$('waiting').style.display='none';				
 				$('result').style.display = 'inline-block';
 				the_link = "There was an error, please try again<BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
 				$('done').innerHTML = the_link;
 				} else {
 				var to_str1 = the_response[1];
@@ -421,9 +453,8 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 					sendRequest (url,mail_handleResult, "");
 					}
 				the_link = "<SPAN>The request has been declined</SPAN><BR /><BR /><BR /><BR />";		
-				the_link += "<SPAN id='finish' class = 'plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'window.close();'>Close</SPAN>";
-//				the_link += "<BR /><BR />" + countmail + " messages have been sent";
-				window.opener.get_requests(window.opener.req_field, window.opener.req_direct);
+				the_link += "<SPAN id='finish' class = 'plain text' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'refresh_opener(); window.close();'>Close</SPAN>";
+				refresh_opener();
 				}
 			}
 		}
@@ -693,7 +724,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 			<DIV style="background-color: green; color: black; font-size: 1.5em;">Request Updated</DIV>
 			<BR /><BR />
 			<?php print $theEmailCount;?> email(s) have been sent<BR /><BR />
-			<SPAN id='finish_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.opener.get_requests(window.opener.req_field, window.opener.req_direct); window.close();">Finish</SPAN>		
+			<SPAN id='finish_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "refresh_opener(); window.close();">Finish</SPAN>		
 		</DIV>
 		</CENTER>
 <?php
@@ -808,55 +839,55 @@ if((!empty($_POST)) && (empty($_GET))) {
 			<DIV id='left_scroller' style='position: relative; top: 0px; left: 0px; height: 90%; overflow-y: auto; overflow-x: hidden; border: 1px outset #000000;'>
 				<TABLE style='width: 100%;'>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'>Requested By</TD><TD class='td_data' style='text-align: left;'><?php print get_user_name($row['requester']);?></TD>
+						<TD class='td_label text' style='text-align: left;'>Requested By</TD><TD class='td_data text' style='text-align: left;'><?php print get_user_name($row['requester']);?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'>Request Date and Time</TD><TD class='td_data' style='text-align: left;'><?php print format_dateonly(strtotime($row['request_date']));?></TD>
+						<TD class='td_label text' style='text-align: left;'>Request Date and Time</TD><TD class='td_data text' style='text-align: left;'><?php print format_dateonly(strtotime($row['request_date']));?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Status');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['status'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Status');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['status'];?></TD>
 					</TR>					
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Patient');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['the_name'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Patient');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['the_name'];?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Street');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['street'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Street');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['street'];?></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('City');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['city'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('City');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['city'];?></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Postcode');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['postcode'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Postcode');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['postcode'];?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('State');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['state'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('State');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['state'];?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Destination Address');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['to_address'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Destination Address');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['to_address'];?></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Pickup Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['pickup'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Pickup Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['pickup'];?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Arrival Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['arrival'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Arrival Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['arrival'];?></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Phone');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['phone'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Phone');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['phone'];?></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Email');?></TD><TD class='td_data' style='text-align: left;'><?php print $contact_email_p;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Email');?></TD><TD class='td_data text' style='text-align: left;'><?php print $contact_email_p;?></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Originating Facility');?></TD><TD class='td_data' style='text-align: left;'><?php print $orig_facility;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Originating Facility');?></TD><TD class='td_data text' style='text-align: left;'><?php print $orig_facility;?></TD>
 					</TR>					
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Receiving Facility');?></TD><TD class='td_data' style='text-align: left;'><?php print $rec_facility;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Receiving Facility');?></TD><TD class='td_data text' style='text-align: left;'><?php print $rec_facility;?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Scope');?></TD><TD class='td_data' style='text-align: left;'><?php print $row['scope'];?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Scope');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['scope'];?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Description');?></TD><TD class='td_data' style='text-align: left;'><?php print nl2br($row['description']);?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Description');?></TD><TD class='td_data text' style='text-align: left;'><?php print nl2br($row['description']);?></TD>
 					</TR>
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99></TD>
@@ -865,25 +896,25 @@ if((!empty($_POST)) && (empty($_GET))) {
 						<TD COLSPAN='2' class='heading' style='text-align: left;'>Status Times and Dates</TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Tentative Date and Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $tentative_date;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Tentative Date and Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $tentative_date;?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Accepted Date and Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $accepted_date;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Accepted Date and Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $accepted_date;?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Declined Date and Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $declined_date;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Declined Date and Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $declined_date;?></TD>
 					</TR>					
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Resourced Date and Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $resourced_date;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Resourced Date and Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $resourced_date;?></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Completed Date and Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $completed_date;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Completed Date and Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $completed_date;?></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Closed Date and Time');?></TD><TD class='td_data' style='text-align: left;'><?php print $closed_date;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Closed Date and Time');?></TD><TD class='td_data text' style='text-align: left;'><?php print $closed_date;?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Updated by');?></TD><TD class='td_data' style='text-align: left;'><?php print $updated_by;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Updated by');?></TD><TD class='td_data text' style='text-align: left;'><?php print $updated_by;?></TD>
 					</TR>	
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99></TD>
@@ -893,36 +924,41 @@ if((!empty($_POST)) && (empty($_GET))) {
 <?php
 	if($can_edit) {
 ?>
-			<SPAN id='edit_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_edit();">Edit</SPAN>
+		<SPAN id='edit_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_edit();">Edit</SPAN>
 <?php
-	}
+		}
 	if(($can_edit) && ($row['cancelled'] == "")) {	//	12/3/13
 ?>
-			<SPAN id='req_can_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_cancel(<?php print $row['request_id'];?>);">Cancel Request</SPAN>			
+		<SPAN id='req_can_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_cancel(<?php print $row['request_id'];?>);">Cancel Request</SPAN>			
 <?php
-	}
+		}
 	if((!is_service_user()) && (($row['status'] == 'Open') || ($row['status'] == 'Declined'))) {
 ?>
-			<SPAN id='tent_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "tentative(<?php print $id;?>);">Tentatively Accept and open Ticket</SPAN>
+		<SPAN id='tent_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "tentative(<?php print $id;?>);">Tentatively Accept and open Ticket</SPAN>
 <?php
-	}
+		}
 	if((!is_service_user()) && (($row['status'] == 'Open') || ($row['status'] == 'Declined'))) {
 ?>
-			<SPAN id='accept_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "accept(<?php print $id;?>);">Accept and open Ticket</SPAN>
+		<SPAN id='accept_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "accept(<?php print $id;?>);">Accept and open Ticket</SPAN>
 <?php
-	}
+		}
 	if((!is_service_user()) && ($row['status'] == 'Tentative')) {
 ?>
-			<SPAN id='accept_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "status_update(<?php print $id;?>, 'Accepted');">Accept</SPAN>
+		<SPAN id='accept_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "status_update(<?php print $id;?>, 'Accepted');">Accept</SPAN>
 <?php
-	}
+		}
 	if((!is_service_user()) && (($row['status'] == 'Open') || ($row['status'] == 'Tentative'))) {
 ?>	
-			<SPAN id='decline_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "decline(<?php print $id;?>);">Decline</SPAN>			
+		<SPAN id='decline_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "decline(<?php print $id;?>);">Decline</SPAN>			
 <?php
-	}
+		}
+	if((!is_service_user()) && (($row['status'] == 'Tentative') || ($row['status'] == 'Accepted'))) {
 ?>
-			<SPAN id='close_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.opener.get_requests(window.opener.req_field, window.opener.req_direct); window.close();">Close</SPAN><BR /><BR />		
+		<SPAN id='tick_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = 'window.opener.location="../edit.php?id=<?php print $row['ticket_id'];?>"; window.close();'>Open Ticket</SPAN>	
+<?php
+		}
+?>
+			<SPAN id='close_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "refresh_opener(); window.close();">Close</SPAN><BR /><BR />		
 		</DIV>
 	</DIV>
 	<DIV id='edit' style='position: absolute; width: 95%; text-align: center; margin: 10px;'>
@@ -932,52 +968,52 @@ if((!empty($_POST)) && (empty($_GET))) {
 				<FORM NAME='edit_frm' METHOD='POST' ACTION = "<?php print basename( __FILE__); ?>">
 				<TABLE style='width: 100%;'>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'>Requested By</TD><TD class='td_data' style='text-align: left;'><?php print get_user_name($row['requester']);?></TD>
+						<TD class='td_label text' style='text-align: left;'>Requested By</TD><TD class='td_data text' style='text-align: left;'><?php print get_user_name($row['requester']);?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'>Request Date and Time</TD><TD class='td_data' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',strtotime($row['request_date']),FALSE);?></TD>
+						<TD class='td_label text' style='text-align: left;'>Request Date and Time</TD><TD class='td_data text' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',strtotime($row['request_date']),FALSE);?></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Status');?></TD><TD class='td_data' style='text-align: left;'><?php print $status_sel;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Status');?></TD><TD class='td_data text' style='text-align: left;'><?php print $status_sel;?></TD>
 					</TR>					
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Patient');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_patient' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['the_name'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Patient');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_patient' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['the_name'];?>"></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Street');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_street' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['street'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Street');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_street' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['street'];?>"></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('City');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_city' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['city'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('City');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_city' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['city'];?>"></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Postcode');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_postcode' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['postcode'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Postcode');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_postcode' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['postcode'];?>"></TD>
 					</TR>						
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('State');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print $row['state'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('State');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_state' TYPE='TEXT' SIZE='4' MAXLENGTH='4' VALUE="<?php print $row['state'];?>"></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Destination Address');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_toaddress' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['to_address'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Destination Address');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_toaddress' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['to_address'];?>"></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Pickup Time');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_pickup' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['pickup'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Pickup Time');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_pickup' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['pickup'];?>"></TD>
 					</TR>	
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Arrival Time');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_arrival' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['arrival'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Arrival Time');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_arrival' TYPE='TEXT' SIZE='24' MAXLENGTH='128' VALUE="<?php print $row['arrival'];?>"></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Phone');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_phone' TYPE='TEXT' SIZE='16' MAXLENGTH='16' VALUE="<?php print $row['phone'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Phone');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_phone' TYPE='TEXT' SIZE='16' MAXLENGTH='16' VALUE="<?php print $row['phone'];?>"></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Originating Facility');?></TD><TD class='td_data' style='text-align: left;'><?php print $orig_fac_menu;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Originating Facility');?></TD><TD class='td_data text' style='text-align: left;'><?php print $orig_fac_menu;?></TD>
 					</TR>					
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Receiving Facility');?></TD><TD class='td_data' style='text-align: left;'><?php print $rec_fac_menu;?></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Receiving Facility');?></TD><TD class='td_data text' style='text-align: left;'><?php print $rec_fac_menu;?></TD>
 					</TR>
 					<TR class='odd'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Scope');?></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_scope' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['scope'];?>"></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Scope');?></TD><TD class='td_data text' style='text-align: left;'><INPUT NAME='frm_scope' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE="<?php print $row['scope'];?>"></TD>
 					</TR>	
 					<TR class='even'>	
-						<TD class='td_label' style='text-align: left;'><?php print get_text('Description');?></TD><TD class='td_data' style='text-align: left;'><TEXTAREA NAME="frm_description" COLS="45" ROWS="10" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD>
+						<TD class='td_label text' style='text-align: left;'><?php print get_text('Description');?></TD><TD class='td_data text' style='text-align: left;'><TEXTAREA NAME="frm_description" COLS="45" ROWS="10" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD>
 					</TR>		
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99></TD>
@@ -991,8 +1027,8 @@ if((!empty($_POST)) && (empty($_GET))) {
 				<INPUT NAME='frm_app_email' TYPE='hidden' SIZE='128' VALUE="<?php print $row['email'];?>">
 				<INPUT NAME='frm_username' TYPE='hidden' SIZE='128' VALUE="<?php print get_user_name($row['requester']);?>">
 			</DIV><BR /><BR />
-			<SPAN id='sub_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "validate(document.edit_frm);">Update</SPAN>
-			<SPAN id='close_but' CLASS ='plain' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "window.opener.get_requests(window.opener.req_field, window.opener.req_direct); window.close();">Cancel</SPAN><BR /><BR />	
+			<SPAN id='sub_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "validate(document.edit_frm);">Update</SPAN>
+			<SPAN id='close_but' CLASS ='plain text' style='float: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "refresh_opener(); window.close();">Cancel</SPAN><BR /><BR />	
 			</FORM>		
 		</DIV>
 	</DIV>		
@@ -1003,6 +1039,19 @@ if((!empty($_POST)) && (empty($_GET))) {
 	<DIV id='map_canvas' style='display: none;'></DIV>
 	<SCRIPT>
 	var map;				// make globally visible
+	var viewportwidth;
+	var viewportheight;
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	set_fontsizes(viewportwidth, "popup");	
 	var mapWidth = <?php print get_variable('map_width');?>;
 	var mapHeight = <?php print get_variable('map_height');?>;;
 	$('map_canvas').style.width = mapWidth + "px";

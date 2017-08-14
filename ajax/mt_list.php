@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
@@ -116,10 +118,11 @@ function mt_list($sortby="mi_id", $sortdir="ASC") {
 	`mi`.`name` AS `mi_name`,
 	`mt`.`name` AS `type_name`, 
 	`mi`.`boundary` AS `boundary`,
+	`mi`.`mi_status` AS `mi_status`,
 	`mi`.`description` AS `mi_description`
 	FROM `$GLOBALS[mysql_prefix]major_incidents` `mi` 
 	LEFT JOIN `$GLOBALS[mysql_prefix]mi_types` `mt` ON ( `mi`.`type` = `mt`.`id` )
-	GROUP BY `majinc_id` ORDER BY `majinc_id` DESC";
+	GROUP BY `majinc_id` ORDER BY `inc_endtime`, `majinc_id` DESC";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$num_rows = mysql_num_rows($result);
 //	Major While
@@ -131,9 +134,12 @@ function mt_list($sortby="mi_id", $sortdir="ASC") {
 			$tip =  addslashes ( "");		// tooltip string - 10/28/2012
 			$type = shorten($row['type_name'], 50);
 			$updated = format_sb_date_2($row['mi_updated']);
+			$starttime = format_sb_date_2($row['inc_startime']);
+			$endtime = (is_date($row['inc_endtime'])) ? format_sb_date_2($row['inc_endtime']) : "N/A";
 			$mi_name = replace_quotes(shorten($row['mi_name'], 50));
 			$mi_description = replace_quotes(shorten($row['mi_description'], 30));
-			$locale = get_variable('locale');	// 08/03/09			
+			$locale = get_variable('locale');	// 08/03/09	
+			$status = $row['mi_status'];
 			$mi_row[$i][0] = $mi_name;
 			$mi_row[$i][1] = $mi_description;			
 			$mi_row[$i][2] = $type;
@@ -226,6 +232,9 @@ function mt_list($sortby="mi_id", $sortdir="ASC") {
 			$mi_row[$i][16][6] = $row['bronze_state'];
 			$mi_row[$i][16][7] = $row['bronze_lat'];
 			$mi_row[$i][16][8] = $row['bronze_lng'];
+			$mi_row[$i][17] = $starttime;
+			$mi_row[$i][18] = $endtime;
+			$mi_row[$i][19] = $status;
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

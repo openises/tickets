@@ -1,4 +1,6 @@
 <?php
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
@@ -54,7 +56,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	
 	if (isset($_SESSION['list_type'])) {$func = $_SESSION['list_type'];}		// 12/02/10	 persistance for the tickets list
 
-	$cwi = get_variable('closed_interval');			// closed window interval in hours
+	$cwi = (get_variable('closed_interval') != "") ? get_variable('closed_interval'): 1;			// closed window interval in hours
 	//	output row fields - ID, name(scope), location, lat, lng, description, status, actions, patients, assigned, updated, infowindow text, tip string, scheduled flag
 	
 	// initiate arrays
@@ -141,8 +143,10 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	$interval = get_variable('hide_booked');
 	switch($func) {		
 		case 0: 
-			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR)) OR 
-				(`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}'  AND `$GLOBALS[mysql_prefix]ticket`.`problemend` >= '{$time_back}')){$where2} AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 0 AND `$GLOBALS[mysql_prefix]allocates`.`al_as_of` >= '{$time_back}')";	//	11/29/10, 4/18/11, 4/18/11
+			$where = "WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' 
+					OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND (`$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR) OR `$GLOBALS[mysql_prefix]ticket`.`booked_date` > NOW())) 
+					OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}' AND `$GLOBALS[mysql_prefix]ticket`.`problemend` >= '{$time_back}')
+					{$where2}";
 			break;
 		case 1:
 		case 2:

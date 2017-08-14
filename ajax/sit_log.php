@@ -34,6 +34,7 @@ $GLOBALS['LOG_CALL_REC_FAC_CLEAR']	=38;		// 9/29/09
 
 $GLOBALS['LOG_FACILITY_ADD']		=40;		// 9/22/09
 $GLOBALS['LOG_FACILITY_CHANGE']		=41;		// 9/22/09
+$GLOBALS['LOG_FACILITY_STATUS']		= 4040;
 
 $GLOBALS['LOG_FACILITY_INCIDENT_OPEN']	=42;		// 9/29/09
 $GLOBALS['LOG_FACILITY_INCIDENT_CLOSE']	=43;		// 9/29/09
@@ -75,11 +76,13 @@ $GLOBALS['LOG_WARNLOCATION_DELETE']	=4014;		// 8/9/13
 
 $GLOBALS['LOG_SPURIOUS']			=127;		// 10/24/13 Added to catch failed logs
 */
+$timezone = date_default_timezone_get();
+date_default_timezone_set($timezone);
 @session_start();
 session_write_close();
-if($_GET['q'] != $_SESSION['id']) {
+/* if($_GET['q'] != $_SESSION['id']) {
 	exit();
-	}
+	} */
 require_once('../incs/functions.inc.php');
 require_once('../incs/log_codes.inc.php');
 function br2nl($input) {
@@ -124,8 +127,7 @@ function subval_sort($a,$subkey, $dd) {
 $logdays = intval(get_variable('log_days'));	
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]log` 
-	WHERE `who` != " . $_SESSION['user_id'] . " 
-	AND `code` != 90 AND `code` != 127 
+	WHERE `code` != 90 AND `code` != 127 
 	AND `code` != 5000 
 	AND `when` >= CURRENT_DATE - INTERVAL " . $logdays . " DAY
 	ORDER BY `id` DESC LIMIT 1000";
@@ -140,7 +142,22 @@ if (($result) && (mysql_num_rows($result) >=1)) {
 			} else {
 			$the_onClick = "";
 			}
-		$code_type = ($row['code'] != 0) ? $types[$row['code']] : "NA";
+		$code_type = ($row['code'] != 0 && array_key_exists($row['code'], $types)) ? $types[$row['code']] : "NA";
+		$code_type .= (($row['code'] >= 40 && $row['code'] <= 51) || $row['code'] == 4040) ? " - " . get_facilityhandle($row['facility']): "";
+		$code_type .= ($row['code'] >= 39 && $row['code'] <= 38) ? " - " . get_facilityhandle($row['rec_facility']): "";
+		switch($row['code']) {
+			case 20:
+				$infocols = get_un_status_cols($row['info']);
+				$info = "<SPAN STYLE='background-color: " . $infocols[0] . "; color: " . $infocols[1] . ";'>" . replace_quotes(shorten(get_un_status_name($row['info']), 20)) . "</SPAN>";
+				break;
+			case 4040:
+				$infocols = get_fac_status_cols($row['info']);
+				$info = "<SPAN STYLE='background-color: " . $infocols[0] . "; color: " . $infocols[1] . ";'>" . replace_quotes(shorten(get_fac_status_name($row['info']), 20)) . "</SPAN>";
+				break;
+			default:
+				$info = replace_quotes(shorten($row['info'], 20));
+			}
+		$color = ($row['who'] != $_SESSION['user_id']) ? "#000000" : "#707070";
 		$ret_arr[$i][0] = $row['id'];
 		$ret_arr[$i][1] = get_owner($row['who']);
 		$ret_arr[$i][2] = $row['from'];
@@ -151,9 +168,10 @@ if (($result) && (mysql_num_rows($result) >=1)) {
 		$ret_arr[$i][7] = get_facilityname($row['facility']);
 		$ret_arr[$i][8] = get_facilityname($row['rec_facility']);
 		$ret_arr[$i][9] = $row['mileage'];
-		$ret_arr[$i][10] = replace_quotes(shorten($row['info'], 20));
+		$ret_arr[$i][10] = $info;
 		$ret_arr[$i][11] = $the_onClick;
-		$ret_arr[$i][12] = $row['info'];		
+		$ret_arr[$i][12] = $row['info'];
+		$ret_arr[$i][13] = $color;
 		$i++;
 		}
 	} else {
