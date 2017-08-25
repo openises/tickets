@@ -76,8 +76,6 @@ $GLOBALS['LOG_WARNLOCATION_DELETE']	=4014;		// 8/9/13
 
 $GLOBALS['LOG_SPURIOUS']			=127;		// 10/24/13 Added to catch failed logs
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 @session_start();
 session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
@@ -131,11 +129,11 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`
 	AND `code` != 5000 
 	AND `when` >= CURRENT_DATE - INTERVAL " . $logdays . " DAY
 	ORDER BY `id` DESC LIMIT 1000";
-	
+
 $result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_num_rows($result);
+$num_rows = mysql_affected_rows();
 $i = 0;
-if (($result) && (mysql_num_rows($result) >=1)) {
+if (($result) && ($num_rows >=1)) {
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
 		if($row['ticket_id'] != 0) {
 			$the_onClick = "edit.php?id=" . $row['ticket_id'];

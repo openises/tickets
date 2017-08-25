@@ -1,6 +1,4 @@
 <?php
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
 @session_start();
@@ -158,6 +156,7 @@ if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for t
 	}
 
 $query_fac = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`, 
+	`$GLOBALS[mysql_prefix]facilities`.`handle` 						AS `handle`, 
 	`$GLOBALS[mysql_prefix]facilities`.`id` 						AS `fac_id`, 
 	`$GLOBALS[mysql_prefix]fac_types`.`id` 							AS `type_id`,
 	`$GLOBALS[mysql_prefix]facilities`.`description` 				AS `facility_description`,

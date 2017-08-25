@@ -3,8 +3,6 @@
 get_replacetext.php, gets replacement text data for standard messages
 2/4/13	New File
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/messaging.inc.php');
 

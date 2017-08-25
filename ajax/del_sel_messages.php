@@ -3,8 +3,6 @@
 del_messages.php - puts all current messages into the wastebasket - the del_all function.
 10/23/12 - new file
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 $messages = array_key_exists('messages', $_GET) ? $_GET['messages'] : "";
 if($messages == "") {

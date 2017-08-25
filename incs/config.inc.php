@@ -533,6 +533,21 @@ function get_setting_help($setting){/* get help for settings */
 		case "log_days": 				return "Number of days to show the recent events for on the Situation screen, 3 is the default";	break;
 		case "responder_list_sort": 	return "Default Column to sort by for responder list for situation and unit screen. 2 numbers separated by comma, first is sit, second is units";	break;
 		case "facility_list_sort": 		return "Default Column to sort by for facility list for situation and facility screen. 2 numbers separated by comma, first is sit, second is facilities";	break;
+		case "listheader_height": 		return "Hight of list header rows, default 20. Setting is in px, enter number only. Only modify if you see extra blank lines above list rows";	break;
+		case "notify_assigns": 			return "Notify units assigned to an incident on various actions. \"0\" is off, \"1\" is on incident close, \"2\" is on incident close and change, \"3\" is on all changes and incident closed, \"4\" is on changes only, not on close.";	break;
+		case "httpuser": 				return "For HTTP Authorisation. HTTP Auth username. Not used yet";	break;
+		case "httppwd": 				return "For HTTP Authorisation. HTTP Auth password.  Not used yet";	break;
+		case "timezone": 				return "Timezone for server, default \"America/New_York\"";	break;
+		case "followmee_username": 		return "user name for followme gps tracking service.";	break;
+		case "followmee_key": 			return "user key for followme gps tracking service.";	break;
+		case "traccar_server": 			return "The address of the TRACCAR Database, localhost by default.";	break;
+		case "traccar_db": 				return "For TRACCAR Database the MySQL database name.";	break;
+		case "traccar_dbuser": 			return "For TRACCAR Database the MySQL user id.";	break;
+		case "traccar_dbpass": 			return "For TRACCAR Database, the Database password.";	break;
+		case "javaprssrvr_server": 		return "The address of the JAVAPRSSRVR Database, localhost by default";	break;
+		case "javaprssrvr_db": 			return "For JAVAPRSSRVR Database the MySQL database name.";	break;
+		case "javaprssrvr_dbuser": 		return "For JAVAPRSSRVR Database the MySQL user name.";	break;
+		case "javaprssrvr_dbpass": 		return "For JAVAPRSSRVR Database, the Database password.";	break;
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}
 	}

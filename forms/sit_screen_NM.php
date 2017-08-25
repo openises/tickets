@@ -208,6 +208,7 @@ function pageLoaded() {
 		window.statSel = false;
 		window.facstatSel = false;
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function do_responder_refresh() {
@@ -382,7 +383,6 @@ function set_size() {
 		}
 	get_scheduled_number();
 	loadData();
-	set_fontsizes(viewportwidth, "fullscreen");
 	}
 	
 function loadData() {
@@ -392,6 +392,8 @@ function loadData() {
 		get_mi_totals();
 		load_responderlist(window.resp_field, window.resp_direct);
 		}
+	load_status_bgcolors();
+	load_status_textcolors();
 	}
 	
 function pageUnload() {
@@ -468,11 +470,11 @@ if (is_guest()) {
 		$term_str = ($temp )? $temp : "Mobile" ;
 
 ?>
+	try {
 		parent.frames["upper"].$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";	
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].$("script").innerHTML  = "<?php print LessExtension(basename(__FILE__));?>";
-	try {
 		parent.frames["upper"].$("main_body").style.backgroundColor  = "<?php print get_css('page_background', $day_night);?>";
 		parent.frames["upper"].$("main_body").style.color  = "<?php print get_css('normal_text', $day_night);?>";
 		parent.frames["upper"].$("tagline").style.color  = "<?php print get_css('titlebar_text', $day_night);?>";
@@ -544,6 +546,7 @@ if (is_guest()) {
 	if((!(is_guest())) && ($_SESSION['good_internet']) && (!($get_id))) {
 		if(file_exists("./incs/modules.inc.php")) {
 			get_modules('main');
+			get_modules('sit_form');
 			}
 		}	
 	
@@ -801,7 +804,6 @@ if(!isGuest) {
 		$('stats_table').style.width = leftcolwidth + "px";
 		}
 	}
-set_fontsizes(viewportwidth, "fullscreen");
 // end of set widths
 var theLocale = <?php print get_variable('locale');?>;
 $('controls').innerHTML = controlsHTML;

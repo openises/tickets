@@ -171,8 +171,7 @@ function circleInside(point, center, radius) {
 		}
 	return theRet;
 	}
-
-
+	
 var check_initialized = false;
 var check_interval = null;
 
@@ -226,7 +225,7 @@ function do_fs_assignment_flags() {
 			if(rmarkers[key].latlng) {
 				var theKey = key;
 				var theText = "<DIV style='position: relative;'>";
-				theText += "<SPAN id='iw_" + theKey + "' class='plain' style='position: relative; top: 2px; right: 5px; display: inline; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_resppopup(" + theKey + ");'>...</SPAN>";
+				theText += "<SPAN id='iw_" + theKey + "' class='plain' style='position: relative; top: 2px; right: 5px; display: inline; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_fs_resppopup(" + theKey + ");'>...</SPAN>";
 				theText += "<DIV id='" + theKey + "' style='background-color: red; border-radius: 4px; padding: 4px;'  onMouseover='bringPopupToFront(this.id);'>" + rmarkers[theKey].infopopup + "</DIV></DIV>";
 				var popup = L.popup({className: "custom-popup", closeButton: false}).setContent(theText);
 				infoPopups[theKey] = popup;
@@ -299,10 +298,9 @@ function change_status_sel(the_control, the_val, theIcon, the_unit) {
 				document.getElementById(the_control).options[f].selected = true;
 				document.getElementById(the_control).style.backgroundColor = window.status_bgcolors[newval];
 				document.getElementById(the_control).style.color = window.status_textcolors[newval];
-				parent.frames["upper"].show_msg ('Responder ' + theIcon + ' Status Changed');
 				$("rsupd_" + the_unit).style.color = "#FFFFFF";
 				$("rsupd_" + the_unit).style.backgroundColor = "#000000";
-//				$("rsupd_" + the_unit).innerHTML = payload;
+				do_sel_update (the_unit, the_val, theIcon);
 				}
 			}
 		}
@@ -1930,7 +1928,7 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.unitzindexno, riseOnHover: true, riseOffset: 30000});
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
-			if(theAssigned[theid]) {
+			if(infoPopups[theid]) {
 				do_indv_assignment_flag(theid);
 				}
 			});
@@ -3941,6 +3939,7 @@ function do_resp_sort(id, field, header_text) {
 	}
 
 function load_responderlist(sort, dir) {
+	var resp_assigns = JSON.decode(window.theAssigns);
 	window.respFin = false;
 	if(sort != window.resp_field) {
 		window.resp_field = sort;
@@ -4017,15 +4016,16 @@ function load_responderlist(sort, dir) {
 						outputtext += "<TD id='ricon_" + unit_no + "' class='plain_list text' style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myrclick(" + unit_no + ");'>" + unit_id + "</TD>";
 						outputtext += "<TD id='rhand_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + pad(10, htmlentities(resp_arr[key][1], 'ENT_QUOTES'), "\u00a0") + "</TD>";
 						outputtext += "<TD id='rmail_" + unit_no + "' class='plain_list text_bolder'>" + theMailBut + "</TD>";
-						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + pad(20, resp_arr[key][12], "\u00a0") + "</TD>";
-						outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + pad(20, " ", "\u00a0") + "</TD>";
+						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + get_assigns(unit_no) + "</TD>";
+						outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + get_status_sel(unit_no, resp_arr[key][15], resp_arr[key][1]) + "</TD>";
 						outputtext += "<TD id='rmob_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'>" +  pad(5, resp_arr[key][13], "\u00a0") + "</TD>";
 						outputtext += "<TD id='rsupd_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'><SPAN id = '" + resp_arr[key][27] + "'>" + resp_arr[key][16] + "</SPAN></TD>";
 						outputtext += "<TD class='plain_list text'>" + pad(5, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
-						if(resp_arr[key][31] != 0) {
+						
+						if(resp_assigns[unit_no] && resp_assigns[unit_no].length != 0) {
 							theAssigned[unit_no] = true; 
-							infowindowtext = "<B>" + resp_arr[key][2] + "</B> " + resp_arr[key][30];
+							infowindowtext = "<B>" + resp_arr[key][2] + "</B><BR />" + get_assigns_flag(unit_no);
 							} else {
 							infowindowtext = " ";
 							}
@@ -4067,7 +4067,7 @@ function load_responderlist(sort, dir) {
 			outputtext += "</tbody>";
 			outputtext += "</TABLE>";
 			setTimeout(function() {
-				if(resp_arr[0][24] != 0) {
+				if(window.numAssigns != 0) {
 					if($('show_asgn')) {
 						$('show_asgn').style.color = "#000000";
 						$('show_asgn_img').style.opacity = "1";
@@ -4168,6 +4168,7 @@ function load_responderlist(sort, dir) {
 					}
 				window.resp_last_display = resp_arr[0][23];
 				window.respFin = true;
+				window.statSel = true;
 				window.latest_responder = responder_number;
 				pageLoaded();
 				window.do_resp_refresh = false;
@@ -4360,6 +4361,7 @@ function do_resp_sort2(id, field, header_text) {
 	}
 
 function load_responderlist2(sort, dir) {
+	var resp_assigns = JSON.decode(window.theAssigns);
 	window.statSel = false;
 	window.respFin = false;
 	if(sort != window.resp_field) {
@@ -4444,8 +4446,8 @@ function load_responderlist2(sort, dir) {
 						outputtext += "<TD id='ricon_" + unit_no + "' class='plain_list text_bolder' style='background-color: " + bg_color + "; color: " + fg_color + ";' onClick='myrclick(" + unit_no + ");'>" + resp_arr[key][2] + "</TD>";
 						outputtext += "<TD id='rname_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'>" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "</TD>";
 						outputtext += "<TD id='rmail_" + unit_no + "' class='plain_list text_bolder' style='text-align: center;'>" + theMailBut + "</TD>";
-						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + pad(22, resp_arr[key][12], "\u00a0") + "</TD>";
-						outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + pad(20, " ", "\u00a0") + "</TD>";
+						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + get_assigns(unit_no) + "</TD>";
+						outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + get_status_sel(unit_no, resp_arr[key][15], resp_arr[key][1]) + "</TD>";
 						var status_about = pad(22, html_entity_decode(resp_arr[key][26], 'ENT_QUOTES'), "\u00a0")
 						outputtext += "<TD id='rsab_" + unit_no + "' class='plain_list text' " + theTip + " onClick='myrclick(" + unit_no + ");'>" + status_about.trunc(20) + "</TD>";
 						outputtext += "<TD id='rmob_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'>" +  pad(6, resp_arr[key][13], "\u00a0") + "</TD>";
@@ -4453,9 +4455,9 @@ function load_responderlist2(sort, dir) {
 						outputtext += "<TD id='rsupd_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'><SPAN id = '" + theFlag + "' style='white-space: nowrap;'>" + pad(2, resp_arr[key][16], "\u00a0") + "</SPAN></TD>";
 						outputtext += "<TD class='plain_list text'>" + pad(12, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
-						if(resp_arr[key][31] != 0) {
+						if(resp_assigns[unit_no] && resp_assigns[unit_no].length != 0) {
 							theAssigned[unit_no] = true; 
-							infowindowtext = "<B>" + resp_arr[key][2] + "</B> " + resp_arr[key][30];
+							infowindowtext = "<B>" + resp_arr[key][2] + "</B><BR />" + get_assigns_flag(unit_no);
 							} else {
 							infowindowtext = " ";
 							}
@@ -4498,7 +4500,7 @@ function load_responderlist2(sort, dir) {
 			outputtext += "</tbody>";
 			outputtext += "</TABLE>";
 			setTimeout(function() {
-				if(resp_arr[0][24] != 0) {
+				if(window.numAssigns != 0) {
 					if($('show_asgn')) {
 						$('show_asgn').style.color = "#000000";
 						$('show_asgn_img').style.opacity = "1";
@@ -4598,6 +4600,7 @@ function load_responderlist2(sort, dir) {
 					}
 				window.resp_last_display = resp_arr[0][23];
 				window.respFin = true;
+				window.statSel = true;
 				window.latest_responder = responder_number;
 				pageLoaded();
 				window.do_resp_refresh = false;
@@ -4821,7 +4824,7 @@ function load_facilitylist(sort, dir) {
 					outputtext += "<TD class='plain_list text_bolder' style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][2] + "</TD>";
 					outputtext += "<TD class='plain_list text_bolder' style=\"text-align: left;\" onClick='myfclick(" + fac_id + ");'>" + htmlentities(fac_arr[key][0], 'ENT_QUOTES') + "</TD>";
 					outputtext += "<TD class='plain_list text_bolder'>" + theMailBut + "</TD>";
-					outputtext += "<TD id='fs_" + fac_id + "' class='plain_list text' " + theTip + ">" + pad(20, " ", "\u00a0") + "</TD>";
+					outputtext += "<TD id='fs_" + fac_id + "' class='plain_list text' " + theTip + ">" + get_fac_status_sel(fac_id, fac_arr[key][8], fac_arr[key][2]) + "</TD>";
 					outputtext += "<TD id='fsupd_" + fac_id + "' class='plain_list text' onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][9] + "</TD>";
 					outputtext += "<TD class='plain_list text'>" + pad(3, " ", "\u00a0") + "</TD>";
 					outputtext += "</TR>";
@@ -4922,7 +4925,7 @@ function load_facilitylist(sort, dir) {
 					}
 				window.facFin = true;
 				window.fac_last_display = fac_arr[key][10];
-				window.facstatSel = false;
+				window.facstatSel = true;
 				window.latest_facility = facility_number;
 				pageLoaded();
 				facilitylist_get();
@@ -5394,6 +5397,7 @@ function fs_incidentlist_loop() {
 	}			// end function do_loop()	
 
 function load_fs_responders() {
+	var resp_assigns = JSON.decode(window.theAssigns);
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/full_screen_responders.php?version='+randomnumber+'&q='+sess_id;
 	sendRequest (url,responderlist_cb, "");		
@@ -5412,9 +5416,9 @@ function load_fs_responders() {
 				if(key != 0) {
 					if(resp_arr[key][17]) {
 						var unit_id = resp_arr[key][17];
-						if(resp_arr[key][31] != 0) {
+						if(resp_assigns[unit_id] && resp_assigns[unit_id].length != 0) {
 							theAssigned[unit_id] = true; 
-							infowindowtext = "<B>" + resp_arr[key][2] + "</B> " + resp_arr[key][30];
+							infowindowtext = "<B>" + resp_arr[key][2] + "</B><BR />" + get_assigns_flag(unit_id);
 							} else {
 							infowindowtext = " ";
 							}
@@ -7138,43 +7142,108 @@ function tweetInfo(message) {
 		alert(theOutput2);
 		}
 	}
-
-function get_status_selectors() {
-	for(var i = 0; i < theResponders.length; i++) {
-		var theResp = theResponders[i];
-		var randomnumber=Math.floor(Math.random()*99999999);
-		var querystr = "responder_id=" + theResp;
-		querystr += "&version=" + randomnumber;
-		querystr += "&q=" + sess_id;
-		var url = "./ajax/get_status_control.php?" + querystr;
-		var payload = syncAjax(url);
-		var temp = JSON.decode(payload);
-		var theSel = temp[0];
-		if($('rs_' + theResp)) {$('rs_' + theResp).innerHTML = theSel;}
+	
+function get_status_sel(unit_id, status_val, handle) {
+	var status_details = JSON.decode(window.responder_sel);
+	var def_bg = "#FFFFFF";
+	var def_fg = "#000000";
+	for(var i in status_details) {
+		for(var j in status_details[i]) {
+			if(j == status_val) {
+				def_bg = status_details[i][j]['bg_color'];
+				def_fg = status_details[i][j]['text_color'];
+				}
+			}
 		}
-	setTimeout(function() {
-		responderlist_setwidths();
-		},3000);
-	window.statSel = true;
-	pageLoaded();
+	var outputtext = "<SELECT CLASS='sit text' id='frm_status_id_u_" + unit_id + "' name='frm_status_id' style='background-color: " + def_bg + "; color: " + def_fg + ";' onchange = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update(" + unit_id + ", this.options[this.selectedIndex].value, \"" + handle + "\");'>";
+	for(var i in status_details) {
+		outputtext += "<OPTGROUP CLASS='text' LABEL='" + i + "'>";
+		for(var j in status_details[i]) {
+			var sel = (j == status_val) ? "SELECTED" : "";
+			outputtext += "<OPTION CLASS='text' VALUE=" + j + " " + sel + " style='background-color:" + status_details[i][j]['bg_color'] + "; color:" + status_details[i][j]['text_color'] + ";' onMouseover = 'style.backgroundColor = this.backgroundColor;'>" + status_details[i][j]['name'] + "</OPTION>";
+			}
+		outputtext += "</OPTGROUP>";
+		}
+	outputtext += "</SELECT>";
+	return outputtext;
 	}
 	
-function get_fac_status_selectors() {
-	for(var i = 0; i < theFacilities.length; i++) {
-		var theFac = theFacilities[i];
-		var randomnumber=Math.floor(Math.random()*99999999);
-		var querystr = "facility_id=" + theFac;
-		querystr += "&version=" + randomnumber;
-		querystr += "&q=" + sess_id;
-		var url = "./ajax/get_fac_status_control.php?" + querystr;
-		var payload = syncAjax(url);
-		var temp = JSON.decode(payload);
-		var theSel = temp[0];
-		if($('fs_' + theFac)) {$('fs_' + theFac).innerHTML = theSel;}
+function get_fac_status_sel(fac_id, status_val, handle) {
+	var status_details = JSON.decode(window.facility_sel);
+	var def_bg = "#FFFFFF";
+	var def_fg = "#000000";
+	for(var i in status_details) {
+		for(var j in status_details[i]) {
+			if(j == status_val) {
+				def_bg = status_details[i][j]['bg_color'];
+				def_fg = status_details[i][j]['text_color'];
+				}
+			}
 		}
-	setTimeout(function() {		
-		facilitylist_setwidths();
-		},3000);
-	window.facstatSel = true;
-	pageLoaded();
+	var outputtext = "<SELECT CLASS='sit text' id='frm_status_id_f_" + fac_id + "' name='frm_status_id' STYLE='background-color:" + def_bg + "; color:" + def_fg + ";' onchange = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update_fac(" + fac_id + ", this.options[this.selectedIndex].value, \"" + handle + "\");'>";
+	for(var i in status_details) {
+		outputtext += "<OPTGROUP CLASS='text' LABEL='" + i + "'>";
+		for(var j in status_details[i]) {
+			var sel = (j == status_val) ? "SELECTED" : "";
+			outputtext += "<OPTION CLASS='text' VALUE=" + j + " " + sel + " STYLE='background-color:" + status_details[i][j]['bg_color'] + "; color:" + status_details[i][j]['text_color'] + ";' onMouseover = 'style.backgroundColor = this.backgroundColor;'>" + status_details[i][j]['name'] + "</OPTION>";
+			}
+		outputtext += "</OPTGROUP>";
+		}
+	outputtext += "</SELECT>";
+	return outputtext;
 	}
+	
+function get_assigns(unit_id) {
+	var retval = "";
+	var titleval = "";
+	var resp_assigns = JSON.decode(window.theAssigns);
+	var the_tickets = JSON.decode(window.theTickets);
+	var num_ass = (resp_assigns[unit_id]) ? resp_assigns[unit_id].length : 0;
+	if(resp_assigns[unit_id]) {
+		if(num_ass == 1) {
+			var ticket = resp_assigns[unit_id][0];
+			var tickScope = the_tickets[ticket];
+			retval += "<SPAN style=width: 100%; text-align: center; display: inline-block;' onMouseover='Tip(\"" + tickScope + "\");' onMouseout='UnTip();'>" + tickScope + "</SPAN>";
+			return retval;
+			} else if(num_ass >= 2) {
+			var tempArr = [];
+			for (var i = 0; i < resp_assigns[unit_id].length; i++) {
+				tempArr.push(resp_assigns[unit_id][i]);
+				}
+			var tipStr = tempArr.join();
+			retval += "<SPAN style=width: 100%; text-align: center; display: inline-block;' onMouseover='Tip(\"" + tipStr + "\");' onMouseout='UnTip();'>" + num_ass + "</SPAN>";
+			return retval;
+			} else {
+			retval += pad(20, " ", "\u00a0");
+			return retval;
+			}
+		} else {
+		retval += pad(20, " ", "\u00a0");
+		return retval;
+		}
+	}
+	
+function get_assigns_flag(unit_id) {
+	var resp_assigns = JSON.decode(window.theAssigns);
+	var the_tickets = JSON.decode(window.theTickets);
+	var num_ass = (resp_assigns[unit_id]) ? resp_assigns[unit_id].length : 0;
+	if(resp_assigns[unit_id]) {
+		if(num_ass == 1) {
+			var theString = "";
+			theString += "<SPAN id='incpop_" + resp_assigns[unit_id][0] + "' class='span_link' style='text-decoration: underline; cursor: pointer;' onMouseover='Tip(\"Click for details\");' onMouseout='UnTip();' onClick='get_incidentinfo(\"" + resp_assigns[unit_id][0] + "\");'>" + the_tickets[resp_assigns[unit_id][0]] + "</SPAN>";
+			} else if(num_ass >= 2) {
+			var theString = "";
+			for (var i = 0; i < num_ass; i++) {
+				theString += "<SPAN id='incpop_" + resp_assigns[unit_id][i] + "' class='span_link' style='text-decoration: underline; cursor: pointer;' onMouseover='Tip(\"Click for details\");' onMouseout='UnTip();' onClick='get_incidentinfo(\"" + resp_assigns[unit_id][i] + "\");'>" + the_tickets[resp_assigns[unit_id][i]] + "</SPAN><BR />";
+				}
+			return theString;
+			} else {
+			return " ";
+			}
+		}
+	}
+	
+function get_incidentinfo(ticket_id) {
+	get_tickpopup(ticket_id);
+	}
+

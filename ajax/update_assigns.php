@@ -8,8 +8,6 @@
 8/28/10 frm_u2fenr and frm_u2farr added
 9/1/10 set unit 'updated' time
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 
 require_once('../../incs/functions.inc.php');		//7/28/10

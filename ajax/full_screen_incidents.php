@@ -1,6 +1,4 @@
 <?php
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
@@ -56,7 +54,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	
 	if (isset($_SESSION['list_type'])) {$func = $_SESSION['list_type'];}		// 12/02/10	 persistance for the tickets list
 
-	$cwi = get_variable('closed_interval');			// closed window interval in hours
+	$cwi = (get_variable('closed_interval') != "") ? get_variable('closed_interval'): 1;			// closed window interval in hours
 	//	output row fields - ID, name(scope), location, lat, lng, description, status, actions, patients, assigned, updated, infowindow text, tip string, scheduled flag
 	
 	// initiate arrays

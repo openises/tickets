@@ -1,6 +1,4 @@
 <?php
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
 set_time_limit(0);
@@ -273,7 +271,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$mail_link = "";
 		}
 
-// DISPATCHES
+/* // DISPATCHES
 
 	$units_assigned = 0;
 	if(array_key_exists($row['unit_id'] , $assigns_ary)) {
@@ -309,7 +307,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 			$ass_td = $units_assigned;
 			$flaginfo = "";
 			break;
-		}
+		} */
 
 // STATUS
 	$status = (valid_status($row['un_status_id'])) ? get_status_sel($row['unit_id'], $row['un_status_id'], "u") : "Status Error";
@@ -377,7 +375,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$ret_arr[$i][9] = $tip;
 	$ret_arr[$i][10] = $track_type;
 	$ret_arr[$i][11] = $mail_link;
-	$ret_arr[$i][12] = $ass_td;
+//	$ret_arr[$i][12] = $ass_td;
 	$ret_arr[$i][13] = $the_bull;
 	$ret_arr[$i][14] = $bull_color;
 	$ret_arr[$i][15] = $status_id;
@@ -386,14 +384,14 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$ret_arr[$i][18] = $the_color;	
 	$ret_arr[$i][20] = $resp_cat;
 	$ret_arr[$i][23] = $status_name;
-	$ret_arr[$i][24] = intval($row['nr_assigned']);
+//	$ret_arr[$i][24] = intval($row['nr_assigned']);
 	$ret_arr[$i][25] = $type;
 	$ret_arr[$i][26] = htmlentities($status_about, ENT_QUOTES);
 	$ret_arr[$i][27] = $the_flag;
 	$ret_arr[$i][28] = $row['excl_zone'];
 	$ret_arr[$i][29] = $row['ring_fence'];
-	$ret_arr[$i][30] = $flaginfo;
-	$ret_arr[$i][31] = $units_assigned;
+//	$ret_arr[$i][30] = $flaginfo;
+//	$ret_arr[$i][31] = $units_assigned;
 	$i++;
 	}				// end  ==========  while() for RESPONDER ==========
 
@@ -484,7 +482,7 @@ if($units_ct > 0 ) {
 $the_output[0][21] = $cats_buttons;
 $the_output[0][22] = $units_ct;	
 $the_output[0][23] = $latest_id;
-$the_output[0][24] = $numAssigns;
+//$the_output[0][24] = $numAssigns;
 
 //dump($the_output);
 print json_encode($the_output);

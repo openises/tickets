@@ -1,11 +1,11 @@
 <?php
 
 error_reporting(E_ALL);				// 9/13/08
-?>
-<SCRIPT>
-window.onresize=function(){set_size()};
-</SCRIPT>
-<?php
+
+$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;
+if(file_exists("./incs/modules.inc.php")) {
+	require_once('./incs/modules.inc.php');
+	}
 require_once('./incs/all_forms_js_variables.inc.php');
 ?>
 <SCRIPT>
@@ -13,6 +13,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
+window.onresize=function(){set_size()};
 var respFin = false;
 var statSel = false;
 var mapCenter;
@@ -82,7 +83,6 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .30;
 	mapHeight = viewportheight * .55;
 	outerwidth = viewportwidth * .99;
@@ -117,9 +117,7 @@ function set_size() {
 	}
 	
 function pageLoaded() {
-	if(respFin && !statSel) {
-		get_status_selectors();
-		} else if(respFin && statSel) {
+	if(respFin) {
 		load_exclusions();
 		load_ringfences();
 		load_catchments();
@@ -132,6 +130,7 @@ function pageLoaded() {
 		mapZoom = map.getZoom();
 		map.invalidateSize();
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function do_tab(tabid, suffix, lat, lng) {
@@ -173,24 +172,19 @@ function do_tab(tabid, suffix, lat, lng) {
 		<SCRIPT SRC='./js/usng.js' 			TYPE='application/x-javascript'></SCRIPT>		<!-- 10/14/08 -->
 <?php
 	}
-	if($_SESSION['good_internet']) {	//	10/31/13
-		$sit_scr = (array_key_exists('id', ($_GET)))? $_GET['id'] :	NULL;	 	//	10/23/12
-		if((module_active("Ticker")==1) && (!($sit_scr))) {	//	6/1/12, 10/23/12
-?>
-			<SCRIPT SRC='./modules/Ticker/js/mootools-1.2-core.js' type='application/x-javascript'></SCRIPT>
-			<SCRIPT SRC='./modules/Ticker/js/ticker_core.js' type='application/x-javascript'></SCRIPT>
-			<LINK REL=StyleSheet HREF="./modules/Ticker/css/ticker_css.php?version=<?php print time();?>" TYPE="text/css">
-<?php
-			$ld_ticker = "ticker_init();";	//	3/23/11 To support ticket module
-			}
-		}
 
 ?>		
 </HEAD>
 <?php
+	if((!(is_guest())) && ($_SESSION['good_internet'])) {
+		if(file_exists("./incs/modules.inc.php")) {
+			get_modules('main');
+			}
+		}
+
 	$gunload = "clearInterval(r_interval);";				// 3/23/12
 ?>
-<BODY style="overflow-y: scroll;" onLoad = "ck_frames(); <?php print $ld_ticker;?> loadData(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
+<BODY style="overflow-y: scroll;" onLoad = "loadData(); ck_frames(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <?php
 	include("./incs/links.inc.php");		// 8/13/10
 ?>
@@ -290,7 +284,6 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-set_fontsizes(viewportwidth);
 mapWidth = viewportwidth * .30;
 mapHeight = viewportheight * .55;
 outerwidth = viewportwidth * .99;
@@ -346,7 +339,6 @@ $('controls').innerHTML = controlsHTML;
 do_kml();
 ?>
 </SCRIPT>
-
 <FORM NAME='view_form' METHOD='get' ACTION='<?php print basename(__FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='func' VALUE='responder'>
 <?php 		$the_val = (can_edit())? "edit" : "view"; ?>

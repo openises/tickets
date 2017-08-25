@@ -1500,9 +1500,9 @@ function get_daynight() {
 	    case "safari" :
 		case "mozilla" :
 			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"incident_alert\" src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
-			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"chat_alert\" src=\"./sounds/chat-alert.mp3\" preload></audio>\n";
-			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"message_alert\" src=\"./sounds/message-alert.mp3\" preload></audio>\n";
-			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"unit_alert\" src=\"./sounds/unit-alert.mp3\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"chat_alert\" src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"message_alert\" src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
+			print (empty($the_mp3_file))? "\n":  "\t\t<audio id=\"unit_alert\" src=\"./sounds/{$the_mp3_file}\" preload></audio>\n";
 			break;
 	    default:
 		}	// end switch

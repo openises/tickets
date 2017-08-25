@@ -4,8 +4,6 @@
 11/18/13 - Fixed inccorrect <DENTER> !!
 */
 //	error_reporting(E_ALL);
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();

@@ -17,8 +17,10 @@ BODY 	{ background-color: <?php print get_css("page_background", $day_night);?>;
 TABLE 	{border-collapse: collapse;}
 INPUT 	{background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal;; 
 		color: <?php print get_css("form_input_text", $day_night);?>;}
+INPUT:focus {background-color: yellow;}
 TEXTAREA {background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal;; 
 		color: <?php print get_css("form_input_text", $day_night);?>;}
+TEXTAREA:focus {background-color: yellow;}
 SELECT 	{background-color: <?php print get_css("select_menu_background", $day_night);?>; font-weight: normal;; 
 		color: <?php print get_css("select_menu_text", $day_night);?>; text-decoration: underline;}
 OPTION 	{font-weight: normal;}

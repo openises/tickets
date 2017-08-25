@@ -3,8 +3,6 @@
 msg_status.php - used by message.php to change read status of a message
 10/23/12 - new file
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 extract($_GET);
 @session_start();

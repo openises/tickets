@@ -46,6 +46,8 @@ var colors = new Array ('odd', 'even');
 function loadData() {
 	get_mi_totals();
 	load_responderlist2('icon', 'ASC');
+	load_status_bgcolors();
+	load_status_textcolors();
 	}
 
 function set_size() {
@@ -65,7 +67,6 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	set_fontsizes(viewportwidth, "fullscreen");
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
 	colwidth = outerwidth * .42;
@@ -92,11 +93,10 @@ function set_size() {
 	}
 	
 function pageLoaded() {
-	if(respFin && !statSel) {
-		get_status_selectors();
-		} else if(respFin && statSel) {
+	if(respFin) {
 		load_regions();
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 </SCRIPT>
 
@@ -150,7 +150,7 @@ function pageLoaded() {
 		<DIV style='position: fixed; top: 50px; z-index: 9999;'>
 <?php
 			if (!(is_guest())) {
-				if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
+				if(can_edit()) {
 ?>
 					<SPAN id='add_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseOver='do_hover_centerbuttons(this.id);' onMouseOut='do_plain_centerbuttons(this.id);' onClick='document.add_Form.submit();'>Add a <?php print get_text("Unit");?><BR /><IMG id='show_asgn_img' SRC='./images/plus.png' /></SPAN>
 <?php
@@ -186,7 +186,6 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-set_fontsizes(viewportwidth, "fullscreen");
 outerwidth = viewportwidth * .99;
 outerheight = viewportheight * .95;
 colwidth = outerwidth * .42;
@@ -245,3 +244,8 @@ $("down").style.display = $("up").style.display = "none";
 	}
 ?>
 </HTML>
+<?php
+if(file_exists("./incs/modules.inc.php")) {	//	10/28/10 Added for add on modules
+	get_modules('list_form');
+	}
+exit();

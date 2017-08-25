@@ -3,8 +3,6 @@
 list messages totals.php - gets new message totals
 21/1/14 - new file
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 @session_start();
 session_write_close();
 require_once('../incs/functions.inc.php');

@@ -2,8 +2,6 @@
 /*
 9/10/13 - New file - popup window to vie details of Location warnings
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 error_reporting(E_ALL);
 
 require_once('../incs/functions.inc.php');

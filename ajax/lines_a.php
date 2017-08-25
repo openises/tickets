@@ -5,8 +5,6 @@
 7/10/10 revised to call get_cb_height ()
 
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 error_reporting(E_ALL);	
 
 @session_start();

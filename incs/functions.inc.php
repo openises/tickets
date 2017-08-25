@@ -2656,6 +2656,8 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 	$fields[$GLOBALS['NOTIFY_TICKET_OPEN']] = "on_ticket";
 	$addrs = array();															// 
 	$facaddrs = array();
+	$assignsaddrs = array();
+	$assignssmsaddrs = array();
 	$intypeaddrs = array();
 	$severity_filter = (intval($row['severity']) == $GLOBALS['SEVERITY_NORMAL'])? "(`severities` = 1 )" : "(`severities`= 3) OR (`severities`= 1)";		// 5/22/11	
 
@@ -2789,6 +2791,69 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 			mail_it ($theTo, "", $theText, $ticket_id, 1 );
 			}				// end if ($addrs)			
 		}
+	$notify_assigns = get_variable('notify_assigns');
+	$defaultSMS = get_msg_variable('default_sms');
+	// notify assigns options - 0 is off, 1 notify assigns on close, 2  notify on close and inc change, 3 notify on close, inc change and action or patient change, 4 notify changes only not close
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . strip_tags($ticket_id);
+	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//	Assignments this Ticket
+		$responderID = $row['responder_id'];
+		$query_resp = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $responderID;	//	Responders assigned
+		$result_resp	= mysql_query($query_mg) or do_error($query_resp,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		while($row_resp = stripslashes_deep(mysql_fetch_assoc($result_resp))) {
+			$continue = false;
+			if($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 4) {
+				switch ($action_id) {
+					case ("1") :
+						$actionText = "changed";
+						break;
+					case ("2") :
+						$actionText = "changed";
+						break;
+					case ("3") :
+						$actionText = "changed";
+						break;
+					case ("4") :
+						$actionText = "closed";
+						break;
+					default:
+						$actionText = "changed";
+						}
+				switch ($notify_assigns) {		// what types of incident changes to send notify to assigned units
+					case ("0") :
+						$continue = false;	//	off
+						break;
+					case ("1") :
+						$continue = ($action_id == 4) ? true : false;	//	close only
+						break;
+					case ("2") :
+						$continue = ($action_id == 0 || $action_id == 4) ? true : false;	//	Incident change and close
+						break;
+					case ("3") :
+						$continue = ($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 3 || $action_id == 4) ? true : false;	//	all changes and close
+						break;
+					case ("4") :
+						$continue = ($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 3) ? true : false;	//	changes only, not on close
+						break;
+					default:
+						$continue = false;	
+						}							
+				if($continue) {
+					if($row['smsg_id'] != "") {
+						array_push($assignssmsaddrs, $row_resp['smsg_id']); // save for SMS						
+						}
+					if (is_email($row_resp['contact_via'])) {
+						array_push($assignsaddrs, $row_resp['contact_via']); // save for emailing
+						}
+					}
+				}
+			}
+		}
+	if ($assignsaddrs) {
+		$theTo = implode("|", array_unique($assignsaddrs));
+		$theText = "Incident " . $scope . " has " . $actionText;
+		mail_it ($theTo, $assignssmsaddrs, $theText, $ticket_id, 1 );
+		}				// end if ($addrs)	
 	$temp = array_values(array_unique($addrs));		// 5/22/10	
 	return (empty($temp))? FALSE: $temp;
 	}
@@ -3421,10 +3486,18 @@ function get_tip($which){		/* get replacement text from db tips table, returns F
 	return (array_key_exists($which, $tips_array))? $tips_array[$which] : $which ;
 	}
 
-function can_edit() {										// 8/27/10, 08/12/15
-	$oper_can_edit = ((is_user()) && (get_variable('oper_can_edit') == 1));
-	$unit_can_edit = ((is_unit()) && (get_variable('unit_can_edit') == 1));	
-	return (is_administrator() || is_super() || ($oper_can_edit) || ($unit_can_edit));
+function can_edit() {
+	$retval = false;
+	if(is_administrator() || is_super()) {
+		$retval = true;
+		} elseif(is_user() && get_variable('oper_can_edit') == 1) {
+		$retval = true;
+		} elseif(is_unit() && get_variable('unit_can_edit') == 1) {
+		$retval = true;
+		} else {
+		$retval = false;
+		}
+	return $retval;
 	} 	// end function can_edit()
 
 

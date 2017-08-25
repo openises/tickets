@@ -3,8 +3,6 @@
 1/3/14 - new file, lists road condition alerts for plotting on situation screen map
 3/31/2015 - corrected field-name in initial sql 'on' clause
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 @session_start();
 require_once('../incs/functions.inc.php');
 session_write_close();

@@ -1,6 +1,4 @@
 <?php
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 set_time_limit(0);
 @session_start();
@@ -27,7 +25,6 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id` ASC";			
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$status = (valid_status($row['un_status_id'])) ? get_status_sel($row['id'], $row['un_status_id'], "u") : "Status Error";		// status
-//	$status = get_status_sel($row['id'], $row['un_status_id'], "u");		// status
 	$ret_arr[$row['id']] = $status;
 	}				// end  ==========  while() for RESPONDER ==========
 

@@ -1,4 +1,8 @@
 <?php
+$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;
+if(file_exists("./incs/modules.inc.php")) {
+	require_once('./incs/modules.inc.php');
+	}
 $do_blink = TRUE;
 $ld_ticker = "";
 $nature = get_text("Nature");
@@ -15,7 +19,10 @@ $def_lat = get_variable('def_lat');
 $def_lng = get_variable('def_lng');
 if(file_exists("modules.inc.php")) {
 	require_once('modules.inc.php');
-	$use_ticker = (($_SESSION['good_internet']) && (module_active("Ticker")==1) && (!($not_sit))) ? 1 : 0;
+	$use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
+	} elseif(file_exists("./incs/modules.inc.php")) {
+	require_once('./incs/modules.inc.php');
+	$use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
 	}
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $show_controls = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "s")) ? "" : "none" ;
@@ -87,8 +94,87 @@ $sitfac_direc = (array_key_exists('fac_direct', $_SESSION)) ? $_SESSION['fac_dir
 $fac_sort = (array_key_exists('fac_sort', $_SESSION)) ? $_SESSION['fac_sort'] : $def_srt_arr_fac[$def_sort_fac];
 $fac_direc = (array_key_exists('fac_direct', $_SESSION)) ? $_SESSION['fac_direct'] : "ASC";
 $listheader_height = get_variable("listheader_height");
+$responder_statuses = array();
+$facility_statuses = array();
+$assigns = array();
+$resp_assigns = array();
+$tickets_arr = array();
+$responders_arr = array();
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group`";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$tmp_arr[$row['group']] = $row['group'];
+	}
+$tmp_arr = array_unique($tmp_arr);
+foreach($tmp_arr as $key => $val) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `group` = '" . $val . "' ORDER BY `sort`";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$responder_statuses[$key][$row['id']]['name'] = $row['status_val'];
+		$responder_statuses[$key][$row['id']]['hide'] = $row['hide'];
+		$responder_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
+		$responder_statuses[$key][$row['id']]['text_color'] = $row['text_color'];	
+		}
+	}
+
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `group`";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$tmp_arr[$row['group']] = $row['group'];
+	}
+$tmp_arr = array_unique($tmp_arr);
+foreach($tmp_arr as $key => $val) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `group` = '" . $val . "' ORDER BY `sort`";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$facility_statuses[$key][$row['id']]['name'] = $row['status_val'];
+		$facility_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
+		$facility_statuses[$key][$row['id']]['text_color'] = $row['text_color'];	
+		}
+	}
+
+$query = "SELECT `a`.`ticket_id`, 
+	`a`.`responder_id`, 
+	`t`.`scope` AS `ticket` 
+	FROM `$GLOBALS[mysql_prefix]assigns` `a`
+	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `a`.`ticket_id`=`t`.`id`
+	WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}') AND (`a`.`clear` IS NULL OR DATE_FORMAT(`a`.`clear`,'%y') = '00' )";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$num_assigns = mysql_num_rows($result);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$assigns[$row['responder_id']][] = $row['ticket_id'];
+	}
+unset($result);
+foreach($assigns as $key => $resp_arr) {
+	$resp_assigns[$key] = $resp_arr;
+	}
+	
+$query = "SELECT `t`.`id`, 
+	`t`.`scope` AS `scope` 
+	FROM `$GLOBALS[mysql_prefix]ticket` `t`
+	WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}')";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$num_assigns = mysql_num_rows($result);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$tickets_arr[$row['id']][] = $type = shorten($row['scope'], 18);
+	}
+unset($result);
+
+$query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `$GLOBALS[mysql_prefix]responder` `r`";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$num_responders = mysql_num_rows($result);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$responders_arr[$row['handle']][] = $row['id'];
+	}
+unset($result);
 ?>
 <SCRIPT>
+var responder_sel = '<?php echo json_encode($responder_statuses); ?>';
+var facility_sel = '<?php echo json_encode($facility_statuses); ?>';
+var theAssigns = '<?php echo json_encode($resp_assigns); ?>';
+var theTickets = '<?php echo json_encode($tickets_arr); ?>';
+var theResponders = '<?php echo json_encode($responders_arr); ?>';
+var numAssigns = <?php print $num_assigns;?>;
 var listheader_height = "<?php print $listheader_height;?>";
 var sit_resp_def_sort = '<?php print $sitresp_sort;?>';
 var sit_resp_def_sort_index = "r" + <?php print $def_sort_respsit + 1;?>;

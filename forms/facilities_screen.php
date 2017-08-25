@@ -132,7 +132,6 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .40;
 	mapHeight = viewportheight * .55;
 	outerwidth = viewportwidth * .99;
@@ -163,15 +162,14 @@ function set_size() {
 	}
 
 function pageLoaded() {
-	if(facFin && !facstatSel) {
-		get_fac_status_selectors();
-		} else if(facFin && facstatSel) {
+	if(facFin) {
 		load_regions();
 		load_catchments();
 		mapCenter = map.getCenter();
 		mapZoom = map.getZoom();
 		map.invalidateSize();
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function do_tab(tabid, suffix, lat, lng) {
@@ -277,7 +275,7 @@ function do_tab(tabid, suffix, lat, lng) {
 		<DIV style='position: fixed; top: 50px; z-index: 9999;'>
 <?php
 			if (!(is_guest())) {
-				if ((!(is_user())) && (!(is_unit())) || (get_variable('oper_can_edit') == "1")) {
+				if (can_edit()) {
 ?>
 					<SPAN id='add_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseOver='do_hover_centerbuttons(this.id);' onMouseOut='do_plain_centerbuttons(this.id);' onClick='document.add_Form.submit();'>Add <?php print get_text("Facility");?><BR /><IMG id='show_asgn_img' SRC='./images/plus.png' /></SPAN>
 <?php
@@ -338,7 +336,6 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-set_fontsizes(viewportwidth, "fullscreen");
 mapWidth = viewportwidth * .40;
 mapHeight = viewportheight * .55;
 outerwidth = viewportwidth * .99;

@@ -3,8 +3,6 @@
 get_messages.php - AJAX file gets email and SMS Gateway messages in background - called from top.php
 10/23/12 - new file
 */
-$timezone = date_default_timezone_get();
-date_default_timezone_set($timezone);
 require_once('../incs/functions.inc.php');
 require_once('../incs/messaging.inc.php');
 require_once '../lib/xpm/POP3.php';

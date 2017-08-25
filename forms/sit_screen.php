@@ -390,15 +390,14 @@ function set_size() {
 		}
 	get_scheduled_number();
 	map.invalidateSize();
-	set_fontsizes(viewportwidth, "fullscreen");
 	}
 	
 function pageLoaded() {
-	if(respFin && !facFin && !incFin && !logFin && !statSel && !facstatSel) {
+	if(respFin && !facFin && !incFin && !logFin) {
 		load_facilitylist(window.fac_field, window.fac_direct);
-		} else if(respFin && facFin && !incFin && !logFin && !facstatSel && !statSel) {
+		} else if(respFin && facFin && !incFin && !logFin) {
 		load_incidentlist(window.inc_field, window.inc_direct);			
-		} else if(respFin && facFin && incFin && !logFin && !facstatSel && !statSel) {
+		} else if(respFin && facFin && incFin && !logFin) {
 		load_exclusions();
 		load_ringfences();
 		load_catchments();
@@ -420,11 +419,7 @@ function pageLoaded() {
 				}
 			}
 		get_scheduled_number();
-		} else if(incFin && respFin && facFin && logFin && !facstatSel && (!statSel || statSel)) {
-		get_fac_status_selectors();
-		} else if(incFin && respFin && facFin && logFin && (facstatSel || !facstatSel) && !statSel) {
-		get_status_selectors();
-		} else if(incFin && respFin && facFin && logFin && facstatSel && statSel) {		
+		} else if(incFin && respFin && facFin && logFin) {		
 		pagetimerEnd = new Date();
 		var elapsedTime = pagetimerEnd - window.pagetimerStart;
 		var theTimeLoadString = "Page Loaded in: " + pageLoadTime + " seconds, Data Loaded in " + elapsedTime/1000 + " seconds";
@@ -439,12 +434,15 @@ function pageLoaded() {
 		mapZoom = map.getZoom();
 		map.invalidateSize();
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 	
 function loadData() {
 	get_mi_totals();
 	load_responderlist(window.resp_field, window.resp_direct);
 	load_warnlocations("situation");
+	load_status_bgcolors();
+	load_status_textcolors();
 	}
 
 function pageUnload() {
@@ -515,11 +513,11 @@ if (is_guest()) {
 		$term_str = ($temp )? $temp : "Mobile" ;
 
 ?>
+	try {
 		parent.frames["upper"].$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";	
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].$("script").innerHTML  = "<?php print LessExtension(basename(__FILE__));?>";
-	try {
 		parent.frames["upper"].$("main_body").style.backgroundColor  = "<?php print get_css('page_background', $day_night);?>";
 		parent.frames["upper"].$("main_body").style.color  = "<?php print get_css('normal_text', $day_night);?>";
 		parent.frames["upper"].$("tagline").style.color  = "<?php print get_css('titlebar_text', $day_night);?>";
@@ -849,8 +847,6 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-	
-set_fontsizes(viewportwidth, "fullscreen");
 mapWidth = viewportwidth * .40;
 mapHeight = viewportheight * .55;
 logwidth = mapWidth *.98;

@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.20A Beta - 07/28/17";	
+$version = "3.20A Beta - 08/14/17";	
 
 /*
 10/1/08 added error reporting
@@ -2415,7 +2415,8 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 				
 			do_setting ('responder_list_sort','1,1');			// 7/14/17				
 			do_setting ('facility_list_sort','1,1');			// 7/14/17
-			do_setting ('listheader_height','20');			// 7/14/17	
+			do_setting ('listheader_height','25');			// 7/14/17
+			do_setting ('notify_assigns','1');			// 8/11/17	
 			}		// end (!($version ==...) ==================================================
 
 $osmdir = getcwd() . "/_osm";

@@ -56,7 +56,8 @@ function found_user() {
 		return $stat_type;
 		}
 
-	function parsedate($diff){	
+	function parsedate($diff){
+		$days = 0;
 		$seconds = 0;   
 		$hours   = 0;   
 		$minutes = 0;   
@@ -108,20 +109,20 @@ function found_user() {
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<STYLE>
-		.header_wrapper	{ position: absolute; left: 2%; top: 2%; display: table; width: 94%;}	
-		.header_wrapper2	{ position: absolute; left: 2%; top: 8%; display: table; width: 94%;}		
-		.header_row		{ display: table-row; color: #000000; text-align: center;}	
-		.header			{ display: table-cell; color: #000000; width: 5%;}
-		.page_heading	{ font-size: 3em; font-weight: bold; display: table-cell; text-align: center; background: #707070; color: #FFFFFF;}	
-		.page_heading_s	{ font-size: 1.2em; font-weight: bold; display: table-cell; text-align: center; background: #707070; color: #FFFFFF;}			
-		.date_time		{ position: relative; padding-left: 80px; font-size: 1.5em; font-weight: bold; display: table-cell; width: 98%; text-align: left}
-		.button_bar 	{ padding-right: 80px; font-size: 1.2em; text-align: center; display: table-cell; width: 56%; padding-left: 25px;}			
+		.header_wrapper	{ position: absolute; left: 2%; top: 2%; width: 98%;}	
+		.header_wrapper2	{ position: absolute; left: 2%; top: 5%; width: 98%;}		
+		.header_row		{ color: #000000; text-align: center; width: 100%;}	
+		.header			{ color: #000000; width: 5%;}
+		.page_heading	{ font-weight: bold; width: 100%; display: inline-block; text-align: left; background: #707070; color: #FFFFFF;}	
+		.page_heading_s	{ font-weight: bold; display: inline-block; text-align: left; background: #707070; color: #FFFFFF;}			
+		.date_time		{ padding-right: 20px; font-weight: bold; display: inline-block; float: right; vertical-align: bottom;}
+		.button_bar 	{ padding-right: 80px; text-align: center; padding-left: 25px;}			
 		.buttons 		{ border: 2px outset #FFFFFF; padding: 2px; background-color: #EFEFEF; font-weight: bold; display: table-cell; cursor: pointer;}	
-		.stats_heading	{ font-size: 1.4em; text-align: center; font-weight: bold; color: #000000; background: #CECECE; height: 3.5em;}
-		.stats_wrapper	{ align: center; position: absolute; left: 2%; top: 100px; width: 96%; float: left;}		
-		.stats_outer	{ border: 4px outset; width: 24%; height: 25em; float: left; background: #FFFFFF;}
-		.stats_inner	{ position: relative; top: 15%; padding: 10px; text-align: center; font-size: 3em; color: #000000; vertical-align: middle;}
-		.stats_inner_warn	{ position: relative; top: 15%; padding: 10px; text-align: center; font-size: 3em; color: #000000; background: red; vertical-align: middle;}		
+		.stats_heading	{ text-align: center; font-weight: bold; color: #000000; background: #CECECE;}
+		.stats_wrapper	{ align: center; position: absolute; left: 2%; top: 130px; width: 96%; height: 80%; float: left;}		
+		.stats_outer	{ border: 4px outset; width: 24%; height: 22em; float: left; background: #FFFFFF;}
+		.stats_inner	{ position: relative; top: 10%; padding: 10px; text-align: center; font-size: 3em; color: #000000; vertical-align: middle;}
+		.stats_inner_warn	{ position: relative; top: 10%; padding: 10px; text-align: center; font-size: 3em; color: #000000; background: red; vertical-align: middle;}		
 		.config_wrapper	{ position: absolute; right: 10%; top: 20%; width: 80%; align: center; display: table; border: 1px solid;}	
 		.config_row		{ align: center; display: table-row; border: 1px solid;}
 		.config_cell_heading	{ font-size: 1.3em; align: left; display: table-cell; border: 1px solid; padding: 3px; color: #FFFF00; background: #707070;}			
@@ -268,10 +269,9 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 		$days2 = $days * 24 * 60 * 60;
 		$hours2 = $hours * 60 * 60;
 		$minutes2 = $minutes * 60;
-		
 		$seconds = $hours2 + $days2 + $minutes2 + $secs;
 		return $seconds;
-	}
+		}
 	
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
@@ -356,27 +356,30 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);	
 		if($result) {
+			
 			print "<DIV class='header_wrapper'>";
 				print "<DIV class='header_row'>";
-					print "<DIV class='page_heading'>TICKETS CAD Statistics Module - Config</DIV><DIV class='page_heading_s'></DIV>";
-				print "</DIV>";
-			print "</DIV>";
-			print "<DIV class='header_wrapper2'>";	
-				print "<DIV class='header_row'>";
-					print "<DIV id='stats8_inner' class='date_time'></DIV>";
-					print "<DIV class='button_bar'>";
-						print "<SPAN id='links' class='buttons' onclick=\"window.location='stats_scr.php?stats=stats' \">Statistics</SPAN>";
-						print "<SPAN id='links' class='buttons' onclick=\"window.location='stats_scr.php?config=config' \">Configuration</SPAN>";						
-						print "<SPAN ID='gout' CLASS='buttons' onClick=\"do_logout()\">Logout</SPAN>";
+					print "<DIV class='page_heading'>";
+						print "<IMG SRC='" . get_variable('logo') . "' BORDER=0 />";
+						print "<SPAN class='page_heading text_biggest' style='display: inline;'>" . get_variable('title_string') . " - Statistics Module, Config Save</SPAN>";
+						print "<SPAN class='page_heading_s text_biggest' style='display: inline;'></SPAN>";
+						print "<SPAN id='stats8_inner' class='date_time text text_right' style='display: inline; vertical-align: bottom;'></SPAN>";
 					print "</DIV>";
 				print "</DIV>";
-			print "</DIV>";	
+				print "<DIV class='header_row'>";
+					print "<DIV class='button_bar'>";
+						print "<SPAN id='links' CLASS='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick=\"window.location='stats_scr.php?stats=stats' \">Statistics</SPAN>";
+						print "<SPAN id='links' CLASS='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'onclick=\"window.location='stats_scr.php?config=config' \">Configuration</SPAN>";						
+						print "<SPAN ID='gout' CLASS='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"do_logout()\">Logout</SPAN>";
+					print "</DIV>";
+				print "</DIV>";
+			print "</DIV>";
 			print "<DIV class='stats_wrapper'>";
 				print "<DIV class='error_page'>The settings have been updated</DIV>";			
 			print "</DIV>";		
-			print "</BODY></HTML>";		
-		}			
-	} else {
+			print "</BODY></HTML>";				
+			}			
+		} else {
 		$th1 = ((get_stat_type_type($_POST['frm_box1']) == "avg") && ($_POST['frm_t1'] !=0)) ?  makeSeconds($_POST['frm_t1']) : $_POST['frm_t1'];
 		$th2 = ((get_stat_type_type($_POST['frm_box2']) == "avg") && ($_POST['frm_t2'] !=0)) ?  makeSeconds($_POST['frm_t2']) : $_POST['frm_t2'];
 		$th3 = ((get_stat_type_type($_POST['frm_box3']) == "avg") && ($_POST['frm_t3'] !=0)) ?  makeSeconds($_POST['frm_t3']) : $_POST['frm_t3'];
@@ -879,18 +882,20 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 		$name6 = get_stat_type_name($row['f6']);
 		$name7 = get_stat_type_name($row['f7']);
 		$name8 = get_stat_type_name($row['f8']);
-	
 ?>
 		<DIV class='header_wrapper'>
 			<DIV class='header_row'>
-			<!-- Title -->
-				<DIV class='page_heading'><IMG SRC="<?php print get_variable('logo');?>" BORDER=0 /> <?php print get_variable('title_string'); ?> Statistics</DIV><DIV class='page_heading_s'></DIV>
+				<DIV class='page_heading'>
+					<IMG SRC="<?php print get_variable('logo');?>" BORDER=0 />
+					<SPAN class='page_heading text_biggest' style='display: inline;'><?php print get_variable('title_string'); ?> - Statistics</SPAN>
+					<SPAN class='page_heading_s text_biggest' style='display: inline;'></SPAN>
+					<SPAN id='stats8_inner' class='date_time text text_right' style='display: inline; vertical-align: bottom;'></SPAN>
+				</DIV>
 			</DIV>
 			<DIV class='header_row'>
-				<DIV id='stats8_inner' class='date_time'></DIV>
 				<DIV class='button_bar'>
-					<SPAN id='links' class='buttons' onclick="window.location='stats_scr.php?config=config' ">Configuration</SPAN>
-					<SPAN ID='gout' CLASS='buttons' onClick="do_logout()">Logout</SPAN>
+					<SPAN id='links' class='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick="window.location='stats_scr.php?config=config' ">Configuration</SPAN>
+					<SPAN ID='gout' CLASS='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_logout()">Logout</SPAN>
 				</DIV>
 			</DIV>
 		</DIV>
@@ -976,59 +981,73 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 	var is_initialized = false;
 	var mu_interval = 10000;
 <?php
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$refresh_time = (isset($row['refresh_rate'])) ? ($row['refresh_rate'] * 1000) : 1000;
-		$rr = found_user() ? $row['refresh_rate'] : 30;
-		$f1 = found_user() ? $row['f1'] : 1;
-		$f2 = found_user() ? $row['f2'] : 2;
-		$f3 = found_user() ? $row['f3'] : 3;
-		$f4 = found_user() ? $row['f4'] : 4;
-		$f5 = found_user() ? $row['f5'] : 5;
-		$f6 = found_user() ? $row['f6'] : 6;
-		$f7 = found_user() ? $row['f7'] : 7;
-		$f8 = found_user() ? $row['f8'] : 8;
-		$type1 = get_stat_type_type($f1);
-		$type2 = get_stat_type_type($f2);
-		$type3 = get_stat_type_type($f3);
-		$type4 = get_stat_type_type($f4);
-		$type5 = get_stat_type_type($f5);
-		$type6 = get_stat_type_type($f6);
-		$type7 = get_stat_type_type($f7);
-		$type8 = get_stat_type_type($f8);		
-		$t1 = found_user() ? $row['threshold_1'] : 0;
-		$t2 = found_user() ? $row['threshold_2'] : 0;
-		$t3 = found_user() ? $row['threshold_3'] : 0;
-		$t4 = found_user() ? $row['threshold_4'] : 0;
-		$t5 = found_user() ? $row['threshold_5'] : 0;
-		$t6 = found_user() ? $row['threshold_6'] : 0;
-		$t7 = found_user() ? $row['threshold_7'] : 0;
-		$t8 = found_user() ? $row['threshold_8'] : 0;
-		$tw1 = found_user() ? $row['thresholdw_1'] : 0;
-		$tw2 = found_user() ? $row['thresholdw_2'] : 0;
-		$tw3 = found_user() ? $row['thresholdw_3'] : 0;
-		$tw4 = found_user() ? $row['thresholdw_4'] : 0;
-		$tw5 = found_user() ? $row['thresholdw_5'] : 0;
-		$tw6 = found_user() ? $row['thresholdw_6'] : 0;
-		$tw7 = found_user() ? $row['thresholdw_7'] : 0;
-		$tw8 = found_user() ? $row['thresholdw_8'] : 0;	
-		$tf1 = found_user() ? $row['thresholdf_1'] : 0;
-		$tf2 = found_user() ? $row['thresholdf_2'] : 0;
-		$tf3 = found_user() ? $row['thresholdf_3'] : 0;
-		$tf4 = found_user() ? $row['thresholdf_4'] : 0;
-		$tf5 = found_user() ? $row['thresholdf_5'] : 0;
-		$tf6 = found_user() ? $row['thresholdf_6'] : 0;
-		$tf7 = found_user() ? $row['thresholdf_7'] : 0;
-		$tf8 = found_user() ? $row['thresholdf_8'] : 0;	
-		$tt1 = found_user() ? $row['t_type1'] : "More";
-		$tt2 = found_user() ? $row['t_type2'] : "More";
-		$tt3 = found_user() ? $row['t_type3'] : "More";
-		$tt4 = found_user() ? $row['t_type4'] : "More";
-		$tt5 = found_user() ? $row['t_type5'] : "More";
-		$tt6 = found_user() ? $row['t_type6'] : "More";
-		$tt7 = found_user() ? $row['t_type7'] : "More";
-		$tt8 = found_user() ? $row['t_type8'] : "More";			
+
+	function makeSeconds($a) {
+		$string = explode("-", $a);
+		$days = $string[0];
+		$hours = $string[1];
+		$minutes = $string[2];
+		$secs = $string[3];
+		$days2 = $days * 24 * 60 * 60;
+		$hours2 = $hours * 60 * 60;
+		$minutes2 = $minutes * 60;
+		$seconds = $hours2 + $days2 + $minutes2 + $secs;
+		return $seconds;
+		}
+		
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$refresh_time = (isset($row['refresh_rate'])) ? ($row['refresh_rate'] * 1000) : 1000;
+	$rr = found_user() ? $row['refresh_rate'] : 30;
+	$f1 = found_user() ? $row['f1'] : 1;
+	$f2 = found_user() ? $row['f2'] : 2;
+	$f3 = found_user() ? $row['f3'] : 3;
+	$f4 = found_user() ? $row['f4'] : 4;
+	$f5 = found_user() ? $row['f5'] : 5;
+	$f6 = found_user() ? $row['f6'] : 6;
+	$f7 = found_user() ? $row['f7'] : 7;
+	$f8 = found_user() ? $row['f8'] : 8;
+	$type1 = get_stat_type_type($f1);
+	$type2 = get_stat_type_type($f2);
+	$type3 = get_stat_type_type($f3);
+	$type4 = get_stat_type_type($f4);
+	$type5 = get_stat_type_type($f5);
+	$type6 = get_stat_type_type($f6);
+	$type7 = get_stat_type_type($f7);
+	$type8 = get_stat_type_type($f8);		
+	$t1 = found_user() ? $row['threshold_1'] : 0;
+	$t2 = found_user() ? $row['threshold_2'] : 0;
+	$t3 = found_user() ? $row['threshold_3'] : 0;
+	$t4 = found_user() ? $row['threshold_4'] : 0;
+	$t5 = found_user() ? $row['threshold_5'] : 0;
+	$t6 = found_user() ? $row['threshold_6'] : 0;
+	$t7 = found_user() ? $row['threshold_7'] : 0;
+	$t8 = found_user() ? $row['threshold_8'] : 0;
+	$tw1 = found_user() ? $row['thresholdw_1'] : 0;
+	$tw2 = found_user() ? $row['thresholdw_2'] : 0;
+	$tw3 = found_user() ? $row['thresholdw_3'] : 0;
+	$tw4 = found_user() ? $row['thresholdw_4'] : 0;
+	$tw5 = found_user() ? $row['thresholdw_5'] : 0;
+	$tw6 = found_user() ? $row['thresholdw_6'] : 0;
+	$tw7 = found_user() ? $row['thresholdw_7'] : 0;
+	$tw8 = found_user() ? $row['thresholdw_8'] : 0;	
+	$tf1 = found_user() ? $row['thresholdf_1'] : 0;
+	$tf2 = found_user() ? $row['thresholdf_2'] : 0;
+	$tf3 = found_user() ? $row['thresholdf_3'] : 0;
+	$tf4 = found_user() ? $row['thresholdf_4'] : 0;
+	$tf5 = found_user() ? $row['thresholdf_5'] : 0;
+	$tf6 = found_user() ? $row['thresholdf_6'] : 0;
+	$tf7 = found_user() ? $row['thresholdf_7'] : 0;
+	$tf8 = found_user() ? $row['thresholdf_8'] : 0;	
+	$tt1 = found_user() ? $row['t_type1'] : "More";
+	$tt2 = found_user() ? $row['t_type2'] : "More";
+	$tt3 = found_user() ? $row['t_type3'] : "More";
+	$tt4 = found_user() ? $row['t_type4'] : "More";
+	$tt5 = found_user() ? $row['t_type5'] : "More";
+	$tt6 = found_user() ? $row['t_type6'] : "More";
+	$tt7 = found_user() ? $row['t_type7'] : "More";
+	$tt8 = found_user() ? $row['t_type8'] : "More";			
 ?>
 	var type1 = "<?php print $type1;?>";
 	var type2 = "<?php print $type2;?>";
@@ -1104,13 +1123,15 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 
 	<DIV class='header_wrapper'>
 		<DIV class='header_row'>
-			<DIV class='page_heading'>TICKETS CAD Statistics Module - Config</DIV>
-		</DIV>
-		<DIV class='header_row'>
-			<DIV id='stats8_inner' class='date_time'></DIV>
+			<DIV class='page_heading'>
+				<IMG SRC="<?php print get_variable('logo');?>" BORDER=0 />
+				<SPAN class='page_heading text_biggest' style='display: inline;'><?php print get_variable('title_string'); ?> - Statistics configuration</SPAN>
+				<SPAN class='page_heading_s text_biggest' style='display: inline;'></SPAN>
+				<SPAN id='stats8_inner' class='date_time text text_right' style='display: inline; vertical-align: bottom;'>Current date and time: <?php print date("D M j Y G:i:s", time());?></SPAN>
+			</DIV>
 			<DIV class='button_bar'>
-				<SPAN id='links' class='buttons' onclick="window.location='stats_scr.php?stats=stats' ">Statistics</SPAN>
-				<SPAN ID='gout' CLASS='buttons' onClick="do_logout()">Logout</SPAN>
+				<SPAN id='links' class='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick="window.location='stats_scr.php?stats=stats' ">Statistics</SPAN>
+				<SPAN ID='gout' class='plain text' style='float: right; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_logout()">Logout</SPAN>
 			</DIV>
 		</DIV>
 	</DIV>
@@ -1422,9 +1443,9 @@ if((!isset($_GET['stats'])) && (!isset($_GET['config'])) && (!isset($_GET['fm_su
 		<DIV class='header_row'>
 			<DIV id='stats8_inner' class='date_time'></DIV>
 			<DIV class='button_bar'>
-				<SPAN id='links' class='buttons' onclick="window.location='stats_scr.php?stats=stats' ">Statistics</SPAN>			
-				<SPAN id='links' class='buttons' onclick="window.location='stats_scr.php?config=config' ">Configuration</SPAN>
-				<SPAN ID='gout' CLASS='buttons' onClick="do_logout()">Logout</SPAN>
+				<SPAN id='links' class='plain text' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick="window.location='stats_scr.php?stats=stats' ">Statistics</SPAN>			
+				<SPAN id='links' class='plain text' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick="window.location='stats_scr.php?config=config' ">Configuration</SPAN>
+				<SPAN ID='gout' CLASS='plain text' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_logout()">Logout</SPAN>
 			</DIV>
 		</DIV>
 	</DIV>
