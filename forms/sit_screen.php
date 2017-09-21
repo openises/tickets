@@ -886,10 +886,12 @@ if(!isGuest) {
 	if(showEvents == 1) {
 		$('logheading').style.width = mapWidth + "px";
 		$('loglist').style.width = mapWidth + "px";
+		$('the_loglist').style.width = mapWidth + "px";
 		}
 	if(showStats == 1) {		
 		$('stats_wrapper').style.width = mapWidth + "px";
 		$('stats_heading').style.width = mapWidth + "px";
+		$('stats_table').style.width = mapWidth + "px";
 		}
 	}
 // end of set widths

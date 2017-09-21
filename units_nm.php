@@ -2079,6 +2079,5 @@ if(get_num_groups()) {
 				}
 			}					
 		exit();
-    break;
 ?>
 

@@ -274,15 +274,10 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			var the_arr_lgth = the_id_arr.length;		// sanity check
 			}
 		catch (e) {
-//			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
-//			do_logout();				// 2/10/12
 			return;
 			}
-//		alert("237 " + the_id_arr[12]);
-//		alert("238 " + the_id_arr.length);
 		if (the_arr_lgth != arr_lgth_good)  {
 			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
-//			do_logout();				// 2/10/12
 			}
 		var temp = parseInt(the_id_arr[0]);				// new chat invite?
 		if (temp != chat_id) {
@@ -300,35 +295,18 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			}
 		var temp =  parseInt(the_id_arr[2]);			// unit?
 		var temp1 =  the_id_arr[3].trim();				// unit timestamp?
-		if ((temp == unit_id) || (temp1 == updated)) {	//	10/23/12
+		if ((temp != unit_id) || (temp1 != updated)) {	//	10/23/12
 			unit_id = temp;
 			updated =  temp1;							// timestamp this unit
 			$('unit_id').innerHTML = unit_id;			// unit id
 			unit_signal();								// light the unit button
-/* 			if(parent.frames["main"].screenname.innerHTML == "situation") {
-				if(typeof parent.frames["main"].load_responderlist == 'function') {
-					if(!parent.frames["main"].changed_resp_sort) {
-						parent.frames["main"].load_responderlist(parent.frames["main"].resp_field, parent.frames["main"].resp_direct);
-						}
-					}
-				} else if(parent.frames["main"].screenname.innerHTML == "responders") {
-				if(typeof parent.frames["main"].load_responderlist2 == 'function') {
-					if(!parent.frames["main"].changed_resp_sort) {
-						parent.frames["main"].load_responderlist2(parent.frames["main"].resp_field, parent.frames["main"].resp_direct);
-						}
-					}
-				} else {
-				// do nothing
-				} */
 			}
 
 		$("div_assign_id").innerHTML = the_id_arr[4].trim();			// 2/19/12
-//		alert("201 " + the_id_arr[4].trim());
 		if (the_id_arr[4].trim() != dispatch)  {		// 1/21/11
 			dispatch = the_id_arr[4].trim();
 			unit_signal();								// sit scr to blue
 			}
-
 		if (the_id_arr[5].trim() != $("div_action_id").innerHTML)  {		// 2/25/12
 			misc_signal();													// situation button blue if ...
 			$("div_action_id").innerHTML = the_id_arr[5].trim();
@@ -363,7 +341,6 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 			the_time =  temp4;	// timestamp this unit, 	9/10/13
 			un_stat_chg(the_unit, the_status);	//		9/10/13
 			}
-// 									9/16/2015
 		var d = new Date();
 		var rightNow = d.getTime(); 									// millisecs since 1970/01/01
 		if ( rightNow > chk_osw_at ) {

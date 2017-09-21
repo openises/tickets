@@ -2799,7 +2799,7 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//	Assignments this Ticket
 		$responderID = $row['responder_id'];
 		$query_resp = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $responderID;	//	Responders assigned
-		$result_resp	= mysql_query($query_mg) or do_error($query_resp,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		$result_resp	= mysql_query($query_resp) or do_error($query_resp,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 		while($row_resp = stripslashes_deep(mysql_fetch_assoc($result_resp))) {
 			$continue = false;
 			if($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 4) {

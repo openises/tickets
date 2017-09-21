@@ -825,10 +825,21 @@ Changes for 3.20 - Major re-write
       Lists sorted by clicking on column heading.
 330.  Added “Txtlocal” as an SMS broadcast provider.
 331.  Added setting to allow default SMS for message sending.
+
+Changes for 3.21 - Maintenance release
+
+332.  Performance improvements to screen load times
+333.  Addition of ability to notify assigned units when Incident is closed or changes.
+
+Changes for 3.22 - Maintenance Release
+
+334.  Fixes to no-maps mode - failure to add new unit, situation screen not loading, not able to add incident.
+335.  Addition of Incident Nature to call board, fix to non show of apply all button when call board in frame.
+336.  Fix to incident close, shows error when notify units is switched on.
 	 
 <A NAME = 'bottom'></A>
 
-July '17
+August '17
 Arnie Shore
 Andy Harvey, UK
 

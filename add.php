@@ -1071,7 +1071,13 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
 		if (theForm.frm_description.value == "")	{errmsg+= "\t<?php print get_text('synopsis');?> is required\n";}
-		if ((theForm.frm_lat.value == 0) || (theForm.frm_lng.value == 0))		{errmsg+= "\tMap position is required\n";}
+<?php
+		if($gmaps || $good_internet) {
+?>
+			if ((theForm.frm_lat.value == 0) || (theForm.frm_lng.value == 0))		{errmsg+= "\tMap position is required\n";}
+<?php
+			}
+?>
 		if (theForm.frm_status.value==<?php print $GLOBALS['STATUS_SCHEDULED'];?>) {		//10/1/09
 			if (theForm.frm_year_booked_date.value == "NULL") 		{errmsg+= "\tScheduled date time error - Hours\n";}
 			if (theForm.frm_minute_booked_date.value == "NULL") 	{errmsg+= "\tScheduled date time error - Minutes\n";}

@@ -326,7 +326,7 @@ if ( ( ! ( is_empty() ) ) && ( is_ok() ) ) {
 			LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]user`		`u` 	ON (`u`.`responder_id` 	= `a`.`responder_id`)
 			WHERE ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
-			AND ((`on_scene` IS  NOT NULL) AND  (DATE_FORMAT(`on_scene`,'%y') <> '00')) ";
+			AND ( GREATEST (  `on_scene`, IFNULL(`u2fenr` , '1970-01-01 00:00:00' ), IFNULL(`u2farr`, '1970-01-01 00:00:00' ) ) = `on_scene` )";
 
 	$query [0] = "{$query_core} AND on_scene < (now() - interval {$osw_arr[0]} minute) AND `severity` <> {$GLOBALS['SEVERITY_NORMAL']} LIMIT {$limit}";	/*	PRIORITIES medium and high on-scene:		*/
 

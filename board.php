@@ -1312,8 +1312,8 @@ if(empty($_SESSION)) {		// expired?
 						$('add_btn').style.display='none';
 						$('mail_btn').style.display='none';
 						$('list_btn').style.display='none';
-						$('close_btn').style.display='none';
-						if ($('refr_btn')) {$('refr_btn').style.display='none';}
+						if($('close_btn')) {$('close_btn').style.display='none';}
+						if($('refr_btn')) {$('refr_btn').style.display='none';}
 						$('apply_btn').style.display='inline-block';
 						$('can_btn').style.display='inline-block';
 						}
@@ -1480,26 +1480,30 @@ if(empty($_SESSION)) {		// expired?
 
 // ================================ end of regions stuff
 
-				$query = "SELECT *, `as_of` AS `as_of`,
-					`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
-					`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
-					`u`.`user` AS `theuser`, `t`.`scope` AS `tick_scope`,
+				$query = "SELECT *, 
+					`as`.`id` AS `assign_id` ,
+					`as`.`comments` AS `assign_comments`,
+					`u`.`user` AS `theuser`, 
+					`t`.`scope` AS `tick_scope`,
 					`t`.`description` AS `tick_descr`,
 					`t`.`status` AS `tick_status`,
 					`t`.`street` AS `tick_street`,
 					`t`.`city` AS `tick_city`,
 					`t`.`state` AS `tick_state`,
 					`r`.`id` AS `unit_id`,
-					`r`.`name` AS `unit_name` ,
-					`r`.`type` AS `unit_type` ,
-					`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
-					FROM `$GLOBALS[mysql_prefix]assigns`
-					LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `a`.`resource_id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+					`r`.`name` AS `unit_name`,
+					`r`.`type` AS `unit_type`,
+					`i`.`type` AS `inc_type`,
+					`as`.`ticket_id` AS `ticket_id`,
+					`as`.`as_of` AS `assign_as_of`
+					FROM `$GLOBALS[mysql_prefix]assigns` `as`
+					LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 	`t` ON (`as`.`ticket_id` = `t`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 	`a` ON (`as`.`ticket_id` = `a`.`resource_id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]user`		 	`u` ON (`as`.`user_id` = `u`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 	`r` ON (`as`.`responder_id` = `r`.`id`)
+					LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	 	`i` ON (`t`.`in_types_id` = `i`.`id`)
 					{$where} AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') $hide_sql
-					GROUP BY `$GLOBALS[mysql_prefix]assigns`.`id`
+					GROUP BY `as`.`id`
 					ORDER BY {$order_by }";
 
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
@@ -1544,9 +1548,9 @@ if(empty($_SESSION)) {		// expired?
 
 					$header = "<TR CLASS='even'>";
 
-					$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_INC_PERC}%' onClick = 'document.can_Form.submit();' TITLE = 'Click to sort by Incident'><U>Incident</U></TD>";		// 9/27/08
+					$header .= "<TD COLSPAN=5 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_INC_PERC}%' onmouseover=\"Tip('Click to sort by Incident')\" onmouseout=\"UnTip()\" onClick = 'document.can_Form.submit();'><U>Incident</U></TD>";		// 9/27/08
 					$header .= "<TD>&nbsp;</TD>";
-					$header .= "<TD COLSPAN=9 ALIGN='center' CLASS='emphb 'WIDTH='{$TBL_UNIT_PERC}%' onClick = 'document.sort_Form.submit();'  TITLE = 'Click to sort by Unit'><U>" . get_text("Units") . "</U></TD>";			// 3/27/09
+					$header .= "<TD COLSPAN=9 ALIGN='center' CLASS='emphb 'WIDTH='{$TBL_UNIT_PERC}%' onmouseover=\"Tip('Click to sort by Unit')\" onmouseout=\"UnTip()\" onClick = 'document.sort_Form.submit();'  TITLE = 'Click to sort by Unit'><U>" . get_text("Units") . "</U></TD>";			// 3/27/09
 					$header .= "<TD>&nbsp;</TD>";
 					$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_CALL_PERC}%'>Dispatch</TD>";
 					$header .= "</TR>\n";
@@ -1556,6 +1560,7 @@ if(empty($_SESSION)) {		// expired?
 								<TD ALIGN='left'>" . cb_shorten("Open", $COLS_OPENED) . "</TD>
 								<TD ALIGN='left'>" . cb_shorten("Synopsis", $COLS_DESCR) . "</TD>
 								<TD ALIGN='left'>" . cb_shorten("Addr", $COLS_ADDR) . "</TD>
+								<TD ALIGN='left'>" . cb_shorten("Nature", $COLS_ADDR) . "</TD>
 								<TD ALIGN='center'>&nbsp;</TD>
 								<TD ALIGN='left' CLASS='emph'> " . cb_shorten("Name", $COLS_UNIT) . "</TD>
 								<TD ALIGN='center' TITLE='E-mail'><IMG SRC='mail.png'></TD>
@@ -1626,6 +1631,11 @@ if(empty($_SESSION)) {		// expired?
 								$short_addr = cb_shorten($address, $COLS_ADDR);
 								print "\t<TD onClick = {$doTick}(" . $row['ticket_id'] . ") CLASS='{$theClass}'
 									onmouseover=\"Tip('{$address}')\" ALIGN='left' onmouseout=\"UnTip()\">{$in_strike}{$short_addr}{$in_strikend}</TD>\n";		// address 8/24/08, 1/17/09
+
+								$incType = addslashes ($row['inc_type']);
+								$short_inctype = cb_shorten($row['inc_type'], $COLS_DESCR);
+								print "\t<TD onClick = $doTick(" . $row['ticket_id'] . ") CLASS='{$theClass}' ALIGN='left'
+									onmouseover=\"Tip('$incType')\" onmouseout=\"UnTip()\">{$in_strike} {$short_inctype}{$in_strikend}</TD>\n";		// call 8/24/08, 4/26/09							
 								} else {
 								print "<TD COLSPAN=4>[#{$row['ticket_id']}]</TD>";				// id only if absent
 								}

@@ -139,7 +139,7 @@ switch ($mode) {
 					LEFT JOIN `$GLOBALS[mysql_prefix]user`		`u` 	ON (`u`.`responder_id` 	= `a`.`responder_id`)
 					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	`s` 	ON (`r`.`un_status_id` 	= `s`.`id`)
 					WHERE ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
-					AND ((`on_scene` IS NOT NULL) AND (DATE_FORMAT(`on_scene`,'%y') <> '00')) ";
+					AND ( GREATEST (  `on_scene`, IFNULL(`u2fenr` , '1970-01-01 00:00:00' ), IFNULL(`u2farr`, '1970-01-01 00:00:00' ) ) = `on_scene` )";
 					}		// end function
 
 		function q0 ($lim) {	//	PRIORITIES medium and high on-scene:

@@ -177,11 +177,11 @@ function set_period(period) {
 	}
 	
 function pageLoaded() {
-	if(respFin && !facFin && !incFin && !logFin && !statSel && !facstatSel) {
+	if(respFin && !facFin && !incFin && !logFin) {
 		load_facilitylist(window.fac_field, window.fac_direct);
-		} else if(respFin && facFin && !incFin && !logFin && !facstatSel && !statSel) {
+		} else if(respFin && facFin && !incFin && !logFin) {
 		load_incidentlist(window.inc_field, window.inc_direct);			
-		} else if(respFin && facFin && incFin && !logFin && !facstatSel && !statSel) {
+		} else if(respFin && facFin && incFin && !logFin) {
 		load_regions();
 		if(!isGuest) {
 			if(showEvents == 1) {
@@ -192,11 +192,7 @@ function pageLoaded() {
 				}
 			}
 		get_scheduled_number();
-		} else if(incFin && respFin && facFin && logFin && !facstatSel && (!statSel || statSel)) {
-		get_fac_status_selectors();
-		} else if(incFin && respFin && facFin && logFin && (facstatSel || !facstatSel) && !statSel) {
-		get_status_selectors();
-		} else if(incFin && respFin && facFin && logFin && facstatSel && statSel) {
+		} else if(incFin && respFin && facFin && logFin) {
 		pagetimerEnd = new Date();
 		var elapsedTime = pagetimerEnd - window.pagetimerStart;
 		var theTimeLoadString = "Page Loaded in: " + pageLoadTime + " seconds, Data Loaded in " + elapsedTime/1000 + " seconds";
@@ -208,7 +204,6 @@ function pageLoaded() {
 		window.statSel = false;
 		window.facstatSel = false;
 		}
-	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function do_responder_refresh() {
@@ -383,6 +378,7 @@ function set_size() {
 		}
 	get_scheduled_number();
 	loadData();
+	set_fontsizes(viewportwidth, "fullscreen");
 	}
 	
 function loadData() {
@@ -470,11 +466,11 @@ if (is_guest()) {
 		$term_str = ($temp )? $temp : "Mobile" ;
 
 ?>
-	try {
 		parent.frames["upper"].$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";	
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].$("script").innerHTML  = "<?php print LessExtension(basename(__FILE__));?>";
+	try {
 		parent.frames["upper"].$("main_body").style.backgroundColor  = "<?php print get_css('page_background', $day_night);?>";
 		parent.frames["upper"].$("main_body").style.color  = "<?php print get_css('normal_text', $day_night);?>";
 		parent.frames["upper"].$("tagline").style.color  = "<?php print get_css('titlebar_text', $day_night);?>";
@@ -804,6 +800,7 @@ if(!isGuest) {
 		$('stats_table').style.width = leftcolwidth + "px";
 		}
 	}
+set_fontsizes(viewportwidth, "fullscreen");
 // end of set widths
 var theLocale = <?php print get_variable('locale');?>;
 $('controls').innerHTML = controlsHTML;

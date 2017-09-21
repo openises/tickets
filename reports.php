@@ -256,11 +256,13 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			litSpecific();
 			$('dates_table').style.display = $('dates_table2').style.display = "none";
 			$('specdate_sub').style.display ='inline-block';
+			$('lock_s').innerHTML = "Use Generic Dates";
 			} else {
 			specificdates = false;
 			unlitSpecific();
 			$('dates_table').style.display = $('dates_table2').style.display = "block";
 			$('specdate_sub').style.display ='none';
+			$('lock_s').innerHTML = "Use Specific Dates";
 			}
 		}
 		

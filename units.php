@@ -460,8 +460,10 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 		if ($_getgoedit == 'true') {
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
 			$station = TRUE;			//
-			$the_lat = empty($_POST['frm_lat'])? "NULL" : quote_smart(trim($_POST['frm_lat'])) ; // 2/24/09
+			$the_lat = empty($_POST['frm_lat'])? "NULL" : quote_smart(trim($_POST['frm_lat'])) ;
 			$the_lng = empty($_POST['frm_lng'])? "NULL" : quote_smart(trim($_POST['frm_lng'])) ;
+			$frm_ringfence = empty($_POST['frm_ringfence'])? 0 : quote_smart(trim($_POST['frm_ringfence'])) ;
+			$frm_excl_zone = empty($_POST['frm_excl_zone'])? 0 : quote_smart(trim($_POST['frm_excl_zone'])) ;
 			$status_updated = (($_POST['frm_status_update'] == 1) || ($_POST['frm_status_updated'] == "")) ? $now : $_POST['frm_status_updated'];	//	6/21/13
 			$curr_groups = $_POST['frm_exist_groups']; 	//	4/14/11
 			$groups = isset($_POST['frm_group']) ? ", " . implode(',', $_POST['frm_group']) . "," : $_POST['frm_exist_groups'];	//	3/28/12 - fixes error when accessed from view ticket screen..	
@@ -512,8 +514,8 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 				`followmee_tracker`= " . 	quote_smart(trim($_POST['frm_followmee_tracker'])) . ",
 				`traccar`= " . 		quote_smart(trim($_POST['frm_traccar'])) . ",
 				`javaprssrvr`= " . 	quote_smart(trim($_POST['frm_javaprssrvr'])) . ",
-				`ring_fence`= " . 	quote_smart(trim($_POST['frm_ringfence'])) . ",		
-				`excl_zone`= " . 	quote_smart(trim($_POST['frm_excl_zone'])) . ",						
+				`ring_fence`= " . 	quote_smart(trim($frm_ringfence)) . ",		
+				`excl_zone`= " . 	quote_smart(trim($frm_excl_zone)) . ",						
 				`direcs`= " . 		quote_smart(trim($_POST['frm_direcs'])) . ",
 				`lat`= " . 			$the_lat . ",
 				`lng`= " . 			$the_lng . ",
@@ -584,6 +586,8 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 		$followmee_tracker = 	(empty($_POST['frm_followmee_tracker']))?	0: quote_smart(trim($_POST['frm_followmee_tracker'])) ;	//	1/30/14
 		$traccar =				(empty($_POST['frm_traccar']))?				0: quote_smart(trim($_POST['frm_traccar'])) ;			//	6/30/17
 		$javaprssrvr =			(empty($_POST['frm_javaprssrvr']))? 		0: quote_smart(trim($_POST['frm_javaprssrvr'])) ;		//	6/30/17
+		$frm_ringfence = 		(empty($_POST['frm_ringfence']))? 			0: quote_smart(trim($_POST['frm_ringfence'])) ;
+		$frm_excl_zone = 		(empty($_POST['frm_excl_zone']))? 			0: quote_smart(trim($_POST['frm_excl_zone'])) ;
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
 		$theFac = 0;
 		if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
@@ -628,8 +632,8 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 				quote_smart(trim($_POST['frm_followmee_tracker'])) . "," .
 				quote_smart(trim($_POST['frm_traccar'])) . "," .
 				quote_smart(trim($_POST['frm_javaprssrvr'])) . "," .
-				quote_smart(trim($_POST['frm_ringfence'])) . "," .	
-				quote_smart(trim($_POST['frm_excl_zone'])) . "," .					
+				quote_smart(trim($frm_ringfence)) . "," .	
+				quote_smart(trim($frm_excl_zone)) . "," .					
 				quote_smart(trim($_POST['frm_direcs'])) . "," .
 				quote_smart(trim($_POST['frm_contact_name'])) . "," .
 				quote_smart(trim($_POST['frm_contact_via'])) . "," .
