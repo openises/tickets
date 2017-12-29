@@ -412,27 +412,27 @@ function set_initial_pri_disp() {
 function hideGroup(color, category) {			// 8/7/09 Revised function to correct incorrect display, revised 12/03/10 completely revised
 	var priority = color;
 	var priority_name="";
-	if(priority == 1) {
+	if(priority == 0) {
 		priority_name="normal";
-	}
-	if(priority == 2) {
+		}
+	if(priority == 1) {
 		priority_name="medium";
-	}
-	if(priority == 3) {
+		}
+	if(priority == 2) {
 		priority_name="high";
-	}
+		}
 	if(priority == 4) {
 		priority_name="all";
-	}
+		}
 	if(priority == 5) {
 		priority_name="none";
-	}
+		}
 
-	if(priority == 1) {
+	if(priority == 0) {
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
-					tmarkers[j].addTo(map);	
+					tmarkers[i].addTo(map);	
 					}
 				if ((tmarkers[i].id != priority) && (tmarkers[i].category == category)) {
 					map.removeLayer(tmarkers[i]);		
@@ -448,7 +448,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		$('pri_all').style.display = '';
 		$('pri_none').style.display = '';
 		}	//	end if priority == 1
-	if(priority == 2) {
+	if(priority == 1) {
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
@@ -468,7 +468,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		$('pri_all').style.display = '';
 		$('pri_none').style.display = '';
 		}	//	end if priority == 2
-	if(priority == 3) {
+	if(priority == 2) {
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
@@ -1760,7 +1760,6 @@ function do_coords(inlat, inlng) {
 	var str = "Position Data\n\n\n" + inlat + ", " + inlng + "\n";
 	str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
 	str += lat2ddm(inlat) + ", " +lng2ddm(inlng);
-	alert(str);
 	return str;
 	}
 
@@ -3579,16 +3578,12 @@ function load_incidentlist(sort, dir) {
 		if(window.inc_period_changed == 1) {
 			if($('map_canvas')) {	
 				for(var key in tmarkers) {
-					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
-					}
-				}
-			if($('map_canvas')) {	
-				for(var key in tmarkers) {
-					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+					if(tmarkers[key]) {map.removeLayer(tmarkers[key]); tmarkers[key] = false;}
 					}
 				}
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
+			window.do_inc_refresh = true;
 			}
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;

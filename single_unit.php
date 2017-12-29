@@ -14,34 +14,21 @@ error_reporting(E_ALL);
 session_write_close();
 require_once($_SESSION['fip']);		// 7/28/10
 require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
-	$query = "SELECT *,
-		`problemstart` AS `problemstart`,
-		`problemend` AS `problemend`,
-		`booked_date` AS `booked_date`,		
-		`date` AS `date`,
-		`t`.`updated` AS updated,
-		`t`.`description` AS `tick_descr`,
-		`t`.`lat` AS `lat`,
-		`t`.`lng` AS `lng`,
-		`t`.`_by` AS `call_taker`,
-		`t`.`street` AS `tick_street`,
-		`t`.`city` AS `tick_city`,
-		`t`.`state` AS `tick_state`,				 
-		`f`.`name` AS `fac_name`,
-		`rf`.`name` AS `rec_fac_name`,
-		`rf`.`street` AS `rec_fac_street`,
-		`rf`.`city` AS `rec_fac_city`,
-		`rf`.`state` AS `rec_fac_state`,
-		`rf`.`lat` AS `rf_lat`,
-		`rf`.`lng` AS `rf_lng`,
-		`f`.`lat` AS `fac_lat`,
-		`f`.`lng` AS `fac_lng` FROM `$GLOBALS[mysql_prefix]ticket` `t`  
-		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`t`.`in_types_id` = `ty`.`id`)		
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON (`f`.`id` = `t`.`facility`)
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `t`.`rec_facility`) 
-		WHERE `t`.`id`={$_GET['ticket_id']} LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
+$id = mysql_real_escape_string($_GET['id']);
+$query	= "SELECT *, 
+			`r`.`updated` AS `r_updated`,
+			`r`.`id` AS `unit_id`,
+			`r`.`name` AS `unit_name`,
+			`s`.`status_val` AS `un_status_val`,
+			`s`.`bg_color` AS `st_background`,
+			`s`.`text_color` AS `st_textcolor`,
+			`t`.`name` AS `typename`
+			FROM `$GLOBALS[mysql_prefix]responder` `r`
+			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON `s`.id=`r`.`un_status_id`
+			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON `t`.id=`r`.`type`	
+			WHERE `r`.`id`={$id} LIMIT 1";
+$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$row	= stripslashes_deep(mysql_fetch_assoc($result));
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -67,17 +54,17 @@ require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 <?php
 			if (!(is_guest())) {
 ?>
-				<SPAN id='edit_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.opener.parent.frames["main"].location="edit.php?id=<?php print $_GET['ticket_id'];?>";'><SPAN STYLE='float: left;'><?php print get_text("Edit");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
+				<SPAN id='edit_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.opener.parent.frames["main"].location="?func=responder&edit=true&id&id=<?php print $_GET['id'];?>";'><SPAN STYLE='float: left;'><?php print get_text("Edit");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
 <?php
 				}
 ?>
 		</DIV>
 		<DIV id='leftcol' style='position: absolute; left: 2%; top: 70px; z-index: 3; text-align: center;'>
 <?php
-			if (!(empty($row_ticket))) {								// 4/30/10
-				print do_ticket_wm($row_ticket, $the_width, FALSE, FALSE);
+			if (!(empty($row))) {
+				print do_unit($row, $the_width, FALSE, FALSE);
 				} else {
-				print "<CENTER><H3>No data for Ticket # {$_GET['ticket_id']} </H3>";
+				print "<CENTER><H3>No data for Unit # {$id} </H3>";
 				}
 ?>
 		</DIV>

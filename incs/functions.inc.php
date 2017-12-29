@@ -646,7 +646,7 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$caption = get_text("Actions");
 	$actr=0;	
-	if ((mysql_num_rows($result)) > 0) {
+	if (mysql_num_rows($result) > 0) {
 		$print .= "<TABLE style='width: 100%;' ID='actions'>";	//	Actions Table
 		$print .= "<TR CLASS='heading' style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";		
 		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
@@ -916,7 +916,7 @@ function show_messages ($the_id, $theSort="date", $links, $display) {			/* list 
 function get_un_status_name($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
 	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
+	if($result && mysql_num_rows($result) > 0) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 		return $row['status_val'];
 		} else {
@@ -965,7 +965,7 @@ function get_fac_status_cols($id) {
 	return $stat_cols;
 	}
 
-function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/14
+function show_log($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/14
 	global $evenodd ;	// class names for alternating table row colors
 	require('log_codes.inc.php'); 									// 9/29/10
 	$query = "
@@ -990,8 +990,7 @@ function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$i = 0;
 	$print = "<TABLE style='width: 100%;' ID='theLog'>";
-
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$code = $row['code'];
 		if ($i==0) {				// 11/20/09
 			$print .= "<TR CLASS='heading' STYLE='width: 98%;'><TD CLASS='heading text text_bold' TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><U>Log: <I>". shorten($row['tickname'], 32) . "</I></U></TD></TR>";
@@ -4375,7 +4374,38 @@ function valid_fac_status($id) {
 		} else {
 		return false;
 		}
-	}	
+	}
+
+function get_roster($current=null) {	//	9/6/13
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` ORDER BY `person_identifier`";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$the_ret = "<SELECT CLASS='text' NAME='frm_roster_id' onChange = 'get_roster_details(this.form, this.options[this.selectedIndex].value);' >";
+	$the_ret .= "<OPTION VALUE='0' SELECTED>Select a Person</OPTION>";	
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$sel = (($current) && ($current == $row['id'])) ? "SELECTED " : "";
+		$the_ret .= "<OPTION VALUE=" .  $row['id'] . " " . $sel . ">" . $row['person_identifier'] . "</OPTION>";
+		}
+	$the_ret .= "</SELECT>";
+	return $the_ret;
+	}
+
+function get_user_details($rosterID) {	//	9/6/13
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` WHERE `id` = '" . $rosterID . "' LIMIT 1"; 
+	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_affected_rows() != 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
+		$the_ret .= "Street: " . $row['address'] . "<BR />";
+		$the_ret .= "State: " . $row['state'] . "<BR />";
+		$the_ret .= "Email: " . $row['email'] . "<BR />";
+		$the_ret .= "Home phone: " . $row['homephone'] . "<BR />";
+		$the_ret .= "Work Phone: " . $row['workphone'] . "<BR />";
+		$the_ret .= "Cellphone: " . $row['cellphone'] . "<BR />";
+		} else {
+		$the_ret = "N/A";
+		}
+	return $the_ret;
+	}
 
 if(checkColExists('std_msgs', 'name')) {$std_messages = get_standard_messages();}
 ?>

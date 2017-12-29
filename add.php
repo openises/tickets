@@ -127,7 +127,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 5/23/2015 - revised to handle new 'addr_source' functions
 10/3/2015 - revised to accommodate V3 map functions (AS)
 */
-
+/* $temp = get_variable('_inc_num');										// 3/2/11
+$inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
+dump($inc_num_ary); */
 if (empty($_GET)) {
 	if (mysql_table_exists("$GLOBALS[mysql_prefix]caller_id")) {				// 6/9/11
 		$cid_calls = $cid_name = $cid_phone = $cid_street = $cid_city = $cid_state = $cid_lat = $cid_lng = "";
@@ -199,6 +201,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		function updt_ticket($id) {							/* 1/25/09 */
 			global $addrs, $_POST, $NOTIFY_TICKET;	//	8/28/13
 
+			$ticket_id = $id;
 			$post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
 			$post_frm_meridiem_booked_date = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_booked_date'])))) ) ? "" : $_POST['frm_meridiem_booked_date'] ; //10/1/09
 			$post_frm_affected = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_affected'])))) ) ? "" : $_POST['frm_affected'] ;
@@ -249,32 +252,76 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 			$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 			if(empty($post_frm_owner)) {$post_frm_owner=0;}
-
-
-//			$inc_num_ary = unserialize (get_variable('_inc_num'));					// 11/13/10
+			
+			//$inc_num_ary = unserialize (get_variable('_inc_num'));											// 11/13/10
 			$temp = get_variable('_inc_num');										// 3/2/11
-			snap( __LINE__ , $temp );
 			$inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
- 			$name_rev = $_POST['frm_scope'];
-			snap( __LINE__ , $inc_num_ary[0] );
+			
+			// Show serial and format
+			switch ((int) $inc_num_ary[0]) {
+				case 0:			// none
+					$inc_serial="";													// empty
+					break;
+				case 1: 		// number only
+					$inc_serial = (string) $inc_num_ary[3]. $inc_num_ary[2] . " " ;					// number and trailing separator if any
+					break;
 
-			if ($inc_num_ary[0] == 0 ) {											// no auto numbering scheme
+				case 2:			// labeled
+					$inc_serial = $inc_num_ary[1]. $inc_num_ary[2] . (string) $inc_num_ary[3] . " "   ;		// label, separator, number
+					break;
+
+				case 3:			// year
+					$inc_serial = $inc_num_ary[5]  . $inc_num_ary[2] . (string) $inc_num_ary[3] . " " ;		// year, separator, number
+					break;
+
+				default:
+					alert("ERROR @ " + "<?php print __LINE__;?>");
+				}
+			
+			$inc_nature = get_type($_POST['frm_in_types_id']);
+			
+			$prepend_nature = (bool)($inc_num_ary[4]==1)? $inc_nature: "" ;
+
+			if ($inc_num_ary[0] != 0 ) {											// no auto numbering scheme
 				switch (get_variable('serial_no_ap')) {								// incident name revise -1/22/09
-
 					case 0:								/*  no serial no. */
 					    $name_rev = $_POST['frm_scope'];
 					    break;
 					case 1:								/*  prepend  */
-						$name_rev =  $id . "/" . $_POST['frm_scope'];
+						$name_rev =  $ticket_id . "/" . $_POST['frm_scope'];
 					    break;
 					case 2:								/*  append  */
-					    $name_rev = $_POST['frm_scope'] . "/" .  $id;
+					    $name_rev = $_POST['frm_scope'] . "/" .  $ticket_id;
 					    break;
 					default:							/* error????  */
 					    $name_rev = " error  error  error ";
 					}				// end switch
 															// 8/23/08, 9/20/08, 8/13/09
-				}		// end if()
+				} else {
+				$name_rev = $_POST['frm_scope'];
+				}
+			$spacer = ($inc_num_ary[2] != "") ? $inc_num_ary[2] : "";
+					
+			$scope = $inc_serial . $name_rev . $spacer . $prepend_nature;	//	set final scope to be inserted to ticket_id
+			
+			// increment the serial if used
+			
+			$the_year = date("y");
+			if ((((int) $inc_num_ary[0]) == 3) && (!($inc_num_ary[5] == $the_year))) {				// year style and change?
+				$inc_num_ary[3] = 1;																// roll over and start at 1
+				$inc_num_ary[5] = $the_year;
+				} else {
+				if (((int) $inc_num_ary[0])>0) {		// step to next no. if scheme in use
+					$inc_num_ary[3]++;				// do the deed for next use
+					}
+				}			// end if/else - 10/11/2013
+
+			$out_str = base64_encode(serialize ($inc_num_ary));						// 3/2/11
+
+			$query = "UPDATE`$GLOBALS[mysql_prefix]settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
+			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			
+			// end of serial increment
 
 			$facility_id = 		empty($_POST['frm_facility_id'])?		0 : trim($_POST['frm_facility_id']);				// 9/28/09
 			$rec_facility_id = 	empty($_POST['frm_rec_facility_id'])?	0 : trim($_POST['frm_rec_facility_id']);				// 9/28/09
@@ -313,7 +360,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				`rec_facility`= " . 	quote_smart($rec_facility_id) . ",
 				`lat`= " . 			$the_lat . ",
 				`lng`= " . 			$the_lng . ",
-				`scope`= " . 		quote_smart(trim($name_rev)) . ",
+				`scope`= " . 		quote_smart(trim($scope)) . ",
 				`owner`= " . 		quote_smart(trim($post_frm_owner)) . ",
 				`severity`= " . 	quote_smart(trim($_POST['frm_severity'])) . ",
 				`in_types_id`= " . 	quote_smart(trim($_POST['frm_in_types_id'])) . ",
@@ -496,37 +543,22 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			if (intval($rec_facility_id) >  0) {
 				do_log($GLOBALS['LOG_CALL_REC_FAC_SET'], $id, 0 ,0 ,0 ,$rec_facility_id);	// 6/20/10 - 7/11/10
 				}
-
-			$the_year = date("y");
-			if ((((int) $inc_num_ary[0]) == 3) && (!($inc_num_ary[5] == $the_year))) {				// year style and change?
-				$inc_num_ary[3] = 1;																// roll over and start at 1
-				$inc_num_ary[5] = $the_year;
-				}
-			else {
-				if (((int) $inc_num_ary[0])>0) {		// step to next no. if scheme in use
-					$inc_num_ary[3]++;				// do the deed for next use
-					}
-				}			// end if/else - 10/11/2013
-
-			$out_str = base64_encode(serialize ($inc_num_ary));						// 3/2/11
-
-			$query = "UPDATE`$GLOBALS[mysql_prefix]settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			return $name_rev;
+			$ret_arr = array();
+			$ret_arr[0] = $name_rev;
+			$ret_arr[1] = $scope;
+			return $ret_arr;
 			}				// end function updt ticket()
 
-		$ticket_name = updt_ticket(trim($_POST['ticket_id']));				// 1/25/09
+		$ticket_name_ary = updt_ticket(trim($_POST['ticket_id']));				// 1/25/09
+		$ticket_name = $ticket_name_ary[0];
+		$ticket_scope = $ticket_name_ary[1];
 		$addrs = notify_user($_POST['ticket_id'],$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array of adddr's for notification, or FALSE
 		if ($addrs) {				// any addresses?	8/28/13
 			$theTo = implode("|", array_unique($addrs));
 			$theText = "New " . get_text("Incident");
 			mail_it ($theTo, "", $theText, $_POST['ticket_id'], 1 );
 			}				// end if/else ($addrs)
-		if((intval(get_variable('auto_route'))==1) && ($in_win == 0)) {
-			$form_name = "to_routes";
-			} else if((intval(get_variable('auto_route'))==0) && ($in_win == 0)) {
-			$form_name = "to_main";
-			}
+
 ?>
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml">
@@ -555,8 +587,13 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>
 		</HEAD>
 <?php
-		if($in_win == 0) {
-			$onloadStr = "document." . $form_name . ".submit();";
+		if($in_win) {
+			if((intval(get_variable('auto_route'))==1) && ($in_win == 0)) {
+				$onloadStr = "setTimeout(function(){ document.to_routes.submit();}, 8000);";
+				} else if((intval(get_variable('auto_route'))==0) && ($in_win == 0)) {
+//				$onloadStr = "setTimeout(function(){ document.to_main.submit();}, 8000);";
+				$onloadStr = "";
+				}
 			} else {
 			$onloadStr = "";
 			}
@@ -565,7 +602,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <?php
 
 		$now = time() - (intval(get_variable('delta_mins')*60));		// 6/20/10
-		print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: '{$ticket_name}  ' Added by '{$_SESSION['user_id']}' at " . date(get_variable("date_format"),$now) . "</FONT></CENTER><BR /><BR />";
+		print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: '{$ticket_scope} ' ({$ticket_name}) Added by '{$_SESSION['user_id']}' at " . date(get_variable("date_format"),$now) . "</FONT></CENTER><BR /><BR />";
 		if($in_win == 1 || get_variable("calltaker_mode") == 1) {
 ?>
 			<CENTER><SPAN id='cont_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'>FINISH</SPAN></CENTER>
@@ -576,7 +613,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			<CENTER>
 			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_main.submit();'>Main</SPAN><BR />			
 			</FORM>
-
+			<BR />
 			<FORM NAME='to_routes' METHOD='get' ACTION='<?php print $_SESSION['routesfile'];?>'>
 			<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print $_POST['ticket_id'];?>' />
 			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_routes.submit();'>Routes</SPAN>
@@ -708,28 +745,28 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		fieldwidth = colwidth * .6;
 		medfieldwidth = colwidth * .3;		
 		smallfieldwidth = colwidth * .2;
-		$('outer').style.width = outerwidth + "px";
-		$('outer').style.height = outerheight + "px";
-		$('leftcol').style.width = colwidth + "px";
-		$('leftcol').style.height = colheight + "px";	
-		$('main_table').style.width = colwidth + "px";
-		$('rightcol').style.width = colwidth + "px";
-		$('rightcol').style.height = colheight + "px";	
-		$('map_canvas').style.width = mapWidth + "px";
-		$('map_canvas').style.height = mapHeight + "px";
-		$('map_caption').style.width = mapWidth + "px";
-		$('street').style.width = fieldwidth + "px";
-		$('about').style.width = fieldwidth + "px";
-		$('toaddress').style.width = fieldwidth + "px";
-		$('scope').style.width = fieldwidth + "px";
-		$('911').style.width = fieldwidth + "px";
-		$('contact').style.width = fieldwidth + "px";
-		$('description').style.width = fieldwidth + "px";
-		$('comments').style.width = fieldwidth + "px";
-		$('filename').style.width = fieldwidth + "px";
-		$('facy').style.width = medfieldwidth + "px";
-		$('recfacy').style.width = medfieldwidth + "px";
-		$('my_txt').style.width = smallfieldwidth + "px";
+		if($('outer')) {$('outer').style.width = outerwidth + "px";}
+		if($('outer')) {$('outer').style.height = outerheight + "px";}
+		if($('leftcol')) {$('leftcol').style.width = colwidth + "px";}
+		if($('leftcol')) {$('leftcol').style.height = colheight + "px";}
+		if($('main_table')) {$('main_table').style.width = colwidth + "px";}
+		if($('rightcol')) {$('rightcol').style.width = colwidth + "px";}
+		if($('rightcol')) {$('rightcol').style.height = colheight + "px";}
+		if($('map_canvas')) {$('map_canvas').style.width = mapWidth + "px";}
+		if($('map_canvas')) {$('map_canvas').style.height = mapHeight + "px";}
+		if($('map_caption')) {$('map_caption').style.width = mapWidth + "px";}
+		if($('street')) {$('street').style.width = fieldwidth + "px";}
+		if($('about')) {$('about').style.width = fieldwidth + "px";}
+		if($('toaddress')) {$('toaddress').style.width = fieldwidth + "px";}
+		if($('scope')) {$('scope').style.width = fieldwidth + "px";}
+		if($('911')) {$('911').style.width = fieldwidth + "px";}
+		if($('contact')) {$('contact').style.width = fieldwidth + "px";}
+		if($('description')) {$('description').style.width = fieldwidth + "px";}
+		if($('comments')) {$('comments').style.width = fieldwidth + "px";}
+		if($('filename')) {$('filename').style.width = fieldwidth + "px";}
+		if($('facy')) {$('facy').style.width = medfieldwidth + "px";}
+		if($('recfacy')) {$('recfacy').style.width = medfieldwidth + "px";}
+		if($('my_txt')) {$('my_txt').style.width = smallfieldwidth + "px";}
 		map.invalidateSize();
 		}
 	
@@ -859,14 +896,13 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		$('repeats').innerHTML = "(" + result[0].trim() + ")";		// prior calls this phone no. - 9/29/09
 		if (!(result.length>2)) {
 <?php
-	if (get_variable("locale") ==0) {				// USA only		// 10/2/09
+			if (get_variable("locale") ==0) {				// USA only		// 10/2/09
 ?>
-			alert("lookup failed");
+				alert("lookup failed");
 <?php
-		}
+				}
 ?>
-			}
-		else {				// 10/2/2015
+			} else {				// 10/2/2015
 			document.add.frm_contact.value=result[1].trim();	// name
 			document.add.frm_phone.value=result[2].trim();		// phone
 			document.add.frm_street.value=result[3].trim();		// street
@@ -880,7 +916,6 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				}
 //			else if ((result[3].length>0) && (result[4].length>0) && (result[5].length>0)) {		// 4/27/10
 			else if ( isOKCoord ( result[7].trim() ) && ( isOKCoord ( result[8].trim() ) ) ) {			// 10/3/2015
-
 				pt_to_map (document.add, result[7].trim(), result[8].trim());	// (my_form, lat, lng) - 10/2/2015
 
 				}
@@ -1008,27 +1043,13 @@ require_once('./incs/all_forms_js_variables.inc.php');
 	var tbd_str = "TBD";									// 1/11/09
 	var user_inc_name = false;							// 4/21/10
 
-	function do_inc_name(str, indx) {								// 10/4/08, 7/7/09
-<?php
-
-		$temp = get_variable('_inc_num');										// 3/2/11
-
-		$inc_num_ary = (strpos($temp, '{')>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
-
-		if (intval($inc_num_ary[4])>0) {
-?>
-			if (document.add.frm_scope.value.trim()==tbd_str) {document.add.frm_scope.value= "";}
-			ldg_sl_str = (document.add.frm_scope.value.trim().length>0) ? "/" : "";				// other input?
-			document.add.frm_scope.value += ldg_sl_str + str + "/";								// 11/13/10
-<?php
-			}
-?>
+	function do_inc_protocol(indx) {								// 10/4/08, 7/7/09
 		if (window.protocols && window.protocols[indx]) {
 			$('proto_cell').innerHTML = protocols[indx];
 			} else {
 			$('proto_cell').innerHTML = "";
 			}
-		}			// end function do_inc_name()
+		}			// end function do_inc_protocol()
 
 	function datechk_s(theForm) {		// pblm start vs now
 		var start = new Date();
@@ -1448,33 +1469,6 @@ $do_inwin = ($in_win) ? $loc_startup : "ck_frames();";
 <?php
 require_once('./incs/links.inc.php');
 
-//$inc_num_ary = unserialize (get_variable('_inc_num'));											// 11/13/10
-$temp = get_variable('_inc_num');										// 3/2/11
-$inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
-switch ((int) $inc_num_ary[0]) {
-    case 0:			// none
-   		$inc_name="";													// empty
-    	break;
-    case 1: 		// number only
-		$inc_name = (string) $inc_num_ary[3]. $inc_num_ary[2] . " " ;					// number and trailing separator if any
-    	break;
-
-    case 2:			// labeled
-		$inc_name = $inc_num_ary[1]. $inc_num_ary[2] . (string) $inc_num_ary[3] . " "   ;		// label, separator, number
-    	break;
-
-    case 3:			// year
-		$inc_name = $inc_num_ary[5]  . $inc_num_ary[2] . (string) $inc_num_ary[3] . " " ;		// year, separator, number
-		break;
-
-    default:
-    	alert("ERROR @ " + "<?php print __LINE__;?>");
-	}
-
-$do_inc_nature = (bool)($inc_num_ary[4]==1)? "true": "false" ;		//
-
-print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
-
 if (!(mysql_table_exists("$GLOBALS[mysql_prefix]places"))) {$city_name_array_str="";}		// 2/21/11 - build array of city names for JS usage
 else {				// 3/29/2014
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` =  'city' ORDER BY `id`";		// get all city names
@@ -1598,17 +1592,14 @@ if (intval (get_variable('addr_source')) > 0 ) {
 
 	function do_selected_addr (payload) {	     		// handles selected item for form  fill-in
 		document.getElementById("addr_list").innerHTML = "";
-		var payload_arr = payload.split("/",8)
-//		document.add..value = payload_arr[0];							// jc_911 id - utility TBD
+		var payload_arr = payload.split("/",8);
 		document.add.frm_lat.value = 			payload_arr[1];			// lat
 		document.add.frm_lng.value = 			payload_arr[2];			// lng
-
 		do_coords(document.add.frm_lat.value, document.add.frm_lng.value );
-
-//		var sep = (payload_arr[3].length == 0) ? "" : " ";				// house number defined?
 		document.add.frm_street.value = 		payload_arr[3];			// street
 		document.add.frm_address_about.value = 	payload_arr[4];			// about/community
 		document.add.frm_city.value = 			payload_arr[5];			// city
+		loc_lkup(document.add);
 		do_lat (parseFloat(payload_arr[1]));
 		do_lng (parseFloat(payload_arr[2]));
 		pt_to_map (document.add, parseFloat(payload_arr[1]), parseFloat(payload_arr[2]));		// lat, lng as floats
@@ -1770,7 +1761,7 @@ if (intval (get_variable('addr_source')) > 0 ) {
 				<TD CLASS="td_label text" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_nature"];?>');"><?php print $nature;?>: <font color='red' size='-1'>*</font></TD>
 				<TD></TD>
 				<TD class='td_data text'>
-					<SELECT id='sel_in_types_id' NAME="frm_in_types_id"  tabindex=60 onChange="do_set_severity (this.selectedIndex); do_inc_name(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());">	<!--  10/4/08 -->
+					<SELECT id='sel_in_types_id' NAME="frm_in_types_id"  tabindex=60 onChange="do_set_severity (this.selectedIndex); do_inc_protocol(this.options[selectedIndex].value.trim());">	<!--  10/4/08 -->
 						<OPTION VALUE=0 SELECTED>TBD</OPTION>				<!-- 1/11/09 -->
 <?php
 						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
@@ -2008,7 +1999,6 @@ if (intval (get_variable('addr_source')) > 0 ) {
 <?php
 					}										// end else {} 11/13/10
 ?>
-			</TR>
 			<TR CLASS='even'>
 				<TD COLSPAN=3 ALIGN='center'><HR SIZE=1 COLOR=BLUE WIDTH='60%' /></TD>
 			</TR>
@@ -2212,7 +2202,7 @@ if (intval (get_variable('addr_source')) > 0 ) {
 <?php
 				if ($gmaps || $good_internet) {
 ?>
-					<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
+					<DIV id='rightcol' style='position: relative; left: 20px; top: 10px; float: left;'>
 <?php
 					if($gmaps) {
 ?>
@@ -2280,28 +2270,28 @@ if ($gmaps || $good_internet) {
 	fieldwidth = colwidth * .5;
 	medfieldwidth = colwidth * .3;	
 	smallfieldwidth = colwidth * .2;
-	$('outer').style.width = outerwidth + "px";
-	$('outer').style.height = outerheight + "px";
-	$('leftcol').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
-	$('main_table').style.width = colwidth + "px";
+	if($('outer')) {$('outer').style.width = outerwidth + "px";}
+	if($('outer')) {$('outer').style.height = outerheight + "px";}
+	if($('leftcol')) {$('leftcol').style.width = colwidth + "px";}
+	if($('leftcol')) {$('leftcol').style.height = colheight + "px";}
+	if($('main_table')) {$('main_table').style.width = colwidth + "px";}
 	if($('rightcol')) {$('rightcol').style.width = colwidth + "px";}
-	if($('rightcol')) {$('rightcol').style.height = colheight + "px";}	
-	$('map_canvas').style.width = mapWidth + "px";
-	$('map_canvas').style.height = mapHeight + "px";
-	$('map_caption').style.width = mapWidth + "px";
-	$('street').style.width = fieldwidth + "px";
-	$('about').style.width = fieldwidth + "px";
-	$('toaddress').style.width = fieldwidth + "px";
-	$('scope').style.width = fieldwidth + "px";
-	$('911').style.width = fieldwidth + "px";
-	$('contact').style.width = fieldwidth + "px";
-	$('description').style.width = fieldwidth + "px";	
-	$('comments').style.width = fieldwidth + "px";
-	$('filename').style.width = fieldwidth + "px";
-	$('facy').style.width = medfieldwidth + "px";
-	$('recfacy').style.width = medfieldwidth + "px";
-	$('my_txt').style.width = smallfieldwidth + "px";
+	if($('rightcol')) {$('rightcol').style.height = colheight + "px";}
+	if($('map_canvas')) {$('map_canvas').style.width = mapWidth + "px";}
+	if($('map_canvas')) {$('map_canvas').style.height = mapHeight + "px";}
+	if($('map_caption')) {$('map_caption').style.width = mapWidth + "px";}
+	if($('street')) {$('street').style.width = fieldwidth + "px";}
+	if($('about')) {$('about').style.width = fieldwidth + "px";}
+	if($('toaddress')) {$('toaddress').style.width = fieldwidth + "px";}
+	if($('scope')) {$('scope').style.width = fieldwidth + "px";}
+	if($('911')) {$('911').style.width = fieldwidth + "px";}
+	if($('contact')) {$('contact').style.width = fieldwidth + "px";}
+	if($('description')) {$('description').style.width = fieldwidth + "px";}
+	if($('comments')) {$('comments').style.width = fieldwidth + "px";}
+	if($('filename')) {$('filename').style.width = fieldwidth + "px";}
+	if($('facy')) {$('facy').style.width = medfieldwidth + "px";}
+	if($('recfacy')) {$('recfacy').style.width = medfieldwidth + "px";}
+	if($('my_txt')) {$('my_txt').style.width = smallfieldwidth + "px";}
 	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 		iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 		}

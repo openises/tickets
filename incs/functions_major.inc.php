@@ -1694,3 +1694,47 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	return $print;
 	}		// end function do ticket_wm()
 	
+function do_unit($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10 - 11/16/10
+	global $unit;
+	$query = "SELECT *, packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
+		WHERE `source`= '$theRow[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
+	$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if (mysql_affected_rows()>0) {						// got track stuff?
+		$rowtr = stripslashes_deep(mysql_fetch_array($result_tr));
+		$lat = $rowtr['latitude'];
+		$lng = $rowtr['longitude'];
+		}
+	$print = "<DIV style='border: 1px solid #707070;'>";
+	$print .= "<TABLE BORDER='0' ID='left' width='" . $theWidth . "'>";
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text_large text_center' COLSPAN=2><B>{$unit}: <I>" . highlight($search,$theRow['unit_name']) . "</I></B>" . $theRow['unit_id'] . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Roster User") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, get_user_details($theRow['roster_user'])) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Handle") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['handle']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Addr") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['street']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("City") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['city']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("State") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['state']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Phone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['phone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Type") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['typename']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'><SPAN STYLE='background-color: " . $theRow['st_background'] . "; color: " . $theRow['st_textcolor'] . ";'>" . $theRow['un_status_val'] . "</SPAN></TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status About") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['status_about']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Description") . ":</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . highlight($search, $theRow['description']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Capability") . ":</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . highlight($search, $theRow['capab']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Located at Facility") . ":</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . highlight($search, get_facilityname($theRow['at_facility'])) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Contact name") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['contact_name']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Contact via") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['contact_via']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Cellphone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['cellphone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Updated") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['updated']) . "</TD></TR>\n";
+	if (isset($rowtr)) {	
+		$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Course") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude']) . "</TD></TR>\n";
+		$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Closest city") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rowtr['closest_city']) . "</TD></TR>\n";
+		$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, strtotime($rowtr['updated'])) . "</TD></TR>\n";
+		$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("As of") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, format_date(strtotime($rowtr['packet_date']))) . "</TD></TR>\n";
+		}
+	$print .= "<TR><TD COLSPAN=99>";
+	$print .= show_assigns(1,$theRow['unit_id']);
+	$print .= "</TD></TR><TR><TD COLSPAN=99>";
+	$print .= show_unit_log($theRow['unit_id']);
+	$print .= "</TD></TR>";
+	$print .= "</TABLE>\n<BR /><BR /><BR /><BR /></DIV>";
+	return $print;
+	}
+	

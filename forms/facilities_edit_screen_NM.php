@@ -195,89 +195,89 @@ function any_track(theForm) {
 
 function check_days(id) {
 	if((id == "monday") && ($('monday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "monday") && (!($(id).checked))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[0][2]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[0][2]'].style.backgroundColor = "#CECECE";
 		} else if((id == "tuesday") && ($('tuesday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "tuesday") && (!($(id).tuesday))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[1][2]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[1][2]'].style.backgroundColor = "#CECECE";
 		} else if((id == "wednesday") && ($('wednesday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "wednesday") && (!($(id).checked))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[2][2]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[2][2]'].style.backgroundColor = "#CECECE";
 		} else if((id == "thursday") && ($('thursday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "thursday") && (!($(id).checked))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[3][2]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[3][2]'].style.backgroundColor = "#CECECE";
 		} else if((id == "friday") && ($('friday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "friday") && (!($(id).checked))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[4][2]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[4][2]'].style.backgroundColor = "#CECECE";
 		} else if((id == "saturday") && ($('saturday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "saturday") && (!($(id).checked))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[5][2]'].style.backgroundColor = "#CECECE";		
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].style.backgroundColor = "#CECECE";		
 		} else if((id == "sunday") && ($('sunday').checked)) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][0]'].checked = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][1]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][2]'].readOnly  = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][1]'].style.backgroundColor = "#FFFFFF";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][2]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][0]'].checked = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].readOnly  = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].style.backgroundColor = "#FFFFFF";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].style.backgroundColor = "#FFFFFF";
 		} else if((id == "sunday") && (!($(id).checked))) {
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][0]'].checked = false;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][1]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][2]'].readOnly  = true;
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][1]'].style.backgroundColor = "#CECECE";
-		document.forms['fac_edit_form'].elements['frm_opening_hours[6][2]'].style.backgroundColor = "#CECECE";		
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][0]'].checked = false;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].readOnly  = true;
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].style.backgroundColor = "#CECECE";
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].style.backgroundColor = "#CECECE";		
 		} else {
 		}
 	}
@@ -303,7 +303,7 @@ function check_days(id) {
 	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<A NAME='top'>		<!-- 11/11/09 -->
-			<FORM METHOD="POST" NAME= "fac_edit_form" ENCTYPE="multipart/form-data" ACTION="facilities.php?goedit=true"> <!-- 7/9/09 -->
+			<FORM METHOD="POST" NAME= "res_edit_form" ENCTYPE="multipart/form-data" ACTION="facilities.php?goedit=true"> <!-- 7/9/09 -->
 			<TABLE BORDER=0 ID='editform'>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>
@@ -491,7 +491,7 @@ function check_days(id) {
 <?php
 						if($good_internet) {
 ?>
-							<button type="button" onClick="Javascript:loc_lkup(document.fac_edit_form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
+							<button type="button" onClick="Javascript:loc_lkup(document.res_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
 <?php
 							}
 ?>
@@ -803,7 +803,7 @@ function check_days(id) {
 			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
 				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
 				<SPAN id='reset_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='do_add_reset(this.form);'><?php print get_text("Reset");?><BR /><IMG id='can_img' SRC='./images/restore.png' /></SPAN>
-				<SPAN id='sub_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='validate(document.fac_edit_form);'><?php print get_text("Submit");?><BR /><IMG id='can_img' SRC='./images/submit.png' /></SPAN>
+				<SPAN id='sub_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='validate(document.res_edit_Form);'><?php print get_text("Submit");?><BR /><IMG id='can_img' SRC='./images/submit.png' /></SPAN>
 			</DIV>
 		</DIV>
 		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>

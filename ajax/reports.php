@@ -246,6 +246,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			`a`.`comments` AS `disp_comments`,
 			`r`.`handle`,
 			`t`.`problemstart` AS `problemstart_i`,
+			`t`.`id` AS `tick_id`,
+			`r`.`id` AS `unit_id`,
 			`r`.`handle`
 			FROM `$GLOBALS[mysql_prefix]assigns` `a`
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 	ON (`t`.`id` = `a`.`ticket_id`)
@@ -281,8 +283,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					}
 
 				$row_tr = "<TR CLASS = '{$evenodd[$i%2]} {$severityclass}'>";
-				$row_tr .= "<TD CLASS='plain_list text text_left'>&nbsp;{$row['handle']}</TD>\n";
-				$row_tr .= "<TD CLASS='plain_list text text_left'>&nbsp;{$row['scope']}</TD>\n";		//
+				$row_tr .= "<TD CLASS='plain_list text text_left' onClick = 'open_unit_window(" . $row['unit_id'] . ");'>&nbsp;{$row['handle']}</TD>\n";
+				$row_tr .= "<TD CLASS='plain_list text text_left' onClick = 'open_tick_window(" . $row['tick_id'] . ");'>&nbsp;{$row['scope']}</TD>\n";		//
 				$row_tr .= "<TD CLASS='plain_list text text_center'>&nbsp;" . do_cell ($row['problemstart_i'], $row['problemstart']) . "</TD>\n";
 				$row_tr .= "<TD CLASS='plain_list text text_center'>&nbsp;" . do_cell ($row['dispatched_i'], $row['dispatched']) . "</TD>\n";
 				$row_tr .= "<TD CLASS='plain_list text text_center'>&nbsp;" . do_cell ($row['responding_i'], $row['responding']) . "</TD>\n";
@@ -320,7 +322,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 		$from_to = date_range($date_in,$func_in);	// get date range as array
 
-		$incidents = $severity = $unit_names = $status_vals = $users = $unit_status_ids = array();
+		$incidents = $severity = $fac_names = $status_vals = $users = $fac_status_ids = array();
 		$query = "SELECT `id`, `scope`, `severity` FROM `$GLOBALS[mysql_prefix]ticket`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$incidents[0]="";
@@ -332,10 +334,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 		$query = "SELECT `id`, `name`, `status_id` FROM `$GLOBALS[mysql_prefix]facilities`";
 		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$unit_names[0]="TBD";
+		$fac_names[0]="TBD";
 		while ($temp_row = mysql_fetch_assoc($temp_result)) {
-			$unit_names[$temp_row['id']]=$temp_row['name'];
-			$unit_status_ids[$temp_row['id']]=$temp_row['status_id'];
+			$fac_names[$temp_row['id']]=$temp_row['name'];
+			$fac_status_ids[$temp_row['id']]=$temp_row['status_id'];
 			}
 
 		$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]fac_status`";
@@ -412,17 +414,17 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 				$do_date=$row['when'];
 				$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
-				$curr_unit = $row["facility"];
-				$theUnitName = (array_key_exists($row["facility"], $unit_names))? shorten($unit_names[$row["facility"]], 16): "#" . $row["facility"] ;
+				$curr_facility = $row["facility"];
+				$theFacName = (array_key_exists($row["facility"], $fac_names))? shorten($fac_names[$row["facility"]], 16): "#" . $row["facility"] ;
 				
-				$table .= (array_key_exists($curr_unit, $unit_names))? "<TD CLASS='plain_list text text_left' onClick = 'viewU(" .$curr_unit . ")'>" . $theUnitName . "</TD>":	"<TD>[#" . $curr_unit . "]</TD>";
+				$table .= (array_key_exists($curr_facility, $fac_names))? "<TD CLASS='plain_list text text_left' onClick = 'viewU(" .$curr_facility . ")'>" . $theFacName . "</TD>":	"<TD>[#" . $curr_facility . "]</TD>";
 				if (!empty($do_date)) {
 					$table .= "<TD CLASS='plain_list text text_left'>" . date ('D, M j', strtotime($do_date)) . "</TD>";
 					$do_date = "";
 					} else {
 					$table .= "<TD CLASS='plain_list text text_left'></TD>";
 					}
-				$theUnitName = (array_key_exists($row["facility"], $unit_names))? shorten($unit_names[$row["facility"]], 16): "#" . $row["facility"] ;
+				$theFacName = (array_key_exists($row["facility"], $fac_names))? shorten($fac_names[$row["facility"]], 16): "#" . $row["facility"] ;
 				foreach($statuses as $key => $val) {
 					if($row['status'] == $key) {
 						$val = date("H:i:s", strtotime($row['when_num']));

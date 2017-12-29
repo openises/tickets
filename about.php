@@ -793,7 +793,7 @@ Changes for 3.12A - Maintenance release
 312.  Rework to geocoding to improve stability and accuracy.
 313.  Other minor fixes.
 
-Changes for 3.20 - Major re-write
+Changes for 3.20A - Major re-write
 
 314.  Screen look and feel, buttons and responsiveness to different screen sizes.
 315.  Reworking of No Maps mode so that it can be used to simplify the screen but not limiting ability to geocode 
@@ -826,16 +826,22 @@ Changes for 3.20 - Major re-write
 330.  Added “Txtlocal” as an SMS broadcast provider.
 331.  Added setting to allow default SMS for message sending.
 
-Changes for 3.21 - Maintenance release
+Changes for 3.21A - Maintenance release
 
 332.  Performance improvements to screen load times
 333.  Addition of ability to notify assigned units when Incident is closed or changes.
 
-Changes for 3.22 - Maintenance Release
+Changes for 3.22A - Maintenance Release
 
 334.  Fixes to no-maps mode - failure to add new unit, situation screen not loading, not able to add incident.
 335.  Addition of Incident Nature to call board, fix to non show of apply all button when call board in frame.
 336.  Fix to incident close, shows error when notify units is switched on.
+
+Changes for 3.23A - Maintenance Release
+
+337.  Fixes consituents - debug code removed.
+338.  Fixes to ticket popup from reports, captures error status values (where status value has subsequently been
+      removed.
 	 
 <A NAME = 'bottom'></A>
 

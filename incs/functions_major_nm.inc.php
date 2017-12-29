@@ -27,6 +27,7 @@ $disposition = get_text("Disposition");
 $patient = get_text("Patient");
 $incident = get_text("Incident");
 $incidents = get_text("Incidents");
+$unit = get_text("Unit");
 
 function do_updated ($instr) {		// 11/3/2012
 	return substr($instr, 8, 8);
@@ -1692,33 +1693,33 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 		default: $severityclass='severity_normal'; break;
 		}
 	$print = "<TABLE BORDER='0' ID='left' width='" . $theWidth . "'>\n";		//
-	$print .= "<TR CLASS='even'><TD ALIGN='left' CLASS='td_data' COLSPAN=2 ALIGN='center'><B>" . $incident . ": <I>" . highlight($search,$theRow['scope']) . "</B>" . $tickno . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Addr") . ":</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['tick_street']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("City") . ":</TD>			<TD ALIGN='left'>" . highlight($search, $theRow['tick_city']);
+	$print .= "<TR CLASS='even'><TD ALIGN='left' CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . $incident . ": <I>" . highlight($search,$theRow['scope']) . "</B>" . $tickno . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Addr") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['tick_street']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("City") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['tick_city']);
 	$print .=	"&nbsp;&nbsp;" . highlight($search, $theRow['tick_state']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Priority") . ":</TD> <TD ALIGN='left' CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Priority") . ":</TD><TD ALIGN='left' CLASS='" . $severityclass . " text'>" . get_severity($theRow['severity']);
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$nature}:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
 	$print .= "</TD></TR>\n";
 
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("Synopsis") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['tick_descr'])) . "</TD></TR>\n";	//	8/12/09
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Protocol") . ":</TD> <TD ALIGN='left' CLASS='{$severityclass}'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
-	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>	<TD ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Synopsis") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, nl2br($theRow['tick_descr'])) . "</TD></TR>\n";	//	8/12/09
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Protocol") . ":</TD> <TD ALIGN='left' CLASS='{$severityclass} text'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>" . get_text("911 Contacted") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Reported by") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Phone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
 	$elapsed = get_elapsed_time($theRow);
 	$elaped_str = (intval($theRow['problemend'])> 1)? "" : "&nbsp;&nbsp;&nbsp;&nbsp;({$elapsed})";	
-	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "{$elaped_str}</TD></TR>\n";
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . get_status($theRow['status']) . "{$elaped_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
-	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Written") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2(strtotime($theRow['updated'])) . "</TD></TR>\n";
-	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD ALIGN='left'>Scheduled date:</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
+	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>Scheduled date:</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
 
 	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
-	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>" . $incident . " at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
+	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . $incident . " at Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
 	$rec_fac_details = empty($theRow['rec_fac_name'])? "" : $theRow['rec_fac_name'] . "<BR />" . $theRow['rec_fac_street'] . "<BR />" . $theRow['rec_fac_city'] . "<BR />" . $theRow['rec_fac_state'];
-	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
-	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['comments'])) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD>					<TD ALIGN='left'>" . format_date_2(strtotime($theRow['problemstart']));
+	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>Receiving Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
+	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>{$disposition}:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, nl2br($theRow['comments'])) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Run Start") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(strtotime($theRow['problemstart']));
 	$elaped_str = (intval($theRow['problemend'])> 1)?  $elapsed : "";
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;" . format_date($theRow['problemend']) . "&nbsp;&nbsp;({$elaped_str})</TD></TR>\n";
 
@@ -1741,8 +1742,8 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 	}
 
-	$print .= "<TR CLASS='odd'><TD ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
-		<TD ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
+		<TD CLASS='td_data text' ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
 	$print .= "<TR><TD colspan=99 ALIGN='left'>";
 	$print .= show_actions($theRow[0], "date", FALSE, TRUE, 0);
 	$print .="</TD></TR>";
@@ -1769,32 +1770,32 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 		default: $severityclass='severity_normal'; break;
 		}
 	$print = "<DIV style='border: 1px solid #707070;'><TABLE BORDER='0' ID='left' width='" . $theWidth . "'>\n";		//
-	$print .= "<TR CLASS='even'><TD ALIGN='left' CLASS='td_data' COLSPAN=2 ALIGN='center'><B>{$incident}: <I>" . highlight($search,$theRow['scope']) . "</B>" . $tickno . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Addr") . ":</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['tick_street']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("City") . ":</TD>			<TD ALIGN='left'>" . highlight($search, $theRow['tick_city']);
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='left' CLASS='td_data' COLSPAN=2 ALIGN='center'><B>{$incident}: <I>" . highlight($search,$theRow['scope']) . "</B>" . $tickno . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Addr") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['tick_street']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("City") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['tick_city']);
 	$print .=	"&nbsp;&nbsp;" . highlight($search, $theRow['tick_state']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Priority") . ":</TD> <TD ALIGN='left' CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Priority") . ":</TD><TD ALIGN='left' CLASS='" . $severityclass . " text'>" . get_severity($theRow['severity']);
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$nature}:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
 	$print .= "</TD></TR>\n";
 
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("Synopsis") . ":</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['tick_descr']))) . "</TD></TR>\n";	//	8/12/09
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Protocol") . ":</TD> <TD ALIGN='left' CLASS='{$severityclass}'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
-	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>	<TD ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Synopsis") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['tick_descr']))) . "</TD></TR>\n";	//	8/12/09
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Protocol") . ":</TD> <TD ALIGN='left' CLASS='{$severityclass} text'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>" . get_text("911 Contacted") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Reported by") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Phone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
 	$elapsed =  get_elapsed_time ($theRow);
 	$elapsed_str = get_elapsed_time ($theRow);			
-	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
-	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Written") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2(strtotime($theRow['updated'])) . "</TD></TR>\n";
-	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD ALIGN='left'>Scheduled date:</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
-	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
-	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>{$incident} at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
+	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>Scheduled date:</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
+	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;</TD></TR>\n";			// separator
+	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>{$incident} at Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
 	$rec_fac_details = empty($theRow['rec_fac_name'])? "" : $theRow['rec_fac_name'] . "<BR />" . $theRow['rec_fac_street'] . "<BR />" . $theRow['rec_fac_city'] . "<BR />" . $theRow['rec_fac_state'];
-	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
-	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD> <TD ALIGN='left'>" . format_date_2(strtotime($theRow['problemstart']));
+	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>Receiving Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
+	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>{$disposition}:</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Run Start") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2(strtotime($theRow['problemstart']));
 	$end_str = (good_date_time($theRow['problemend']))? format_date_2(strtotime($theRow['problemend'])) : "";
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;{$end_str}&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$locale = get_variable('locale');	// 08/03/09
@@ -1816,13 +1817,13 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 	}
 
-	$print .= "<TR CLASS='odd'><TD ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
-		<TD ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
+		<TD CLASS='td_data text' ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
 
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
 	$print .= show_log ($theRow[0]);				// log
 	$print .="</TD></TR>";
-	$print .= "<TR STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $theRow['lat'] . "</SPAN><SPAN ID='oldlng'>" . $theRow['lng'] . "</SPAN></TD></TR>";
+	$print .= "<TR STYLE = 'display:none;'><TD CLASS='td_data text' colspan=2><SPAN ID='oldlat'>" . $theRow['lat'] . "</SPAN><SPAN ID='oldlng'>" . $theRow['lng'] . "</SPAN></TD></TR>";
 
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
@@ -1847,32 +1848,32 @@ function do_ticket_only($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						//
 		default: $severityclass='severity_normal'; break;
 		}
 	$print = "<TABLE BORDER='0' ID='left' width='" . $theWidth . "'>\n";		//
-	$print .= "<TR CLASS='even'><TD ALIGN='left' CLASS='td_data' COLSPAN=2 ALIGN='center'><B>{$incident}: <I>" . highlight($search,$theRow['scope']) . "</B>" . $tickno . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Addr") . ":</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['tick_street']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("City") . ":</TD>			<TD ALIGN='left'>" . highlight($search, $theRow['tick_city']);
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='left' CLASS='td_data' COLSPAN=2 ALIGN='center'><B>{$incident}: <I>" . highlight($search,$theRow['scope']) . "</B>" . $tickno . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Addr") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['tick_street']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("City") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['tick_city']);
 	$print .=	"&nbsp;&nbsp;" . highlight($search, $theRow['tick_state']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Priority") . ":</TD> <TD ALIGN='left' CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Priority") . ":</TD><TD ALIGN='left' CLASS='" . $severityclass . " text'>" . get_severity($theRow['severity']);
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$nature}:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
 	$print .= "</TD></TR>\n";
 
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("Synopsis") . ":</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['tick_descr']))) . "</TD></TR>\n";	//	8/12/09
-	$print .= "<TR CLASS='odd' ><TD ALIGN='left'>" . get_text("Protocol") . ":</TD> <TD ALIGN='left' CLASS='{$severityclass}'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
-	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>	<TD ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Synopsis") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['tick_descr']))) . "</TD></TR>\n";	//	8/12/09
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Protocol") . ":</TD><TD ALIGN='left' CLASS='{$severityclass} text'>{$theRow['protocol']}</TD></TR>\n";		// 7/16/09
+	$print .= "<TR CLASS='even'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>" . get_text("911 Contacted") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Reported by") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Phone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
 	$elapsed = get_elapsed_time ($theRow);	
 	$elapsed_str = get_elapsed_time ($theRow);			
-	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
-	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2($theRow['date']) . $by_str;
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='left'>" . get_text("Written") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2($theRow['date']) . $by_str;
 	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2($theRow['updated']) . "</TD></TR>\n";
-	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD ALIGN='left'>Scheduled date:</TD>		<TD ALIGN='left'>" . format_date_2($theRow['booked_date']) . "</TD></TR>\n";	// 10/6/09
+	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left'>Scheduled date:</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2($theRow['booked_date']) . "</TD></TR>\n";	// 10/6/09
 	$print .= "<TR CLASS='even' ><TD ALIGN='left' COLSPAN='2'>&nbsp;	<TD ALIGN='left'></TR>\n";			// separator
-	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD ALIGN='left'>{$incident} at Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
+	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>{$incident} at Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
 	$rec_fac_details = empty($theRow['rec_fac_name'])? "" : $theRow['rec_fac_name'] . "<BR />" . $theRow['rec_fac_street'] . "<BR />" . $theRow['rec_fac_city'] . "<BR />" . $theRow['rec_fac_state'];
-	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
-	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD> <TD ALIGN='left'>" . format_date_2($theRow['problemstart']);
+	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>Receiving Facility:</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
+	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD CLASS='td_label text' ALIGN='left'>{$disposition}:</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Run Start") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date_2($theRow['problemstart']);
 	$end_str = (good_date_time($theRow['problemend']))? format_date_2(strtotime($theRow['problemend'])) : "";
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;{$end_str}&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$locale = get_variable('locale');	// 08/03/09
@@ -1894,8 +1895,8 @@ function do_ticket_only($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						//
 		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 	}
 
-	$print .= "<TR CLASS='odd'><TD ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
-		<TD ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
+	$print .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='left' onClick = 'javascript: do_coords(" .$theRow['lat'] . "," . $theRow['lng']. ")'><U>" . get_text("Position") . "</U>: </TD>
+		<TD CLASS='td_data text' ALIGN='left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
 	$print .= "</TABLE>\n";	
 	return $print;
 	}		// end function do ticket_only()
@@ -1909,7 +1910,7 @@ function do_ticket_extras($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
 	$print .= show_log ($theRow[0]);				// log
 	$print .="</TD></TR>";
-	$print .= "<TR STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $theRow['lat'] . "</SPAN><SPAN ID='oldlng'>" . $theRow['lng'] . "</SPAN></TD></TR>";
+	$print .= "<TR STYLE = 'display:none;'><TD CLASS='td_data text' colspan=2><SPAN ID='oldlat'>" . $theRow['lat'] . "</SPAN><SPAN ID='oldlng'>" . $theRow['lng'] . "</SPAN></TD></TR>";
 											// 3/30/2013
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
@@ -1929,6 +1930,50 @@ function do_ticket_messages($theRow, $theWidth, $search=FALSE, $dist=TRUE) {				
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;
-	}		// end function do ticket_extras()	
+	}		// end function do ticket_extras()
+	
+function do_unit($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10 - 11/16/10
+	global $unit;
+	$query = "SELECT *, packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
+		WHERE `source`= '$theRow[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
+	$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if (mysql_affected_rows()>0) {						// got track stuff?
+		$rowtr = stripslashes_deep(mysql_fetch_array($result_tr));
+		$lat = $rowtr['latitude'];
+		$lng = $rowtr['longitude'];
+		}
+	$print = "<DIV style='border: 1px solid #707070;'>";
+	$print .= "<TABLE BORDER='0' ID='left' width='" . $theWidth . "'>";
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text_large text_center' COLSPAN=2><B>{$unit}: <I>" . highlight($search,$theRow['unit_name']) . "</I></B>" . $theRow['unit_id'] . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Roster User") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, get_user_details($theRow['roster_user'])) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Handle") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['handle']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Addr") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['street']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("City") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['city']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("State") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['state']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Phone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['phone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Type") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['typename']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'><SPAN STYLE='background-color: " . $theRow['st_background'] . "; color: " . $theRow['st_textcolor'] . ";'>" . $theRow['un_status_val'] . "</SPAN></TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status About") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['status_about']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Description") . ":</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . highlight($search, $theRow['description']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Capability") . ":</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . highlight($search, $theRow['capab']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Located at Facility") . ":</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . highlight($search, get_facilityname($theRow['at_facility'])) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Contact name") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['contact_name']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Contact via") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['contact_via']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Cellphone") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['cellphone']) . "</TD></TR>\n";
+	$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Updated") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $theRow['updated']) . "</TD></TR>\n";
+	if (isset($rowtr)) {	
+		$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Course") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rowtr['course'] . ", Speed:  " . $rowtr['speed'] . ", Alt: " . $rowtr['altitude']) . "</TD></TR>\n";
+		$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Closest city") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, $rowtr['closest_city']) . "</TD></TR>\n";
+		$print .= "<TR CLASS='even' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, strtotime($rowtr['updated'])) . "</TD></TR>\n";
+		$print .= "<TR CLASS='odd' ><TD CLASS='td_label text' ALIGN='left'>" . get_text("As of") . ":</TD><TD CLASS='td_data text' ALIGN='left'>" . highlight($search, format_date(strtotime($rowtr['packet_date']))) . "</TD></TR>\n";
+		}
+	$print .= "<TR><TD COLSPAN=99>";
+	$print .= show_assigns(1,$theRow['unit_id']);
+	$print .= "</TD></TR><TR><TD COLSPAN=99>";
+	$print .= show_unit_log($theRow['unit_id']);
+	$print .= "</TD></TR>";
+	$print .= "</TABLE>\n<BR /><BR /><BR /><BR /></DIV>";
+	return $print;
+	}
 	
 //	} -- dummy

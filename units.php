@@ -215,37 +215,6 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	return $print;
 	}			// end function get_icon_legend ()
 	
-function get_roster($current=null) {	//	9/6/13
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` ORDER BY `person_identifier`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$the_ret = "<SELECT CLASS='text' NAME='frm_roster_id' onChange = 'get_roster_details(this.form, this.options[this.selectedIndex].value);' >";
-	$the_ret .= "<OPTION VALUE='0' SELECTED>Select a Person</OPTION>";	
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$sel = (($current) && ($current == $row['id'])) ? "SELECTED " : "";
-		$the_ret .= "<OPTION VALUE=" .  $row['id'] . " " . $sel . ">" . $row['person_identifier'] . "</OPTION>";
-		}
-	$the_ret .= "</SELECT>";
-	return $the_ret;
-	}
-
-function get_user_details($rosterID) {	//	9/6/13
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` WHERE `id` = '" . $rosterID . "' LIMIT 1"; 
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_affected_rows() != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
-		$the_ret .= "Street: " . $row['address'] . "<BR />";
-		$the_ret .= "State: " . $row['state'] . "<BR />";
-		$the_ret .= "Email: " . $row['email'] . "<BR />";
-		$the_ret .= "Home phone: " . $row['homephone'] . "<BR />";
-		$the_ret .= "Work Phone: " . $row['workphone'] . "<BR />";
-		$the_ret .= "Cellphone: " . $row['cellphone'] . "<BR />";
-		} else {
-		$the_ret = "";
-		}
-	return $the_ret;
-	}
-	
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	require_once('./incs/modules.inc.php');
 	}	

@@ -316,10 +316,10 @@ function set_size() {
 	do_log_refresh = true;
 	responders_updated = [];
 	facilities_updated = [];
-	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
-	$('the_rlist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
-	$('the_flist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
-	$('the_loglist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
+	if($('the_list')) {$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";}
+	if($('the_rlist')) {$('the_rlist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";}
+	if($('the_flist')) {$('the_flist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";}
+	if($('the_loglist')) {$('the_loglist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";}
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
 		viewportheight = window.innerHeight
@@ -378,17 +378,18 @@ function set_size() {
 	load_poly_controls();
 	if(!isGuest) {
 		if(showEvents == 1) {
-			$('logheading').style.width = mapWidth + "px";
-			$('loglist').style.width = mapWidth + "px";
-			load_log(window.log_field, window.log_direct);
+			if($('logheading')) {$('logheading').style.width = mapWidth + "px";}
+			if($('loglist')) {$('loglist').style.width = mapWidth + "px";}
+			if($('the_loglist')) {$('the_loglist').style.width = mapWidth + "px";}
 			}
 		if(showStats == 1) {		
-			$('stats_wrapper').style.width = mapWidth + "px";
-			$('stats_heading').style.width = mapWidth + "px";
-			do_statistics();
+			if($('stats_wrapper')) {$('stats_wrapper').style.width = mapWidth + "px";}
+			if($('stats_heading')) {$('stats_heading').style.width = mapWidth + "px";}
+			if($('stats_table')) {$('stats_table').style.width = mapWidth + "px";}
 			}
 		}
 	get_scheduled_number();
+	loadData();
 	map.invalidateSize();
 	}
 	
@@ -665,7 +666,8 @@ if (is_guest()) {
 					</SELECT>
 				</FORM>
 				Incidents <SPAN ID='sched_flag'></SPAN>
-				<SPAN id='collapse_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Minimize List");' onmouseout='do_plain(this.id); UnTip();' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right' height="19" width="19"></SPAN>
+				<SPAN id='popout' class='plain text' onmouseover='do_hover(this.id); Tip("Pop out full incident list");' onmouseout='do_plain(this.id); UnTip();' onClick="do_full_inc_scr(); hideDiv('ticketlist', 'collapse_incs', 'expand_incs'); $('ticketheading').style.display='none';" style = 'float: left;'>Popout</SPAN>
+				<SPAN id='collapse_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Minimize List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs');" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right' height="19" width="19"></SPAN>
 				<SPAN id='expand_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right' height="19" width="19"></SPAN>
 				<SPAN id='reload_incs' class='plain_square text' style='float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover_squarebuttons(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="do_incident_refresh();" style = 'float: right; display: "";'><IMG SRC = './markers/refresh.png' ALIGN='right' height="19" width="19"></SPAN><BR />
 				<SPAN ID = 'btn_go' class='plain text' style='width: 50px; float: none; display: none; font-size: .8em; color: green;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);' onClick='submit_period(); hide_btns_closed();' CLASS='conf_button' STYLE = 'margin-left: 10px; color: green; display: none;'>Next</SPAN>
@@ -808,9 +810,9 @@ var controlsHTML = "<TABLE id='controlstable' ALIGN='center'>";
 controlsHTML += "<SPAN class='heading' style='width: 100%; text-align: center; display: inline-block;'>Map Controls</SPAN></BR>";
 controlsHTML +=	"<TR class='even'><TD><CENTER><TABLE ID='buttons_sh' style='display: <?php print $show_controls;?>;'><TR CLASS='odd'><TD>";
 controlsHTML +=	"<TABLE WIDTH='100%'><TR class='heading_2' WIDTH='100%'><TH ALIGN='center'>Incidents</TH></TR><TR><TD>";
-controlsHTML +=	"<DIV class='pri_button text' onClick=\"set_pri_chkbox('normal'); hideGroup(1, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' STYLE = 'vertical-align: middle'BORDER=0>&nbsp;&nbsp;Normal: <input type=checkbox id='normal'  onClick=\"set_pri_chkbox('normal')\"/>&nbsp;&nbsp;</DIV>";
-controlsHTML +=	"<DIV class='pri_button text' onClick=\"set_pri_chkbox('medium'); hideGroup(2, 'Incident');\"><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;Medium: <input type=checkbox id='medium'  onClick=\"set_pri_chkbox('medium')\"/>&nbsp;&nbsp;</DIV>";
-controlsHTML +=	"<DIV class='pri_button text' onClick=\"set_pri_chkbox('high'); hideGroup(3, 'Incident');\"><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;High: <input type=checkbox id='high'  onClick=\"set_pri_chkbox('high')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button text' onClick=\"set_pri_chkbox('normal'); hideGroup(0, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' STYLE = 'vertical-align: middle'BORDER=0>&nbsp;&nbsp;Normal: <input type=checkbox id='normal'  onClick=\"set_pri_chkbox('normal')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button text' onClick=\"set_pri_chkbox('medium'); hideGroup(1, 'Incident');\"><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;Medium: <input type=checkbox id='medium'  onClick=\"set_pri_chkbox('medium')\"/>&nbsp;&nbsp;</DIV>";
+controlsHTML +=	"<DIV class='pri_button text' onClick=\"set_pri_chkbox('high'); hideGroup(2, 'Incident');\"><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;High: <input type=checkbox id='high'  onClick=\"set_pri_chkbox('high')\"/>&nbsp;&nbsp;</DIV>";
 controlsHTML +=	"<DIV class='pri_button text' ID = 'pri_all' class='pri_button' STYLE = 'display: none; width: 70px;' onClick=\"set_pri_chkbox('all'); hideGroup(4, 'Incident');\"><IMG SRC = './our_icons/sm_blue.png' BORDER=0 STYLE = 'vertical-align: middle'><IMG SRC = './our_icons/sm_green.png' BORDER=0 STYLE = 'vertical-align: middle'><IMG SRC = './our_icons/sm_red.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;All <input type=checkbox id='all'  STYLE = 'display:none;' onClick=\"set_pri_chkbox('all')\"/>&nbsp;&nbsp;</DIV>";
 controlsHTML +=	"<DIV class='pri_button text' ID = 'pri_none' class='pri_button' STYLE = 'width: 60px;' onClick=\"set_pri_chkbox('none'); hideGroup(5, 'Incident');\"><IMG SRC = './our_icons/sm_white.png' BORDER=0 STYLE = 'vertical-align: middle'>&nbsp;&nbsp;None <input type=checkbox id='none' STYLE = 'display:none;' onClick=\"set_pri_chkbox('none')\"/>&nbsp;&nbsp;</DIV>";
 controlsHTML +=	"</TD></TR></TABLE></TD></TR><TR CLASS='odd'><TD><DIV ID = 'boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR>";
@@ -884,14 +886,14 @@ $('the_flist').style.width = listwidth + "px";
 $('facilitiesheading').style.width = listwidth + "px";
 if(!isGuest) {
 	if(showEvents == 1) {
-		$('logheading').style.width = mapWidth + "px";
-		$('loglist').style.width = mapWidth + "px";
-		$('the_loglist').style.width = mapWidth + "px";
+		if($('logheading')) {$('logheading').style.width = mapWidth + "px";}
+		if($('loglist')) {$('loglist').style.width = mapWidth + "px";}
+		if($('the_loglist')) {$('the_loglist').style.width = mapWidth + "px";}
 		}
 	if(showStats == 1) {		
-		$('stats_wrapper').style.width = mapWidth + "px";
-		$('stats_heading').style.width = mapWidth + "px";
-		$('stats_table').style.width = mapWidth + "px";
+		if($('stats_wrapper')) {$('stats_wrapper').style.width = mapWidth + "px";}
+		if($('stats_heading')) {$('stats_heading').style.width = mapWidth + "px";}
+		if($('stats_table')) {$('stats_table').style.width = mapWidth + "px";}
 		}
 	}
 // end of set widths

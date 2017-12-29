@@ -256,13 +256,11 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			litSpecific();
 			$('dates_table').style.display = $('dates_table2').style.display = "none";
 			$('specdate_sub').style.display ='inline-block';
-			$('lock_s').innerHTML = "Use Generic Dates";
 			} else {
 			specificdates = false;
 			unlitSpecific();
 			$('dates_table').style.display = $('dates_table2').style.display = "block";
 			$('specdate_sub').style.display ='none';
-			$('lock_s').innerHTML = "Use Specific Dates";
 			}
 		}
 		
@@ -470,6 +468,12 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		var url = "single.php?ticket_id="+ id;
 		var tickWindow = window.open(url, 'mailWindow', 'resizable=1, scrollbars, height=600, width=720, left=100,top=100,screenX=100,screenY=100');
 		tickWindow.focus();
+		}
+		
+	function open_unit_window (id) {				// 4/14/11
+		var url = "single_unit.php?id="+ id;
+		var unitWindow = window.open(url, 'mailWindow', 'resizable=1, scrollbars, height=600, width=720, left=100,top=100,screenX=100,screenY=100');
+		unitWindow.focus();
 		}
 		
 	function showhide() {
