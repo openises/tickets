@@ -4,7 +4,8 @@
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
-@session_start();
+session_start();						// 
+session_write_close();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}
@@ -36,9 +37,17 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<SCRIPT SRC='../js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
 <?php
 	if($key_str) {
+		if($https) {
 ?>
-		<SCRIPT TYPE="application/x-javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
+			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
 <?php
+			} else {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php				
+			}
 		}
 ?>
 	<SCRIPT>

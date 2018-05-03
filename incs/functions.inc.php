@@ -3,6 +3,7 @@ error_reporting(E_ALL ^ E_STRICT);
 
 $theTimezone = date_default_timezone_get();
 date_default_timezone_set($theTimezone);
+$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
 /*
 5/23/08 added function do_kml() - generates JS for kml files - 
 5/31/08 added function do_log() default values
@@ -477,6 +478,30 @@ function check_for_rows($query) {		/* check sql query for returning rows, courte
 	}
 
 //	} {		-- dummy
+
+function get_disp_closure_summary($tick_id) {
+	$eol = PHP_EOL;
+	$string = "";
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+		WHERE `ticket_id`='$tick_id' AND ((`clear` IS NOT NULL) AND (DATE_FORMAT(`clear`,'%y') != '00'))
+		ORDER BY `id` ASC");		// 6/25/10
+	if (mysql_affected_rows()>0) {
+		while($row = mysql_fetch_assoc($result)) {
+			$string .= "Unit: " . get_responder($row['responder_id']) . chr(0x0D).chr(0x0A);
+			$string .= "D: " . format_sb_date_2($row['dispatched']) . chr(0x0D).chr(0x0A);
+			$string .= "R: " . format_sb_date_2($row['responding']) . chr(0x0D).chr(0x0A);
+			$string .= "O: " . format_sb_date_2($row['on_scene']) . chr(0x0D).chr(0x0A);
+			if($row['u2fenr'] != NULL && $row['u2fenr'] != "0000-00-00 00:00:00") {
+				$string .= "FENR: " . format_sb_date_2($row['u2fenr']) . chr(0x0D).chr(0x0A);
+				}
+			if($row['u2farr'] != NULL && $row['u2farr'] != "0000-00-00 00:00:00") {
+				$string .= "FARR: " . format_sb_date_2($row['u2farr']) . chr(0x0D).chr(0x0A);
+				}
+			$string .= "C: " . format_sb_date_2($row['clear']) . chr(0x0D).chr(0x0A);
+			}
+		}
+	return $string;
+	}
 
 function get_disps($tick_id, $resp_id) {				// 7/4/10, 10/20/12
 	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
@@ -2260,10 +2285,13 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 		case 3:
 		   	$match_str = strtoupper(get_variable("msg_text_3"));
 		   	break;
+		case 4:
+			$match_str = strtoupper(get_variable("msg_text_3")) . ",W";
+			break;
 		}
 	$match_str = preg_replace("/[^a-zA-Z]+/", "", $match_str);					// drop ash/trash - 5/31/2013
 
-	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "V"));}		// empty get all - force non-zero hit
+	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "W"));}		// empty get all - force non-zero hit
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id . " LIMIT 1";
 	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
@@ -2455,6 +2483,9 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 						$message .= get_text("{$gt}") . ": " . format_date_2($t_row['booked_date']). $_end .$eol;
 						}
 				    break;
+				case "W":
+					$message .= get_disp_closure_summary($ticket_id) .$eol;
+					break;
 				default:
 //				    $message = "Match string error:" . $match_str[$i]. " " . $match_str . $eol ;
 					@session_start();
@@ -2473,8 +2504,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 	$subject = ($text != "") ? $text : "{$the_scope}";						// 7/3/2013
 	if ($txt_only) {
 		return $message;		// 2/16/09
-		}
-	else {
+		} else {
 		$smsg_to_str = ($smsg_to_str == NULL) ? "" : $smsg_to_str;
 		do_send ($to_str, $smsg_to_str, $subject, $message, $ticket_id, 0, NULL, NULL);	//	10/23/12
 		}
@@ -2634,19 +2664,17 @@ function is_email($email){		   //  validate email, code courtesy of Jerrett Tayl
 function is_twitter($address) {
 	$isTwitter = (substr($address, 0, 1) == "@") ? TRUE : FALSE;
 	return $isTwitter;
-	}
-		
+	}	
 
 function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28/13
 	if (get_variable('allow_notify') != '1') return FALSE;						//should we notify?
-	$query = "SELECT `scope`, `severity`, `facility`, `rec_facility`, `in_types_id` FROM `$GLOBALS[mysql_prefix]ticket` WHERE (`id`=$ticket_id)";
+	$query = "SELECT `scope`, `severity`, `facility`, `rec_facility`, `in_types_id` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id;
 	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 	$row = stripslashes_deep(mysql_fetch_assoc($result));
 	$scope = $row['scope'];
 	$facility = $row['facility'];
 	$rec_facility = $row['rec_facility'];
 	$in_types_id = $row['in_types_id'];
-	
 	$fields = array();
 	$fields[$GLOBALS['NOTIFY_TICKET_CHG']] = "on_ticket";
 	$fields[$GLOBALS['NOTIFY_ACTION_CHG']] = "on_action";
@@ -2792,31 +2820,36 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 		}
 	$notify_assigns = get_variable('notify_assigns');
 	$defaultSMS = get_msg_variable('default_sms');
+	$actionText = "";
 	// notify assigns options - 0 is off, 1 notify assigns on close, 2  notify on close and inc change, 3 notify on close, inc change and action or patient change, 4 notify changes only not close
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . strip_tags($ticket_id);
 	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//	Assignments this Ticket
 		$responderID = $row['responder_id'];
+		$tick_id = $row['ticket_id'];
 		$query_resp = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $responderID;	//	Responders assigned
 		$result_resp	= mysql_query($query_resp) or do_error($query_resp,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 		while($row_resp = stripslashes_deep(mysql_fetch_assoc($result_resp))) {
 			$continue = false;
-			if($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 4) {
+			if($action_id == "0" || $action_id == "1" || $action_id == "2" || $action_id == "4") {
 				switch ($action_id) {
+					case ("0") :
+						$actionText .= "changed";
+						break;
 					case ("1") :
-						$actionText = "changed";
+						$actionText .= "changed";
 						break;
 					case ("2") :
-						$actionText = "changed";
+						$actionText .= "changed";
 						break;
 					case ("3") :
-						$actionText = "changed";
+						$actionText .= "";
 						break;
 					case ("4") :
-						$actionText = "closed";
+						$actionText .= "closed";
 						break;
 					default:
-						$actionText = "changed";
+						$actionText .= "changed";
 						}
 				switch ($notify_assigns) {		// what types of incident changes to send notify to assigned units
 					case ("0") :
@@ -2838,7 +2871,7 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 						$continue = false;	
 						}							
 				if($continue) {
-					if($row['smsg_id'] != "") {
+					if($row_resp['smsg_id'] != "") {
 						array_push($assignssmsaddrs, $row_resp['smsg_id']); // save for SMS						
 						}
 					if (is_email($row_resp['contact_via'])) {
@@ -2848,12 +2881,16 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 				}
 			}
 		}
-	if ($assignsaddrs) {
-		$theTo = implode("|", array_unique($assignsaddrs));
-		$theText = "Incident " . $scope . " has " . $actionText;
-		mail_it ($theTo, $assignssmsaddrs, $theText, $ticket_id, 1 );
-		}				// end if ($addrs)	
-	$temp = array_values(array_unique($addrs));		// 5/22/10	
+	if($actionText != "") {
+		if ($assignsaddrs) {
+			$theTo = implode("|", array_unique($assignsaddrs));
+			$theSMSTo = implode(",", array_unique($assignssmsaddrs));
+			$theText = "Incident " . $scope . " has " . $actionText;
+			mail_it ($theTo, $theSMSTo, $theText, $ticket_id, 4 );
+
+			}
+		}
+	$temp = array_values(array_unique($addrs));	
 	return (empty($temp))? FALSE: $temp;
 	}
 	

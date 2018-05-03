@@ -4,7 +4,8 @@
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
-@session_start();
+session_start();						// 
+session_write_close();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}
@@ -28,6 +29,22 @@ $gmaps_ok = ($key_str) ? 1 : 0;
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<?php
+	require_once('../incs/all_forms_js_variables.inc.php');
+	if($key_str) {
+		if($https) {
+?>
+			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			} else {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php				
+			}
+		}
+?>
 	<SCRIPT TYPE="application/x-javascript" SRC="../js/jss.js"></SCRIPT>
 	<script type="application/x-javascript" src="../js/osm_map_functions.js"></script>
 	<SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>	
@@ -44,14 +61,6 @@ $gmaps_ok = ($key_str) ? 1 : 0;
 	<script src="../js/Control.Geocoder.js"></script>
 	<script type="application/x-javascript" src="./js/usng.js"></script>
 	<script type="application/x-javascript" src="./js/osgb.js"></script>
-<?php
-	if($key_str) {
-?>
-		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="application/x-javascript" src="../js/Google.js"></script>
-<?php 
-		}
-?>
 	<script type="application/x-javascript" src="../js/L.Graticule.js"></script>
 	<script type="application/x-javascript" src="../js/leaflet-providers.js"></script>
 	<script type="application/x-javascript" src="../js/geotools2.js"></script>

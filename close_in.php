@@ -386,7 +386,7 @@ function do_is_start($in_row) {				// 3/22/10
 				$id = $_POST['frm_ticket_id'];
 				$theTo = implode("|", array_unique($addrs));
 				$theText = get_text("Incident") . " " . $row['scope'] . " has been closed";
-				mail_it ($theTo, "", $theText, $id, 1 );
+				mail_it ($theTo, "", $theText, $id, 4);
 				}				// end if ($addrs)
 			}
 		unset($result);

@@ -39,10 +39,17 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
 	if($key_str) {
+		if($https) {
 ?>
-		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="application/x-javascript" src="../js/Google.js"></script>
-<?php 
+			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			} else {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php				
+			}
 		}
 ?>
 	<script type="application/x-javascript" src="../js/osm_map_functions.js"></script>

@@ -1,18 +1,18 @@
 <?php
-if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
+if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
 session_write_close();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}
-require_once('incs/functions.inc.php');		//7/28/10
+require_once('incs/functions.inc.php');
 do_login(basename(__FILE__));
 $in_win = (array_key_exists("mode", $_GET)) ? 1 : 0;
 $from_mi = (array_key_exists("mi", $_GET)) ? 1 : 0;
 $gmaps = $_SESSION['internet'];
 $noMaps = (!$in_win && !$gmaps) ? 1 : 0;
-require_once($_SESSION['fmp']);		// 8/26/10
+require_once($_SESSION['fmp']);
 // $istest = TRUE;
 if($istest) {print "_GET"; dump($_GET);}
 if($istest) {print "_POST"; dump($_POST);}
@@ -434,9 +434,9 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 			print "</DIV";
 			print '<BR /><BR /><FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
 			if($tick_stat == 1) {
-				$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE				
+				$addrs = notify_user($id, $GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE				
 				} else {
-				$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CLOSE']);		// returns array or FALSE						
+				$addrs = notify_user($id, $GLOBALS['NOTIFY_TICKET_CLOSE']);		// returns array or FALSE						
 				}
 			unset ($_SESSION['active_ticket']);								// 5/4/11
 			return($addrs);	//	11/18/13
@@ -492,14 +492,21 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 <script src="./js/osopenspace.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
 <?php
-if ($_SESSION['internet'] || $_SESSION['good_internet']) {
+if ($_SESSION['internet']) {
 	$api_key = get_variable('gmaps_api_key');
 	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	if($key_str) {
+		if($https) {
 ?>
-		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="application/x-javascript" src="./js/Google.js"></script>
-<?php 
+			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			} else {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php				
+			}
 		}
 	}
 ?>
@@ -882,8 +889,7 @@ function set_size() {
 		}
 	elseif (array_key_exists('id', ($_SESSION))){
 		$id = $_SESSION['active_ticket'];	
-		}
-	else {
+		} else {
 		echo "error at "	 . __LINE__;
 		}								// end if/else
 
@@ -892,11 +898,12 @@ function set_size() {
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
 			} else {
 			$the_addrs = edit_ticket($id);	// post updated data	11/18/13
+			$theStatus = $_POST['frm_status'];
 
 			if ($addrs) {
 				$theTo = implode("|", array_unique($addrs));
 				$theText = "TICKET-Update: " . $_POST['frm_scope'];
-				mail_it ($theTo, "", $theText, $id, 1 );
+				mail_it($theTo, "", $theText, $id, $theStatus);
 				}				// end if ($addrs)
 			if($_SESSION['internet']) {
 				require_once('./forms/ticket_view_screen.php');

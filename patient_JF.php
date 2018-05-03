@@ -43,13 +43,23 @@ $get_action = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['action'])))) 
 	<META HTTP-EQUIV="Script-date" CONTENT="8/16/08">
 	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
 <?php
-if ($get_action == 'add') {		
-	$api_key = get_variable('gmaps_api_key');		// empty($_GET) 
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+			if($https) {
 ?>
-<SCRIPT TYPE="application/x-javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $api_key; ?>"></SCRIPT>
-<SCRIPT src="./js/graticule.js" type="application/x-javascript"></SCRIPT>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php
-	}	
+				} else {
+?>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php				
+				}
+			}
+		}
 ?>
 
 <SCRIPT>

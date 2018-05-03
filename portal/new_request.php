@@ -5,7 +5,8 @@
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
-@session_start();
+session_start();						// 
+session_write_close();
 $logged_in = $logged_out = false;
 if (empty($_SESSION)) {
 	$logged_out = true;
@@ -127,6 +128,9 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 <style type="text/css">
 body {overflow:hidden}
 </style>
+<?php
+require_once('../incs/all_forms_js_variables.inc.php');
+?>
 <SCRIPT TYPE="application/x-javascript" SRC="../js/jss.js"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>	
 <SCRIPT TYPE="application/x-javascript" SRC="../js/domready.js"></script>
@@ -144,10 +148,17 @@ body {overflow:hidden}
 <script type="application/x-javascript" src="../js/osgb.js"></script>
 <?php
 if($key_str) {
+	if($https) {
 ?>
-	<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-	<script type="application/x-javascript" src="../js/Google.js"></script>
-<?php 
+		<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script src="./js/Google.js"></script>
+<?php
+		} else {
+?>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script src="./js/Google.js"></script>
+<?php				
+		}
 	}
 ?>
 <script type="application/x-javascript" src="../js/osm_map_functions.js"></script>

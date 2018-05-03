@@ -7,7 +7,7 @@ error_reporting(0);
 require_once('../incs/functions.inc.php');
 $temp1  = (get_variable('socketserver_url') != "") ? get_variable('socketserver_url') : "localhost";
 $temp2 = get_variable('socketserver_port');
-$serveraddress = (array_key_exists("SERVER_NAME", $_SERVER) && $temp1 == "") ? "{$_SERVER['SERVER_NAME']}" : $temp1;
+$serveraddress = (array_key_exists("SERVER_NAME", $_SERVER)) ? "{$_SERVER['SERVER_NAME']}" : $temp1;
 $serverport = ($temp2 == "") ? "1337" : $temp2;
 $serverstring = "tcp://" . $serveraddress . ":" . $serverport;
 

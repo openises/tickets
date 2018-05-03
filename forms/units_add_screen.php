@@ -123,13 +123,13 @@ function set_size() {
 	$('map_legend').style.width = mapWidth + "px";
 	$('icon_legend').style.width = mapWidth + "px";
 	for (var i = 0; i < fields.length; i++) {
-		$(fields[i]).style.width = fieldwidth + "px";
+		if($(fields[i])) {$(fields[i]).style.width = fieldwidth + "px";}
 		} 
 	for (var i = 0; i < medfields.length; i++) {
-		$(medfields[i]).style.width = medfieldwidth + "px";
+		if($(medfields[i])) {$(medfields[i]).style.width = medfieldwidth + "px";}
 		}
 	for (var i = 0; i < smallfields.length; i++) {
-		$(smallfields[i]).style.width = smallfieldwidth + "px";
+		if($(smallfields[i])) {$(smallfields[i]).style.width = smallfieldwidth + "px";}
 		}
 	load_exclusions();
 	load_ringfences();
@@ -798,13 +798,13 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 		$('map_legend').style.width = mapWidth + "px";
 		$('icon_legend').style.width = mapWidth + "px";
 		for (var i = 0; i < fields.length; i++) {
-			$(fields[i]).style.width = fieldwidth + "px";
+			if($(fields[i])) {$(fields[i]).style.width = fieldwidth + "px";}
 			} 
 		for (var i = 0; i < medfields.length; i++) {
-			$(medfields[i]).style.width = medfieldwidth + "px";
+			if($(medfields[i])) {$(medfields[i]).style.width = medfieldwidth + "px";}
 			}
 		for (var i = 0; i < smallfields.length; i++) {
-			$(smallfields[i]).style.width = smallfieldwidth + "px";
+			if($(smallfields[i])) {$(smallfields[i]).style.width = smallfieldwidth + "px";}
 			}
 		load_exclusions();
 		load_ringfences();

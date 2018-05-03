@@ -685,10 +685,17 @@ if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 	$api_key = get_variable('gmaps_api_key');
 	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 	if($key_str) {
+		if($https) {
 ?>
-		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-		<script type="application/x-javascript" src="./js/Google.js"></script>
-<?php 
+			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php
+			} else {
+?>
+			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+			<script src="./js/Google.js"></script>
+<?php				
+			}
 		}
 	}
 ?>
@@ -902,7 +909,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 <?php
 				}
 ?>
-			} else {				// 10/2/2015
+ 			} else {				// 10/2/2015
 			document.add.frm_contact.value=result[1].trim();	// name
 			document.add.frm_phone.value=result[2].trim();		// phone
 			document.add.frm_street.value=result[3].trim();		// street

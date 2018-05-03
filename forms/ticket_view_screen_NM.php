@@ -94,10 +94,27 @@ unset($result_as);
 	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 <?php 
 
-if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
-	require_once('./incs/modules.inc.php');
-	}
-?>	
+	if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
+		require_once('./incs/modules.inc.php');
+		}
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+			if($https) {
+?>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php
+				} else {
+?>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php				
+				}
+			}
+		}
+?>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>

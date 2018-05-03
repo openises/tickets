@@ -404,14 +404,21 @@ function get_loc_name($id) {
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
 <?php
-	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
+	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
+			if($https) {
 ?>
-			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script type="application/x-javascript" src="./js/Google.js"></script>
-<?php 
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php
+				} else {
+?>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php				
+				}
 			}
 		}
 ?>

@@ -2294,35 +2294,55 @@ function log_debug(theText) {
 function get_tickpopup(id) {
 	if(typeof(tmarkers) !== 'undefined') {
 		for(var key in tmarkers) {
-			if (tmarkers[key] && typeof(tmarkers[key]._popup)=='undefined') {
+			if (tmarkers[key]) {
+				if(typeof(tmarkers[key]._popup)=='undefined') {
+					// Do nothing
+					} else {
+					tmarkers[key].closePopup();
+					}
 				} else {
-				tmarkers[key].closePopup();
+				// do nothing
 				}
 			}
 		}
 	if(typeof(rmarkers) !== 'undefined') {
 		for(var key in rmarkers) {
-			if (rmarkers[key] && typeof(rmarkers[key]._popup)=='undefined') {
-				} else {
-				if(!theAssigned[key]) {
-					rmarkers[key].closePopup();
+			if (rmarkers[key]) {
+				if(typeof(rmarkers[key]._popup)=='undefined') {
+					// Do nothing
+					} else {
+					if(!theAssigned[key]) {
+						rmarkers[key].closePopup();
+						}
 					}
+				} else {
+				// Do Nothing
 				}
 			}
 		}
 	if(typeof(fmarkers) !== 'undefined') {
 		for(var key in fmarkers) {
-			if (fmarkers[key] && typeof(fmarkers[key]._popup)=='undefined') {
+			if (fmarkers[key]) {
+				if(typeof(fmarkers[key]._popup)=='undefined') {
+					// Do nothing
+					} else {
+					fmarkers[key].closePopup();
+					}
 				} else {
-				fmarkers[key].closePopup();
+				// do nothing
 				}
 			}
 		}
 	if(typeof(wlmarkers) !== 'undefined') {
 		for(var key in wlmarkers) {
-			if (wlmarkers[key] && typeof(wlmarkers[key]._popup)=='undefined') {
+			if (wlmarkers[key]) { 
+				if(typeof(wlmarkers[key]._popup)=='undefined') {
+					// Do nothing
+					} else {
+					wlmarkers[key].closePopup();
+					}
 				} else {
-				wlmarkers[key].closePopup();
+				// do nothing
 				}
 			}
 		}

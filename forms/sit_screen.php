@@ -62,10 +62,17 @@ if(file_exists("./incs/modules.inc.php")) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
+			if($https) {
 ?>
-			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php
+				} else {
+?>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php				
+				}
 			}
 		}
 ?>
@@ -488,12 +495,14 @@ if ((!($_SESSION['internet'])) && (!$_SESSION['good_internet'])) {
 if (is_guest()) {
 ?>	
 	parent.frames["upper"].$("add").style.display = "none";
-	try { parent.frames["upper"].$("ics").style.display = "none";}	
-	catch(e) { }
-	try { parent.frames["upper"].$("has_button").style.display = "none";}
-	catch(e) { }
-	try { parent.frames["upper"].guest_hide_buttons(isGuest);}
-	catch(e) { }		
+	try {
+		parent.frames["upper"].$("add").style.display = "none";
+		parent.frames["upper"].$("ics").style.display = "none";
+		parent.frames["upper"].$("has_button").style.display = "none";
+		parent.frames["upper"].guest_hide_buttons(isGuest);
+		}	
+	catch(e) { 
+		}
 <?php
 	}		// end guest - needs other levels!
 
@@ -666,7 +675,6 @@ if (is_guest()) {
 					</SELECT>
 				</FORM>
 				Incidents <SPAN ID='sched_flag'></SPAN>
-				<SPAN id='popout' class='plain text' onmouseover='do_hover(this.id); Tip("Pop out full incident list");' onmouseout='do_plain(this.id); UnTip();' onClick="do_full_inc_scr(); hideDiv('ticketlist', 'collapse_incs', 'expand_incs'); $('ticketheading').style.display='none';" style = 'float: left;'>Popout</SPAN>
 				<SPAN id='collapse_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Minimize List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs');" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right' height="19" width="19"></SPAN>
 				<SPAN id='expand_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right' height="19" width="19"></SPAN>
 				<SPAN id='reload_incs' class='plain_square text' style='float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover_squarebuttons(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="do_incident_refresh();" style = 'float: right; display: "";'><IMG SRC = './markers/refresh.png' ALIGN='right' height="19" width="19"></SPAN><BR />

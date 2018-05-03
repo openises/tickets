@@ -20,14 +20,19 @@ function checkBrowser($input) {
 		if(strlen($n) > 0){
 			$version = "";
 			$navigator = $browser;
-			$j=strpos($userAgent, $navigator)+strlen($navigator)+1;
+			$temp=strpos($userAgent, $navigator)+strlen($navigator)+1;
+			$j = intval($temp);
 			for($j=0; $j<=$l; $j++){
-				$s = substr ($userAgent, $j, 1);
-				if(is_numeric($version.$s)) {
-					$version .= $s;
+				if(is_numeric($j)) {
+					$s = substr($userAgent, $j, 1);
+					if(is_numeric($version.$s)) {
+						$version .= $s;
+						} else {
+						break;
+						}
 					} else {
 					break;
-					}	
+					}
 				}
 			}
 

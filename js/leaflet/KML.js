@@ -195,7 +195,7 @@ L.Util.extend(L.KML, {
 	},
 
 	parsePlacemark: function (place, xml, style) {
-		var h, i, j, el, options = {};
+		var h, i, j, el, extra='', options = {};
 
 		var multi = ['MultiGeometry', 'MultiTrack', 'gx:MultiTrack'];
 		for (h in multi) {
@@ -243,9 +243,35 @@ L.Util.extend(L.KML, {
 				descr = descr + el[i].childNodes[j].nodeValue;
 			}
 		}
+		el = place.getElementsByTagName('ExtendedData');
+		if(el) {
+			for (i = 0; i < el.length; i++) {
+				var extendedData = el[i];
+				if(typeof(extendedData) != 'undefined' && extendedData != null) {
+					for (j = 0; j < extendedData.childNodes.length; j++) {
+						var schemaData = extendedData.childNodes[j];
+						if(typeof(schemaData) != 'undefined' && schemaData != null) {
+							for (k = 0; k < schemaData.childNodes.length; k++) {
+								var theNode = schemaData.childNodes[k];
+								if(typeof(theNode) != 'undefined' && theNode != null) {
+									var textnode = theNode.childNodes[0];
+									if(typeof(textnode) != 'undefined' && textnode != null) {
+										var thetext = textnode.nodeValue;
+										var theName = theNode.getAttribute('name');
+										if(theName != "fulcrum_id") {
+											extra = extra + "<h3>" + theName + ":</h3> " + thetext + "<BR />";
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 
 		if (name) {
-			layer.bindPopup('<h2>' + name + '</h2>' + descr);
+			layer.bindPopup('<h2>' + name + '</h2>' + descr + "<BR />" + extra);
 		}
 
 		return layer;

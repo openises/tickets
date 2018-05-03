@@ -113,10 +113,17 @@ unset($result_as);
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
+			if($https) {
 ?>
-			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php
+				} else {
+?>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
+<?php				
+				}
 			}
 		}
 ?>
