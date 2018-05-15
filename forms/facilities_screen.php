@@ -132,6 +132,7 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .40;
 	mapHeight = viewportheight * .55;
 	outerwidth = viewportwidth * .99;
@@ -263,7 +264,7 @@ function do_tab(tabid, suffix, lat, lng) {
 			<SPAN class='text_medium text_center text_italic' style='color: #FFFFFF; width: 100%; display: block;' id='caption'>click on item to view / edit, Click headers to sort</SPAN>
 		</DIV>
 		<DIV class="scrollableContainer2" id='facilitylist' style='border: 1px outset #707070;'>
-			<DIV class="scrollingArea2" id='the_flist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+			<DIV class="scrollingArea2" id='the_flist' style='padding-top: 20px;'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 		</DIV>
 		<BR />
 		<DIV style='z-index: 1; position: relative; text-align: center;'>
@@ -336,6 +337,7 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
+set_fontsizes(viewportwidth, "fullscreen");
 mapWidth = viewportwidth * .40;
 mapHeight = viewportheight * .55;
 outerwidth = viewportwidth * .99;

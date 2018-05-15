@@ -8,7 +8,6 @@ if (empty($_SESSION)) {
 	}
 require_once './incs/functions.inc.php';
 require './incs/exportcsv.inc.php';
-
 $thefiles = array();
 if ($handle = opendir('./message_archives')) {
     while (false !== ($entry = readdir($handle))) {
@@ -47,6 +46,7 @@ if(mysql_num_rows($result) != 0) {
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<SCRIPT SRC="./js/jss.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 function $() {									// 1/21/09
@@ -124,13 +124,13 @@ if(empty($_POST)) {
 					<TD COLSPAN=99 class='spacer'>&nbsp;</TD>
 				</TR>			
 				<TR class='odd'>	
-					<TD class='td_label' style='text-align: left;'>&nbsp;&nbsp;Start Date</TD><TD class='td_data'><?php print generate_dateonly_dropdown('start',strtotime($oldest_date),FALSE);?></TD>
+					<TD class='td_label text' style='text-align: left;'>&nbsp;&nbsp;Start Date</TD><TD class='td_data text'><?php print generate_dateonly_dropdown('start',strtotime($oldest_date),FALSE);?></TD>
 				</TR>
 				<TR class='even'>	
-					<TD class='td_label' style='text-align: left;'>&nbsp;&nbsp;End Date</TD><TD class='td_data'><?php print generate_dateonly_dropdown('end',strtotime($newest_date),FALSE);?></TD>
+					<TD class='td_label text' style='text-align: left;'>&nbsp;&nbsp;End Date</TD><TD class='td_data text'><?php print generate_dateonly_dropdown('end',strtotime($newest_date),FALSE);?></TD>
 				</TR>
 				<TR class='odd'>	
-					<TD class='td_label' COLSPAN=99>DELETE MESSAGES<input type="checkbox" name="del_messages" value="yes"></TD>
+					<TD class='td_label text' COLSPAN=99>DELETE MESSAGES<input type="checkbox" name="del_messages" value="yes"></TD>
 				</TR>			
 				<TR class='spacer'>
 					<TD COLSPAN=99 class='spacer'>&nbsp;</TD>
@@ -169,8 +169,8 @@ if(empty($_POST)) {
 						$thefile = "./message_archives/" . $val;
 ?>
 						<TR class='<?php print $class;?>'>
-							<TD class='td_label' style='font-size: 12px; text-align: left;'><INPUT TYPE='checkbox' name='files[]' value=<?php print $val;?>></TD>
-							<TD class='td_data' style='font-size: 12px; text-align: left;'><A HREF='<?php print $thefile;?>'><?php print $val;?></TD>
+							<TD class='td_label text' style='font-size: 12px; text-align: left;'><INPUT TYPE='checkbox' name='files[]' value=<?php print $val;?>></TD>
+							<TD class='td_data text' style='font-size: 12px; text-align: left;'><A HREF='<?php print $thefile;?>'><?php print $val;?></TD>
 						</TR>
 <?php
 						$class = ($class == 'even') ? 'odd': 'even';
@@ -187,16 +187,18 @@ if(empty($_POST)) {
 <?php
 } else {
 	if(isset($_POST['frm_year_start'])) {
-		$month_start = (($_POST['frm_month_start'] > 0) && ($_POST['frm_month_start'] == 9)) ? "0" . $_POST['frm_month_start'] : $_POST['frm_month_start'];
-		$day_start = (($_POST['frm_day_start'] > 0) && ($_POST['frm_day_start'] == 9)) ? "0" . $_POST['frm_day_start'] : $_POST['frm_day_start'];
-		$month_end = (($_POST['frm_month_end'] > 0) && ($_POST['frm_month_end'] == 9)) ? "0" . $_POST['frm_month_end'] : $_POST['frm_month_end'];
-		$day_end = (($_POST['frm_day_end'] > 0) && ($_POST['frm_day_end'] == 9)) ? "0" . $_POST['frm_day_end'] : $_POST['frm_day_end'];
+		$month_start = (strlen($_POST['frm_month_start']) == 1) ? "0" . $_POST['frm_month_start'] : $_POST['frm_month_start'];
+		$day_start = (strlen($_POST['frm_day_start']) == 1) ? "0" . $_POST['frm_day_start'] : $_POST['frm_day_start'];
+		$month_end = (strlen($_POST['frm_month_end']) == 1) ? "0" . $_POST['frm_month_end'] : $_POST['frm_month_end'];
+		$day_end = (strlen($_POST['frm_day_end']) == 1) ? "0" . $_POST['frm_day_end'] : $_POST['frm_day_end'];
 		$start = $_POST['frm_year_start'] . "-" . $_POST['frm_month_start'] . "-" . $_POST['frm_day_start'] . " 00:00:00";
 		$end = $_POST['frm_year_end'] . "-" . $_POST['frm_month_end'] . "-" . $_POST['frm_day_end'] . " 23:59:00";	
 		$starttag = "$_POST[frm_year_start]$month_start$day_start";
 		$endtag = "$_POST[frm_year_end]$month_end$day_end";	
 		$filetag = $starttag . "_" . $endtag;
-		$filename = "./message_archives/msg_archive_" . $filetag . ".csv";
+		$directoryName = getcwd() . "/message_archives/";
+		$theFile = "msg_archive_" . $filetag . ".csv";
+		$filename = $directoryName . $theFile;
 		$table = $_POST['table'];
 		$del = ((isset($_POST['del_messages'])) && ($_POST['del_messages'] == "yes")) ? TRUE : FALSE;
 		$the_return = exportMysqlToCsv($table, $filename, $start, $end, $del);
@@ -212,6 +214,7 @@ if(empty($_POST)) {
 		$print = "";
 		foreach($_POST['files'] as $val) {
 			$print .=  "Deleted " . $val . "<BR />";
+			$file = realpath($dir . $val) . "<BR />";
 			unlink($dir . $val);
 			}
 		$title = "Archive Deletion Complete";
@@ -231,4 +234,17 @@ if(empty($_POST)) {
 }
 ?> 
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "fullscreen");
+</SCRIPT>
 </HTML>

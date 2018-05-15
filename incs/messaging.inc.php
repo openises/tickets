@@ -8,6 +8,7 @@
 extract($_GET);
 set_time_limit(0);
 require_once('functions.inc.php');
+$txtlocal_time = "-2 hours";
 function get_provider_name($val) {
 	switch($val) {
 		case "0":
@@ -222,7 +223,7 @@ function check_server($url) {
 				return false;
 				}
 			} else {
-				do_log($GLOBALS['LOG_SMSGATEWAY_CONNECT'], 0, 0, "Cannot connect to SMS Gateway server: ");				
+//				do_log($GLOBALS['LOG_SMSGATEWAY_CONNECT'], 0, 0, "Cannot connect to SMS Gateway server: ");				
 				return false;
 			}
 		}
@@ -275,6 +276,11 @@ function isTag($val) {
 	}
 	
 function link_ticket($message) {
+	$string = strtoupper(GetBetween($message, "#", "#"));
+	return intval($string);
+	}
+	
+function link_ticket_to_email($message) {
 	$string = strtoupper(GetBetween($message, "#", "#"));
 	return intval($string);
 	}
@@ -360,7 +366,8 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=30 ) {	//	C
 	$counter = 0;
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));	
 	$ret = array();
-	$the_list = white_list();	
+	$the_list = white_list();
+	$blacklist = black_list();
 	$ticket_id = 0;
 	$simple = get_msg_variable('email_svr_simple');
 	if($simple == 1) {
@@ -370,7 +377,7 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=30 ) {	//	C
 		}
 	// STAT
 	if(!$c) {
-		do_log($GLOBALS['LOG_EMAIL_CONNECT'], 0, 0, "Cannot connect to IC Email server: ");		
+//		do_log($GLOBALS['LOG_EMAIL_CONNECT'], 0, 0, "Cannot connect to IC Email server: ");		
 		}
 	$s = POP3::pStat($c);
 	// $i - total number of messages, $b - total bytes
@@ -450,7 +457,22 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=30 ) {	//	C
 				$to = $the_message[$z]['to'];	
 				$subject = $the_message[$z]['subject'];
 				$text = $the_message[$z]['text'];	
-				if((in_array($from_address, $the_list)) || ($the_message[$z]['from'] == "") || ($no_whitelist == 1)) {
+				$ticket_from_subject = intval(link_ticket_to_email($subject));
+				$ticket_from_message = intval(link_ticket_to_email($text));
+				if(!is_int($ticket_from_subject)) {
+					$ticket_from_subject = 0;
+					}
+				if(!is_int($ticket_from_message)) {
+					$ticket_from_message = 0;
+					}
+				if($ticket_from_message != 0) {
+					$ticket_id = $ticket_from_message;
+					} elseif($ticket_from_subject != 0 && $ticket_from_message == 0) {
+					$ticket_id = $ticket_from_subject;
+					} elseif($ticket_from_subject == 0 && $ticket_from_message == 0) {					
+					$ticket_id = 0;
+					}
+				if((!in_array($from_address, $blacklist)) && ((in_array($from_address, $the_list)) || ($the_message[$z]['from'] == "") || ($no_whitelist == 1))) {
 					if((array_key_exists('date', $the_message[$z])) && ($the_message[$z]['date'] != "")) {
 						$date = date_parse($the_message[$z]['date']);				
 						$datepart = $date['year'] . "-" . $date['month'] . "-" . $date['day'];
@@ -518,6 +540,16 @@ function white_list() {	//	function to check sender is in allowed list - allowed
 		if($row['email'] != "") {
 			$the_ret[] = $row['email'];
 			}
+		}
+	return $the_ret;
+	}
+	
+function black_list() {	//	function to check sender is in disallowed list.
+	$the_ret = array();
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]email_blacklist`";
+	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+		$the_ret[] = $row['email'];
 		}
 	return $the_ret;
 	}
@@ -730,14 +762,15 @@ function get_responses($server,$orgcode,$apipin,$messageid,$mode) {	//	Polls SMS
 	return $result;	
 	}
 	
-function get_responses_txtlocal($server,$username,$hash) {	//	Polls SMS Gateway for responses - called function do_smsg_retrieve(..
+function get_responses_txtlocal($id) {	//	Polls SMS Gateway for responses - called function do_smsg_retrieve(..
+	global $txtlocal_time;
+	$server = get_msg_variable('txtlocal_icserver');
+	$server2 = get_msg_variable('txtlocal_inserver');
+	$username = get_msg_variable('txtlocal_username');
+	$hash = get_msg_variable('txtlocal_hash');
+	$time = strtotime($txtlocal_time, time() - (intval(intval(get_variable('delta_mins')))*60));
+	$fields = array('username'=>urlencode($username),'hash'=>urlencode($hash),'min_time'=>$time,'inbox_id'=>$id,'format'=>'xml');
 	if (function_exists("curl_init")) {
-		$fields = array(
-					'username'=>urlencode($username),
-					'hash'=>urlencode($hash),
-					'inbox_id'=>'9',
-					'format'=>'xml'
-					);
 		// Send the POST request with cURL
 		$ch = curl_init($server);
 		curl_setopt($ch, CURLOPT_POST, true);
@@ -745,19 +778,8 @@ function get_responses_txtlocal($server,$username,$hash) {	//	Polls SMS Gateway 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		$result = curl_exec($ch);
 		curl_close($ch);
-/* 		$curl_errno = curl_errno($ch);
-		$curl_error = curl_error($ch);
-		if ($curl_errno) {
-			$result = "999";
-			} */
 		} else {	//	No cURL
 		$optional_headers = NULL;
-		$fields = array(
-					'username'=>urlencode($username),
-					'hash'=>urlencode($hash),
-					'inbox_id'=>'9',
-					'format'=>'xml'
-					); 
 		$params = array('http' => array(  
 					'method' => 'POST',  
 					'content' => $fields  
@@ -781,17 +803,16 @@ function get_responses_txtlocal($server,$username,$hash) {	//	Polls SMS Gateway 
 	}
 	
 function get_txtlocal_inboxes() {	//	Polls SMS Gateway for responses - called function do_smsg_retrieve(..
-	$server = get_msg_variable('txtlocal_inserver');
+	global $txtlocal_time;
+	$time = strtotime($txtlocal_time, time() - (intval(intval(get_variable('delta_mins')))*60));
+	$server = get_msg_variable('txtlocal_icserver');
+	$server2 = get_msg_variable('txtlocal_inserver');
 	$username = get_msg_variable('txtlocal_username');
 	$hash = get_msg_variable('txtlocal_hash');
+	$fields = array('username'=>urlencode($username),'hash'=>urlencode($hash),'min_time'=>$time,'format'=>'xml'); 
 	if (function_exists("curl_init")) {
-		$fields = array(
-					'username'=>urlencode($username),
-					'hash'=>urlencode($hash),
-					'format'=>'xml'
-					); 
 		// Send the POST request with cURL
-		$ch = curl_init($server);
+		$ch = curl_init($server2);
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -799,11 +820,6 @@ function get_txtlocal_inboxes() {	//	Polls SMS Gateway for responses - called fu
 		curl_close($ch);
 		} else {	//	No cURL
 		$optional_headers = NULL;
-		$fields = array(
-					'username'=>urlencode($username),
-					'hash'=>urlencode($hash),
-					'format'=>'xml'
-					); 
 		$params = array('http' => array(  
 					'method' => 'POST',  
 					'content' => $fields  
@@ -812,7 +828,7 @@ function get_txtlocal_inboxes() {	//	Polls SMS Gateway for responses - called fu
 			$params['http']['header'] = $optional_headers;  
 			}  
 		$ctx = stream_context_create($params);  
-		$fp = @fopen($server, 'rb', false, $ctx);  
+		$fp = @fopen($server2, 'rb', false, $ctx);  
 		if (!$fp) { 			
 			$result = "999";
 			}
@@ -1094,7 +1110,7 @@ function check_xml_response() {
 		$data = send_message_responder($server,'','','','','','','','');	//	Calls function that does the sending
 		if(!$data) {		
 			print "Problem with the SMS Gateway<BR />";
-			do_log($GLOBALS['LOG_SMSGATEWAY_SEND'], 0, 0, "Cannot send SMS Message to SMS Gateway: ");			
+//			do_log($GLOBALS['LOG_SMSGATEWAY_SEND'], 0, 0, "Cannot send SMS Message to SMS Gateway: ");			
 			return false;
 			} else {
 			$ret_arr = array();
@@ -1182,7 +1198,7 @@ function do_smsg_send($orgcode,$apipin,$subject,$message,$reciptype,$recipients,
 		foreach($smsgs_arr as $val) {
 			$responderNos = get_cellphone($val);
 			$respondNosArr = explode(",", ($responderNos));
-			if($respondNosArr[1]) {
+			if(array_key_exists(1, $respondNosArr)) {
 				foreach($respondNosArr as $val2) {
 					$cells_arr[] = $val2;
 					}
@@ -1265,12 +1281,12 @@ function do_smsg_retrieve($orgcode,$apipin,$mode) {	// retrieves responses from 
 					$thetime = ($thetime == "???") ? $now : $thetime;
 					switch($status) {	//	Work with message status updates - write logs for failures.
 						case "FAILED (NO RESPONSE)":
-							do_log($GLOBALS['LOG_SMSGATEWAY_RECEIVE'], 0, 0, "SMS Message Not received by recipients: ");							
+//							do_log($GLOBALS['LOG_SMSGATEWAY_RECEIVE'], 0, 0, "SMS Message Not received by recipients: ");							
 							break;	
 						case "TRANSIT":
 							break;
 						case "DELIVERED LATE":
-							do_log($GLOBALS['LOG_SMSGATEWAY_RECEIVE'], 0, 0, "SMS Message Delivery delay: ");	
+//							do_log($GLOBALS['LOG_SMSGATEWAY_RECEIVE'], 0, 0, "SMS Message Delivery delay: ");	
 							$who = intval(get_resp_id($callsign));
 							$what = $messageid;
 							update_delivered($who, $what);							
@@ -1317,53 +1333,59 @@ function do_smsg_retrieve($orgcode,$apipin,$mode) {	// retrieves responses from 
 		} else if (return_provider_name(get_msg_variable('smsg_provider')) == "SMS Broadcast") {
 		// Not implemented!
 		} else if (return_provider_name(get_msg_variable('smsg_provider')) == "Txt Local") {
-		$server = get_msg_variable('txtlocal_icserver');
-		$username = get_msg_variable('txtlocal_username');
-		$hash = get_msg_variable('txtlocal_hash');
-		$data = get_responses_txtlocal($server,$username,$hash);	//	Calls function that does the sending
-		$the_response=xml2array($data);
-		if(multi_array_key_exists('code', $response)) {
-			print "Error code: " . $response['response']['errors']['error']['code'] . "<BR />";
-			print "Error message: " . $response['response']['errors']['error']['message'] . "<BR />";
-			} else {
-			$messages = $the_response['response']['messages']['message'];
-			$num_messages = count($the_response['response']['messages']);
-			if($num_messages == 1) {
-				$messageid = $messages['id'];
-				$dn = $messages['number'];
-				$message = $messages['message'];
-				$datestring = $messages['date'];
-				$replyto = get_resp_id_from_number(trim($messages['number']));
-				$respname = (get_resp_name($replyto) != "") ? get_resp_name($replyto): "NA";
-				$resp_id = intval(get_resp_id($replyto));
-				$ticket_id = link_ticket($message);
-				$message = strip_ticket($message);
-				$msgType = 4;
-				$server = 0;
-				$temp = store_msg($replyto, $messageid, "SMS Reply", $message, $respname, $ticket_id, $datestring, 0, $msgType, $server);
-				if(get_msg_variable('use_autostat') == 1) {	//	 Check if Auto Status Updates is set as on and if so check replies for smart text.
-					$the_return = auto_status($message, $replyto, $datestring);
-					if($the_return != 0) {
-						$stat_up[$resp_id] = $the_return;	//	if auto status is on and funtion auto status returns a required update then write that update to $stat_up array for output.
-						}
-					}
-				} else {
-				foreach($messages as $val) {
-					$messageid = $val['id'];
-					$dn = $val['number'];
-					$message = $val['message'];
-					$datestring = $val['date'];
-					$replyto = get_resp_id_from_number(trim($val['number']));
-					$respname = (get_resp_name($replyto) != "") ? get_resp_name($replyto): "NA";
-					$resp_id = intval(get_resp_id($replyto));
-					$ticket_id = link_ticket($message);
-					$msgType = 4;
-					$server = 0;
-					$temp = store_msg($replyto, $messageid, "SMS Reply", $message, $respname, $ticket_id, $datestring, 0, $msgType, $server);
-					if(get_msg_variable('use_autostat') == 1) {	//	 Check if Auto Status Updates is set as on and if so check replies for smart text.
-						$the_return = auto_status($message, $replyto, $datestring);
-						if($the_return != 0) {
-							$stat_up[$resp_id] = $the_return;	//	if auto status is on and funtion auto status returns a required update then write that update to $stat_up array for output.
+		$theResponse = xml2array(get_txtlocal_inboxes());
+		$numInboxes = $theResponse['response']['num_inboxes'];
+		$inboxes = $theResponse['response']['inboxes'];
+		foreach($inboxes as $inbox) {
+			foreach($inbox as $arr) {
+				$id = $arr['id'];
+				$number = $arr['number'];				
+				$data = get_responses_txtlocal($id);
+				$the_response=xml2array($data);
+				if(multi_array_key_exists('code', $response)) {
+					print "Error code: " . $response['response']['errors']['error']['code'] . "<BR />";
+					print "Error message: " . $response['response']['errors']['error']['message'] . "<BR />";
+					} else {
+					$messages = $the_response['response']['messages']['message'];
+					$num_messages = count($messages);
+					if($num_messages == 1) {
+						$messageid = $messages['id'];
+						$dn = $messages['number'];
+						$message = $messages['message'];
+						$datestring = $messages['date'];
+						$replyto = get_resp_id_from_number(trim($messages['number']));
+						$respname = (get_resp_name($replyto) != "") ? get_resp_name($replyto): "NA";
+						$resp_id = intval(get_resp_id($replyto));
+						$ticket_id = link_ticket($message);
+						$message = strip_ticket($message);
+						$msgType = 4;
+						$server = 0;
+						$temp = store_msg($replyto, $messageid, "SMS Reply", $message, $respname, $ticket_id, $datestring, 0, $msgType, $server);
+						if(get_msg_variable('use_autostat') == 1) {	//	 Check if Auto Status Updates is set as on and if so check replies for smart text.
+							$the_return = auto_status($message, $replyto, $datestring);
+							if($the_return != 0) {
+								$stat_up[$resp_id] = $the_return;	//	if auto status is on and funtion auto status returns a required update then write that update to $stat_up array for output.
+								}
+							}
+						} else {
+						foreach($messages as $val) {
+							$messageid = $val['id'];
+							$dn = $val['number'];
+							$message = $val['message'];
+							$datestring = $val['date'];
+							$replyto = get_resp_id_from_number(trim($val['number']));
+							$respname = (get_resp_name($replyto) != "") ? get_resp_name($replyto): "NA";
+							$resp_id = intval(get_resp_id($replyto));
+							$ticket_id = link_ticket($message);
+							$msgType = 4;
+							$server = 0;
+							$temp = store_msg($replyto, $messageid, "SMS Reply", $message, $respname, $ticket_id, $datestring, 0, $msgType, $server);
+							if(get_msg_variable('use_autostat') == 1) {	//	 Check if Auto Status Updates is set as on and if so check replies for smart text.
+								$the_return = auto_status($message, $replyto, $datestring);
+								if($the_return != 0) {
+									$stat_up[$resp_id] = $the_return;	//	if auto status is on and funtion auto status returns a required update then write that update to $stat_up array for output.
+									}
+								}
 							}
 						}
 					}

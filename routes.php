@@ -156,7 +156,6 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" /> 
 	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/> 
-	
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -663,8 +662,7 @@ function doReset() {
 
 			if ($row['multi']==1) {
 				$dispatches_disp[$row['theunit_id']] = "**";					// identify as multiple - 5/22/09
-				}
-			else {
+				} else {
 				$dispatches_disp[$row['theunit_id']] = (empty($row['clear']))? $row['theticket']:"";	// blank = unit unassigned
 				}		// end if/else(...)
 			}
@@ -937,7 +935,7 @@ function doReset() {
 <?php
 
 ?>
-			<SPAN ID='mail_dir_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.email_form.submit();'><?php print get_text("Mail Dir");?><BR /><IMG SRC='./images/send.png' BORDER=0></SPAN>
+			<SPAN ID='mail_dir_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='do_direcs_mail_win();'><?php print get_text("Mail Dir");?><BR /><IMG SRC='./images/send.png' BORDER=0></SPAN>
 			<SPAN ID='reset_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: none;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='show_butts(to_hidden) ; doReset();'><?php print get_text("Reset");?><BR /><IMG SRC='./images/restore.png' BORDER=0></SPAN>
 			<SPAN ID='can_but' class='plain_centerbuttons text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG SRC='./images/cancel.png' BORDER=0></SPAN>
 <?php
@@ -949,7 +947,7 @@ function doReset() {
 <?php
 				}
 ?>
-			<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);'>
+			<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='mail_direcs' onsubmit='return mail_direcs(this);'>
 				<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />
 				<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />
 				<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident' />

@@ -90,12 +90,14 @@ if ($istest) {
 		dump ($_SESSION);
 		}
 	}
+	
+$protocol = ($https) ? "https" : "http";
 
 if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$extra = 'mobile.php';
-	header("Location: http://$host$uri/$extra");
+	header("Location: " . $protocol . "://$host$uri/$extra");
 	exit();
 	}
 	
@@ -103,7 +105,7 @@ if($_SESSION['level'] == $GLOBALS['LEVEL_SERVICE_USER']) {
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$extra = 'portal.php';
-	header("Location: http://$host$uri/$extra");
+	header("Location: " . $protocol . "://$host$uri/$extra");
 	exit;
 	}
 
@@ -111,7 +113,8 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 $get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
 $get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
 $get_sort_by_field = 	(array_key_exists('sort_by_field', ($_GET)))?	$_GET['sort_by_field']:	NULL;
-$get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	NULL;	
+$get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	NULL;
+$alt_sit = (intval(get_variable('alternate_sit')) == 1) ? true : false;
 	if ($get_print) {
 		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
 			require_once('./forms/ticket_view_screen.php');
@@ -120,29 +123,28 @@ $get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_valu
 			require_once('./forms/ticket_view_screen_NM.php');
 			print "<BR /><P ALIGN='left'>";
 			}
-		}
-	else if ($get_id) {
+		} else if ($get_id) {
 		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
-//			add_header($get_id, FALSE, TRUE);
 			require_once('./forms/ticket_view_screen.php');
-//			print "<BR /><P ALIGN='left'>";
 			} else {
 			add_header($get_id, FALSE, TRUE);
 			require_once('./forms/ticket_view_screen_NM.php');
 			print "<BR /><P ALIGN='left'>";
 			}
 
-		}
-	else if ($get_sort_by_field && $get_sort_value) {
+		} else if ($get_sort_by_field && $get_sort_value) {
 		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
 			require_once('./forms/sit_screen.php');
 			} else {
 			require_once('./forms/sit_screen_NM.php');
 			}
-		}
-	else {
+		} else {
 		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
-			require_once('./forms/sit_screen.php');
+			if($alt_sit) {
+				require_once('full_sit_scr.php');
+				} else {
+				require_once('./forms/sit_screen.php');
+				}
 			} else {
 			require_once('./forms/sit_screen_NM.php');
 			}

@@ -11,7 +11,7 @@ require_once('incs/functions.inc.php');		//7/28/10
 
 // dump($_POST);
 
-function template_214 ($item) {
+function template_ics ($item) {
 
 	$body 			= " BACKGROUND-COLOR: #EFEFEF; MARGIN:0; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none ";
 	$table 			= " width:7in; border-collapse: collapse; border:1px solid black; background-color: white; ";
@@ -211,7 +211,7 @@ switch ($step) {
 <input type = 'hidden' name = 'f0' value = "" />
 <h2>ACTIVITY LOG (ICS 214)</h2>
 <?php
-	echo template_214 ($item);		// fills form with default $item entries
+	echo template_ics ($item);		// fills form with default $item entries
 ?>
 <input type = 'hidden' name = 'step' value = 2 />
 <input type = 'hidden' name = 'frm_add_str' value = '<?php echo $_POST['frm_add_str'];?>'/>
@@ -248,7 +248,7 @@ switch ($step) {
 			}			// end function html_mail ()
 
 		$stuff = array_values ($_POST);
-		$html_message = template_214 ($stuff) ;
+		$html_message = template_ics ($stuff) ;
 
 		$to_array = explode ("|", $_POST['frm_add_str']);
 		$to = $sep = "";
@@ -274,7 +274,7 @@ switch ($step) {
 <div id = 'complete' style = 'margin-top:40px;'><H2 >ICS 214 Message sent - <?php echo $stuff[3] ; ?></h2></div>
 
 <?php
-//		echo template_214 ($stuff) ;
+//		echo template_ics ($stuff) ;
 		break;
 
 	case 3 :				// what-for tbd

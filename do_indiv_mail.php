@@ -30,8 +30,9 @@ require_once($_SESSION['fip']);		//7/28/10
 
 //dump($_POST);
 
-if (empty($_POST)) {		
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart(trim($_GET['the_id'])). " LIMIT 1";
+if (empty($_POST)) {
+	$id = quote_smart(trim($_GET['the_id']));
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id . " LIMIT 1";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row = mysql_fetch_assoc($result);
 ?>
@@ -88,7 +89,19 @@ if (empty($_POST)) {
 			<TR CLASS= 'odd'>
 				<TD ALIGN='right'>Addr:</TD>
 				<TD>
-					<INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $row['contact_via'];?>'>
+<?php
+					$em_arr = array();
+					$temp_arr = array();
+					$temp_addrs = get_contact_via($row['unit_id']);
+					foreach($temp_addrs as $val) {
+						if (is_email($val)) {
+							array_push($temp_arr, $val);
+							}
+						}
+					$em_arr = array_unique($temp_arr);
+					$em_addr = implode("|", $em_arr);
+?>
+					<INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $em_addr;?>'>
 				</TD>
 			</TR>
 			<TR CLASS='even'>
@@ -111,13 +124,11 @@ if (empty($_POST)) {
 				</TD>
 			</TR>
 		</TABLE>
+		<INPUT TYPE='hidden' NAME="frm_id" VALUE='<?php print $id;?>'>
 		</FORM>
 <?php
-		}		// end if (empty($_POST)) {
-
-	else {
-
-			do_send ($_POST['frm_addr'], "", $_POST['frm_subj'], $_POST['frm_text'], 0, quote_smart(trim($_GET['the_id'])));	// ($to_str, $subject_str, $text_str )
+		} else {		// end if (empty($_POST)) {
+		do_send ($_POST['frm_addr'], "", $_POST['frm_subj'], $_POST['frm_text'], 0, $_POST['frm_id']);	// ($to_str, $subject_str, $text_str )
 ?>
 	<BODY><CENTER>		
 	<CENTER><BR /><BR /><BR /><H3>Mail sent</H3><BR /><BR />

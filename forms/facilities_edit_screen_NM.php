@@ -303,7 +303,7 @@ function check_days(id) {
 	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 			<A NAME='top'>		<!-- 11/11/09 -->
-			<FORM METHOD="POST" NAME= "res_edit_form" ENCTYPE="multipart/form-data" ACTION="facilities.php?goedit=true"> <!-- 7/9/09 -->
+			<FORM METHOD="POST" NAME= "res_edit_Form" ENCTYPE="multipart/form-data" ACTION="facilities.php?goedit=true"> <!-- 7/9/09 -->
 			<TABLE BORDER=0 ID='editform'>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>

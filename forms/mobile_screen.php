@@ -145,23 +145,23 @@ input:hover {background-color: white; border-width: 4px; border-STYLE: outset;}
 <script type="application/x-javascript" src="./js/usng.js"></script>
 <script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
-if ($_SESSION['internet']) {
-	$api_key = get_variable('gmaps_api_key');
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
-	if($key_str) {
-		if($https) {
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+			if($https) {
 ?>
-			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php
-			} else {
+				} else {
 ?>
-			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php				
+				}
 			}
 		}
-	}
 ?>
 <script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
 <script type="application/x-javascript" src="./js/L.Graticule.js"></script>
@@ -572,7 +572,11 @@ function ck_frames() {
 		} else {
 		try {
 			parent.upper.show_butts();
-			parent.upper.do_day_night("<?php print $_SESSION['day_night'];?>");
+			} 
+		catch (e) {
+			}
+		parent.upper.do_day_night("<?php print $_SESSION['day_night'];?>")
+		try {
 			parent.upper.theConnection();
 			} 
 		catch (e) {

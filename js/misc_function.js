@@ -838,7 +838,9 @@ function $() {									// 1/21/09, 7/18/10
 	}
 	
 function do_hover (the_id) {
-	if($(the_id).classList.contains("text_small")) {
+	if($(the_id).classList.contains("text_large")) {
+		CngClass(the_id, 'hover text_large');	
+		} else if($(the_id).classList.contains("text_small")) {
 		CngClass(the_id, 'hover text_small');
 		} else {
 		CngClass(the_id, 'hover text');
@@ -847,7 +849,9 @@ function do_hover (the_id) {
 	}
 
 function do_plain (the_id) {				// 8/21/10
-	if($(the_id).classList.contains("text_small")) {
+	if($(the_id).classList.contains("text_large")) {
+		CngClass(the_id, 'plain text_large');			
+		} else if($(the_id).classList.contains("text_small")) {
 		CngClass(the_id, 'plain text_small');
 		} else {
 		CngClass(the_id, 'plain text');
@@ -952,6 +956,16 @@ function do_lo_plain (the_id) {
 		} else {
 		CngClass(the_id, 'lo_plain text');
 		}
+	return true;
+	}
+	
+function do_plain_medium (the_id) {				// 8/21/10
+	CngClass(the_id, 'plain text_medium');
+	return true;
+	}
+	
+function do_hover_medium (the_id) {
+	CngClass(the_id, 'hover text_medium');
 	return true;
 	}
 
@@ -1164,6 +1178,22 @@ function do_mail_win(the_id) {
 	newwindow_mail.focus();
 	starting = false;
 	}		// end function do mail_win()
+	
+function do_direcs_mail_win() {
+	if(starting) {return;}					// dbl-click catcher
+	starting=true;
+	var the_height = window.screen.height * 0.7;
+	var the_width = window.screen.width * 0.5;
+	var url = "do_direcs_mail.php";
+	newwindow_direcs=window.open(url, "mail_direcs",  "titlebar, location=0, resizable=1, scrollbars, height="+the_height+",width="+the_width+",status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
+	if (isNull(newwindow_direcs)) {
+		alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
+		return;
+		}
+	newwindow_direcs.focus();
+	document.email_form.submit();
+	starting = false;
+	}		// end function do mail_win()
 
 function do_fac_mail_win(the_name, the_addrs) {			// 3/8/10
 	if(starting) {return;}					// dbl-click catcher
@@ -1172,6 +1202,19 @@ function do_fac_mail_win(the_name, the_addrs) {			// 3/8/10
 	var the_width = window.screen.width * 0.5;
 	var url = (isNullOrEmpty(the_name))? "do_fac_mail.php?" : "do_fac_mail.php?name=" + escape(the_name) + "&addrs=" + escape(the_addrs);	//
 	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height="+the_height+",width="+the_width+",status=0,toolbar=0,menubar=0,location=0, left=50,top=100,screenX=50,screenY=100");
+	if (isNull(newwindow_mail)) {
+		alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
+		return;
+		}
+	newwindow_mail.focus();
+	starting = false;
+	}		// end function do mail_win()
+
+function do_member_mail_win(the_id) {	
+	if(starting) {return;}					// dbl-click catcher
+	starting=true;
+	var url = "do_member_mail.php?name=" + escape(the_id);	//
+	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=320,width=720,status=0,toolbar=0,menubar=0,location=0, left=100,top=100,screenX=100,screenY=100");
 	if (isNull(newwindow_mail)) {
 		alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
 		return;
@@ -1232,6 +1275,30 @@ function unit_log(id) {										// 9/10/13
 	var ulWindow = window.open(url, 'unitLogWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
 	setTimeout(function() { ulWindow.focus(); }, 1);
 	}
+	
+var newwindow_incfs = null;
+function do_full_inc_scr() {                            //9/7/09
+	if ((newwindow_incfs) && (!(newwindow_incfs.closed))) {newwindow_incfs.focus(); return;}		// 7/28/10
+	if (logged_in()) {
+		if(starting) {return;}                        // 4/15/10 fullscreen=no
+		if(window.focus() && newwindow_incfs) {newwindow_incfs.focus()}    // if already exists
+		starting=true;
+		params  = 'width='+screen.width;
+		params += ', height='+screen.height;
+		params += ', top=0, left=0, scrollbars = 1';
+		params += ', resizable=1';
+		newwindow_incfs=window.open("full_sit_scr.php", "incidents_full_scr", params);
+		if (isNull(newwindow_incfs)) {
+			alert ("This operation requires popups to be enabled. Please adjust your browser options.");
+			return;
+			}
+		newwindow_incfs.focus();
+		var params = "f_n=fullscr_sit&v_n=true&sess_id=" + sess_id;
+		var url = "persist2.php";
+		sendRequest (url, gb_handleResult, params);
+		starting = false;
+		}
+	}        // end function do full_scr()
 	
 function get_roster_details(theForm, id)	{	//	9/6/13
 	if(id==0) {
@@ -1611,7 +1678,7 @@ function set_fontsizes(screenwidth, screenFormat) {
 	jss.set('.text_big', { "font-size": theFonts.large });
 	jss.set('.text_biggest', { "font-size": theFonts.verylarge });
 	jss.set('.heading', { "font-size": theFonts.large });
-	if(theScreen != "responders") {
+	if(theScreen != "responders" && theScreen != "requests") {
 		jss.set('div.scrollingArea', { "padding-top": listPadding });
 		jss.set('div.scrollingArea2', { "padding-top": listPadding });
 		} else {
@@ -1632,4 +1699,133 @@ function pausecomp(millis) {
 
 	do { curDate = new Date(); } 
 	while(curDate-date < millis);
-	} 
+	}
+	
+function generatePassword() {
+    var length = 12,
+        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        retVal = "";
+    for (var i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+		}
+	if(document.user_add_Form) {document.user_add_Form.frm_passwd.value = retVal;}
+	if(document.user_add_Form) {document.user_add_Form.frm_passwd_confirm.value = retVal;}
+	if($('view_password')) {$('view_password').style.display="inline-block"; $('view_password').innerHTML = retVal;}
+	if(document.editProf) {document.editProf.frm_passwd.value = retVal;}
+	if(document.editProf) {document.editProf.frm_passwd_confirm.value = retVal;}
+	if($('view_password')) {$('view_password').style.display="inline-block"; $('view_password').innerHTML = retVal;}
+    return retVal;
+	}
+	
+function get_callboard() {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url = './ajax/get_callboard.php?version=' + randomnumber + '&q=' + sess_id;
+	sendRequest (url,callboard_cb, "");
+	function callboard_cb(req) {
+		var board_arr = JSON.decode(req.responseText);
+		if(!board_arr) { return;}
+		var outputtext = "<TABLE id='cbtable' class='fixedheadscrolling scrollable' style='width: 90%;'>";
+		outputtext += "<thead>";
+		outputtext += "<TR class='topline' style='width: 90%; background-color: #EFEFEF;'>";
+		outputtext += "<TH id='tb1' COLSPAN='4' class='plain_listheader text' style='color: #000000; background-color: green;'>INCIDENT</TH>";
+		outputtext += "<TH id='tb2' COLSPAN='9' class='plain_listheader text' style='color: #000000; background-color: orange;'>UNITS</TH>";
+		outputtext += "<TH id='tb3' class='plain_listheader text' style='color: #FFFFFF; background-color: blue;'>AS OF</TH>";
+		outputtext += "<TH id='tb4' COLSPAN='3' class='plain_listheader text' style='color: #000000; background-color: #FFFFFF;'>DISPATCH</TH>";
+		outputtext += "</TR><BR />";
+		outputtext += "<TR class='secondline' style='width: 90%; background-color: #EFEFEF;'>";		
+		outputtext += "<TH id='b1' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Incident Name');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Name</TH>";
+		outputtext += "<TH id='b2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Incident Description');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Synopsis</TH>";
+		outputtext += "<TH id='b3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Incident Address');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Address</TH>";
+		outputtext += "<TH id='b4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Incident Type');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Nature</TH>";
+		outputtext += "<TH id='b5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Responder Name');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Name</TH>";
+		outputtext += "<TH id='b6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Contact Unit');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Mail</TH>";
+		outputtext += "<TH id='b7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Dispatched');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">D</TH>";
+		outputtext += "<TH id='b8' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Responding');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">R</TH>";
+		outputtext += "<TH id='b9' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('On Scene');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">O</TH>";
+		outputtext += "<TH id='b10' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('En-route to Facility');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">FE</TH>";
+		outputtext += "<TH id='b11' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Arrived at Facility');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">FA</TH>";
+		outputtext += "<TH id='b12' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Cleared from Job');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">C</TH>";
+		outputtext += "<TH id='b13' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Responder Status');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Status</TH>";
+		outputtext += "<TH id='b14' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Updated as of');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">&nbsp;</TH>";
+		outputtext += "<TH id='b15' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Dispatched By');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">By</TH>";
+		outputtext += "<TH id='b16' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Assignment Comments');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Comment</TH>";
+		outputtext += "<TH id='b17' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('Reset Dispatch Times');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\">Reset</TH>";
+		outputtext += "</TR>";
+		outputtext += "</thead>";
+		outputtext += "<tbody>";
+		var i = 1;
+		for(var f = 0; f < board_arr.length; f++) {
+			if(board_arr[f][8] != "") {
+				var theMailBut = pad(10, "<DIV style='text-align: center;'><IMG SRC='mail.png' BORDER=0 TITLE = 'click to email unit " + board_arr[f][7] + "' onclick = 'do_mail_win(\"" + board_arr[f][1] + "\");'></DIV>", "\u00a0");
+				} else {
+				var theMailBut = pad(10, "", "\u00a0");
+				}
+			outputtext += "<TR id='line_" + board_arr[f][0] + "' CLASS='" + colors[i%2] + "' style='width: 90%;'>";
+			outputtext += "<TD id='scope_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(30, board_arr[f][3], "\u00a0") + "</TD>";	//	Tickets Name
+			outputtext += "<TD id='descr_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(30, board_arr[f][4], "\u00a0") + "</TD>";	//	Ticket Description
+			outputtext += "<TD id='addr_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(30, board_arr[f][5], "\u00a0") + "</TD>";	//	Ticket Address
+			outputtext += "<TD id='nature_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][6], "\u00a0") + "</TD>";	//	Ticket Type
+			outputtext += "<TD id='rname_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(20, board_arr[f][7], "\u00a0") + "</TD>";	//	Responder Name
+			outputtext += "<TD id='mail_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + theMailBut + "</TD>";	//	Email
+			outputtext += "<TD id='disp_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][9], "\u00a0") + "</TD>";	//	Dispatched
+			outputtext += "<TD id='resp_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][10], "\u00a0") + "</TD>";	//	Responding
+			outputtext += "<TD id='os_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][11], "\u00a0") + "</TD>";		//	On Scene
+			outputtext += "<TD id='enr_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][12], "\u00a0") + "</TD>";	//	En route to Facilty
+			outputtext += "<TD id='arr_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][13], "\u00a0") + "</TD>";	//	Arrived at Facility
+			outputtext += "<TD id='clear_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(10, board_arr[f][14], "\u00a0") + "</TD>";	//	Clear
+			outputtext += "<TD id='comm_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(20, board_arr[f][15], "\u00a0") + "</TD>";	//	Responder Status
+			outputtext += "<TD id='asof_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(20, board_arr[f][16], "\u00a0") + "</TD>";	//	Updated
+			outputtext += "<TD id='db_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(5, board_arr[f][17], "\u00a0") + "</TD>";	//	Dispatched by
+			outputtext += "<TD id='comments_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>" + pad(20, board_arr[f][18], "\u00a0") + "</TD>";	//	Assigns Comments
+			outputtext += "<TD id='reset_" + board_arr[f][0] + "' class='plain_list text_bolder' style='border-right: 1px solid red;'>Reset</TD>";	//	Reset Dispatch times
+			outputtext += "</TR>";
+			i++;
+			}
+		outputtext += "</tbody>";
+		outputtext += "</TABLE>";
+		setTimeout(function() {
+			if($('the_board')) {$('the_board').innerHTML = outputtext;}
+			var cbtable = document.getElementById('cbtable');
+			if(cbtable) {
+				var headerRow = cbtable.rows[1];
+				var tableRow = cbtable.rows[2];
+				if(tableRow) {
+					for (var i = 0; i < tableRow.cells.length; i++) {
+						if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = (tableRow.cells[i].clientWidth + 1.4) + "px";}
+						}
+					var thePad = 1;
+					var b1 = $('b1').clientWidth + thePad;
+					var b2 = $('b2').clientWidth + thePad;
+					var b3 = $('b3').clientWidth + thePad;
+					var b4 = $('b4').clientWidth + thePad;
+					var b5 = $('b5').clientWidth + thePad;
+					var b6 = $('b6').clientWidth + thePad;
+					var b7 = $('b7').clientWidth + thePad;
+					var b8 = $('b8').clientWidth + thePad;
+					var b9 = $('b9').clientWidth + thePad;
+					var b10 = $('b10').clientWidth + thePad;
+					var b11 = $('b11').clientWidth + thePad;
+					var b12 = $('b12').clientWidth + thePad;
+					var b13 = $('b13').clientWidth + thePad;
+					var b14 = $('b14').clientWidth + thePad;
+					var b15 = $('b15').clientWidth + thePad;
+					var b16 = $('b16').clientWidth + thePad;
+					var b17 = $('b17').clientWidth + thePad;
+					var colheader1 = (b1 + b2 + b3 + b4) + "px";
+					var colheader2 = (b5 + b6 + b7 + b8 + b9 + b10 + b11 + b12 + b13) + "px";
+					var colheader3 = (b14) + "px";
+					var colheader4 = (b15 + b16 + b17) + "px";
+					$('tb1').style.width = colheader1;
+					$('tb2').style.width = colheader2;
+					$('tb3').style.width = colheader3;
+					$('tb4').style.width = colheader4;
+					} else {
+					var cellwidthBase = window.cbWidth / 17;
+					for (var i = 0; i < tableRow.cells.length; i++) {		
+						headerRow.cells[0].style.width = cellwidthBase + "px";
+						}
+					}
+				}
+			},300);	
+		}				// end function callboard_cb()
+	}				// end function get_callboard()

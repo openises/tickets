@@ -4,8 +4,7 @@
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
-session_start();						// 
-session_write_close();
+@session_start();
 if (empty($_SESSION)) {
 	header("Location: index.php");
 	}

@@ -12,9 +12,11 @@ $temp2 = get_variable('socketserver_port');
 $host = ($temp1 == "") ? "{$_SERVER['SERVER_NAME']}" : $temp1;
 $port = ($temp2 == "") ? "1337" : $temp2;
 $isLocal = ($host == "127.0.0.1") ? 1 : 0;
-@session_start();
-$user_id = (array_key_exists('user_id', $_SESSION)) ? $_SESSION['user_id'] : "";
 $users_arr = array();
+$user_names = array();
+@session_start();
+session_write_close();
+$user_id = (array_key_exists('user_id', $_SESSION)) ? $_SESSION['user_id'] : 0;
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
 $result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -29,6 +31,12 @@ while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
 	}
 	
 $from_arr = array_unique($from_arr1);
+
+$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
+$result_users2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+while ($row_users2 = stripslashes_deep(mysql_fetch_assoc($result_users2))) 	{
+	$user_names[$row_users2['id']] = $row_users2['user'];
+	}
 
 ?>
 <!DOCTYPE html>
@@ -60,10 +68,22 @@ $from_arr = array_unique($from_arr1);
 	var sk_inteval = null;
 	var users = <?php echo json_encode($users_arr);?>;
 	var users_IP = <?php echo json_encode($from_arr);?>;
+	var usernames = <?php echo json_encode($user_names);?>;
 	var checkConn = false
 	var host = "ws://" + hostURL + ":" + hostPORT;
 	var checkconn_interval = null;
 	
+	function get_user_id() {
+		if((window.opener) && (window.opener.parent.frames["upper"])) {						// in call board?
+			user_id = window.opener.parent.frames["upper"].$("user_id").innerHTML;
+			} else if($('user_id')) {	//	In top bar
+			user_id = $('user_id').innerHTML;
+			} else {
+			user_id = (parent.frames["upper"])? parent.frames["upper"].$('user_id').innerHTML : $('user_id').innerHTML;	
+			}		// end else
+		return user_id;
+		}				// end function get_user_id()
+
 	function Socket_startup() {
 		if (window.checkconn_interval!=null) {return;}		//	Interval already set
 		window.checkconn_interval = window.setInterval('theConnection()', 2000);
@@ -75,6 +95,17 @@ $from_arr = array_unique($from_arr1);
 			}
 		return inVal;
 		}
+		
+	function do_heartbeat() {	//	Heartbeat to drive connected users information
+		var userid = get_user_id();
+		if(userid == 0) {return;}
+		broadcast("I am " + userid, 599);
+		}			// end function do_heartbeat()
+		
+	function broadcast_heartbeat() {	//	Timer for do_heartbeat()
+		if (window.broadcast_interval!=null) {return;}
+		window.broadcast_interval = window.setInterval('do_heartbeat()', 10000);
+		}			// end function broadcast_heartbeat()
 		
 	function theConnection() {
 		if(window.checkConn == true || window.socket) {	//	stop duplicate connections
@@ -98,6 +129,7 @@ $from_arr = array_unique($from_arr1);
 			var theMins = addZero(n.getMinutes());
 			var theSeconds = addZero(n.getSeconds());
 			var dateStamp = theHours + ":" + theMins + ":" + theSeconds;
+			broadcast_heartbeat();
 			var ourArr = event.data.split("/");
 			var the_message = ourArr[1];
 			var msgType = (ourArr[2]) ? parseInt(ourArr[2]) : 1;
@@ -120,13 +152,25 @@ $from_arr = array_unique($from_arr1);
 							}
 						}
 					logText += "<BR />";
-					$('summary').innerHTML = logText;
-					$('summary').scrollTop = $('summary').scrollHeight;
+//					$('summary').innerHTML = logText;
+//					$('summary').scrollTop = $('summary').scrollHeight;
 					break;
 				case 97:
-					var logText = "Usercount Heartbeat: " + payload + " at " + dateStamp + "<BR />";
-					$('messageLog').innerHTML += logText;
-					$('messageLog').scrollTop = $('messageLog').scrollHeight;
+//					var logText = "Usercount Heartbeat: " + payload + " at " + dateStamp + "<BR />";
+//					$('messageLog').innerHTML += logText;
+//					$('messageLog').scrollTop = $('messageLog').scrollHeight;
+					break;
+				 case 98:
+					var connectedString = "";
+					var part1 = ourArr[0];
+					var part2 = payload;
+					var part3 = ourArr[2];
+					var connectedUsers = payload;
+					var usersArr = payload.split(",");
+					for(var i = 0; i < usersArr.length; i++) {
+						connectedString += usernames[usersArr[i]] + "<BR />";
+						}
+					$('summary').innerHTML = "Connected Users<BR />" + connectedString;
 					break;
 				case 299:
 					var logText = "System Message: " + payload + " at " + dateStamp + "<BR />";
@@ -140,6 +184,31 @@ $from_arr = array_unique($from_arr1);
 				} 
 			}				// end incoming
 		}
+		
+	function broadcast(theMessage, theType) {
+<?php
+		$do_broadcast = get_variable('broadcast');
+		if (intval ($do_broadcast) == 1) {							// possibly disabled
+?>
+			var user_id = get_user_id();
+			if(theMessage == "close server") {
+				alert("Closing Down Websocket Server");
+				}
+			if(theMessage == "restart server") {
+				alert("Restarting Websocket Server");
+				}				
+			var type = (theType) ? theType : 1;
+			if(theType == 1) {writeto_log(5000, 0, 0, theMessage, 0, 0, 0);}
+	    	var temp = user_id;
+			var outStr = temp + "/" + theMessage + "/" + theType;
+			if(window.socket) {
+				window.socket.send(outStr);
+				}
+<?php
+			}		// end ($do_broadcast) == 1
+?>		
+	    }		// end function broadcast
+
 		
 	</script>
 </HEAD>

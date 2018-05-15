@@ -27,12 +27,11 @@ require_once($_SESSION['fip']);		//7/28/10
 </STYLE>
 <?php
 
-if (empty($_POST['frm_u_id']) && empty($_GET['unit_id'])) {
+/* if (empty($_POST['frm_u_id']) && empty($_GET['unit_id'])) {
 	print "<CENTER>You must select a Unit first</BR></BR>";
 	print "<A href='javascript: self.close ()'>Close</A></CENTER>";
 	exit();
-	}
-
+	} */
 if(!array_key_exists('direcs', $_GET)) {
 	$direcs = ($_POST['frm_direcs'] == "") ? $_POST['frm_text'] : $_POST['frm_direcs'];
 	$tick_name = (isset($_POST['frm_scope'])) ? $_POST['frm_scope'] : "";	//10/29/09
@@ -41,20 +40,18 @@ if(!array_key_exists('direcs', $_GET)) {
 	$unit_id = ((isset($_POST['frm_u_id'])) && ($_POST['frm_u_id'] != "")) ? $_POST['frm_u_id'] : 0;
 	$the_addrs = ((isset($_POST['frm_addr'])) && ($_POST['frm_addr'] != "")) ? $_POST['frm_addr'] : "";		
 	$smsg_id = "";
-	$mail_subject = $_POST['frm_mail_subject'];
+	$mail_subject = $_POST['frm_mail_subject'] . " " . $_POST['frm_scope'];
 	$direcs = str_replace("&nbsp;",' ',$direcs); 
 	$direcs = str_replace("</tr>",'NEWLINE',$direcs);
 	$direcs = str_replace("</td>",' ',$direcs);
 	$direcs = strip_tags($direcs);
 	$direcs = str_replace("NEWLINE",'&#13;&#10;',$direcs);
-	//$direcs = stripslashes($direcs);
-	//$direcs = html_entity_decode($direcs);
 	unset($_POST['frm_direcs']);
 	unset($_POST['frm_u_id']);
 	unset($_POST['frm_tick_id']);
 	unset($_POST['frm_smsgaddrs']);
 	unset($_POST['frm_mail_subject']);
-	unset($_POST['frm_scope']);	//10/29/09
+	unset($_POST['frm_scope']);
 	$display_form = (array_key_exists('showform', $_POST)) ? true : false;
 }
 if (empty($_POST) || $display_form) {	
@@ -72,12 +69,39 @@ if (empty($_POST) || $display_form) {
 	if(array_key_exists('subject', $_GET)) {
 		$mail_subject = $_GET['subject'];
 		}
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = $unit_id";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $unit_id;
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-		$contact_email = $row['contact_via'];
-		$contact_name = $row['contact_name'];
-		$smsg_id = $row['smsg_id'];
+// Get Email Addresses
+		$em_arr = array();
+		$temp_arr = array();
+		$temp_addrs = get_contact_via($unit_id);
+		foreach($temp_addrs as $val) {
+			if (is_email($val)) {
+				array_push($temp_arr, $val);
+				}
+			}
+		$em_arr = array_unique($temp_arr);
+		$em_addr = implode("|", $em_arr);
+		$contact_email = $em_addr;
+// Get Contact Names		
+		$nm_arr = array();
+		$temp_arr = array();
+		$temp_addrs = get_mdb_names($unit_id);
+		foreach($temp_addrs as $val) {
+			array_push($temp_arr, $val);
+			}
+		$nm_arr = array_unique($temp_arr);
+		$contact_name = implode(",", $nm_arr);
+// Get SMSG IDs
+		$sm_arr = array();
+		$temp_arr = array();
+		$temp_addrs = get_smsgid($unit_id);
+		foreach($temp_addrs as $val) {
+			array_push($temp_arr, $val);
+			}
+		$sm_arr = array_unique($temp_arr);
+		$smsg_id = implode(",", $sm_arr);		
 		}
 ?>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
@@ -162,7 +186,7 @@ if (empty($_POST) || $display_form) {
 				</TR>
 
 			<TR CLASS= 'odd'>
-				<TD ALIGN='right'>Addr:</TD>
+				<TD CLASS='td_label text text_right'>Addr:</TD>
 				<TD CLASS='td_data text'>
 					<INPUT NAME='frm_addr' SIZE=32 VALUE = '<?php print $contact_email;?>'>
 				</TD>

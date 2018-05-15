@@ -102,8 +102,8 @@ var board = <?php print $board;?>;
 var showEvents = <?php print $showEvents;?>;
 var showStats = <?php print $showStats;?>;
 var counter = 0;
-var pagetimerStart = new Date();
-var pagetimerEnd = 0;
+var pagetimerStart;
+var pagetimerEnd;
 var doTime = false;
 var incFin = false;
 var respFin = false;
@@ -193,6 +193,9 @@ function pageLoaded() {
 		if(!isGuest) {
 			if(showEvents == 1) {
 				load_log(window.log_field, window.log_direct);
+				} else {
+				logFin = true;
+				pageLoaded();
 				}
 			if(showStats == 1) {		
 				do_statistics();
@@ -200,16 +203,26 @@ function pageLoaded() {
 			}
 		get_scheduled_number();
 		} else if(incFin && respFin && facFin && logFin) {
-		pagetimerEnd = new Date();
-		var elapsedTime = pagetimerEnd - window.pagetimerStart;
-		var theTimeLoadString = "Page Loaded in: " + pageLoadTime + " seconds, Data Loaded in " + elapsedTime/1000 + " seconds";
-		$('timer_div').innerHTML = theTimeLoadString;
 		window.incFin = false;
 		window.respFin = false;
 		window.facFin = false;
 		window.logFin = false;
 		window.statSel = false;
 		window.facstatSel = false;
+		responderlist_get();
+		facilitylist_get();
+		incidentlist_get();
+		conditions_get();	
+		if(showEvents == 1) {
+			log_get();
+			}
+		if(showStats == 1) {		
+			statistics_get();
+			}
+		window.pagetimerEnd = new Date();
+		var elapsedTime = pagetimerEnd - pagetimerStart;
+		var theTimeLoadString = "Page Loaded in: " + pageLoadTime + " seconds, Data Loaded in " + elapsedTime/1000 + " seconds";
+		$('timer_div').innerHTML = theTimeLoadString;
 		}
 	}
 
@@ -218,6 +231,8 @@ function do_responder_refresh() {
 	window.do_resp_refresh = true; 
 	$('the_rlist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 	setTimeout(function() {
+		get_assignments();
+		get_unit_categories();
 		load_responderlist(window.resp_field, window.resp_direct);
 		},1000);
 	}
@@ -375,12 +390,14 @@ function set_size() {
 	$('facilitiesheading').style.width = rightcolwidth + "px";
 	if(!isGuest) {
 		if(showEvents == 1) {
-			$('logheading').style.width = leftcolwidth + "px";
-			$('loglist').style.width = leftcolwidth + "px";
+			if($('logheading')) {$('logheading').style.width = leftcolwidth + "px";}
+			if($('loglist')) {$('loglist').style.width = leftcolwidth + "px";}
+			if($('the_loglist')) {$('the_loglist').style.width = leftcolwidth + "px";}
 			}
 		if(showStats == 1) {		
-			$('stats_wrapper').style.width = leftcolwidth + "px";
-			$('stats_heading').style.width = leftcolwidth + "px";
+			if($('stats_wrapper')) {$('stats_wrapper').style.width = leftcolwidth + "px";}
+			if($('stats_heading')) {$('stats_heading').style.width = leftcolwidth + "px";}
+			if($('stats_table')) {$('stats_table').style.width = leftcolwidth + "px";}
 			}
 		}
 	get_scheduled_number();
@@ -389,10 +406,18 @@ function set_size() {
 	}
 	
 function loadData() {
+	pagetimerStart = new Date();
 	if(window.board ==2) {
-		setTimeout(function() {get_mi_totals();load_responderlist(window.resp_field, window.resp_direct);},5000);
+		setTimeout(function() {
+			get_mi_totals(); 
+			get_assignments(); 
+			get_unit_categories(); 
+			load_responderlist(window.resp_field, window.resp_direct);
+			},5000);
 		} else {
 		get_mi_totals();
+		get_assignments();
+		get_unit_categories();
 		load_responderlist(window.resp_field, window.resp_direct);
 		}
 	load_status_bgcolors();
@@ -605,6 +630,7 @@ if (is_guest()) {
 					</SELECT>
 				</FORM>
 				Incidents <SPAN ID='sched_flag'></SPAN>
+				<SPAN id='full_scr_inc' class='plain text' onmouseover='do_hover(this.id); Tip("Pop out full incident list");' onmouseout='do_plain(this.id); UnTip();' onClick="do_full_inc_scr(); hideDiv('ticketlist', 'collapse_incs', 'expand_incs'); $('ticketheading').style.display='none';" style = 'float: left;'><IMG SRC = './images/full_screen.png'></SPAN>
 				<SPAN id='collapse_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Minimize List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
 				<SPAN id='expand_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Expand List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
 				<SPAN id='reload_incs' class='plain_square text' style='float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover_squarebuttons(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="do_incident_refresh();" style = 'float: right; display: "";'><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN><BR />
@@ -797,14 +823,14 @@ $('the_flist').style.height = innerlistheight + "px";
 $('facilitiesheading').style.width = rightcolwidth + "px";
 if(!isGuest) {
 	if(showEvents == 1) {
-		$('logheading').style.width = leftcolwidth + "px";
-		$('loglist').style.width = leftcolwidth + "px";
-		$('the_loglist').style.width = leftcolwidth + "px";
+		if($('logheading')) {$('logheading').style.width = leftcolwidth + "px";}
+		if($('loglist')) {$('loglist').style.width = leftcolwidth + "px";}
+		if($('the_loglist')) {$('the_loglist').style.width = leftcolwidth + "px";}
 		}
 	if(showStats == 1) {		
-		$('stats_wrapper').style.width = leftcolwidth + "px";
-		$('stats_heading').style.width = leftcolwidth + "px";
-		$('stats_table').style.width = leftcolwidth + "px";
+		if($('stats_wrapper')) {$('stats_wrapper').style.width = leftcolwidth + "px";}
+		if($('stats_heading')) {$('stats_heading').style.width = leftcolwidth + "px";}
+		if($('stats_table')) {$('stats_table').style.width = leftcolwidth + "px";}
 		}
 	}
 set_fontsizes(viewportwidth, "fullscreen");

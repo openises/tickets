@@ -94,6 +94,7 @@
 	do_login(basename(__FILE__));	// session_start()
 	require_once('./incs/config.inc.php');
 	require_once('./incs/usng.inc.php');
+	require_once('./incs/member.inc.php');
 	$st_size = (get_variable("locale") ==0)?  2: 4;		
 	if ($istest) {
 		foreach ($_POST as $VarName=>$VarValue) 	{echo "POST:$VarName => $VarValue, <BR />";};
@@ -127,6 +128,25 @@
 		return $org_cntl;
 		}
 		
+	function read_directory($directory, $ext = NULL) {
+		$the_ret = array();
+		$dirhandler = opendir($directory);
+		$i=0;
+		while ($file = readdir($dirhandler)) {
+			if ($file != '.' && $file != '..') {
+				$i++;
+				$temp = explode(".", $file);
+				$count = count($temp);
+				$extension = $temp[$count-1];
+				if(!$ext || $ext == $extension) {
+					$the_ret[$i]=$file;
+					}					
+				}   
+			}
+		closedir($dirhandler);
+		return $the_ret;
+		}
+
 	function dump_db() {
 		require_once('./incs/MySQLDump.class.php');
 		include('./incs/mysql.inc.php');
@@ -217,6 +237,9 @@ require_once('./incs/all_forms_js_variables.inc.php');
 <SCRIPT>
 	var viewportwidth;
 	var viewportheight;
+	var fieldnames = [];
+	var screens = [];
+	var sortorders = [];
 
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
@@ -1002,8 +1025,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						$msg = "Notify deletion complete!";					// pre-set
 						$query = "DELETE from $GLOBALS[mysql_prefix]notify WHERE id='".$_POST['frm_id'][$i]."' LIMIT 1";
 						$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-						}
-					else {					//email validation check
+						} else {					//email validation check
 						$msg = "Notify update complete.";			// pre-set
 	
 						$email = validate_email($_POST['frm_email'][$i]);
@@ -1038,7 +1060,6 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				
 				if (!get_variable('allow_notify')) print "<FONT CLASS=\"warn\">Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 				print "<FONT CLASS='header'>$msg</FONT><BR /><BR />";
-				print "<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'><SPAN STYLE='float: left;'><?php print get_text('Finished');?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>";
 				}				// end array_key_exists('save')
 	
 			else if ((array_key_exists('add', ($_GET))) && ($_GET['add']== 'true')) {	//email validation check
@@ -1070,7 +1091,6 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 				if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
 				print "<FONT SIZE='3'><B>Notify update complete.</B></FONT><BR /><BR />";
-				print "<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'><SPAN STYLE='float: left;'><?php print get_text('Finished');?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>";
 				}			// end array_key_exists('add')
 	
 			else {
@@ -1118,7 +1138,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						<SPAN id='send_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.new_notify.submit();'><SPAN STYLE='float: left;'>" . get_text('New Notify') . "</SPAN><IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
 						<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.frm_update.reset();'><SPAN STYLE='float: left;'>" . get_text('Reset') . "</SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 						<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'><SPAN STYLE='float: left;'>" . get_text('Cancel') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
-					print "</TABLE><BR />";
+					print "</FORM></TABLE><BR />";
 ?>
 					<FORM NAME = 'new_notify' method = 'GET' ACTION = '<?php print basename(__FILE__);?>' >
 					<INPUT TYPE = 'hidden' NAME = 'func' VALUE = 'notify' />
@@ -1174,41 +1194,47 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				<BR />
 				<BR />
 				<FORM METHOD="POST" name='editProf' ACTION="config.php?func=profile&go=true"><INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'];?>">
-				<TABLE BORDER="0" STYLE = 'margin-left:40px'>	<!-- 8/27/10 -->
+				<TABLE BORDER="0" STYLE = ' width: 50%; margin-left:40px'>
 					<TR CLASS='odd'>
-						<TD COLSPAN=2 ALIGN='center'>
+						<TD COLSPAN=4 ALIGN='center'>
 							<FONT CLASS="header text">Edit My Profile</FONT><BR /><BR />
 						</TD>
 					</TR>
 					<TR CLASS="even">
-						<TD CLASS="td_label text">New Password:</TD>
+						<TD CLASS="td_label text" style='width: 25%;'>New Password:</TD>
 						<TD>
-							<INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd" VALUE=''> &nbsp;&nbsp;
+							<INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd" VALUE='' />
+						</TD>
+						<TD style='width: 25%;'>
 							<B>Confirm: </B>
-							<INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"  VALUE=''>
+							<INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"  VALUE='' />
+						</TD>
+						<TD style='width: 50%;'>
+							<SPAN class='plain' id='gen_pass' style='vertical-align: middle; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='generatePassword();'>Generate Password</SPAN>
+							<SPAN id='view_password' class='text_large text_bold text_valign_middle text_center' style='float: right; display: none; background-color: #FFFFFF; border: 1px outset #707070; height: 100%; width: 50%;'></SPAN>
 						</TD>
 					</TR>
 					<TR CLASS="odd">
-						<TD CLASS="td_label text">Email:</TD>
-						<TD>
+						<TD CLASS="td_label text" style='width: 25%;'>Email:</TD>
+						<TD COLSPAN=3 style='width: 75%;'>
 							<INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['email'];?>" NAME="frm_email">
 						</TD>
 					</TR>
 					<TR CLASS="even">
-						<TD CLASS="td_label text">Info:</TD>
-						<TD>
+						<TD CLASS="td_label text" style='width: 25%;'>Info:</TD>
+						<TD COLSPAN=3 style='width: 75%;'>
 							<INPUT SIZE="47" MAXLENGTH="255" TYPE="text" VALUE="<?php print $row['info'];?>" NAME="frm_info">
 						</TD>
 					</TR>
 					<TR CLASS="odd">
-						<TD CLASS="td_label text">Tickets per page:</TD>
-						<TD>
+						<TD CLASS="td_label text" style='width: 25%;'>Tickets per page:</TD>
+						<TD COLSPAN=3 style='width: 75%;'>
 							<INPUT SIZE="47" MAXLENGTH="3" TYPE="text" VALUE="<?php print $row['ticket_per_page'];?>" NAME="frm_ticket_per_page">
 						</TD>
 					</TR>
 					<TR CLASS="even">
-						<TD CLASS="td_label text">Sort By:</TD>
-						<TD>
+						<TD CLASS="td_label text" style='width: 25%;'>Sort By:</TD>
+						<TD COLSPAN=3 style='width: 75%;'>
 							<SELECT NAME="frm_sortorder">
 								<OPTION value="date" <?php if($row['sortorder']=='date') print " selected";?>>Date</OPTION>
 								<OPTION value="description" <?php if($row['sortorder']=='description') print " selected";?>>Description</OPTION>
@@ -1219,7 +1245,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						</TD>
 					</TR>
 					<TR CLASS="odd">
-						<TD ALIGN="center" COLSPAN=2>
+						<TD COLSPAN=4 ALIGN="center" COLSPAN=2 style='width: 100%;'>
 							<SPAN id='can_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
 							<SPAN id='reset_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.editProf.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 							<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate_prof(document.editProf);"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
@@ -1457,7 +1483,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 					}					
 				}
-			print '<FONT CLASS="update_conf">Settings saved - will take effect at <font color="red"> next Tickets re-start</FONT>.</FONT><BR /><BR />';
+			print '<FONT CLASS="update_conf">Messaging Settings saved.</FONT><BR /><BR />';
 			}
 		else {
 			print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";		// 9/21/08
@@ -1566,7 +1592,536 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 <?php
 			exit();
 			}				// end else
-	    break;		
+	    break;
+	
+	case 'mdb_settings' :
+		if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
+			print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+			foreach ($_POST as $VarName=>$VarValue) {
+				if($VarName == "date_tracking") {
+					$var_arr = array();
+					$count = count($_POST['date_tracking']);
+					$var_str = implode(",", $_POST['date_tracking']);
+					$query = "UPDATE `$GLOBALS[mysql_prefix]mdb_settings` SET `value`=". quote_smart($var_str)." WHERE `name`='".$VarName."'";
+					$result = mysql_query($query);
+					} else {
+					$query = "UPDATE `$GLOBALS[mysql_prefix]mdb_settings` SET `value`=". quote_smart($VarValue)." WHERE `name`='".$VarName."'";
+					$result = mysql_query($query);
+					}
+				}
+			print '<FONT CLASS="update_conf">Membership Database Settings saved.<BR /><BR />';
+			} else {
+			print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";		// 9/21/08
+			$evenodd = array ("even", "odd");
+?>
+			<DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 /></div>
+			<A NAME="top" /> <!-- 11/11/09 -->
+
+<?php
+			print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Edit Membership Database Settings</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />
+				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
+				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=mdb_settings&go=true'>";
+			$counter = 0;
+			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]mdb_settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			while($row = stripslashes_deep(mysql_fetch_array($result))) {
+				if (($row['name']{0} <> "_" ) && (($row['name'] <> "date_tracking") && ($row['name'] <> "mdb_contact_via_field") && ($row['name'] <> "mdb_cellphone_field") && ($row['name'] <> "mdb_homephone_field") && ($row['name'] <> "mdb_workphone_field") && ($row['name'] <> "mdb_phone_field") && ($row['name'] <> "mdb_smsg_id_field") && ($row['name'] <> "tickets_status_available") && ($row['name'] <> "tickets_status_unavailable") && ($row['name'] <> "member_status_available") && ($row['name'] <> "enforce_status") && ($row['name'] <> "no_status_select") && ($row['name'] <> "use_mdb_contact") && ($row['name'] <> "use_mdb_status"))) {								// hide these
+					$capt = str_replace ( "_", " ", $row['name']);
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_mdb_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
+					print "<TD><INPUT MAXLENGTH='512' SIZE='48' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
+					$counter++;
+					} else {
+					if($row['name'] == "date_tracking") {
+						$temp1 = get_mem_datetime_fields();
+						$numMemDateTimeFields = count($temp1);
+						$temp2 = get_veh_datetime_fields();
+						$numVehDateTimeFields = count($temp2);
+						$fields_arr = array_merge($temp1, $temp2);
+						$fieldnames = array();
+						foreach($fields_arr as $key => $val) {
+							$fieldnames[] = $val['label'];
+							}
+						$numDateTimeFields = $numMemDateTimeFields + $numVehDateTimeFields;
+						$val_checked = explode(",", $row['value']);
+						$capt = str_replace ( "_", " ", $row['name']);
+						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_mdb_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD><TD>";
+						for ($n = 0; $n < $numDateTimeFields; $n++) {
+							$chkd = ($val_checked[$n] == "1") ? "CHECKED" : "";
+							print "<INPUT TYPE = 'hidden' NAME='date_tracking[" . $n . "]' VALUE='0'>";							
+							print "<INPUT TYPE = 'checkbox' NAME='date_tracking[" . $n . "]' VALUE='1' " . $chkd . ">" . $fieldnames[$n] . "<BR />";
+							}
+						print "</TD></TR>\n";							
+						$counter++;
+						} elseif($row['name'] == "enforce_status" || $row['name'] == "no_status_select" || $row['name'] == "use_mdb_contact" || $row['name'] == "use_mdb_status") {
+						$capt = str_replace ("_", " ", $row['name']);
+						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_mdb_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";						
+						print "<TD><SELECT style='width: 100%;' name='" . $row['name'] . "'>";
+						$no = ($row['value'] == 0) ? "selected" : "";
+						$yes = ($row['value'] == 1) ? "selected" : "";
+						print "<OPTION value=0 " . $no . ">No</OPTION>";
+						print "<OPTION value=1 " . $yes . ">Yes</OPTION>";
+						print "</SELECT></TD>";
+						print "</TR>\n";
+						$counter++;
+						} elseif($row['name'] == "mdb_contact_via_field" || $row['name'] == "mdb_cellphone_field" || $row['name'] == "mdb_phone_field" || $row['name'] == "mdb_smsg_id_field") {
+						$capt = str_replace ("_", " ", $row['name']);
+						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_mdb_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";						
+						print "<TD>" . get_mdb_fields_select($row['name'], $row['value']) . "</TD>";
+						print "</TR>\n";
+						$counter++;
+						} elseif($row['name'] == "tickets_status_available" || $row['name'] == "tickets_status_unavailable") {
+						$capt = str_replace ("_", " ", $row['name']);
+						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_mdb_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";						
+						print "<TD>" . get_tickets_status_select($row['name'], $row['value']) . "</TD>";
+						print "</TR>\n";
+						$counter++;
+						} elseif($row['name'] == "member_status_available") {
+						$capt = str_replace ("_", " ", $row['name']);
+						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_mdb_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";						
+						print "<TD>" . get_mdb_status_select($row['name'], $row['value']) . "</TD>";
+						print "</TR>\n";
+						$counter++;
+						} else {
+						$capt = str_replace ( "_", " ", $row['name']);
+						print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='".get_msg_settings_help($row['name'])."'>$capt</A>: &nbsp;</TD>";
+						print "<TD>" . get_mdb_fields_select($row['name'], $row['value']) . "</TD></TR>\n";
+						$counter++;
+						}
+						
+					}
+				}		// str_replace ( search, replace, subject)
+			
+			print "</FORM></TABLE>\n";		// 7/16/09	
+?>
+		<A NAME="bottom" /> <!-- 11/11/09 -->
+		<IMG SRC="markers/up.png" BORDER=0  onclick = "location.href = '#top';" STYLE = 'margin-left: 20px'></TD>
+			<DIV ID="foo">
+				<DIV ID="bar">		<!-- 9/26/09 -->
+					<SPAN id='cancel_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+<?php		// 3/19/11
+					if((is_administrator()) || (is_super())) {
+?>
+						<SPAN id='reset_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.set_Form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+						<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.set_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+<?php	
+						}
+?>				
+				
+				</DIV>
+			</DIV>
+
+			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
+			</BODY>
+			<SCRIPT>
+				try {
+					parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+					parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
+					parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+					}
+				catch(e) {
+					}
+			</SCRIPT>
+			</HTML>
+<?php
+			exit();
+			}				// end else
+	    break;
+	
+	case 'wizard_settings' :
+		if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
+			print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+			$delcounter = 0;
+			if(array_key_exists('frm_delete', $_POST)) {
+				foreach($_POST['frm_delete'] as $key=>$val) {
+					if($val == "1") {
+						$query = "DELETE FROM `$GLOBALS[mysql_prefix]wizard_settings` WHERE id='" . $key . "' LIMIT 1";
+						$result = mysql_query($query);
+						$delcounter++;
+						}
+					}
+				if($delcounter > 0) {print $delcounter . " Field Settings removed from New Incident Wizard.";}
+				}
+			if(array_key_exists('frm_new', $_POST)) {
+				$fieldindex = get_field_index("ticket", $_POST['frm_fieldname']);
+				$type = get_field_type("ticket", $fieldindex);
+				switch($type) {
+					case "BLOB":
+						$fieldtype = "TEXTAREA";
+						break;
+					case "LONG":
+					case "VAR_STRING";
+					case "STRING";
+						$fieldtype = "TEXT STRING";
+						break;
+					case "DATETIME":
+						$fieldtype = "DATETIME";
+						break;
+					default:
+						$fieldtype = "TEXT STRING";
+					}
+				$fieldname = get_field_name("ticket", $fieldindex);
+				$fieldsize = get_field_size('ticket', $fieldindex);			
+				if($fieldtype == "TEXT STRING") {
+					$maxlength = 64;;
+					} else {
+					$maxlength = $fieldsize;
+					}
+				$query  = "INSERT INTO `$GLOBALS[mysql_prefix]wizard_settings` (`fieldname` , `label`, `screen`, `display_order` , `maxlength` , `fieldtype` , `size`, `default_text`, `helptext` ) VALUES 
+					('" . $fieldname . "', '" . $_POST['frm_label'][0] . "', " . $_POST['frm_screen'][0] . ", " . $_POST['frm_display_order'][0] . ", " . $maxlength . ", '" . $fieldtype . "', " . $fieldsize . ", '" . $_POST['frm_default_text'][0] . "', '" . $_POST['frm_helptext'][0] . "')";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+				print "New Setting Submitted<BR />";
+				} else {
+				$output_arr = array();
+				foreach($_POST as $key=>$setting) {
+					foreach($setting as $key2=>$value) {
+						$output_arr[$key2][$key] = $value;
+						}
+					}
+				foreach($output_arr as $key=>$val) {
+ 					$query = "UPDATE `$GLOBALS[mysql_prefix]wizard_settings` SET 
+						`fieldname` = ". quote_smart($val['frm_fieldname']) . ",
+						`label` = ". quote_smart($val['frm_label']) . ",
+						`screen` = ". quote_smart($val['frm_screen']) . ",
+						`display_order` = ". quote_smart($val['frm_display_order']) . ",
+						`maxlength` = ". quote_smart($val['frm_maxlength']) . ",
+						`fieldtype` = ". quote_smart($val['frm_fieldtype']) . ",
+						`helptext` = ". quote_smart($val['frm_helptext']) . ",
+						`default_text` = ". quote_smart($val['frm_default_text']) . ",
+						`size` = ". quote_smart($val['frm_fieldsize']) . " 
+						WHERE `id`='" . $key . "'";
+					$result = mysql_query($query);
+					}
+				print '<FONT CLASS="update_conf">Wizard Settings saved.<BR /><BR />';
+				}
+			} else {
+?>
+			<SCRIPT>
+			function do_screeenandorder_validation(selectedid, theID, theControl) {
+				var thisControl = theControl.getAttribute('id');
+				var thisControlValue = $(thisControl).value;
+				var thisScreen = $("frm_screen_" + theID);
+				var thisScreenValue = thisScreen.value;
+				var fieldlength = document.getElementsByName("frm_fieldname[]").length;
+				var selects = document.getElementsByTagName("select");
+				for(var	i = 1; i <= selects.length; i++) {
+					var screenfield = $("frm_screen_" + i);
+					var theField = $("frm_fieldname_" + i);
+					var theSelect = $("disp_order_" + i);
+					var selectValue = $(theSelect).value;
+					var screenValue = screenfield.value;
+					if(screenfield && theField) {
+						if(selectValue == thisControlValue && screenValue == thisScreenValue) {
+							alert("That screen and order combination is aleady set for " + theField.value);
+							}
+						}
+					}
+				}
+				
+			function do_delete_setting(theID) {
+				if(confirm("Please confirm you wish to delete this field from the \"New Incident Wizard\".")) {
+					var fieldName = "frm_delete_" + theID;
+					$(fieldName).value = 1;
+					$('settingRow_' + theID).style.backgroundColor='red';
+					return true;
+					} else {
+					return false;
+					}
+				}
+				
+			function do_reset_settings() {
+				var table = $('settings_table');
+				var rows = table.getElementsByTagName('tr');
+				for(var	i = 0; i <= rows.length; i++) {
+					rows[i].style.backgroundColor = "";
+					}
+				document.set_Form.reset();
+				}
+				
+			</SCRIPT>
+<?php
+			print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";		// 9/21/08
+			$evenodd = array ("even", "odd");
+			$mandatory = array();
+			$mandatory[0] = 'in_types_id';
+			$mandatory[1] = 'contact';
+			$mandatory[2] = 'address';
+			$mandatory[4] = 'state';
+			$mandatory[7] = 'scope';
+			$mandatory[8] = 'description';
+			$mandatory[9] = 'problemstart';
+		
+?>
+			<DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 /></div>
+			<A NAME="top" /> <!-- 11/11/09 -->
+
+<?php
+			print "<SPAN STYLE='position: relative; top: 30px; margin-left: 40px'><FONT CLASS='header text_biggest'>Edit New Incident Wizard Settings</FONT>&nbsp;&nbsp;&nbsp;(mouseover caption for help information)</SPAN><BR /><BR />
+				<FORM METHOD='POST' NAME= 'set_Form' onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=wizard_settings&go=true'>
+				<TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto;'>";
+			print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>Field</TH><TH CLASS='header text text_left'>Label</TH><TH CLASS='header text text_left'>Screen</TH><TH CLASS='header text text_left'>Display Order</TH><TH CLASS='header text text_left'>Default Text</TH><TH CLASS='header text text_left'>Help Text</TH><TH CLASS='header text text_left'>Field Display Length</TH><TH CLASS='header text text_left'>Field Type</TH><TH CLASS='header text text_left'>Field Size</TH><TH CLASS='header text text_left'>&nbsp;&nbsp;&nbsp;</TH></TR>\n";
+			$counter = 0;
+			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]wizard_settings` ORDER BY screen, display_order");
+			while($row = stripslashes_deep(mysql_fetch_array($result))) {
+				$counter++;
+				print "<TR id='settingRow_" . $row['id'] . "' CLASS='" . $evenodd[$counter%2] . "' STYLE='width: 100%;'>\n";
+				$id = $row['id'];
+				$screen = $row['screen'];
+				$name = $row['fieldname'];
+				$label = $row['label'];
+				$display_order = $row['display_order'];
+				$default_text = $row['default_text'];
+				$helptext = $row['helptext'];
+				if($name == "address") {$fieldindex = "address";} else {$fieldindex = get_field_index("ticket", $name);}
+				if($name == "address") {$type = "STRING";} else {$type = get_field_type("ticket", $fieldindex);}
+				switch($type) {
+					case "BLOB":
+						$fieldtype = "TEXTAREA";
+						break;
+					case "LONG":
+					case "VAR_STRING";
+					case "STRING";
+						$fieldtype = "TEXT STRING";
+						break;
+					case "DATETIME":
+						$fieldtype = "DATETIME";
+						break;
+					default:
+						$fieldtype = "TEXT STRING";
+					}
+				if($name == "address") {
+					$fieldname == "address";
+					$fieldsize == 128;
+					} else {
+					$fieldname = get_field_name("ticket", $fieldindex);
+					$fieldsize = get_field_size('ticket', $fieldindex);
+					}
+				$control = get_wizard_field_select($name, $id);
+				$disporderControl = "<SELECT id='disp_order_" . $id . "' name='frm_display_order[" . $id . "]' onChange='do_screeenandorder_validation(this.value, " . $id . ", this);' STYLE='width: 90%;'>\n";
+				$sel1 = $sel2 = $sel3 = $sel4 = "";
+				switch($display_order) {
+					case 1:
+						$sel1 = "SELECTED ";
+						break;
+					case 2:
+						$sel2 = "SELECTED ";
+						break;
+					case 3:
+						$sel3 = "SELECTED ";
+						break;
+					case 4:
+						$sel4 = "SELECTED ";
+						break;
+					}
+				$disporderControl .= "<OPTION VALUE=1 " . $sel1 . ">1</OPTION><OPTION VALUE=2 " . $sel2 . ">2</OPTION><OPTION VALUE=3 " . $sel3 . ">3</OPTION><OPTION VALUE=4 " . $sel4 . ">4</OPTION>";
+				$disporderControl .= "</SELECT>\n";
+				print "<TD style='border-right: 1px solid red;' class='td_data text text_left'>".$control."</TD>\n";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'><INPUT STYLE='width: 90%;' id='frm_label_" . $id . "' type='text' name='frm_label[" . $id . "]' value='".$label."' /></TD>\n";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'><INPUT STYLE='width: 90%;' id='frm_screen_" . $id . "' type='text' name='frm_screen[" . $id . "]' value='".$screen."' /></TD>\n";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'>" . $disporderControl . "</TD>\n";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'><INPUT STYLE='width: 90%;' type='text' id='frm_default_text_" . $id . "' name='frm_default_text[" . $id . "]' value='".$default_text."' /></TD>\n";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'><INPUT STYLE='width: 90%;' type='text' id='frm_helptext_" . $id . "' name='frm_helptext[" . $id . "]' value='".$helptext."' /></TD>\n";
+				if($fieldtype == "TEXT STRING") {
+					print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'><INPUT STYLE='width: 90%;' type='text' id='frm_maxlength_" . $id . "' name='frm_maxlength[" . $id . "]' value='64' /></TD>\n";
+					} else {
+					print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'><INPUT STYLE='width: 90%;' type='text' id='frm_maxlength_" . $id . "' name='frm_maxlength[" . $id . "]' value='".$fieldsize."' /></TD>\n";
+					}
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_left'>".$fieldtype."&nbsp;&nbsp;&nbsp;</TD>\n";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_left'>".$fieldsize."&nbsp;&nbsp;&nbsp;</TD>\n";
+				$delete = (in_array($name, $mandatory)) ? "" : "<SPAN id='delete_button_".$id."' class='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"do_delete_setting(" . $id . ");\"><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>";
+				print "<TD style='border-right: 1px solid red;' CLASS='td_data text text_center'>".$delete."</TD>\n";
+				print "</TR>\n";
+				print "<INPUT TYPE='hidden' NAME='frm_fieldtype[" . $id . "]' VALUE='".$fieldtype."' />";
+				print "<INPUT TYPE='hidden' NAME='frm_fieldsize[" . $id . "]' VALUE='".$fieldsize."' />";
+				print "<INPUT TYPE='hidden' ID='frm_delete_" . $id . "' NAME='frm_delete[" . $id . "]' VALUE='' />";
+				}
+			
+			print "</TABLE></FORM><BR /><BR /><BR />";
+			$control = get_wizard_field_select(NULL, NULL);
+			if($control != "") {
+				print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Add New Field</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />";
+				print "<FORM METHOD='POST' NAME= 'new_set_Form' ACTION='config.php?func=wizard_settings&go=true'>";
+				print "<TABLE BORDER='0' STYLE='margin-left: 40px; width: auto;'>";
+				print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>Field</TH><TH CLASS='header text text_left'>Label</TH><TH CLASS='header text text_left'>Screen</TH><TH CLASS='header text text_left'>Display Order</TH><TH CLASS='header text text_left'>Default Text</TH><TH CLASS='header text text_left'>Help Text</TH></TR>";
+				$counter = 0;
+				print "<TR CLASS='" . $evenodd[$counter%2] . "' STYLE='width: 100%;'>";
+				print "<TD class='td_data text text_left'>" . $control . "</TD>";
+				print "<TD CLASS='td_data text text_center'><INPUT type='text' id='frm_label_0' name='frm_label[0]' value='' /></TD>";
+				print "<TD CLASS='td_data text text_center'><INPUT type='text' id='frm_screen_0' name='frm_screen[0]' value='1' /></TD>";
+				$disporderControl = "<SELECT id='disp_order_0' name='frm_display_order[0]' onChange='do_screeenandorder_validation(this.value, 0, this);'>\n";
+				$disporderControl .= "<OPTION VALUE=1 SELECTED>1</OPTION>\n<OPTION VALUE=2>2</OPTION>\n<OPTION VALUE=3>3</OPTION>\n<OPTION VALUE=4>4</OPTION>\n";
+				$disporderControl .= "</SELECT>\n";
+				print "<TD CLASS='td_data text text_center'>" . $disporderControl . "</TD>";
+				print "<TD CLASS='td_data text text_center'><INPUT type='text' id='frm_default_text_0' name='frm_default_text[0]' value='' /></TD>";
+				print "<TD CLASS='td_data text text_center'><INPUT type='text' id='frm_helptext_0' name='frm_helptext[0]' value='' /></TD>";
+				print "<TD CLASS='td_data text text_center'>";
+				print "<SPAN id='add_but' CLASS='plain text' style='width: 100px; display: inline-block; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.new_set_Form.submit();'><SPAN STYLE='float: left;'>" . get_text('Add New') . "</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>";
+				print "</TD>\n";
+				print "</TR>";
+				print "</TABLE>";
+				print "<INPUT TYPE='hidden' NAME='frm_new' VALUE=1 />";
+				print "</FORM>\n";
+				}
+?>
+		<A NAME="bottom" /> <!-- 11/11/09 -->
+		<IMG SRC="markers/up.png" BORDER=0  onclick = "location.href = '#top';" STYLE = 'margin-left: 20px'></TD>
+			<DIV ID="foo">
+				<DIV ID="bar">		<!-- 9/26/09 -->
+					<SPAN id='cancel_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+<?php		// 3/19/11
+					if((is_administrator()) || (is_super())) {
+?>
+						<SPAN id='reset_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_reset_settings();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+						<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.set_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+<?php	
+						}
+?>				
+				
+				</DIV>
+			</DIV>
+
+			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
+			</BODY>
+			<SCRIPT>
+				try {
+					parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+					parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
+					parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+					}
+				catch(e) {
+					}
+			</SCRIPT>
+			</HTML>
+<?php
+			exit();
+			}				// end else
+	    break;
+	
+	case 'sound_settings' :
+		if((isset($_GET))&& (isset($_GET['go']))&& ($_GET['go'] == 'true')) {
+			print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+			$delcounter = 0;
+			if(array_key_exists('frm_delete', $_POST)) {
+				foreach($_POST['frm_delete'] as $key=>$val) {
+					if($val == "1") {
+						$query = "DELETE FROM `$GLOBALS[mysql_prefix]sound_settings` WHERE id='" . $key . "' LIMIT 1";
+						$result = mysql_query($query);
+						$delcounter++;
+						}
+					}
+				if($delcounter > 0) {print $delcounter . " Field Settings removed from New Incident Wizard.";}
+				}
+				
+			$soundnames = array();
+			$soundnames[1] = "Incident";
+			$soundnames[3] = "Responder";
+			$soundnames[6] = "Message";
+			$soundnames[7] = "Chat";
+			$soundnames[8] = "Broadcast";
+			$output_arr = array();
+			foreach($_POST as $key=>$setting) {
+				foreach($setting as $key2=>$value) {
+					$output_arr[$key2][$key] = $value;
+					$output_arr[$key2]['frm_name'] = $soundnames[$key2];
+					$output_arr[$key2]['frm_ison'] = (isset($_POST['frm_ison'][$key2])) ? 1: 0;
+					}
+				}
+			foreach($output_arr as $key=>$val) {
+				$query = "UPDATE `$GLOBALS[mysql_prefix]sound_settings` SET 
+					`name` = ". quote_smart($val['frm_name']) . ",
+					`filename` = ". quote_smart($val['frm_filename']) . ",
+					`mp3_filename` = ". quote_smart($val['frm_mp3_filename']) . ",
+					`ison` = ". quote_smart($val['frm_ison']) . " 
+					WHERE `id`='" . $key . "'";
+				$result = mysql_query($query);
+				}
+			print '<FONT CLASS="update_conf">Sound Settings saved.<BR /><BR />';
+			} else {
+			print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";		// 9/21/08
+			$evenodd = array ("even", "odd");
+?>
+			<DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 /></div>
+			<A NAME="top" /> <!-- 11/11/09 -->
+
+<?php
+			$theSounds = array();
+			$theDirectory = getcwd().'/sounds/';
+			$theSounds = read_directory($theDirectory, "wav");
+			
+			$theMP3Sounds = array();
+			$theDirectory = getcwd().'/sounds/';
+			$theMP3Sounds = read_directory($theDirectory, "mp3"); 
+
+			print "<SPAN STYLE='position: relative; top: 30px; margin-left: 40px'><FONT CLASS='header text_biggest'>Edit Sound Settings</FONT>&nbsp;&nbsp;&nbsp;(mouseover caption for help information)</SPAN><BR /><BR />
+				<FORM METHOD='POST' NAME= 'set_Form' onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=sound_settings&go=true'>
+				<TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto; padding: 2px;'>";
+			print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>&nbsp;</TH><TH CLASS='header text text_left'>Name</TH><TH CLASS='header text text_left'>WAV File Name</TH><TH CLASS='header text text_left'>MP3 File Name</TH><TH CLASS='header text text_left'>Sound Used</TH></TR>\n";
+			$counter = 0;
+			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]sound_settings` ORDER BY id");
+			while($row = stripslashes_deep(mysql_fetch_array($result))) {
+				$counter++;
+				print "<TR id='settingRow_" . $row['id'] . "' CLASS='" . $evenodd[$counter%2] . "' STYLE='width: 100%; padding: 2px;'>\n";
+				$id = $row['id'];
+				$name = $row['name'];
+				$filename = $row['filename'];
+				$ison = $row['ison'];
+				print "<TD style='border-right: 1px solid red; padding: 2px;' class='td_data text text_left'>".$id."</TD>\n";
+				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'><INPUT id='frm_name_" . $id . "' type='text' name='frm_name[" . $id . "]' value='".$name."' DISABLED/></TD>\n";
+				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'>";
+				print "<SELECT ID='frm_filename_" . $id . "' NAME='frm_filename[" . $id . "]'>";				
+				print "\t<OPTION VALUE=0 SELECTED>Select Sound</OPTION>\n";
+				foreach($theSounds as $key => $val) {
+					$sel = ($row['filename'] == $val) ? " SELECTED" : "";
+					print "\t<OPTION VALUE='" . $val . "'" . $sel . ">" . $val . "</OPTION>\n";
+					}
+				print "</SELECT></TD>\n";
+				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'>";
+				print "<SELECT ID='frm_mp3_filename_" . $id . "' NAME='frm_mp3_filename[" . $id . "]'>";				
+				print "\t<OPTION VALUE=0 SELECTED>Select Sound</OPTION>\n";
+				foreach($theMP3Sounds as $key => $val) {
+					$sel = ($row['mp3_filename'] == $val) ? " SELECTED" : "";
+					print "\t<OPTION VALUE='" . $val . "'" . $sel . ">" . $val . "</OPTION>\n";
+					}
+				print "</SELECT></TD>\n";
+				$chkd = ($ison == 1) ? " CHECKED" : "";
+				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'><INPUT TYPE='checkbox' VALUE=1 NAME='frm_ison[" . $id . "]'" . $chkd . " /></TD>";
+				print "</TR>\n";
+				}
+			
+			print "</TABLE>";
+			print "</FORM><BR /><BR /><BR />";
+?>
+		<A NAME="bottom" /> <!-- 11/11/09 -->
+		<IMG SRC="markers/up.png" BORDER=0  onclick = "location.href = '#top';" STYLE = 'margin-left: 20px'></TD>
+			<DIV ID="foo">
+				<DIV ID="bar">		<!-- 9/26/09 -->
+					<SPAN id='cancel_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+<?php		// 3/19/11
+					if((is_administrator()) || (is_super())) {
+?>
+						<SPAN id='reset_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_reset_settings();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+						<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.set_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+<?php	
+						}
+?>				
+				
+				</DIV>
+			</DIV>
+
+			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
+			</BODY>
+			<SCRIPT>
+				try {
+					parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+					parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
+					parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+					}
+				catch(e) {
+					}
+			</SCRIPT>
+			</HTML>
+<?php
+			exit();
+			}				// end else
+	    break;
 	
 	case 'user' :
 		print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
@@ -1604,8 +2159,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						$disabled = "DISABLED";
 				}		// end outer switch()
 	// =======================		
-				$do_unit = (intval($row['responder_id']) > 0)? "inline": "none";
-
+				$do_unit = ($row['level'] == $GLOBALS['LEVEL_SUPER'] || $row['level'] == $GLOBALS['LEVEL_ADMINISTRATOR'] || $row['level'] == $GLOBALS['LEVEL_UNIT'])? "inline": "none";
 				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 7/11/10
 				$result_sel = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 				$sel_str = "<SELECT ID='frm_responder_sel' NAME='sel_responder_id' STYLE = 'display: " . $do_unit . ";' onChange='do_set_unit(this.options[selectedIndex].value.trim())' {$disabled}><\n\t<OPTION VALUE=0 SELECTED>NA</OPTION>\n";
@@ -1631,21 +2185,32 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				$caption = (is_administrator() || is_super())? "Edit": "View";
 				$onclick = " onClick = '$(\"frm_responder_sel\").style.display = \"none\";$(\"unit_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
 							$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
+				$adminonclick = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\";$(\"unit_sel\").style.display = \"\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
+							$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
 
-				$on_responder = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\"; $(\"unit_sel\").style.display = \"inline\"; $(\"frm_facility_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true; $(\"fac_sel\").style.display = \"none\";'";
-				$on_facility = " onClick = '$(\"frm_facility_sel\").style.display = \"inline\"; $(\"fac_sel\").style.display = \"inline\"; $(\"frm_responder_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true; $(\"unit_sel\").style.display = \"none\";'";
+				$on_responder = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\"; $(\"unit_sel\").style.display = \"\"; $(\"frm_facility_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true; $(\"fac_sel\").style.display = \"none\";'";
+				$on_facility = " onClick = '$(\"frm_facility_sel\").style.display = \"inline\"; $(\"fac_sel\").style.display = \"\"; $(\"frm_responder_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true; $(\"unit_sel\").style.display = \"none\";'";
 ?>
 				<FONT CLASS="header text"><?php print $caption; ?> User Data</FONT><BR /><BR />
 				<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&edit=true">
-				<TABLE BORDER="0" CELLSPACING=1>
-					<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $id;?>">
+				<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $id;?>">
+				<TABLE BORDER="0" CELLSPACING=1 STYLE='width: 50%;'>
 					<TR CLASS="even">
 						<TD ALIGN="right" CLASS="td_label text">User ID:</TD>
-						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $row['user'];?>" NAME="frm_user" <?php print $disabled;?> ></TD>
+						<TD COLSPAN=3>
+							<INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $row['user'];?>" NAME="frm_user" <?php print $disabled;?> />
+						</TD>
 					</TR>
 					<TR CLASS="odd">
 						<TD ALIGN="right" CLASS="td_label text">Password:</TD>
-						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" <?php print $disabled;?>> &nbsp;&nbsp;<B>Confirm: </B><INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm" <?php print $disabled;?>></TD>
+						<TD COLSPAN=2>
+							<INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" <?php print $disabled;?> /> &nbsp;&nbsp;<B>Confirm: </B>
+							<INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm" <?php print $disabled;?> />
+							&nbsp;&nbsp;<SPAN class='plain' id='gen_pass' style='vertical-align: middle; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='generatePassword();'>Generate Password</SPAN>
+						</TD>
+						<TD>
+							<SPAN id='view_password' class='text_large text_bold text_valign_middle text_center' style='float: right; display: none; background-color: #FFFFFF; border: 1px outset #707070; height: 100%; width: 100%;'></SPAN>
+						</TD>
 					</TR>
 					<TR CLASS="even" VALIGN='middle'>
 						<TD ALIGN="right" CLASS="td_label text">Level:</TD>
@@ -1656,10 +2221,10 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_GUEST']))? 			"checked":"" ;
 						print " Guest &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_GUEST'] . 		"' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
 						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_ADMINISTRATOR']))? 	"checked":"" ;
-						print " Administrator &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
+						print " Administrator &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_ADMINISTRATOR'] ."' {$checked} {$disabled} {$adminonclick}>&nbsp;&nbsp;&nbsp;\n";
 						if (is_super()) {				// 6/9/08
 							$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_SUPER']))? 	"checked":"" ;
-							print " Super &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' {$checked} {$disabled} {$onclick}>&nbsp;&nbsp;&nbsp;\n";
+							print " Super &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SUPER'] ."' {$checked} {$disabled} {$adminonclick}>&nbsp;&nbsp;&nbsp;\n";
 							}
 						$checked = (intval($row['level'])==intval($GLOBALS['LEVEL_MEMBER']))? 	"checked":"" ;						// 12/15/08
 						print " Member &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_MEMBER'] ."' {$checked} {$disabled} {$onclick}>\n";
@@ -1694,77 +2259,116 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						print get_all_group_butts(get_allocates(4, $id));	//	6/10/11
 						print "</DIV";
 						}
+					$unit_visibility = (intval($row['level'])==intval($GLOBALS['LEVEL_UNIT']) || intval($row['level'])==intval($GLOBALS['LEVEL_SUPER']) || intval($row['level'])==intval($GLOBALS['LEVEL_ADMINITRATOR']) || intval($row['level'])==intval($GLOBALS['LEVEL_USER'])) ? "" : "style='display: none;'";
 ?>	
-					<TR VALIGN="baseline" CLASS="even">
+					<TR id='unit_sel' <?php print $unit_visibility;?> VALIGN="baseline" CLASS="even">
 						<TD CLASS="td_label text" ALIGN="right">
-							<SPAN  id='unit_sel'><?php print get_text("Unit");?>: </SPAN>
+							<SPAN><?php print get_text("Unit");?>: </SPAN>
 						</TD>
-						<TD><?php print $sel_str;?></TD>
+						<TD COLSPAN=3><?php print $sel_str;?></TD>
 					</TR>
-					<TR VALIGN="baseline" CLASS="even">
+<?php
+					$fac_visibility = (intval($row['level'])==intval($GLOBALS['LEVEL_FACILITY'])) ? "" : "style='display: none;'";
+?>
+					<TR id='fac_sel' <?php print $fac_visibility;?> VALIGN="baseline" CLASS="even">
 						<TD CLASS="td_label text" ALIGN="right">
-							<SPAN id='fac_sel'><?php print get_text("Facility");?>: </SPAN>
+							<SPAN><?php print get_text("Facility");?>: </SPAN>
 						</TD>
-						<TD><?php print $sel_str2;?></TD>
+						<TD COLSPAN=3><?php print $sel_str2;?></TD>
 					</TR>
 					<TR VALIGN="baseline" CLASS="spacer">
 						<TD class="spacer" COLSPAN=99 ALIGN='center'>&nbsp;</TD>
 					</TR>
-					<TR VALIGN="baseline" CLASS="even">
-						<TD COLSPAN=4 ALIGN='center'>&nbsp;</TD>
-					</TR>
 					<TR VALIGN="baseline" CLASS="odd">
 						<TD CLASS="td_label text" ALIGN="right">Last name: </TD>
-						<TD><INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="<?php print $row['name_l'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD>
+							<INPUT ID="ID3" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_l" VALUE="<?php print $row['name_l'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>>
+						</TD>
 						<TD CLASS="td_label text" ALIGN="right">First: </TD>
-						<TD><INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="<?php print $row['name_f'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+						<TD>
+							<INPUT ID="ID4" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_name_f" VALUE="<?php print $row['name_f'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> 
+						</TD>
 					</TR>
 					<TR VALIGN="baseline" CLASS="even">
 						<TD CLASS="td_label text" ALIGN="right">
-							<SPAN  id='unit_sel'><?php print get_text("Organisation");?>: </SPAN>
+							<SPAN  id='org_sel'><?php print get_text("Organisation");?>: </SPAN>
 						</TD>
-						<TD><?php print get_org_control($id, $row['org']);?></TD>
+						<TD COLSPAN=3><?php print get_org_control($id, $row['org']);?></TD>
 					</TR>
 					<TR VALIGN="baseline" CLASS="odd">
 						<TD CLASS="td_label text" ALIGN="right">MI: </TD>
-						<TD><INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="<?php print $row['name_mi'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD>
+							<INPUT ID="ID5" MAXLENGTH="4" SIZE=3 type="text" NAME="frm_name_mi" VALUE="<?php print $row['name_mi'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> />
+						</TD>
 						<TD CLASS="td_label text" ALIGN="right">DOB: </TD>
-						<TD><INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="<?php print $row['dob'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> /></TD>
+						<TD>
+							<INPUT MAXLENGTH=16 ID="fd6" SIZE=16 type="text" NAME="frm_dob" VALUE="<?php print $row['dob'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> />
+						</TD>
 					</TR>
 					<TR CLASS="even">
-						<TD CLASS="td_label text" ALIGN="right">Callsign: </TD><TD><INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>"<?php print $disabled;?>/></TD>
+						<TD CLASS="td_label text" ALIGN="right">Callsign: </TD>
+						<TD>
+							<INPUT SIZE="20" MAXLENGTH="20" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>"<?php print $disabled;?> />
+						</TD>
 						<TD CLASS="td_label text" ALIGN="right">Ident: </TD>
-						<TD><INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="<?php print $row['ident'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD></TR>
+						<TD>
+							<INPUT ID="ID17" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_ident" VALUE="<?php print $row['ident'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> /> 
+						</TD>
+					</TR>
 					<TR CLASS="odd">
 						<TD CLASS="td_label text" ALIGN="right">Info: </TD>
-						<TD COLSPAN=3><INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE="<?php print $row['info'];?>"<?php print $disabled;?>></TD>
+						<TD COLSPAN=3>
+							<INPUT SIZE="83" MAXLENGTH="83" TYPE="text" NAME="frm_info" VALUE="<?php print $row['info'];?>"<?php print $disabled;?>>
+						</TD>
 					</TR>
-					<TR CLASS="even"><TD CLASS="td_label text" ALIGN="right">Email: </TD><TD><INPUT SIZE="32" MAXLENGTH="128" TYPE="text" NAME="frm_email" VALUE="<?php print $row['email'];?>"<?php print $disabled;?>></TD>
+					<TR CLASS="even">
+						<TD CLASS="td_label text" ALIGN="right">Email: </TD>
+						<TD>
+							<INPUT SIZE="32" MAXLENGTH="128" TYPE="text" NAME="frm_email" VALUE="<?php print $row['email'];?>"<?php print $disabled;?> />
+						</TD>
 						<TD CLASS="td_label text" ALIGN="right">&nbsp;&nbsp;&nbsp;&nbsp;Alternate: </TD>
-						<TD><INPUT ID="ID24" MAXLENGTH="32" SIZE="128" type="text" NAME="frm_email_s" VALUE="<?php print $row['email_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+						<TD>
+							<INPUT ID="ID24" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_email_s" VALUE="<?php print $row['email_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> /> 
+						</TD>
 					</TR>
 					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label text" ALIGN="right"> Street addr: </TD>
-						<TD COLSPAN=3><INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="<?php print $row['addr_street'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+						<TD COLSPAN=4>
+							<INPUT ID="ID8" MAXLENGTH="32" SIZE=32 type="text" NAME="frm_addr_street" VALUE="<?php print $row['addr_street'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> 
+						</TD>
 					</TR>
-					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label text" ALIGN="right">City: </TD>
-						<TD><INPUT ID="ID9" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_addr_city" VALUE="<?php print $row['addr_city'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+					<TR VALIGN="baseline" CLASS="even">
+						<TD CLASS="td_label text" ALIGN="right">City: </TD>
+						<TD>
+							<INPUT ID="ID9" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_addr_city" VALUE="<?php print $row['addr_city'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>>
+						</TD>
 						<TD CLASS="td_label text" ALIGN="right">St: </TD>
-						<TD><INPUT ID="ID10" MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" type="text" NAME="frm_addr_st" VALUE="<?php print $row['addr_st'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+						<TD>
+							<INPUT ID="ID10" MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" type="text" NAME="frm_addr_st" VALUE="<?php print $row['addr_st'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> 
+						</TD>
 					</TR>
 					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label text" ALIGN="right">Phone: </TD>
-						<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_p" VALUE="<?php print $row['phone_p'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>></TD>
+						<TD>
+							<INPUT ID="ID19" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_p" VALUE="<?php print $row['phone_p'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> />
+						</TD>
 						<TD CLASS="td_label text" ALIGN="right">Alternate: </TD>
-						<TD><INPUT ID="ID20" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_s" VALUE="<?php print $row['phone_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+						<TD>
+							<INPUT ID="ID20" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_s" VALUE="<?php print $row['phone_s'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?> /> 
+						</TD>
 					</TR>
-					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label text" ALIGN="right">Mobile: </TD>
-						<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_m" VALUE="<?php print $row['phone_m'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> </TD>
+					<TR VALIGN="baseline" CLASS="even">
+						<TD CLASS="td_label text" ALIGN="right">Mobile: </TD>
+						<TD COLSPAN=3>
+							<INPUT ID="ID21" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_m" VALUE="<?php print $row['phone_m'];?>" onChange = "this.value=this.value.trim()"<?php print $disabled;?>> 
+						</TD>
 					</TR>
 <?php 
 					if ((is_administrator() || is_super())) { 
 ?>					
 						<TR CLASS="odd" VALIGN='top'>
 							<TD CLASS="td_label text">Remove User: </TD>
-							<TD COLSPAN=3> &raquo; <INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $disabled;?>></TD>
+							<TD COLSPAN=3>
+								&raquo; <INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $disabled;?> />
+							</TD>
 						</TR>
 <?php 
 						} 
@@ -1773,32 +2377,32 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						<TD></TD>
 						<TD COLSPAN=3 ALIGN="center">
 <?php
-					if($disabled != "DISABLED") {
+							if($disabled != "DISABLED") {
 ?>
-						<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+								<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 <?php
-						} else {
+								} else {
 ?>
-						<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Back");?></SPAN><IMG STYLE='float: right;' SRC='./images/back_small.png' BORDER=0></SPAN>
+								<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Back");?></SPAN><IMG STYLE='float: right;' SRC='./images/back_small.png' BORDER=0></SPAN>
 <?php
-						}
-					if ((is_administrator() || is_super())) {
-						if($disabled != "DISABLED") {
+								}
+							if ((is_administrator() || is_super())) {
+								if($disabled != "DISABLED") {
 ?>
-						<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.user_add_Form.reset(); document.user_add_Form.frm_responder_id.value='<?php echo $row['responder_id'];?>'; document.user_add_Form.frm_facility_id.value='<?php echo $row['facility_id'];?>';"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
-						<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="return validate_user(document.user_add_Form);"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+									<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.user_add_Form.reset(); document.user_add_Form.frm_responder_id.value='<?php echo $row['responder_id'];?>'; document.user_add_Form.frm_facility_id.value='<?php echo $row['facility_id'];?>';"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+									<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="return validate_user(document.user_add_Form);"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 <?php 
-							}
-						} 
+									}
+								} 
 ?>					
 						</TD>
 					</TR>
-					<INPUT TYPE='hidden' NAME='frm_hash' VALUE='<?php print $row['passwd'];?>' />	<!-- 11/30/08 -->
-					<INPUT TYPE='hidden' NAME='frm_func' VALUE='e' />
-					<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='<?php echo $row['responder_id'];?>' />
-					<INPUT TYPE='hidden' NAME='frm_facility_id' VALUE='<?php echo $row['facility_id'];?>' />
-					<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print $alloc_groups;?>">						
 				</TABLE>
+				<INPUT TYPE='hidden' NAME='frm_hash' VALUE='<?php print $row['passwd'];?>' />	<!-- 11/30/08 -->
+				<INPUT TYPE='hidden' NAME='frm_func' VALUE='e' />
+				<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='<?php echo $row['responder_id'];?>' />
+				<INPUT TYPE='hidden' NAME='frm_facility_id' VALUE='<?php echo $row['facility_id'];?>' />
+				<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print $alloc_groups;?>">		
 				</FORM>
 				<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
 				</BODY>
@@ -1929,14 +2533,12 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						}	
 						
 						print "<B>User <i>'$_POST[frm_user]'</i> has been added.</B><BR /><BR />";
-						}
-					else {
+						} else {
 						print "Passwords don't match. Please try again.<BR />";
 						?>
 						<BR />
+						<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&add=true&go=true">							<TR CLASS="even">
 						<TABLE BORDER="0">
-							<FORM METHOD="POST" NAME = "user_add_Form" onSubmit="return validate_user(document.user_add_Form);" ACTION="config.php?func=user&add=true&go=true">
-							<TR CLASS="even">
 								<TD CLASS="td_label text">User ID:</TD>
 								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_user'];?>" NAME="frm_user"></TD>
 							</TR>
@@ -1946,11 +2548,15 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 							</TR>
 							<TR CLASS="even">
 								<TD CLASS="td_label text">Confirm Password: &nbsp;&nbsp;</TD>
-								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd_confirm"></TD>
+								<TD>
+									<INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd_confirm">
+								</TD>
 							</TR>
 							<TR CLASS="odd">
 								<TD CLASS="td_label text">Callsign:</TD>
-								<TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_callsign'];?>" NAME="frm_callsign"></TD>
+								<TD>
+									<INPUT MAXLENGTH="20" SIZE="20" TYPE="text" VALUE="<?php print $_POST['frm_callsign'];?>" NAME="frm_callsign">
+								</TD>
 							</TR>
 							<TR CLASS="even">
 								<TD CLASS="td_label text">Level:</TD><TD>
@@ -1983,8 +2589,8 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 									<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate_user(document.user_add_Form);"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 								</TD>
 							</TR>
-						</FORM>
 						</TABLE>
+						</FORM>
 						<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
 					</BODY>
 					</HTML>
@@ -2027,7 +2633,14 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 					</TR>
 					<TR CLASS="odd">
 						<TD CLASS="td_label text" ALIGN="right"> Password: <FONT COLOR='red'>*</FONT></TD>
-						<TD COLSPAN=3><INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" VALUE="">&nbsp;&nbsp; <B>Confirm: </B> <INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm"></TD>
+						<TD COLSPAN=2>
+							<INPUT MAXLENGTH="20" SIZE="20" TYPE="password" NAME="frm_passwd" VALUE="" />&nbsp;&nbsp; <B>Confirm: </B> 
+							<INPUT MAXLENGTH="255" SIZE="16" TYPE="password" NAME="frm_passwd_confirm" />
+							<SPAN class='plain' id='gen_pass' style='vertical-align: middle; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='generatePassword();'>Generate Password</SPAN>
+						</TD>
+						<TD>
+							<SPAN id='view_password' class='text_large text_bold text_valign_middle text_center' style='float: right; display: none; background-color: #FFFFFF; border: 1px outset #707070; height: 100%; width: 100%;'></SPAN>
+						</TD>
 					</TR>
 					<TR CLASS="even" VALIGN='baseline'>
 						<TD CLASS="td_label text" ALIGN="right"> Level: <FONT COLOR='red'>*</FONT></TD>
@@ -2105,7 +2718,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						<TD CLASS="td_label text" ALIGN="right">
 							<SPAN  id='unit_sel'><?php print get_text("Organisation");?>: </SPAN>
 						</TD>
-						<TD><?php print get_org_control(0, 0);?></TD>
+						<TD COLSPAN = 3><?php print get_org_control(0, 0);?></TD>
 					</TR>
 					<TR VALIGN="baseline" CLASS="odd">
 						<TD CLASS="td_label text" ALIGN="right">MI: </TD>
@@ -2138,13 +2751,15 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 						<TD CLASS="td_label text" ALIGN="right">St: </TD>
 						<TD><INPUT ID="ID10" MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" type="text" NAME="frm_addr_st" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
 					</TR>
-					<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label text" ALIGN="right">Phone: </TD>
+					<TR VALIGN="baseline" CLASS="odd">
+						<TD CLASS="td_label text" ALIGN="right">Phone: </TD>
 						<TD><INPUT ID="ID19" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_p" VALUE="" onChange = "this.value=this.value.trim()"></TD>
 						<TD CLASS="td_label text" ALIGN="right">Alternate: </TD>
 						<TD><INPUT ID="ID20" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_s" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
 					</TR>
-					<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label text" ALIGN="right">Mobile: </TD>
-						<TD><INPUT ID="ID21" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_m" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
+					<TR VALIGN="baseline" CLASS="even">
+						<TD CLASS="td_label text" ALIGN="right">Mobile: </TD>
+						<TD COLSPAN = 3><INPUT ID="ID21" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_phone_m" VALUE="" onChange = "this.value=this.value.trim()"> </TD>
 					</TR>
 					<INPUT TYPE='hidden' NAME='frm_func' VALUE='a'>
 					<INPUT TYPE='hidden' NAME='frm_hash' VALUE=''>	<!-- 11/30/08 -->
@@ -2814,15 +3429,9 @@ ul {
 <?php
 			if (!intval(get_variable('ics_top')==1)) { 		// 5/24/2013
 ?>		
-			<A id='ics' class='plain text' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.open('ics213.php', 'ics213');">ICS FORMS</A>			<!-- 3/22/12 -->		
+			<A id='ics' class='plain text' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.open('ics.php', 'ics');">ICS FORMS</A>			<!-- 3/22/12 -->		
 <?php
 				}		// end if ( ... ics_top ...)
-			
-			if (mysql_table_exists("$GLOBALS[mysql_prefix]evacuees")) {		// 6/4/09
-?>	
-				<A id='evacs' class='plain text' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('evacuees');">Evacuees</A>	
-<?php
-				}		// end if evacuees
 			if (mysql_table_exists("$GLOBALS[mysql_prefix]constituents")) {		// 6/4/09
 ?>	
 				<A id='const' class='plain text' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('constituents');"><?php echo get_text ("Constituents");?></A>	 <!-- 6/18/2013 -->
@@ -2843,25 +3452,38 @@ ul {
 				<A id='pin_cont' class='plain text' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('pin_ctrl');">PIN Control</A>	 <!-- 4/9/10 -->
 <?php
 				}			// end 'pin_ctrl'
+			if(is_super() || is_admin()) {
+?>	
+				<A id='wiz_set' class='plain text' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=wizard_settings">New Incident Wizard Settings</A>
+<?php
+				}			// end 'wizard Settings'
 ?>
 			<A id='phpinfo' class='plain text' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="getinfo.php">PHP Information</A>	 <!-- 1/23/17 -->
 <?php
-//			if (mysql_table_exists("$GLOBALS[mysql_prefix]organisations")) {
-?>	<!--
-				<BR />
-				<LI><A HREF="#" onClick = "do_Post('organisations');">Organisations</A> -->
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]organisations")) {
+?>
+				<A id='orgs' class='plain text' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('organisations');">Organisations</A>	 <!-- 4/9/10 -->
 <?php
-//				}
+				}
+?>
+			<A id='import_mdb' class='plain text' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="ticketsmdb_import.php">Import Tickets MDB Data</A>	
+			<A id='sounds' class='plain text' style='clear: both; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=sound_settings"><?php echo get_text ("Sounds");?></A>
+
+<?php
 			}
 ?>
 		</DIV>
 <?php
-		if(is_administrator()) {
+		if(is_administrator() || is_super()) {
+			if(is_super()) {
 ?>
-			<DIV class='config_heading text' id='organisations_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-				<DIV class='config_heading text' style='display: block; clear: both;'>Organisations</DIV>
-				<A id='orgs' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('organisations');">Organisations</A>
-			</DIV>
+				<DIV class='config_heading text' id='organisations_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading text' style='display: block; clear: both;'>Organisations</DIV>
+					<A id='orgs' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('organisations');">Organisations</A>
+				</DIV>
+<?php
+				}
+?>
 			<DIV class='config_heading text' id='files_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Files</DIV>
 				<A id='ul_file' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='file_window();'>Upload File</A>
@@ -2873,16 +3495,18 @@ ul {
 			</DIV>
 <?php
 			}
-		if(!(is_guest()) && (get_variable('use_messaging') != 0)) {		//10/23/12		
+		if(is_super() && (get_variable('use_messaging') != 0)) {	
 ?>
 			<DIV class='config_heading text' id='msg_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Messaging</DIV>
 				<A id='msg_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=msg_settings">Messaging Settings</A>
 				<A id='msg_arch' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="msg_archive.php">Message Archiving</A>	
 				<A id='white_list' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('known_sources');">Email White List</A>		
+				<A id='black_list' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('email_blacklist');">Email Black List</A>		
 				<A id='get_msgs' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "get_msgs();">Get all Messages</A>
 				<A id='std_msgs' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('std_msgs');">Edit Std Messages</A>
 				<A id='msg_rtxt' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('replacetext');">Msg Text replacement</A>			
+				<A id='msg_rtxt_order' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('replacetext_order');">Replacement Text Order</A>			
 <?php
 				if(get_msg_variable('use_autostat') == 1) {		//10/23/12
 ?>
@@ -2893,7 +3517,29 @@ ul {
 			</DIV>
 <?php
 			}
-		if((is_administrator()) || (is_super())) {
+		if(is_super() && intval(get_variable('use_mdb')) != 0) {
+?>
+			<DIV class='config_heading text' id='mdb_section' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+				<DIV class='config_heading text' style='display: block; clear: both;'>Membership Database</DIV>
+					<A id='mdb_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=mdb_settings">MDB Settings</A>
+					<A id='memberlist' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="member.php">Member List</A>
+					<A id='vehicles' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('vehicles');">Vehicles</A>
+					<A id='vehicle_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('vehicle_types');">Vehicle Types</A>
+					<A id='equipment' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('equipment_types');">Equipment</A>
+					<A id='capabilities' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('capability_types');">Capabilities</A>
+					<A id='clothing' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('clothing_types');">Clothing</A>
+					<A id='events' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('events');">Events</A>
+					<A id='event_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('event_types');">Event Types</A>
+					<A id='training' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('training_packages');">Training Packages</A>
+					<A id='member_status' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('member_status');">Member Status</A>
+					<A id='member_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('member_types');">Member Types</A>
+					<A id='teams' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('team');">Teams</A>
+					<A id='defined_fields' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='revisable_fields.php'">Custom Field Definitions</A>
+					<A id='fieldsets' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('fieldsets');">Fieldsets</A>
+					<A id='bulk_allocations' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='./bulk_admin/bulk_add_capab.php'">Bulk Allocations</A>
+					<A id='bulk_allocations_selective' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='./bulk_admin/bulk_add_allocation.php'">Selective Bulk Allocations</A>
+				</DIV>
+<?php
 			if(get_variable('use_disp_autostat') == 1) {		//9/10/13
 ?>
 				<DIV class='config_heading text' id='ad_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
@@ -2928,6 +3574,7 @@ ul {
 			<DIV class='config_heading text' id='db_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Database Functions</DIV>
 				<A id='dump_db' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=dump">Dump DB to screen</A>
+				<A id='restore_db' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="db_loader.php">Backup and Restore</A>
 				<A id='rst_db' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=reset">Reset Database</A>
 				<A id='opt_db' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=optimize">Optimize Database</A>
 				<A id='del_indx' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "show_tables_and_indexes.php">Delete Duplicate Indexes</A>	
@@ -2941,7 +3588,13 @@ ul {
 			<DIV class='config_heading text' id='rc_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Road Conditions</DIV>
 				<A id='rd_cond' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('conditions');">Conditions Table</A>
+<?php
+		if(get_roadcondition_types() > 0) {
+?>
 				<A id='rd_alerts' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('roadinfo');">Published Alerts</A>
+<?php
+			}
+?>
 			</DIV>
 <?php
 			}
@@ -2954,7 +3607,7 @@ ul {
 			</DIV>
 <?php
 			}
-		if((is_administrator()) || (is_super())) {
+		if(is_super()) {
 ?>
 			<DIV class='config_heading text' id='oet_tests' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Outgoing email Tests</DIV>
@@ -2968,10 +3621,6 @@ ul {
 				<A id='tst_opengts' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_ogts();">Open GTS</A>
 				<A id='tst_tt' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_t_tracker();">Internal Tracker</A>
 			</DIV>
-<?php
-			}								// end if (is_administrator()|| is_super() ) -- latitude.php
-		if (is_super()) {									// super or admin - 9/24/08			
-?>
 			<DIV class='config_heading text' id='inc_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'><?php print get_text("Incidents");?> Configuration</DIV>		
 				<A id='inc_num' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=in_nums">Incident Numbers</A>
@@ -2984,9 +3633,7 @@ ul {
 				<A id='rst_unstat' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="reset_responder_status.php" >Reset <?php print get_text("Unit");?> status</A>
 			</DIV>
 <?php
-
-	
-			if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) 	{		// 10/5/09
+			if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) {
 ?>			
 				<DIV class='config_heading text' id='facs_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 					<DIV class='config_heading text' style='display: block; clear: both;'><?php print get_text("Facilities");?> Configuration</DIV>			
@@ -2997,27 +3644,37 @@ ul {
 
 				}
 			}	// end if is super
-		if(is_administrator() || is_user()) {
+		if(is_administrator() || is_super() || is_user()) {
 ?>
 			<DIV class='config_heading text' id='warn_locs' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Warn Locations</DIV>		
 				<A id='warn_loc' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="warn_locations.php">Warn Locations</A>
 			</DIV>
-			<DIV class='config_heading text' id='capts_etc' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-				<DIV class='config_heading text' style='display: block; clear: both;'>Captions, Signals, Hints and Places</DIV>		
-				<A id='capt_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="capts.php">Captions</A></LI></TD>
-				<A id='sigs_set' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('codes');">Signals</A>
-				<A id='hints_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=hints">Hints</A>
-				<A id='places_set' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('places');">Places</A>
-			</DIV>
 <?php
+			if(is_super()) {
+?>
+				<DIV class='config_heading text' id='capts_etc' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading text' style='display: block; clear: both;'>Captions, Signals, Hints and Places</DIV>		
+					<A id='capt_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="capts.php">Captions</A></LI></TD>
+					<A id='sigs_set' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('codes');">Signals</A>
+					<A id='hints_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=hints">Hints</A>
+					<A id='places_set' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('places');">Places</A>
+				</DIV>
+<?php
+				}
 			}
 		if(is_administrator()) {
 ?>
 			<DIV class='config_heading text' id='map_mkup' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Map Markup</DIV>					
 				<A id='mm' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF= "./mmarkup.php">Map Markup</A>
-				<A id='mm_cat' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mmarkup_cats');">MM Categories</A>
+<?php
+				if(is_super()) {
+?>
+					<A id='mm_cat' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('mmarkup_cats');">MM Categories</A>
+<?php
+				}
+?>
 			</DIV>
 <?php
 			}
@@ -3032,31 +3689,6 @@ ul {
 			</DIV>
 <?php	
 			}	
-		$course_table = "$GLOBALS[mysql_prefix]courses_taken";		// 12/19/11 
-		if (mysql_table_exists($course_table)) {
-?>
-			<DIV class='config_heading text' id='courses_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-				<DIV class='config_heading text' style='display: block; clear: both;'>Courses</DIV>		
-				<FORM NAME = 'course_form' METHOD = 'post' ACTION = 'course_report.php' TARGET = '_blank'>	
-				<INPUT TYPE = 'hidden' NAME = 'user_id' VALUE = ''>
-				</FORM>
-				<A id='upt_courses' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('courses');">Update Courses</A>
-				<A id='upt_taken' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('courses_taken');">Update Courses taken</A>
-				<A id='reports' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='#'>Report</A>&raquo;
-				<SELECT class='text' NAME='frm_user_id' onChange = "document.course_form.user_id.value=this.options[this.selectedIndex].value; document.course_form.submit();">
-					<OPTION class='text' VALUE='' selected>Select</OPTION>
-					<OPTION class='text' VALUE='0' >All users</OPTION>
-<?php
-		$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			$the_opt = shorten("({$row['user']}) {$row['name_l']}, {$row['name_f']} {$row['name_mi']} ", 32);
-			echo "\t\t\t<OPTION class='text' VALUE='{$row['id']}'>{$the_opt}</OPTION>\n";
-			}				// end while()
-		echo "\n\t\t</SELECT>\n";
-		echo "\n</DIV>";
-			}			// if (mysql_table_exists())
-			
 		if (is_super()) {									// super or admin - 10/28/10			
 ?>
 			<DIV class='config_heading text' id='modules_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
@@ -3123,7 +3755,7 @@ ul {
 		}
 	set_fontsizes(viewportwidth, "fullscreen");	
 	</SCRIPT>
-	<DIV id='statusBar' style='position: fixed; bottom: 5px; left: 5px; width: 100%; hieght: 50px; background-color: yellow; color: black; display: none;'></DIV>
+	<DIV id='statusBar' style='position: fixed; bottom: 5px; left: 5px; width: 100%; height: 50px; background-color: yellow; color: black; display: none;'></DIV>
 	<FORM NAME='tables' METHOD = 'post' ACTION='tables.php'>
 	<INPUT TYPE='hidden' NAME='func' VALUE='r'>
 	<INPUT TYPE='hidden' NAME='tablename' VALUE=''>

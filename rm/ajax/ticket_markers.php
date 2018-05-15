@@ -29,12 +29,12 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = '" . $row['ticket_id'] . "' AND `status` = " . $GLOBALS['STATUS_OPEN']; 		
 		$result2 = mysql_query($query2) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
-		$ret_arr[$i][0] .= $row2['id'];
-		$ret_arr[$i][1] .= $row2['scope'];
-		$ret_arr[$i][2] .= $row2['lat'];
-		$ret_arr[$i][3] .= $row2['lng'];			
-		$ret_arr[$i][4] .= stripslashes_deep(shorten($row2['description'], 30));
-		$ret_arr[$i][5] .= format_date_2(strtotime($row2['problemstart']));		
+		$ret_arr[$i][0] = $row2['id'];
+		$ret_arr[$i][1] = $row2['scope'];
+		$ret_arr[$i][2] = $row2['lat'];
+		$ret_arr[$i][3] = $row2['lng'];			
+		$ret_arr[$i][4] = stripslashes_deep(shorten($row2['description'], 30));
+		$ret_arr[$i][5] = format_date_2(strtotime($row2['problemstart']));		
 		$i++;
 		}				// end while
 	}	//	end else

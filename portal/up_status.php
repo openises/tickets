@@ -5,8 +5,7 @@
 error_reporting(E_ALL);
 //	file as_up_un_status.php
 
-session_start();						// 
-session_write_close();
+@session_start();
 require_once('../incs/functions.inc.php');
 
 extract($_GET);

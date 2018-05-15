@@ -144,7 +144,7 @@ $func = (empty($_POST))? "l":$_POST['func'];
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$row =  stripslashes_deep(mysql_fetch_array($result));
 ?>
-			<FORM NAME = 'to_edit_form' METHOD = 'post' ACTION = '<?php print basename(__FILE__);?>'>
+			<FORM NAME = 'editForm' METHOD = 'post' ACTION = '<?php print basename(__FILE__);?>'>
 			<TABLE ALIGN='center' STYLE = 'margin-top:60px'>
 				<TR CLASS='even' VALIGN = 'bottom'><TH COLSPAN=2>Enter caption change</TH></TR>
 				<TR CLASS='odd' VALIGN = 'bottom'><TD COLSPAN=2>&nbsp;</TD></TR>
@@ -162,8 +162,8 @@ $func = (empty($_POST))? "l":$_POST['func'];
 				<TR CLASS='even'>
 					<TD COLSPAN=2 ALIGN='center'>
 						<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.can_form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
-						<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.to_edit_form.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
-						<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.to_edit_form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+						<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.editForm.reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+						<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.editForm.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 					</TD>
 				</TR>
 			</TABLE>

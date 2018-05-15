@@ -21,6 +21,46 @@
 6/1/13 revised 'contact us' addr to user addr if available
 10/29/13 revised do_login to cure errors in user choice of maps when using internet = 3
 */
+$colors = array ('odd', 'even');
+
+function userlist(){		/* list users */
+	global $colors;
+	$ary = array();
+	$output = "";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` ORDER BY `u`.`user` ASC ";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+	if (mysql_num_rows($result)==0) 	 {
+		print '<B>[no users found]</B><BR />'; 
+		return;
+		}
+
+	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 1/23/10
+
+	$output .= "<TABLE>";
+	$output .= "<TR CLASS='even'>";
+	$output .= "<TD CLASS='heading' COLSPAN='99' ALIGN='center'>Users Currently or recently online</TD></TR>";
+	$i=0;
+	while($row = stripslashes_deep(mysql_fetch_array($result))) {
+		$level = get_level_text($row['level']);
+		$lastlogintime = format_date_2(mysql_format_date(strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
+		$isonline = ($row['expires'] > $now) ? true: false;
+		if($isonline) {
+			$ary[$i]['user'] = $row['user'];
+			$ary[$i]['when'] = $lastlogintime;
+			}
+		}
+	if(count($ary) > 0) {
+		$output .= "<TR CLASS='header'><TD><B>&nbsp;User</B></TD><TD><B>&nbsp;Online</B></TD><TD><B>&nbsp;Log in</B></TD></TR>";
+		$j = 1;
+		for($j = 0; $j < count($ary); $j++){
+			$output .= "<TR CLASS='{$colors[$j%2]}'><TD>&nbsp;{$ary[$j]['user']}</TD><TD ALIGN = 'center'><IMG SRC = './markers/checked.png' BORDER=0></TD>	<TD>{$ary[$j]['when']}</TD></TR>\n";
+			}
+		} else {
+		$output .= "<TR CLASS='{$colors[$i%2]}'><TD COLSPAN = 3 style='text-align: center;'>No Other users logged in</TD></TR>\n";
+		}
+	$output .= '</TABLE><BR />';
+	return $output;
+	}		// end function list_users()
 
 function do_logout($return=FALSE){						/* logout - destroy session data */
 	global $hide_dispatched, $hide_status_groups;
@@ -71,28 +111,27 @@ function check_conn () {				// returns TRUE/FALSE
 		if($parts['scheme']=='https'){
 			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  1);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		}
+			}
 	
 		$response = curl_exec($ch);
 		curl_close($ch);
 		if(preg_match('/HTTP\/1\.\d+\s+(\d+)/', $response, $matches)){
 			$code=intval($matches[1]);
-		} else {
+			} else {
 			$code=0;
-		}
+			}
 
 		if(($code>=200) && ($code<400)) {
 			return TRUE;
-		} else {
+			} else {
 			return FALSE;
-		}		
-	} else {				// not CURL
+			}		
+		} else {				// not CURL
 		if ($fp = @fopen($url, "r")) {
 			while (!feof($fp) && (strlen($response)<9000)) $response .= fgets($fp, 128);
 			fclose($fp);
 			return TRUE;
-			}		
-		else {
+			} else {
 			return FALSE;
 			}
 		}
@@ -100,17 +139,21 @@ function check_conn () {				// returns TRUE/FALSE
 
 function set_filenames($internet, $userchoice) {
 	$localmaps = get_variable('local_maps');
-	$internet_good = (($internet == 1) || (($internet == 3) && (check_conn()))) ? true: false;		// check_conn()  returns TRUE/FALSE = 8/31/10
-	if(($internet_good) && ($userchoice == "Show")) {	//	10/29/13
-		$normal = true;
-		} elseif(($internet_good) && ($userchoice == "Hide")) {
-		$normal = false;
+	$internet_good = (check_conn()) ? 1: 0;
+	$internet = intval($internet);
+	$internet = ($internet == 1 || $internet == 3) ? 1 : 0;
+	if($internet && $internet_good && $userchoice == "Show") {	//	10/29/13
+		$normal = 1;
+		} elseif($userchoice == "Hide") {
+		$normal = 0;
+		} elseif(!$internet) {
+		$normal = 0;
 		} elseif(!$internet_good) {
-		$normal = false;
+		$normal = 0;
 		} elseif($localmaps == "1") {
-		$normal = true;
+		$normal = 1;
 		} else {
-		$normal = false;
+		$normal = 0;
 		}
 	$_SESSION['internet'] = $normal;   
 	$_SESSION['good_internet'] = $internet_good;
@@ -128,11 +171,11 @@ function set_filenames($internet, $userchoice) {
 // ==========================================================================
 
 function is_expired($id) {		// returns boolean
-	global $now ;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$id} LIMIT 1;";	
+	$now = time() - (intval(get_variable('delta_mins'))*60);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$id} LIMIT 1;";
 	$result = mysql_query($query);
 	$row = @stripslashes_deep(mysql_fetch_assoc($result));
-	return ((mysql_num_rows($result)==1) && ($row['expires'] > $now));
+	return ((mysql_num_rows($result)==1) && (strtotime($row['expires']) > $now));
 	}
 
 function redir($url, $time = 0) {
@@ -154,6 +197,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 	global $hide_dispatched, $hide_status_groups;
 	@session_start();
 	global $expiry, $istest;
+	$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
 	$allow_accessRequests = get_variable("access_requests");
 	$no_autoforward = ($na) ? 1 : 0;	//	1/30/14
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
@@ -161,7 +205,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 //																			7/3/11
 	$warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
 	
-	$internet = intval(get_variable("internet"));				// 8/22/10
+	$internet = (get_variable('internet') != "") ? intval(get_variable("internet")) : 3;
 	if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
 		if(dupe_user($_SESSION['user_id'], $_SERVER['REMOTE_ADDR'])) {
 			do_logout();
@@ -173,7 +217,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		$_SESSION['expires'] = $expiry;
 		$userchoice = $_SESSION['maps_sh'];
 		$warn = "";
-		if($internet==3) {set_filenames($internet, $userchoice);}			// possible change to filenames based on connect status - 8/31/10
+		set_filenames($internet, $userchoice);
 		}				// end if((!(empty($_SESSION)))  && ...)
 
 	else { 				// not logged in; now either get form data or db check form entries 	
@@ -278,6 +322,11 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['show_hide_upper'] = "s";		//6/10/11
 				$_SESSION['sh_cond'] = "s";
 				$_SESSION['mobile_selected'] = 0;
+				$_SESSION['sit_resp_minimised'] = "n";
+				$_SESSION['sit_fac_minimised'] = "n";
+				$_SESSION['responderlist'] = "s";
+				$_SESSION['facilitylist'] = "s";
+				$_SESSION['loglist'] = "s";
 				$initLayer = intval(get_variable('default_map_layer'));
 				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");	
 				$_SESSION['layer_inuse'] = $baseLayerNamesArr[$initLayer];
@@ -334,8 +383,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					} else {
 					$extra = 'main.php?log_in=1';
 					}
-
-				$url = "http://" . $host . $uri . "/" . $extra;
+					
+				$protocol = ($https) ? "https" : "http";
+				$url = $protocol . "://" . $host . $uri . "/" . $extra;
+//				$url = "http://" . $host . $uri . "/" . $extra;
 				redir($url);
 				exit();				
 				}			// end if (mysql_affected_rows()==1)
@@ -571,7 +622,6 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			}
 		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
 		$my_click = ($_SERVER["HTTP_HOST"] == "127.0.0.1")? " onClick = \"document.login_form.frm_user.value='admin';document.login_form.frm_passwd.value='admin';\"" : "" ;
-
 //	6/1/12
 		$query_guest 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`='guest' LIMIT 1";
 		$result_guest = mysql_query($query_guest) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -580,6 +630,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 // End of code to check for guest account existence
 ?>
 		<TR CLASS='even'>
+			<TD ROWSPAN=99>
+				<IMG BORDER=0 SRC='open_source_button.png' /><BR /><BR /><BR /><BR /><img src="php.png" />
+			</TD>
 			<TD CLASS="td_label text_large">
 				<?php print get_text("User"); ?>:
 			</TD>
@@ -655,7 +708,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			</TR>
 <?php
 			}
-		if($guest_exists) {	//	6/1/12
+  		if($guest_exists) {	//	6/1/12
 ?>
 			<TR CLASS='even'>
 				<TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -675,11 +728,6 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			<TD COLSPAN=2>&nbsp;</TD>
 		</TR>
 		<TR CLASS='even'>
-			<TD CLASS='text_medium' COLSPAN=99 ALIGN='CENTER'>
-				<IMG BORDER=0 SRC='open_source_button.png' />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="php.png" />
-			</TD>
-		</TR>
-		<TR CLASS='even'>
 			<TD COLSPAN=2>&nbsp;</TD>
 		</TR>
 	 	</TABLE>
@@ -690,9 +738,17 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
 		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE=<?php print $no_autoforward; ?>>
 		</FORM><BR /><BR />
-<!--		<a href="<?php echo get_contact_addr ();?>/"><SPAN CLASS='text_small'>Contact us</SPAN></a>	 6/1/2013 --> 
 		</DIV>
 		</CENTER>
+<?php
+		if(get_variable('login_userlist') == "1") {
+?>
+			<DIV CLASS='even' style='position: absolute; top: 5%; right: 2%; height: 40%; overflow-y: scroll; border: 1px outset #707070; padding: 20px;'><BR /><BR />
+				<?php print userlist();?>
+			</DIV>
+<?php
+			}
+?>
 <SCRIPT>
 		document.addEventListener("keyup", function(event) {	//	Captures return key click on login button to simulate it being an input button
 			event.preventDefault();

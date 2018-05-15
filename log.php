@@ -23,17 +23,6 @@ if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restr
 	exit();
 	}
 	
-function get_status_name($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		return $row['status_val'];
-		} else {
-		return " ";
-		}
-	}
-
 //dump($_POST);
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">

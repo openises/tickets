@@ -67,7 +67,7 @@ if (empty($_POST)) { 		// pass # 1
 		if($mode == 0) {
 			
 ?>
-			<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!');opener.location.href = 'main.php'; window.close();"> <!-- 4/5/10 -->
+			<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!'); opener.do_incident_refresh(); window.close();"> <!-- 4/5/10 -->
 			</BODY></HTML>
 <?php
 			} else {
@@ -386,7 +386,7 @@ function do_is_start($in_row) {				// 3/22/10
 				$id = $_POST['frm_ticket_id'];
 				$theTo = implode("|", array_unique($addrs));
 				$theText = get_text("Incident") . " " . $row['scope'] . " has been closed";
-				mail_it ($theTo, "", $theText, $id, 4);
+				mail_it($theTo, "", $theText, $id, 4);
 				}				// end if ($addrs)
 			}
 		unset($result);

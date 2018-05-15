@@ -7,7 +7,7 @@ if($_GET['q'] != $_SESSION['id']) {
 	}
 if (!(array_key_exists('func', $_GET))) {		//	3/15/11
 	$func = 0;
-} else {
+	} else {
 	extract ($_GET);
 	}
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
@@ -18,7 +18,6 @@ $sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : $_GET['sortb
 $sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : $_GET['sort_value'];
 $my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : $_GET['my_offset'];
 $istest = FALSE;
-$iw_width= "270px";					// map infowindow with
 $nature = get_text("Nature");			// 12/03/10
 $disposition = get_text("Disposition");
 $patient = get_text("Patient");
@@ -46,7 +45,7 @@ function subval_sort($a,$subkey, $dd) {
 	}
 
 function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sortdir="ASC", $func=0, $my_offset=0) {
-	global $istest, $iw_width, $disposition, $patient, $incident, $num_rows, $internet, $by_severity, $sev_color;
+	global $istest, $disposition, $patient, $incident, $num_rows, $internet, $by_severity, $sev_color;
 	$time = microtime(true); // Gets microseconds
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 
@@ -54,7 +53,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	
 	if (isset($_SESSION['list_type'])) {$func = $_SESSION['list_type'];}		// 12/02/10	 persistance for the tickets list
 
-	$cwi = (get_variable('closed_interval') != "") ? get_variable('closed_interval'): 1;			// closed window interval in hours
+	$cwi = (get_variable('closed_interval') != "") ? get_variable('closed_interval'): 0;			// closed window interval in hours
 	//	output row fields - ID, name(scope), location, lat, lng, description, status, actions, patients, assigned, updated, infowindow text, tip string, scheduled flag
 	
 	// initiate arrays
@@ -99,7 +98,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			}
 		}
 	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
-	$time_back = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60) - ($cwi*3600));
+	$deltamins = (!empty(get_variable('delta_mins'))) ? intval(get_variable('delta_mins')) : 0;
+	$time_back = mysql_format_date(time() - ($deltamins*60) - ($cwi*3600));
 	$sort_by_severity = ($func == 0)? "`severity` DESC ": "";
 
 	if (!(array_key_exists('func', $_GET))) {		//	3/15/11
@@ -141,10 +141,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	$interval = get_variable('hide_booked');
 	switch($func) {		
 		case 0: 
-			$where = "WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' 
-					OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND (`$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR) OR `$GLOBALS[mysql_prefix]ticket`.`booked_date` > NOW())) 
-					OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}' AND `$GLOBALS[mysql_prefix]ticket`.`problemend` >= '{$time_back}')
-					{$where2}";
+			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR)) OR 
+				(`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}' AND `$GLOBALS[mysql_prefix]ticket`.`problemend` >= '{$time_back}')){$where2} AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR) AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2) OR (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 0 AND `$GLOBALS[mysql_prefix]allocates`.`al_as_of` >= '{$time_back}')";	//	11/29/10, 4/18/11, 4/18/11
 			break;
 		case 1:
 		case 2:
@@ -216,22 +214,14 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = mysql_fetch_assoc($result)) 	{
 			$problemstart = strtotime($row['problemstart']);
-			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-			$now = strtotime($now);
+			$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+			$now = time() - ($delta*60);
 			$difference = round(abs($now - $problemstart) / 60,2);
-			$tick_gps = get_allocates(1, $row['tick_id']);	//	6/10/11
-			$grp_names = "Groups Assigned: ";	//	6/10/11
-			$y=0;	//	6/10/11
-			foreach($tick_gps as $value) {	//	6/10/11
-				$counter = (count($tick_gps) > ($y+1)) ? ", " : "";
-				$grp_names .= get_groupname($value);
-				$grp_names .= $counter;
-				$y++;
-				}
+			$grp_names = get_allocated_names(1, $row['tick_id']);	//	6/10/11
 			$by_severity[$row['severity']] ++;
-			if (($row['units_assigned']==0) && ($row['status']==$GLOBALS['STATUS_OPEN']) && ($difference > 30)) {					// 4/11/10
+			if (($row['units_assigned']==0) && ($row['status']==$GLOBALS['STATUS_OPEN']) && ($difference > 30)) {
 				$do_blink = 1;
 				} else {
 				$do_blink = 0;
@@ -241,11 +231,11 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$type = shorten($row['type'], 18);
 			$severity = $row['severity'];
 			$status = $row['status'];
-			$the_id = $row['tick_id'];		// 11/27/09
+			$the_id = $row['tick_id'];
 			$radius = $row['radius'];
 			$updated = format_sb_date_2($row['updated']);
-			$the_scope = htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
-			$address_street=htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 20), ENT_QUOTES);
+			$the_scope=htmlentities(shorten(stripslashes($row['scope']), 30), ENT_QUOTES);
+			$address_street=htmlentities(shorten(stripslashes($row['ticket_street'] . " " . $row['ticket_city']), 20), ENT_QUOTES);
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 			$num_assigned = $row['units_assigned'];
@@ -253,8 +243,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$num_patients = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: 0;
 			if ($status== $GLOBALS['STATUS_CLOSED']) {
 				$strike = "<strike>"; $strikend = "</strike>";
+				} else { $strike = $strikend = "";
 				}
-			else { $strike = $strikend = "";}
 			
 			if (intval($row['radius']) > 0) {
 				$color= (substr($row['color'], 0, 1)=="#")? $row['color']: "blue";		// black default

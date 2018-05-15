@@ -55,13 +55,13 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		FROM `$GLOBALS[mysql_prefix]messages` `m` 
 		{$where} {$order} {$order2}";
 $result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$bgcolor = "#EEEEEE";
 $num=mysql_num_rows($result);
 if (mysql_num_rows($result) == 0) { 				// 8/6/08
 	$print = "<TABLE style='width: 100%;'><TR style='width: 100%;'><TD style='width: 100%;'>No Messages</TD></TR></TABLE>";	
 	} else {
+	$i=1;		// line counter	
 	$print = "<TABLE style='width: 100%;'>";	
-	$print .= "<TR style='width: 100%; font-weight: bold; color: #FFFFFF; background-color: #707070;'><TD style='width: 10%;'>TYPE</TD><TD style='width: 30%;'>FROM</TD><TD style='width: 40%;'>SUBJECT</TD><TD style='width: 20%;'>DATE</TD></TR>";
+	$print .= "<TR class='header' style='width: 100%;'><TD style='width: 20%;'>FROM</TD><TD style='width: 40%;'>SUBJECT</TD><TD style='width: 40%;'>DATE</TD></TR>";
 	while ($msg_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$the_readers = array();
 		$the_readers = explode("," , $msg_row['readby']);
@@ -128,13 +128,12 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$read_class = ($the_class == 1) ? "font-weight: bold;" : "";
 
 		$fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
-		$print .= "<TR style='width: 100%; cursor: pointer; background-color: " . $bgcolor . "; " . $read_class . "' onClick='get_message(" . $the_message_id . ");'>";		
-		$print .= "<TD style='width: 10%; " . $color . ";'>" . $type_flag . "</TD>";		
-		$print .= "<TD style='width: 30%;'>" . $fromname . "</TD>";
-		$print .= "<TD style='width: 40%;'>" . stripslashes_deep(shorten($msg_row['subject'], 18)) . "</TD>";
-		$print .= "<TD style='width: 20%;'>" . format_date_2(strtotime($msg_row['date'])) . "</TD>";		
+		$print .= "<TR CLASS = '{$evenodd[$i%2]}' style='width: 100%; height: 30px; cursor: pointer; " . $read_class . "' onClick='get_message(" . $the_message_id . ");'>";		
+		$print .= "<TD class='text_medium' style='width: 20%;'>" . $fromname . "</TD>";
+		$print .= "<TD class='text_medium' style='width: 40%;'>" . stripslashes_deep(shorten($msg_row['subject'], 18)) . "</TD>";
+		$print .= "<TD class='text_medium' style='width: 40%;'>" . format_date_2(strtotime($msg_row['date'])) . "</TD>";		
 		$print .= "</TR>";
-		$bgcolor = ($bgcolor == "#EEEEEE") ? "#FEFEFE" : "#EEEEEE";				
+		$i++;
 		} // end while	
 		$print .= "</TABLE>";
 	}				// end else

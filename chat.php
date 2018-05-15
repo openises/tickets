@@ -321,7 +321,7 @@ $signals_list .= "</SELECT>\n";
 		if(window.event)	{keynum = e.keyCode;	} 			// IE
 		else if(e.which)	{keynum = e.which;	}				// Mozilla/Opera
 		if (keynum==13) {										// allow enter key
-			wr_chat_msg(document.forms[0]) ;					// submit to server-side script
+			wr_chat_msg(document.chat_form) ;					// submit to server-side script
 			do_focus ()
 			}
 		else {
@@ -395,7 +395,7 @@ $signals_list .= "</SELECT>\n";
 	</SCRIPT>
 </HEAD>
 <BODY onLoad = "if (!(window.opener)) {window.close();};announce();getMessages(true); set_to(); do_focus();" onUnload="wr_chat_msg(document.chat_form_2); clearTimeout(the_to);">
-	<DIV id='button_bar' class='but_container'>
+	<DIV id='button_bar' class='but_container' style='width: 98%;'>
 		<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>Chat
 		<SPAN ID='can_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='clear_to(); opener.chat_win_close(); self.close();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
 	</DIV>
@@ -408,7 +408,7 @@ $signals_list .= "</SELECT>\n";
 		<FORM METHOD="post" NAME='chat_form' onSubmit="return false;">
 		<NOBR>
 		<INPUT CLASS='text' style='vertical-align: middle;' TYPE="text" NAME="frm_message" SIZE=60 value = "" onChange = "clear_to()"; onBlur = 'set_to()'; >
-		<SPAN ID='send_but' class='plain text' style='float: none; width: 80px; display: inline-block; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='wr_chat_msg(document.forms[0]);set_to();'><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
+		<SPAN ID='send_but' class='plain text' style='float: none; width: 80px; display: inline-block; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='wr_chat_msg(document.chat_form);set_to();'><SPAN STYLE='float: left;'><?php print get_text("Send");?></SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>
 		<SPAN ID='reset_but' class='plain text' style='float: none; width: 80px; display: inline-block; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.chat_form.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 		<BR /><BR /><NOBR>
 		<?php print  $signals_list; ?><br />
@@ -436,6 +436,8 @@ $signals_list .= "</SELECT>\n";
 			<BR />
 		</DIV>
 		<INPUT TYPE='hidden' NAME = 'frm_user' VALUE='<?php print $_SESSION['user_id'];?>'>
+		<INPUT TYPE='hidden' NAME = 'frm_room' VALUE='0'>
+		<INPUT TYPE='hidden' NAME = 'frm_from' VALUE='<?php print $_SERVER['REMOTE_ADDR']; ?>'>
 		</FORM>
 		<FORM METHOD="post" NAME='chat_form_2' onSubmit="return false;">
 		<INPUT TYPE="hidden" NAME = "frm_message" VALUE=' has left this chat.'>

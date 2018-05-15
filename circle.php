@@ -61,23 +61,23 @@ tr.front 					{height: 18px; }
 
 <SCRIPT SRC="./js/jscolor/jscolor.js"  type="application/x-javascript"></SCRIPT>
 <?php
-if ($_SESSION['internet']) {
-	$api_key = get_variable('gmaps_api_key');
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
-	if($key_str) {
-		if($https) {
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+			if($https) {
 ?>
-			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php
-			} else {
+				} else {
 ?>
-			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php				
+				}
 			}
 		}
-	}
 ?>
 <SCRIPT SRC="./js/usng.js" TYPE="application/x-javascript"></SCRIPT>	<!-- 8/23/08 -->
 <SCRIPT SRC="./js/lat_lng.js" TYPE="application/x-javascript"></SCRIPT>	<!-- 11/8/11 -->

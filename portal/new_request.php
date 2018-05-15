@@ -5,8 +5,7 @@
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
-session_start();						// 
-session_write_close();
+@session_start();
 $logged_in = $logged_out = false;
 if (empty($_SESSION)) {
 	$logged_out = true;
@@ -150,12 +149,12 @@ require_once('../incs/all_forms_js_variables.inc.php');
 if($key_str) {
 	if($https) {
 ?>
-		<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
 		<script src="./js/Google.js"></script>
 <?php
 		} else {
 ?>
-		<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+		<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
 		<script src="./js/Google.js"></script>
 <?php				
 		}

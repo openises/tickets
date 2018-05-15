@@ -800,16 +800,16 @@ if(empty($_SESSION)) {		// expired?
 			<BODY onLoad = "reSizeScr_add(<?php print $lines;?>)"><!-- <?php echo __LINE__; ?> --><LEFT>
 				<A NAME='page_top'>
 
-				<DIV ID='buttons' style="position:fixed; top:10px; right:2px; height: 150px; width: 150px; overflow-y: auto;">
+				<DIV ID='buttons' style="position:fixed; top:10px; right:2px; height: 300px; width: 150px; overflow-y: auto;">
 					<TABLE style='width: 100%;'>
 						<TR>
 							<TD ALIGN='left'>
-								<A HREF="#page_top">to top</A>
+								<A id='top_but' HREF="#page_top" CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' ><SPAN STYLE='float: left;'>to top</SPAN><IMG STYLE='float: right;' SRC='./images/up_small.png' BORDER=0></A>
 							</TD>
 						</TR>
 						<TR>
 							<TD ALIGN='left'>
-								<A HREF="#page_bottom">to bottom</A>
+								<A id='bot_but' HREF="#page_bottom" CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' ><SPAN STYLE='float: left;'>to bottom</SPAN><IMG STYLE='float: right;' SRC='./images/down_small.png' BORDER=0></SPAN></A>
 							</TD>
 						</TR>
 						<TR>
@@ -870,8 +870,16 @@ if(empty($_SESSION)) {		// expired?
 						$distance = ($row['distance']> 5000.0)? "?" : round($row['distance'],1);
 
 						$cd_str = get_cd_str ($row, $_POST['frm_ticket_id']);
-
-						$em_addr = is_email($row['contact_via'])? $row['contact_via']."," : "";				//  4/28/11
+						$em_arr = array();
+						$temp_arr = array();
+						$temp_addrs = get_contact_via($row['unit_id']);
+						foreach($temp_addrs as $val) {
+							if (is_email($val)) {
+								array_push($temp_arr, $val);
+								}
+							}
+						$em_arr = array_unique($temp_arr);
+						$em_addr = implode(",", $em_arr);
 ?>						
 						<TR CLASS='<?php print $evenodd[($i+1)%2];?>' VALIGN='baseline'>
 							<TD ALIGN='right' CLASS='td_label'><?php print $capt;?> </TD>
@@ -1046,8 +1054,8 @@ if(empty($_SESSION)) {		// expired?
 //			dump($_POST);
 			$unit_ids = explode(",", $_POST['frm_unit_id_str']);		//  4/23/10
 			for ($i=0; $i< count($unit_ids)-1; $i++) {
-
-				$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		// 11/2/09, 3/9/09, 10/6/09 added start end and total miles
+				$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+				$now = mysql_format_date(time() - ($delta*60));
 
 				$temp = trim($frm_miles_strt);				// 11/4/09
 				$start_mi = (empty($temp))? 0: $temp ;
@@ -1297,10 +1305,10 @@ if(empty($_SESSION)) {		// expired?
 						$('list_btn').style.display='inline-block';
 						$('close_btn').style.display='inline-block';
 						$('refr_btn').style.display='inline-block';
-						if(typeof window.opener.parent.frames["main"].do_responder_refresh() == 'function') {
-							window.opener.parent.frames["main"].do_responder_refresh();
-							}		
-						if(typeof window.opener.parent.frames["main"].do_statistics() == 'function') {
+//						if(window.opener && typeof window.opener.parent.frames["main"].do_responder_refresh() == 'function') {
+//							window.opener.parent.frames["main"].do_responder_refresh();
+//							}		
+						if(window.opener && typeof window.opener.parent.frames["main"].do_statistics() == 'function') {
 							window.opener.parent.frames["main"].do_statistics();
 							}
 						$('done_id').style.display='inline';  					// show 'Done!' for 2 seconds
@@ -1432,7 +1440,8 @@ if(empty($_SESSION)) {		// expired?
 					} else 	{										// otherwise show
 					$temp =  get_variable('closed_interval');
 					$cwi = ( empty($temp) ) ? "24" : $temp;		// default to 24 hours if no user setting
-					$time_back = mysql_format_date(time() - (get_variable('delta_mins')*60) - ($cwi*3600));
+					$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+					$time_back = mysql_format_date(time() - ($delta*60) - ($cwi*3600));
 					$hide_sql = " OR `clear`>= '$time_back' ";
 					$butn_txt = "Hide ";
 					$butn_val = "h";
@@ -1542,15 +1551,16 @@ if(empty($_SESSION)) {		// expired?
 <?php
 					$doUnit = (($guest)||($user))? "viewU" : "editU";		// 5/11/10
 					$doTick = ($guest)? "viewT" : "editT";				// 06/26/08
-					$now = time() - (get_variable('delta_mins')*60);
+					$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+					$now = time() - ($delta*60);
 					$items = mysql_num_rows($result);
 					$tags_arr = explode("/", get_variable('disp_stat'));		// 8/29/10
 
 					$header = "<TR CLASS='even'>";
 
-					$header .= "<TD COLSPAN=5 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_INC_PERC}%' onmouseover=\"Tip('Click to sort by Incident')\" onmouseout=\"UnTip()\" onClick = 'document.can_Form.submit();'><U>Incident</U></TD>";		// 9/27/08
+					$header .= "<TD COLSPAN=6 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_INC_PERC}%' onClick = 'document.can_Form.submit();' TITLE = 'Click to sort by Incident'><U>Incident</U></TD>";		// 9/27/08
 					$header .= "<TD>&nbsp;</TD>";
-					$header .= "<TD COLSPAN=9 ALIGN='center' CLASS='emphb 'WIDTH='{$TBL_UNIT_PERC}%' onmouseover=\"Tip('Click to sort by Unit')\" onmouseout=\"UnTip()\" onClick = 'document.sort_Form.submit();'  TITLE = 'Click to sort by Unit'><U>" . get_text("Units") . "</U></TD>";			// 3/27/09
+					$header .= "<TD COLSPAN=9 ALIGN='center' CLASS='emphb 'WIDTH='{$TBL_UNIT_PERC}%' onClick = 'document.sort_Form.submit();'  TITLE = 'Click to sort by Unit'><U>" . get_text("Units") . "</U></TD>";			// 3/27/09
 					$header .= "<TD>&nbsp;</TD>";
 					$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_CALL_PERC}%'>Dispatch</TD>";
 					$header .= "</TR>\n";
@@ -2177,7 +2187,8 @@ if(empty($_SESSION)) {		// expired?
 							</TD>
 						</TR>
 <?php
-						$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		// mysql format
+						$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+						$now = mysql_format_date(time() - ($delta*60)); 		// mysql format
 
 						if (is_date($asgn_row['dispatched'])) {
 							$the_date = $asgn_row['dispatched'];
@@ -2344,7 +2355,8 @@ if(empty($_SESSION)) {		// expired?
 				break;			// end 	case 'edit': == } ==
 
 			case 'edit_db':		// ==== {  ================================================
-				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+				$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+				$now = mysql_format_date(time() - ($delta*60));
 
 				if (isset($frm_inc_status_id)) {
 					$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `status`= " . quote_smart($frm_inc_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_ticket_id) ." LIMIT 1";
@@ -2618,7 +2630,9 @@ if(empty($_SESSION)) {		// expired?
 <?php
 					$doUnit = (($guest)||($user))? "viewU" : "editU";	// 5/11/10
 					$doTick = ($guest)? "viewT" : "editT";				// 06/26/08
-					$now = time() - (get_variable('delta_mins')*60);
+					$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+					$now = time() - ($delta*60);
+
 					$items = mysql_num_rows($result_temp);
 					$header = "<TR >";
 

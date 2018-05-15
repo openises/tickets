@@ -32,7 +32,27 @@ $evenodd = array ("even", "odd");
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+<SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
+	window.onresize=function(){set_size()};
+	
+	var viewportwidth, viewportheight;
+	
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		set_fontsizes(viewportwidth, "popup");
+		}
+		
 	function do_popup(id) {
 		document.popup.id.value = id;
 		document.popup.submit();	
@@ -55,14 +75,14 @@ $evenodd = array ("even", "odd");
 <FORM>
 <TABLE cellpadding = 2 align='center'  STYLE = 'margin-top:32px;'>
 <?php
-	echo "<TR CLASS = 'even'><TH>{$caption}</TH><TH>" . get_text("Addr") . "</TH><TH>" . get_text("Incident") . "</TH><TH>Opened</TH></TR>";
- 	echo "<TR CLASS = 'odd'><TD COLSPAN=4 ALIGN='center'><I>Click line for " . get_text("Incident") . " detail</I></TD></TR>";
+	echo "<TR CLASS = 'even'><TH CLASS='text text_left'>{$caption}</TH><TH CLASS='text text_left'>" . get_text("Addr") . "</TH><TH CLASS='text text_left'>" . get_text("Incident") . "</TH><TH CLASS='text text_left'>Opened</TH></TR>";
+ 	echo "<TR CLASS = 'odd'><TD CLASS='text text_center' COLSPAN=4 ALIGN='center'><I>Click line for " . get_text("Incident") . " detail</I></TD></TR>";
 	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {	
 		echo "<TR CLASS= '{$evenodd[($i)%2]}' onclick = 'do_popup({$in_row['id']});'>";
-		echo "<TD ALIGN='right'>" . round($in_row["miles"], 1) . "</TD>";
-		echo "<TD>" . shorten("{$in_row['street']}  {$in_row['city']}", 48) . "</TD>";
-		echo "<TD>{$in_row["scope"]}</TD>";
-		echo "<TD>". substr($in_row["problemstart"], 5, 11) ."</TD>";
+		echo "<TD CLASS='text' ALIGN='right'>" . round($in_row["miles"], 1) . "</TD>";
+		echo "<TD CLASS='text'>" . shorten("{$in_row['street']}  {$in_row['city']}", 48) . "</TD>";
+		echo "<TD CLASS='text'>{$in_row["scope"]}</TD>";
+		echo "<TD CLASS='text'>". substr($in_row["problemstart"], 5, 11) ."</TD>";
 		echo "</TR>\n";
 		$i++;
 		}		// end while()
@@ -77,4 +97,17 @@ $evenodd = array ("even", "odd");
 	</script>
 </CENTER>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

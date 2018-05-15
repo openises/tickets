@@ -12,8 +12,13 @@ require_once('./incs/all_forms_js_variables.inc.php');
 <?php
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
+$useMDBContact = (get_mdb_variable('use_mdb_contact') && get_mdb_variable('use_mdb_contact') != "") ? get_mdb_variable('use_mdb_contact') : "0";
+$useMDBStatus =  (get_mdb_variable('use_mdb_status') && get_mdb_variable('use_mdb_status') != "") ? get_mdb_variable('use_mdb_status') : "0";
 ?>
 window.onresize=function(){set_size()};
+var use_mdb = <?php echo get_variable('use_mdb');?>;
+var use_mdb_contact = <?php echo get_mdb_variable('use_mdb_contact');?>;
+var use_mdb_status = <?php echo get_mdb_variable('use_mdb_status');?>;
 var respFin = false;
 var statSel = false;
 var mapCenter;
@@ -83,6 +88,7 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .30;
 	mapHeight = viewportheight * .55;
 	outerwidth = viewportwidth * .99;
@@ -130,7 +136,6 @@ function pageLoaded() {
 		mapZoom = map.getZoom();
 		map.invalidateSize();
 		}
-	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 function do_tab(tabid, suffix, lat, lng) {
@@ -204,7 +209,7 @@ function do_tab(tabid, suffix, lat, lng) {
 			<SPAN class='text_medium text_center text_italic' style='color: #FFFFFF; width: 100%; display: block;' id='caption'>click on item to view / edit, Click headers to sort</SPAN>
 		</DIV>
 		<DIV class="scrollableContainer2" id='responderlist' style='border: 1px outset #707070;'>
-			<DIV class="scrollingArea2" id='the_rlist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+			<DIV class="scrollingArea2" id='the_rlist' style='padding-top: 20px;'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 		</DIV>
 		<BR />
 		<DIV style='z-index: 1; position: relative; text-align: center;'>
@@ -284,6 +289,7 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
+set_fontsizes(viewportwidth, "fullscreen");
 mapWidth = viewportwidth * .30;
 mapHeight = viewportheight * .55;
 outerwidth = viewportwidth * .99;

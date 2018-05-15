@@ -8,10 +8,13 @@ $gt_status = get_text("Status");
 $iw_width = 	"300px";		// map infowindow with
 $col_width= max(320, intval($_SESSION['scr_width']* 0.45));
 $zoom_tight = false;
-$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
-$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-$id = mysql_real_escape_string($id);
+$get_print = (array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
+$get_id = (array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
+$tick_id = mysql_real_escape_string($get_id);
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
+$theNotice = (isset($theNotice)) ? $theNotice : "";
+$mode = (isset($mode)) ? $mode: 0;
+$https = (array_key_exists('HTTPS', $_SERVER)) ? 1 : 0;
 
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
@@ -255,16 +258,32 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 	}
 </SCRIPT>
 </HEAD>
-<BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
-<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
-<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
+<?php
+if($mode == 0) {
+?>
+	<BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
+	<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
+<?php
+	} else {
+?>
+	<BODY onLoad = "set_size(); location.href = '#top';">
+	<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 	<DIV id='button_bar' class='but_container'>
-	<?php print add_header($id, TRUE, TRUE);?>
+		<SPAN id='can_but' roll='button' aria-label='Cancel' CLASS='plain text' style='width: 80px; display: inline-block; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
+	</DIV>
+<?php
+	}
+?>
+
+<DIV id = "outer" style='position: absolute; left: 0px; top: 70px; width: 90%;'>
+	<DIV id='button_bar' class='but_container' style='text-align: left; position: fixed; top: 60px;'>
+	<?php print add_header($tick_id, TRUE, TRUE);?>
 	</DIV>
 	<DIV id = "leftcol" style='position: relative; top: 70px; left: 30px; float: left;'>
+
 <?php
 
-	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
+	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$tick_id})</I>" : "";			// 1/25/09, 2/18/12
 	$un_stat_cats = get_all_categories();
 	$istest = FALSE;
 	if($istest) {
@@ -274,8 +293,8 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		dump($_POST);
 		}
 
-	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
-		print "Invalid Ticket ID: '$id'<BR />";
+	if ($tick_id == '' OR $tick_id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$tick_id'")) {	/* sanity check */
+		print "Invalid Ticket ID: '$tick_id'<BR />";
 		return;
 		}
 
@@ -307,12 +326,12 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
+		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $tick_id $restrict_ticket";
 
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (!mysql_num_rows($result)){	//no tickets? print "error" or "restricted user rights"
-		print "<FONT CLASS=\"warn\">Internal error " . basename(__FILE__) ."/" .  __LINE__  .".  Notify developers of this message.</FONT>";	// 8/18/09
+	if (!mysql_num_rows($result)){
+		print "<FONT CLASS=\"warn\">Internal error " . basename(__FILE__) ."/" .  __LINE__  .".  Notify developers of this message.</FONT>";
 		exit();
 		}
 
@@ -327,12 +346,12 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		break;
 
 		case "1":
-		$grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;OSGB&nbsp;&nbsp;" . LLtoOSGB($row['lat'], $row['lng']);    // 8/23/08, 10/15/08, 8/3/09
+		$grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;OSGB&nbsp;&nbsp;" . LLtoOSGB($row['lat'], $row['lng']);
 		break;
 
 		case "2":
-		$coords =  $row['lat'] . "," . $row['lng'];                                    // 8/12/09
-		$grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;UTM&nbsp;&nbsp;" . toUTM($coords);    // 8/23/08, 10/15/08, 8/3/09
+		$coords =  $row['lat'] . "," . $row['lng'];
+		$grid_type = "&nbsp;&nbsp;&nbsp;&nbsp;UTM&nbsp;&nbsp;" . toUTM($coords);
 		break;
 
 		default:
@@ -341,14 +360,15 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 
 
 ?>
+	<DIV style='width: 100%;'><?php print $theNotice;?></DIV>;
 	<TABLE id='leftTable' style='width: <?php print $col_width;?>; border: 1px solid #707070;'>
 	<TR VALIGN="top" style='width: 100%;'><TD CLASS="print_TD, even" ALIGN="left" style='width: 100%;'>
 	<DIV id='loc_warnings' style='z-index: 1000; display: none; height: 100px; width: 100%; font-size: 1.5em; font-weight: bold; border: 2px outset #707070;'></DIV><BR />	
 
 <?php
 
-	print do_ticket_only($row, $col_width, FALSE) ;				// 2/25/09
-	print show_actions($row['tick_id'], "date", FALSE, FALSE, 1);		/* lists actions and patient data belonging to ticket */
+	print do_ticket_only($row, $col_width, FALSE) ;
+	print show_actions($row['tick_id'], "date", FALSE, FALSE, 1);
 	print "</TD></TR></TABLE>\n";	
 	$lat = $row['lat']; $lng = $row['lng'];
 ?>
@@ -429,7 +449,7 @@ do_kml();
 // ================================End of Facilities========================================
 // ====================================Add Responding Units to Map================================================
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$tick_id'";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	while($row = mysql_fetch_array($result)){
 		$responder_id=($row['responder_id']);
@@ -581,8 +601,10 @@ map.setView([theLat, theLng], 13);
 </SCRIPT>
 </DIV>
 <?php
-$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
-print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, $id, 0, 0, 0)
+if($mode == 0) {
+	$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
+	print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, $tick_id, 0, 0, 0);
+	}
 ?>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>

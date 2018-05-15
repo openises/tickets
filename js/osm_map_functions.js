@@ -150,6 +150,10 @@ String.prototype.trunc = String.prototype.trunc ||
 function pad(width, string, padding) { 
 	return (width <= string.length) ? string : pad(width, string + padding, padding)
 	}
+	
+function bothpad(width, string, padding) { 
+	return (width <= string.length) ? string : pad(width, padding + string + padding, padding)
+	}
 
 Array.prototype.contains = function(obj) {
     var i = this.length;
@@ -181,11 +185,11 @@ var na=document.getElementsByTagName("blink");
 function blink_continue() {
 	if (b_interval!=null) {return;}
 	b_interval = window.setInterval('blink_loop()', 500); 
-	}			// end function mu get()
+	}			// end function blink_continue()
 
 function blink_loop() {
 	do_blink();
-	}			// end function do_loop()
+	}			// end function blink_loop()
 	
 function bringPopupToFront(id) {
 	if(frontPopup == id) {return;}
@@ -536,6 +540,7 @@ function set_pri_chkbox(control) {
 // 	Units show / hide functions				
 	
 function set_categories() {			//	12/03/10 - checks current session values and sets checkboxes and view states for hide and show.
+	if(!$('RESP_ALL')) {return;}
 	var resptbl = document.getElementById('respondertable');
 	if(resptbl) {
 	var headerRow = resptbl.rows[0];
@@ -582,7 +587,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 						}
 					}
 				}
-			$(catname).checked = true;
+			if($(catname)) {$(catname).checked = true;}
 			} else {
 			for (var j = 1; j < rmarkers.length; j++) {
 				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
@@ -593,7 +598,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 						}
 					}
 				}
-			$(catname).checked = false;
+			if($(catname)) {$(catname).checked = false;}
 			}				
 		}
 	if(typeof(resptbl) !== 'undefined') {
@@ -1136,11 +1141,11 @@ function set_bnds() {			//	12/03/10 - checks current session values and sets che
 		var bnds = bnd_curr[key];
 		var bnd_nm = bnd_names_curr[key];
 		if(bnds == "s") {
-			$(bnd_nm).checked = true;
+			if(bnd_nm) {$(bnd_nm).checked = true;}
 			if(window.boundary[key]) {window.boundary[key].addTo(map);}
 			} else {
-			map.removeLayer(boundary[key]);				
-			$(bnd_nm).checked = false;
+			if(window.boundary[key]) {map.removeLayer(boundary[key]);}				
+			if(bnd_nm) {$(bnd_nm).checked = false;}
 			}				
 		if(bnd_hidden!=0) {
 			if($('BND_ALL')) { $('BND_ALL').style.display = '';}
@@ -1186,7 +1191,19 @@ function hideDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		}
 	if (div_area == "region_boxes") {
 		var controlarea = "region_boxes";
-		}			
+		}
+	if (div_area == "ticketlist") {
+		var controlarea = "ticketlist";
+		}
+	if (div_area == "responderlist") {
+		var controlarea = "responderlist";
+		}
+	if (div_area == "facilitylist") {
+		var controlarea = "facilitylist";
+		}
+	if (div_area == "loglist") {
+		var controlarea = "loglist";
+		}
 	var divarea = div_area 
 	var hide_cont = hide_cont 
 	var show_cont = show_cont 
@@ -1194,10 +1211,12 @@ function hideDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		$(divarea).style.display = 'none';
 		$(hide_cont).style.display = 'none';
 		$(show_cont).style.display = '';
-		} 
-	var params = "f_n=" +controlarea+ "&v_n=h&sess_id=" + sess_id;
-	var url = "persist2.php";
-	sendRequest (url, gb_handleResult, params);			
+		}
+	if(typeof(controlarea) !== 'undefined') {
+		var params = "f_n=" +controlarea+ "&v_n=h&sess_id=" + sess_id;
+		var url = "persist2.php";
+		sendRequest (url, gb_handleResult, params);
+		}		
 	} 
 
 function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
@@ -1215,7 +1234,19 @@ function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		}
 	if (div_area == "region_boxes") {
 		var controlarea = "region_boxes";
-		}				
+		}
+	if (div_area == "ticketlist") {
+		var controlarea = "ticketlist";
+		}
+	if (div_area == "responderlist") {
+		var controlarea = "responderlist";
+		}
+	if (div_area == "facilitylist") {
+		var controlarea = "facilitylist";
+		}
+	if (div_area == "loglist") {
+		var controlarea = "loglist";
+		}		
 	var divarea = div_area
 	var hide_cont = hide_cont 
 	var show_cont = show_cont 
@@ -1224,9 +1255,11 @@ function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		$(hide_cont).style.display = '';
 		$(show_cont).style.display = 'none';
 		}
-	var params = "f_n=" +controlarea+ "&v_n=s&sess_id=" + sess_id;
-	var url = "persist2.php";
-	sendRequest (url, gb_handleResult, params);					
+	if(typeof(controlarea) !== 'undefined') {
+		var params = "f_n=" +controlarea+ "&v_n=s&sess_id=" + sess_id;
+		var url = "persist2.php";
+		sendRequest (url, gb_handleResult, params);
+		}		
 	} 
 
 function show_All() {						// 8/7/09 Revised function to correct incorrect display, 12/03/10, revised to remove units show and hide from this function
@@ -1372,7 +1405,7 @@ function to_str(instr) {			// 0-based conversion - 2/13/09
 	return hop+to_char(lop);
 	}
 	
-function loc_lkup(my_form) {		   						// 7/5/10
+function loc_lkup(my_form) {
 	if(!$('map_canvas')) {return; }
 	var theLat = my_form.frm_lat.value;
 	var theLng = my_form.frm_lng.value;	
@@ -1389,12 +1422,16 @@ function loc_lkup(my_form) {		   						// 7/5/10
 		}
 	control.options.geocoder.geocode(myAddress, function(results) {
 		if(!results[0]) {
-			if(!confirm("Could not find location from address. Do you want to use default location?")) {
-				alert("Please try inputting the address in a different way");
-				return false;
-				} else {
+			if(allow_nogeo == "1") {
 				dummy_pt_to_map(my_form);
-				return;
+				} else {
+				if(!confirm("Could not find location from address. Do you want to use default location?")) {
+					alert("Please try inputting the address in a different way");
+					return false;
+					} else {
+					dummy_pt_to_map(my_form);
+					return;
+					}
 				}
 			}
 		var r = results[0]['center'];
@@ -1418,6 +1455,13 @@ function pt_to_map (my_form, lat, lng) {
 	if(locale == 0) { my_form.frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
 	if(locale == 1) { my_form.frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
 	if(locale == 2) { my_form.frm_ngs.value=LLtoUTM(theLat, theLng, 5); }
+	if(document.wiz_add) {
+		document.wiz_add.wiz_show_lat.value=do_lat_fmt(theLat);
+		document.wiz_add.wiz_show_lng.value=do_lng_fmt(theLng);	
+		if(locale == 0) { document.wiz_add.wiz_frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
+		if(locale == 1) { document.wiz_add.wiz_frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
+		if(locale == 2) { document.wiz_add.wiz_frm_ngs.value=LLtoUTM(theLat, theLng, 5); }		
+		}
 	var iconurl = "./our_icons/yellow.png";
 	icon = new baseIcon({iconUrl: iconurl});	
 	marker = L.marker([theLat, theLng], {icon: icon});
@@ -1429,12 +1473,22 @@ function dummy_pt_to_map(my_form) {
 	if(!$('map_canvas')) {return; }
 	if(marker) {map.removeLayer(marker);}
 	if(myMarker) {map.removeLayer(myMarker);}
-	var theLat = 0.999999;
-	var theLng = 0.999999;
+	var theLat = def_lat;
+	var theLng = def_lng;
 	my_form.frm_lat.value=theLat;	
 	my_form.frm_lng.value=theLng;		
-	my_form.show_lat.value=theLat;
-	my_form.show_lng.value=theLng;	
+	my_form.show_lat.value=do_lat_fmt(theLat);
+	my_form.show_lng.value=do_lng_fmt(theLng);	
+	if(locale == 0) { my_form.frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
+	if(locale == 1) { my_form.frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
+	if(locale == 2) { my_form.frm_ngs.value=LLtoUTM(theLat, theLng, 5); }
+	if(document.wiz_add) {
+		document.wiz_add.wiz_show_lat.value=do_lat_fmt(theLat);
+		document.wiz_add.wiz_show_lng.value=do_lng_fmt(theLng);	
+		if(locale == 0) { document.wiz_add.wiz_frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
+		if(locale == 1) { document.wiz_add.wiz_frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
+		if(locale == 2) { document.wiz_add.wiz_frm_ngs.value=LLtoUTM(theLat, theLng, 5); }		
+		}
 	var iconurl = "./our_icons/question1.png";
 	icon = new baseIcon({iconUrl: iconurl});	
 	marker = L.marker([def_lat, def_lng], {icon: icon});
@@ -1457,7 +1511,7 @@ function newGetAddress(latlng, currform) {
 				r.city = r.town;
 				}
 			} else if(window.geo_provider == 1) {
-			var r = results[0];
+			var r = results[0].properties.address;
 			if(!r.city) {
 				if(r.suburb && (r.suburb != "")) {
 				theCity = r.suburb;
@@ -2294,55 +2348,35 @@ function log_debug(theText) {
 function get_tickpopup(id) {
 	if(typeof(tmarkers) !== 'undefined') {
 		for(var key in tmarkers) {
-			if (tmarkers[key]) {
-				if(typeof(tmarkers[key]._popup)=='undefined') {
-					// Do nothing
-					} else {
-					tmarkers[key].closePopup();
-					}
+			if (tmarkers[key] && typeof(tmarkers[key]._popup)=='undefined') {
 				} else {
-				// do nothing
+				tmarkers[key].closePopup();
 				}
 			}
 		}
 	if(typeof(rmarkers) !== 'undefined') {
 		for(var key in rmarkers) {
-			if (rmarkers[key]) {
-				if(typeof(rmarkers[key]._popup)=='undefined') {
-					// Do nothing
-					} else {
-					if(!theAssigned[key]) {
-						rmarkers[key].closePopup();
-						}
-					}
+			if (rmarkers[key] && typeof(rmarkers[key]._popup)=='undefined') {
 				} else {
-				// Do Nothing
+				if(!theAssigned[key]) {
+					rmarkers[key].closePopup();
+					}
 				}
 			}
 		}
 	if(typeof(fmarkers) !== 'undefined') {
 		for(var key in fmarkers) {
-			if (fmarkers[key]) {
-				if(typeof(fmarkers[key]._popup)=='undefined') {
-					// Do nothing
-					} else {
-					fmarkers[key].closePopup();
-					}
+			if (fmarkers[key] && typeof(fmarkers[key]._popup)=='undefined') {
 				} else {
-				// do nothing
+				fmarkers[key].closePopup();
 				}
 			}
 		}
 	if(typeof(wlmarkers) !== 'undefined') {
 		for(var key in wlmarkers) {
-			if (wlmarkers[key]) { 
-				if(typeof(wlmarkers[key]._popup)=='undefined') {
-					// Do nothing
-					} else {
-					wlmarkers[key].closePopup();
-					}
+			if (wlmarkers[key] && typeof(wlmarkers[key]._popup)=='undefined') {
 				} else {
-				// do nothing
+				wlmarkers[key].closePopup();
 				}
 			}
 		}
@@ -2675,6 +2709,7 @@ function myrssclick(id) {					// Responds to sidebar click, then triggers listen
 	}
 	
 function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_position) {
+	var protocol = (https == "1") ? "https://" : "http://";
 	if(locale == 1 && useOSMAP == 1) {	//	UK Use Ordnance Survey as Basemap
 		openspaceLayer = L.tileLayer.OSOpenSpace(openspace_api, {debug: true});
 		var grid = L.graticule({ interval: .5 })
@@ -2771,7 +2806,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			});
 		} else {
 		var latLng;
-		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 		var	cmAttr = '';
 		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 		var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
@@ -2781,30 +2816,35 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			var ggl2 = new L.Google('SATELLITE');
 			var ggl3 = new L.Google('HYBRID');
 			}
-		var clouds = L.OWM.clouds({showLegend: false, opacity: 0.3});
-		var cloudscls = L.OWM.cloudsClassic({showLegend: false, opacity: 0.3});
-		var precipitation = L.OWM.precipitation({showLegend: false, opacity: 0.3});
-		var precipitationcls = L.OWM.precipitationClassic({showLegend: false, opacity: 0.3});
-		var rain = L.OWM.rain({showLegend: false, opacity: 0.3});
-		var raincls = L.OWM.rainClassic({showLegend: false, opacity: 0.3});
-		var snow = L.OWM.snow({showLegend: false, opacity: 0.3});
-		var pressure = L.OWM.pressure({showLegend: false, opacity: 0.3});
-		var pressurecntr = L.OWM.pressureContour({showLegend: false, opacity: 0.8});
-		var temp = L.OWM.temperature({showLegend: false, opacity: 0.3});
-		var wind = L.OWM.wind({showLegend: false, opacity: 0.3});
+		var clouds = L.OWM.clouds({appId: owm_api,showLegend: false, opacity: 0.3});
+		var cloudscls = L.OWM.cloudsClassic({appId: owm_api,showLegend: false, opacity: 0.3});
+		var precipitation = L.OWM.precipitation({appId: owm_api,showLegend: false, opacity: 0.3});
+		var precipitationcls = L.OWM.precipitationClassic({appId: owm_api,showLegend: false, opacity: 0.3});
+		var rain = L.OWM.rain({appId: owm_api,showLegend: false, opacity: 0.3});
+		var raincls = L.OWM.rainClassic({appId: owm_api,showLegend: false, opacity: 0.3});
+		var snow = L.OWM.snow({appId: owm_api,showLegend: false, opacity: 0.3});
+		var pressure = L.OWM.pressure({appId: owm_api,showLegend: false, opacity: 0.3});
+		var pressurecntr = L.OWM.pressureContour({appId: owm_api,showLegend: false, opacity: 0.8});
+		var temp = L.OWM.temperature({appId: owm_api,showLegend: false, opacity: 0.3});
+		var wind = L.OWM.wind({appId: owm_api,showLegend: false, opacity: 0.3});
 		var dark = L.tileLayer.provider('Thunderforest.TransportDark');
-		var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
+		if(owm_api != "") {
+			var city = L.OWM.current({interval: 15, lang: 'en', minZoom: 8, appId: owm_api});
+			} else {
+			var city = L.OWM.current({interval: 15, lang: 'en', minZoom: 8});
+			}
+		var nexrad = L.tileLayer.wms(protocol + "mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
 			layers: 'nexrad-n0r-900913',
 			format: 'image/png',
 			transparent: true,
 			attribution: "",
 		});
-		var shade = L.tileLayer.wms("http://ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
+		var shade = L.tileLayer.wms(protocol + "ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
 			layers: "HR-NED.IMAGE", 
 			format: 'image/png',
 			attribution: "",
 		});
-		var usgstopo = L.tileLayer('http://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
+		var usgstopo = L.tileLayer(protocol + 'basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
 			maxZoom: 20,
 			attribution: '',
 		});
@@ -2932,6 +2972,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				"Snow": snow,
 				"Radar": nexrad,
 				"Grid": grid,
+				"City Weather": city,
 			};
 			map.setView([lat, lng], initzoom);
 			bounds = map.getBounds();	
@@ -2993,6 +3034,7 @@ function layer_handleResult(req) {
 	}
 	
 function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_position) {
+	var protocol = (https == "1") ? "https://" : "http://";
 	if(locale == 1 && useOSMAP == 1) {	//	UK Use Ordnance Survey as Basemap
 		openspaceLayer = L.tileLayer.OSOpenSpace(openspace_api, {debug: true});
 		var grid = L.graticule({ interval: .5 })
@@ -3088,7 +3130,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			});
 		} else {
 		var latLng;
-		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 		var	cmAttr = '';
 		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
 		if(good_gmapsapi == 1) {
@@ -3097,30 +3139,35 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			var ggl2 = new L.Google('SATELLITE');
 			var ggl3 = new L.Google('HYBRID');
 			}
-		var clouds = L.OWM.clouds({showLegend: false, opacity: 0.3});
-		var cloudscls = L.OWM.cloudsClassic({showLegend: false, opacity: 0.3});
-		var precipitation = L.OWM.precipitation({showLegend: false, opacity: 0.3});
-		var precipitationcls = L.OWM.precipitationClassic({showLegend: false, opacity: 0.3});
-		var rain = L.OWM.rain({showLegend: false, opacity: 0.3});
-		var raincls = L.OWM.rainClassic({showLegend: false, opacity: 0.3});
-		var snow = L.OWM.snow({showLegend: false, opacity: 0.3});
-		var pressure = L.OWM.pressure({showLegend: false, opacity: 0.3});
-		var pressurecntr = L.OWM.pressureContour({showLegend: false, opacity: 0.8});
-		var temp = L.OWM.temperature({showLegend: false, opacity: 0.3});
-		var wind = L.OWM.wind({showLegend: false, opacity: 0.3});
+		var clouds = L.OWM.clouds({appId: owm_api,showLegend: false, opacity: 0.3});
+		var cloudscls = L.OWM.cloudsClassic({appId: owm_api,showLegend: false, opacity: 0.3});
+		var precipitation = L.OWM.precipitation({appId: owm_api,showLegend: false, opacity: 0.3});
+		var precipitationcls = L.OWM.precipitationClassic({appId: owm_api,showLegend: false, opacity: 0.3});
+		var rain = L.OWM.rain({appId: owm_api,showLegend: false, opacity: 0.3});
+		var raincls = L.OWM.rainClassic({appId: owm_api,showLegend: false, opacity: 0.3});
+		var snow = L.OWM.snow({appId: owm_api,showLegend: false, opacity: 0.3});
+		var pressure = L.OWM.pressure({appId: owm_api,showLegend: false, opacity: 0.3});
+		var pressurecntr = L.OWM.pressureContour({appId: owm_api,showLegend: false, opacity: 0.8});
+		var temp = L.OWM.temperature({appId: owm_api,showLegend: false, opacity: 0.3});
+		var wind = L.OWM.wind({appId: owm_api,showLegend: false, opacity: 0.3});
 		var dark = L.tileLayer.provider('Thunderforest.TransportDark');
-		var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
+		if(owm_api != "") {
+			var city = L.OWM.current({interval: 15, lang: 'en', minZoom: 8, appId: owm_api});
+			} else {
+			var city = L.OWM.current({interval: 15, lang: 'en', minZoom: 8});
+			}
+		var nexrad = L.tileLayer.wms(protocol + "mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
 			layers: 'nexrad-n0r-900913',
 			format: 'image/png',
 			transparent: true,
 			attribution: "",
 		});
-		var shade = L.tileLayer.wms("http://ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
+		var shade = L.tileLayer.wms(protocol + "ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
 			layers: "HR-NED.IMAGE", 
 			format: 'image/png',
 			attribution: "",
 		});
-		var usgstopo = L.tileLayer('http://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
+		var usgstopo = L.tileLayer(protocol + 'basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}', {
 			maxZoom: 20,
 			attribution: '',
 		});
@@ -3245,6 +3292,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 				"Snow": snow,
 				"Radar": nexrad,
 				"Grid": grid,
+				"City Weather": city,
 			};
 
 			} else {
@@ -3294,10 +3342,10 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 	}
 
 function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
+	var protocol = (https == "1") ? "https://" : "http://";
 	var latLng;
-	var owm_apid = "e15882cd5d458e3804cf9efb5164db8c";
 	var my_Path = "http://127.0.0.1/_osm/tiles/";
-	var osmUrl = (my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+	var osmUrl = (my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 	var	cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 	var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
 	if(minimap) { minimap.remove(); }
@@ -3358,18 +3406,6 @@ function fvg_handleResult(req) {	// 6/10/11	The persist callback function for vi
 	window.statSel = false;
 	window.facstatSel = false;
 	loadData();
-/* 	load_exclusions();
-	load_ringfences();
-	load_catchments();
-	load_basemarkup();
-	load_groupbounds();	
-	load_incidentlist(inc_field, inc_direct);
-	load_responderlist(resp_field, resp_direct);
-	load_facilitylist(fac_field, fac_direct);
-	do_conditions();
-	load_regions();
-	set_initial_pri_disp();
-	load_poly_controls(); */
 	update_regions_text();
 	}
 	
@@ -3396,11 +3432,6 @@ function getHeaderHeight(element) {
 	return element.clientHeight;
 	}
 	
-changed_inc_sort = false;
-var inc_direct = 'DESC';
-var inc_field = 'id';
-var inc_id = "t1";
-
 function set_inc_headers(id, header_text, the_bull) {
 	if(id == "t1") {
 		window.t1_text = header_text + the_bull;
@@ -3483,7 +3514,6 @@ function do_inc_sort(id, field, header_text) {
 		$('spinner_i').innerHTML = "<CENTER><IMG src='./images/animated_spinner.gif'></CENTER>";
 		}
 	window.changed_inc_sort = true;
-//	window.inc_last_display == 0;
 	if(inc_field == field) {
 		if(window.inc_direct == "ASC") {
 			window.inc_direct = "DESC"; 
@@ -3569,6 +3599,7 @@ function createDiv(id) {
 function load_incidentlist(sort, dir) {
 	window.counter++;
 	window.incFin = false;
+	window.incLoading = true;
 	if(sort != window.inc_field) {
 		window.inc_field = sort;
 		}
@@ -3690,10 +3721,10 @@ function load_incidentlist(sort, dir) {
 					} else {
 					var datestring = "<SPAN style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
 					}
-				outputtext += "<TR ID='inc_" + inc_id + "' CLASS='" + colors[i%2] +"' style='cursor: context-menu; width: " + window.listwidth + "px; " + strike + "' oncontextmenu=\"getPos(event); localContext(" + inc_id + ");\" onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
+				outputtext += "<TR ID='inc_" + inc_id + "' CLASS='" + colors[i%2] +"' style='cursor: context-menu; width: " + window.listwidth + "px; " + strike + "' oncontextmenu=\"getPos(event); localContext(" + inc_id + ");\" onMouseover=\"Tip('" + inc_arr[key][11] + "', WIDTH, 200, SHADOW, true)\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
 				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + ";'>" + pad(4, i, "\u00a0") + "</TD>";
-				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + ";'>" + htmlentities(inc_arr[key][0], 'ENT_QUOTES') + "</TD>";
-				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + ";'>" + inc_arr[key][1] + "</TD>";
+				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + ";'>" + html_entity_decode(inc_arr[key][0], 'ENT_QUOTES') + "</TD>";
+				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + ";'>" + html_entity_decode(inc_arr[key][1], 'ENT_QUOTES') + "</TD>";
 				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + ";'>" + inc_arr[key][4] + "</TD>";
 				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + "; width: 1em;'>" + pad(6, inc_arr[key][17], "\u00a0") + "</TD>";
 				outputtext += "<TD class='plain_list text_bolder' style='cursor: context-menu; color: " + inc_arr[key][14] + "; width: 1em;'>" + pad(6, inc_arr[key][16], "\u00a0") + "</TD>";
@@ -3781,8 +3812,8 @@ function load_incidentlist(sort, dir) {
 			window.inc_last_display = window.latest_ticket;
 			pageLoaded();
 			window.do_inc_refresh = false;
-			incidentlist_get();
 			},500);
+		window.incLoading = false;
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
 	
@@ -3823,7 +3854,7 @@ function incidentlist_setwidths() {
 		headerRow.cells[7].style.width = tcell8 + "px";
 		headerRow.cells[8].style.width = tcell9 + "px";				
 		}
-	if(getHeaderHeight(headerRow) >= 20) {
+	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = inctbl.insertRow(1);
 		theRow.style.height = "20px";
 		for (var i = 0; i < tableRow.cells.length; i++) {
@@ -3835,12 +3866,385 @@ function incidentlist_setwidths() {
 	
 function incidentlist_get() {								// set cycle
 	if (i_interval!=null) {return;}
-	i_interval = window.setInterval('incidentlist_loop()', 20000);
+	if(window.incFin == true || window.respLoading == true || window.facLoading == true || window.logLoading == true) {return;}
+	i_interval = window.setInterval('incidentlist_loop()', 60000);
 	}			// end function incidentlist_get()
 
 function incidentlist_loop() {
 	load_incidentlist(window.inc_field, window.inc_direct);
 	}			// end function incidentlist_loop()
+	
+function do_inc_sort_fw(id, field, header_text) {
+	if($('spinner_i')) {
+		$('spinner_i').style.display = "block";
+		$('spinner_i').innerHTML = "<CENTER><IMG src='./images/animated_spinner.gif'></CENTER>";
+		}
+	window.changed_inc_sort = true;
+	if(inc_field == field) {
+		if(window.inc_direct == "ASC") {
+			window.inc_direct = "DESC"; 
+			var the_bull = "&#9660"; 
+			window.inc_header = header_text;
+			set_inc_headers(id, header_text, the_bull);
+			} else if(window.inc_direct == "DESC") { 
+			window.inc_direct = "ASC"; 
+			var the_bull = "&#9650"; 
+			window.inc_header = header_text; 
+			set_inc_headers(id, header_text, the_bull);
+			}
+		} else {
+		$(inc_id).innerHTML = inc_header;
+		window.inc_field = field;
+		window.inc_direct = "ASC";
+		window.inc_id = id;
+		window.inc_header = header_text;
+		var the_bull = "&#9650";
+		set_inc_headers(id, header_text, the_bull);
+		}
+	load_full_incidentlist(window.inc_field, window.inc_direct);
+	return true;
+	}
+	
+function load_full_incidentlist(sort, dir) {
+	window.counter++;
+	window.incFin = false;
+	if(sort != window.inc_field) {
+		window.inc_field = sort;
+		}
+	if(dir != window.inc_direct) {
+		window.inc_direct = dir;
+		}
+	if($('the_list').innerHTML == "") {
+		$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
+		}
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = sess_id;
+	var url = './ajax/sit_incidents.php?sort='+window.inc_field+'&dir='+ window.inc_direct+'&func='+window.inc_period+'&version='+randomnumber+'&q='+sessID;
+	sendRequest (url,incidentlist_cb, "");
+	function incidentlist_cb(req) {
+		var inc_arr = JSON.decode(req.responseText);
+		if(!inc_arr) {
+			if(doDebug) {
+				log_debug(req.responseText); 
+				sendInfo(req.responseText);
+				}
+			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......Error loading Incident list.........</marquee>";
+			$('the_list').innerHTML = outputtext;
+			return;
+			}	
+		if(window.inc_period_changed == 1) {
+			$('the_list').innerHTML = "";
+			window.inc_period_changed = 0;
+			}
+		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
+			window.inc_last_display = 0;
+			outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
+			$('the_list').innerHTML = outputtext;
+			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
+			the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
+			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+			$('sev_counts').innerHTML = the_sev_str;
+			return false;
+			}
+		var i = 1;
+		var blinkstart = "";
+		var blinkend = "";
+		var category = "Incident";
+		var outputtext = "<TABLE id='incidenttable' class='fixedheadscrolling scrollable' style='width: " + window.outerwidth + "px;'>";
+		outputtext += "<thead>";
+		outputtext += "<TR style='width: " + window.outerwidth + "px; background-color: #EFEFEF;'>";
+		outputtext += "<TH id='t2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + incTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'scope', '" + textScope + "')\">" + window.t2_text + "</TH>";
+		outputtext += "<TH id='t3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + locTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'street', '" + textAddress + "')\">" + window.t3_text + "</TH>";
+		outputtext += "<TH id='t4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + typeTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'type', '" + textType + "')\">" + window.t4_text + "</TH>";
+		outputtext += "<TH id='t5' class='plain_listheader text' style='width: 1em;' onMouseOver=\"do_hover_listheader(this.id); Tip('" + actTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'a', '" + textA + "')\">" + window.t5_text + "</TH>";
+		outputtext += "<TH id='t6' class='plain_listheader text' style='width: 1em;' onMouseOver=\"do_hover_listheader(this.id); Tip('" + numTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'p', '" + textP + "')\">" + window.t6_text + "</TH>";
+		outputtext += "<TH id='t7' class='plain_listheader text' style='width: 1em;' onMouseOver=\"do_hover_listheader(this.id); Tip('" + assTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'u', '" + textU + "')\">" + window.t7_text + "</TH>";
+		outputtext += "<TH id='t8' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + updatedTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_inc_sort_fw(this.id, 'updated', '" + textUpdated + "')\">" + window.t8_text + "</TH>";
+		outputtext += "<TH id='r9' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r10' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r11' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r12' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r13' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r14' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r15' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
+		outputtext += "<TH id='r16' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";		
+		outputtext += "</TR>";
+		outputtext += "</thead>";
+		outputtext += "<tbody>";
+		var tabindex = 1;
+		for(var key in inc_arr) {
+			if(key != 0) {
+				var inc_id = inc_arr[key][20];
+				var infowindowtext = "";
+				if(inc_arr[key][19] == 1) {
+					blinkstart = "<blink>";
+					blinkend = "</blink>";
+					} else {
+					blinkstart = "";
+					blinkend = "";
+					}
+				if(inc_arr[key][6] == 1) {
+					var strike = "text-decoration: line-through;";
+					} else {
+					var strike = "";
+					}
+				if(inc_arr[key][21] == 0) {
+					var datestring = "<SPAN>" + inc_arr[key][10] + "</SPAN>";
+					} else if(inc_arr[key][21] != 0 && inc_arr[key][6] == 2) {
+					var datestring = "<SPAN style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";						
+					} else {
+					var datestring = "<SPAN style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
+					}
+				outputtext += "<TR ID='inc_" + inc_id + "' CLASS='" + colors[i%2] +"' style='cursor: pointer; width: " + window.outerwidth + "px; " + strike + "' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "');\" onMouseout='UnTip();'>";
+				outputtext += "<TD roll='button' aria-label='Incident Name for " + inc_id + " " + htmlentities(inc_arr[key][0], 'ENT_QUOTES') + "' tabindex=" + tabindex + " class='plain_list text text_bolder' style='cursor: pointer; color: " + inc_arr[key][14] + ";'>" + htmlentities(inc_arr[key][0], 'ENT_QUOTES') + "</TD>";
+				tabindex++;
+				outputtext += "<TD roll='button' aria-label='Address for Incident " + inc_id + " " + inc_arr[key][1] + "' tabindex=" + tabindex + " class='plain_list text text_bolder' style='cursor: pointer; color: " + inc_arr[key][14] + ";'>" + inc_arr[key][1] + "</TD>";
+				tabindex++;
+				outputtext += "<TD roll='button' aria-label='Incident type for Incident " + inc_id + " " + inc_arr[key][4] + "' tabindex=" + tabindex + " class='plain_list text text_bolder' style='cursor: pointer; color: " + inc_arr[key][14] + ";'>" + inc_arr[key][4] + "</TD>";
+				tabindex++;
+				outputtext += "<TD roll='button' aria-label='Number of Actions for Incident " + inc_id + " " + inc_arr[key][17] + "' tabindex=" + tabindex + " class='plain_list text text_bolder text_center' style='cursor: pointer; color: " + inc_arr[key][14] + "; width: 1em;'>" + bothpad(6, inc_arr[key][17], "\u00a0") + "</TD>";
+				tabindex++;
+				outputtext += "<TD roll='button' aria-label='Number of Patients for Incident " + inc_id + " " + inc_arr[key][16] + "' tabindex=" + tabindex + " class='plain_list text text_bolder text_center' style='cursor: pointer; color: " + inc_arr[key][14] + "; width: 1em;'>" + bothpad(6, inc_arr[key][16], "\u00a0") + "</TD>";
+				tabindex++;
+				outputtext += "<TD roll='button' aria-label='Number of Units assigned on Incident " + inc_id + " " + inc_arr[key][18] + "' tabindex=" + tabindex + " class='plain_list text text_bolder text_center' style='cursor: pointer; color: " + inc_arr[key][14] + "; width: 1em;'>" + blinkstart + bothpad(6, inc_arr[key][18], "\u00a0") + blinkend + "</TD>";
+				tabindex++;
+				outputtext += "<TD roll='button' aria-label='Incident " + inc_id + " Updated " + inc_arr[key][25] + "' tabindex=" + tabindex + " class='plain_list text text_bolder' style='cursor: pointer; color: " + inc_arr[key][14] + ";'>" + datestring + "</TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='View Incident " + inc_id + "' tabindex=" + tabindex + " id='view" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'  onClick='get_ticket(" + inc_id + ");'><SPAN style='float: left;'>" + viewbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/list_small.png' BORDER=0></SPAN></TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Add Patient to Incident " + inc_id + "' tabindex=" + tabindex + " id='pat" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'onClick=\"get_auxForm(" + inc_id + ", 'Add Patient', 'patient');\"><SPAN style='float: left;'>Add " + patientbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/patient_small.png' BORDER=0></SPAN></TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Add Action to Incident " + inc_id + "' tabindex=" + tabindex + " id='act" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"get_auxForm(" + inc_id + ", 'Add Action', 'action');\"><SPAN style='float: left;'>Add " + actionbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/action_small.png' BORDER=0></SPAN></TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Add Note to Incident " + inc_id + "' tabindex=" + tabindex + " id='note" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"get_auxForm(" + inc_id + ", 'Add Note', 'note');\"><SPAN style='float: left;'>Add " + notebuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN></TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Dispatch Incident " + inc_id + "' tabindex=" + tabindex + " id='disp_" + inc_id + "' CLASS='plain text' style='height: auto; width: 85%; display: block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"load_dispatch(" + inc_id + ", window.disp_field, window.disp_direct, window.searchitem);\"><SPAN style='float: left;'>" + dispatchbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/dispatch_small.png' BORDER=0></SPAN></TD>";			
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Print Incident " + inc_id + "' tabindex=" + tabindex + " id='prt" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"do_print_ticket(" + inc_id + ");\"><SPAN style='float: left;'>" + printbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/print_small.png' BORDER=0></SPAN></TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Contact Units Assigned to Incident " + inc_id + "' tabindex=" + tabindex + " id='contact" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"get_auxForm(" + inc_id + ", 'Contact Units', 'contact_all');\"><SPAN style='float: left;'>" + contactbuttonText + " Units</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/mail_small.png' BORDER=0></SPAN></TD>";
+				tabindex++;
+				outputtext += "<TD aria-hidden='true' class='plain_list text_large text_bolder' style='cursor: pointer; color: " + inc_arr[key][14] + ";'>" + pad(3, " ", "\u00a0") + "</TD>";
+				tabindex++;
+				outputtext += "</TR>";
+				if(window.tickets_updated[key]) {
+					if(window.tickets_updated[key] != inc_arr[key][10]) {
+						window.do_update = true;
+						} else {
+						window.do_update = false;
+						}
+					} else {
+					window.tickets_updated[key] = inc_arr[key][10];
+					window.do_update = true;
+					}
+				window.latest_ticket = key;
+				i++;
+				}
+			}
+		outputtext += "</tbody>";
+		outputtext += "</TABLE>";
+		var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
+		the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
+		the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+		$('sev_counts').innerHTML = the_sev_str;
+		setTimeout(function() {
+			if(window.inc_last_display == 0) {
+				$('the_list').innerHTML = outputtext;
+				} else {
+				if((window.inc_last_display != window.latest_ticket) || (window.changed_inc_sort == true) || (window.do_inc_refresh == true)) {
+					$('the_list').innerHTML = outputtext;
+					window.na=document.getElementsByTagName("blink");
+					if(window.changed_inc_sort == true) {
+						if($('spinner_i')) {
+							$('spinner_i').innerHTML = "";
+							$('spinner_i').style.display = "none";
+							}
+						}	
+					}
+				}
+			},500);
+		setTimeout(function() {
+			var inctbl = document.getElementById('incidenttable');
+			var headerRow = inctbl.rows[0];
+			var tableRow = inctbl.rows[1];
+			if(tableRow) {
+				for (var i = 0; i < tableRow.cells.length; i++) {
+					if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth +1 + "px";}
+					}
+				} else {
+				var cellwidthBase = window.outerwidth / 56;
+				var cellwidth = cellwidthBase * 4;
+				for (var i = 0; i < headerRow.cells.length; i++) {
+					if(headerRow.cells[i]) {headerRow.cells[i].style.width = cellwidth + "px";}
+					}
+				}
+			window.inc_last_display = window.latest_ticket;
+			window.do_inc_refresh = false;
+			full_incidentlist_get();
+			},1500);
+		}				// end function incidentlist_cb()
+	}				// end function load_incidentlist()
+	
+	
+	
+function full_incidentlist_setwidths() {
+	var viewableRow = 1;
+	var inctbl = document.getElementById('respondertable');
+	var headerRow = inctbl.rows[0];
+	for (i = 1; i < inctbl.rows.length; i++) {
+		if(!isViewable(inctbl.rows[i])) {
+			} else {
+			viewableRow = i;
+			break;
+			}
+		}
+	var tableRow = inctbl.rows[viewableRow];
+	if(tableRow && i != inctbl.rows.length) {
+		for (var i = 0; i < tableRow.cells.length; i++) {
+			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
+			}
+		} else {
+		var cellwidthBase = window.outerwidth / 56;
+		var cellwidth = cellwidthBase * 4;
+		for (var i = 0; i < headerRow.cells.length; i++) {
+			if(headerRow.cells[i]) {headerRow.cells[i].style.width = cellwidth + "px";}
+			}		
+		}
+	}
+	
+function full_incidentlist_get() {								// set cycle
+	if (i_interval!=null) {return;}
+	i_interval = window.setInterval('full_incidentlist_loop()', 20000);
+	}			// end function full_incidentlist_get()
+
+function full_incidentlist_loop() {
+	load_full_incidentlist(window.inc_field, window.inc_direct);
+	}			// end function incidentlist_loop()
+	
+function load_full_incidentlist_incbuttons() {
+	window.counter++;
+	window.incFin = false;
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = sess_id;
+	var url = './ajax/fullsit_incidents.php?version='+randomnumber+'&func='+window.inc_period+'&q='+sessID;
+	sendRequest (url,incidentlist_cb, "");
+	function incidentlist_cb(req) {
+		var inc_arr = JSON.decode(req.responseText);
+		if(!inc_arr) {
+			if(doDebug) {
+				log_debug(req.responseText); 
+				sendInfo(req.responseText);
+				}
+			return;
+			}	
+		if(window.inc_period_changed == 1) {
+			}
+		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
+			window.inc_last_display = 0;
+			$('incbuttons').innerHTML = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
+			return false;
+			}
+		var i = 1;
+		$('incbuttons').innerHTML = "";
+		for(var key in inc_arr) {
+			if(key != 0) {
+				var inc_id = inc_arr[key][20];
+				if(inc_arr[key][21] == 0) {
+					var datestring = "<SPAN class='text text_white text_bold'>" + inc_arr[key][10] + "</SPAN>";
+					} else if(inc_arr[key][21] != 0 && inc_arr[key][6] == 2) {
+					var datestring = "<SPAN class='text text_bold' style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";						
+					} else {
+					var datestring = "<SPAN class='text text_bold' style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
+					}
+				var addonstring = "<SPAN class='text text_white text_bold'>A: " + inc_arr[key][7] + "&nbsp;&nbsp;&nbsp;P: " + inc_arr[key][8] + "&nbsp;&nbsp;&nbsp;U: " + inc_arr[key][9] + "</SPAN>";
+				var buttonelement = document.createElement('span');
+				buttonelement.id = "but_inc_" + inc_id;
+				buttonelement.roll = "button";
+				buttonelement.setAttribute('aria-label', "Incident " + inc_id);
+				buttonelement.setAttribute('tabindex', inc_id);
+				buttonelement.className = 'plain_centerbuttons text';
+				buttonelement.style.width = '18%';
+				buttonelement.style.display = 'block';
+				buttonelement.style.textAlign = 'center';
+				buttonelement.style.verticalAlign = 'middle';
+				buttonelement.innerHTML = "<CENTER><DIV style='height: 90%; width: 90%; vertical-align: middle; background-color: " + inc_arr[key][14] + ";'><span class='text text_bold text_white'>" + htmlentities(inc_arr[key][0], 'ENT_QUOTES') + "</SPAN><BR />" + datestring + "<BR />" + addonstring + "</DIV></CENTER>";
+				buttonelement.onmouseover = function() {do_hover_centerbuttons(this.id);}
+				buttonelement.onmouseout = function() {do_plain_centerbuttons(this.id);}
+				buttonelement.onclick = function(e) {get_auxForm(this.id, 'Incident Options', 'incbutton_opts',e.clientX,e.clientY);}
+				$('incbuttons').appendChild(buttonelement);
+				if(inc_arr[key][19] == 1) {
+					blink_element(buttonelement.id);
+					} else {
+					unblink_element(buttonelement.id);
+					}
+				window.latest_ticket = key;
+				i++;
+				}
+			}
+		setTimeout(function() {
+			window.inc_last_display = window.latest_ticket;
+			window.do_inc_refresh = false;
+			},500);
+		}				// end function incidentlist_cb()
+	}				// end function load_incidentlist()
+
+function ringfence_alert(respid) {
+	var the_responders = JSON.decode(window.theResponderHandles);
+	try {
+		if(newwindow_incfs && newwindow_incfs.$('alerts').style.display == "none") {
+			newwindow_incfs.$('alerts').style.display="block";
+			}
+		var theID = "rf_resp_" + respid;
+		if($(newwindow_incfs.$(theID))) {
+			return;
+			}
+		var handle = the_responders[respid];
+		var alertsdiv = newwindow_incfs.$('alerts');
+		var alertspan = document.createElement('span');
+		alertspan.id = theID;
+		alertspan.className = "plain_centerbuttons text";
+		alertspan.style.float = "left";
+		alertspan.style.width = "100px";
+		alertspan.style.margin = "10px";
+		alertspan.onmouseover = function() {newwindow_incfs.do_hover_centerbuttons(this.id);}
+		alertspan.onmouseout = function() {newwindow_incfs.do_plain_centerbuttons(this.id);}
+		alertspan.onclick = function() {alert("Ringfence alert responder " + theID);}
+		alertspan.innerHTML = "Ringfence Alert , Responder - <SPAN class='text_large' style='color: red; background-color: yellow; font-weight: bold;'>" + handle + "</SPAN>";
+		alertsdiv.appendChild(alertspan);
+		}
+	catch(err) {
+		// Do nothing
+		}
+	}
+	
+function exclusion_alert(respid) {
+	var the_responders = JSON.decode(window.theResponderHandles);
+	try {
+		if(newwindow_incfs && newwindow_incfs.$('alerts').style.display == "none") {
+			newwindow_incfs.$('alerts').style.display="block";
+			}
+		var theID = "ex_resp_" + respid;
+		if($(newwindow_incfs.$(theID))) {
+			return;
+			}
+		var handle = the_responders[respid];
+		var alertsdiv = newwindow_incfs.$('alerts');
+		var alertspan = document.createElement('span');
+		alertspan.id = theID;
+		alertspan.className = "plain_centerbuttons text";
+		alertspan.style.float = "left";
+		alertspan.style.width = "100px";
+		alertspan.style.margin = "10px";
+		alertspan.onmouseover = function() {newwindow_incfs.do_hover_centerbuttons(this.id);}
+		alertspan.onmouseout = function() {newwindow_incfs.do_plain_centerbuttons(this.id);}
+		alertspan.onclick = function() {alert("Exclusion Zone alert responder " + theID);}	
+		alertspan.innerHTML = "Exclusion Zone Alert , Responder - <SPAN class='text_large' style='color: red; background-color: yellow; font-weight: bold;'>" + handle + "</SPAN>";
+		alertsdiv.appendChild(alertspan);
+		}
+	catch(err) {
+		// Do nothing
+		}
+	}
 
 function isInteger(s) {
 	return (s.toString().search(/^-?[0-9]+$/) == 0);
@@ -3858,59 +4262,74 @@ function set_resp_headers(id, header_text, the_bull) {
 	if(id == "r1") {
 		window.r1_text = header_text + the_bull;
 		window.r2_text = textHandle;
-		window.r3_text = textMail;
-		window.r4_text = textIncs;
-		window.r5_text = textStatus;
-		window.r6_text = textM;
-		window.r7_text = textAsof;
+		window.r3_text = textName;
+		window.r4_text = textMail;
+		window.r5_text = textIncs;
+		window.r6_text = textStatus;
+		window.r7_text = textM;
+		window.r8_text = textAsof;
 		} else if(id == "r2") {
 		window.r2_text = header_text + the_bull;
 		window.r1_text = textIcon;
-		window.r3_text = textMail;
-		window.r4_text = textIncs;
-		window.r5_text = textStatus;
-		window.r6_text = textM;
-		window.r7_text = textAsof;
+		window.r3_text = textName;
+		window.r4_text = textMail;
+		window.r5_text = textIncs;
+		window.r6_text = textStatus;
+		window.r7_text = textM;
+		window.r8_text = textAsof;
 		} else if(id == "r3") {
 		window.r3_text = header_text + the_bull;
 		window.r1_text = textIcon;
 		window.r2_text = textHandle;
-		window.r4_text = textIncs;
-		window.r5_text = textStatus;
-		window.r6_text = textM;
-		window.r7_text = textAsof;
+		window.r4_text = textMail;
+		window.r5_text = textIncs;
+		window.r6_text = textStatus;
+		window.r7_text = textM;
+		window.r8_text = textAsof;
 		} else if(id == "r4") {
 		window.r4_text = header_text + the_bull;
 		window.r1_text = textIcon;
 		window.r2_text = textHandle;
-		window.r3_text = textMail;
-		window.r5_text = textStatus;
-		window.r6_text = textM;
-		window.r7_text = textAsof;
+		window.r3_text = textName;		
+		window.r5_text = textIncs;
+		window.r6_text = textStatus;
+		window.r7_text = textM;
+		window.r8_text = textAsof;
 		} else if(id == "r5") {
 		window.r5_text = header_text + the_bull;
 		window.r1_text = textIcon;
 		window.r2_text = textHandle;
-		window.r3_text = textMail;
-		window.r4_text = textIncs;
-		window.r6_text = textM;
-		window.r7_text = textAsof;
+		window.r3_text = textName;
+		window.r4_text = textMail;
+		window.r6_text = textStatus;
+		window.r7_text = textM;
+		window.r8_text = textAsof;
 		} else if(id == "r6") {
 		window.r6_text = header_text + the_bull;
 		window.r1_text = textIcon;
 		window.r2_text = textHandle;
-		window.r3_text = textMail;
-		window.r4_text = textIncs;
-		window.r5_text = textStatus;
-		window.r7_text = textAsof;
+		window.r3_text = textName;
+		window.r4_text = textMail;
+		window.r5_text = textIncs;
+		window.r7_text = textM;
+		window.r8_text = textAsof;
 		} else if(id == "r7") {
 		window.r7_text = header_text + the_bull;
 		window.r1_text = textIcon;
 		window.r2_text = textHandle;
-		window.r3_text = textMail;
-		window.r4_text = textIncs;
-		window.r5_text = textStatus;
-		window.r6_text = textM;
+		window.r3_text = textName;
+		window.r4_text = textMail;
+		window.r5_text = textIncs;
+		window.r8_text = textAsof;
+		} else if(id == "r8") {
+		window.r8_text = header_text + the_bull;
+		window.r1_text = textIcon;
+		window.r2_text = textHandle;
+		window.r3_text = textName;
+		window.r4_text = textMail;
+		window.r5_text = textIncs;
+		window.r6_text = textStatus;
+		window.r7_text = textM;		
 		}
 	}
 	
@@ -3956,6 +4375,7 @@ function do_resp_sort(id, field, header_text) {
 function load_responderlist(sort, dir) {
 	var resp_assigns = JSON.decode(window.theAssigns);
 	window.respFin = false;
+	window.respLoading = true;
 	if(sort != window.resp_field) {
 		window.resp_field = sort;
 		}
@@ -3989,7 +4409,6 @@ function load_responderlist(sort, dir) {
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
-			$('boxes').innerHTML = resp_arr[0][19];
 			window.latest_responder = 0;
 			window.respFin = true;
 			pageLoaded();
@@ -3999,12 +4418,13 @@ function load_responderlist(sort, dir) {
 			outputtext += "<TR style='width: " + window.leftlistwidth + "px; background-color: #EFEFEF;'>";
 			outputtext += "<TH id='r1' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + iconTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'icon', '" + textIcon + "')\">" + window.r1_text + "</TH>";
 			outputtext += "<TH id='r2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + handleTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'handle', '" + textHandle + "')\">" + window.r2_text + "</TH>";
-			outputtext += "<TH id='r3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + emailTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'mail', '" + textMail + "')\">" + window.r3_text + "</TH>";
-			outputtext += "<TH id='r4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + incsTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'incidents', '" + textIncs + "')\">" + window.r4_text + "</TH>";
-			outputtext += "<TH id='r5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + statusTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'status', '" + textStatus + "')\">" + window.r5_text + "</TH>";
-			outputtext += "<TH id='r6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + trackingTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'm', '" + textM + "')\">" + window.r6_text + "</TH>";
-			outputtext += "<TH id='r7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + respUpdTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'asof', '" + textAsof + "')\">" + window.r7_text + "</TH>";
-			outputtext += "<TH id='r8'>" + pad(5, " ", "\u00a0") + "</TH>";
+			outputtext += "<TH id='r3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + nameTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'name', '" + textName + "')\">" + window.r3_text + "</TH>";
+			outputtext += "<TH id='r4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + emailTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'mail', '" + textMail + "')\">" + window.r4_text + "</TH>";
+			outputtext += "<TH id='r5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + incsTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'incidents', '" + textIncs + "')\">" + window.r5_text + "</TH>";
+			outputtext += "<TH id='r6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + statusTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'status', '" + textStatus + "')\">" + window.r6_text + "</TH>";
+			outputtext += "<TH id='r7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + trackingTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'm', '" + textM + "')\">" + window.r7_text + "</TH>";
+			outputtext += "<TH id='r8' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); Tip('" + respUpdTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_resp_sort(this.id, 'asof', '" + textAsof + "')\">" + window.r8_text + "</TH>";
+			outputtext += "<TH id='r9'>" + pad(5, " ", "\u00a0") + "</TH>";
 			outputtext += "</TR>";
 			outputtext += "</thead>";
 			outputtext += "<tbody>";
@@ -4029,10 +4449,16 @@ function load_responderlist(sort, dir) {
 						var fg_color = resp_arr[key][8];
 						outputtext += "<TR id='" + resp_arr[key][20] + unit_no +"' CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;'>";
 						outputtext += "<TD id='ricon_" + unit_no + "' class='plain_list text' style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myrclick(" + unit_no + ");'>" + unit_id + "</TD>";
-						outputtext += "<TD id='rhand_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + pad(10, htmlentities(resp_arr[key][1], 'ENT_QUOTES'), "\u00a0") + "</TD>";
+						var nameTip = "onMouseover=\"Tip('" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "');\" onMouseout='UnTip();'";
+						outputtext += "<TD id='rhand_" + unit_no + "' class='plain_list text_bolder' " + nameTip + " onClick='myrclick(" + unit_no + ");'>" + pad(7, htmlentities(resp_arr[key][1], 'ENT_QUOTES'), "\u00a0") + "</TD>";
+						outputtext += "<TD id='rname_" + unit_no + "' class='plain_list text_bolder' " + nameTip + " onClick='myrclick(" + unit_no + ");'>" + pad(10, htmlentities(resp_arr[key][12], 'ENT_QUOTES'), "\u00a0") + "</TD>";
 						outputtext += "<TD id='rmail_" + unit_no + "' class='plain_list text_bolder'>" + theMailBut + "</TD>";
-						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + get_assigns(unit_no) + "</TD>";
-						outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + get_status_sel(unit_no, resp_arr[key][15], resp_arr[key][1]) + "</TD>";
+						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + pad(30, get_assigns(unit_no), "\u00a0") + "</TD>";
+						if(resp_arr[key][30] == 0) {
+							outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + get_status_sel(unit_no, resp_arr[key][15], resp_arr[key][1]) + "</TD>";
+							} else {
+							outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + pad(20, resp_arr[key][23], "\u00a0") + "</TD>";
+							}
 						outputtext += "<TD id='rmob_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'>" +  pad(5, resp_arr[key][13], "\u00a0") + "</TD>";
 						outputtext += "<TD id='rsupd_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'><SPAN id = '" + resp_arr[key][27] + "'>" + resp_arr[key][16] + "</SPAN></TD>";
 						outputtext += "<TD class='plain_list text'>" + pad(5, " ", "\u00a0") + "</TD>";
@@ -4119,13 +4545,11 @@ function load_responderlist(sort, dir) {
 					}
 				if(window.resp_last_display == 0) {		//	first load
 					$('the_rlist').innerHTML = outputtext;
-					if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 					if($('boxes')) {set_categories();}
 					} else {
 					if((responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true) || (window.do_resp_refresh == true)) {	//	data changed
 						$('the_rlist').innerHTML = "";
 						$('the_rlist').innerHTML = outputtext;
-						if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 						if($('boxes')) {set_categories();}
 						window.respFin = window.facFin = window.incFin = window.logFin = window.facstatSel = true;
 						window.statSel = false;
@@ -4152,23 +4576,10 @@ function load_responderlist(sort, dir) {
 							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 							}
 						} else {
-						var cellwidthBase = window.listwidth / 36;
-						cell1 = cellwidthBase * 3;
-						cell2 = cellwidthBase * 5;
-						cell3 = cellwidthBase * 5;
-						cell4 = cellwidthBase * 6;
-						cell5 = cellwidthBase * 6;
-						cell6 = cellwidthBase * 4;
-						cell7 = cellwidthBase * 5;
-						cell8 = cellwidthBase * 2;
-						headerRow.cells[0].style.width = cell1 + "px";
-						headerRow.cells[1].style.width = cell2 + "px";
-						headerRow.cells[2].style.width = cell3 + "px";
-						headerRow.cells[3].style.width = cell4 + "px";						
-						headerRow.cells[4].style.width = cell5 + "px";							
-						headerRow.cells[5].style.width = cell6 + "px";						
-						headerRow.cells[6].style.width = cell7 + "px";		
-						headerRow.cells[7].style.width = cell8 + "px";		
+						var cellwidthBase = window.listwidth / 8;
+						for (var i = 0; i < tableRow.cells.length; i++) {		
+							headerRow.cells[0].style.width = cellwidthBase + "px";
+							}
 						}
 					if((window.resp_last_display == 0) || (responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true) || (window.do_resp_refresh == true)) {
 						if(getHeaderHeight(headerRow) >= listheader_height) {
@@ -4188,9 +4599,9 @@ function load_responderlist(sort, dir) {
 				pageLoaded();
 				window.do_resp_refresh = false;
 				window.changed_resp_sort = false;
-				responderlist_get();
 				},3000);
 			}
+		window.respLoading = false;
 		}				// end function responderlist_cb()
 	}				// end function load_responderlist()
 
@@ -4201,6 +4612,7 @@ function isViewable(element){
 function responderlist_setwidths() {
 	var viewableRow = 1;
 	var resptbl = document.getElementById('respondertable');
+	if(!resptbl) {return;}
 	var headerRow = resptbl.rows[0];
 	for (i = 1; i < resptbl.rows.length; i++) {
 		if(!isViewable(resptbl.rows[i])) {
@@ -4215,30 +4627,12 @@ function responderlist_setwidths() {
 			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 			}
 		} else {
-		var cellwidthBase = window.listwidth / 28;
-		cell1 = cellwidthBase * 2;
-		cell2 = cellwidthBase * 4;
-		cell3 = cellwidthBase * 4;
-		cell4 = cellwidthBase * 5;
-		cell5 = cellwidthBase * 5;
-		cell6 = cellwidthBase * 3;
-		cell7 = cellwidthBase * 4;
-		cell8 = cellwidthBase * 1;
-		headerRow.cells[0].style.width = cell1 + "px";
-		headerRow.cells[1].style.width = cell2 + "px";
-		headerRow.cells[2].style.width = cell3 + "px";
-		headerRow.cells[3].style.width = cell4 + "px";
-		headerRow.cells[4].style.width = cell5 + "px";
-		headerRow.cells[5].style.width = cell6 + "px";
-		headerRow.cells[6].style.width = cell7 + "px";
-		headerRow.cells[7].style.width = cell8 + "px";
+		var cellwidthBase = window.listwidth / 8;
+		for (var i = 0; i < tableRow.cells.length; i++) {		
+			headerRow.cells[0].style.width = cellwidthBase + "px";
+			}
 		}
-	if(window.screensize == "Extralarge" || window.screensize == "Large") {
-		var headerMaxHeight = 30;
-		} else {
-		var headerMaxHeight = 25;
-		}
-	if(getHeaderHeight(headerRow) >= headerMaxHeight) {
+	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = resptbl.insertRow(1);
 		theRow.style.height = "20px";
 		for (var i = 0; i < tableRow.cells.length; i++) {
@@ -4250,7 +4644,8 @@ function responderlist_setwidths() {
 	
 function responderlist_get() {
 	if (r_interval!=null) {return;}
-	r_interval = window.setInterval('responderlist_loop()', 60000); 
+	if(window.incLoading == true || window.respFin == true || window.facLoading == true || window.logLoading == true) {return;}
+	r_interval = window.setInterval('responderlist_loop()', 120000); 
 	}			// end function mu get()
 
 function responderlist_loop() {
@@ -4459,7 +4854,12 @@ function load_responderlist2(sort, dir) {
 						var fg_color = resp_arr[key][8];
 						outputtext += "<TR id='" + resp_arr[key][20] + unit_no +"' CLASS='plain_list text " + colors[i%2] +"' style='width: " + window.leftlistwidth + "px;'>";
 						outputtext += "<TD id='ricon_" + unit_no + "' class='plain_list text_bolder' style='background-color: " + bg_color + "; color: " + fg_color + ";' onClick='myrclick(" + unit_no + ");'>" + resp_arr[key][2] + "</TD>";
-						outputtext += "<TD id='rname_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'>" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "</TD>";
+						if(use_mdb == "1" && use_mdb_contact == "1") {
+							var nameTip = "onMouseover=\"Tip('" + htmlentities(resp_arr[key][1], 'ENT_QUOTES') + " - " + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "');\" onMouseout='UnTip();'";
+							outputtext += "<TD id='rname_" + unit_no + "' class='plain_list text' " + nameTip + " onClick='myrclick(" + unit_no + ");'>" + htmlentities(resp_arr[key][12], 'ENT_QUOTES') + "</TD>";
+							} else {
+							outputtext += "<TD id='rname_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'>" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "</TD>";
+							}
 						outputtext += "<TD id='rmail_" + unit_no + "' class='plain_list text_bolder' style='text-align: center;'>" + theMailBut + "</TD>";
 						outputtext += "<TD id='rincs_" + unit_no + "' class='plain_list text_bolder' onClick='myrclick(" + unit_no + ");'>" + get_assigns(unit_no) + "</TD>";
 						outputtext += "<TD id='rs_" + unit_no + "' class='plain_list text' " + theTip + ">" + get_status_sel(unit_no, resp_arr[key][15], resp_arr[key][1]) + "</TD>";
@@ -4605,7 +5005,7 @@ function load_responderlist2(sort, dir) {
 					if((window.resp_last_display == 0) || (responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true) || (window.do_resp_refresh == true)) {
 						if(getHeaderHeight(headerRow) >= listheader_height) {
 							var theRow = resptbl.insertRow(1);
-							theRow.style.height = "10px";
+							theRow.style.height = "20px";
 							for (var i = 0; i < tableRow.cells.length; i++) {
 								var theCell = theRow.insertCell(i);
 								theCell.innerHTML = " ";
@@ -4661,12 +5061,7 @@ function responderlist2_setwidths() {
 		headerRow.cells[6].style.width = cell7 + "px";
 		headerRow.cells[7].style.width = cell8 + "px";
 		}
-	if(window.screensize == "Extralarge" || window.screensize == "Large") {
-		var headerMaxHeight = 18;
-		} else {
-		var headerMaxHeight = 13;
-		}
-	if(getHeaderHeight(headerRow) >= headerMaxHeight) {
+	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = resptbl.insertRow(1);
 		theRow.style.height = "10px";
 		for (var i = 0; i < tableRow.cells.length; i++) {
@@ -4766,6 +5161,7 @@ function do_fac_sort(id, field, header_text) {
 function load_facilitylist(sort, dir) {
 	window.facstatSel = false;
 	window.facFin = false;
+	window.facLoading = true;
 	if(sort != window.fac_field) {
 		window.fac_field = sort;
 		}
@@ -4836,9 +5232,9 @@ function load_facilitylist(sort, dir) {
 						 var theTip = "";
 						 }
 					outputtext += "<TR id='" + fac_arr[key][15] + fac_id +"' TITLE='" + fac_arr[key][16] + "' CLASS='plain_list text " + colors[i%2] + "' style='width: " + window.leftlistwidth + "px;'>";
-					outputtext += "<TD class='plain_list text_bolder' style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][2] + "</TD>";
-					outputtext += "<TD class='plain_list text_bolder' style=\"text-align: left;\" onClick='myfclick(" + fac_id + ");'>" + htmlentities(fac_arr[key][0], 'ENT_QUOTES') + "</TD>";
-					outputtext += "<TD class='plain_list text_bolder'>" + theMailBut + "</TD>";
+					outputtext += "<TD class='plain_list text' style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][2] + "</TD>";
+					outputtext += "<TD class='plain_list text' style=\"text-align: left;\" onClick='myfclick(" + fac_id + ");'>" + htmlentities(fac_arr[key][0], 'ENT_QUOTES') + "</TD>";
+					outputtext += "<TD class='plain_list text'>" + theMailBut + "</TD>";
 					outputtext += "<TD id='fs_" + fac_id + "' class='plain_list text' " + theTip + ">" + get_fac_status_sel(fac_id, fac_arr[key][8], fac_arr[key][2]) + "</TD>";
 					outputtext += "<TD id='fsupd_" + fac_id + "' class='plain_list text' onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][9] + "</TD>";
 					outputtext += "<TD class='plain_list text'>" + pad(3, " ", "\u00a0") + "</TD>";
@@ -4943,9 +5339,9 @@ function load_facilitylist(sort, dir) {
 				window.facstatSel = true;
 				window.latest_facility = facility_number;
 				pageLoaded();
-				facilitylist_get();
 				},500);
 			}
+		window.facLoading = false;
 		}				// end function facilitylist_cb()
 	}				// end function load_facilitylist()	
 
@@ -4980,12 +5376,7 @@ function facilitylist_setwidths() {
 		headerRow.cells[4].style.width = fcell5 + "px";	
 		headerRow.cells[5].style.width = fcell6 + "px";	
 		}
-	if(window.screensize == "Extralarge" || window.screensize == "Large") {
-		var headerMaxHeight = 30;
-		} else {
-		var headerMaxHeight = 25;
-		}
-	if(getHeaderHeight(headerRow) >= headerMaxHeight) {
+	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = factbl.insertRow(1);
 		theRow.style.height = "20px";
 		for (var i = 0; i < tableRow.cells.length; i++) {
@@ -4997,7 +5388,8 @@ function facilitylist_setwidths() {
 	
 function facilitylist_get() {
 	if (f_interval!=null) {return;}
-	f_interval = window.setInterval('facilitylist_loop()', 60000);
+	if(window.facFin == true || window.respLoading == true || window.incLoading == true || window.logLoading == true) {return;}
+	f_interval = window.setInterval('facilitylist_loop()', 240000);
 	}			// end function mu get()
 
 function facilitylist_loop() {
@@ -5167,7 +5559,7 @@ function load_warnloclist(sort, dir) {
 						for (var i = 0; i < tableRow.cells.length; i++) {
 							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 							}
-						if(getHeaderHeight(headerRow) >= 20) {
+						if(getHeaderHeight(headerRow) >= listheader_height) {
 							var theRow = loctbl.insertRow(1);
 							theRow.style.height = "20px";
 							for (var i = 0; i < tableRow.cells.length; i++) {
@@ -5221,7 +5613,7 @@ function warnloclist_setwidths() {
 		headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";
 		headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";
 		}
-	if(getHeaderHeight(headerRow) >= 20) {
+	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = loctbl.insertRow(1);
 		theRow.style.height = "20px";
 		for (var i = 0; i < tableRow.cells.length; i++) {
@@ -5447,12 +5839,11 @@ function load_fs_responders() {
 							window.responders_updated[unit_id] = resp_arr[key][16];
 							window.do_resp_update = true;
 							}
-//						infowindowtext = resp_arr[key][19];
-						if(rmarkers[key]) {
-							var curPos = rmarkers[key].getLatLng();
+						if(rmarkers[unit_id]) {
+							var curPos = rmarkers[unit_id].getLatLng();
 							if((curPos.lat != resp_arr[key][3]) || (curPos.lng != resp_arr[key][4])) {
 								theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][4]);
-								rmarkers[key].setLatLng(theLatLng);
+								rmarkers[unit_id].setLatLng(theLatLng);
 								}
 							} else {
 							if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
@@ -5911,7 +6302,8 @@ function check_excl(resp_id, lat, lng, flag) {
 		var ez_arr = JSON.decode(req.responseText);
 		var theResponse = parseInt(ez_arr[0]);
 		if(theResponse == 1) {
-			blink_text2(flag, '#00FF00', '#FFFF00', '#FFFF00', '#FF0000')
+			blink_text2(flag, '#00FF00', '#FFFF00', '#FFFF00', '#FF0000');
+			exclusion_alert(resp_id);
 			}
 		}				// end function fencecheckcb()
 	}				// end function check_excl()
@@ -5925,6 +6317,7 @@ function check_ringfence(resp_id, lat, lng, flag) {
 		var theResponse =  parseInt(rf_arr[0]);
 		if(theResponse == 1) {
 			blink_text(flag, '#FF0000', '#FFFF00', '#FFFF00', '#FF0000');
+			ringfence_alert(resp_id);
 			}
 		}				// end function fencecheckcb()
 	}				// end function check_ringfence()
@@ -6162,7 +6555,7 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 					for (var i = 0; i < tableRow.cells.length; i++) {
 						if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 						}
-					if(getHeaderHeight(headerRow) >= 20) {
+					if(getHeaderHeight(headerRow) >= listheader_height) {
 						var theRow = filetbl.insertRow(1);
 						theRow.style.height = "20px";
 						for (var i = 0; i < tableRow.cells.length; i++) {
@@ -6262,6 +6655,7 @@ function do_sort(id, field, header_text) {
 
 function load_log(sort, dir) {
 	window.logFin = false;
+	window.logLoading = true;
 	if(sort != window.log_field) {
 		window.log_field = sort;
 		}
@@ -6332,7 +6726,7 @@ function load_log(sort, dir) {
 									headerRow.cells[i].style.width = tableRow.cells[i].clientWidth + "px";
 									}
 								}
-							if(getHeaderHeight(headerRow) >= 30) {
+							if(getHeaderHeight(headerRow) >= listheader_height) {
 								var theRow = logtbl.insertRow(1);
 								theRow.style.height = "20px";
 								for (var i = 0; i < tableRow.cells.length; i++) {
@@ -6352,13 +6746,14 @@ function load_log(sort, dir) {
 					window.latest_logid = latest_log;
 					},500);
 				}
-			log_get();
 			}
+		window.logLoading = false;
 		}				// end function loglist_cb()
 	}				// end function load_log()
 
 function log_get() {								// set cycle
 	if (log_interval!=null) {return;}
+	if(window.logFin == true || window.respLoading == true || window.facLoading == true || window.incLoading == true) {return;}
 	log_interval = window.setInterval('log_loop()', 240000);
 	}			// end function log_get()
 
@@ -6559,6 +6954,7 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 	var url ='./ajax/sidebar_list_messages.php'+theSearchstring+theSortField+theOrder+"&version=" + randomnumber + "&inorout=" + window.inorout+'&q='+sess_id;
 	sendRequest (url, main_mess_cb, "");
 	function main_mess_cb(req) {
+		var msgtabindex = 1;
 		var theNew = 0;
 		var the_messages=JSON.decode(req.responseText);
 		if((!the_messages) || (the_messages[0][0] == "No Messages")) {
@@ -6569,17 +6965,29 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 			return false;
 			}
 		var theClass = "even";
-		var outputtext = "<TABLE id='messagestable' class='fixedheadscrolling scrollable' style='width: 700px;'>";
+		if(typeof window.fs_sit !== 'undefined') {
+			var outputtext = "<TABLE id='messagestable' class='fixedheadscrolling scrollable' style='width: 100%;'>";
+			} else {
+			var outputtext = "<TABLE id='messagestable' class='fixedheadscrolling scrollable' style='width: 700px;'>";
+			}
 		outputtext += "<thead>";
 		outputtext += "<TR style='width: 100%;'>";
-		outputtext += "<TH id='m1' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgIDTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'message', '" + textMsgID + "')\">" + window.msg1_text + "</TH>";
-		outputtext += "<TH id='m2' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgTickTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'ticket_id', '" + textMsgTkt + "')\">" + window.msg2_text + "</TH>";
-		outputtext += "<TH id='m3' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgTypeTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'msg_type', '" + textMsgType + "')\">" + window.msg3_text + "</TH>";
-		outputtext += "<TH id='m4' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgSenderTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'from', '" + textMsgFrom + "')\">" + window.msg4_text + "</TH>";
-		outputtext += "<TH id='m5' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgWhoTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'to', '" + textMsgTo + "')\">" + window.msg5_text + "</TH>";
-		outputtext += "<TH id='m6' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgSubjTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'subject', '" + textMsgSubj + "')\">" + window.msg6_text + "</TH>";
-		outputtext += "<TH id='m7' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgDateTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'date', '" + textMsgDate + "')\">" + window.msg7_text + "</TH>";
-		outputtext += "<TH id='m8' class='plain_listheader text_small' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgOwnerTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'owner', '" + textMsgOwner + "')\">" + window.msg8_text + "</TH>";		
+		outputtext += "<TH id='m1' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message ID' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgIDTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'message', '" + textMsgID + "')\">" + window.msg1_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m2' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Incident ID' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgTickTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'ticket_id', '" + textMsgTkt + "')\">" + window.msg2_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m3' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Type' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgTypeTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'msg_type', '" + textMsgType + "')\">" + window.msg3_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m4' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Sender' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgSenderTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'from', '" + textMsgFrom + "')\">" + window.msg4_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m5' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Recipient' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgWhoTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'to', '" + textMsgTo + "')\">" + window.msg5_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m6' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Subject' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgSubjTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'subject', '" + textMsgSubj + "')\">" + window.msg6_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m7' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Date' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgDateTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'date', '" + textMsgDate + "')\">" + window.msg7_text + "</TH>";
+		msgtabindex++;
+		outputtext += "<TH id='m8' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Owner' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgOwnerTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'owner', '" + textMsgOwner + "')\">" + window.msg8_text + "</TH>";		
+		msgtabindex++;
 		outputtext += "</TR>";
 		outputtext += "</thead>";
 		outputtext += "<tbody>";			
@@ -6615,15 +7023,16 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 				}
 			var the_delstat = "Delivery Status: " + the_text + " ---- ";
 			var theTitle = the_delstat + the_messages[key][11];
-			outputtext += "<TR class=\"" + theClass + "\" title=\"" + theTitle + "\" style='width: 100%;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox&ticket_id=" + ticket_id + "&responder_id=" + responder_id + "&facility_id=" + facility_id + "&mi_id=" + mi_id + "&sort= " + sort + "&dir=" + dir + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + the_messages[key][10] + "</TD>";	//	Message ID
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + the_messages[key][1] + "</TD>";	//	Ticket ID
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + pad(8, the_messages[key][2], "\u00a0") + "</TD>";	//	Type Padded to 8 characters
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + the_messages[key][3] + "</TD>";	//	From
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + the_messages[key][4] + "</TD>";	//	To
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + the_messages[key][5] + "</TD>";	//	Subject
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + "; " + the_del_flag + ";'>" + the_messages[key][7] + "</TD>";		//	Date
-			outputtext += "<TD class='plain_list text_small text_normal' style='" + theStatus + ";'>" + the_messages[key][8] + "</TD>";	//	Owner
+			outputtext += "<TR class=\"" + theClass + "\" title=\"" + theTitle + "\" roll='button' aria-label='Message ID " + the_messages[key][10] + "' tabindex=" + msgtabindex + " style='width: 100%;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox&ticket_id=" + ticket_id + "&responder_id=" + responder_id + "&facility_id=" + facility_id + "&mi_id=" + mi_id + "&sort= " + sort + "&dir=" + dir + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + the_messages[key][10] + "</TD>";	//	Message ID
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + the_messages[key][1] + "</TD>";	//	Ticket ID
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + pad(8, the_messages[key][2], "\u00a0") + "</TD>";	//	Type Padded to 8 characters
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + the_messages[key][3] + "</TD>";	//	From
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + the_messages[key][4] + "</TD>";	//	To
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + the_messages[key][5] + "</TD>";	//	Subject
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + "; " + the_del_flag + ";'>" + the_messages[key][7] + "</TD>";		//	Date
+			outputtext += "<TD class='plain_list text text_normal' style='" + theStatus + ";'>" + the_messages[key][8] + "</TD>";	//	Owner
+			msgtabindex++;
 			outputtext += "</TR>";
 			if(theClass == "even") {
 				theClass = "odd";
@@ -6641,9 +7050,9 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 				var tableRow = msgtbl.rows[1];
 				if(tableRow) {
 					for (var i = 0; i < tableRow.cells.length; i++) {
-						if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
+						if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -2 + "px";}
 						}
-					if(getHeaderHeight(headerRow) >= 20) {
+					if(getHeaderHeight(headerRow) >= listheader_height) {
 						var theRow = msgtbl.insertRow(1);
 						theRow.style.height = "20px";
 						for (var i = 0; i < tableRow.cells.length; i++) {
@@ -6683,10 +7092,10 @@ function messagelist_setwidths() {
 		var tableRow = theTable.rows[viewableRow];
 		if(tableRow) {
 			for (var i = 0; i < tableRow.cells.length; i++) {
-				if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
+				if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -2 + "px";}
 				}
 			}
-		if(getHeaderHeight(headerRow) >= 20) {
+		if(getHeaderHeight(headerRow) >= listheader_height) {
 			var theRow = theTable.insertRow(1);
 			theRow.style.height = "20px";
 			for (var i = 0; i < tableRow.cells.length; i++) {
@@ -6975,7 +7384,6 @@ function do_conditions() {
 				}
 			}
 		}				// end function cond_cb()
-	conditions_get();	
 	}				// end function do_conditions()	
 	
 function conditions_get() {
@@ -7262,3 +7670,562 @@ function get_incidentinfo(ticket_id) {
 	get_tickpopup(ticket_id);
 	}
 
+	
+function setTableCells(theTable, tableWidth) {
+	var table = document.getElementById(theTable);
+	if(table) {
+		var headerRow = table.rows[0];
+		var tableRow = table.rows[1];
+		if(tableRow) {
+			for (var i = 0; i < tableRow.cells.length; i++) {
+				headerRow.cells[i].style.width = tableRow.cells[i].clientWidth +1 + "px";
+				}
+			} else {
+			var numCols = headerRow.cells.length;
+			var cellwidth = tableWidth / numCols;
+			for (var i = 0; i < headerRow.cells.length; i++) {
+				headerRow.cells[i].style.width = cellwidth + "px";
+				}				
+			}
+		if(getHeaderHeight(headerRow) >= listheader_height) {
+			var theRow = table.insertRow(1);
+			theRow.style.height = "20px";
+			for (var i = 0; i < headerRow.cells.length; i++) {
+				var theCell = theRow.insertCell(i);
+				theCell.innerHTML = " ";
+				}
+			}
+		}	
+	}
+	
+function get_requests() {
+	window.reqs_interval = null;
+	$('all_requests').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
+	randomnumber=Math.floor(Math.random()*99999999);
+	var url ="./ajax/list_requests_admin.php?showall=" + showall + "&version=" + randomnumber;
+	sendRequest (url, requests_cb, "");
+	function requests_cb(req) {
+		var the_requests=JSON.decode(req.responseText);
+		the_string = "<TABLE id='requeststable' class='fixedheadscrolling scrollable' style='width: 100%;'>";
+		the_string += "<thead>";
+		the_string += "<TR class='plain_listheader text' style='width: " + window.listwidth + "px;'>";
+		the_string += "<TH class='plain_listheader text' style='width: 40px; border-right: 1px solid #FFFFFF;'>" + textID + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textPatient + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='bold; border-right: 1px solid #FFFFFF;'>" + textPhone + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textContact + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='width: 15%; border-right: 1px solid #FFFFFF;'>" + textScope + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='width: 10%; border-right: 1px solid #FFFFFF;'>" + textDescription + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textStatus + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textRequested + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textUpdated + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textBy + "</TH>";
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>...</TH>";				
+		the_string += "</TR>";
+		the_string += "</thead>";
+		the_string += "<tbody>";		
+		theClass = "background-color: #CECECE";
+		for(var key in the_requests) {
+			if(the_requests[key][0] == "No Current Requests") {
+				the_string += "<TR style='" + theClass + "; border-bottom: 2px solid #000000;'>";
+				the_string += "<TD CLASS='text_biggest text_bold text_center' COLSPAN=99 width='100%'>No Current Requests</TD></TR>";
+				} else {
+				var the_request_id = the_requests[key][0];
+				if((the_requests[key][16] == 'Open') || (the_requests[key][16] == 'Tentative')) {
+					the_onclick = "onClick=\"window.open('request.php?id=" + the_request_id + "','view_request','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"";
+					} else {
+					the_onclick = "";
+					}
+				var theTitle = the_requests[key][13];
+				var theField = the_requests[key][13];
+				if(theField.length > 48) {
+					theField = theField.substring(0,48)+"...";
+					}
+				the_string += "<TR title='" + theTitle + "' style='" + the_requests[key][17] + "; border-bottom: 2px solid #000000; height: 12px; width: 100%;'>";
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_request','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][0] + "</TD>";
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][2] + "</TD>";
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][3] + "</TD>";
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][4] + "</TD>";
+				the_string += "<TD CLASS='plain_list text' style='width: 15%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + theField + "</TD>";
+				the_string += "<TD CLASS='plain_list text' title='" + the_requests[key][14] + "' style='width: 10%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap: sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][14].substring(0,24)+"..." + "</TD>";
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' " + the_onclick + ">" + the_requests[key][16] + "</TD>";	
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][18] + "</TD>";
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][25] + "</TD>";
+				the_string += "<TD CLASS='plain_list text'style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][26] + "</TD>";
+				if(the_requests[key][35] != 0) {
+					the_string += "<TD CLASS='plain_list text'><SPAN id='ed_but' class='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"location.href='../edit.php?id=" + the_requests[key][35] + "';\">Open Ticket</SPAN></TD>";
+					} else {
+					the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;'>&nbsp;</TD>";
+					}
+				the_string += "</TR>";
+				}
+			}
+		the_string += "</tbody></TABLE>";
+		setTimeout(function() {
+			$('all_requests').innerHTML = the_string;
+			setTableCells("requeststable", window.listwidth);
+			requests_get();
+			},1500);
+		}
+	}		
+	
+function requests_get() {
+	reqs_interval = window.setInterval('do_requests_loop()', 30000);
+	}	
+	
+function do_requests_loop() {
+	randomnumber=Math.floor(Math.random()*99999999);
+	var url ="./ajax/list_requests_admin.php?showall=" + showall + "&version=" + randomnumber;
+	sendRequest (url, requests_cb2, "");
+	}
+
+function requests_cb2(req) {
+	var the_requests=JSON.decode(req.responseText);
+	if(the_requests[0] == "No Current Requests") {
+		var columnWidth = (window.innerWidth * .93) / 10;
+		width = "width: " + columnWidth + "px; ";
+		} else {
+		width = "";
+		}
+	the_string = "<TABLE id='requeststable' class='fixedheadscrolling scrollable' style='width: " + window.listwidth + "px;'>";
+	the_string += "<thead>";
+	the_string += "<TR class='plain_listheader text' style='width: " + window.listwidth + "px;'>";
+	the_string += "<TH class='plain_listheader text' style='width: 40px; border-right: 1px solid #FFFFFF;'>" + textID + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textPatient + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='bold; border-right: 1px solid #FFFFFF;'>" + textPhone + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textContact + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='width: 15%; border-right: 1px solid #FFFFFF;'>" + textScope + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='width: 10%; border-right: 1px solid #FFFFFF;'>" + textDescription + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textStatus + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textRequested + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textUpdated + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textBy + "</TH>";
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>...</TH>";		
+	the_string += "</TR>";
+	the_string += "</thead>";
+	the_string += "<tbody>";		
+	theClass = "background-color: #CECECE";
+	for(var key in the_requests) {
+		if(the_requests[key][0] == "No Current Requests") {
+			the_string += "<TR style='" + theClass + "; border-bottom: 2px solid #000000;'>";
+			the_string += "<TD CLASS='text_biggest text_bold text_center COLSPAN=99 width='100%'>No Current Requests</TD></TR>";
+			} else {
+			var the_request_id = the_requests[key][0];
+			if((the_requests[key][16] == 'Open') || (the_requests[key][16] == 'Tentative')) {
+				the_onclick = "onClick=\"window.open('request.php?id=" + the_request_id + "','view_request','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"";
+				} else {
+				the_onclick = "";
+				}
+			var theTitle = the_requests[key][13];
+			var theField = the_requests[key][13];
+			if(theField.length > 48) {
+				theField = theField.substring(0,48)+"...";
+				}
+			the_string += "<TR title='" + theTitle + "' style='" + the_requests[key][17] + "; border-bottom: 2px solid #000000; height: 12px; width: 100%;'>";
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_request','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][0] + "</TD>";
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][2] + "</TD>";
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][3] + "</TD>";
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][4] + "</TD>";
+			the_string += "<TD CLASS='plain_list text' style='width: 15%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + theField + "</TD>";
+			the_string += "<TD CLASS='plain_list text' title='" + the_requests[key][14] + "' style='width: 10%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap: sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][14].substring(0,24)+"..." + "</TD>";
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' " + the_onclick + ">" + the_requests[key][16] + "</TD>";	
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][18] + "</TD>";
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][25] + "</TD>";
+			the_string += "<TD CLASS='plain_list text'style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][26] + "</TD>";
+			if(the_requests[key][35] != 0) {
+				the_string += "<TD CLASS='plain_list text'><SPAN id='ed_but' class='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"location.href='../edit.php?id=" + the_requests[key][35] + "';\">Open Ticket</SPAN></TD>";
+				} else {
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;'>&nbsp;</TD>";
+				}
+			the_string += "</TR>";
+			}
+		}
+	the_string += "</TABLE>";
+	setTimeout(function() {
+		$('all_requests').innerHTML = the_string;
+		setTableCells("requeststable", window.listwidth);
+		},1500);
+	}
+	
+function summary_get() {
+	summary_interval = window.setInterval('do_summary_loop()', 10000);
+	}	
+	
+function do_summary_loop() {
+	randomnumber=Math.floor(Math.random()*99999999);
+	var url ="./ajax/requests_wallboard.php?version=" + randomnumber;
+	sendRequest (url, summary_cb2, "");
+	}
+
+function get_summary() {
+	randomnumber=Math.floor(Math.random()*99999999);
+	var url ="./ajax/requests_wallboard.php?version=" + randomnumber;
+	sendRequest (url, summary_cb, "");
+	function summary_cb(req) {
+		var the_summary=JSON.decode(req.responseText);
+		var theColor = "style='background-color: #CECECE; color: #000000;'";
+		if(the_summary[0] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
+		var numOpen = "<TD class='summ_td_label text'>Requests Open (not accepted): </TD><TD class='summ_td_data text' " + theColor + ">" + the_summary[0] + "</TD>";
+		if(the_summary[1] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }			
+		var numAcc = "<TD class='summ_td_label text'>Requests Accepted (not resourced): </TD><TD class='summ_td_data text'>" + the_summary[1] + "</TD>";
+		var numComp = "<TD class='summ_td_label text'>Requests Completed: </TD><TD class='summ_td_data text'>" + the_summary[3] + "</TD>";
+		if(the_summary[7] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
+		var totTent = "<TD class='summ_td_label text'>Requests Tentative: </TD><TD class='summ_td_data text' " + theColor + ">" + the_summary[7] + "</TD>";
+		var totCan = "<TD class='summ_td_label text'>Requests Cancelled: </TD><TD class='summ_td_data text'>" + the_summary[8] + "</TD>";
+		var totDec = "<TD class='summ_td_label text'>Requests Declined: </TD><TD class='summ_td_data text'>" + the_summary[9] + "</TD>";
+		var summaryText = "<TABLE style='width: 100%; background-color: #FFFFFF;'>";
+		summaryText += "<TR>" + numOpen + numAcc + numComp + "</TR>";
+		summaryText += "<TR>" + totTent + totCan + totDec + "</TR>";
+		summaryText += "</TABLE>";
+		$('theSummary').innerHTML = summaryText;
+		summary_get();			
+		}
+	}
+	
+function summary_cb2(req) {
+	var the_summary=JSON.decode(req.responseText);
+	var theColor = "style='background-color: #CECECE; color: #000000;'";
+	if(the_summary[0] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
+	var numOpen = "<TD class='summ_td_label text'>Requests Open (not accepted): </TD><TD class='summ_td_data text' " + theColor + ">" + the_summary[0] + "</TD>";
+	if(the_summary[1] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }			
+	var numAcc = "<TD class='summ_td_label text'>Requests Accepted (not resourced): </TD><TD class='summ_td_data text'>" + the_summary[1] + "</TD>";
+	var numComp = "<TD class='summ_td_label text'>Requests Completed: </TD><TD class='summ_td_data text'>" + the_summary[3] + "</TD>";
+	if(the_summary[7] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
+	var totTent = "<TD class='summ_td_label text'>Requests Tentative: </TD><TD class='summ_td_data text' " + theColor + ">" + the_summary[7] + "</TD>";
+	var totCan = "<TD class='summ_td_label text'>Requests Cancelled: </TD><TD class='summ_td_data text'>" + the_summary[8] + "</TD>";
+	var totDec = "<TD class='summ_td_label text'>Requests Declined: </TD><TD class='summ_td_data text'>" + the_summary[9] + "</TD>";
+	var summaryText = "<TABLE style='width: 100%; background-color: #FFFFFF;'>";
+	summaryText += "<TR>" + numOpen + numAcc + numComp + "</TR>";
+	summaryText += "<TR>" + totTent + totCan + totDec + "</TR>";
+	summaryText += "</TABLE>";
+	$('theSummary').innerHTML = summaryText;
+	}
+	
+
+function hide_closed() {
+	showall = "no";
+	$('hideBut').style.display = "none";
+	$('showBut').style.display = "inline-block";
+	get_requests();
+	}
+
+function show_closed() {
+	showall = "yes";
+	$('showBut').style.display = "none";
+	$('hideBut').style.display = "inline-block";
+	get_requests();
+	}
+	
+var disp_direct = 'ASC';
+var disp_field = 'distance';
+var disp_id = "disp1";
+var searchitem = "";
+
+function do_filter_by_capab(ticket_id) {
+	load_dispatch(ticket_id, window.disp_field, window.disp_direct, document.searchform.frm_searchstring.value)
+	}
+
+function set_disp_headers(id, header_text, the_bull) {
+	if(id == "disp1") {
+		window.disp1_text = header_text + the_bull;
+		window.disp2_text = textDispNames;
+		window.disp3_text = textDispDistance;
+		window.disp4_text = textDispCalls;
+		window.disp5_text = textDispStatus;
+		window.disp6_text = textDispMobile;
+		window.disp7_text = textDispAsof;
+		} else if(id == "disp2") {
+		window.disp2_text = header_text + the_bull;
+		window.disp1_text = textDispHandle;
+		window.disp3_text = textDispDistance;
+		window.disp4_text = textDispCalls;
+		window.disp5_text = textDispStatus;
+		window.disp6_text = textDispMobile;
+		window.disp7_text = textDispAsof;
+		} else if(id == "disp3") {
+		window.disp3_text = header_text + the_bull;
+		window.disp2_text = textDispNames;
+		window.disp1_text = textDispHandle;
+		window.disp4_text = textDispCalls;
+		window.disp5_text = textDispStatus;
+		window.disp6_text = textDispMobile;
+		window.disp7_text = textDispAsof;
+		} else if(id == "disp4") {
+		window.disp4_text = header_text + the_bull;
+		window.disp2_text = textDispNames;
+		window.disp3_text = textDispDistance;
+		window.disp1_text = textDispHandle;
+		window.disp5_text = textDispStatus;
+		window.disp6_text = textDispMobile;
+		window.disp7_text = textDispAsof;
+		} else if(id == "disp5") {
+		window.disp5_text = header_text + the_bull;
+		window.disp2_text = textDispNames;
+		window.disp3_text = textDispDistance;
+		window.disp4_text = textDispCalls;
+		window.disp1_text = textDispHandle;
+		window.disp6_text = textDispMobile;
+		window.disp7_text = textDispAsof;
+		} else if(id == "disp6") {
+		window.disp5_text = header_text + the_bull;
+		window.disp2_text = textDispNames;
+		window.disp3_text = textDispDistance;
+		window.disp4_text = textDispCalls;
+		window.disp1_text = textDispHandle;
+		window.disp6_text = textDispMobile;
+		window.disp7_text = textDispAsof;
+		} else {
+		window.disp7_text = header_text + the_bull;
+		window.disp2_text = textDispNames;
+		window.disp3_text = textDispDistance;
+		window.disp4_text = textDispCalls;
+		window.disp5_text = textDispStatus;
+		window.disp6_text = textDispMobile;
+		window.disp1_text = textDispHandle;
+		}
+	}
+	
+function do_disp_sort(id, field, header_text) {
+	if(disp_field == field) {
+		if(disp_direct == "ASC") { 
+			window.disp_direct = "DESC"; 
+			var the_bull = "&#9660"; 
+			window.disp_header = header_text;
+			set_disp_headers(id, header_text, the_bull);
+			} else if(disp_direct == "DESC") { 
+			window.disp_direct = "ASC"; 
+			var the_bull = "&#9650"; 
+			window.disp_header = header_text; 
+			set_disp_headers(id, header_text, the_bull);
+			}
+		} else {
+		$(disp_id).innerHTML = disp_header;
+		window.disp_field = field;
+		window.disp_direct = "ASC";
+		window.disp_id = id;
+		window.disp_header = header_text;
+		var the_bull = "&#9650";
+		set_disp_headers(id, header_text, the_bull);
+		}
+	load_dispatch(window.currentTicket, window.disp_field, window.disp_direct, window.searchitem);
+	return true;
+	}
+	
+function load_dispatch(ticket_id, sort, dir, searchitem) {
+	window.currentTicket = ticket_id;
+	if(sort != window.disp_field) {
+		window.disp_field = sort;
+		}
+	if(dir != window.disp_direct) {
+		window.disp_direct = dir;
+		}
+	if($('extra')) {
+		$('extra').style.display = "block";
+		$('extra').style.width = '80%';
+		$('extra').style.height = '80%';
+		if($('extra_details').innerHTML == "") {
+			$('extra_details').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
+			}
+		}
+	var wrappertext = "<DIV id='disp_outer' style='width: " + window.disp_winWidth + "; height: 90%; display: block;'><BR />";
+	wrappertext += 			"<DIV id = 'dispmailform' style='position: relative; top: 10px; left: 30%; height: 50%; width: 40%; display: none; z-index: 9999;'></DIV>";		
+	wrappertext += 			"<DIV id = 'leftcol' style='position: relative; top: 10px; float: left; width: 50%;'>";
+	wrappertext += 				"<DIV id='dispatches' style='display: block; width: 100%;'>";
+	wrappertext += 					"<DIV id='dispatchheader' class='header text_center text_bold text_biggest' style='display: block; width: 100%; text-align: middle;'>Incident Dispatch - <SPAN id='theScope'></SPAN></DIV>";
+	wrappertext += 					"<DIV class='scrollableContainer' id='dispatchlist' style='display: block; height: 80%; width: 100%;'>";
+	wrappertext += 						"<DIV class='scrollingArea' id='the_displist' style='max-height: 90%; ><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>";		
+	wrappertext += 					"</DIV>";
+	wrappertext += 				"</DIV>";
+	wrappertext += "		<SPAN ID='sub_but' class='plain text' style='display: inline-block; float: none; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate_disp(document.dispatch_frm);'><SPAN STYLE='float: left;'>Next</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>";
+	wrappertext += "		<SPAN ID='mail_dir_but' class='plain text' style='display: none; float: none; width: 150px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_direcs_mail_win();'><SPAN STYLE='float: left;'>Mail Directions</SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>";
+	wrappertext += "		<SPAN ID='reset_but' class='plain text' style='display: none; float: none; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='show_butts(to_hidden) ; doReset();'><SPAN STYLE='float: left;'>Reset</SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>";
+	wrappertext += "		<SPAN ID='can_but' class='plain text' style='display: inline-block; float: none; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"$('extra').style.display='none';\"><SPAN STYLE='float: left;'>Cancel</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
+	wrappertext += "		<FORM METHOD='post' NAME='searchform'>";
+	wrappertext += "		<SPAN class='td_label text middle' style='display: inline;'>Filter by capability</SPAN><SPAN class='td_data text middle'><INPUT TYPE='text' style='display: inline;' NAME='frm_searchstring' VALUE= '" + searchitem + "' /></SPAN>";
+	wrappertext += "		<SPAN ID='search_but' class='plain text' style='display: inline-block; float: none; width: 100px; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_filter_by_capab(" + ticket_id + ");'><SPAN STYLE='float: left;'>Filter</SPAN><IMG STYLE='float: right;' SRC='./images/filter_small.png' BORDER=0></SPAN>";
+	wrappertext += "		</FORM>";
+	wrappertext += 			"</DIV>";		
+	wrappertext += "		<DIV id='rightcol' style='position: relative; top: 10px; float: right; width: 45%;'>";
+	wrappertext += "			<DIV id='map_canvas' style = 'border: 1px outset #707070;'></DIV>";
+	wrappertext += "			<SPAN id='map_caption' class='text_center bold text_big' style='display: inline-block;'>Map</SPAN><BR /><BR />";
+	wrappertext += "			<DIV ID='legend' CLASS='legend' STYLE='text-align: center; vertical-align: middle;'>";
+	wrappertext += "				<SPAN CLASS='header text_big'>Units Legend:</SPAN>";
+	wrappertext += "			</DIV><BR />";
+	wrappertext += "			<DIV ID='directions' CLASS='text' STYLE='text-align: left; vertical-align: text-top;'></DIV>";
+	wrappertext += "		</DIV>";
+	wrappertext += "	</DIV>";
+	wrappertext += "<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='mail_direcs' onsubmit='return mail_direcs(this);'>";
+	wrappertext += "<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />";
+	wrappertext += "<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />";
+	wrappertext += "<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Incident - ' />"
+	wrappertext += "<INPUT TYPE='hidden' NAME='frm_scope' VALUE='' />"
+	wrappertext += "<INPUT TYPE='hidden' NAME='frm_tick_id' VALUE='" + ticket_id + "' />";
+	wrappertext += "<INPUT TYPE='hidden' NAME='showform' VALUE='1' />"
+	wrappertext += "</FORM>";
+	$('extra_details').innerHTML = wrappertext;
+	$('extra_header').innerHTML = "Incident Dispatch";
+	$('extra_header').style.width = window.disp_winWidth + "px";
+	$('map_canvas').style.width = window.mapWidth + "px";
+	$('map_canvas').style.height = window.mapHeight + "px";
+	$('map_caption').style.width = window.mapWidth + "px";
+	if(window.map) {window.map = null;}
+	init_map(1, def_lat, def_lng, "", 13, theLocale, useOSMAP, "br");
+	map.setView([def_lat, def_lng], 13);
+	var bounds = map.getBounds();	
+	var zoom = map.getZoom();
+	var got_points = false;	// map is empty of points
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url = './ajax/routes_form.php?ticket_id=' + ticket_id + '&sortby=' + window.disp_field + '&dir=' + window.disp_direct + '&searchstring=' + searchitem + '&version=' + randomnumber+'&q='+sess_id;
+	sendRequest (url,dispatchlist_cb, "");
+	function dispatchlist_cb(req) {
+		var i = 1;
+		var disp_arr = JSON.decode(req.responseText);
+		document.email_form.frm_scope.value = disp_arr[3];
+		$('theScope').innerHTML = disp_arr[3];
+		$('legend').innerHTML = disp_arr[2];
+		if(disp_arr[0] == 0) {
+			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold; color: #000000;'>......No Responders.........</marquee>";	
+			return false;
+			} else {
+			var disp_resp = disp_arr[1];
+			window.theLat = disp_arr[0].lat;
+			window.theLng = disp_arr[0].lng
+			var facility = disp_arr[0].facility;
+			var rec_facility = disp_arr[0].rec_facility;			
+			var outputtext = "<FORM METHOD='post' NAME='dispatch_frm' ACTION='./ajax/form_post.php?ticket_id=" + ticket_id + "&q=" + sess_id + "&function=dispatch'>";
+			outputtext += "<TABLE id='disptable' class='fixedheadscrolling scrollable' style='width: 98%;'>";
+			outputtext += "<thead>";
+			outputtext += "<TR style='width: 100%; background-color: #EFEFEF;'>";
+			outputtext += "<TH id='arrow' class='plain_listheader text'>&nbsp;&nbsp;&nbsp;</TH>";
+			outputtext += "<TH id='selector' class='plain_listheader text'>Select</TH>";
+			outputtext += "<TH id='disp1' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'handle', '" + textDispHandle + "');\">" + window.disp1_text + "</TH>";
+			outputtext += "<TH id='disp2' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'name', '" + textDispNames + "');\">" + window.disp2_text + "</TH>";
+			outputtext += "<TH id='disp3' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'distance', '" + textDispDistance + "');\">" + window.disp3_text + "</TH>";
+			outputtext += "<TH id='disp4' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'dispatch_str', '" + textDispCalls + "');\">" + window.disp4_text + "</TH>";
+			outputtext += "<TH id='disp5' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'unitstatus', '" + textDispStatus + "');\">" + window.disp5_text + "</TH>";
+			outputtext += "<TH id='disp6' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'mobile', '" + textDispMobile + "');\">" + window.disp6_text + "</TH>";
+			outputtext += "<TH id='disp7' class='plain_listheader text' onMouseOver=\"do_hover_listheader(this.id); onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_disp_sort(this.id, 'updated', '" + textDispAsof + "');\">" + window.disp7_text + "</TH>";
+			outputtext += "<TH id='disp8'>" + pad(3, " ", "\u00a0") + "</TH>";
+			outputtext += "</TR>";
+			outputtext += "</thead>";
+			outputtext += "<tbody>";
+			for(var key in disp_resp) {
+				if(disp_resp[key][0]) {
+					var dispcolor = disp_resp[key][4];
+					var bgcolor = disp_resp[key][3];
+					var unit_id = disp_resp[key][0];
+					unit_ids[i] = unit_id;
+					window.unit_names[i] = disp_resp[key][1];
+					window.unit_handles[i] = disp_resp[key][2];
+					if(disp_resp[key][8] == window.nm_coord || disp_resp[key][9] == window.nm_coord) {
+						window.lats[i] = def_lat;
+						window.lngs[i] = def_lng;
+						} else {
+						window.lats[i] = disp_resp[key][8];
+						window.lngs[i] = disp_resp[key][9];
+						}
+					outputtext += "<TR ID = 'row_" + i + "' CLASS='" + colors[i%2] + "' style='width: 100%;' onMouseover=\"Tip('Some text here')\" onmouseout='UnTip();' onClick='show_disp_line(" + i + ", this.id, " + unit_id + ");'>";
+					outputtext += "<TD class='plain_list text text_left'><IMG BORDER=0 SRC='rtarrow.gif' ID = \"R" + i + "\"  STYLE = 'visibility: hidden;' /></TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>&nbsp;&nbsp;&nbsp;&nbsp;<input type='checkbox' ID='C_" + i + "' NAME = 'unit_" + i + "' " + disp_resp[key][7] + " />&nbsp;&nbsp;&nbsp;&nbsp;</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + pad(7, disp_resp[key][2], "\u00a0") + "</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + disp_resp[key][1] + "</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + disp_resp[key][10] + "</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + pad(20, disp_resp[key][14], "\u00a0") + "</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + disp_resp[key][5] + "</TD>";
+					var mobile = (disp_resp[key][11] == "1") ? "Yes" : "No";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + pad(4, mobile, "\u00a0") + "</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + pad(10, disp_resp[key][12], "\u00a0") + "</TD>";
+					outputtext += "<TD class='plain_list text text_left' style='background-color: " + bgcolor + "; color: " + dispcolor + ";'>" + pad(3, " ", "\u00a0") + "</TD>";
+					outputtext += "</TR>";
+					i++;
+					window.nr_units++;
+					}
+				}
+			outputtext += "</tbody>";
+			outputtext += "</TABLE>";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='" + ticket_id + "' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= '" + sess_id + "' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_id_str' 		VALUE= '' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_name_str' 	VALUE= '' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_status_id' 	VALUE= '1' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_facility_id' 	VALUE= '" + facility + "' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_rec_facility_id' VALUE= '" + rec_facility + "' />";
+			outputtext += "<INPUT TYPE='hidden' NAME='frm_comments' 	VALUE= 'New' />";
+			outputtext += "</FORM>";
+			}
+			setTimeout(function() {
+				$('the_displist').innerHTML = outputtext;
+				},500);
+			setTimeout(function() {				
+				var disptbl = document.getElementById('disptable');
+				if(disptbl) {
+					var headerRow = disptbl.rows[0];
+					var tableRow = disptbl.rows[1];
+					if(tableRow) {
+						for (var i = 0; i < tableRow.cells.length; i++) {				
+							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth - 2 + "px";}
+							}
+						if(getHeaderHeight(headerRow) >= 30) {
+							var theRow = disptbl.insertRow(1);
+							theRow.style.height = "20px";
+							for (var i = 0; i < tableRow.cells.length; i++) {
+								var theCell = theRow.insertCell(i);
+								theCell.innerHTML = " ";
+								}
+							}
+						} else {
+						var cellwidthBase = window.mapWidth / 28;
+						for (var i = 0; i < headerRow.cells.length; i++) {
+							headerRow.cells[i].style.width = (cellwidthBase * 4) + "px";
+							}
+						}				
+					}
+				$('the_displist').style.height = window.disp_listheight;
+				},1000);
+		}				// end function dispatchlist_cb()
+	}				// end function load_dispatch()
+	
+function get_assignments() {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url = './ajax/get_assignments.php?version=' + randomnumber + '&q=' + sess_id;
+	sendRequest (url,assignments_cb, "");
+	function assignments_cb(req) {
+		var assign_arr = JSON.decode(req.responseText);
+		if(!assign_arr) { return;}
+		for(var f = 0; f < assign_arr.length; f++) {
+			var assignsID = assign_arr[f][0];
+			var respID = assign_arr[f][1];
+			var tickID = assign_arr[f][2];
+			var tickScope = assign_arr[f][3];
+			}
+		allAssigns = assign_arr;
+		}				// end function assignments_cb()
+	}				// end function get_assignments()
+	
+function get_unit_assigns(unit_id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url = './ajax/get_unit_assignments.php?unit=' + unit_id + '&version=' + randomnumber + '&q=' + sess_id;
+	sendRequest (url,assignments_cb, "");
+	function assignments_cb(req) {
+		var assign_arr = JSON.decode(req.responseText);
+		if(!assign_arr) {return;}
+		for(var key in assign_arr) {
+			if(isInteger(key)) {
+				var the_assignsid = "rincs_" + key;
+				if($(the_assignsid)) {
+					$(the_assignsid).innerHTML = assign_arr[key];
+					}
+				}
+			}
+		}				// end function assignments_cb()	
+	}
+	
+function get_unit_categories() {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url = './ajax/get_unit_categories.php?version=' + randomnumber + '&q=' + sess_id;
+	sendRequest (url,cats_cb, "");
+	function cats_cb(req) {
+		var cats_arr = JSON.decode(req.responseText);
+		if(!cats_arr) { return;}
+		if($('boxes')) {$('boxes').innerHTML = cats_arr[0]; set_categories();}
+		}				// end function cats_cb()
+	}				// end function get_unit_categories()

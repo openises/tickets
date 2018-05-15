@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-
+require_once('functions.inc.php');
 /*
 7/8/10 extracted from routes.php
 8/4/10 Add check for tickets/ units / facilities entered in no maps mode and added default question mark icon for those items.
@@ -120,6 +120,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		var current_unit;
 		
 		function setDirections(fromLat, fromLng, toLat, toLng, recLat, recLng, locale, unit_id, lineCalled) {
+//			alert(fromLat + ", " + fromLng + ", " + toLat + ", " + toLng + ", " + recLat + ", " + recLng + ", " + locale + ", " + unit_id + ", " + lineCalled);
 			$('mail_dir_but').style.display = "none";
 			$('loading').style.display = "inline-block";
 //			$("mail_button").style.display = "none";	//10/6/09
@@ -471,6 +472,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 // major while ... for RESPONDER data starts here
 				$i = $k = 1;				// sidebar/icon index
 				while ($unit_row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 7/13/09
+					$theName = implode(" | ", get_mdb_names($unit_row['unit_id']));
 					$has_coords = ((my_is_float($unit_row['lat'])) && (my_is_float($unit_row['lng'])));				// 2/25/09, 7/7/09
 					$has_rem_source = ((intval ($unit_row['aprs'])==1)||(intval ($unit_row['instam'])==1)||(intval ($unit_row['locatea'])==1)||(intval ($unit_row['gtrack'])==1)||(intval ($unit_row['glat'])==1));		// 11/15/09
 	
@@ -494,7 +496,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 <?php
 					if ($has_coords) {
 						$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
-						$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($unit_row['unit_name'], 48) . "</TD></TR>";
+						$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>" . shorten($theName, 48) . "</TD></TR>";
 						$tab_1 .= "<TR CLASS='even'><TD>Description:</TD><TD>" . shorten(str_replace($eols, " ", $unit_row['description']), 32) . "</TD></TR>";
 						$tab_1 .= "<TR CLASS='odd'><TD>Status:</TD><TD>" . $unit_row['unitstatus'] . " </TD></TR>";
 						$tab_1 .= "<TR CLASS='even'><TD>Contact:</TD><TD>" . $unit_row['contact_name']. " Via: " . $unit_row['contact_via'] . "</TD></TR>";
@@ -643,8 +645,8 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 <?php
 					$str_dist = ($have_position)? number_format(round($unit_row['distance'], 1), 1): "" ;		// 3/5/11
 ?>
-					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>;  opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($unit_row['unit_name']);?>\">";
-					sidebar_line += "<NOBR><?php print shorten($unit_row['unit_name'], 20);?></SPAN></NOBR></TD>";
+					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>; opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($theName);?>\">";
+					sidebar_line += "<NOBR><?php print shorten($theName, 20);?></SPAN></NOBR></TD>";
 					sidebar_line += "<TD CLASS='text text_center'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
 					sidebar_line += "<?php print get_assigned_td($unit_row['unit_id']); ?>";		// 3/15/11
 <?php

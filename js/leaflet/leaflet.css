@@ -314,6 +314,7 @@
 	top: 1px;
 	}
 .leaflet-control-layers label {
+	width: 250px;
 	display: block;
 	}
 .leaflet-control-layers-separator {
@@ -398,7 +399,6 @@
 	color:#fff;
 	font-size:12px;
 	width: 150px;
-//	line-height:12px;
 	}
 .custom-popup .leaflet-popup-content-wrapper a {
 	margin: 0px;

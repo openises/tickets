@@ -7,20 +7,23 @@ header('Content-type: text/css');
 require_once('incs/functions.inc.php');
 session_start();
 session_write_close();
-$day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
+$day_night = ((!empty($_SESSION)) && (array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
 $alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 
 
 ?>
 /* Core Elements */
-BODY 	{ background-color: <?php print get_css("page_background", $day_night);?>;	margin:0; font-weight: normal; font-style: normal; 
-		color: <?php print get_css("normal_text", $day_night);?>; font-family: Arial, Verdana, Geneva, "Trebuchet MS", Tahoma, Helvetica, sans-serif; text-decoration: none;}
+BODY 	{ background-color: <?php print get_css("page_background", $day_night);?>; margin:0; font-weight: normal; font-style: normal; 
+		color: <?php print get_css("normal_text", $day_night);?>; font-family: Arial, Verdana, Geneva, "Trebuchet MS", Tahoma, Helvetica, sans-serif;}
 TABLE 	{border-collapse: collapse;}
-INPUT 	{background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal;; 
-		color: <?php print get_css("form_input_text", $day_night);?>;}
+INPUT 	{background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal; color: <?php print get_css("form_input_text", $day_night);?>;
+		-webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;}
 INPUT:focus {background-color: yellow;}
-TEXTAREA {background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal;; 
-		color: <?php print get_css("form_input_text", $day_night);?>;}
+INPUT:disabled {background-color: #CECECE; color: #000000;}
+TEXTAREA {background-color: <?php print get_css("form_input_background", $day_night);?>; font-weight: normal; color: <?php print get_css("form_input_text", $day_night);?>;}
 TEXTAREA:focus {background-color: yellow;}
+FIELDSET { margin: 0 0 20px; padding: 1em; border: 3px inset #FFFFFF; border-radius: 20px 20px; background-color: <?php print get_css("row_light", $day_night);?>;}
+LABEL { margin-left: 20px; width: 40%; display: inline-block; vertical-align: top; font-weight: bold; padding: 2px; text-align: left;}
+LEGEND { margin-left: 30px; font-weight: bold; padding: 5px; background: #0000FF; border: 3px inset #FFFFFF; color: #FFFFFF; border-radius: 20px 20px;}
 SELECT 	{background-color: <?php print get_css("select_menu_background", $day_night);?>; font-weight: normal;; 
 		color: <?php print get_css("select_menu_text", $day_night);?>; text-decoration: underline;}
 OPTION 	{font-weight: normal;}
@@ -40,8 +43,10 @@ TD 		{background-color: inherit; color: #000000; vertical-align: middle; word-wr
 .spacer {background-color: <?php print get_css("row_spacer", $day_night);?>; height: 2px;}
 tr.even {background-color: <?php print get_css("row_light", $day_night);?>; color: <?php print get_css("row_light_text", $day_night);?>;}
 tr.odd {background-color: <?php print get_css("row_dark", $day_night);?>; color: <?php print get_css("row_dark_text", $day_night);?>;}
+tr.rowselect {background-color: <?php print get_css("row_light", $day_night);?>; color: <?php print get_css("row_light_text", $day_night);?>; font-style: italic;}
 .even {background-color: <?php print get_css("row_light", $day_night);?>;}
 .odd {background-color: <?php print get_css("row_dark", $day_night);?>;}
+.rowselect {background-color: <?php print get_css("row_light", $day_night);?>; font-style: italic;}
 tr.plain {background-color: <?php print get_css("row_plain", $day_night);?>; color: <?php print get_css("row_plain_text", $day_night);?>;}
 tr.heading {background-color: <?php print get_css("row_heading_background", $day_night);?>;	color: <?php print get_css("row_heading_text", $day_night);?>; font-weight: bold;}
 .heading {background-color: <?php print get_css("row_heading_background", $day_night);?>; color: <?php print get_css("row_heading_text", $day_night);?>; font-weight: bold;}
@@ -51,6 +56,7 @@ tr.heading_3 {background-color: #909090; color: #FFFFFF; font-style: italic;}
 tr.spacer {background-color: <?php print get_css("row_spacer", $day_night);?>; height: 2px;}
 td.spacer {background-color: <?php print get_css("row_spacer", $day_night);?>; height: 2px;}
 td {cursor: pointer;}
+.td_border {border: 1px solid #707070;}
 .plain_list {word-wrap: break-all; cursor: pointer; -ms-word-wrap : sWrap; }
 .list_entry {word-wrap: break-all; cursor: pointer; -ms-word-wrap : sWrap;}
 .plain_listheader {overflow-wrap: break-all; word-wrap: break-all; color:#000000; border: 1px outset #606060; background-color: #EFEFEF; font-weight: bold; cursor: pointer; -ms-word-wrap : sWrap; box-sizing: border-box; moz-box-sizing: border-box;}
@@ -61,6 +67,18 @@ td {cursor: pointer;}
 .cols {display: inline-block; white-space: normal; word-wrap: break-all; padding-top: 5px; padding-bottom: 5px; height: auto; -ms-word-wrap : sWrap;}
 .msg_col {display: inline-block; white-space: normal; word-wrap: break-all; padding-top: 5px; padding-bottom: 5px; -ms-word-wrap : sWrap;}	
 .msg_div {max-height: 150px; overflow-y: auto; overflow-x: hidden; word-wrap: break-all; display: block;}
+
+/* MDB Reports */
+.tablehead { FONT-WEIGHT: bold; COLOR: #FFFFFF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; background: #707070; }
+.tablehead2 { FONT-WEIGHT: bold; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+.reportheading { FONT-WEIGHT: bold; COLOR: #FFFFFF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; background: #707070;} 
+.heading1 { WIDTH: 100%; DISPLAY: inline-block; FONT-WEIGHT: bold; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; background: #CECECE; } 
+.heading2 { FONT-WEIGHT: bold; COLOR: #000000; FONT-STYLE: italic; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; background: #CECECE; BORDER: 1px solid #707070; } 
+.pagebreak { page-break-after: always; }
+.info_head 	{ margin-left: 4px; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; color:#000000;  border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
+  				  padding: 4px 0.5em; color: #F0F0F0; background-color: #a2a2a2; font-weight: bold; cursor: normal; text-align: center; }	
+.info 	{ word-wrap: break-all; margin-left: 4px; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; color: #000000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
+  				  padding: 4px 0.5em; color: black; background-color: #EFEFEF; font-weight: normal; cursor: normal; text-align: center; }
 
 /* Severities */
 .severity_high {font-weight: bold; color: #C00000;}
@@ -95,7 +113,7 @@ tr.fs_buttons {background-color: <?php print get_css("page_background", $day_nig
 .legend {font-weight: bold;	color: <?php print get_css("legend", $day_night);?>;}
 .mobile {background-color: <?php print get_css("page_background", $day_night);?>; color: <?php print get_css("normal_text", $day_night);?>;}
 .disp_stat	{font-weight: bold; color: #FFFFFF; background-color: #000000;}
-.but_container{border: 1px solid black; text-align: center; position: fixed; top: 5px; left: 1px; z-index: 999; padding: 10px; background-color: rgb(0%,0%,0%);	background-color: rgba(0%, 0%, 0%, 0.5); width: 96%;}
+.but_container{border: 1px solid black; text-align: center; position: fixed; top: 5px; left: 1px; z-index: 999; padding-top: 10px; padding-bottom: 10px; background-color: rgb(0%,0%,0%); background-color: rgba(0%, 0%, 0%, 0.5); width: 98%}
 .midline {vertical-align: middle; display: inline-block; width: 100px;}
 	
 /* buttons and links */
@@ -103,7 +121,7 @@ tr.fs_buttons {background-color: <?php print get_css("page_background", $day_nig
 .update_conf {font-weight: bold; color: <?php print get_css("header_text", $day_night);?>;}
 .hovermenu ul {font-weight: bold; padding-left: 0; margin-left: 0; height: 20px; cursor: pointer;}
 .hovermenu ul li {list-style: none;	display: inline;}
-.hovermenu ul li a {padding: 2px 0.5em;	text-decoration: none; float: left;	color: black; background-color: #FFF2BF; border: 2px solid #FFF2BF;}
+.hovermenu ul li a {padding: 2px 0.5em;	float: left;	color: black; background-color: #FFF2BF; border: 2px solid #FFF2BF;}
 .hovermenu ul li a:hover{background-color: #FFE271; border-style: outset;}
 .cat_button, .pri_button,.cat_button_fs, .pri_button_fs {
 	font-weight: bold;	color: <?php print get_css("label_text", $day_night);?>; float:left; padding:2px; vertical-align:middle; cursor: pointer;}
@@ -120,18 +138,20 @@ tr.fs_buttons {background-color: <?php print get_css("page_background", $day_nig
 .right_menu_container {padding-top: 5px; padding-bottom: 5px; z-index: 3;}
 .but_hdr {margin-right: .9em; color:#000000; padding: 4px 0.5em; background-color: #EFEFEF; font-weight: bold;}	
 .reg_button {color:#000000; padding: 4px 0.5em; background-color: #EFEFEF; font-weight: bold; padding-left: .9em;}
-.plain_square {border: 1px outset #FFFFFF; background-color: #EFEFEF; color:#000000; text-decoration: none; float: left; font-weight: bold; cursor: pointer; border-radius:.5em; width: 19px; height: 19px; padding: 2px; margin: 2px;}
-.hover_square {border: 1px outset #FFFFFF; background-color: #DEE3E7; color:#000000; text-decoration: none; float: left; font-weight: bold; cursor: pointer; border-radius:.5em; width: 19px; height: 19px; padding: 2px; margin: 2px;}
-.plain, .hover, .plain_inactive {margin-left: 4px; color:#000000; padding: 4px 0.5em; text-decoration: none; float: left; font-weight: bold; cursor: pointer; border-radius:.5em;}
+.plain_square {border: 1px outset #FFFFFF; background-color: #EFEFEF; color:#000000; float: left; font-weight: bold; cursor: pointer; border-radius:.5em; width: 19px; height: 19px; padding: 2px; margin: 2px;}
+.hover_square {border: 1px outset #FFFFFF; background-color: #DEE3E7; color:#000000; float: left; font-weight: bold; cursor: pointer; border-radius:.5em; width: 19px; height: 19px; padding: 2px; margin: 2px;}
+.plain, .hover, .plain_inactive {margin-left: 4px; color:#000000; padding: 4px 0.5em; float: left; font-weight: bold; cursor: pointer; border-radius:.5em;}
 .plain {border: 1px outset #FFFFFF; background-color: #EFEFEF;}
 .hover {border: 1px inset #FFFFFF; background-color: #DEE3E7;}
-.plainmi, .hovermi {margin-left: 4px; color:#FFFFFF; padding: 4px 0.5em; text-decoration: none; float: left; font-weight: bold; cursor: pointer; border-radius:.5em; display: inline-block; width: 300px;}
+.plainmi, .hovermi {margin-left: 4px; color:#FFFFFF; padding: 4px 0.5em; float: left; font-weight: bold; cursor: pointer; border-radius:.5em; display: inline-block; width: 300px;}
 .plainmi {border: 1px outset #FFFFFF; background-color: red;}
 .hovermi {border: 1px inset #FFFFFF; background-color: orange;}
-.plain_centerbuttons, .hover_centerbuttons, .isselected {text-align: center; margin-left: 4px; color:#000000; padding: 4px 0.5em; text-decoration: none; float: left; font-weight:
+.plain_centerbuttons, .hover_centerbuttons, .isselected {text-align: center; margin-left: 4px; color:#000000; padding: 4px 0.5em; float: left; font-weight:
 	bold; cursor: pointer; border-radius:.5em; height: 60px;}
-.plain_centerbuttons {border: 1px outset #FFFFFF; background-color: #EFEFEF;}
-.hover_centerbuttons {border: 1px inset #FFFFFF; background-color: #DEE3E7;}
+.plain_logout, .hover_logout {text-align: center; margin-left: 4px; color:#000000; padding: 4px 0.5em; float: left; font-weight:
+	bold; cursor: pointer; border-radius:.5em; height: 40px; width: auto; vertical-align: middle; line-height: 40px;}
+.plain_centerbuttons, .plain_logout {border: 1px outset #FFFFFF; background-color: #EFEFEF;}
+.hover_centerbuttons, .hover_logout {border: 1px inset #FFFFFF; background-color: #DEE3E7;}
 .plain_inactive {color:#909090; background-color: #DEE3E7;}
 .signal_r,.signal_o,.signal_b,.signal_w,.hover_lo,.isselected {margin-left: 4px; border: 1px outset #FF3366; padding: 4px 0.5em; float: left; color: #000000; font-weight: bold;
 	border-radius:.5em; cursor: pointer;}
@@ -166,6 +186,7 @@ li.mylink {font-weight: bold; font-size: 24px; cursor: pointer; color: <?php pri
 .text_large {font-size: 1.1em;}
 .text_big {font-size: 1.3em;}
 .text_biggest {font-size: 1.5em;}
+.text_massive {font-size: 3em;}
 
 /* Text Weight */
 .text_light {font-weight: lighter;}
@@ -175,11 +196,16 @@ li.mylink {font-weight: bold; font-size: 24px; cursor: pointer; color: <?php pri
 .text_boldest {font-weight: 900;}
 
 /* Text Decoration */
-.italic {text-decoration: italic;}
+.italic {font-style: italic;}
 .underline {text-decoration: underline;}
 
 /* Text Wrap */
 .nowrap {white-space:nowrap;}
+
+/* Text Alignment */
+.text_center {text-align: center;}
+.text_valign_middle {vertical-align: middle;}
+.text_valign_base {vertical-align: baseline;}
 
 /* Borders */
 .solidborder {border:1px solid gray;}
@@ -232,9 +258,9 @@ select.sit {background-color: transparent; color: #102132; border: none;}
 div.tabBox {}
 div.tabArea { font-size: 90%; font-weight: bold; padding: 0px 0px 3px 0px; }
 span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-		padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
+		padding: 2px 1em 2px 1em; position: relative; top: 3px; z-index: 100; }
 span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; border-radius: .75em .75em 0em 0em;
-		border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
+		border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; top: 3px;	z-index: 100;}
 span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
 div.content { font-size: 90%; background-color: #F0F0F0; border: 2px outset #707070; border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
 		position: relative;	z-index: 101; cursor: auto; height: auto; font-size: 70%;}
@@ -258,7 +284,7 @@ html>body .hovermenu ul li a:active{ border-style: inset;}
 .content {padding: 1em; float: left;}
 
 /* Scrolling Lists */
-table.fixedheadscrolling { cellspacing: 0; border-collapse: collapse; }
+table.fixedheadscrolling { padding: 0; border-collapse: collapse; }
 table.fixedheadscrolling td {overflow: hidden; }
 div.scrollableContainer {position: relative; top: 0px; border: 1px solid #999;}
 div.scrollableContainer2 {position: relative; top: 0px; border: 1px solid #999;}
@@ -277,8 +303,12 @@ div.sel {margin-top: 5px; width: 160px; height: 50px; color:#050; background-col
 .modal {display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);}
 .modal-content {background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 40%; border-radius:3em;}
 .close {color: #aaa; float: right; font-size: 28px; font-weight: bold;}
-.close:hover, .close:focus {color: black; text-decoration: none; cursor: pointer;}
-.modal-body {background-color: #FEFEFE; color: #000000; padding: 1%; height: 300px; text-align: center;}
-.modal-header {background-color: #707070; color: #000000; padding-top: 3%; padding-bottom: 3%; width: 100%; text-align: center;}
-.modal-footer {background-color: #707070; color: #000000; padding-top: 3%; padding-bottom: 3%; width: 100%; text-align: center;}
+.close:hover, .close:focus {color: black; cursor: pointer;}
+.modal-body {background-color: #FEFEFE; color: #000000; height: auto; text-align: left; width: 100%; padding-top: 20px; padding-bottom: 20px;}
+.modal-header {background-color: #0000DB; color: #000000; padding-top: 3%; padding-bottom: 3%; width: 100%; text-align: center; border-radius:2.5em 2.5em 0px 0px;}
+.modal-footer {background-color: #FFFF24; color: #000000; padding-top: 3%; padding-bottom: 3%; width: 100%; text-align: center; border-radius:0px 0px 2.5em 2.5em;}
 
+/* Mail Form */
+.row { white-space: nowrap; display: table-row;}
+.cell {display: table-cell; padding-left: 10px; padding-right: 10px;}
+.container {display: table; border: 1px outset #FFFFFF; padding: 10px;}

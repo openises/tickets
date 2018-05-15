@@ -5,13 +5,45 @@
 */
 error_reporting(0);
 require_once('../incs/functions.inc.php');
+
 $temp1  = (get_variable('socketserver_url') != "") ? get_variable('socketserver_url') : "localhost";
 $temp2 = get_variable('socketserver_port');
 $serveraddress = (array_key_exists("SERVER_NAME", $_SERVER)) ? "{$_SERVER['SERVER_NAME']}" : $temp1;
-$serverport = ($temp2 == "") ? "1337" : $temp2;
-$serverstring = "tcp://" . $serveraddress . ":" . $serverport;
+if(get_variable('sslcert_location') != "") {
+	$serverport = ($temp2 == "") ? "1348" : $temp2;
+	$https = true;
+	} else {
+	$serverport = ($temp2 == "") ? "1337" : $temp2;
+	$https = false;
+	}
+	
+	
+if($https) {
+	$pemfile = get_variable('sslcert_location');
+	$pem_passphrase = get_variable('sslcert_passphrase');	
+	if(!file_exists($pemfile)) {
+		echo "Can't see Certificate File<BR />";
+		exit();
+		}
+	$context = stream_context_create();
+	stream_context_set_option($context, 'ssl', 'local_cert', $pemfile);
+	stream_context_set_option($context, 'ssl', 'passphrase', $pem_passphrase);
+	stream_context_set_option($context, 'ssl', 'allow_self_signed', false);
+	stream_context_set_option($context, 'ssl', 'peer_name', 'www.ticketsaws.net');
+	stream_context_set_option($context, 'ssl', 'verify_peer', false);
+	stream_context_set_option($context, 'ssl', 'local_pk', '/etc/letsencrypt/live/www.ticketsaws.net/privkey.pem');
+	stream_context_set_option($context, 'ssl', 'ciphers', 'ALL:!TLSv1.0:!SSLv2:!SSLv3:TLSv1.1:TLSv1.2:TLSv1.3');
+	$serverstring = "ssl://" . $serveraddress . ":" . $serverport;
+	} else {
+	$serverstring = "tcp://" . $serveraddress . ":" . $serverport;
+	}
 
+$users_connected = array();
 // Core Server functions
+
+if($https && !file_exists($pemfile)) {
+	echo "Certificate not found<BR />";
+	}
 
 //	check if port is open or free
 function check_port($port) {
@@ -35,6 +67,7 @@ function server_report() {
                   '110'=>'POP3',
                   '143'=>'IMAP',
 				  '1337'=>'TICKETS SOCKET SERVER',
+				  '1348'=>'TICKETS SOCKET SERVER',
                   '3306'=>'MySQL');
     foreach ($svcs as $port=>$service) {
         $report[$service] = check_port($port);
@@ -103,52 +136,37 @@ function do_restart($data) {
 	}
 
 //	Websocket Handshake
-function handshake($connect) {
-    $info = array();
-
-    $line = fgets($connect);
-    $header = explode(' ', $line);
-	if((!array_key_exists(1, $header)) || (!array_key_exists(0, $header))) {
-		return false;
+function handshake($client, $buffer) {
+	// Respond to client
+	$info = array();
+	$header = array();
+	$lines = preg_split("/\r\n/", $buffer);
+	foreach($lines as $line) {
+		$line = chop($line);
+		if(preg_match('/\A(\S+): (.*)\z/', $line, $matches)) {
+			$header[$matches[1]] = $matches[2];
+			}
 		}
-    $info['method'] = $header[0];
-    $info['uri'] = $header[1];
-
-    while ($line = rtrim(fgets($connect))) {
-        if (preg_match('/\A(\S+): (.*)\z/', $line, $matches)) {
-            $info[$matches[1]] = $matches[2];
-        } else {
-            break;
-        }
-    }
-
-    $address = explode(':', stream_socket_get_name($connect, true));
+	$info = $header;
+    $address = explode(':', stream_socket_get_name($client, true));
     $info['ip'] = $address[0];
     $info['port'] = $address[1];
-	dump($info);
-    if (empty($info['Sec-WebSocket-Key'])) {
-        return false;
-		}
-/*  if(!$info['origin'] == "http://localhost") {
-		echo "Intrusion attempt<BR />";
+	if (empty($info['Sec-WebSocket-Key'])) {
 		return false;
-		} */
-
+		}
     $SecWebSocketAccept = base64_encode(pack('H*', sha1($info['Sec-WebSocket-Key'] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
     $upgrade = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" .
         "Upgrade: websocket\r\n" .
         "Connection: Upgrade\r\n" .
         "Sec-WebSocket-Accept:$SecWebSocketAccept\r\n\r\n";
-    fwrite($connect, $upgrade);
-
-    return $info;
+	fwrite($client, $upgrade);
+	return $info;
 	}
 
 //	Websocket encoding to send string to all connected clients
 function encode($payload, $type = 'text', $masked = false) {
     $frameHead = array();
     $payloadLength = strlen($payload);
-
     switch ($type) {
         case 'text':
             // first byte indicates FIN, Text-Frame (10000001):
@@ -300,15 +318,15 @@ function decode($data) {
 
 //	Handle an incoming message.
 function onMessage($connect, $data) {
-	global $client_socks;
-	$current_users = count($client_socks);
+	global $client_socks, $users_connected;
 	$temp = decode($data);
 	$sendstring = $temp['payload'];
 	$elements = explode("/", $sendstring);
-	if(!array_key_exists(1,$elements)) {return;}
+	if(!array_key_exists(1,$elements) || $elements[1] == "") {return;}
 	$userid = $elements[0];
 	$isAdmin = checkAdmin($userid);
 	$textElement = explode(":", $elements[1]);
+	$current_users = count($users_connected);
 	if(array_key_exists(1, $textElement)) {
 		$theMessage = substr($textElement[1], 1);
 		} else {
@@ -316,11 +334,14 @@ function onMessage($connect, $data) {
 		}
 	switch($elements[2]) {
 		case 1:
-		$theUser = 
 		$messagelog = "0/" . $elements[1] . "/299";
 		foreach($client_socks as $theClient) {
 			$writeReturn = fwrite($theClient, encode($messagelog));
 			}
+		break;
+		
+		case 599:
+		$users_connected[$userid] = $connect;
 		break;
 		
 		default:
@@ -364,6 +385,14 @@ function onMessage($connect, $data) {
 					$sendstring = "0/There are no other users connected, message will not be sent/1";
 					$writeReturn = fwrite($connect, encode($sendstring));
 					break;
+				case 599:
+					$writeReturn = fwrite($connect, encode($sendstring));				
+					$theUsers = count($users_connected);
+					$sendstring = "0/" . $theUsers . "/97";
+					foreach($client_socks as $theClient) {
+						$writeReturn = fwrite($theClient, encode($sendstring));
+						}
+					break;
 				default:
 					$writeReturn = fwrite($connect, encode($sendstring));
 					break;			
@@ -393,6 +422,19 @@ function onMessage($connect, $data) {
 						$writeReturn = fwrite($theClient, encode($sendstring));
 						}
 					break;
+				case 599:
+					foreach($client_socks as $theClient) {		
+						$sendstring = "0/" . $current_users . "/97";
+						$writeReturn = fwrite($connect, encode($sendstring));
+						$tempUsers = array();
+						foreach($users_connected as $key=>$val) {
+							$tempUsers[] = $key;
+							}
+						$theUsers = implode(",", $tempUsers);
+						$sendstring = "0/" . $theUsers . "/98";
+						$writeReturn = fwrite($connect, encode($sendstring));
+						}
+					break;
 				default:
 					foreach($client_socks as $theClient) {	
 						$writeReturn = fwrite($theClient, encode($sendstring));
@@ -401,6 +443,7 @@ function onMessage($connect, $data) {
 				}
 			}
 		}
+//	dump($users_connected);
 	}
 // End of Core Server Functions
 
@@ -410,10 +453,12 @@ if($report['TICKETS SOCKET SERVER'] == "1") {
 	echo 2;
 	exit();
 	}
-	
-// Attempt to start server	
-
-$server = stream_socket_server("{$serverstring}", $errno, $errstr);
+echo $serverstring . "\n";
+if($https) {
+	$server = stream_socket_server("{$serverstring}", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context);
+	} else {
+	$server = stream_socket_server("{$serverstring}", $errno, $errstr);
+	}
 
 //	Check if server started.
 
@@ -429,30 +474,34 @@ if ($server === false) {
 
 // declare array for monitoring sockets
 $client_socks = array();
+$current_users = 0;
+//$client_ips = array();
 
 //	Main While loop, continues from when there is a first connection until there are no connections. 
 while(true) {
-    //prepare readable sockets
-    $read_socks = $client_socks;
-    $read_socks[] = $server;
-		
+	$buffer = '';
+	$read_socks = $client_socks;
+	$read_socks[] = $server;
+	
     //start reading and use a large timeout
-    if(!stream_select ( $read_socks, $write, $except, 300000 )) {
+    if(!stream_select ($read_socks, $write, $except, 300000)) {
 		die('something went wrong while selecting');
 		}
-		
+
 //new client
     if(in_array($server, $read_socks)) {
-        $new_client = stream_socket_accept($server);
+		$new_client = stream_socket_accept($server, 30000);
 		$current_users = count($client_socks);
-		if(($new_client) && ($info = handshake($new_client))) {
-			dump($info);
-            //print remote client information, ip and port number
-            echo "Connection accepted from " . stream_socket_get_name($new_client, true) . "\n";
-            $client_socks[] = $new_client;
-            echo "Now there are total ". count($client_socks) . " clients.\n";
+		while( !preg_match('/\r?\n\r?\n/', $buffer) )
+			$buffer .= fread($new_client, 2046); 
+		if(($new_client) && ($info = handshake($new_client, $buffer))) {
+			echo "Connection accepted from " . stream_socket_get_name($new_client, true) . "\n";
+			$client_socks[] = $new_client;
+			$current_users = count($client_socks);
+			echo "Now there are total " . $current_users . " clients.\n";
 			switch($current_users) {
 				case 0;
+					$users_connected = array();		//	No client sockets, initialise current users array.
 					sleep(20);
 					foreach($client_socks as $theClient) {
 						$sendstring = "0/1/97";
@@ -466,6 +515,7 @@ while(true) {
 						}
 					break;
 				}
+//				}
 			}
         //delete the server socket from the read sockets
         unset($read_socks[ array_search($server, $read_socks) ]);
@@ -475,7 +525,8 @@ while(true) {
 	foreach($read_socks as $key=>$sock) {
 		$data = fread($sock, 8000);
 		if(!$data){
-			unset($client_socks[ array_search($sock, $client_socks) ]);
+			unset($client_socks[array_search($sock, $client_socks)]);
+			unset($users_connected[array_search($sock, $users_connected)]);
 			@fclose($sock);
 			echo "A client disconnected. Now there are total " . count($client_socks) . " clients.\n";
 			sleep(2);

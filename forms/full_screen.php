@@ -106,7 +106,7 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="application/x-javascript" src="./js/esri-leaflet.js"></script>
 	<script type="application/x-javascript" src="./js/Control.Geocoder.js"></script>
 <?php
-	if ($_SESSION['internet']) {
+	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
@@ -265,7 +265,7 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
-		
+	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth -2;
 	mapHeight = viewportheight - 40;
 	outerwidth = viewportwidth -2;
@@ -298,30 +298,18 @@ function set_size() {
 	$("hidelists").style.position = "absolute";	
 	$("hidelists").style.top = "0px";
 	$("hidelists").style.left = colwidth + "px";
-	load_exclusions();
-	load_ringfences();
-	load_catchments();
-	load_basemarkup();
-	load_groupbounds();	
-	load_fs_incidentlist();
-	load_fs_responders();
-	load_fs_facilities();
-	full_scr_ass();
-	load_regions();
-	set_initial_pri_disp();
-	load_poly_controls();
-	mapCenter = map.getCenter();
-	mapZoom = map.getZoom();
-	map.invalidateSize();
-	set_fontsizes(viewportwidth, "fullscreen");
+	loadData();
 	}
 	
 function loadData() {
+	get_mi_totals();
 	load_exclusions();
 	load_ringfences();
 	load_catchments();
 	load_basemarkup();
 	load_groupbounds();	
+	get_assignments();
+	get_unit_categories();
 	load_fs_incidentlist();
 	load_fs_responders();
 	load_fs_facilities();
@@ -333,7 +321,6 @@ function loadData() {
 	mapZoom = map.getZoom();
 	map.invalidateSize();
 	setTimeout(function() {$('leftcol').style.display = "none"; $('showlists').style.display='inline-block';},10000);
-	get_mi_totals();
 	load_warnlocations("fullscreen");
 	}
 

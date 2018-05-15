@@ -69,6 +69,8 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, 'fullscreen');
+	if(use_mdb && use_mdb_contact) {show_member_contact_info();}
 	mapWidth = viewportwidth * .45;
 	mapHeight = mapWidth * .9;
 	outerwidth = viewportwidth * .99;
@@ -96,7 +98,6 @@ function set_size() {
 	$('map_caption').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	map.invalidateSize();
-	set_fontsizes(viewportwidth);
 	}
 	
 function loadData() {
@@ -128,7 +129,7 @@ function to_fac_routes(id) {
 	}
 </SCRIPT>
 <?php
-$query_un = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";	// 6/10/11
+$query_un = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";
 $result_un = mysql_query($query_un);	// 6/10/11
 $un_groups = array();
 $un_names = "";	
@@ -141,22 +142,31 @@ while ($row_un = stripslashes_deep(mysql_fetch_assoc($result_un))) 	{	// 6/10/11
 		}
 	}
 	
+
+	
 $id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT *, r.updated AS `r_updated` FROM `$GLOBALS[mysql_prefix]responder` `r` 
-	WHERE `r`.`id`={$id} LIMIT 1";
+$query	= "SELECT *, r.updated AS `r_updated` FROM `$GLOBALS[mysql_prefix]responder` `r` WHERE `r`.`id` = {$id} LIMIT 1";
 $result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
-$track_type = get_remote_type ($row) ;			// 7/6/11
-$is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));				// 1/27/09
+$row = stripslashes_deep(mysql_fetch_assoc($result));
+$track_type = get_remote_type ($row) ;
+$is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));
 $lat = $row['lat'];
 $lng = $row['lng'];
-$ringfence = $row['ring_fence'];	//	6/10/11
+$ringfence = $row['ring_fence'];
+$exclzone = $row['excl_zone'];
 
 $rf_name = "";
 $query_rf	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l` WHERE `l`.`id`={$ringfence}";	//	6/10/11
 $result_rf	= mysql_query($query_rf) or do_error($query_rf, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 while($row_rf	= stripslashes_deep(mysql_fetch_assoc($result_rf))) {
 	$rf_name = $row_rf['line_name'];
+	}
+	
+$ex_name = "";
+$query_ex	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l` WHERE `l`.`id`={$exclzone}";	//	6/10/11
+$result_ex	= mysql_query($query_ex) or do_error($query_ex, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+while($row_ex	= stripslashes_deep(mysql_fetch_assoc($result_ex))) {
+	$ex_name = $row_ex['line_name'];
 	}
 	
 if (isset($row['un_status_id'])) {
@@ -241,9 +251,6 @@ $the_type = $temp[0];			// name of type
 				<TD CLASS='td_data text'><?php print $row['handle'];?>
 				<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<?php print $row['icon_str'];?></TD>
 			</TR>
-			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
-			</TR>
 			<TR CLASS = 'even'>
 				<TD CLASS="td_label text">Location: </TD>
 				<TD CLASS='td_data text'><?php print $row['street'] ;?></TD>
@@ -253,20 +260,10 @@ $the_type = $temp[0];			// name of type
 				<TD CLASS='td_data text'><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text">Phone: &nbsp;</TD>
-				<TD CLASS='td_data text' COLSPAN=3><?php print $row['phone'] ;?></TD>
-			</TR>
-			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
-			</TR>
-			<TR CLASS = "odd">
 				<TD CLASS="td_label text">Regions: </TD>			
 				<TD CLASS='td_data text'><?php print $un_names;?></TD>
 			</TR>
-			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
-			</TR>
-			<TR CLASS = "even">
+			<TR CLASS = "odd">
 				<TD CLASS="td_label text">Type: </TD>
 				<TD CLASS='td_data text'><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 					<SPAN CLASS="td_label text">
@@ -276,21 +273,22 @@ $the_type = $temp[0];			// name of type
 					</SPAN>
 				</TD>
 			</TR>
-			<TR CLASS = "odd" VALIGN='top'>
+			<TR CLASS = "even" VALIGN='top'>
 				<TD CLASS="td_label text" >Tracking:</TD>
 				<TD CLASS='td_data text'><?php print $GLOBALS['TRACK_NAMES'][$track_type];?></TD>
 			</TR>
-			<TR CLASS = "even" VALIGN='top'>
+			<TR CLASS = "odd" VALIGN='top'>
 				<TD CLASS="td_label text">Callsign/License/Key: </TD>	
 				<TD CLASS='td_data text'><?php print $row['callsign'];?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR CLASS = "even">
 				<TD CLASS="td_label text">Ringfence: </TD>			
 				<TD CLASS='td_data text'><?php print $rf_name;?></TD>
 			</TR>
-			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
-			</TR>			
+			<TR CLASS = "odd">
+				<TD CLASS="td_label text">Exclusion Zone: </TD>			
+				<TD CLASS='td_data text'><?php print $ex_name;?></TD>
+			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Status:</TD>		
 				<TD CLASS='td_data text'>
@@ -301,49 +299,71 @@ $the_type = $temp[0];			// name of type
 					<SPAN CLASS="td_label text" STYLE='margin-left: 32px'>Dispatch:&nbsp;</SPAN><?php print $dispatch_arr[$row_st['dispatch']];?>
 				</TD>
 			</TR>
-			<TR CLASS = "even">
+			<TR CLASS = "odd">
 				<TD CLASS="td_label text">About Status</TD> 
 				<TD CLASS='td_data text'><?php print $row['status_about'] ;?></TD>
 			</TR>	<!-- 9/6/13 -->
-			<TR class='spacer'>
-				<TD class='spacer' COLSPAN=99>&nbsp;</TD>
-			</TR>
-			<TR CLASS = "odd">
+			<TR CLASS = "even">
 				<TD CLASS="td_label text">Description: </TD>	
 				<TD CLASS='td_data_wrap' style='word-wrap: break-word;'><?php print $row['description'];?></TD>
 			</TR>
-			<TR CLASS = "even">
+			<TR CLASS = "odd">
 				<TD CLASS="td_label text">Capability: </TD>	
 				<TD CLASS='td_data text'><?php print $row['capab'];?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR CLASS = "even">
 				<TD CLASS="td_label text">Located at Facility: </TD>	
 				<TD CLASS='td_data text'><?php print get_facilityname($row['at_facility']);?></TD>
 			</TR>
-			<TR CLASS = "even">
+			<TR ID = 'members_info_row' CLASS = "odd" style='display: none;'>
+				<TD CLASS="td_label text top">
+					<A CLASS="td_label text" HREF="#" TITLE="Member Data">Member Information</A>:&nbsp;					
+				</TD>
+				<TD CLASS='td_data_wrap text'>
+					<DIV class='text top' id='member_info_div' style='vertical-align: text-top; max-height: 200px; width: 100%;'>
+<?php
+						$theName = (is_array(get_mdb_names($id))) ? implode(" , ", get_mdb_names($id)) : get_mdb_names($id);
+						$contactVia = (is_array(get_contact_via($id))) ? implode(" | ", get_contact_via($id)) : get_contact_via($id);
+						$thePhone = (is_array(get_mdb_phone($id))) ? implode(",", get_mdb_phone($id)) : get_mdb_phone($id);
+						$cellphone = (is_array(get_mdb_cell($id))) ? implode(" , ", get_mdb_cell($id)) : get_mdb_cell($id);
+						$smsgid = (is_array(get_smsgid($id))) ? implode(" | ", get_smsgid($id)) : get_smsgid($id);
+?>
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Member Names assigned to this unit.">Contact Names</SPAN><SPAN class='td_data_wrap text top' style='width: 70%;'><?php print $theName;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Contact emails for units assigned to this unit.">Contact Via</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block; word-wrap: break-word;'><?php print $contactVia;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Phone numbers of members assigned to this unit.">Phone</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block; word-wrap: break-word;'><?php print $thePhone;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Cellphone numbers of members assigned to this unit.">Cellphone</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block;'><?php print $cellphone;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="SMS Gateway IDs for Members assigned to this unit - this is not the cellphone number but the short ID for the Gateway Provider - If provider uses Cellphones as IDs use the Handle here.">SMS Gateway ID</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block;'><?php print $smsgid;?></SPAN><BR />								
+					</DIV>
+				</TD>
+			</TR>
+			<TR ID = 'contact_name_row' CLASS = "even">
 				<TD CLASS="td_label text">Contact name:</TD>	
 				<TD CLASS='td_data text'><?php print $row['contact_name'] ;?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR ID = 'contact_via_row' CLASS = "odd">
 				<TD CLASS="td_label text">Contact via:</TD>	
 				<TD CLASS='td_data text'><?php print $row['contact_via'] ;?></TD>
 			</TR>
 			<TR CLASS = "even">
+				<TD CLASS="td_label text">Phone: &nbsp;</TD>
+				<TD CLASS='td_data text' COLSPAN=3><?php print $row['phone'] ;?></TD>
+			</TR>
+			<TR ID = 'cellphone_row' CLASS = "odd">
 				<TD CLASS="td_label text">Cellphone:</TD>	
 				<TD CLASS='td_data text'><?php print $row['cellphone'] ;?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR ID = 'smsg_provider_row' CLASS = "even">
 				<TD CLASS="td_label text"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID:</TD>	
 				<TD CLASS='td_data text'><?php print $row['smsg_id'] ;?></TD>
 			</TR>
-			<TR CLASS = 'even'>
+			<TR CLASS = 'odd'>
 				<TD CLASS="td_label text">As of:</TD>	
 				<TD CLASS='td_data text'><?php print format_date($row['updated']); ?></TD>
 			</TR>
 <?php
 			if (my_is_float($lat)) {				// 7/10/09
 ?>		
-				<TR CLASS = "odd">
+				<TR CLASS = "even">
 					<TD CLASS="td_label text"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD>
 					<TD CLASS='td_data text'>
 						<INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=11 disabled />&nbsp;
@@ -540,6 +560,10 @@ if (isset($rowtr)) {																	// got tracks?
 </SCRIPT>
 		<SPAN id='map_caption' CLASS='text_blue text text_bold' style='width: 100%; text-align: center; display: block;'><?php print get_variable('map_caption');?></SPAN><BR />
 	</DIV>
+	<DIV id='memberview' class='even' style='position: fixed; top: 100px; left: 30%; width: 50%; height: 60%; display: none; overflow-y: scroll; border: 4px outset #707070; z-index: 99999; box-shadow: 0px 0px 0px 15px rgba(0, 0, 0, 0.3), 0px 20px 15px 0px rgba(0, 0, 0, 0.6);'>
+		<SPAN id='memberview_close' class='plain text' style='position: absolute; right: 0px; top: 0px; display: inline;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick="$('memberview').style.display = 'none';">Close&nbsp;&nbsp;<IMG id='memclose_img' style='vertical-align: middle;' SRC='./images/close.png' /></SPAN>
+		<DIV id='memberdetails' style='position: absolute; top: 30px;'></DIV>
+	</DIV>
 </DIV>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
@@ -570,7 +594,8 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-set_fontsizes(viewportwidth);
+set_fontsizes(viewportwidth, 'fullscreen');
+if(use_mdb && use_mdb_contact) {show_member_contact_info();}
 mapWidth = viewportwidth * .45;
 mapHeight = mapWidth * .9;
 outerwidth = viewportwidth * .99;
@@ -601,8 +626,8 @@ var boundary = [];			//	exclusion zones array
 var bound_names = [];
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var initZoom = <?php print get_variable('def_zoom');?>;
+init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 load_exclusions();

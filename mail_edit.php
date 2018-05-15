@@ -221,9 +221,7 @@ $heading = "Dispatch message";
 </TABLE>
 </FORM>
 <?php
-	}		// end if (empty($_POST))
-
-else {
+	} else {		// end if (empty($_POST))
 	$the_responders = array();
 	$the_emails = explode('|',$_POST['frm_addrs']);
 	$the_sms = ((isset($_POST['frm_smsgaddrs'])) && ($_POST['frm_smsgaddrs'] != "")) ? explode(',', $_POST['frm_smsgaddrs']) : "";

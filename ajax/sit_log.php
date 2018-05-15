@@ -78,9 +78,9 @@ $GLOBALS['LOG_SPURIOUS']			=127;		// 10/24/13 Added to catch failed logs
 */
 @session_start();
 session_write_close();
-/* if($_GET['q'] != $_SESSION['id']) {
+if($_GET['q'] != $_SESSION['id']) {
 	exit();
-	} */
+	}
 require_once('../incs/functions.inc.php');
 require_once('../incs/log_codes.inc.php');
 function br2nl($input) {
@@ -131,7 +131,7 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`
 	ORDER BY `id` DESC LIMIT 1000";
 
 $result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_affected_rows();
+$num_rows = mysql_num_rows($result);
 $i = 0;
 if (($result) && ($num_rows >=1)) {
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{

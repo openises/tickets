@@ -302,9 +302,10 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, $stats_in_db Statistics ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db+$stats_in_db)." total</TD></TR>";	//	11/07/11
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`";
+	$query = "SELECT COUNT(*) as `num` FROM `$GLOBALS[mysql_prefix]log`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	$nr_logs = mysql_affected_rows();
+	$row = mysql_fetch_assoc($result);
+	$nr_logs = number_format($row['num']);
 	unset($result);
 
 	print "<TR CLASS='even'><TD CLASS='td_label'>Log records in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>{$nr_logs}</TD></TR>";		// 4/5/09
@@ -336,40 +337,40 @@ function list_users(){		/* list users */
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	if (mysql_affected_rows()==0) 	 { print '<B>[no users found]</B><BR />'; return; 	}
 
-//	if (!check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]user`")==0) { print '<B>[no users found]</B><BR />'; return; 	}
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 1/23/10
 
 	print "<TABLE BORDER='0' CELLPADDING=2>";
 	$caption = (has_admin())?" - click to edit":  ""; 	//
 	print "<TR CLASS='even'><TD COLSPAN='99' ALIGN='center'><B>Users" . $caption . " </B></TD></TR>";
-	print "<TR CLASS='odd'><TD><B>ID</B></TD>
-		<TD><B>&nbsp;User</B></TD>
-		<TD><B>&nbsp;Online</B></TD>
-		<TD><B>&nbsp;Level</B></TD>
-		<TD><B>&nbsp;Unit</B></TD>
-		<TD><B>&nbsp;Description</B></TD>
-		<TD><B>&nbsp;Log in</B></TD>
-		<TD><B>&nbsp;From</B></TD>
-		<TD><B>&nbsp;Browser</B></TD>
+	print "<TR CLASS='odd'>
+		<TD class='text'><B>ID</B></TD>
+		<TD class='text'><B>&nbsp;User</B></TD>
+		<TD class='text'><B>&nbsp;Online</B></TD>
+		<TD class='text'><B>&nbsp;Level</B></TD>
+		<TD class='text'><B>&nbsp;Unit</B></TD>
+		<TD class='text'><B>&nbsp;Description</B></TD>
+		<TD class='text'><B>&nbsp;Log in</B></TD>
+		<TD class='text'><B>&nbsp;From</B></TD>
+		<TD class='text'><B>&nbsp;Browser</B></TD>
 		</TR>";
 	$i=1;
 	while($row = stripslashes_deep(mysql_fetch_array($result))) {				// 10/8/08
 		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$row['userid']}' \"": "";
 
 		$level = get_level_text($row['level']);
-//		$login = format_date_time($row['login']);
-		$login = format_sb_date_2($row['login']);		// 5/8/2013
+		$login = format_sb_date_2(mysql_format_date(strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
+		$isonline = ($row['expires'] > $now) ? true: false;
 		$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
 		print "<TR CLASS='{$colors[$i%2]}' {$onclick}>
-				<TD>{$row['userid']}</TD>
-				<TD>&nbsp;{$row['user']}</TD>
-				<TD ALIGN = 'center'>{$online}</TD>
-				<TD>{$level}</TD>
-				<TD>{$row['unitname']}</TD>
-				<TD>{$row['info']}</TD>
-				<TD>{$login}</TD>
-				<TD>{$row['_from']}</TD>
-				<TD>{$row['browser']}</TD>
+				<TD class='text'>{$row['userid']}</TD>
+				<TD class='text'>&nbsp;{$row['user']}</TD>
+				<TD class='text' ALIGN = 'center'>{$online}</TD>
+				<TD class='text'>{$level}</TD>
+				<TD class='text'>" . shorten($row['unitname'], 15) . "</TD>
+				<TD class='text'>" . shorten($row['info'], 15) . "</TD>
+				<TD class='text'>{$login}</TD>
+				<TD class='text'>{$row['_from']}</TD>
+				<TD class='text'>{$row['browser']}</TD>
 				</TR>\n";
 		$i++;
 		}
@@ -405,154 +406,166 @@ function validate_email($email){ 	//really validate? - code courtesy of Jerrett 
 		return $return;
 		}
 
-//	$host = substr(strstr($check[0], '@'), 1);
-//	if (!checkdnsrr($host.'.',"MX")) {
-//		$return['status'] = false;
-//		$return['msg'] = "invalid host ($host)";
-//		return $return;
-//		}
-
 	$return['status'] = true; $return['msg'] = $email;
 	return $return;
 	}
 
 function get_setting_help($setting){/* get help for settings */
 	switch($setting) {
-		case "_aprs_time":				return "Not user-settable; used for APRS time between polls"; break;
-		case "_version": 				return "Tickets version number"; break;
-		case "abbreviate_affected": 	return "Abbreviates \"affected\" string at this length when listing tickets, 0 to turn off"; break;
-		case "abbreviate_description": 	return "Abbreviates descriptions at this length when listing tickets, 0 to turn off"; break;
-		case "access_requests": 		return "Allow new users to request access from login screen - swithes on request access button"; break;
-		case "allow_custom_tags": 		return "Enable/disable use of custom tags for rowbreak, italics etc."; break;
-		case "allow_notify": 			return "Allow/deny notification of ticket updates"; break;
-		case "auto_poll":				return "APRS/Instamapper will be polled every n minutes.  Use 0 for no poll"; break;
-		case "auto_route": 				return "Do/don&#39;t (1/0) use routing for new tickets"; break;												// 9/13/08
-		case "call_board":				return "Call Board - 0, 1, 2 - for none, floating window, fixed frame"; break;
-		case "chat_time":				return "Keep n hours of Chat"; break;
-		case "date_format": 			return "Format dates according to php function date() variables"; break;
-		case "def_area_code":			return "Default telephone area code"; break;
-		case "def_city":				return "Default city name"; break;
-		case "def_lat":					return "Map center default lattitude"; break;
-		case "def_lng":					return "Map center default longitude"; break;
-		case "def_st":					return "Default two-letter state"; break;
-		case "def_zoom":				return "Map default zoom"; break;
-		case "delta_mins":				return "Minutes delta - for server/users time synchronization"; break;
-		case "email_reply_to":			return "The default reply-to address for emailing incident information"; break;
-		case "email_from":				return "Outgoing email will use this value as the FROM value. VALID ADDRESS MANDATORY!"; break;
-		case "frameborder": 			return "Size of frameborder"; break;
-		case "framesize": 				return "Size of the top frame in pixels"; break;
-		case "gmaps_api_key":			return "Google maps API key - see HELP/README re how to obtain"; break;
-		case "guest_add_ticket": 		return "Allow guest users to add tickets - NOT RECOMMENDED"; break;
-		case "host": 					return "Hostname where Tickets is run"; break;
-		case "ics_date": 				return "Date format for ICS forms. Format dates according to php function date() variables"; break;
-		case "kml_files":  				return "Do/don&#39;t (1/0) display KML files"; break;
-		case "lat_lng":					return "Lat/lng display: (0) for DDD.ddddd, (1) for DDD MMM SS.ss, (2) for DDD MM.mm"; break;		// 9/13/08
-		case "link_capt":				return "Caption to be used for external link button"; break;
-		case "link_url":				return "URL of external page link"; break;
-		case "login_banner": 			return "Message to be shown at login screen"; break;
-		case "map_caption":				return "Map caption - cosmetic"; break;
-		case "map_height":				return "Map height - pixels"; break;
-		case "map_width":				return "Map width - pixels"; break;
-		case "military_time": 			return "Enter dates as military time (no am/pm)"; break;
-		case "openspace_api": 			return "UK use only, API key for Openspace use to show UK Ordnance Survey Maps"; break;
-		case "quick":					return "Do/don&#39;t (1/0) bypass user notification steps for quicker operation"; break;			// 3/11/09
-		case "restrict_units": 			return "Restrict units from seing other areas of Tickets, only mobile screen."; break;
-		case "restrict_user_add": 		return "Restrict user to only post tickets as himself"; break;
-		case "restrict_user_tickets": 	return "Restrict to showing only tickets to current user"; break;
-		case "serial_no_ap": 			return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
-		case "situ_refr":				return "Situation map auto refresh - in seconds"; break;											// 3/11/09
-		case "smtp_acct":				return "Ex: outgoing.verizon.net/587/ashore4/*&^$#@/ashore4@verizon.net"; break;					// 7/12/09
-		case "terrain": 				return "Do/don&#39;t (1/0) include terrain map view option"; break;
-		case "ticket_per_page": 		return "Number of tickets per page to show"; break;
-		case "ticket_table_width": 		return "Width of table when showing ticket"; break;
-		case "UTM":						return "Shows UTM values in addition to Lat/Long"; break;
-		case "validate_email": 			return "Do/don&#39;t (1/0) use simple email validation check for notifies"; break;
-		case "wp_key": 					return "White pages lookup key - obtain your own for high volume use"; break;												// 9/13/08
-		case "closed_interval": 		return "Closed tickets and cleared dispatches are visible for this many hours"; break;												// 9/13/08
-		case "def_zoom_fixed": 			return "Dynamic or fixed map/zoom; 0 dynamic, 1 fixed situ, 2 fixed units, 3 both"; break;												// 9/13/08
-		case "instam_key": 				return "Instamapper &#39;Master API key&#39;"; break;												// 9/13/08
-		case "msg_text_1": 				return "Default message string for incident new/edit notifies; see instructions"; break;		// 4/5/09										// 9/13/08
-		case "msg_text_2": 				return "Default message string for incident mini-menu email; see instructions"; break;												// 9/13/08
-		case "msg_text_3": 				return "Default message string for for dispatch notifies; see instructions"; break;												// 9/13/08
-		case "ogts_info": 				return "Open GTS server info"; break;												// 9/13/08
-		case "gtrack_url": 				return "URL for Gtrack server in format http://www.yourserver.com"; break;	//06/24/09
-		case "maptype": 				return "Default Map display type - 1 for Standard, 2 for Satellite, 3 for Terrain Map, 4 for Hybrid"; break;	//08/02/09
-		case "locale": 					return "Locale for USNG/UTM/OSG setting plus date format - 0=US, 1=UK, 2=ROW "; break;	//08/03/09
-		case "func_key1": 				return "User Defined Function key 1 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
-		case "func_key2": 				return "User Defined Function key 2 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
-		case "func_key3": 				return "User Defined Function key 3 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
-		case "reverse_geo": 			return "Use Reverse Geocoding when setting location for an incident. 1 for yes, 0 for no. Default is 0"; break;	//11/01/09
-		case "logo": 					return "Enter filename of your site logo file here"; break;	//8/13/10
-		case "regions_control": 		return "Regions select / view control floating over map (0) or docked to top bar (1)"; break;												// 9/13/08
-		case "pie_charts": 				return "Severity/Incident types/Location pie chart diameters, in pixels"; break;	// 3/21/10
-		case "internet": 				return "Internet/network connection available: 1 (default) for Yes, 2 for No, 3 for maybe - will check network dynamically"; break;	// 8/13/10
-		case "sound_mp3": 				return "Enter filename of your site mp3 alert tone - Default is phonesring.mp3"; break;	// 8/13/10
-		case "sound_wav": 				return "Enter filename of your site WAV alert tone - Default is aooga.wav"; break;	// 8/13/10
-		case "oper_can_edit": 			return "Operator is disallowed (0) or allowed to (1) edit incident data"; break;	// 8/27/10
-		case "disp_stat": 				return "Dispatch status tags, slash-separated; for &#39;dispatched&#39;, responding&#39;, &#39;on-scene&#39;, &#39;facility-enroute&#39;, &#39;facility arrived&#39;, &#39;clear&#39; IN THAT ORDER! (D/R/O/FE/FA/Clear)"; break;	// 8/29/10
-		case "group_or_dispatch": 		return "Show hide categories for units on the situation screen are based on show/hide setting in un_status table (0 - default) or on status groups in un_status table (1)"; break;	// 8/29/10
-		case "aprs_fi_key": 			return "To use aprs location data you will need to sign up for an aprs.fi user account/key (free).  Obtain from http://aprs.fi"; break;	// 3/19/11
-		case "followmee_key": 			return "To use FollowMee Tracking for Smart Phones, see http://www.followmee.com for more info."; break;	// 3/19/11
-		case "followmee_username": 		return "To use FollowMee Tracking for Smart Phones, see http://www.followmee.com for more info."; break;	// 3/19/11
-		case "title_string": 			return "If text is entered here it replaces the default title in the top bar."; break;	// 6/10/11
-		case "calltaker_mode":			return "Disables directly entering Dispatch screen when entering a new ticket, designed for calltaker and dispatcher being distinct roles"; break;
-		case "use_messaging": 			return "Setting determines whether to use Tickets 2-way Messaging interface. Setting 0 (Default) does not use messaging, 1 to use Email, 2 to use SMS Gateway and 3 to use Email and SMS Gateway"; break;	// 6/10/11
-		case "map_in_portal": 			return "Setting determines whether to show map on portal page or not - 1 (default) shows the map"; break;	// 6/10/11
-		case "ics_top": 				return "Do/don&#39;t (1/0) show ICS button in top button row.  (Default is 0, for \"No\".)";	 break;	// 5/21/2013
-		case "auto_refresh": 			return "Do/don&#39;t (1/0) Automatic refresh for Sit scr, Full scr, Mobile; slash-separated, with 1 = Yes.  (Default is 1/1/1.)";	 break;	// 5/21/2013
-		case "broadcast": 				return "Do/don&#39;t (1/0) use &#39;broadcast to other users&#39; - aka HAS, for Hello-All-Stations  (Default is 0, for \"No\")";	 break;	// 5/21/2013
-		case "hide_booked": 			return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 5/21/2013
-		case "use_responder_mobile": 	return "Use Responder Mobile (rm) page - provides for auto redirect to mobile page for smartphone devices";	 break;	// 9/10/13
-		case "responder_mobile_tracking": 	return "Use inbuilt tracking from Responder Mobile (rm) page. 0 is switched off, a positive whole number is the number of minutes between updates.";	 break;	// 9/10/13
-		case "local_maps": 				return "Use local maps (OSM). Requires download of map tiles from config page";	 break;	// 10/12/15
-		case "cloudmade_api": 			return "Cloudmade API code. Used to provide night mode on Responder Mobile (rm) page.";	 break;	// 9/10/13
-		case "responder_mobile_forcelogin": return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 9/10/13
-		case "use_disp_autostat": 		return "Use Automatic Status updates for Responder status based on changes in dispatch status - Needs setup through config page.";	 break;	// 9/10/13
-		case "portal_contact_email": 	return "Contact Us email address that appears on the Portal Page";	 break;	// 9/10/13
-		case "portal_contact_phone": 	return "Contact Us phone number that appears on the Portal Page.";	 break;	// 9/10/13
-		case "notify_facilities": 		return "Do Notifies to specified address / address list when Receiving Facility or Incident at Facility set.";	 break;	// 9/10/13
-		case "notify_in_types": 		return "Do Notifies to specified address for a particular incident type.";	 break;	// 9/10/13
-		case "warn_proximity": 			return "For Location Warnings - proximity of warnings selected for current location";	 break;	// 9/10/13
-		case "warn_proximity_units": 	return "For Location Warnings, measurment units - M = Miles, K =  Kilometres";	 break;	// 9/10/13
-		case "use_osmap": 				return "Use UK Ordnance survey maps. Only works if locale is 1 and Openspace API set. Shows link in infowindow for OS Map popup.";	 break;
-		case "xastir_db": 				return "If using private Xastir server for APRS tracking, the database name that the APRS data is written to.";	 break;
-		case "xastir_dbpass": 			return "For Xastir Database, the password for access";	 break;
-		case "xastir_dbuser": 			return "For Xastir Database the MySQL user id.";	 break;
-		case "xastir_server": 			return "The address of the Xastir Database, localhost by default.";	 break;
-		case "os_watch": 				return "Example: 5/15/60, meaning units on-scene at priority calls are reported every 5 minutes, on-scene at normal calls every 15, and &#39;Others&#39; every 60 minutes.  See documentation re &#39;Others&#39;.";	 break;		// 4/14/2015
-		case "add_uselocation": 		return "When adding a new incident from the Mobile page, use users current position to auto populate incident location";	 break;
-		case "bing_api_key": 			return "API key for use with Bing Geolocation service";	 break;
-		case "geocoding_provider": 		return "Geocoding provider - 0 (default) for OSM Nominatim, 1 for Google, 2 for Bing";	 break;
-		case "addr_source": 			return "0 - don&#39;t bother, 1 - use existing incident street addresses, 2 - use constituents.";	break;
-		case "default_map_layer": 		return "0 (Default) - Open Streetmap, 1 - Google Road, 2 - Google Terrain, 3 - Google Satellite, 4 - Google Hybrid, 5 - USGS Topographic, 6 - Dark Map, 7 - Aerial Map.";	break;
-		case "status_watch":			return "Displays watch alert for units that have been in a status (of a particular Group) for longer than a number of minutes. Format is Group/Time, for example Break/30. This would alert operators when someone has been on break for more than 30 minutes";
-		case "mob_show_cleared": 		return "Sets display of incidents in Mobile screen to include Assignments that are cleared but the incident is still open. 1 (default) shows them, 0 hides them";	break;
-		case "custom_situation": 		return "Customise Situation screen, two settings 0 to hide, 1 to show for Recent Events and Statistics";	break;
-		case "facboard_hide_patient": 	return "Show (0) or Hide (1) Patient Name on facility board";	break;
-		case "debug": 					return "Debug on (1) or off (0) (default) for situation screen and other lists";	break;
-		case "log_days": 				return "Number of days to show the recent events for on the Situation screen, 3 is the default";	break;
-		case "responder_list_sort": 	return "Default Column to sort by for responder list for situation and unit screen. 2 numbers separated by comma, first is sit, second is units";	break;
-		case "facility_list_sort": 		return "Default Column to sort by for facility list for situation and facility screen. 2 numbers separated by comma, first is sit, second is facilities";	break;
-		case "listheader_height": 		return "Hight of list header rows, default 20. Setting is in px, enter number only. Only modify if you see extra blank lines above list rows";	break;
-		case "notify_assigns": 			return "Notify units assigned to an incident on various actions. \"0\" is off, \"1\" is on incident close, \"2\" is on incident close and change, \"3\" is on all changes and incident closed, \"4\" is on changes only, not on close.";	break;
-		case "httpuser": 				return "For HTTP Authorisation. HTTP Auth username. Not used yet";	break;
-		case "httppwd": 				return "For HTTP Authorisation. HTTP Auth password.  Not used yet";	break;
-		case "timezone": 				return "Timezone for server, default \"America/New_York\"";	break;
-		case "followmee_username": 		return "user name for followme gps tracking service.";	break;
-		case "followmee_key": 			return "user key for followme gps tracking service.";	break;
-		case "traccar_server": 			return "The address of the TRACCAR Database, localhost by default.";	break;
-		case "traccar_db": 				return "For TRACCAR Database the MySQL database name.";	break;
-		case "traccar_dbuser": 			return "For TRACCAR Database the MySQL user id.";	break;
-		case "traccar_dbpass": 			return "For TRACCAR Database, the Database password.";	break;
-		case "javaprssrvr_server": 		return "The address of the JAVAPRSSRVR Database, localhost by default";	break;
-		case "javaprssrvr_db": 			return "For JAVAPRSSRVR Database the MySQL database name.";	break;
-		case "javaprssrvr_dbuser": 		return "For JAVAPRSSRVR Database the MySQL user name.";	break;
-		case "javaprssrvr_dbpass": 		return "For JAVAPRSSRVR Database, the Database password.";	break;
-		default: 						return "No help for '$setting'"; break;	//	 ics_top
+		case "_aprs_time":						return "Not user-settable; used for APRS time between polls"; break;
+		case "_version": 						return "Tickets version number"; break;
+		case "abbreviate_affected": 			return "Abbreviates \"affected\" string at this length when listing tickets, 0 to turn off"; break;
+		case "abbreviate_description": 			return "Abbreviates descriptions at this length when listing tickets, 0 to turn off"; break;
+		case "access_requests": 				return "Allow new users to request access from login screen - swithes on request access button"; break;
+		case "allow_custom_tags": 				return "Enable/disable use of custom tags for rowbreak, italics etc."; break;
+		case "allow_notify": 					return "Allow/deny notification of ticket updates"; break;
+		case "auto_poll":						return "APRS/Instamapper will be polled every n minutes.  Use 0 for no poll"; break;
+		case "auto_route": 						return "Do/don&#39;t (1/0) use routing for new tickets"; break;												// 9/13/08
+		case "call_board":						return "Call Board - 0, 1, 2 - for none, floating window, fixed frame"; break;
+		case "chat_time":						return "Keep n hours of Chat"; break;
+		case "date_format": 					return "Format dates according to php function date() variables"; break;
+		case "def_area_code":					return "Default telephone area code"; break;
+		case "def_city":						return "Default city name"; break;
+		case "def_lat":							return "Map center default lattitude"; break;
+		case "def_lng":							return "Map center default longitude"; break;
+		case "def_st":							return "Default two-letter state"; break;
+		case "def_zoom":						return "Map default zoom"; break;
+		case "delta_mins":						return "Minutes delta - for server/users time synchronization"; break;
+		case "email_reply_to":					return "The default reply-to address for emailing incident information"; break;
+		case "email_from":						return "Outgoing email will use this value as the FROM value. VALID ADDRESS MANDATORY!"; break;
+		case "frameborder": 					return "Size of frameborder"; break;
+		case "framesize": 						return "Size of the top frame in pixels"; break;
+		case "gmaps_api_key":					return "Google maps API key - see HELP/README re how to obtain"; break;
+		case "guest_add_ticket": 				return "Allow guest users to add tickets - NOT RECOMMENDED"; break;
+		case "host": 							return "Hostname where Tickets is run"; break;
+		case "ics_date": 						return "Date format for ICS forms. Format dates according to php function date() variables"; break;
+		case "kml_files":  						return "Do/don&#39;t (1/0) display KML files"; break;
+		case "lat_lng":							return "Lat/lng display: (0) for DDD.ddddd, (1) for DDD MMM SS.ss, (2) for DDD MM.mm"; break;		// 9/13/08
+		case "link_capt":						return "Caption to be used for external link button"; break;
+		case "link_url":						return "URL of external page link"; break;
+		case "login_banner": 					return "Message to be shown at login screen"; break;
+		case "map_caption":						return "Map caption - cosmetic"; break;
+		case "map_height":						return "Map height - pixels"; break;
+		case "map_width":						return "Map width - pixels"; break;
+		case "military_time": 					return "Enter dates as military time (no am/pm)"; break;
+		case "openspace_api": 					return "UK use only, API key for Openspace use to show UK Ordnance Survey Maps"; break;
+		case "quick":							return "Do/don&#39;t (1/0) bypass user notification steps for quicker operation"; break;			// 3/11/09
+		case "restrict_units": 					return "Restrict units from seing other areas of Tickets, only mobile screen."; break;
+		case "restrict_user_add": 				return "Restrict user to only post tickets as himself"; break;
+		case "restrict_user_tickets": 			return "Restrict to showing only tickets to current user"; break;
+		case "serial_no_ap": 					return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
+		case "situ_refr":						return "Situation map auto refresh - in seconds"; break;											// 3/11/09
+		case "smtp_acct":						return "Ex: outgoing.verizon.net/587/ashore4/*&^$#@/ashore4@verizon.net"; break;					// 7/12/09
+		case "terrain": 						return "Do/don&#39;t (1/0) include terrain map view option"; break;
+		case "ticket_per_page": 				return "Number of tickets per page to show"; break;
+		case "ticket_table_width": 				return "Width of table when showing ticket"; break;
+		case "UTM":								return "Shows UTM values in addition to Lat/Long"; break;
+		case "validate_email": 					return "Do/don&#39;t (1/0) use simple email validation check for notifies"; break;
+		case "wp_key": 							return "White pages lookup key - obtain your own for high volume use"; break;												// 9/13/08
+		case "closed_interval": 				return "Closed tickets and cleared dispatches are visible for this many hours"; break;												// 9/13/08
+		case "def_zoom_fixed": 					return "Dynamic or fixed map/zoom; 0 dynamic, 1 fixed situ, 2 fixed units, 3 both"; break;												// 9/13/08
+		case "instam_key": 						return "Instamapper &#39;Master API key&#39;"; break;												// 9/13/08
+		case "msg_text_1": 						return "Default message string for incident new/edit notifies; see instructions"; break;		// 4/5/09										// 9/13/08
+		case "msg_text_2": 						return "Default message string for incident mini-menu email; see instructions"; break;												// 9/13/08
+		case "msg_text_3": 						return "Default message string for for dispatch notifies; see instructions"; break;												// 9/13/08
+		case "ogts_info": 						return "Open GTS server info"; break;												// 9/13/08
+		case "gtrack_url": 						return "URL for Gtrack server in format http://www.yourserver.com"; break;	//06/24/09
+		case "maptype": 						return "Default Map display type - 1 for Standard, 2 for Satellite, 3 for Terrain Map, 4 for Hybrid"; break;	//08/02/09
+		case "locale": 							return "Locale for USNG/UTM/OSG setting plus date format - 0=US, 1=UK, 2=ROW "; break;	//08/03/09
+		case "func_key1": 						return "User Defined Function key 1 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
+		case "func_key2": 						return "User Defined Function key 2 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
+		case "func_key3": 						return "User Defined Function key 3 - Insert URL or File- URL to include http:// followed by Text to display on button. Separate values with comma."; break;	//08/05/09
+		case "reverse_geo": 					return "Use Reverse Geocoding when setting location for an incident. 1 for yes, 0 for no. Default is 0"; break;	//11/01/09
+		case "logo": 							return "Enter filename of your site logo file here"; break;	//8/13/10
+		case "regions_control": 				return "Regions select / view control floating over map (0) or docked to top bar (1)"; break;												// 9/13/08
+		case "pie_charts": 						return "Severity/Incident types/Location pie chart diameters, in pixels"; break;	// 3/21/10
+		case "internet": 						return "Internet/network connection available: 1 (default) for Yes, 2 for No, 3 for maybe - will check network dynamically"; break;	// 8/13/10
+		case "sound_mp3": 						return "Enter filename of your site mp3 alert tone - Default is phonesring.mp3"; break;	// 8/13/10
+		case "sound_wav": 						return "Enter filename of your site WAV alert tone - Default is aooga.wav"; break;	// 8/13/10
+		case "oper_can_edit": 					return "Operator is disallowed (0) or allowed to (1) edit incident data"; break;	// 8/27/10
+		case "disp_stat": 						return "Dispatch status tags, slash-separated; for &#39;dispatched&#39;, responding&#39;, &#39;on-scene&#39;, &#39;facility-enroute&#39;, &#39;facility arrived&#39;, &#39;clear&#39; IN THAT ORDER! (D/R/O/FE/FA/Clear)"; break;	// 8/29/10
+		case "group_or_dispatch": 				return "Show hide categories for units on the situation screen are based on show/hide setting in un_status table (0 - default) or on status groups in un_status table (1)"; break;	// 8/29/10
+		case "aprs_fi_key": 					return "To use aprs location data you will need to sign up for an aprs.fi user account/key (free).  Obtain from http://aprs.fi"; break;	// 3/19/11
+		case "followmee_key": 					return "To use FollowMee Tracking for Smart Phones, see http://www.followmee.com for more info."; break;	// 3/19/11
+		case "followmee_username": 				return "To use FollowMee Tracking for Smart Phones, see http://www.followmee.com for more info."; break;	// 3/19/11
+		case "title_string": 					return "If text is entered here it replaces the default title in the top bar."; break;	// 6/10/11
+		case "calltaker_mode":					return "Disables directly entering Dispatch screen when entering a new ticket, designed for calltaker and dispatcher being distinct roles"; break;
+		case "use_messaging": 					return "Setting determines whether to use Tickets 2-way Messaging interface. Setting 0 (Default) does not use messaging, 1 to use Email, 2 to use SMS Gateway and 3 to use Email and SMS Gateway"; break;	// 6/10/11
+		case "map_in_portal": 					return "Setting determines whether to show map on portal page or not - 1 (default) shows the map"; break;	// 6/10/11
+		case "ics_top": 						return "Do/don&#39;t (1/0) show ICS button in top button row.  (Default is 0, for \"No\".)";	 break;	// 5/21/2013
+		case "auto_refresh": 					return "Do/don&#39;t (1/0) Automatic refresh for Sit scr, Full scr, Mobile; slash-separated, with 1 = Yes.  (Default is 1/1/1.)";	 break;	// 5/21/2013
+		case "broadcast": 						return "Do/don&#39;t (1/0) use &#39;broadcast to other users&#39; - aka HAS, for Hello-All-Stations  (Default is 0, for \"No\")";	 break;	// 5/21/2013
+		case "hide_booked": 					return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 5/21/2013
+		case "use_responder_mobile": 			return "Use Responder Mobile (rm) page - provides for auto redirect to mobile page for smartphone devices";	 break;	// 9/10/13
+		case "responder_mobile_tracking": 		return "Use inbuilt tracking from Responder Mobile (rm) page. 0 is switched off, a positive whole number is the number of minutes between updates.";	 break;	// 9/10/13
+		case "local_maps": 						return "Use local maps (OSM). Requires download of map tiles from config page";	 break;	// 10/12/15
+		case "cloudmade_api": 					return "Cloudmade API code. Used to provide night mode on Responder Mobile (rm) page.";	 break;	// 9/10/13
+		case "responder_mobile_forcelogin": 	return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 9/10/13
+		case "use_disp_autostat": 				return "Use Automatic Status updates for Responder status based on changes in dispatch status - Needs setup through config page.";	 break;	// 9/10/13
+		case "portal_contact_email": 			return "Contact Us email address that appears on the Portal Page";	 break;	// 9/10/13
+		case "portal_contact_phone": 			return "Contact Us phone number that appears on the Portal Page.";	 break;	// 9/10/13
+		case "notify_facilities": 				return "Do Notifies to specified address / address list when Receiving Facility or Incident at Facility set.";	 break;	// 9/10/13
+		case "notify_in_types": 				return "Do Notifies to specified address for a particular incident type.";	 break;	// 9/10/13
+		case "warn_proximity": 					return "For Location Warnings - proximity of warnings selected for current location";	 break;	// 9/10/13
+		case "warn_proximity_units": 			return "For Location Warnings, measurment units - M = Miles, K =  Kilometres";	 break;	// 9/10/13
+		case "use_osmap": 						return "Use UK Ordnance survey maps. Only works if locale is 1 and Openspace API set. Shows link in infowindow for OS Map popup.";	 break;
+		case "xastir_db": 						return "If using private Xastir server for APRS tracking, the database name that the APRS data is written to.";	 break;
+		case "xastir_dbpass": 					return "For Xastir Database, the password for access";	 break;
+		case "xastir_dbuser": 					return "For Xastir Database the MySQL user id.";	 break;
+		case "xastir_server": 					return "The address of the Xastir Database, localhost by default.";	 break;
+		case "os_watch": 						return "Example: 5/15/60, meaning units on-scene at priority calls are reported every 5 minutes, on-scene at normal calls every 15, and &#39;Others&#39; every 60 minutes.  See documentation re &#39;Others&#39;.";	 break;		// 4/14/2015
+		case "add_uselocation": 				return "When adding a new incident from the Mobile page, use users current position to auto populate incident location";	 break;
+		case "bing_api_key": 					return "API key for use with Bing Geolocation service";	 break;
+		case "geocoding_provider": 				return "Geocoding provider - 0 (default) for OSM Nominatim, 1 for Google, 2 for Bing";	 break;
+		case "addr_source": 					return "0 - don&#39;t bother, 1 - use existing incident street addresses, 2 - use constituents.";	break;
+		case "default_map_layer": 				return "0 (Default) - Open Streetmap, 1 - Google Road, 2 - Google Terrain, 3 - Google Satellite, 4 - Google Hybrid, 5 - USGS Topographic, 6 - Dark Map, 7 - Aerial Map.";	break;
+		case "status_watch":					return "Displays watch alert for units that have been in a status (of a particular Group) for longer than a number of minutes. Format is Group/Time, for example Break/30. This would alert operators when someone has been on break for more than 30 minutes";
+		case "mob_show_cleared": 				return "Sets display of incidents in Mobile screen to include Assignments that are cleared but the incident is still open. 1 (default) shows them, 0 hides them";	break;
+		case "custom_situation": 				return "Customise Situation screen, two settings 0 to hide, 1 to show for Recent Events and Statistics";	break;
+		case "facboard_hide_patient": 			return "Show (0) or Hide (1) Patient Name on facility board";	break;
+		case "debug": 							return "Debug on (1) or off (0) (default) for situation screen and other lists";	break;
+		case "log_days": 						return "Number of days to show the recent events for on the Situation screen, 3 is the default";	break;
+		case "responder_list_sort": 			return "Default Column to sort by for responder list for situation and unit screen. 2 numbers separated by comma, first is sit, second is units";	break;
+		case "facility_list_sort": 				return "Default Column to sort by for facility list for situation and facility screen. 2 numbers separated by comma, first is sit, second is facilities";	break;
+		case "listheader_height": 				return "Hight of list header rows, default 20. Setting is in px, enter number only. Only modify if you see extra blank lines above list rows";	break;
+		case "notify_assigns": 					return "Notify units assigned to an incident on various actions. \"0\" is off, \"1\" is on incident close, \"2\" is on incident close and change, \"3\" is on all changes and incident closed, \"4\" is on changes only, not on close.";	break;
+		case "httpuser": 						return "For HTTP Authorisation. HTTP Auth username. Not used yet";	break;
+		case "httppwd": 						return "For HTTP Authorisation. HTTP Auth password.  Not used yet";	break;
+		case "timezone": 						return "Timezone for server, default \"America/New_York\"";	break;
+		case "followmee_username": 				return "user name for followme gps tracking service.";	break;
+		case "followmee_key": 					return "user key for followme gps tracking service.";	break;
+		case "traccar_server": 					return "The address of the TRACCAR Database, localhost by default.";	break;
+		case "traccar_db": 						return "For TRACCAR Database the MySQL database name.";	break;
+		case "traccar_dbuser": 					return "For TRACCAR Database the MySQL user id.";	break;
+		case "traccar_dbpass": 					return "For TRACCAR Database, the Database password.";	break;
+		case "javaprssrvr_server": 				return "The address of the JAVAPRSSRVR Database, localhost by default";	break;
+		case "javaprssrvr_db": 					return "For JAVAPRSSRVR Database the MySQL database name.";	break;
+		case "javaprssrvr_dbuser": 				return "For JAVAPRSSRVR Database the MySQL user name.";	break;
+		case "javaprssrvr_dbpass": 				return "For JAVAPRSSRVR Database, the Database password.";	break;
+		case "responder_list_sort": 			return "Default sort column for responder lists.";	break;
+		case "notify_assigns": 					return "Send notifications for Incident changes /closures to all assigned units 1 (yes) or 0 (no).";	break;
+		case "live_mdb": 						return "Not used currently.";	break;
+		case "use_mdb": 						return "Use integrated Tickets MDB 1 (yes) or 0 (no).";	break;
+		case "inc_statistics_red_thresholds": 	return "Red thresholds for Alternate Incident screen statistics from left to right on the screen.";	break;
+		case "inc_statistics_orange_thresholds":return "Orange thresholds for Alternate Incident screen statistics from left to right on the screen.";	break;
+		case "alternate_sit":					return "Use Alternate Situation screen - this is the same as the Full Operations screen.";	break;
+		case "full_sit_v2":						return "Use the alternative Full Operations screen.";	break;
+		case "report_graphic":					return "Graphic or logo for header of reports.";	break;
+		case "report_header":					return "Text for header of reports.";	break;
+		case "report_footer":					return "Text for footer of reports.";	break;
+		case "report_contact":					return "Contact details for header of reports.";	break;
+		case "openweathermaps_api":				return "Open Weathermaps API key, required for city weather.";	break;
+		case "allow_nogeo":						return "Allow Ticket to be submitted with no geo-location.";	break;
+		case "session_timeout":					return "Timer in minutes before user is logged out after no activity.";	break;
+		case "login_userlist":					return "Show userlist and login status on login page.";	break;
+		case "map_on_rm":						return "Use map on responder mobile page, 1 is show maps, 0 is no maps .";	break;
+		case "sslcert_location":				return "Server file location of SSL certificate (Absolute path not relative file location.";	break;
+		case "sslcert_passphrase":				return "Passphrase for SSL certificate.";	break;
+		default: 								return "No help for '$setting'"; break;
 		}
 	}
-
-function get_css_day_help($setting){/* get help for color settings	3/15/11 */
+	
+function get_css_day_help($setting){			/* get help for color settings	3/15/11 */
 	switch($setting) {
 		case "page_background":				return "Main Page Background color."; break;
 		case "normal_text": 				return "Normal text color."; break;
@@ -590,7 +603,7 @@ function get_css_night_help($setting){/* get help for color settings	3/15/11 */
 		}
 	}
 
-function get_msg_settings_help($setting){/* get help for color settings	3/15/11 */
+function get_msg_settings_help($setting){/* get help for messaging settings */
 	switch($setting) {
 		case "email_server":				return "POP3 server address such as pop.gmail.com. Do not include the http://"; break;
 		case "email_port": 					return "Email server port - normally 110. For gmail use port 995"; break;
@@ -635,8 +648,23 @@ function get_msg_settings_help($setting){/* get help for color settings	3/15/11 
 		default: 							return "No help for '$setting'"; break;	//		default: 						return "No help for '$setting'"; break;	//
 		}
 	}
-
-//		case 'kml files':  				return 'Dont/Do display KML files - 0/1'; break;
-//def_zoom_fixed
+	
+function get_mdb_settings_help($setting){/* get help for membership database settings*/
+	switch($setting) {
+		case "use_mdb_contact": 			return "Use contact details from Tickets Membership Database"; break;
+		case "use_mdb_status": 				return "Use Status Information from Tickets Membership Database \"Availability\" field"; break;
+		case "date_tracking": 				return "Which dates to track on Tickets Membership Database front page for upcoming or expired alerts"; break;
+		case "mdb_contact_via_field": 		return "Sets which Tickets MDB Field is used for Unit \"Contact Via\""; break;
+		case "mdb_phone_field": 			return "Sets which Tickets MDB Field is used for Unit \"Phone\""; break;
+		case "mdb_cellphone_field": 		return "Sets which Tickets MDB Field is used for Unit \"Cellphone\""; break;
+		case "mdb_smsg_id_field": 			return "Sets which Tickets MDB Field is used for Unit \"SMS Gateway ID\""; break;
+		case "tickets_status_available":	return "Sets which Tickets Unit Status is used when Member is set as available"; break;
+		case "tickets_status_unavailable": 	return "Sets which Tickets Unit Status is used when Member is set as unavailable"; break;
+		case "member_status_available": 	return "Sets which Member Status Value is \"Available\""; break;
+		case "enforce_status":				return "Enforce Member Status being master - Status changes on unit will be over-ridden"; break;
+		case "no_status_select": 			return "If enforce status is set, removes the status select control from responder/unit lists"; break;
+		default: 							return "No help for '$setting'"; break;	//		default: 						return "No help for '$setting'"; break;	//
+		}
+	}
 
 ?>

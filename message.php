@@ -644,11 +644,11 @@ if(empty($_POST)) {
 					</tr> 	
 					<tr>       
 						<td CLASS='td_label text'>Original Message:</td>   					
-						<td CLASS='td_data text'><TEXTAREA NAME="frm_message" readonly="readonly" COLS=58 ROWS=5 style='background-color: #F0F0F0 ; color: #707070; overflow-y: auto; overflow-x: hidden;'><?php print $message ;?></TEXTAREA></td>     
+						<td CLASS='td_data text'><TEXTAREA NAME="frm_message" readonly="readonly" COLS=58 ROWS=5 wrap="soft" style='background-color: #F0F0F0 ; color: #707070; overflow-y: auto; overflow-x: hidden;'><?php print $message ;?></TEXTAREA></td>     
 					</tr> 					
 					<tr>       
 						<td CLASS='td_label text'>Response:</td>   					
-						<td CLASS='td_data text'><TEXTAREA NAME="frm_reply" COLS=58 ROWS=15></TEXTAREA></td>     
+						<td CLASS='td_data text'><TEXTAREA NAME="frm_reply" COLS=58 ROWS=15 wrap="soft"></TEXTAREA></td>     
 					</tr> 
 <?php
 					if(($type == 3) || ($type == 4) || ($type == 5) || ($type == 6)) {
@@ -693,11 +693,11 @@ if(empty($_POST)) {
 					</tr> 	
 					<tr>   
 						<td CLASS='td_label text'>Original Message:</td>          					
-						<td CLASS='td_data text'><TEXTAREA NAME="frm_message" readonly="readonly" COLS=58 ROWS=5 style='background-color: #F0F0F0; color: #707070; overflow-y: auto; overflow-x: hidden;'><?php print $message ;?></TEXTAREA></td>      
+						<td CLASS='td_data text'><TEXTAREA NAME="frm_message" readonly="readonly" COLS=58 ROWS=5 wrap="soft" style='background-color: #F0F0F0; color: #707070; overflow-y: auto; overflow-x: hidden;'><?php print $message ;?></TEXTAREA></td>      
 					</tr>
 					<tr>   
 						<td CLASS='td_label text'>Your Message:</td>          					
-						<td CLASS='td_data text'><TEXTAREA NAME="frm_reply" COLS=58 ROWS=15></TEXTAREA></td>      
+						<td CLASS='td_data text'><TEXTAREA NAME="frm_reply" COLS=58 ROWS=15 wrap="soft"></TEXTAREA></td>      
 					</tr>					
 <?php
 					if(($type == 3) || ($type == 4)) {

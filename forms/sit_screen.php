@@ -13,10 +13,8 @@ $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE HTML>															  
 <HTML>
-
 	<HEAD><TITLE>Tickets - Main Module</TITLE>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
@@ -40,7 +38,8 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/messaging.js"></SCRIPT>
-<?php 
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
 if(file_exists("./incs/modules.inc.php")) {
 	require_once('./incs/modules.inc.php');
 	}	
@@ -81,19 +80,15 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 	<script type="application/x-javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
-window.onresize=function(){set_size()};
-</SCRIPT>
-<?php
-require_once('./incs/all_forms_js_variables.inc.php');
-?>
-<SCRIPT>
+window.onresize=function(){set_size();}
 <?php
 $quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
 var counter = 0;
-var pagetimerStart = new Date();
-var pagetimerEnd = 0;
+var pagetimerStart;
+var pagetimerEnd;
+var msgtabindex = 500;
 var doTime = false;
 var incFin = false;
 var respFin = false;
@@ -101,6 +96,10 @@ var facFin = false;
 var logFin = false;
 var statSel = false;
 var facstatSel = false;
+var incLoading = false;
+var respLoading = false;
+var facLoading = false;
+var logLoading = false;
 var minimap;
 var mapWidth;
 var mapHeight;
@@ -192,6 +191,8 @@ function do_responder_refresh() {
 	window.do_resp_refresh = true; 
 	$('the_rlist').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 	setTimeout(function() {
+		get_assignments();
+		get_unit_categories();
 		load_responderlist(window.resp_field, window.resp_direct);
 		},1000);
 	}
@@ -274,14 +275,13 @@ function do_statistics() {
 	sendRequest (url,stats_cb, "");
 	function stats_cb(req) {
 		var theStats = JSON.decode(req.responseText);
-		$('s1').innerHTML = theStats[0];
-		$('s2').innerHTML = theStats[1];
-		$('s3').innerHTML = theStats[4];
-		$('s4').innerHTML = secondsToTime(theStats[5]);
-		$('s5').innerHTML = secondsToTime(theStats[8]);
-		$('s6').innerHTML = theStats[9];
+		if($('s1')) {$('s1').innerHTML = theStats[0];}
+		if($('s2')) {$('s2').innerHTML = theStats[1];}
+		if($('s3')) {$('s3').innerHTML = theStats[4];}
+		if($('s4')) {$('s4').innerHTML = secondsToTime(theStats[5]);}
+		if($('s5')) {$('s5').innerHTML = secondsToTime(theStats[8]);}
+		if($('s6')) {$('s6').innerHTML = theStats[9];}
 		}
-	statistics_get();
 	}
 	
 function statistics_get() {								// set cycle
@@ -337,6 +337,8 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_resp_fac_log_vis();
+	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .40;
 	mapHeight = viewportheight * .55;
 	outerwidth = viewportwidth * .99;
@@ -370,51 +372,15 @@ function set_size() {
 	$('the_flist').style.maxHeight = listHeight + "px";
 	$('the_flist').style.width = listwidth + "px";
 	$('facilitiesheading').style.width = listwidth + "px";
-	load_responderlist(window.resp_field, window.resp_direct);
-	load_facilitylist(window.fac_field, window.fac_direct);
-	load_exclusions();
-	load_ringfences();
-	load_catchments();
-	load_basemarkup();
-	load_groupbounds();
-	load_incidentlist(window.inc_field, window.inc_direct);
-	load_warnlocations();
-	do_conditions();
-	load_regions();
-	set_initial_pri_disp();
-	load_poly_controls();
-	if(!isGuest) {
-		if(showEvents == 1) {
-			if($('logheading')) {$('logheading').style.width = mapWidth + "px";}
-			if($('loglist')) {$('loglist').style.width = mapWidth + "px";}
-			if($('the_loglist')) {$('the_loglist').style.width = mapWidth + "px";}
-			}
-		if(showStats == 1) {		
-			if($('stats_wrapper')) {$('stats_wrapper').style.width = mapWidth + "px";}
-			if($('stats_heading')) {$('stats_heading').style.width = mapWidth + "px";}
-			if($('stats_table')) {$('stats_table').style.width = mapWidth + "px";}
-			}
-		}
-	get_scheduled_number();
 	loadData();
-	map.invalidateSize();
 	}
-	
-function pageLoaded() {
-	if(respFin && !facFin && !incFin && !logFin) {
+
+function pageLoaded() {		//	Follows on from loading responderlist within function loadData
+ 	if(respFin && !facFin && !incFin && !logFin) {	//	Load Facilitylist
 		load_facilitylist(window.fac_field, window.fac_direct);
-		} else if(respFin && facFin && !incFin && !logFin) {
+		} else if(respFin && facFin && !incFin && !logFin) {	//	Load Incidentlist
 		load_incidentlist(window.inc_field, window.inc_direct);			
-		} else if(respFin && facFin && incFin && !logFin) {
-		load_exclusions();
-		load_ringfences();
-		load_catchments();
-		load_basemarkup();
-		load_groupbounds();
-		do_conditions();
-		load_regions();
-		set_initial_pri_disp();
-		load_poly_controls();
+		} else if(respFin && facFin && incFin && !logFin) {	//	Load loglist
 		if(!isGuest) {
 			if(showEvents == 1) {
 				load_log(window.log_field, window.log_direct);
@@ -427,26 +393,66 @@ function pageLoaded() {
 				}
 			}
 		get_scheduled_number();
-		} else if(incFin && respFin && facFin && logFin) {		
-		pagetimerEnd = new Date();
-		var elapsedTime = pagetimerEnd - window.pagetimerStart;
-		var theTimeLoadString = "Page Loaded in: " + pageLoadTime + " seconds, Data Loaded in " + elapsedTime/1000 + " seconds";
-		$('timer_div').innerHTML = theTimeLoadString;
+		} else if(incFin && respFin && facFin && logFin) {	//	Load everything elase
+		load_exclusions();
+		load_ringfences();
+		load_catchments();
+		load_basemarkup();
+		load_groupbounds();
+		do_conditions();
+		load_regions();
+		set_initial_pri_disp();
+		load_poly_controls();
 		window.incFin = false;
 		window.respFin = false;
 		window.facFin = false;
 		window.logFin = false;
 		window.statSel = false;
 		window.facstatSel = false;
+		responderlist_get();
+		facilitylist_get();
+		incidentlist_get();
+		conditions_get();	
+		if(showEvents == 1) {
+			log_get();
+			}
+		if(showStats == 1) {		
+			statistics_get();
+			}
 		mapCenter = map.getCenter();
 		mapZoom = map.getZoom();
 		map.invalidateSize();
+		window.pagetimerEnd = new Date();
+		var elapsedTime = pagetimerEnd - pagetimerStart;
+		var theTimeLoadString = "Page Loaded in: " + pageLoadTime + " seconds, Data Loaded in " + elapsedTime/1000 + " seconds";
+		$('timer_div').innerHTML = theTimeLoadString;
 		}
-	set_fontsizes(viewportwidth, "fullscreen");
 	}
 	
+function set_resp_fac_log_vis() {
+	if(showfacs == "s") {
+		showDiv('facilitylist', 'collapse_facs', 'expand_facs');
+		} else {
+		hideDiv('facilitylist', 'collapse_facs', 'expand_facs');
+		}
+	if(showresp == "s") {
+		showDiv('responderlist', 'collapse_resp', 'expand_resp');
+		} else {
+		hideDiv('responderlist', 'collapse_resp', 'expand_resp');
+		}
+	if(showlog == "s") {
+		showDiv('loglist', 'collapse_log', 'expand_log');
+		} else {
+		hideDiv('loglist', 'collapse_log', 'expand_log');
+		}			
+	}
+	
+	
 function loadData() {
+	pagetimerStart = new Date();
 	get_mi_totals();
+	get_assignments();
+	get_unit_categories();
 	load_responderlist(window.resp_field, window.resp_direct);
 	load_warnlocations("situation");
 	load_status_bgcolors();
@@ -495,36 +501,32 @@ if ((!($_SESSION['internet'])) && (!$_SESSION['good_internet'])) {
 if (is_guest()) {
 ?>	
 	parent.frames["upper"].$("add").style.display = "none";
-	try {
-		parent.frames["upper"].$("add").style.display = "none";
-		parent.frames["upper"].$("ics").style.display = "none";
-		parent.frames["upper"].$("has_button").style.display = "none";
-		parent.frames["upper"].guest_hide_buttons(isGuest);
-		}	
-	catch(e) { 
-		}
+	try { parent.frames["upper"].$("ics").style.display = "none";}	
+	catch(e) { }
+	try { parent.frames["upper"].$("has_button").style.display = "none";}
+	catch(e) { }
+	try { parent.frames["upper"].guest_hide_buttons(isGuest);}
+	catch(e) { }		
 <?php
 	}		// end guest - needs other levels!
 
-	if (array_key_exists('log_in', $_GET)) {
+if (array_key_exists('log_in', $_GET)) {
 ?>
-		parent.frames["upper"].$("gout").style.display  = "inline-block";
-		parent.frames["upper"].mu_init ();
-		var theBroadcast =  <?php print get_variable('broadcast');?>;
-		if(parseInt(theBroadcast) == 1) {
-			parent.frames["upper"].theConnection();		
-			}
-		if (parent.frames.length == 3) {
-			parent.calls.location.href = 'board.php';
-			}
-<?php
+	parent.frames["upper"].$("gout").style.display  = "inline";
+	parent.frames["upper"].mu_init ();
+	var theBroadcast =  <?php print get_variable('broadcast');?>;
+	if(parseInt(theBroadcast) == 1) {
+		parent.frames["upper"].theConnection();
 		}
-		$temp = get_unit();
-		$term_str = ($temp )? $temp : "Mobile" ;
-
+	if (parent.frames.length == 3) {
+		parent.calls.location.href = 'board.php';
+		}
+<?php
+	$temp = get_handle();
+	$term_str = ($temp )? $temp : "Mobile" ;
 ?>
 	try {
-		parent.frames["upper"].$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";	
+		parent.frames["upper"].$("user_id").innerHTML  = "<?php print $_SESSION['user_id'];?>";
 		parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 		parent.frames["upper"].$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 		parent.frames["upper"].$("script").innerHTML  = "<?php print LessExtension(basename(__FILE__));?>";
@@ -546,7 +548,9 @@ if (is_guest()) {
 		}
 	catch(e) {
 		}
-		
+<?php
+	}
+?>		
 	function get_new_colors() {
 		window.location.href = 'main.php';
 		}
@@ -675,6 +679,7 @@ if (is_guest()) {
 					</SELECT>
 				</FORM>
 				Incidents <SPAN ID='sched_flag'></SPAN>
+				<SPAN id='full_scr_inc' class='plain text' onmouseover='do_hover(this.id); Tip("Pop out full incident list");' onmouseout='do_plain(this.id); UnTip();' onClick="do_full_inc_scr(); hideDiv('ticketlist', 'collapse_incs', 'expand_incs'); $('ticketheading').style.display='none';" style = 'float: left;'><IMG SRC = './images/full_screen.png'></SPAN>
 				<SPAN id='collapse_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Minimize List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs');" style = 'float: right; display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right' height="19" width="19"></SPAN>
 				<SPAN id='expand_incs' class='plain_square text' onmouseover='do_hover_squarebuttons(this.id); Tip("Expand List");' onmouseout='do_plain(this.id); UnTip();' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'float: right; display: none;'><IMG SRC = './markers/expand.png' ALIGN='right' height="19" width="19"></SPAN>
 				<SPAN id='reload_incs' class='plain_square text' style='float: right; text-align: center; vertical-align: middle;' onmouseover='do_hover_squarebuttons(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain_squarebuttons(this.id); UnTip();' onClick="do_incident_refresh();" style = 'float: right; display: "";'><IMG SRC = './markers/refresh.png' ALIGN='right' height="19" width="19"></SPAN><BR />
@@ -811,6 +816,7 @@ if (is_guest()) {
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
 print add_sidebar(TRUE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 ?>	
+
 </DIV>
 <SCRIPT>
 
@@ -828,8 +834,7 @@ controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'fac_boxes' ALIGN='center' VALIGN
 controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'poly_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR></TABLE></CENTER></TD></TR></TABLE>";
 
 //	setup map-----------------------------------//
-var map;
-var minimap;
+var map, minimap;
 var sortby = '`date`';
 var sort = "DESC";
 var columns = "<?php print get_msg_variable('columns');?>";
@@ -857,6 +862,8 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
+set_resp_fac_log_vis();
+set_fontsizes(viewportwidth, "fullscreen");
 mapWidth = viewportwidth * .40;
 mapHeight = viewportheight * .55;
 logwidth = mapWidth *.98;
@@ -871,27 +878,27 @@ leftlistwidth = colwidth;
 celwidth = listwidth * .20;
 res_celwidth = listwidth * .15;
 fac_celwidth = listwidth * .15;
-$('outer').style.width = outerwidth + "px";
-$('outer').style.height = outerheight + "px";
-$('leftcol').style.width = colwidth + "px";
-$('leftcol').style.height = colheight + "px";	
-$('rightcol').style.width = colwidth + "px";
-$('rightcol').style.height = colheight + "px";	
-$('map_canvas').style.width = mapWidth + "px";
-$('map_canvas').style.height = mapHeight + "px";
-$('ticketlist').style.maxHeight = listHeight + "px";
-$('ticketlist').style.width = listwidth + "px";
-$('ticketheading').style.width = listwidth + "px";
-$('responderlist').style.maxHeight = listHeight + "px";
-$('responderlist').style.width = listwidth + "px";
-$('the_rlist').style.maxHeight = listHeight + "px";
-$('the_rlist').style.width = listwidth + "px";
-$('respondersheading').style.width = listwidth + "px";
-$('facilitylist').style.maxHeight = listHeight + "px";	
-$('facilitylist').style.width = listwidth + "px";
-$('the_flist').style.maxHeight = listHeight + "px";
-$('the_flist').style.width = listwidth + "px";
-$('facilitiesheading').style.width = listwidth + "px";
+if($('outer')) {$('outer').style.width = outerwidth + "px";}
+if($('outer')) {$('outer').style.height = outerheight + "px";}
+if($('leftcol')) {$('leftcol').style.width = colwidth + "px";}
+if($('leftcol')) {$('leftcol').style.height = colheight + "px";}
+if($('rightcol')) {$('rightcol').style.width = colwidth + "px";}
+if($('rightcol')) {$('rightcol').style.height = colheight + "px";}
+if($('map_canvas')) {$('map_canvas').style.width = mapWidth + "px";}
+if($('map_canvas')) {$('map_canvas').style.height = mapHeight + "px";}
+if($('ticketlist')) {$('ticketlist').style.maxHeight = listHeight + "px";}
+if($('ticketlist')) {$('ticketlist').style.width = listwidth + "px";}
+if($('ticketheading')) {$('ticketheading').style.width = listwidth + "px";}
+if($('responderlist')) {$('responderlist').style.maxHeight = listHeight + "px";}
+if($('responderlist')) {$('responderlist').style.width = listwidth + "px";}
+if($('the_rlist')) {$('the_rlist').style.maxHeight = listHeight + "px";}
+if($('the_rlist')) {$('the_rlist').style.width = listwidth + "px";}
+if($('respondersheading')) {$('respondersheading').style.width = listwidth + "px";}
+if($('facilitylist')) {$('facilitylist').style.maxHeight = listHeight + "px";}
+if($('facilitylist')) {$('facilitylist').style.width = listwidth + "px";}
+if($('the_flist')) {$('the_flist').style.maxHeight = listHeight + "px";}
+if($('the_flist')) {$('the_flist').style.width = listwidth + "px";}
+if($('facilitiesheading')) {$('facilitiesheading').style.width = listwidth + "px";}
 if(!isGuest) {
 	if(showEvents == 1) {
 		if($('logheading')) {$('logheading').style.width = mapWidth + "px";}
@@ -905,10 +912,7 @@ if(!isGuest) {
 		}
 	}
 // end of set widths
-var theLocale = <?php print get_variable('locale');?>;
-var useOSMAP = <?php print get_variable('use_osmap');?>;
-var initZoom = <?php print get_variable('def_zoom');?>;
-init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
+init_map(1, def_lat, def_lng, "", parseInt(initZoom), locale, useOSMAP, "tr");
 map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
 bounds = map.getBounds();	
 zoom = map.getZoom();

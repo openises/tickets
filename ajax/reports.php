@@ -220,7 +220,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$titles['s'] = "Dispatch Log Last Year -  - Specific Dates - ";
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -365,7 +365,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$titles['s'] = get_text("Facilities") . " - Specific Dates - ";
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -509,7 +509,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$titles['s'] = get_text("Units") . " - Specific Dates - ";		
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -735,7 +735,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$titles['s'] = get_text("Comms") . " - Specific Dates - ";
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -875,7 +875,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$curr_date="";
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -1026,7 +1026,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$i = 0;
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -1104,7 +1104,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$secondTable = "";
 				}
 			} else {
-			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
+//			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .= "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Incident Summary</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
 			}
@@ -1299,6 +1299,153 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$ret_arr[6] = $title;
 		return $ret_arr;
 		}		// end function do_inc_report()
+		
+// ================================================== INCIDENT SUMMARY FORMAT 2 =========================================
+		
+	function do_inc_report_2($date_in, $func_in) {				// Incidents report - $frm_date, $mode as params
+		global $evenodd, $img_width, $types, $doDownload ;
+		global $nature, $disposition, $patient, $incident, $incidents;
+		global $theWidth, $doprint;
+		global $startdate, $enddate;
+		
+		$ret_arr = array();
+
+		$from_to = date_range($date_in,$func_in);	// get date range as array
+		$priorities = array("text_black","text_blue","text_red" );
+
+		$types = array();
+		$types[$GLOBALS['LOG_INCIDENT_OPEN']]		="{$incident} open";
+		$types[$GLOBALS['LOG_INCIDENT_CLOSE']]		="{$incident} close";
+		$types[$GLOBALS['LOG_INCIDENT_CHANGE']]		="{$incident} change";
+
+		$where = " WHERE `problemstart` >= '" . $from_to[0] . "' AND `problemstart` < '" . $from_to[1] . "'";
+		$which_inc = ($_GET['tick_sel'] ==0)? "" : " AND `ticket_id` = " . $_Get['tick_sel'];				// 2/7/09
+
+		$query = "
+			SELECT *,
+			`t`.`id` AS `tick_id`,
+			`t`.`severity` AS `tick_severity`,
+			`t`.`scope` AS `tick_name`,
+			`u`.`user` AS `user_name`,
+			`u`.`name_l` AS `user_surname`,
+			`u`.`name_f` AS `user_firstname`,
+			`t`.`street` AS `ticket_street`,
+			`t`.`city` AS `ticket_city`,
+			`t`.`state`AS `ticket_state`,
+			`t`.`org` AS `ticket_org`,
+			`r`.`name` AS `resp_name`,
+			`r`.`handle` AS `resp_handle`,
+			`o`.`name` AS `organisation`,
+			`i`.`type` AS `inc_type`
+			FROM `$GLOBALS[mysql_prefix]ticket` t 
+			LEFT JOIN `$GLOBALS[mysql_prefix]organisations` o ON (`t`.`org` = `o`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON (`t`.`_by` = `u`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` i ON (`t`.`in_types_id` = `i`.`id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]assigns` a ON (`t`.`id` = `a`.`ticket_id`)
+			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`a`.`responder_id` = `r`.`id`)
+			". $where . $which_inc . " ORDER BY `problemstart` ASC";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+
+		$titles = array ();
+		$titles['dr'] = "Incident Daily Report - ";
+		$titles['cm'] = "Incident Report - Current Month-to-date - ";
+		$titles['lm'] = "Incident Report - Last Month - ";
+		$titles['cy'] = "Incident Report - Current Year-to-date - ";
+		$titles['ly'] = "Incident Report - Last Year - ";
+		$titles['cw'] = "Incident Report - Current Week-to-date - ";
+		$titles['lw'] = "Incident Report - Last Week - ";
+		$titles['s'] = "Incident Report - Specific Dates - ";
+		$i = 0;
+		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
+		$title = $titles[$func_in] . $from_to[2] . $to_str;
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		if(!$doprint) {
+			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
+			} else {
+			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
+			}
+		$curr_tick = "";
+		$num_incs = mysql_num_rows($result);
+		if ($num_incs>0) {
+			$table .= "<thead><TR style='width: 100%;'>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>{$incident}</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Controller</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Organisation</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Opened</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Closed</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Type</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Comments</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Address</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Unit(s) Responding</TH>";
+			$table .= "<TH CLASS='plain_listheader text text_left'>Miles</TH>";
+			$table .= "</TR></thead><tbody>\n";
+			$inc_types = array();
+			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+				$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
+				$temp = $row['user_firstname'] . " " . $row['user_surname'];
+				$controller = ($temp == " " || $temp == "") ? str_pad($row['user_name'], 20, " ", STR_PAD_RIGHT) : str_pad($temp, 20, " ", STR_PAD_RIGHT);
+				$organisation = ($row['org'] != 0) ? str_pad($row['organisation'], 20, " ", STR_PAD_RIGHT) : str_pad(" ", 20, " ", STR_PAD_RIGHT);
+				$address = $row['ticket_street'] . " " . $row['ticket_city'] . " " . $row['ticket_state'];
+				$problemstart = date ('D, M j', strtotime($row['problemstart']));
+				$problemend = date ('D, M j', strtotime($row['problemend']));
+				$inctype = $row['inc_type'];
+				$comments = ($row['comments'] != "") ? str_pad($row['comments'], 10, " ", STR_PAD_RIGHT) : str_pad(" ", 10, " ", STR_PAD_RIGHT);
+				$class = 'plain_list text text_normal text_left';
+				if($row['miles'] == "") {
+					if($row['end_miles'] != "" && $row['start_miles'] != "") {
+						$miles = round($row['end_miles'] - $row['start_miles'], 0);
+						} else {
+						$miles = "N/A";
+						}
+					} else {
+					$miles = round($row['miles'], 0);
+					}
+				if(!$doDownload) {
+					if($row['tick_name'] == $curr_tick) {
+						$tickname = str_pad(" ", 30, " ", STR_PAD_RIGHT);
+						$controller = " - ";
+						$organisation = " - ";
+						$address = " - ";
+						$problemstart = " - ";
+						$problemend = " - ";	
+						$inctype = " - ";
+						$comments = " - ";
+						$class = 'plain_list text text_normal text_center';
+						} else {
+						$class = 'plain_list text text_normal text_left';
+						$curr_tick = $row['tick_name'];
+						$tickname = str_pad($curr_tick, 30, " ", STR_PAD_RIGHT);
+						}
+					} else {
+					$tickname = str_pad($row['tick_name'], 30, " ", STR_PAD_RIGHT);
+					$class = 'plain_list text text_normal text_left';
+					}
+				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $tickname . "</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $controller . "</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $organisation . "</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $problemstart ."</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $problemend ."</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $inctype . "</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $comments . "</TD>";
+				$table .= "<TD CLASS='" . $class . "'>" . $address . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $row['handle'] . " - " . $row['resp_name'] . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $miles . "</TD>";						
+				$table .= "</TR>\n";
+				$i++;
+				}		// end while($row = ...)
+
+			$table .= "<tbody></TABLE>";
+			} else {
+			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
+			$table .= "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Incident Report</TD></TR></thead><tbody>";
+			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
+			}
+		$ret_arr[0] = $heading;
+		$ret_arr[1] = $table;
+		$ret_arr[2] = $title;
+		return $ret_arr;
+		}		// end function do_inc_report_2()
+		
 // ================================================== INCIDENT LOG REPORT =========================================
 
 	function do_inc_log_report($the_ticket_id) {			// 3/18/10
@@ -1395,7 +1542,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			default: $severityclass='severity_normal'; break;
 			}
 		$title = $incident . $theRow['scope'] . $tickno;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $incident . $theRow['scope'] . $tickno . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $incident . $theRow['scope'] . $tickno . "</DIV>";
 		$table = "<TABLE BORDER='0' WIDTH='100%'>\n";		//
 		$table .= "<TR CLASS='odd' ><TD ALIGN='left'>Priority:</TD> <TD ALIGN='left' CLASS='" . $severityclass . "'>" . get_severity($theRow['severity']);
 		$table .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$nature}:&nbsp;&nbsp;" . get_type($theRow['in_types_id']);
@@ -1576,7 +1723,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$where = " WHERE `problemstart` >= '{$from_to[0]}' AND `problemstart` < '{$from_to[1]}'";
 		$to_str = ($func_in=="dr")? "": " to {$from_to[3]} " . substr($from_to[1] ,0 , 4) ;
 		$title = "After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
 		$query = "SELECT *,
 			`problemstart` AS `problemstart`,
 			`problemend` AS `problemend`,
@@ -1608,12 +1755,12 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 		if (mysql_affected_rows()==0) {
 			$title = "After Action Report - 0 Incidents: " . $from_to[2] . $to_str;
-			$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
+			$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
 			$table .= "<SPAN style='text-align: center; width: 100%; display: inline-block;'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></SPAN>";
 			} else {
 			$numrows = mysql_num_rows($result);
 			$title = "After Action Report - " . $numrows . " Incidents: " . $from_to[2] . $to_str;
-			$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
+			$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
 			$page_num = 1;
 			while ($row_ticket = stripslashes_deep(mysql_fetch_array($result))){
 				$table .= do_ticket_wm($row_ticket, "98%", FALSE, FALSE);	//	2/4/13
@@ -1659,11 +1806,14 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					if (empty($today)) {
 						$today_ref = date("z", strtotime($row_in['problemstart']));
 						$today = substr( format_date_2($row_in['problemstart']), 0, 7);
-						}
-					else {
+						$today_full = format_date_2($row_in['problemstart']);
+						} else {
 						if (!($today_ref == (date("z", strtotime($row_in['problemstart']))))) {				// date change?
 							$today_ref = date("z", strtotime($row_in['problemstart']));
 							$today = substr( format_date_2($row_in['problemstart']), 0, 7);
+							$today_full = format_date_2($row_in['problemstart']);
+							} else {
+							$today_full = format_date_2($row_in['problemstart']);
 							}
 						}
 
@@ -1671,7 +1821,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$def_st = get_variable('def_st');
 
 				$theReturn .= "<TR CLASS = '{$evenodd[$line_ctr%2]}' style='width: 100%;' onClick = 'open_tick_window(" . $row_in['tick_id'] . ");'>\n";		
-				$theReturn .= "<TD CLASS='plain_list text text_normal text_left'><DIV style='width: 50px;;'>{$today}</DIV></TD>\n";							//		Date -
+				$theReturn .= "<TD CLASS='plain_list text text_normal text_left' onMouseover=\"Tip('{$today_full}');\"><DIV style='width: 50px;'>{$today}</DIV></TD>\n";							//		Date -
 				
 				$scope = $row_in['tick_scope'];
 				$scope_sh = shorten($row_in['tick_scope'], 30);
@@ -1736,9 +1886,9 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$theReturn .= "<TD CLASS='plain_list text text_normal text_left'>{$today}</TD>\n";							//		Date -
 
 				$when = format_date_2($ary_in['when']);
-				$when_sh = short_ts($when);
-				$theReturn .= "<TD CLASS='plain_list text text_normal text_left' onMouseover=\"Tip('{$when}');\" onmouseout='UnTip();'>{$when_sh}</TD>\n";						//		start
-				$theReturn .= "<TD CLASS='plain_list text text_normal text_center' style='background-color: white; color: black;' COLSPAN=11>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";							//		end	Ending time
+				$when_sh = substr( format_date_2($ary_in['when']), 0, 7);
+				$theReturn .= "<TD CLASS='plain_list text text_normal text_left' onMouseover=\"Tip('{$when}');\" onmouseout='UnTip();'>{$when_sh}</TD>\n";
+				$theReturn .= "<TD CLASS='plain_list text text_normal text_center' style='border: 1px solid red;' COLSPAN=11>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";							//		end	Ending time
 				$theReturn .= "<I>Log entry:</I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";					//		Call type
 				$info = $ary_in['info'];
 				$sh_info = shorten ( $ary_in['info'] , 128);
@@ -1808,7 +1958,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$to_str = ($func_in=="dr")? "": " to {$from_to[3]} " . substr($from_to[1] ,0 , 4) ;
 		$title = $incident . " Management Report - " . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $title . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $title . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -1848,8 +1998,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					if ($row['tick_id'] == $buffer['tick_id']) {
 						$units_str .= $sep . $row['unit_name'] ;		// no change, collect unit names
 						} else {
-						$table .= check_logs($buffer['problemstart']) ;				// problemstart integer
 						$table .= do_print($buffer);		// print from buffer
+						$table .= check_logs($buffer['problemstart']) ;				// problemstart integer
 						do_stats($buffer);
 						$buffer = $row;
 						$units_str = $row['unit_name'];
@@ -1857,8 +2007,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					}		// end if/else
 				}		// end while(
 
-			$table .= check_logs(time()) ;				// everything remaining
 			$table .= do_print($buffer);					// print from buffer
+			$table .= check_logs(time()) ;				// everything remaining
 			do_stats($buffer);
 			}		// end else{}
 
@@ -1954,7 +2104,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -2116,7 +2266,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		
 		$to_str = ($func_in=="dr")? "": " to " . $from_to[3];
 		$title = $titles[$func_in] . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_big text_bold text_center' style='width: 98%;'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $titles[$func_in] . $from_to[2] . $to_str . "</DIV>";
 		if(!$doprint) {
 			$table = "<TABLE id='reportstable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 			} else {
@@ -2263,6 +2413,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		    $output = do_inc_report ($date, $func);
 //			print json_encode($output);
 		    break;
+		case "e":
+		    $output = do_inc_report_2 ($date, $func);
+//			print json_encode($output);
+		    break;
 		case "l":
 		    $output = do_inc_log_report ($tick_sel);
 //			print json_encode($output);
@@ -2283,10 +2437,12 @@ $htmlfooter = "</DIV></BODY></HTML>";
 $header = ($dohtml) ? $htmlheader : "";
 $footer = ($dohtml) ? $htmlfooter : "";
 if($dohtml) {
-	print $header;
+	$page = "";
 	foreach($output as $val) {
-		print $val;
+		$page .= $val;
 		}
+	print $header;
+	print $page;
 	print $footer;
 	} else {
 	print json_encode($output);

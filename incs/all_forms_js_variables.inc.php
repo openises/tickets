@@ -28,17 +28,19 @@ $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'
 $show_controls = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "s")) ? "" : "none" ;
 $col_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "s")) ? "" : "none";
 $exp_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "h")) ? "" : "none";
-$show_resp = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "s")) ? "" : "none" ;
+$show_resp = ((array_key_exists('responderlist', $_SESSION)) && ($_SESSION['responderlist'] == "s")) ? "s" : "h" ;
+$show_facs = ((array_key_exists('facilitylist', $_SESSION)) && ($_SESSION['facilitylist'] == "s")) ? "s" : "h" ;
+$show_log = ((array_key_exists('loglist', $_SESSION)) && ($_SESSION['loglist'] == "s")) ? "s" : "h" ;
 $resp_col_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "s")) ? "" : "none";
 $resp_exp_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "h")) ? "" : "none";
-$show_facs = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none" ;
 $facs_col_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none";
 $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "h")) ? "" : "none";
 $columns_arr = explode(',', get_msg_variable('columns'));
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
-$showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
+$showmaps = (array_key_exists('internet', $_SESSION) && $_SESSION['internet']) ? 1 : 0;
 $api_key = get_variable('gmaps_api_key');
 $key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$gmaps = (array_key_exists('internet', $_SESSION) && $_SESSION['internet']) ? 1 : 0;
 $gmaps_ok = ($key_str) ? 1 : 0;
 $temp = get_variable('auto_poll');				// 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
@@ -54,6 +56,15 @@ $customSit_setting = get_variable('custom_situation');
 $customSit_arr = explode ("/", $customSit_setting);			// Recent Events, Statistics
 $showEvents = intval($customSit_arr[0]);
 $showStats = intval($customSit_arr[1]);
+$quick = ((is_super() || is_administrator()) && (intval(get_variable('quick'))==1)) ? 1 : 0;
+$show_ampm = (get_variable('military_time')==1) ? 0 : 1;
+$broadcast = intval(get_variable('broadcast'));
+$protocols = array();
+$query_in = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
+$result_in = mysql_query($query_in);
+while ($row_in = stripslashes_deep(mysql_fetch_assoc($result_in))) {
+	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = addslashes($row_in['protocol']);}
+	}
 $mapzooms = array();
 $dir = (is_dir('./_osm/tiles')) ? './_osm/tiles' : '../_osm/tiles';
 $mapdir = scandir($dir);
@@ -78,7 +89,6 @@ $def_sort = (get_variable('responder_list_sort') != "") ? get_variable('responde
 $temp = explode(",", $def_sort);
 $def_sort_respsit = $temp[0] -1;
 $def_sort_resp = $temp[1] -1;
-
 $def_srt_arr_facsit = array('id','name','mail','status','updated');
 $def_srt_arr_fac = array('id','name','mail','status','updated');
 $def_sort_fac = (get_variable('facility_list_sort') != "") ? get_variable('facility_list_sort') : "1,1";
@@ -94,12 +104,15 @@ $sitfac_direc = (array_key_exists('fac_direct', $_SESSION)) ? $_SESSION['fac_dir
 $fac_sort = (array_key_exists('fac_sort', $_SESSION)) ? $_SESSION['fac_sort'] : $def_srt_arr_fac[$def_sort_fac];
 $fac_direc = (array_key_exists('fac_direct', $_SESSION)) ? $_SESSION['fac_direct'] : "ASC";
 $listheader_height = get_variable("listheader_height");
+$useMDBContact = (get_mdb_variable('use_mdb_contact') && get_mdb_variable('use_mdb_contact') != "") ? get_mdb_variable('use_mdb_contact') : "0";
+$useMDBStatus = (get_mdb_variable('use_mdb_status') && get_mdb_variable('use_mdb_status') != "") ? get_mdb_variable('use_mdb_status') : "0";
 $responder_statuses = array();
 $facility_statuses = array();
 $assigns = array();
 $resp_assigns = array();
 $tickets_arr = array();
 $responders_arr = array();
+$respondersHandles_arr = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group`";
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
@@ -164,17 +177,37 @@ $query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `$GLOBALS[mysql_prefix]
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $num_responders = mysql_num_rows($result);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-	$responders_arr[$row['handle']][] = $row['id'];
+	$responders_arr[$row['handle']] = $row['id'];
+	}
+unset($result);
+
+$query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `$GLOBALS[mysql_prefix]responder` `r`";
+$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$num_responders = mysql_num_rows($result);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$id = $row['id'];
+	$handle = ($row['handle'] != "") ? $row['handle'] : "UNK";
+	$respondersHandles_arr[$id] = $handle;
 	}
 unset($result);
 ?>
 <SCRIPT>
+var allow_nogeo = "<?php print get_variable('allow_nogeo');?>";
+var https = "<?php echo $https;?>";
+var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;	
+var nm_lat_val = "<?php echo $GLOBALS['NM_LAT_VAL'];?>";
+var use_mdb = "<?php echo get_variable('use_mdb');?>";
+var use_mdb_contact = '<?php echo $useMDBContact;?>';
+var use_mdb_status = '<?php echo $useMDBStatus;?>';
+var owm_api = "<?php echo get_variable('openweathermaps_api');?>";
 var responder_sel = '<?php echo json_encode($responder_statuses); ?>';
 var facility_sel = '<?php echo json_encode($facility_statuses); ?>';
 var theAssigns = '<?php echo json_encode($resp_assigns); ?>';
 var theTickets = '<?php echo json_encode($tickets_arr); ?>';
 var theResponders = '<?php echo json_encode($responders_arr); ?>';
+var theResponderHandles = '<?php echo json_encode($respondersHandles_arr); ?>';
 var numAssigns = <?php print $num_assigns;?>;
+var allAssigns = [];
 var listheader_height = "<?php print $listheader_height;?>";
 var sit_resp_def_sort = '<?php print $sitresp_sort;?>';
 var sit_resp_def_sort_index = "r" + <?php print $def_sort_respsit + 1;?>;
@@ -184,6 +217,10 @@ var sit_fac_def_sort = '<?php print $sitfac_sort;?>';
 var sit_fac_def_sort_index = "r" + <?php print $def_sort_facsit + 1;?>;
 var fac_def_sort = '<?php print $fac_sort;?>';
 var fac_def_sort_index = "f" + <?php print $def_sort_fac + 1;?>;
+var changed_inc_sort = false;
+var inc_direct = 'DESC';
+var inc_field = 'id';
+var inc_id = "t1";
 var changed_resp_sort = false;
 var resp_direct = '<?php print $sitresp_direc;?>';
 var resp_field = window.sit_resp_def_sort;
@@ -201,17 +238,22 @@ var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var showTicker = <?php print $use_ticker;?>;
 var showEvents = <?php print $showEvents;?>;
 var showStats = <?php print $showStats;?>;
+var showfacs = "<?php print $show_facs;?>";
+var showresp = "<?php print $show_resp;?>";
+var showlog = "<?php print $show_log;?>";
 var doDebug = (parseInt(<?php print get_variable('debug');?> == 1)) ? true: false;
 var guest = <?php print $isGuest;?>;
 var sess_id = "<?php print $sess_id;?>";
 var good_gmapsapi = <?php print $gmaps_ok;?>;
 var internet = <?php print $showmaps;?>;
+var gmaps = internet;
 var good_internet = <?php print $good_internet;?>;
 var geo_provider = <?php print get_variable('geocoding_provider');?>;
 var BingKey = "<?php print get_variable('bing_api_key');?>";
 var GoogleKey = "<?php print get_variable('gmaps_api_key');?>";
 var openspace_api = "<?php print get_variable('openspace_api');?>";
 var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
+var quick = <?php print intval($quick);?>;
 var icons=[];
 icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;	// blue
 icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;	// yellow
@@ -222,11 +264,15 @@ var columns = "<?php print get_msg_variable('columns');?>";	//	10/23/12
 var the_columns = new Array(<?php print get_msg_variable('columns');?>);	//	10/23/12
 var thelevel = '<?php print $the_level;?>';
 var locale = <?php print get_variable('locale');?>;
+var theLocale = <?php print get_variable('locale');?>;
 var my_Local = <?php print get_variable('local_maps');?>;
 var def_lng = <?php print get_variable('def_lng');?>;
 var def_lat = <?php print get_variable('def_lat');?>;
 var def_zoom = <?php print get_variable('def_zoom');?>;
+var useOSMAP = <?php print get_variable('use_osmap');?>;
+var initZoom = <?php print get_variable('def_zoom');?>;
 var zoom = <?php print get_variable('def_zoom');?>;
+var protocols = <?php echo json_encode($protocols); ?>;
 var states_arr = <?php echo json_encode($states); ?>;
 var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
 var curr_cats = <?php echo json_encode($curr_cats); ?>;
@@ -249,6 +295,8 @@ var mapWidth = <?php print get_variable('map_width');?>;
 var mapHeight = <?php print get_variable('map_height');?>;
 var theAPI = '<?php print get_variable('cloudmade_api');?>';
 var bounds;
+var theBroadcast = <?php print $broadcast?>;
+var show_ampm = <?php print $show_ampm?>;
 
 var textID = "<?php print get_text('Icon');?>";
 var textScope = "<?php print get_text('Scope');?>";
@@ -280,6 +328,7 @@ var updatedTip = "<?php print get_tip('Incident data last updated');?>";
 
 var textIcon = "<?php print get_text('Icon');?>"; 
 var textHandle = "<?php print get_text('Handle');?>"; 
+var textName = "<?php print get_text('Name');?>";
 var textMail = "<?php print get_text('Mail');?>"; 
 var textIncs = "<?php print get_text('Incidents');?>"; 
 var textStatus = "<?php print get_text('Status');?>"; 
@@ -289,20 +338,23 @@ var textAsof = "<?php print get_text('As of');?>";
 var respBull = (resp_direct == "ASC") ? "&#9650" : "&#9660";
 var r1_text = (resp_id == "r1") ? textIcon + respBull : textIcon; 
 var r2_text = (resp_id == "r2") ? textHandle + respBull : textHandle;
-var r3_text = (resp_id == "r3") ? textMail + respBull : textMail;
-var r4_text = (resp_id == "r4") ? textIncs + respBull : textIncs;
-var r5_text = (resp_id == "r5") ? textStatus + respBull : textStatus;
-var r6_text = (resp_id == "r6") ? textM + respBull : textM;
-var r7_text = (resp_id == "r7") ? textAsof + respBull : textAsof;
+var r3_text = (resp_id == "r3") ? textName + respBull : textName;
+var r4_text = (resp_id == "r4") ? textMail + respBull : textMail;
+var r5_text = (resp_id == "r5") ? textIncs + respBull : textIncs;
+var r6_text = (resp_id == "r6") ? textStatus + respBull : textStatus;
+var r7_text = (resp_id == "r7") ? textM + respBull : textM;
+var r8_text = (resp_id == "r8") ? textAsof + respBull : textAsof;
 var resp_header = textIcon + respBull;
 
 var iconTip = "<?php print get_tip('Map Icon');?>";
 var handleTip = "<?php print get_tip('Responder Handle');?>";
+var nameTip = "<?php print get_tip('Responder Name');?>";
 var emailTip = "<?php print get_tip('Email this responder');?>";
 var incsTip = "<?php print get_tip('Incident(s) this responder assigned to or number of incidents');?>";
 var statusTip = "<?php print get_tip('Responder Status');?>";
 var trackingTip = "<?php print get_tip('Responder Tracking Type - GL-Google Latitude, MT-Tickets RM Tracker, TT-Tickets Internal Tracker');?>";
 var respUpdTip = "<?php print get_tip('Responder data last updated');?>";
+var statusAboutTip = "<?php print get_tip('Responder status about');?>";
 
 var textName = "<?php print get_text('Name');?>";
 var textStatusAbout = "<?php print get_text('Status About');?>";
@@ -318,9 +370,6 @@ var rr6_text = (resp_id == "rr6") ? textStatusAbout + respBull : textStatusAbout
 var rr7_text = (resp_id == "rr7") ? textM + respBull : textM;
 var rr8_text = (resp_id == "rr8") ? textAsof + respBull : textAsof;
 var resp_header = textIcon + respBull;
-
-var nameTip = "<?php print get_tip('Responder Name');?>";
-var statusAboutTip = "<?php print get_tip('Responder status about');?>";
 
 var textFacIcon = "<?php print get_text('Icon');?>";
 var textFacName = "<?php print get_text('Name');?>";
@@ -408,14 +457,14 @@ var textMsgSubj = "<?php print get_text('Subj');?>";
 var textMsgDate = "<?php print get_text('Date');?>";
 var textMsgOwner = "<?php print get_text('Owner');?>";
 
-var msg1_text = "";
-var msg2_text = "";
-var msg3_text = "";
-var msg4_text = "";
-var msg5_text = "";
-var msg6_text = "";
-var msg7_text = "";
-var msg8_text = "";
+var msg1_text = textMsgID;
+var msg2_text = textMsgTkt;
+var msg3_text = textMsgType;
+var msg4_text = textMsgFrom;
+var msg5_text = textMsgTo;
+var msg6_text = textMsgSubj;
+var msg7_text = textMsgDate;
+var msg8_text = textMsgOwner;
 var msg_header = textMsgID;
 
 var msgIDTip = "<?php print get_tip('Message ID');?>";
@@ -432,5 +481,52 @@ var textFSDesc = "<?php print get_text('Description');?>";
 var textFSUnit = "<?php print get_text('Unit');?>";
 var textFSDS = "<?php print get_text('DS');?>";
 var textFSDate = "<?php print get_text('Date');?>";
+
+var textSurname = "<?php print get_text('Surname');?>";
+var textTeamID = "<?php print get_text('Team ID');?>";
+var textCity = "<?php print get_text('City');?>";
+var textPatient = "<?php print get_text('Patient');?>";
+var textPhone = "<?php print get_text('Phone');?>";
+var textContact = "<?php print get_text('Contact');?>";
+var textDescription = "<?php print get_text('Description');?>";
+var textRequested = "<?php print get_text('Requested');?>";
+var textBy = "<?php print get_text('By');?>";
+var textJoined = "<?php print get_text('Joined');?>";
+
+var h0_text = textID;			
+var h1_text = textName;
+var h2_text = textSurname;
+var h3_text = textTeamID;
+var h4_text = textCity;
+var h5_text = textType;
+var h6_text = textStatus;
+var h7_text = textContact;
+var h8_text = textJoined;
+var h9_text = textAsof;	
+
+var textDispHandle = "<?php print get_text('Handle');?>";
+var textDispNames = "<?php print get_text('Name(s)');?>";
+var textDispDistance = "<?php print get_text('SLD');?>";
+var textDispCalls = "<?php print get_text('Calls');?>";
+var textDispStatus = "<?php print get_text('Status');?>";
+var textDispMobile = "<?php print get_text('M');?>";
+var textDispAsof = "<?php print get_text('As Of');?>";
+
+var disp1_text = textDispHandle;
+var disp2_text = textDispNames;
+var disp3_text = textDispDistance + "&#9650";
+var disp4_text = textDispCalls;
+var disp5_text = textDispStatus;
+var disp6_text = textDispMobile;
+var disp7_text = textDispAsof;
+var disp_header = textDispDistance;
+
+var viewbuttonText = "<?php print get_text('View');?>";
+var patientbuttonText = "<?php print get_text('Patient');?>";
+var actionbuttonText = "<?php print get_text('Action');?>";
+var notebuttonText = "<?php print get_text('Note');?>";
+var dispatchbuttonText = "<?php print get_text('Dispatch');?>";
+var printbuttonText = "<?php print get_text('Print');?>";
+var contactbuttonText = "<?php print get_text('Contact');?>";
 // end of variable setup
 </SCRIPT>

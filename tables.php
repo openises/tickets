@@ -328,23 +328,23 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 <script src="./js/esri-leaflet.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
 <?php
-if ($_SESSION['internet']) {
-	$api_key = get_variable('gmaps_api_key');
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
-	if($key_str) {
-		if($https) {
+	if ($_SESSION['internet']) {
+		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		if($key_str) {
+			if($https) {
 ?>
-			<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php
-			} else {
+				} else {
 ?>
-			<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-			<script src="./js/Google.js"></script>
+				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+				<script src="./js/Google.js"></script>
 <?php				
+				}
 			}
 		}
-	}
 ?>
 <script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
 <script type="application/x-javascript" src="./js/L.Graticule.js"></script>
@@ -352,15 +352,15 @@ if ($_SESSION['internet']) {
 <script type="application/x-javascript" src="./js/usng.js"></script>
 <script type="application/x-javascript" src="./js/osgb.js"></script>
 <script type="application/x-javascript" src="./js/geotools2.js"></script>
-</HEAD>
 <SCRIPT>
 	var viewportwidth;
 	var viewportheight;
 	var outerwidth;
 	var outerheight;
 	var tablewidth;
-	window.onresize=function(){set_size()};
+	window.onresize=function(){set_size();}
 </SCRIPT>
+</HEAD>
 <?php
 	require_once('./incs/all_forms_js_variables.inc.php');
 ?>
@@ -378,7 +378,7 @@ if ($_SESSION['internet']) {
 			}
 		set_fontsizes(viewportwidth, "fullscreen");
 		tablewidth = viewportwidth * .8;
-		$('listView').style.width = tablewidth + "px";
+		if($('listView')) {$('listView').style.width = tablewidth + "px";}
 		}
 
 	if(self.location.href==parent.location.href) {				// 1/6/2013
@@ -720,7 +720,6 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 			print "\n\t\tmands = new Array();\t\t\t// array of mandatory fieldnames\n ";			
 			print "\t\ttypes = new Array();\t\t\t// array of fieldname types\n ";			
 			$query ="SHOW COLUMNS FROM `$mysql_prefix$tablename`";			// check value where possible - by mysql_field_type			
-//			$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";			// check value where possible - by mysql_field_type
 			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);		// check presence/absence
 			while ($row = mysql_fetch_assoc($result)) {
 				$thename = $row['Field'];
@@ -1251,25 +1250,25 @@ switch ($func) {		// ================================== case "c" ===============
 			}			// end while ...
 		unset ($result);
 		unset ($subst);
+		print "</TABLE>";
 
 		for($page = 1; $page <= $maxPage; $page++) {  				// set link to each page no.
 			$nav .= ($page == $pageNum)? 
-				"<SPAN id='page_" . $page . "' class='plain text text_red text_boldest' style='background-color: blue; color: white; float: none;'>$page</SPAN>" : 
-				"<SPAN id='page_" . $page . "' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav(\"" . $page . "\");'>$page</SPAN>" ;
+				"<SPAN id='page_" . $page . "' class='plain text text_red text_boldest' style='background-color: blue; color: white; float: none; display: inline-block;'>" . $page . "</SPAN>" : 
+				"<SPAN id='page_" . $page . "' class='plain text' style='float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav(\"" . $page . "\");'>" . $page . "</SPAN>" ;
 			}
 		if ($pageNum > 1) {											// create prior/next links
 			$page = $pageNum - 1;
-			$prev = "<SPAN id='prev_but' CLASS='plain text text-center' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav($page);'><IMG style='vertical-align: middle;' SRC='./markers/prev.png' height='16' width= '16' border='0' /></SPAN>";
+			$prev = "<SPAN id='prev_but' CLASS='plain text text-center' style='float: none; vertical-align: middle; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav(" . $page . ");'><IMG style='vertical-align: middle;' SRC='./markers/prev.png' height='16' width= '16' border='0' /></SPAN>";
 			}
 
 		if ($pageNum < $maxPage) {									// if not on last
 			$page = $pageNum + 1;
-			$next = "<SPAN id='next_but' CLASS='plain text text-center' style='float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav($page);'><IMG style='vertical-align: middle;' SRC='./markers/next.png' height='16' width= '16' border='0' /></SPAN>";
+			$next = "<SPAN id='next_but' CLASS='plain text text-center' style='float: none; vertical-align: middle; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav(" . $page . ");'><IMG style='vertical-align: middle;' SRC='./markers/next.png' height='16' width= '16' border='0' /></SPAN>";
 			}
-		print "<TR VALIGN=\"top\" style='width: 100%;'><TD ALIGN=\"center\" COLSPAN=\"99\"><BR />" . $prev . $nav . $next . "</TD></TR>";			// print the navigation links
+		print "<CENTER><DIV id='navbuttons' style='width: 800px; display: block; text-align: center;'>" . $prev . $nav . $next . "</DIV></CENTER>";			// print the navigation links
 		}					// end got rows
 ?>
-	</TABLE>
 	<BR />
 	<BR />
 	<FORM NAME="r" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
@@ -1321,7 +1320,7 @@ case "u":	// =======================================  Update 	==================
 		$i++;
 		}
 	
-	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";					// target row
+	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `" . $indexname . "` = " . $_POST['id'] . " LIMIT 1";					// target row
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
 	$row = mysql_fetch_array($result);																		// $row has data
 	$lineno = 0;															// for alternating row colors
@@ -1336,7 +1335,7 @@ case "u":	// =======================================  Update 	==================
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename ?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $id ?>"/>
+	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $_POST['id'] ?>"/>
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>  <!-- process update -->
@@ -1526,7 +1525,6 @@ case "u":	// =======================================  Update 	==================
 		}		// end foreach () ...
 																// now drop trailing comma
 	$query  = "INSERT INTO $mysql_prefix$tablename (" . substr($temp1, 0, (strlen($temp1) - 1)) . ") VALUES (" . substr($temp2, 0, (strlen($temp2) - 1)) . ")";
-//	dump ($query);
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	unset ($result);
 ?>
@@ -1545,15 +1543,12 @@ case "u":	// =======================================  Update 	==================
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$row = mysql_fetch_array($result);
 	$id = $row['id'];
-
-	
 	unset ($result);
-
 //	break;
 
 	case "v":		// View detail	========================
-
-	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `$indexname` = \"$id\" LIMIT 1";
+	$id = (array_key_exists('id', $_POST)) ? $_POST['id'] : $id;
+	$query ="SELECT * FROM `$mysql_prefix" . $tablename . "` WHERE `" . $indexname . "` = " . $id . " LIMIT 1";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	$row = mysql_fetch_array($result);
 	if (!(isset($srch_str))) {$srch_str="";}	// 10/31/10
@@ -1564,21 +1559,19 @@ case "u":	// =======================================  Update 	==================
 
 	$the_custom = "./tables/v_" . $tablename . ".php";				// 12/26/08
 	if (file_exists ( $the_custom)){
-//		print __LINE__ . "<BR />";
 		require_once($the_custom) ;
 		$custom	= TRUE;
-		}
-	else {
+		} else {
 
 ?>
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $id ?>"/>
+	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $_POST['id'] ?>"/>
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby ;?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
-	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>  <!-- process update -->
-	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
+	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>
+	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/>
 	
 <?php
 	print "<TABLE BORDER=\"0\" ALIGN=\"center\" >";
@@ -1588,28 +1581,24 @@ case "u":	// =======================================  Update 	==================
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
 		$lineno++;
 		print "\n\t<TR CLASS=" . $evenodd [$lineno % 2] . " VALIGN=\"top\"><TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD><TD>";
-//		if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
-//						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
 		if ((mysql_field_name($result, $i) != $indexname) 
 				&& (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 				&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))
 				&& (intval ($row[$i]) > 0)) {							// prepare to replace with indexed values - 9/15/10
 
 
-			$query ="SELECT * FROM `$mysql_prefix$temp` WHERE `$indexname` = $row[$i] LIMIT 1";				
+			$query ="SELECT * FROM `$mysql_prefix" . $temp . "` WHERE `" . $indexname . "` = " . $row[$i] . " LIMIT 1";				
 			$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query); 
 			if (mysql_affected_rows()>0) 	{										// defined?
 				$temp_row = mysql_fetch_array($temp_result);						// yes
+				dump($temp_row);
 				print (($temp == 'user')&&(array_key_exists('user', $temp_row)))? $temp_row['user']: $temp_row[1];		// 12/12/11 - special case
-//				print $temp_row[1];			// value, whatever name
-				}
-			else { 																	// no
+				} else { 																	// no
 				print $row[$i];
 				}
 			unset ($temp_result);
 			unset ($temp_row);
-			}
-		else {
+			} else {
 			$empty = (strlen($row[$i])== 0) ?  " - empty" : $empty = "";
 
 			switch (mysql_field_type($result, $i)) {
@@ -1654,18 +1643,18 @@ case "u":	// =======================================  Update 	==================
 		$disallow = is_in_use($row['id']);				// 10/20/09	- 2/25/10 - 11/9/10
 		if ((!($disallow) && ($can_edit))) {			// 3/19/11
 ?>
-			<SPAN ID='del_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc ('d', '<?php print $id ?>');"><SPAN STYLE='float: left;'><?php print get_text("Delete entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
+			<SPAN ID='del_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc ('d', '<?php print $_POST["id"] ?>');"><SPAN STYLE='float: left;'><?php print get_text("Delete entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
 <?php
 			}
 		if ($can_edit) {							// 3/19/11
 ?>
-			<SPAN ID='edit_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc('u', '<?php print $id ?>');"><SPAN STYLE='float: left;'><?php print get_text("Edit entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
+			<SPAN ID='edit_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc('u', '<?php print $_POST["id"] ?>');"><SPAN STYLE='float: left;'><?php print get_text("Edit entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
 <?php
 			}
 ?>		
 	</TR>
 	</FORM>
-	</TD></TR></TABLE>
+	</TABLE>
 <?php
 	break;		// end View ==========================
 
@@ -1677,21 +1666,19 @@ case "u":	// =======================================  Update 	==================
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// major while () - 3/25/09
 		$types[$row['Field']] = $row['Type'];
 		}
-//	dump($types);
 
 	$query = "UPDATE $mysql_prefix$tablename SET ";
 	foreach ($_POST as $VarName=>$VarValue) {
 		if ((substr($VarName, 0, 4)=="frm_") && ($VarName != $indexname)) { 
 			if (((boolean) strpos( " double float real ",  $types[substr($VarName, 4, 99)])) && (empty($VarValue))){
 				$query .= "`" . substr($VarName, 4, 99) . "` = NULL,";
-				}
-			else {
+				} else {
 				$query .= "`" . substr($VarName, 4, 99) . "` = " . fnQuote_Smart($VarValue) . ",";		// 6/21/10
 				}
 
 			}		// field names - note tic's
 		}
-	$query = substr($query, 0, (strlen($query) - 1)) . " WHERE `" .$indexname . "` = $id LIMIT 1";
+	$query = substr($query, 0, (strlen($query) - 1)) . " WHERE `" .$indexname . "` = " . $_POST['id'] . " LIMIT 1";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	unset ($result);
 //	dump ($query);
@@ -1714,7 +1701,7 @@ case "u":	// =======================================  Update 	==================
 	break;		// end Process Update 	=================
 
 	case "d":																		// Delete ===========================
-	$query ="DELETE FROM $mysql_prefix$tablename WHERE `" . $indexname . "` = $id LIMIT 1";
+	$query ="DELETE FROM $mysql_prefix$tablename WHERE `" . $indexname . "` = " . $_POST['id'] . " LIMIT 1";
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 	unset ($result);
 ?>
@@ -2029,7 +2016,8 @@ if (typeof window.innerWidth != 'undefined') {
 	}
 set_fontsizes(viewportwidth, "fullscreen");
 tablewidth = viewportwidth * .8;
-$('listView').style.width = tablewidth + "px";
+if($('listView')) {$('listView').style.width = tablewidth + "px";}
+if($('navbuttons')) {$('navbuttons').style.width = viewportwidth * .8 + "px";}
 </SCRIPT>
 </BODY>
 </HTML>

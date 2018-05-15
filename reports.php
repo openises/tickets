@@ -219,10 +219,19 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 			viewportheight = document.getElementsByTagName('body')[0].clientHeight
 			}
+		set_fontsizes(viewportwidth, "fullscreen");
 		outerwidth = viewportwidth * .99;
 		outerheight = viewportheight * .95;
 		$('outer').style.width = outerwidth + "px";
-		set_fontsizes(viewportwidth, "fullscreen");
+		$('button_bar').style.width = outerwidth + "px";	
+		$('report_header').style.width = outerwidth + "px";
+		$('reports').style.width = outerwidth + "px";
+		$('reportHeader').style.width = outerwidth + "px";
+		$('report_wrapper').style.width = outerwidth + "px";
+		$('report').style.width = outerwidth + "px";
+		$('report2').style.width = outerwidth + "px";
+		$('report3').style.width = outerwidth + "px";
+		set_tablewidths();
 		}
 
 	function do_full_w (the_form) {							// 4/24/11
@@ -301,29 +310,32 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		var printWindow = window.open(url, 'printWindow', 'resizable=1, scrollbars, height=600, width=1000, left=100,top=100,screenX=100,screenY=100');
 		setTimeout(function() { printWindow.focus(); }, 1);
 		}
-	
-	function downloadReport(mode) {
+		
+ 	function downloadReport(mode) {
+		var usespec = (specificdates == true) ? 1 : 0;
 		var randomnumber=Math.floor(Math.random()*99999999);
 		var title = base64_encode(reportname);
-		if(specificdates) {
-			startdate = document.sel_form.frm_month_start_date.value + ", " + document.sel_form.frm_day_start_date.value + ", " + document.sel_form.frm_year_start_date.value;
-			enddate = document.sel_form.frm_month_end_date.value + ", " + document.sel_form.frm_day_end_date.value + ", " + document.sel_form.frm_year_end_date.value;
+		if(usespec == 1) {
+			startdate = document.sel_form.frm_month_start_date.value + "," + document.sel_form.frm_day_start_date.value + "," + document.sel_form.frm_year_start_date.value;
+			enddate = document.sel_form.frm_month_end_date.value + "," + document.sel_form.frm_day_end_date.value + "," + document.sel_form.frm_year_end_date.value;
 			} else {
 			startdate = 0;
 			enddate = 0;				
 			}
-		if(which == "l") {
-			var url = "./ajax/reports.php?report=l&ticksel=" + ticksel + "&width=100%&mode=" + mode + "&title=" + title + "&version=" + randomnumber;
-			} else if(which != "l" && func == "ugr") {
-			var url = "download_report.php?report=" + which + "&func=ugr&what=" + what + "&date=" + currDate + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=100%&mode=" + mode + "&title=" + title + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
+		if(func == "ugr") {
+			var url = "download_report.php?mode=" + mode + "&report=" + which + "&func=" + what + "&date=" + currDate + "&title=" + title + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=" + theWidth + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
 			} else {
-			var url = "download_report.php?report=" + which + "&func=udr&what=dr&date=" + what + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=100%&mode=" + mode + "&title=" + title + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
+			var url = "download_report.php?mode=" + mode + "&report=" + which + "&func=dr&date=" + what + "&title=" + title + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=" + theWidth + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
 			}
-		var printWindow = window.open(url, 'printWindow', 'resizable=1, scrollbars, height=600, width=1000, left=100,top=100,screenX=100,screenY=100');
-		setTimeout(function() { printWindow.focus(); }, 1);		
+		hideButs();
+		var downloadWindow = window.open(url, 'downloadWindow', 'resizable=1, scrollbars, height=600, width=1000, left=100,top=100,screenX=100,screenY=100');
+		setTimeout(function() { downloadWindow.focus(); showButs();}, 1);		
 		}
 		
 	function setDates() {
+		what = "s";
+		specificdates = true;
+		func = 'ugr';
 		goGetit('ugr', 's', 1);
 		}
 		
@@ -332,14 +344,16 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		$('report_header').innerHTML = "";
 		$('report2').innerHTML = "";
 		$('report3').innerHTML = "";
+		$('reportHeader').style.display='block';
 		$('reports').style.display='block';
 		$('report_wrapper').style.display = "block";
+		$('r_footer').style.display = "block";
 		$('report_selection').style.display='none';
 		$('report').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 		if(usespec == 1) {
 			if(specificdates) {
-				startdate = document.sel_form.frm_month_start_date.value + ", " + document.sel_form.frm_day_start_date.value + ", " + document.sel_form.frm_year_start_date.value;
-				enddate = document.sel_form.frm_month_end_date.value + ", " + document.sel_form.frm_day_end_date.value + ", " + document.sel_form.frm_year_end_date.value;
+				startdate = document.sel_form.frm_month_start_date.value + "," + document.sel_form.frm_day_start_date.value + "," + document.sel_form.frm_year_start_date.value;
+				enddate = document.sel_form.frm_month_end_date.value + "," + document.sel_form.frm_day_end_date.value + "," + document.sel_form.frm_year_end_date.value;
 				} else {
 				startdate = 0;
 				enddate = 0;				
@@ -355,7 +369,10 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		sendRequest (url,reports_cb, "");
 		function reports_cb(req) {
 			var theResponse = JSON.decode(req.responseText);
-			$('report_header').innerHTML = theResponse[0];
+			$('report_header').innerHTML = "<IMG id='head_img' style='display: block; vertical-align: middle; margin-left: 10px; float: left;' src=\"<?php print get_variable('report_graphic');?>\"/>";
+			$('report_header').innerHTML += theResponse[0];
+			$('report_header').innerHTML += "<SPAN id='r_contact' CLASS='tablehead text text_right' style='display: inline-block; vertical-align: middle; margin-right: 10px; float: right;'><?php print get_variable('report_contact');?></SPAN>";
+			$('reportHeader').style.height = $('head_img').clientHeight + "px";
 			$('report').innerHTML = theResponse[1];
 			if(theResponse[2]) {$('report2').innerHTML = theResponse[2]; $('report2').style.display = "block";}
 			if(theResponse[3]) {$('report3').innerHTML = theResponse[3]; $('report3').style.display = "block";}
@@ -387,7 +404,11 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			$('report_wrapper').style.display = "none";
 			$('report3').style.display = "none";
 			$('report2').style.display = "block";
-			$('report_header').innerHTML = theResponse[0];
+			$('reportHeader').style.display='block';
+			$('r_footer').style.display = "block";
+			$('report_header').innerHTML = "<IMG style='display: block; vertical-align: middle; margin-left: 10px; float: left;' src=\"<?php print get_variable('report_graphic');?>\"/>";
+			$('report_header').innerHTML += theResponse[0];
+			$('report_header').innerHTML += "<SPAN id='r_contact' CLASS='tablehead text text_right' style='display: inline-block; vertical-align: middle; margin-right: 10px; float: right;'><?php print get_variable('report_contact');?></SPAN>";
 			$('report2').innerHTML = theResponse[1];
 			if(theResponse[6]) {reportname = theResponse[6];}
 			$('report_selection').style.display='none';
@@ -406,7 +427,7 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			var headerRow = theTable.rows[0];
 			for(var r = 1; r < theTable.rows.length; r++) {
 				var tableRow = theTable.rows[r];
-				if(tableRow.cells.length > 1) {
+				if(tableRow.cells.length > 2) {
 					break;
 					}
 				}
@@ -426,7 +447,9 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 					var theCell = theRow.insertCell(i);
 					theCell.innerHTML = " ";
 					}
-				}				
+				}
+			
+			headerRow.cells[0].style.width = tableRow.cells[0].clientWidth + "px";
 			}
 		}
 		
@@ -543,14 +566,14 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 	</SCRIPT>
 
 	</HEAD>
-<BODY onLoad = "ck_frames()">
+<BODY onLoad = "ck_frames();" style='overflow-x: hidden;'>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT> <!-- 10/2/10 -->
 
 <A NAME="top" />
 <DIV ID='to_bottom' style="position:fixed; top:20px; left:10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#bottom';">
 <IMG SRC="markers/down.png" BORDER=0 /></DIV>
-<DIV id = "outer" style='position: absolute; left: 2%; width: 96%;'>
-	<DIV id='button_bar' class='but_container' style='width: 100%;'>
+<DIV id = "outer" style='position: absolute; left: 2%; width: 95%; display: block;'>
+	<DIV id='button_bar' class='but_container' style='position: fixed; left: 2%; top: 0%; width: 100%; display: block;'>
 		<SPAN id='showhide_but' class='plain text' style='width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='showhide();'>Hide Menu</SPAN>
 		<SPAN id='print_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='openPrintscreen();'>Print</SPAN>
 		<SPAN id='downloaddoc_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='downloadReport("doc");'>Download .doc</SPAN>
@@ -692,17 +715,18 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		<TR CLASS='odd'><TD COLSPAN=8 CLASS='td_label' ALIGN='center'>&nbsp;</TD></TR>
 		<TR CLASS='odd'>
 			<TD COLSPAN=8 CLASS='td_label' style='text-align: center;'>
-				<SPAN ID='ulog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='u'; doLit('ulog_but');"><?php print get_text("Unit"); ?> Log</SPAN>
-				<SPAN ID='comms_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='c'; doLit('comms_but');"><?php print get_text("Comms report"); ?></SPAN>
-				<SPAN ID='flog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='f'; doLit('flog_but');"><?php print get_text("Facility"); ?> Log</SPAN>
-				<SPAN ID='dlog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='d'; doLit('dlog_but');"><?php print get_text("Dispatch"); ?> Log</SPAN>
-				<SPAN ID='slog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='s'; doLit('slog_but');"><?php print get_text("Station"); ?> Log</SPAN>
-				<SPAN ID='ilog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='i'; doLit('ilog_but');"><?php print $incident;?> Summary</SPAN>
-				<SPAN ID='alog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='a'; doLit('alog_but');">After-action Report</SPAN>
-				<SPAN ID='mlog_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='m'; doLit('mlog_but');"><?php print $incident;?> mgmt Report</SPAN>
-				<SPAN ID='billreport_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='b'; doLit('billreport_but'); $('org_ctrl').style.display='inline'; $('reg_ctrl').style.display='none';">Organisation Billing Report</SPAN>
-				<SPAN ID='region_but' CLASS='plain text' style='margin: 5px; width: 17%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='r'; doLit('region_but'); $('reg_ctrl').style.display='inline'; $('org_ctrl').style.display='none';">Region Report</SPAN>
-				<SPAN ID="inc_log_btn" style='display: none; margin: 5px; width: 17%;' CLASS='plain text' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_incLog(); Javascript: which = 'l'; doLit('inc_log_btn');"><?php print $incident;?> Log</SPAN>
+				<SPAN ID='ulog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='u'; doLit('ulog_but');"><?php print get_text("Unit"); ?> Log</SPAN>
+				<SPAN ID='comms_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='c'; doLit('comms_but');"><?php print get_text("Comms report"); ?></SPAN>
+				<SPAN ID='flog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='f'; doLit('flog_but');"><?php print get_text("Facility"); ?> Log</SPAN>
+				<SPAN ID='dlog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='d'; doLit('dlog_but');"><?php print get_text("Dispatch"); ?> Log</SPAN>
+				<SPAN ID='slog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='s'; doLit('slog_but');"><?php print get_text("Station"); ?> Log</SPAN>
+				<SPAN ID='ilog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='i'; doLit('ilog_but');"><?php print $incident;?> Summary</SPAN>
+				<SPAN ID='irep_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='e'; doLit('irep_but');"><?php print $incident;?> Report</SPAN>
+				<SPAN ID='alog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='a'; doLit('alog_but');">After-action Report</SPAN>
+				<SPAN ID='mlog_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='m'; doLit('mlog_but');"><?php print $incident;?> mgmt Report</SPAN>
+				<SPAN ID='billreport_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='b'; doLit('billreport_but'); $('org_ctrl').style.display='inline'; $('reg_ctrl').style.display='none';">Organisation Billing Report</SPAN>
+				<SPAN ID='region_but' CLASS='plain text' style='margin: 5px; width: 15%;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick ="Javascript: which='r'; doLit('region_but'); $('reg_ctrl').style.display='inline'; $('org_ctrl').style.display='none';">Region Report</SPAN>
+				<SPAN ID="inc_log_btn" style='display: none; margin: 5px; width: 15%;' CLASS='plain text' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_incLog(); Javascript: which = 'l'; doLit('inc_log_btn');"><?php print $incident;?> Log</SPAN>
 			</TD>
 		</TR>
 		<TR CLASS='odd'>
@@ -794,13 +818,19 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 
 		<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>
 	</DIV>
-	<DIV id='reports'>
-		<DIV style='position: relative; top: 30px;' id='report_header'></DIV>
-		<DIV id='report_wrapper' class="scrollableContainer" style='position: relative; top: 50px; left: 1.5%; width: 95%; display: none; height: 80%;'>
+	<DIV id='reports' style='position: relative; top: 50px; width: 100%;'>
+		<DIV id='reportHeader' class='heading text_large text_center' style='width: 100%; display: none; height: auto; padding-top: 5px; padding-bottom: 5px;'>
+			<SPAN style='text-align: center; display: block;' id='report_header'></SPAN>
+		</DIV>
+		<DIV id='report_wrapper' class="scrollableContainer" style='position: relative; top: 10px; left: 0px; width: 100%; display: none; height: 80%;'>
 			<DIV id='report' class="scrollingArea"></DIV>
-		</DIV><BR /><BR /><BR />
-		<DIV id='report2' style='position: relative; top: 20px; left: 1.5%; text-align: center; width: 95%; display: none;'></DIV><BR /><BR />
-		<DIV id='report3' style='position: relative; top: 20px; left: 1.5%; text-align: center; width: 95%; display: none;'></DIV><BR /><BR />
+		</DIV>
+		<BR />
+		<BR />
+		<BR />
+		<DIV id='report2' style='position: relative; top: 20px; left: 1.5%; text-align: center; width: 100%; display: none;'></DIV><BR /><BR />
+		<DIV id='report3' style='position: relative; top: 20px; left: 1.5%; text-align: center; width: 100%; display: none;'></DIV><BR /><BR />
+		<SPAN id='r_footer' CLASS='tablehead text text_center' style='width: 100%; display: none; vertical-align: middle; margin-left: auto;'><?php print get_variable('report_footer');?></SPAN><BR /><BR />
 	</DIV>
 </DIV>
 <DIV ID='to_top' style="position:fixed; bottom:30px; left:10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#top';">
@@ -817,10 +847,18 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
-outerwidth = viewportwidth * .99;
+set_fontsizes(viewportwidth, "fullscreen");
+outerwidth = viewportwidth * .95;
 outerheight = viewportheight * .95;
 $('outer').style.width = outerwidth + "px";
-set_fontsizes(viewportwidth, "fullscreen");
+$('button_bar').style.width = outerwidth + "px";	
+$('report_header').style.width = outerwidth + "px";
+$('reports').style.width = outerwidth + "px";
+$('reportHeader').style.width = outerwidth + "px";
+$('report_wrapper').style.width = outerwidth + "px";
+$('report').style.width = outerwidth + "px";
+$('report2').style.width = outerwidth + "px";
+$('report3').style.width = outerwidth + "px";
 doLit("ulog_but");
 
 </SCRIPT>

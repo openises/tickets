@@ -113,9 +113,9 @@ unset($result_as);
 
 $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
-$id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
+$ticket_id = (array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
 
-$result = mysql_query("SELECT *,`problemstart` AS problemstart ,`problemend` AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
+$result = mysql_query("SELECT *,`problemstart` AS problemstart ,`problemend` AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$ticket_id'");
 $row = mysql_fetch_assoc($result);
 $title = $row['scope'];
 $ticket_severity = get_severity($row['severity']);
@@ -352,7 +352,7 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 /* Creates statistics header and details of responding and en-route units 7/29/09 */
 
 					$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-						WHERE ticket_id='$id'
+						WHERE ticket_id='$ticket_id'
 						AND `dispatched` IS NOT NULL 
 						AND `responding` IS NULL 
 						AND `on_scene` IS NULL 
@@ -360,14 +360,14 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 					$num_rows_dispatched = mysql_num_rows($result_dispatched);
 
 					$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-						WHERE ticket_id='$id'
+						WHERE ticket_id='$ticket_id'
 						AND `responding` IS NOT NULL 
 						AND `on_scene` IS NULL 
 						AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) GROUP BY `responder_id`");		// 6/25/10
 					$num_rows_responding = mysql_num_rows($result_responding);
 
 					$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-						WHERE ticket_id='$id' 
+						WHERE ticket_id='$ticket_id' 
 						AND `on_scene` IS NOT NULL 
 						AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') GROUP BY `responder_id`");		// 6/25/10
 					$num_rows_on_scene = mysql_num_rows($result_on_scene);
@@ -383,7 +383,7 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 						LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
 						LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
 							WHERE (`clear` IS NOT NULL OR DATE_FORMAT(`clear`,'%y') <> '00')
-							AND ticket_id='$id' GROUP BY `r`.`id` ";
+							AND ticket_id='$ticket_id' GROUP BY `r`.`id` ";
 
 					$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 					$num_rows_cleared = mysql_affected_rows();
@@ -463,7 +463,7 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-			WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
+			WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $ticket_id $restrict_ticket";			// 7/16/09, 8/12/09
 
 
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -507,7 +507,7 @@ var zoom = map.getZoom();
 
 		$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
 
-		$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
+		$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$ticket_id})</I>" : "";			// 1/25/09, 2/18/12
 		$un_stat_cats = get_all_categories();
 		$istest = FALSE;
 		if($istest) {
@@ -517,8 +517,8 @@ var zoom = map.getZoom();
 			dump($_POST);
 			}
 
-		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
-			print "Invalid Ticket ID: '$id'<BR />";
+		if ($ticket_id == '' OR $ticket_id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$ticket_id'")) {	/* sanity check */
+			print "Invalid Ticket ID: '$ticket_id'<BR />";
 			return;
 			}
 
@@ -548,7 +548,7 @@ var zoom = map.getZoom();
 			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-			WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
+			WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $ticket_id $restrict_ticket";			// 7/16/09, 8/12/09
 
 
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -826,7 +826,7 @@ var zoom = map.getZoom();
 // ================================End of Facilities========================================
 // ====================================Add Responding Units to Map================================================
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id' AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'";
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$ticket_id' AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		while($row = mysql_fetch_array($result)){
 			$responder_id=($row['responder_id']);

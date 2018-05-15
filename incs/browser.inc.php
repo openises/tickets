@@ -12,7 +12,7 @@ function checkBrowser($input) {
 
 	$browsers = explode(" ", $browsers);
 
-	$userAgent = (isset( $_SERVER['HTTP_USER_AGENT'])) ? strToLower($_SERVER['HTTP_USER_AGENT']) : "gecko";
+	$userAgent = (array_key_exists('HTTP_USER_AGENT', $_SERVER) && !is_null($_SERVER['HTTP_USER_AGENT'])) ? strToLower($_SERVER['HTTP_USER_AGENT']) : "gecko";
 	$l = strlen($userAgent);
 	for ($i=0; $i<count($browsers); $i++) {
 		$browser = $browsers[$i];

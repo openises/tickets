@@ -8,9 +8,9 @@ $gt_status = get_text("Status");
 $iw_width = 	"300px";		// map infowindow with
 $col_width= max(320, intval($_SESSION['scr_width']* 0.45));
 $zoom_tight = false;
-$get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
-$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-$id = mysql_real_escape_string($id);
+$get_print = (array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
+$get_id = (array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
+$tick_id = mysql_real_escape_string($get_id);
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 $u_types = array();												// 1/1/09
@@ -94,27 +94,10 @@ unset($result_as);
 	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 <?php 
 
-	if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
-		require_once('./incs/modules.inc.php');
-		}
-	if ($_SESSION['internet']) {
-		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
-		if($key_str) {
-			if($https) {
-?>
-				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
-<?php
-				} else {
-?>
-				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
-<?php				
-				}
-			}
-		}
-?>
+if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
+	require_once('./incs/modules.inc.php');
+	}
+?>	
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
@@ -186,7 +169,7 @@ function set_size() {
 	<DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>
 <?php
 
-	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
+	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$tick_id})</I>" : "";			// 1/25/09, 2/18/12
 	$un_stat_cats = get_all_categories();
 	$istest = FALSE;
 	if($istest) {
@@ -196,8 +179,8 @@ function set_size() {
 		dump($_POST);
 		}
 
-	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
-		print "Invalid Ticket ID: '$id'<BR />";
+	if ($tick_id == '' OR $tick_id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$tick_id'")) {	/* sanity check */
+		print "Invalid Ticket ID: '$tick_id'<BR />";
 		return;
 		}
 
@@ -229,7 +212,7 @@ function set_size() {
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
+		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $tick_id $restrict_ticket";			// 7/16/09, 8/12/09
 
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -316,7 +299,7 @@ function set_size() {
 // ================================End of Facilities========================================
 // ====================================Add Responding Units to Map================================================
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$tick_id'";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	while($row = mysql_fetch_array($result)){
 		$responder_id=($row['responder_id']);
@@ -342,7 +325,7 @@ function set_size() {
 </DIV>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
-print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, $id, 0, 0, 0)
+print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, $tick_id, 0, 0, 0)
 ?>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>

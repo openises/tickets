@@ -54,13 +54,14 @@ function fac_cat($id) {
 	}
 	
 function get_day() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-//	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+	$timestamp = (time() - (intval($delta)*60));
 	return strftime("%A",$timestamp);
 	}
 	
 function get_currenttime() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
+	$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+	$timestamp = (time() - (intval($delta)*60));
 //	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
 	return strftime("%R",$timestamp);
 	}
@@ -102,7 +103,8 @@ function openStatus() {
 	}
 
 function setStatus($statval, $id) {
-	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+	$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+	$now = mysql_format_date(time() - ($delta*60));
 	$query = "UPDATE `$GLOBALS[mysql_prefix]facilities` SET
 		`status_id`= " .	quote_smart(trim($statval)) . ",
 		`updated`= " . 		quote_smart(trim($now)) . "
@@ -226,10 +228,9 @@ while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
 // BEDS
 	$beds_info = "<TD ALIGN='right'>{$row_fac['beds_a']}/{$row_fac['beds_o']}</TD>";
 // STATUS
-	$status = (valid_fac_status($row_fac['fac_status_id'])) ? get_status_sel($row_fac['fac_id'], $row_fac['fac_status_id'], "f") : "Status Error";
+	$status = (array_key_exists($row_fac['fac_status_id'], $status_vals)) ? get_status_sel($row_fac['fac_id'], $row_fac['fac_status_id'], "f") : "Status Error";
 	$status_id = $row_fac['fac_status_id'];
-	$temp = $row_fac['status_id'] ;
-	$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
+	$the_status = (array_key_exists($status_id, $status_vals))? $status_vals[$status_id] : "??";				// 2/2/09
 // AS-OF - 11/3/2012
 	$updated = format_sb_date_2 ( $row_fac['updated'] );
 	if(!(isempty(trim($row_fac['opening_hours']))))  	{
@@ -267,7 +268,6 @@ while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
 				$openstring = (array_key_exists(0, $val) && $val[0] == "on") ? "Open" : "Closed";
 				if($openstring == "Open") {
 					$outputstring .= "Opens: " . $val[1] . "<BR />Closes: " . $val[2];
-//					print $val[1] . ", " . $val[2] . "<BR />";
 					if(isTimeBetween($val[1], $val[2])) {
 						$calculatedStatus = 1;
 						} else {

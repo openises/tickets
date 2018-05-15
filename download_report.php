@@ -21,20 +21,10 @@ function curPageURL() {
 	}
 	
 $serverpath = curPageURL();
-
-if($report == "l") {
-	$url = $serverpath . "/ajax/reports.php?report=l&tick_sel=" . $ticksel . "&dohtml=true&width=100%&version=" . $randomnumber;
-	} elseif($report != "l" && $func == "ugr") {
-	$url = $serverpath . "/ajax/reports.php?report=" . $report . "&func=" . $what . "&date=" . $currDate . "&tick_sel=" . $ticksel . "&resp_sel=" . $respsel . "&dohtml=true&width=100%&version=" . $randomnumber;	
-	} elseif($report != "l" && $func == "udr") {
-	$url = $serverpath . "/ajax/reports.php?report=" . $report . "&func=dr&date=" . $date . "&tick_sel=" . $ticksel . "&resp_sel=" . $respsel . "&dohtml=true&width=100%&version=" . $randomnumber;	
-	} else {
-	$url = $serverpath . "/ajax/reports.php?report=" . $report . "&func=" . $func . "&tick_sel=" . $ticksel . "&resp_sel=" . $respsel . "&dohtml=true&width=100%&version=" . $randomnumber;	
-	}
-
+$url = $serverpath . "/ajax/reports.php?report=$report&func=$func&date=$date&tick_sel=$ticksel&resp_sel=$respsel&organisation=$organisation&startdate=$startdate&enddate=$enddate&dohtml=true&version=$randomnumber";
 if (function_exists("curl_init")) {
 	$ch = curl_init();
-	$timeout = 5;
+	$timeout = 20;
 	curl_setopt($ch, CURLOPT_URL, $url);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
@@ -43,6 +33,7 @@ if (function_exists("curl_init")) {
 		curl_setopt($ch, CURLOPT_USERPWD, $security);
 		}
 	$thePage = curl_exec($ch);
+	$thePage = preg_replace("#(<\s*a\s+[^>]*href\s*=\s*[\"'])(?!http)([^\"'>]+)  ([\"'>]+)#",'$1'.$url.'$2$3', $thePage);
 	curl_close($ch);
 	} else {				// no CURL
 	if ($fp = @fopen($url, "r")) {

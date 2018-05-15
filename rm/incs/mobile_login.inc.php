@@ -1,6 +1,7 @@
 <?php
 /*
 */
+
 function do_mobile_logout($return=FALSE){						/* logout - destroy session data */
 	global $hide_dispatched, $hide_status_groups;
 	@session_start();
@@ -121,9 +122,10 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 	$nocenter = FALSE;
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	@session_start();
+	$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
 	$the_sid = (isset($_SESSION['id']))? $_SESSION['id'] : null;
 	$internet = get_variable("internet");				// 8/22/10
-	$warn = ((!(empty($_SESSION)))  && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
+	$warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
 	if((!(empty($_SESSION)))  && ($now < $_SESSION['expires']))  {		// expired?
 
 		$the_date = mysql_format_date($expiry) ;
@@ -216,7 +218,8 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				$host  = $_SERVER['HTTP_HOST'];
 				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 				$extra = "index.php";
-				$url = "http://" . $host . $uri . "/" . $extra;
+				$protocol = ($https) ? "https" : "http";
+				$url = $protocol . "://" . $host . $uri . "/" . $extra;
 				echo '<meta http-equiv="refresh" content="', 0, ';URL=', $url, '">';
 				exit;				
 				}
@@ -231,29 +234,9 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<title>Tickets Login Screen</title>
-		<LINK REL=StyleSheet HREF="../css/stylesheet.php?version=<?php print time();?>" TYPE="text/css">			
-		<style type="text/css">
-			#outer { width: 100%; height: 100%; }
-			*, html { margin:0; padding:0 }
-			div#map_canvas { width:100%; height:85%; z-index: 9999999;}
-			div#map_outer { width:100%; height:85%; z-index: 9999999;}	
-			div#screen_buttons { width:100%; height:10%; position: fixed; bottom: 0%; z_index: 99999999;}	
-			div#regions { width:100%; z_index: 99999998;}		
-			div#info { width:100%; overflow:hidden; text-align: center; top:0; left:0; }
-			.screen { z-index: 5; width:100%; height: auto; background-color: #CECECE;}			
-			.screen_but_hover { display:-moz-inline-block; display:-moz-inline-box; display:inline-block; float: none; font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 2px; border-STYLE: inset; border-color: #FFFFFF;
-						 padding: 4px; text-decoration: none; background-color: #DEE3E7; font-weight: bolder; text-align: center; width: 15%;}
-			.screen_but_plain { display:-moz-inline-block; display:-moz-inline-box; display:inline-block; float: none; font: normal 12px Arial, Helvetica, sans-serif; color: #000000;  border-width: 2px; border-STYLE: outset; border-color: #FFFFFF;
-						 padding: 4px; text-decoration: none; background-color: #EFEFEF; font-weight: bolder; text-align: center; width: 15%; }				  
-			.lightBox { filter:alpha(opacity=60); -moz-opacity:0.6; -khtml-opacity: 0.6; opacity: 0.6; background-color:white; padding:2px; }
-			.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 2px; border-STYLE: inset; border-color: #FFFFFF;
-						  padding: 4px 0.5em;text-decoration: none;float: none; background-color: #DEE3E7;font-weight: bolder; width: 100px; text-align: center;}
-			.plain 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color: #000000;  border-width: 2px; border-STYLE: outset; border-color: #FFFFFF;
-						  padding: 4px 0.5em;text-decoration: none; float: none; background-color: #EFEFEF;font-weight: bolder; width: 100px; text-align: center;}
-			INPUT { font-size: 1em; border: 2px inset #EFEFEF;}
-		</style>		
-		<SCRIPT SRC = ".././js/md5.js" ></SCRIPT>		
-		<SCRIPT SRC = "../..js/sha1.js" ></SCRIPT>			
+		<LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>">			
+		<SCRIPT SRC = "../js/md5.js" ></SCRIPT>		
+		<SCRIPT SRC = "../js/sha1.js" ></SCRIPT>			
 		<SCRIPT>
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
@@ -411,9 +394,9 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 		
 		<CENTER>
 		<div id='outer' class='screen'>		
-			<div style='font-weight: bold; font-size: 1.2em; color: #000000; background-color: #FFFFCC;'><?php print get_variable('login_banner');?></FONT></div><BR />
+			<div class='header'><?php print get_variable('login_banner');?></FONT></div><BR />
 			<FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form"  onSubmit="return true;">
-			<div>
+			<div class='even'>
 <?php
 				if(array_key_exists('frm_passwd', $_POST)) {$warn = "Login failed. Pls enter correct values and try again.";}
 				if(!(empty($warn))) { 
@@ -424,10 +407,9 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
 				$my_click = ($_SERVER["HTTP_HOST"] == "127.0.0.1")? " onClick = \"document.login_form.frm_user.value='admin';document.login_form.frm_passwd.value='admin';\"" : "" ;
 ?>
-				<div style='display: inline; font-size: 1.5em; font-weight: bold;'><?php print get_text("User"); ?><BR /><INPUT TYPE="text" NAME="frm_user" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE=""></div><BR />
-				<div style='display: inline; font-size: 1.5em; font-weight: bold;'><?php print get_text("Password"); ?><BR /><INPUT TYPE="password" NAME="frm_passwd" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"  VALUE=""></div><BR /><BR /><BR />
-				<INPUT id="sub_but2" TYPE="submit" VALUE="<?php print get_text("Log In"); ?>" class="plain" onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" style="width: auto; font-size: 1.3em;"><BR /><BR />
-				<INPUT id="tick_norm_but2" TYPE="button" VALUE="<?php print get_text("Tickets Normal Screen"); ?>" class="plain" onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" style="width: auto; font-size: 1.3em;" onClick = 'do_tickets_main();' >
+				<INPUT TYPE="text" id="userid" placeholder='Login Name' style='font-size: 1.3em;' NAME="frm_user" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE="" autofocus required/><BR /><BR />
+				<INPUT TYPE="password" id="passwd" placeholder='Password' style='font-size: 1.3em;' NAME="frm_passwd" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();"  VALUE="" required /><BR /><BR /><BR />
+				<SPAN id='sub_but2' roll='button' aria-label='Tickets Mobile Log In' tabindex=1 class='plain text' style='float: none; display: block; width: 40px; height: 40px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.login_form.submit();'><IMG SRC='./images/login.png' BORDER=0 /></SPAN>
 			</div>
 
 			<INPUT TYPE='hidden' NAME = 'encoding' VALUE=''>		
@@ -442,6 +424,7 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 			</FORM>				
 		</div>
 		</CENTER>
+		</BODY>
 		</HTML>
 <?php
 			exit();		// no return value

@@ -3,7 +3,7 @@
 require_once('../../incs/functions.inc.php');
 require_once('../incs/portal.inc.php');
 include('../../incs/html2text.php');
-$sortby = (!(array_key_exists('sort', $_GET))) ? "`request_date`" : $_GET['sort'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "request_date" : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 
 function br2nl($input) {
@@ -29,13 +29,19 @@ function get_contact_details($the_id) {
 	$the_ret = array();
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
+	if($result && mysql_num_rows($result) == 1) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 		$the_ret[] = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
 		$the_ret[] = ($row['email'] != "") ? $row['email'] : "Unknown";
 		$the_ret[] = ($row['email_s'] != "") ? $row['email_s'] : "Unknown";		
 		$the_ret[] = ($row['phone_p'] != "") ? $row['phone_p'] : "Unknown";			
 		$the_ret[] = ($row['phone_s'] != "") ? $row['phone_s'] : "Unknown";		
+		} else {
+		$the_ret[] = "UNK";
+		$the_ret[] = "UNK";
+		$the_ret[] = "UNK";		
+		$the_ret[] = "UNK";			
+		$the_ret[] = "UNK";
 		}
 	return $the_ret;
 	}
@@ -45,10 +51,11 @@ $order = "ORDER BY `" . $sortby . "`";
 $order2 = $sortdir;
 $showall = ((isset($_GET['showall'])) && ($_GET['showall'] == 'yes')) ? true : false;
 if($where == "") {
-	$where .= ($showall == false) ? " WHERE `r`.`status` <> 'Closed' " : "";
+	$where .= ($showall == false) ? " WHERE `r`.`status` <> 'Closed' AND `r`.`status` <> 'Completed'" : "";
 	} else {
-	$where .= ($showall == false) ? " AND `r`.`status` <> 'Closed' " : "";
+	$where .= ($showall == false) ? " AND `r`.`status` <> 'Closed' AND `r`.`status` <> 'Closed' " : "";
 	}
+
 $query = "SELECT *, 
 		`r`.`id` AS `request_id`,
 		`r`.`ticket_id` AS `r_tick_id`,
@@ -102,11 +109,13 @@ $query = "SELECT *,
 $result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $num=mysql_num_rows($result);
 $i=0;
-if (mysql_num_rows($result) == 0) { 				// 8/6/08
+if ($result && mysql_num_rows($result) == 0) { 				// 8/6/08
 	$ret_arr[$i][0] = "No Current Requests";
 	} else {
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$miles = $row['end_miles'] - $row['start_miles'];
+		$end_miles = ($row['end_miles'] != "") ? $row['end_miles'] : 0;
+		$start_miles = ($row['start_miles'] != "") ? $row['start_miles'] : 0;
+		$miles = $end_miles - $start_miles;
 		$request_id = $row['request_id'];
 		$requester = get_owner($row['requester']);
 		$name = $row['the_name'];
@@ -175,8 +184,8 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 			$color = "background-color: #33CCFF; color: #000000;";			
 			} elseif ($row['req_status'] == 'Resourced') {
 			$color = "background-color: #00FF00; color: #000000;";			
-			} elseif ($row['req_status'] == 'Complete') {
-			$color = "background-color: #A9F5BC; color: #0B3B24;";		
+			} elseif ($row['req_status'] == 'Completed') {
+			$color = "background-color: #FFFFFF; color: #00FF00;";		
 			} elseif ($row['req_status'] == 'Declined') {
 			$color = "background-color: #FF9900; color: #FFFFFF;";	
 			} elseif ($row['req_status'] == 'Closed') {
@@ -252,7 +261,7 @@ switch($sortby) {
 	case 'scope':
 		$sortval = 13;
 		break;
-	case 'to_address':
+	case 'toaddress':
 		$sortval = 31;
 		break;
 	case 'postcode':

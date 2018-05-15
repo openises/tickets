@@ -90,6 +90,7 @@ L.Util.extend(L.KML, {
 
 	parseStyle: function (xml) {
 		var style = {};
+		if(typeof(xml) == 'undefined' || xml == null) {return;}
 		var sl = xml.getElementsByTagName('Style');
 
 		var attributes = { color: true, width: true, Icon: true, href: true, hotSpot: true };
@@ -149,8 +150,8 @@ L.Util.extend(L.KML, {
 	},
 	
 	parseStyleMap: function (xml, existingStyles) {
+		if(typeof(xml) == 'undefined' || xml == null) {return;}
 		var sl = xml.getElementsByTagName('StyleMap');
-		
 		for (var i = 0; i < sl.length; i++) {
 			var e = sl[i], el;
 			var smKey, smStyleUrl;

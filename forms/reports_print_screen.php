@@ -21,7 +21,7 @@ $locale = get_variable('locale');	// 08/03/09
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
 <SCRIPT>
-window.onresize=function(){set_size()};
+window.onresize=function(){set_size();}
 </SCRIPT>
 <?php
 require_once('./incs/all_forms_js_variables.inc.php');
@@ -54,8 +54,13 @@ function set_size() {
 	set_fontsizes(viewportwidth, "popup");	
 	outerwidth = viewportwidth * .96;
 	$('outer').style.width = outerwidth + "px";
-	$('report_header').style.width = viewportwidth + "px";
+	$('leftcol').style.width = outerwidth + "px";
 	$('button_bar').style.width = outerwidth + "px";	
+	$('report_header').style.width = outerwidth + "px";
+	$('report').style.width = outerwidth + "px";
+	$('report2').style.width = outerwidth + "px";
+	$('report3').style.width = outerwidth + "px";
+	set_tablewidths();
 	}
 	
 function getHeaderHeight(element) {
@@ -83,11 +88,15 @@ function goGetit(func, what) {
 		$('report_header').innerHTML = theResponse[0];
 		$('report').innerHTML = theResponse[1];
 		setTimeout(function() {
-			if(theResponse[0]) {$('report_header').innerHTML = theResponse[0];}
+			if(theResponse[0]) {
+				$('report_header').innerHTML = "<IMG style='display: block; vertical-align: middle; float: left;' src=\"<?php print get_variable('report_graphic');?>\"/>";
+				$('report_header').innerHTML += theResponse[0] + "<BR />";
+				$('report_header').innerHTML += "<SPAN id='r_contact' CLASS='tablehead text' style='display: inline-block; vertical-align: middle; margin-right: 10px; float: right;'><?php print get_variable('report_contact');?></SPAN>";
+				}
 			if(theResponse[1]) {$('report').innerHTML = theResponse[1];}
 			if(theResponse[2]) {$('report2').innerHTML = theResponse[2];}
 			if(theResponse[3]) {$('report3').innerHTML = theResponse[3];}
-			if($('reportstable')) {$('report_header').style.width = viewportwidth + "px";}
+			if($('report_header')) {$('report_header').style.width = outerwidth + "px";}
 			if($('reportstable')) {$('reportstable').style.width = outerwidth + "px";}
 			if($('left')) {$('left').style.width = outerwidth + "px";}
 			if(theResponse[0]) {$('report_header').style.display = "block";}
@@ -108,7 +117,9 @@ function do_incLog() {
 	sendRequest (url,reports_cb, "");
 	function reports_cb(req) {
 		var theResponse = JSON.decode(req.responseText);
-		$('report_header').innerHTML = theResponse[0];
+		$('report_header').innerHTML = "<IMG style='display: block; vertical-align: middle; margin-left: auto; float: left;' src=\"<?php print get_variable('report_graphic');?>\"/>";
+		$('report_header').innerHTML += theResponse[0] + "<BR />";
+		$('report_header').innerHTML += "<SPAN id='r_contact' CLASS='tablehead text text_right' style='display: inline-block; vertical-align: middle; margin-left: auto; float: right;'><?php print get_variable('report_contact');?></SPAN>";
 		$('report2').innerHTML = theResponse[1];
 		}
 	}
@@ -116,6 +127,7 @@ function do_incLog() {
 function set_tablewidths() {
 	if($('reportstable')) {
 		var theTable = document.getElementById('reportstable');
+		$(theTable).style.width = outerwidth + "px";
 		} else if($('left')) {
 		var theTable = document.getElementById('left');	
 		} else {
@@ -151,19 +163,23 @@ if($report == "l") {
 <BODY onLoad = "<?php print $loadstring;?> location.href = '#top';">
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT> <!-- 10/2/10 -->
 <A NAME="top" />
-<DIV ID='to_bottom' style="position:fixed; top:20px; left:10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#bottom';">
-<IMG SRC="markers/down.png" BORDER=0 /></DIV>
+<DIV ID='to_bottom' style="position:fixed; top:20px; left:10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 /></DIV>
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
-	<DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>
-	<DIV id='button_bar' class='but_container'>
-		<SPAN id='print_but' class='plain' style='float: left; vertical-align: middle; display: inline-block; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'>Print</SPAN>
-		<SPAN id='close_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'>Close</SPAN>
+	<DIV id='leftcol' style='position: absolute; left: 5px; top: 10px; z-index: 3; width: 98%;'>
+		<DIV id='button_bar' class='but_container'>
+			<SPAN id='print_but' class='plain' style='float: left; vertical-align: middle; display: inline-block; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'>Print</SPAN>
+			<SPAN id='close_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'>Close</SPAN>
+		</DIV>
+		<DIV id='report_table_head' class='heading text_large' style='position: relative; top: 60px; height: auto; padding-top: 5px; padding-bottom: 5px;'>
+			<DIV id='report_header' style='text-align: left; height: 50px;'></DIV>
+		</DIV><BR /><BR />
+		<DIV id='report' style='position: relative; top: 30px; text-align: center; width: 96%;'></DIV><BR /><BR />
+		<DIV id='report2' style='position: relative; top: 20px; text-align: center; width: 96%;'></DIV><BR /><BR />
+		<DIV id='report3' style='position: relative; top: 20px; text-align: center; width: 96%;'></DIV><BR /><BR /><BR /><BR />
 	</DIV>
-	<DIV id='report_header' style='position: relative; top: 50px; text-align: center; width: 98%;'></DIV><BR /><BR />
-	<DIV id='report' style='position: relative; top: 30px; text-align: center; width: 96%;'></DIV><BR /><BR />
-	<DIV id='report2' style='position: relative; top: 20px; text-align: center; width: 96%;'></DIV><BR /><BR />
-	<DIV id='report3' style='position: relative; top: 20px; text-align: center; width: 96%;'></DIV><BR /><BR /><BR /><BR />
-	</DIV>
+</DIV>
+<A NAME="bottom" />
+<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></DIV>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = window.innerWidth,
@@ -178,12 +194,14 @@ if (typeof window.innerWidth != 'undefined') {
 set_fontsizes(viewportwidth, "popup");	
 outerwidth = viewportwidth * .96;
 $('outer').style.width = outerwidth + "px";
-$('report_header').style.width = viewportwidth + "px";
+$('leftcol').style.width = outerwidth + "px";
 $('button_bar').style.width = outerwidth + "px";	
+$('report_header').style.width = outerwidth + "px";
+$('report').style.width = outerwidth + "px";
+$('report2').style.width = outerwidth + "px";
+$('report3').style.width = outerwidth + "px";
+$('report_table_head').style.width = outerwidth + "px";
 </SCRIPT>
-</DIV>
-<A NAME="bottom" />
-<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 </BODY>
 </HTML>
 <?php

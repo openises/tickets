@@ -3,34 +3,56 @@
 */
 $temp1  = get_variable('socketserver_url');
 $temp2 = get_variable('socketserver_port');
-$host = ($temp1 == "") ? "{$_SERVER['SERVER_NAME']}" : $temp1;
-$port = ($temp2 == "") ? "1337" : $temp2;
+$host = (array_key_exists("SERVER_NAME", $_SERVER)) ? "{$_SERVER['SERVER_NAME']}" : $temp1;
+
+
 $isLocal = ($host == "127.0.0.1") ? 1 : 0;
 $guest = (is_guest()) ? 1 : 0;
+@session_start();
+session_write_close();
+$user_id = (array_key_exists('user_id', $_SESSION)) ? $_SESSION['user_id'] : 0;
+$ishttps = (array_key_exists('HTTPS', $_SERVER)) ? 1 : 0;
+if($ishttps) {
+	$port = ($temp2 == "") ? "1348" : $temp2;	
+	} else {
+	$port = ($temp2 == "") ? "1337" : $temp2;
+	}
+
+$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
+$result_users2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+while ($row_users2 = stripslashes_deep(mysql_fetch_assoc($result_users2))) 	{
+	$user_names[$row_users2['id']] = $row_users2['user'];
+	}
 ?>
 	<script>
 	function get_user_id() {
 		var user_id = parseInt("<?php print $_SESSION['user_id'];?>");		
 		return user_id;
 		}				// end function get_user_id()
-		
-
+	
+	var https = <?php print $ishttps;?>;
+	var protocol = (https) ? "wss" : "ws";
 	var hostURL = "<?php print $host;?>";
 	var	hostPORT = "<?php print $port;?>";
 	var	isLocal = <?php print $isLocal;?>;
 	var checkConn = false;
 	var socket;
-	var checkConn = false
-	var host = "ws://" + hostURL + ":" + hostPORT;
+	var users = <?php echo json_encode($users_arr);?>;
+	var usernames = <?php echo json_encode($user_names);?>;
+	var host = protocol + "://" + hostURL + ":" + hostPORT;
 	var broadcast_interval = null;
 	var checkconn_interval = null;
-	var users = <?php echo json_encode($users_arr);?>;
 	var guest = <?php print $guest;?>;
 	
 	function start_connection() {
 		if (window.checkconn_interval!=null || guest) {return;}		//	Interval already set
 		window.checkconn_interval = window.setInterval('theConnection()', 2000);
 		}
+		
+	function Socket_startup() {
+		if (window.checkconn_interval!=null || guest) {return;}		//	Interval already set
+		window.checkconn_interval = window.setInterval('theConnection()', 2000);
+		}			// end function Socket_startup()
 	
 	function sleep(milliseconds) {
 		var start = new Date().getTime();
@@ -41,6 +63,33 @@ $guest = (is_guest()) ? 1 : 0;
 			}
 		}
 		
+	function do_heartbeat() {	//	Heartbeat to drive connected users information
+		var userid = get_user_id();
+		if(userid == 0) {return;}
+		broadcast("I am " + userid, 599);
+		broadcast("System asks how many users connected", 96);
+		}			// end function do_heartbeat()
+		
+	function addZero(inVal) {
+		if (inVal < 10) {
+			inVal = "0" + inVal;
+			}
+		return inVal;
+		}
+		
+	function broadcast_heartbeat() {	//	Timer for do_heartbeat()
+		if (window.broadcast_interval!=null) {return;}
+		window.broadcast_interval = window.setInterval('do_heartbeat()', 10000);
+		}			// end function broadcast_heartbeat()
+		
+	function get_current_datetime() {
+		var n = new Date();
+		var hours = n.getHours();
+		var mins = n.getMinutes();
+		var seconds = n.getSeconds();
+		return hours + ":" + mins + ":" + seconds;
+		}
+		
 	function theConnection() {
 		if(window.checkConn == true && window.socket) {	//	stop duplicate connections
 			window.checkconn_interval = null;	//	stop timer if connection already established
@@ -48,17 +97,20 @@ $guest = (is_guest()) ? 1 : 0;
 			} else {
 			if(!guest) {window.socket = new WebSocket(window.host);}
 			}
-		
+
 		window.socket.onopen = function(){
+			window.checkConn = true;
 			if(!guest) {
 				var n = new Date();
 				var hours = n.getHours();
 				var mins = n.getMinutes();
 				var teststring = "Broadcast OK " + hours + ":" + mins;
-				$('broadcastWrapper').style.display = 'inline-block';
+				do_heartbeat();
+				broadcast_heartbeat();
+				$('broadcastWrapper').style.display = 'block';
 				$('timeText').innerHTML = teststring;
 				$('usercount').innerHTML = "1 user(s)";
-				if(responder_id != 0) {$('help_but').style.display = "block";}
+				if(responder_id != 0) {$('help_but').style.display = "inline-block";}
 				}
 			}
 		
@@ -120,7 +172,22 @@ $guest = (is_guest()) ? 1 : 0;
 				 case 40:
 					break;
 				 case 97:
-					usercount(payload);
+					var theUsers = parseInt(payload);
+					window.hasUsercount = theUsers;
+					usercount(theUsers);
+					break;
+				 case 98:
+					var connectedString = "";
+					var part1 = ourArr[0];
+					var part2 = payload;
+					var part3 = ourArr[2];
+					var connectedUsers = payload;
+					var usersArr = payload.split(",");
+					for(var i = 0; i < usersArr.length; i++) {
+						connectedString += usernames[usersArr[i]] + "\r\n";
+						}
+					break;
+				case 599:
 					break;
 				 default:
 					msgtype_1(payload, unit_id);
@@ -131,7 +198,7 @@ $guest = (is_guest()) ? 1 : 0;
 	if(responder_id == 0) {$('help_but').style.display = "none";};
 	
 	function usercount(message) {
-		$('usercount').innerHTML = message + " user(s)";
+		if($('usercount')) {$('usercount').innerHTML = " " + message + " user(s)";}
 		}
 		
 	function msgtype_1(message, unit_id) {
@@ -213,7 +280,7 @@ $guest = (is_guest()) ? 1 : 0;
 	    }		// end function broadcast
 
 	function do_audio()	{
-		if (typeof(do_audible) == "function") {do_audible();}					// if in top
+		if (typeof(do_audible) == "function") {do_audible('Broadcast');}					// if in top
 		}		// end function do_audio()
 
 	function do_respalert(id) {

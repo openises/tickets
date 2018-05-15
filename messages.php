@@ -7,7 +7,6 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 require_once('./incs/functions.inc.php');
-//include('./incs/html2text.php');	
 $the_tickets = array();
 $columns_arr = explode(',', get_msg_variable('columns'));
 $the_level = $_SESSION['level'];
@@ -35,8 +34,7 @@ $files = array();
 $files = read_directory(getcwd().'/message_archives/'); 
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html> 
 <HTML>
 <HEAD>
 <TITLE>Messages</TITLE>
@@ -55,12 +53,13 @@ BODY {font-size: 0.9vw;}
 <SCRIPT>
 var thelevel = "<?php print $_SESSION['level'];?>";
 </SCRIPT>
+<SCRIPT SRC="./js/jss.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
-window.onresize=function(){set_heights()};
+window.onresize=function(){set_heights();}
+var viewportwidth, viewportheight, outsideHeight, remainHeight, folderlHeight, messagesHeight, folderlistHeight;
 var columns = "<?php print get_msg_variable('columns');?>";
-
 var screen = 'msg_win';
 var theScreen;
 var the_ids = new Array();
@@ -219,8 +218,19 @@ function get_sent() {
 	archive = "";	
 	get_sentmessages();
 	}
-	
+
 function set_heights() {
+	if (typeof window.innerWidth != 'undefined') {
+		viewportwidth = window.innerWidth,
+		viewportheight = window.innerHeight
+		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+		} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	var outsideHeight = $('view_messages').clientHeight;
 	var headerHeight = $('header1').clientHeight;
 	var remainHeight = outsideHeight - headerHeight - 15;
@@ -230,20 +240,19 @@ function set_heights() {
 	$('message_list').style.height = messagesHeight;
 	$('folderlist').style.height = folderlistHeight;
 	}
-	
 thelevel = "<?php print can_delete_msg();?>";
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad="get_inbox();light_butt('inbox'); set_heights();">
+<BODY onLoad="get_inbox(); light_butt('inbox'); set_heights();">
 <DIV style='background-color: #CECECE; height: 100%;'>
 	<DIV id='folderlist' style='position: absolute; left: 0px; top: 0px; width: 18%; height: 100%;'>
-		<SPAN id='folders_header' class='heading' style='margin-left: 2%; width: 96%; float: none; display: inline-block; font-size: 1.6em; border: 4px outset #FFFFFF;'>MESSAGE FOLDERS</SPAN><BR /><BR />	
-		<SPAN id='inbox_header' class='heading' style='padding-left: 2%; width: 97%; float: none; display: inline-block; font-size: 1.5em;'>Current Messages</SPAN><BR /><BR />	
-		<SPAN id='inbox' class='plain' style='font-size: 1.2em; margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_inbox();'>Inbox<SPAN id='inbox_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
-		<SPAN id='sent' class='plain' style='font-size: 1.2em; margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_sent();'>Sent Messages<SPAN id='sent_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
-		<SPAN id='deleted' class='plain' style='font-size: 1.2em; margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_wastebin();'>Deleted Items</SPAN><BR /><BR />
-		<SPAN id='archive_header' class='heading' style='padding-left: 2%; width: 95%; float: none; display: inline-block; font-size: 1.5em;'>Archive</SPAN><BR /><BR />
+		<SPAN id='folders_header' class='heading text_biggest' style='width: 98%; float: none; display: inline-block; border: 4px outset #FFFFFF;'>MESSAGE FOLDERS</SPAN><BR /><BR />	
+		<SPAN id='inbox_header' class='heading text_biggest' style='padding-left: 2%; width: 97%; float: none; display: inline-block;'>Current Messages</SPAN><BR /><BR />	
+		<SPAN id='inbox' class='plain text_large' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_inbox();'>Inbox<SPAN id='inbox_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
+		<SPAN id='sent' class='plain text_large' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_sent();'>Sent Messages<SPAN id='sent_new' style='font-weight: bold; float: right;'></SPAN></SPAN><BR /><BR />
+		<SPAN id='deleted' class='plain text_large' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_wastebin();'>Deleted Items</SPAN><BR /><BR />
+		<SPAN id='archive_header' class='heading text_biggest' style='padding-left: 2%; width: 95%; float: none; display: inline-block;'>Archive</SPAN><BR /><BR />
 		<DIV id='archivelist' style='position: relative; left: 0px; top: 0px; width: 95%; height: 70%; overflow-y: auto;'>
 <?php
 			foreach($files AS $val) {
@@ -260,7 +269,7 @@ thelevel = "<?php print can_delete_msg();?>";
 				$end = $end_d . "-" . $end_m . "-" . $end_y;
 				$filename = $start . " to " . $end;
 ?>
-				<SPAN id='<?php print $filename;?>' class='plain' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="get_archive('<?php print $val;?>',this.id);"><?php print $filename;?></SPAN><BR /><BR />	
+				<SPAN id='<?php print $filename;?>' class='plain text_large' style='margin-left: 5%; width: 80%; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="get_archive('<?php print $val;?>',this.id);"><?php print $filename;?></SPAN><BR /><BR />	
 <?php
 				}
 ?>
@@ -300,15 +309,15 @@ thelevel = "<?php print can_delete_msg();?>";
 <?php
 				$print = "";
 				$print .= "<TD id='chk' class='cols_h_chk' style='width: 3%;'><input type='checkbox' id='chk_control' name='chk_control' value='chk_control' onClick='toggle_select_all();'></TD>";
-				$print .= (in_array('1', $columns_arr)) ? "<TD id='ticket' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`ticket_id`',filter)\">Tkt</TD>" : "";					
-				$print .= (in_array('2', $columns_arr)) ? "<TD id='type' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`msg_type`',filter)\">Typ</TD>" : "";				
-				$print .= (in_array('3', $columns_arr)) ? "<TD id='fromname' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`fromname`',filter)\">From</TD>" : "";				
-				$print .= (in_array('4', $columns_arr)) ? "<TD id='recipients' class='cols_h' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`recipients`',filter)\">To</TD>" : "";
-				$print .= (in_array('5', $columns_arr)) ? "<TD id='subject' class='cols_h' NOWRAP style='width: 15.5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`subject`',filter)\">Subject</TD>" : "";					
-				$print .= (in_array('6', $columns_arr)) ? "<TD id='message' class='cols_h' NOWRAP style='width: 38%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`message`',filter)\">Message</TD>" : "";
-				$print .= (in_array('7', $columns_arr)) ? "<TD id='date' class='cols_h' style='width: 8%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`date`',filter)\">Date</TD>" : "";
-				$print .= (in_array('8', $columns_arr)) ? "<TD id='owner' class='cols_h' NOWRAP style='width:7%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`_by`',filter)\">Owner</TD>" : "";
-				$print .= "<TD id='del' class='cols_h' NOWRAP style='width: 3%; color: red;'>&nbsp;&nbsp;&nbsp;</TD>";
+				$print .= (in_array('1', $columns_arr)) ? "<TD id='ticket' class='cols_h text' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`ticket_id`',filter)\">Tkt</TD>" : "";					
+				$print .= (in_array('2', $columns_arr)) ? "<TD id='type' class='cols_h text' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`msg_type`',filter)\">Typ</TD>" : "";				
+				$print .= (in_array('3', $columns_arr)) ? "<TD id='fromname' class='cols_h text' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`fromname`',filter)\">From</TD>" : "";				
+				$print .= (in_array('4', $columns_arr)) ? "<TD id='recipients' class='cols_h text' NOWRAP style='width: 5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`recipients`',filter)\">To</TD>" : "";
+				$print .= (in_array('5', $columns_arr)) ? "<TD id='subject' class='cols_h text' NOWRAP style='width: 15.5%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`subject`',filter)\">Subject</TD>" : "";					
+				$print .= (in_array('6', $columns_arr)) ? "<TD id='message' class='cols_h text' NOWRAP style='width: 38%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`message`',filter)\">Message</TD>" : "";
+				$print .= (in_array('7', $columns_arr)) ? "<TD id='date' class='cols_h text' style='width: 8%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`date`',filter)\">Date</TD>" : "";
+				$print .= (in_array('8', $columns_arr)) ? "<TD id='owner' class='cols_h text' NOWRAP style='width:7%;' onClick=\"sort_switcher('main', the_selected_ticket,'','`_by`',filter)\">Owner</TD>" : "";
+				$print .= "<TD id='del' class='cols_h text' NOWRAP style='width: 3%; color: red;'>&nbsp;&nbsp;&nbsp;</TD>";
 				print $print;
 ?>			
 				</TR>

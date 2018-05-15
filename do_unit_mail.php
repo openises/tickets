@@ -115,25 +115,26 @@ TEXTAREA {FONT-SIZE: 1vw;}
 .row { white-space: nowrap; display: table-row;}
 .cell {display: table-cell; padding-left: 10px; padding-right: 10px;}
 </STYLE>
+<SCRIPT SRC="./js/jss.js"></SCRIPT>
 <SCRIPT SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT>
-	String.prototype.trim = function () {
-		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-		};
+	var viewportwidth, viewportheight;
+	window.onresize=function(){set_size()};
 
-	function $() {
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}		
+		set_fontsizes(viewportwidth, "popup");
 		}
-	
+
 	function do_step_1() {
 		document.mail_form.submit();
 		}
@@ -162,7 +163,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
 						document.mail_form.frm_add_str.value += sep + the_e_add;
 						}
 					} else {
-					document.mail_form.frm_resp_ids.value += sep + the_r_id;					
+					document.mail_form.frm_resp_ids.value += sep + the_r_id;				
 					document.mail_form.frm_add_str.value += sep + the_e_add;
 					}
 				sep = "|";
@@ -173,6 +174,8 @@ TEXTAREA {FONT-SIZE: 1vw;}
 			alert ("Addressees required");
 			return false;
 			}
+//		alert(document.mail_form.frm_add_str.value);
+//		alert(document.mail_form.frm_smsg_ids.value);
 		document.mail_form.submit();	
 		}
 
@@ -286,17 +289,28 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				$row = stripslashes_deep(mysql_fetch_assoc($result));
 				$smsg_ids = (isset($row['smsg_id'])) ? $row['smsg_id'] : "";			
 ?>
-			<BODY scroll='auto' onLoad = "reSizeScr(1); document.mail_form.frm_subj.focus();"><CENTER>		<!-- 1/12/09 -->
+			<BODY scroll='auto' onLoad = "reSizeScr(1); document.mail_form.frm_subj.focus();"><CENTER>
+			<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
+			<INPUT TYPE='hidden' NAME='frm_step' VALUE='3'>	
 			<TABLE ALIGN='center' BORDER = 0>
 				<TR CLASS='odd'><TH COLSPAN=2>Mail to: <?php print $row['name']; ?></TH></TR> <!-- 7/2/10 -->
 				
-				<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
-				<INPUT TYPE='hidden' NAME='frm_step' VALUE='3'>	
+
 <?php
-				if($row['contact_via'] != "") { 
+				$em_arr = array();
+				$temp_arr = array();
+				$temp_addrs = get_contact_via($row['id']);
+				foreach($temp_addrs as $val) {
+					if (is_email($val)) {
+						array_push($temp_arr, $val);
+						}
+					}
+				$em_arr = array_unique($temp_arr);
+				$em_addr = implode("|", $em_arr);
+				if($em_addr != "") { 
 ?>
 					<TR VALIGN = 'TOP' CLASS='even'><TD ALIGN='right'  CLASS="td_label">To: </TD>
-						<TD><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $row['contact_via'];?>' SIZE = 36></TD>
+						<TD><INPUT TYPE='text' NAME='frm_add_str' VALUE='<?php print $em_addr;?>' SIZE = 48></TD>
 					</TR>	
 
 <?php 
@@ -346,26 +360,20 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				</TR>
 				<TR><TD>&nbsp;</TD></TR>	
 <?php
-				if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) { // 10/23/12
+				if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {
 ?>				
 					<TR>
 						<TD ALIGN='left' COLSPAN=2>
-<?php 
-							if($row['contact_via'] != "") {
-?>			
-								<input type="radio" name="use_smsg" VALUE="0"
+							<input type="radio" name="use_smsg" VALUE="0"
 <?php
-									if($row['contact_via'] != "" && get_msg_variable('default_sms') == "0") {
-										print "checked";
-										}	
+								if(get_msg_variable('default_sms') == "0") {
+									print "checked";
+									}	
 ?>
-									> Use Email or Twitter<br>
-<?php 
-								} 
-?>
+								> Use Email or Twitter<br>
 							<input type="radio" name="use_smsg" VALUE="1"
 <?php
-							if($row['contact_via'] == "" || get_msg_variable('default_sms') == "1") {
+							if(get_msg_variable('default_sms') == "1") {
 								print "checked";
 								}	
 ?>
@@ -477,8 +485,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
 					ORDER BY  `name` ASC ";	//	10/23/12
 //			dump(__LINE__);
 //			dump($step);
-				}
-			else {												// 7/1/10 - 9/19/10
+				} else {												// 7/1/10 - 9/19/10
 				$query = "SELECT *, `r`.`id` AS `responder_id`,
 					`t`.`lat` AS `t_lat`,
 					`t`.`lng` AS `t_lng`,
@@ -522,7 +529,10 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				}		// end function do_clear
 
 			</SCRIPT>
-		<BODY scroll='auto' onLoad = "reSizeScr(<?php print $lines;?>); document.mail_form.frm_subj.focus();"><CENTER>		<!-- 1/12/09  -->
+		<BODY scroll='auto' onLoad = "reSizeScr(<?php print $lines;?>); document.mail_form.frm_subj.focus();"><CENTER>
+		<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
+		<INPUT TYPE='hidden' NAME='frm_step' VALUE='3'>	<!-- '3' = select units, '3' = send to selected units -->
+		<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
 		<TABLE ALIGN = 'center' border=0>
 			<TR>
 				<TD COLSPAN=99 ALIGN='center'>
@@ -545,28 +555,80 @@ TEXTAREA {FONT-SIZE: 1vw;}
 		}
 ?>
 			<P>
-			
-			<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
-			<INPUT TYPE='hidden' NAME='frm_step' VALUE='3'>	<!-- '3' = select units, '3' = send to selected units -->
-			<INPUT TYPE='hidden' NAME='frm_add_str' VALUE=''>	<!-- for pipe-delim'd addr string -->
-
 <?php			
 				if($no_rows>0) {
 					$the_arr = array();
 					$n=1;
 					while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){	//	create an array from the result row
-						$name_arr = explode("/", $row['name']);
-						$thename = $name_arr[0];
-						$the_arr[$n]['smsg_id'] = $row['smsg_id'];
-						$the_arr[$n]['name'] = $row['name'];
+						$smsg_arr = array();
+						$temp_arr = array();
+						$temp_smsg = get_smsgid($row['responder_id']);
+						$smsg_length = count($temp_smsg);
+						foreach($temp_smsg as $val) {
+							array_push($temp_arr, $val);
+							}
+						$smsg_arr = array_unique($temp_arr);
+						$smsg_addr = implode(",", $smsg_arr);
+						if($smsg_length > 1) {
+							$the_arr[$n]['smsg_id'] = "...Multiple...";
+							} else {
+							$the_arr[$n]['smsg_id'] = $smsg_addr;
+							}
+							
+						$cell_arr = array();
+						$temp_arr = array();
+						$temp_cell = get_mdb_cell($row['responder_id']);
+						$cell_length = count($temp_cell);
+						foreach($temp_cell as $val) {
+							array_push($temp_arr, $val);
+							}
+						$cell_arr = array_unique($temp_arr);
+						$theCells = implode(",", $cell_arr);
+						if($cell_length > 1) {
+							$the_arr[$n]['cellphone'] = "...Multiple...";
+							} else {
+							$the_arr[$n]['cellphone'] = $theCells;
+							}
+						$name_arr = array();
+						$temp_arr = array();
+						$temp_names = get_mdb_names($row['responder_id']);
+						$names_length = count($temp_names);
+						foreach($temp_names as $val) {
+							array_push($temp_arr, $val);
+							}
+						$name_arr = array_unique($temp_arr);
+						$theNames = implode(",", $name_arr);	
+						if($names_length > 1) {
+							$the_arr[$n]['name'] = "...Multiple...";
+							} else {
+							$the_arr[$n]['name'] = $theNames;
+							}
 						$the_arr[$n]['handle'] = $row['handle'];	
 						$the_arr[$n]['responder_id'] = $row['responder_id'];
-						$the_arr[$n]['contact_via'] = $row['contact_via'];
+						$em_arr = array();
+						$temp_arr = array();
+						$temp_addrs = get_contact_via($row['responder_id']);
+						$addrs_length = count($temp_addrs);
+						foreach($temp_addrs as $val) {
+							if (is_email($val)) {
+								array_push($temp_arr, $val);
+								}
+							}
+						$em_arr = array_unique($temp_arr);
+						$em_addr = implode("|", $em_arr);
+						if($addrs_length > 1) {
+							$the_arr[$n]['contact_via'] = "...Multiple...";
+							} else {
+							$the_arr[$n]['contact_via'] = $em_addr;
+							}
 						$the_arr[$n]['bg_color'] = $row['bg_color'];		
 						$the_arr[$n]['text_color'] = $row['text_color'];
-						$the_arr[$n]['cellphone'] = ($row['cellphone'] != "" && $row['cellphone'] != null) ? $row['cellphone'] : "";
 						$the_arr[$n]['distance'] = (isset($t_row['t_lat'])) ? distance($row['r_lat'], $row['r_lng'], $t_row['t_lat'], $t_row['t_lng'], "N") : 0;	//	populate array entry with distance from responder to ticket
 						$the_arr[$n]['status'] = $row['status_val'];
+						$the_arr[$n]['fullnames'] = $theNames;
+						$the_arr[$n]['fullcontactvia'] = $em_addr;
+						$the_arr[$n]['fullsmsgids'] = $smsg_addr;
+						$the_arr[$n]['fullcells'] = $theCells;
 						$n++;
 						}
 					if((isset($_GET['the_ticket'])) && ($_GET['the_ticket'] != 0)) {
@@ -588,19 +650,19 @@ TEXTAREA {FONT-SIZE: 1vw;}
 							$checked = "";
 							}
 						$smsg = $cell = "";
-						$e_add = (($val['contact_via'] == NULL) || ($val['contact_via'] == "")) ? "<SPAN TITLE='No email address stored' class='cell' style='color: LightGrey;'>(E) NONE</SPAN>" : "<SPAN TITLE='{$val['contact_via']}' class='cell'>(E) " . shorten($val['contact_via'], 30) . "</SPAN>" ;
+						$e_add = (($val['contact_via'] == NULL) || ($val['contact_via'] == "")) ? "<SPAN TITLE='No email address stored' class='cell' style='color: LightGrey;'>(E) NONE</SPAN>" : "<SPAN TITLE='{$val['fullcontactvia']}' class='cell'>(E) " . $val['contact_via'] . "</SPAN>" ;
 						if($using_smsg && $smsg_provider == "SMS Responder") {
-							$smsg = (($val['smsg_id'] == NULL) || ($val['smsg_id'] == "")) ? "<SPAN TITLE='SMS Gateway ID stored' class='cell' style='color: LightGrey; display:'>(SMSG) NONE</SPAN>" : "<SPAN TITLE='{$val['smsg_id']}' class='cell'>(SMSG) " . shorten($val['smsg_id'], 10) . "</SPAN>" ;
+							$smsg = (($val['smsg_id'] == NULL) || ($val['smsg_id'] == "")) ? "<SPAN TITLE='SMS Gateway ID stored' class='cell' style='color: LightGrey; display:'>(SMSG) NONE</SPAN>" : "<SPAN TITLE='{$val['fullsmsgids']}' class='cell'>(SMSG) " . $val['smsg_id'] . "</SPAN>" ;
 							}
 						if($using_smsg && $smsg_provider == "Txt Local") {				
-							$cell = (($val['cellphone'] == NULL) || ($val['cellphone'] == "")) ? "<SPAN TITLE='No Cellphone number stored' class='cell' style='color: LightGrey;'>(CELL) NONE</SPAN>" : "<SPAN TITLE='{$val['cellphone']}' class='cell'>(CELL) " . shorten($val['cellphone'], 12) . "</SPAN>" ;
+							$cell = (($val['cellphone'] == NULL) || ($val['cellphone'] == "")) ? "<SPAN TITLE='No Cellphone number stored' class='cell' style='color: LightGrey;'>(CELL) NONE</SPAN>" : "<SPAN TITLE='{$val['fullcells']}' class='cell'>(CELL) " . $val['cellphone'] . "</SPAN>" ;
 							}
-						$dist = (round($val['distance'],1) != 0) ? "Dist: " . round($val['distance'],2) : "";         
+						$dist = (round($val['distance'],1) != 0) ? "Dist: " . round($val['distance'],2) : ""; 
 						print "\t<SPAN class='row' STYLE='background-color:{$val['bg_color']}; color:{$val['text_color']};'>
-							<INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$val['contact_via']}:{$val['responder_id']}:{$val['smsg_id']}:' {$checked}>
-							<SPAN class='cell'>{$dist}</SPAN>
-							<SPAN class='cell'>{$val['handle']}</SPAN>
-							<SPAN TITLE='{$val['status']}' class='cell'>{$val['name']}</SPAN>
+							<SPAN class='cell'><INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$val['fullcontactvia']}:{$val['responder_id']}:{$val['fullsmsgids']}:' {$checked}></SPAN>
+							<SPAN class='cell'>" . $dist . "</SPAN>
+							<SPAN class='cell' TITLE='{$val['status']}'>{$val['handle']}</SPAN>
+							<SPAN class='cell' TITLE='{$val['fullnames']}'>{$val['name']}</SPAN>
 							{$e_add} 
 							{$smsg}
 							{$cell}
@@ -659,18 +721,20 @@ TEXTAREA {FONT-SIZE: 1vw;}
 			</TR>
 <?php	//	10/23/12
 				if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {
+					$checkede = (get_msg_variable('default_sms') == "0") ? "checked" : "";
+					$checkeds = (get_msg_variable('default_sms') == "1") ? "checked" : "";
 ?>					
 					<TR><TD>&nbsp;</TD></TR>				
 					<TR>
 						<TD ALIGN='left' COLSPAN=2>
-							<input type="radio" name="use_smsg" VALUE="0" checked> Use Email<br>
-							<input type="radio" name="use_smsg" VALUE="1"> Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?<br>						
+							<input type="radio" name="use_smsg" VALUE="0" <?php print $checkede;?>> Use Email<br>
+							<input type="radio" name="use_smsg" VALUE="1" <?php print $checkeds;?>> Use <?php get_provider_name(get_msg_variable('smsg_provider'));?>?<br>						
 						</TD>
 					</TR>
 <?php
 					} else {
 ?>
-				<INPUT TYPE='hidden' NAME="use_smsg" VALUE='0'>
+					<INPUT TYPE='hidden' NAME="use_smsg" VALUE='0'>
 <?php
 					}
 ?>
@@ -713,4 +777,17 @@ TEXTAREA {FONT-SIZE: 1vw;}
 
 ?>
 </BODY>
+<SCRIPT>
+if (typeof window.innerWidth != 'undefined') {
+	viewportwidth = window.innerWidth,
+	viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+	viewportwidth = document.documentElement.clientWidth,
+	viewportheight = document.documentElement.clientHeight
+	} else {
+	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+	viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}		
+set_fontsizes(viewportwidth, "popup");
+</SCRIPT>
 </HTML>

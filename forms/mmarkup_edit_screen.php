@@ -193,7 +193,6 @@ function set_type(id) {
 		$('ban_text').style.display='inline';
 		$('font_size').style.display='inline';
 		$('line_width').style.display='none';
-		$('line_width2').style.display='none';
 		$('type_flag').innerHTML = $('type_flag2').innerHTML = "Banner";
 		type = "b";
 		} else {

@@ -200,8 +200,17 @@ function validate(theForm) {						// Facility form contents validation
 	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)			{errmsg+="Facility TYPE is required.\n";}
 	if (theForm.frm_status_id.options[theForm.frm_status_id.selectedIndex].value==0)	{errmsg+="Facility STATUS is required.\n";}
 	if (theForm.frm_descr.value.trim()=="")											{errmsg+="Facility DESCRIPTION is required.\n";}
-	if ((theForm.frm_lat.value=="") || (theForm.frm_lng.value==""))					{errmsg+="Facility LOCATION must be set - click map location to set.\n";}	// 11/11/09 position mandatory
-	
+	if(allow_nogeo == "0") {
+		if (theForm.frm_lat.value.trim().length == 0) 	{
+			errmsg+="Facility LOCATION must be set - click map location to set.\n";
+			}
+		} else {
+		if(theForm.frm_lat.value.trim().length == 0) {
+			theForm.frm_lat.value = def_lat;
+			theForm.frm_lng.value = def_lng;
+			}
+		}	
+
 	if (errmsg!="") {
 		alert ("Please correct the following and re-submit:\n\n" + errmsg);
 		return false;

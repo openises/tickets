@@ -37,7 +37,7 @@ function get_circlecenter($id) {
 	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 	if(mysql_num_rows($result) != 0) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$temp = explode(":", $row['line_data']);
+		$temp = explode(";", $row['line_data']);
 		$center = explode(",", $temp[0]);
 		return $center;
 		} else {

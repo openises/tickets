@@ -334,7 +334,7 @@ function check_days(id) {
 				</TR>
 					<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility Name - fill in with Name/index where index is the label in the list and on the marker">Name</A>:&nbsp;<font color='red' size='-1'>*</font>
+						<LABEL for="name" style='width: 100%;' title="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
 					</TD>			
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -343,7 +343,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Handle - local rules, local abbreviated name for the facility">Handle</A>:&nbsp;<font color='red' size='-1'>*</font>
+						<LABEL for="handle" style='width: 100%;' title="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
 					</TD>			
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -357,11 +357,14 @@ function check_days(id) {
 					if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {		//	6/10/11
 ?>			
 						<TR CLASS='even' VALIGN='top'>
-							<TD CLASS='td_label text'><A CLASS="td_label text" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?></A>:
+							<TD CLASS='td_label text'>
+								<LABEL style='width: 100%;' title="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?>:</LABEL>
+							</TD>
+							<TD>
 								<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
-							<TD>
+							<TD COLSPAN=2 CLASS='td_data text'>
 <?php			
 								$alloc_groups = implode(',', get_allocates(3, $id));
 								print get_sub_group_butts(($_SESSION['user_id']), 3, $id) ;
@@ -372,11 +375,14 @@ function check_days(id) {
 						} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {
 ?>
 						<TR CLASS='even' VALIGN='top'>
-							<TD CLASS='td_label text'><A CLASS="td_label text" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?></A>:
+							<TD CLASS='td_label text'>
+								<LABEL style='width: 100%;' title="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?>:</LABEL>
+							</TD>
+							<TD>
 								<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
-							<TD>
+							<TD COLSPAN=2 CLASS='td_data text'>
 <?php
 								$alloc_groups = implode(',', get_allocates(3, $id));
 								print get_sub_group_butts(($_SESSION['user_id']), 3, $id) ;
@@ -387,11 +393,14 @@ function check_days(id) {
 						} else {
 ?>
 						<TR CLASS='even' VALIGN='top'>
-							<TD CLASS='td_label text'><A CLASS="td_label text" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Regions');?></A>:
+							<TD CLASS='td_label text'>
+								<LABEL style='width: 100%;' title="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?>:</LABEL>
+							</TD>
+							<TD>
 								<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
-							<TD>
+							<TD COLSPAN=2 CLASS='td_data text'>
 <?php
 								$alloc_groups = implode(',', get_allocates(3, $id));
 								print get_sub_group_butts_readonly(($_SESSION['user_id']), 3, $id);
@@ -410,7 +419,7 @@ function check_days(id) {
 ?>
 					<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 						<TD CLASS="td_label text">
-							<A CLASS="td_label text" HREF="#"  TITLE="Sets Facility Boundary"><?php print get_text("Boundary");?></A>:
+							<LABEL for="boundary" style='width: 100%;' title="Sets Facility Boundary"><?php print get_text("Boundary");?>:</LABEL>
 						</TD>
 						<TD>&nbsp;</TD>
 						<TD COLSPAN=2 CLASS='td_data text'>
@@ -435,7 +444,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even" VALIGN='middle'>
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility Type - Select from menu">Type</A>:&nbsp;<font color='red' size='-1'>*</font>
+						<LABEL for="type" style='width: 100%;' title="Facility Type - Select from menu"><?php print get_text("Type");?>:&nbsp;<font color='red' size='-1'>*</font>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -448,13 +457,13 @@ function check_days(id) {
 								}
 ?>
 						</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-						<A CLASS="td_label' HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;
-						<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked />
+						<LABEL for='direcs' style='width: 100%;' title="Calculate directions on dispatch? - required if you wish to use email directions to unit facility"><?php print get_text('Directions');?>:</LABEL>
+						<INPUT id='direcs' TYPE="checkbox" NAME="frm_direcs_disp" checked />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility Status - Select from pulldown menu">Status</A>:&nbsp;
+						<LABEL for="status" style='width: 100%;' title="Facility Status - Select from pulldown menu"><?php print get_text("Status");?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -484,9 +493,9 @@ function check_days(id) {
 ?>
 					</TD>
 				</TR>
-				<TR CLASS = "odd">
+				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="About Facility status - information about particular status values for this facility">About Status</A>
+						<LABEL for="about" style='width: 100%;' title="About Facility status - information about particular status values for this facility"><?php print get_text("About Status");?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -498,7 +507,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Location - type in location in fields or click location on map ">Location</A>:
+						<LABEL for="location" style='width: 100%;' title="Location - type in location in fields or click location on map "><?php print get_text("Location");?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -507,7 +516,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS='odd'>
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:
+						<LABEL for="city" style='width: 100%;' title="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City");?>:</LABEL>
 					</TD>
 					<TD><button type="button" onClick="Javascript:loc_lkup(document.res_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button></TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -519,7 +528,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
+						<LABEL for="description" style='width: 100%;' title="Facility Description - additional details about Facility"><?php print get_text("Description");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -528,19 +537,19 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility beds "><?php print get_text("Beds"); ?></A>&nbsp;
+						<LABEL for="beds_a" style='width: 100%;' title="Facility beds "><?php print get_text("Beds");?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<SPAN  CLASS = "td_label text" STYLE = "margin-left:20px;">Available: </SPAN>
+						<LABEL for="beds_a" style='width: auto;' title="Facility beds "><?php print get_text("Available");?>:</LABEL>
 						<INPUT id='beds_a' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_a" VALUE="<?php print $row['beds_a'];?>" />			
-						<SPAN  CLASS = "td_label text" STYLE = "margin-left:20px;">Occupied: </SPAN>
+						<LABEL for="beds_o" style='width: auto;' title="Facility beds "><?php print get_text("Occupied");?>:</LABEL>
 						<INPUT id='beds_o' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_o" VALUE="<?php print $row['beds_o'];?>" />			
 					</TD>
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Beds information"><?php print get_text("Beds"); ?> information</A>:&nbsp;
+						<LABEL for="beds_info" style='width: 100%;' title="Facility Description - additional details about Facility"><?php print get_text("Beds"); ?> information:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -549,7 +558,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility Capability - e.g ER, Cells, Medical distribution"><?php print get_text("Capability"); ?></A>:&nbsp;
+						<LABEL for="capability" style='width: 100%;' title="Facility Capability - e.g ER, Cells, Medical distribution"><?php print get_text("Capability"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -558,7 +567,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility main contact name">Contact name</A>:&nbsp;
+						<LABEL for="contact_name" style='width: 100%;' title="Facility main contact name"><?php print get_text("Contact Name"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -567,7 +576,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility contact email - main contact email address"><?php print get_text("Contact email"); ?></A>:&nbsp;
+						<LABEL for="contact_email" style='width: 100%;' title="Facility contact email - main contact email address"><?php print get_text("Contact Email"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -576,7 +585,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility contact phone number - main contact phone number">Contact phone</A>:&nbsp;
+						<LABEL for="contact_phone" style='width: 100%;' title="Facility contact phone number - main contact phone number"><?php print get_text("Contact Phone"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -585,7 +594,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility security contact">Security contact</A>:&nbsp;
+						<LABEL for="sec_contact" style='width: 100%;' title="Facility security contact"><?php print get_text("Security contact"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -594,7 +603,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility security contact email">Security email</A>:&nbsp;
+						<LABEL for="sec_email" style='width: 100%;' title="Facility security contact email"><?php print get_text("Security Email"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -603,7 +612,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility security contact phone number">Security phone</A>:&nbsp;
+						<LABEL for="sec_phone" style='width: 100%;' title="Facility security contact phone number"><?php print get_text("Security Phone"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -612,7 +621,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc.">Opening hours</A>:&nbsp;
+						<LABEL style='width: 100%;' title="Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc."><?php print get_text("Opening Hours"); ?>:</LABEL>
 					</TD>
 <?php
 					$opening_arr_serial = base64_decode($row['opening_hours']);
@@ -680,7 +689,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility access rules - e.g enter by main entrance, enter by ER entrance, call first etc"><?php print get_text("Access rules"); ?></A>:&nbsp;
+						<LABEL for='access_rules' style='width: 100%;' title="Facility access rules - e.g enter by main entrance, enter by ER entrance, call first etc"><?php print get_text("Access rules"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -689,7 +698,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility security requirements - e.g. phone security first, visitors must be security cleared etc.">Security reqs</A>:&nbsp;
+						<LABEL for='sec_reqs' style='width: 100%;' title="Facility security requirements - e.g. phone security first, visitors must be security cleared etc."><?php print get_text("Security reqs"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -698,7 +707,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility contact primary pager number">Pager Primary</A>:&nbsp;
+						<LABEL for='pager_prim' style='width: 100%;' title="Facility contact primary pager number."><?php print get_text("Pager Primary"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -707,7 +716,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Facility contact secondary pager number">Pager Secondary</A>:&nbsp;
+						<LABEL for='pager_sec' style='width: 100%;' title="Facility contact secondary pager number."><?php print get_text("Pager Secondary"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -718,13 +727,13 @@ function check_days(id) {
 <?php
 				$map_capt = "<BR /><BR /><CENTER><B><FONT CLASS = 'normal_text'>Click Map to revise facility location</FONT></B>";
 				$lock_butt = (!$is_mobile)? "<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_edit_Form);'>" : "" ;
-				$usng_link = (!$is_mobile)? "<SPAN ID = 'usng_link' onClick = 'do_usng_conv(res_edit_Form)'>{$usng}:</SPAN>": "{$usng}:";
-				$osgb_link = (!$is_mobile)? "<SPAN ID = 'osgb_link'>{$osgb}:</SPAN>": "{$osgb}:";		
+				$usng_link = (!$is_mobile)? "<LABEL for='grid' style='width: 100%;' title='Show USNG Grid' onClick = 'do_usng_conv(res_edit_Form)'>" . get_text('USNG') . ":</LABEL>": "{$usng}:";
+				$osgb_link = (!$is_mobile)? "<LABEL for='grid' style='width: 100%;'>" . get_text('OSGB') . ":</LABEL>": "{$osgb}:";		
 ?>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<SPAN onClick = 'javascript: do_coords(document.res_edit_Form.frm_lat.value ,document.res_edit_Form.frm_lng.value  )' ><A CLASS="td_label text" HREF="#" TITLE="Latitude and Longitude - set from map click">
-						Lat/Lng</A></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;<?php print $lock_butt;?>
+						<LABEL for='show_lat' style='width: 100%;' title="Latitude and Longitude - set from map click or geocoding address." onClick = 'javascript: do_coords(document.res_edit_Form.frm_lat.value ,document.res_edit_Form.frm_lng.value);'><?php print get_text("Lat/Lng");?>:</LABEL>
+						&nbsp;&nbsp;&nbsp;&nbsp;<?php print $lock_butt;?>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -777,7 +786,7 @@ function check_days(id) {
 ?>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Notify Facility with selected mail list"><?php print get_text("Notify Mail List"); ?></A>:&nbsp;
+						<LABEL for='mailgroup' style='width: 100%;' title="Notify Facility with selected mail list."><?php print get_text("Notify Mail List"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -786,7 +795,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Notify Facility with this email address"><?php print get_text("Notify Email Address"); ?></A>:&nbsp;
+						<LABEL for='notify_email' style='width: 100%;' title="Notify Facility with this email address."><?php print get_text("Notify Email Address"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -795,7 +804,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Notify when?"><?php print get_text("Notify when"); ?></A>:&nbsp;
+						<LABEL for='notify_when' style='width: 100%;' title="Notify when?."><?php print get_text("Notify When"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -818,25 +827,29 @@ function check_days(id) {
 					<TD COLSPAN='4' class='heading text' style='text-align: center;'>File Upload</TD>
 				</TR>
 				<TR class='even'>
-					<TD class='td_label text' style='text-align: left;'>Choose a file to upload:</TD>
+					<TD class='td_label text' style='text-align: left;'>
+						<LABEL for='file' style='width: 100%;' title="File Upload."><?php print get_text("Choose a file to upload"); ?>:</LABEL>
+					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text text_left'>
 						<INPUT id='file' NAME="frm_file" TYPE="file" />
 					</TD>
 				</TR>
 				<TR class='odd'>
-					<TD class='td_label text' style='text-align: left;'>File Name</TD>
+					<TD class='td_label text' style='text-align: left;'>
+						<LABEL for='filename' style='width: 100%;' title="Type a descriptive name for the file."><?php print get_text("Filename"); ?>:</LABEL>
+					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text text_left'>
 					<INPUT id='filename' NAME="frm_file_title" TYPE="text" SIZE="48" MAXLENGTH="128" VALUE=""></TD>
 				</TR>
 				<TR CLASS="even" VALIGN='baseline'>
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Delete Facility from system">Remove Facility</A>:&nbsp;
+						<LABEL for='remove_facility' style='width: 100%;' title="Delete Facility from system."><?php print get_text("Remove Facility"); ?>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
+						<INPUT id='remove_facility' TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
 					</TD>
 				</TR>
 				<TR class='even'>

@@ -43,6 +43,7 @@ var viewportheight;
 var colheight;
 var outerwidth;
 var outerheight;
+
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 	}
@@ -275,16 +276,50 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
 				</TR>	
-				<TR CLASS = "even">
-					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Roster User">Roster User</A></TD>	<!-- 9/6/13 -->
-					<TD CLASS='td_data text' COLSPAN=3 style='text-align: left; vertical-align: top;'><?php print get_roster();?><DIV id='user_details' style='width: 300px; vertical-align: top; display: none; font-size: 1.3em; word-wrap: normal;'></DIV></TD>
-				</TR>	
+<?php
+				if($useMdb == "0") {
+?>
+					<TR CLASS = "even">
+						<TD CLASS="td_label text">
+							<A CLASS="td_label text" HREF="#" TITLE="Roster User">Roster User</A>
+						</TD>
+						<TD>&nbsp;</TD>
+						<TD COLSPAN=2 CLASS='td_data text'>
+							<?php print get_roster();?>
+							<DIV id='user_details' style='width: 300px; vertical-align: top; display: none; font-size: 1.3em; word-wrap: normal;'></DIV>
+						</TD>
+					</TR>
+<?php
+					} else {
+?>
+					<INPUT TYPE="hidden" NAME="frm_roster_id" VALUE="0" />
+<?php
+					}
+				if($useMdb == "1" && $useMdbContact == "1") {
+?>
+					<TR ID = 'members_row' CLASS = "odd">
+						<TD CLASS="td_label text top">
+							<A CLASS="td_label text" HREF="#" TITLE="Members on Unit">Members Assigned to Unit</A>:<BR /><SPAN CLASS='text_white'>Red shows members already assigned to other units.</SPAN>
+						</TD>
+						<TD>&nbsp;</TD>				
+						<TD COLSPAN=2 CLASS='td_data_wrap text'>
+							<?php print get_responder_members(NULL);?>
+						</TD>
+						<INPUT TYPE="hidden" NAME = "frm_name" VALUE=" " />
+					</TR>
+					<TR class='spacer'>
+						<TD class='spacer' COLSPAN=99></TD>
+					</TR>
+<?php				
+					}
+?>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name">Name</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;
+						<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<font color='red' size='-1'>*</font>
 					</TD>
-					<TD CLASS='td_data text' COLSPAN=3 >
-						<INPUT ID='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="" />
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text'>
+						<INPUT id='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -596,8 +631,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				if($good_internet) {
 ?>
 					<TR CLASS = "even">
-						<TD CLASS="td_label_text">
-							<A CLASS="td_label_text" HREF="#" TITLE="Latitude and Longitude - set from map click">
+						<TD CLASS="td_label text">
+							<A CLASS="td_label text" HREF="#" TITLE="Latitude and Longitude - set from map click">
 							<SPAN CLASS='td_label text' onClick = 'javascript: do_coords(document.res_add_Form.frm_lat.value ,document.res_add_Form.frm_lng.value)'>
 								Lat/Lng</A></SPAN>
 							<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_add_Form);' />

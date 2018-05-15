@@ -65,17 +65,16 @@ $actr=0;
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]roadinfo` `r` WHERE `r`.`_on` >= (NOW() - INTERVAL 5 DAY) {$order} {$order2}";
 $result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$bgcolor = "#EEEEEE";
 $num=mysql_num_rows($result);
 if (mysql_num_rows($result) == 0) { 				// 8/6/08
 	$print = "<TABLE style='width: 100%;'><TR style='width: 100%;'><TD style='width: 100%;'>No Alerts</TD></TR></TABLE>";
 	} else {
 	$print = "<TABLE style='width: 100%;'>";
-	$print .= "<TR style='width: 100%; font-weight: bold; color: #FFFFFF; background-color: #707070;'><TD style='width: 30%;'>LOCATION</TD><TD style='width: 60%;'>SUBJECT</TD><TD style='width: 10%;'>DIST</TD></TR>";
+	$print .= "<TR style='width: 100%; font-weight: bold; color: #FFFFFF; background-color: #707070;'><TD style='width: 30%; color: #FFFFFF;'>LOCATION</TD><TD style='width: 60%; color: #FFFFFF;'>SUBJECT</TD><TD style='width: 10%; color: #FFFFFF;'>DIST</TD></TR>";
 	$z=0;
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$the_arr[$z]['id'] = $row['id'];
-		$the_arr[$z]['address'] = stripslashes_deep(shorten($row['address'], 30));
+		$the_arr[$z]['address'] = stripslashes_deep(shorten($row['address'], 15));
 		$the_arr[$z]['description'] = stripslashes_deep(shorten($row['description'], 30));
 		$the_arr[$z]['when'] = format_date_2(strtotime($row['_on']));
 		$the_arr[$z]['lat'] = $row['lat'];
@@ -84,14 +83,14 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$z++;
 		} // end while
 	$the_arr = subval_sort($the_arr,'distance');
-		
+	$i=1;		// line counter		
 	foreach($the_arr AS $val) {
-		$print .= "<TR style='width: 100%; cursor: pointer; background-color: " . $bgcolor . ";' onClick='get_alert(" . $val['id'] . ");'>";
-		$print .= "<TD style='width: 30%;'>" . $val['address'] . "</TD>";
-		$print .= "<TD style='width: 60%;'>" . $val['description'] . "</TD>";
-		$print .= "<TD style='width: 10%;'>" . round($val['distance'], 2) . "</TD>";		
-		$print .= "</TR>";	
-		$bgcolor = ($bgcolor == "#EEEEEE") ? "#FEFEFE" : "#EEEEEE";		
+		$print .= "<TR CLASS = '{$evenodd[$i%2]}' style='width: 100%; cursor: pointer; height: 35px;' onClick='get_alert(" . $val['id'] . ");'>";
+		$print .= "<TD class='text_large' style='width: 30%;'>" . $val['address'] . "</TD>";
+		$print .= "<TD class='text_large' style='width: 60%;'>" . $val['description'] . "</TD>";
+		$print .= "<TD class='text_large' style='width: 10%;'>" . round($val['distance'], 2) . "</TD>";		
+		$print .= "</TR>";
+		$i++;
 		}
 	$print .= "</TABLE>";		
 	}				// end else

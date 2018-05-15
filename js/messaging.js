@@ -277,21 +277,21 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if($('message')) {$('message').innerHTML = "Message";}		
 		if($('date')) {$('date').innerHTML = "Date";}	
 		if($('owner')) {$('owner').innerHTML = "Owner";}	
-		if($('type')) {$('type').innerHTML = "Type";}			
+		if($('type')) {$('type').innerHTML = "Type";}
 		if(theSort == '`ticket_id`') {
 			theSort = '`ticket_id`';
-			if(theOrder == "DESC") {
+			if(theOrder == "DESC" || theOrder == "") {
 				theOrder = "ASC";
 				} else {
 				theOrder = "DESC";
 				}			
-			} else if(theSort == 'ticket_id') {
+			} else if(theSort == '`ticket_id` DESC, `date` DESC, `read_status` ASC') {
 			theSort = 'ticket_id';
-			if(theOrder == "DESC") {
+			if(theOrder == "DESC" || theOrder == "") {
 				theOrder = "ASC";
 				} else {
 				theOrder = "DESC";
-				}	
+				}
 			} else {
 			theSort = '`ticket_id`';
 			theOrder = "DESC";
@@ -299,7 +299,9 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('ticket').innerHTML = "Tkt &#9660";			
 			} else if(theOrder == "DESC") {
-			$('ticket').innerHTML = "Tkt &#9650";				
+			$('ticket').innerHTML = "Tkt &#9660";				
+			} else if(theOrder == "ASC") {
+			$('ticket').innerHTML = "Tkt &#9650";					
 			} else {
 			$('ticket').innerHTML = "Tkt &#9660";			
 			}	
@@ -330,9 +332,11 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 			theOrder = "DESC";
 			}
 		if(theOrder == "") {
-			$('type').innerHTML = "Typ &#9660";
+			$('type').innerHTML = "Typ &#9660";			
 			} else if(theOrder == "DESC") {
-			$('type').innerHTML = "Typ &#9650";			
+			$('type').innerHTML = "Typ &#9660";				
+			} else if(theOrder == "ASC") {
+			$('type').innerHTML = "Typ &#9650";					
 			} else {
 			$('type').innerHTML = "Typ &#9660";			
 			}	
@@ -363,11 +367,13 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 			theOrder = "DESC";
 			}
 		if(theOrder == "") {
-			$('fromname').innerHTML = "From&#9660";			
+			$('fromname').innerHTML = "From &#9660";			
 			} else if(theOrder == "DESC") {
-			$('fromname').innerHTML = "From&#9650";				
+			$('fromname').innerHTML = "From &#9660";				
+			} else if(theOrder == "ASC") {
+			$('fromname').innerHTML = "From &#9650";					
 			} else {
-			$('fromname').innerHTML = "From&#9660";			
+			$('fromname').innerHTML = "From &#9660";			
 			}	
 	} else if(sort_by == '`recipients`') {
 		if($('fromname')) {$('fromname').innerHTML = "From";}	
@@ -398,7 +404,9 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('recipients').innerHTML = "To &#9660";			
 			} else if(theOrder == "DESC") {
-			$('recipients').innerHTML = "To &#9650";				
+			$('recipients').innerHTML = "To &#9660";				
+			} else if(theOrder == "ASC") {
+			$('recipients').innerHTML = "To &#9650";					
 			} else {
 			$('recipients').innerHTML = "To &#9660";			
 			}				
@@ -431,10 +439,12 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('subject').innerHTML = "Subject &#9660";			
 			} else if(theOrder == "DESC") {
-			$('subject').innerHTML = "Subject &#9650";				
+			$('subject').innerHTML = "Subject &#9660";				
+			} else if(theOrder == "ASC") {
+			$('subject').innerHTML = "Subject &#9650";					
 			} else {
 			$('subject').innerHTML = "Subject &#9660";			
-			}	
+			}
 	} else if(sort_by == '`message`') {
 		if($('fromname')) {$('fromname').innerHTML = "From";}	
 		if($('recipients')) {$('recipients').innerHTML = "To";}	
@@ -464,10 +474,12 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('message').innerHTML = "Message &#9660";			
 			} else if(theOrder == "DESC") {
-			$('message').innerHTML = "Message &#9650";				
+			$('message').innerHTML = "Message &#9660";				
+			} else if(theOrder == "ASC") {
+			$('message').innerHTML = "Message &#9650";					
 			} else {
 			$('message').innerHTML = "Message &#9660";			
-			}			
+			}
 	} else if(sort_by == '`date`') {
 		if($('fromname')) {$('fromname').innerHTML = "From";}	
 		if($('recipients')) {$('recipients').innerHTML = "To";}	
@@ -497,7 +509,9 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('date').innerHTML = "Date &#9660";			
 			} else if(theOrder == "DESC") {
-			$('date').innerHTML = "Date &#9650";				
+			$('date').innerHTML = "Date &#9660";				
+			} else if(theOrder == "ASC") {
+			$('date').innerHTML = "Date &#9650";					
 			} else {
 			$('date').innerHTML = "Date &#9660";			
 			}
@@ -530,10 +544,12 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('owner').innerHTML = "Owner &#9660";			
 			} else if(theOrder == "DESC") {
-			$('owner').innerHTML = "Owner &#9650";				
+			$('owner').innerHTML = "Owner &#9660";				
+			} else if(theOrder == "ASC") {
+			$('owner').innerHTML = "Owner &#9650";					
 			} else {
 			$('owner').innerHTML = "Owner &#9660";			
-			}	
+			}
 	} else {
 		if($('fromname')) {$('fromname').innerHTML = "From";}	
 		if($('recipients')) {$('recipients').innerHTML = "To";}	
@@ -549,10 +565,12 @@ function sort_switcher(thescreen, ticket_id, responder_id, sort_by, filter) {
 		if(theOrder == "") {
 			$('date').innerHTML = "Date &#9660";			
 			} else if(theOrder == "DESC") {
-			$('date').innerHTML = "Date &#9650";				
+			$('date').innerHTML = "Date &#9660";				
+			} else if(theOrder == "ASC") {
+			$('date').innerHTML = "Date &#9650";					
 			} else {
 			$('date').innerHTML = "Date &#9660";			
-			}	
+			}
 		}
 	if(folder == "inbox") {
 		if((theScreen == "main") || (theScreen == "ticket")) {		
@@ -768,15 +786,15 @@ function get_arch_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 					the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 					the_string += "<TR title='" + the_messages[key][11] + "' class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
 					the_string += "<TD style='width: 4%;'>&nbsp;&nbsp;&nbsp;</TD>";
-					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-					if(the_columns.inArray('2')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-					if(the_columns.inArray('3')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-					if(the_columns.inArray('4')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-					if(the_columns.inArray('5')) {the_string += "<TD class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-					if(the_columns.inArray('6')) {the_string += "<TD class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div text'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-					if(the_columns.inArray('7')) {the_string += "<TD class='cols' width=" + datewidth + " style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-					if(the_columns.inArray('8')) {the_string += "<TD class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
-					the_string += "<TD class='cols' width='3%' style='vertical-align: top;" + theStatus + ";'>&nbsp;&nbsp;&nbsp;</TD>";
+					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+					if(the_columns.inArray('2')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+					if(the_columns.inArray('3')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+					if(the_columns.inArray('4')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+					if(the_columns.inArray('5')) {the_string += "<TD class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+					if(the_columns.inArray('6')) {the_string += "<TD class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div text'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+					if(the_columns.inArray('7')) {the_string += "<TD class='cols text' width=" + datewidth + " style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+					if(the_columns.inArray('8')) {the_string += "<TD class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('archive_message.php?filename=" + archive + "&screen=ticket&folder=archive&rownum=" + the_row + "','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+					the_string += "<TD class='cols text' width='3%' style='vertical-align: top;" + theStatus + ";'>&nbsp;&nbsp;&nbsp;</TD>";
 					the_string += "</TR>";
 					}
 				}
@@ -807,7 +825,6 @@ function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 	theTicket = ticket_id;
 	theResponder = responder_id;
 	theSort = sortby;
-	theOrder = sort;
 	theOrder = sort;
 	theFilter = filter;
 	theScreen = thescreen;
@@ -851,10 +868,10 @@ function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 				var the_record_id = the_messages[key][10]				
 				if(the_record_id) {	
 					if(the_messages[key][9] == 0) {
-						theStatus = "font-weight: bold;";
+						theStatus = "font-weight: bold; font-style: normal;";
 						theNew++;
 						} else {
-						theStatus = "font-weight: normal;";
+						theStatus = "font-weight: normal; font-style: normal;";
 						}
 					var the_text = "";
 					switch(the_messages[key][12]) {
@@ -882,15 +899,15 @@ function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 					the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 					the_string += "<TR class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
 					the_string += "<TD style='width: 4%;'><input type='checkbox' name='" + the_message_id + "' value='" + the_message_id + "' onClick='checkIfChecked();'></TD>";
-					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-					if(the_columns.inArray('2')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-					if(the_columns.inArray('3')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-					if(the_columns.inArray('4')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-					if(the_columns.inArray('5')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-					if(the_columns.inArray('6')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-					if(the_columns.inArray('7')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-					if(the_columns.inArray('8')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
-					the_string += "<TD class='cols' width='3%' style='vertical-align: top;" + theStatus + ";'>";
+					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+					if(the_columns.inArray('2')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+					if(the_columns.inArray('3')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+					if(the_columns.inArray('4')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+					if(the_columns.inArray('5')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+					if(the_columns.inArray('6')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div text'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+					if(the_columns.inArray('7')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+					if(the_columns.inArray('8')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+					the_string += "<TD class='cols text' width='3%' style='vertical-align: top;" + theStatus + ";'>";
 					if(thelevel == '1') {
 						the_string += "<img src='./images/wastebasket.jpg' style='float: right;' onClick='del_message(" + the_message_id + ", \"inbox\")' alt='Delete' height='23px' width='23px'></TD>";
 						} else {
@@ -995,15 +1012,15 @@ function main_msg_cb2(req) {
 				the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 				the_string += "<TR class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
 				the_string += "<TD style='width: 4%;'><input type='checkbox' name='" + the_message_id + "' value='" + the_message_id + "' onClick='checkIfChecked();'></TD>";
-				if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-				if(the_columns.inArray('2')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-				if(the_columns.inArray('3')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-				if(the_columns.inArray('4')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-				if(the_columns.inArray('5')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-				if(the_columns.inArray('6')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-				if(the_columns.inArray('7')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-				if(the_columns.inArray('8')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
-				the_string += "<TD class='cols' width='3%' style='vertical-align: top;" + theStatus + ";'>";
+				if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+				if(the_columns.inArray('2')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+				if(the_columns.inArray('3')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+				if(the_columns.inArray('4')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+				if(the_columns.inArray('5')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+				if(the_columns.inArray('6')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+				if(the_columns.inArray('7')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+				if(the_columns.inArray('8')) {the_string += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+				the_string += "<TD class='cols text' width='3%' style='vertical-align: top;" + theStatus + ";'>";
 				if(thelevel == '1') {
 					the_string += "<img src='./images/wastebasket.jpg' style='float: right;' onClick='del_message(" + the_message_id + ", \"inbox\")' alt='Delete' height='23px' width='23px'></TD>";
 					} else {
@@ -1186,13 +1203,16 @@ function refresh_opener(the_screen, thefolder, ticket_id, responder_id, facility
 		if(thefolder== "inbox") {
 			window.opener.get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);
 			} else if(thefolder== "sent") {
-			window.opener.get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);	
+			window.opener.get_sentmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);	
 			} else {
 			}
 		} else if (the_screen == "messages") {
-		get_mainmessages();
-		} else if (the_screen == "mobile") {
-		window.opener.load_messages();
+		if(thefolder== "inbox") {
+			window.opener.get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);
+			} else if(thefolder== "sent") {
+			window.opener.get_sentmessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, thefolder);	
+			} else {
+			}
 		} else {
 		get_mainmessages();
 		}
@@ -1326,11 +1346,12 @@ function toggle_select_all() {
 	}
 	
 function deadButton(id) {
-	if(!($(id))) {return;}
-	$(id).className = "plain_inactive";
-	$(id).onclick = function(){null};
-	$(id).onmouseover = function(){null};
-	$(id).onmouseout = function(){null};
+	if($(id)) {
+		$(id).className = "plain_inactive";
+		$(id).onclick = function(){null};
+		$(id).onmouseover = function(){null};
+		$(id).onmouseout = function(){null};
+		}
 	}
 	
 function aliveButton(id) {
@@ -1463,15 +1484,15 @@ function get_wastelist(ticket_id, responder_id, sortby, sort, filter, thescreen)
 					the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 					the_string += "<TR class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
 					the_string += "<TD style='width: 4%;'><input type='checkbox' name='" + the_message_id + "' value='" + the_message_id + "' onClick='checkIfChecked();'></TD>";
-					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-					if(the_columns.inArray('2')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-					if(the_columns.inArray('3')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-					if(the_columns.inArray('4')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-					if(the_columns.inArray('5')) {the_string += "<TD class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-					if(the_columns.inArray('6')) {the_string += "<TD class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-					if(the_columns.inArray('7')) {the_string += "<TD class='cols' width=" + datewidth + " style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-					if(the_columns.inArray('8')) {the_string += "<TD class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
-					the_string += "<TD class='cols' width='3%' style='vertical-align: top;" + theStatus + ";'>";
+					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+					if(the_columns.inArray('2')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+					if(the_columns.inArray('3')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+					if(the_columns.inArray('4')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+					if(the_columns.inArray('5')) {the_string += "<TD class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+					if(the_columns.inArray('6')) {the_string += "<TD class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+					if(the_columns.inArray('7')) {the_string += "<TD class='cols text' width=" + datewidth + " style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+					if(the_columns.inArray('8')) {the_string += "<TD class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&wastebasket=true','view_message','width=600,height=800','titlebar, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+					the_string += "<TD class='cols text' width='3%' style='vertical-align: top;" + theStatus + ";'>";
 					the_string += "<img src='./images/restore.jpg' style='float: right;' onClick='restore_msg(" + the_message_id + ", \"inbox\")' alt='Restore' height='23px' width='23px'></TD>";			
 					the_string += "</TR>";
 					if($('empty_waste')) { $('empty_waste').style.display = "inline-block";}
@@ -1568,15 +1589,15 @@ function get_sent_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 					the_sentstring += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 					the_sentstring += "<TR class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
 					the_sentstring += "<TD style='width: 4%;'><input type='checkbox' name='" + the_message_id + "' value='" + the_message_id + "' onClick='checkIfChecked();'></TD>";
-					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_sentstring += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-					if(the_columns.inArray('2')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-					if(the_columns.inArray('3')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-					if(the_columns.inArray('4')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-					if(the_columns.inArray('5')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-					if(the_columns.inArray('6')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-					if(the_columns.inArray('7')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-					if(the_columns.inArray('8')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
-					the_sentstring += "<TD class='cols' width='3%' style='vertical-align: top;" + theStatus + ";'>";
+					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_sentstring += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+					if(the_columns.inArray('2')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+					if(the_columns.inArray('3')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+					if(the_columns.inArray('4')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+					if(the_columns.inArray('5')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+					if(the_columns.inArray('6')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+					if(the_columns.inArray('7')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+					if(the_columns.inArray('8')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+					the_sentstring += "<TD class='cols text' width='3%' style='vertical-align: top;" + theStatus + ";'>";
 					if(thelevel == '1') {
 						the_sentstring += "<img src='./images/wastebasket.jpg' style='float: right;' onClick='del_message(" + the_message_id + ", \"inbox\")' alt='Delete' height='23px' width='23px'></TD>";
 						} else {
@@ -1681,15 +1702,15 @@ function sent_msg_cb2(req) {
 				the_sentstring += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 				the_sentstring += "<TR class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
 				the_sentstring += "<TD style='width: 4%;'><input type='checkbox' name='" + the_message_id + "' value='" + the_message_id + "' onClick='checkIfChecked();'></TD>";
-				if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_sentstring += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-				if(the_columns.inArray('2')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-				if(the_columns.inArray('3')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-				if(the_columns.inArray('4')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-				if(the_columns.inArray('5')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-				if(the_columns.inArray('6')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-				if(the_columns.inArray('7')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-				if(the_columns.inArray('8')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
-				the_sentstring += "<TD class='cols' width='3%' style='vertical-align: top;" + theStatus + ";'>";
+				if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_sentstring += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+				if(the_columns.inArray('2')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+				if(the_columns.inArray('3')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+				if(the_columns.inArray('4')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+				if(the_columns.inArray('5')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+				if(the_columns.inArray('6')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+				if(the_columns.inArray('7')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+				if(the_columns.inArray('8')) {the_sentstring += "<TD title='" + the_delstat + the_messages[key][11] + "' class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=sent','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+				the_sentstring += "<TD class='cols text' width='3%' style='vertical-align: top;" + theStatus + ";'>";
 				if(thelevel == '1') {
 					the_sentstring += "<img src='./images/wastebasket.jpg' style='float: right;' onClick='del_message(" + the_message_id + ", \"inbox\")' alt='Delete' height='23px' width='23px'></TD>";
 					} else {
@@ -1784,14 +1805,14 @@ function get_all_messagelist(ticket_id, responder_id, sortby, sort, filter, thes
 					var the_delstat = "Delivery Status: " + the_text + " ---- ";
 					the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 					the_string += "<TR class='" + colors[i%2] + "' title='" + the_delstat + the_messages[key][11] + "' style='border-bottom: 2px solid #000000;'>";
-					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-					if(the_columns.inArray('2')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-					if(the_columns.inArray('3')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-					if(the_columns.inArray('4')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-					if(the_columns.inArray('5')) {the_string += "<TD class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-					if(the_columns.inArray('6')) {the_string += "<TD class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-					if(the_columns.inArray('7')) {the_string += "<TD class='cols' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-					if(the_columns.inArray('8')) {the_string += "<TD class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+					if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+					if(the_columns.inArray('2')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+					if(the_columns.inArray('3')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+					if(the_columns.inArray('4')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+					if(the_columns.inArray('5')) {the_string += "<TD class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+					if(the_columns.inArray('6')) {the_string += "<TD class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+					if(the_columns.inArray('7')) {the_string += "<TD class='cols text' width=" + datewidth + " style='" + theStatus + "; " + the_del_flag + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+					if(the_columns.inArray('8')) {the_string += "<TD class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
 					the_string += "</TR>";
 					}
 				}
@@ -1861,14 +1882,14 @@ function all_msg_cb(req) {
 					}		
 				the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 				the_string += "<TR class='" + colors[i%2] + "' style='border-bottom: 2px solid #000000;'>";
-				if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
-				if(the_columns.inArray('2')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
-				if(the_columns.inArray('3')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
-				if(the_columns.inArray('4')) {the_string += "<TD class='cols' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
-				if(the_columns.inArray('5')) {the_string += "<TD class='cols' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
-				if(the_columns.inArray('6')) {the_string += "<TD class='msg_col' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
-				if(the_columns.inArray('7')) {the_string += "<TD class='cols' width=" + datewidth + " style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
-				if(the_columns.inArray('8')) {the_string += "<TD class='cols' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
+				if((the_columns.inArray('1')) && (thescreen != 'ticket')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"open_tick_window(" + the_messages[key][1] + ");\">" + the_messages[key][1] + "</TD>";}
+				if(the_columns.inArray('2')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][2] + "</TD>";}
+				if(the_columns.inArray('3')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][3] + "</TD>";}
+				if(the_columns.inArray('4')) {the_string += "<TD class='cols text' width='5%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][4] + "</TD>";}
+				if(the_columns.inArray('5')) {the_string += "<TD class='cols text' width='16%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][5] + "</TD>";}
+				if(the_columns.inArray('6')) {the_string += "<TD class='msg_col text' width='40%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\"><DIV class='msg_div'>" + Encoder.htmlDecode(the_messages[key][6]) + "</DIV></TD>";}
+				if(the_columns.inArray('7')) {the_string += "<TD class='cols text' width=" + datewidth + " style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=800,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][7] + "</TD>";}
+				if(the_columns.inArray('8')) {the_string += "<TD class='cols text' width='7%' style='" + theStatus + "; white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap;' onClick=\"window.open('message.php?id=" + the_message_id + "&screen=ticket&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_messages[key][8] + "</TD>";}		
 				the_string += "</TR>";
 				}
 			}

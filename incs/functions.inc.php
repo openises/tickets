@@ -1,9 +1,9 @@
 <?php
 error_reporting(E_ALL ^ E_STRICT);
 
-$theTimezone = date_default_timezone_get();
+$theTimezone = "America/New_York";
 date_default_timezone_set($theTimezone);
-$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
+$https = (array_key_exists('HTTPS', $_SERVER)) ? 1 : 0;
 /*
 5/23/08 added function do_kml() - generates JS for kml files - 
 5/31/08 added function do_log() default values
@@ -200,9 +200,9 @@ require_once('istest.inc.php');
 require_once('mysql.inc.php');
 require_once("phpcoord.php");				// UTM converter	
 require_once("usng.inc.php");				// USNG converter 9/12/08
-//require_once($fmp);	// 7/28/10
 require_once("browser.inc.php");			// added 1/23/10
 require_once("messaging.inc.php");			// added 10/23/12
+require_once("member.inc.php");			// added 10/23/12
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/7/09 
 error_reporting (E_ALL  ^ E_DEPRECATED);
@@ -212,14 +212,12 @@ define ('NA_STR', '*na*');
 define ('ADM_STR', 'Admin');
 define ('SUPR_STR', 'Super');				// added 6/16/08
 
-//$GLOBALS['mysql_prefix'] 			= $mysql_prefix;
 /* constants - do NOT change */
 $GLOBALS['STATUS_RESERVED'] 		= 0;		// 10/24/08
 $GLOBALS['STATUS_CLOSED'] 			= 1;
 $GLOBALS['STATUS_OPEN']   			= 2;
 $GLOBALS['STATUS_SCHEDULED']   		= 3;
-//$temp = get_text("Patient");
-//$GLOBALS['NOTIFY_ACTION'] 		= "Added Action/{$temp}";
+
 $GLOBALS['NOTIFY_ACTION'] 			= "Added Action/Patient";
 $GLOBALS['NOTIFY_TICKET'] 			= 'Ticket Update';
 $GLOBALS['ACTION_DESCRIPTION']		= 1;
@@ -255,6 +253,7 @@ $GLOBALS['LEVEL_UNIT'] 				= 5;		// 7/8/09
 $GLOBALS['LEVEL_STATS'] 			= 6;		// 7/6/11
 $GLOBALS['LEVEL_SERVICE_USER'] 		= 7;		// 10/23/12
 $GLOBALS['LEVEL_FACILITY'] 			= 8;		// 04/08/12
+$GLOBALS['LEVEL_MANAGER'] 			= 8;		// 04/08/12
 
 $GLOBALS['LOG_SIGN_IN']				= 1;
 $GLOBALS['LOG_SIGN_OUT']			= 2;
@@ -272,6 +271,12 @@ $GLOBALS['LOG_UNIT_COMPLETE']		=21;		// 	run complete
 $GLOBALS['LOG_UNIT_CHANGE']			=22;
 $GLOBALS['LOG_UNIT_TO_QUARTERS']	=23;		// 3/11/12
 $GLOBALS['LOG_UNIT_COMMENT']   		=24;		// 3/18/15  
+
+$GLOBALS['LOG_MEMBER_STATUS']		=120;
+$GLOBALS['LOG_MEMBER_COMPLETE']		=121;
+$GLOBALS['LOG_MEMBER_CHANGE']		=122;
+$GLOBALS['LOG_MEMBER_ADD']			=123;
+$GLOBALS['LOG_MEMBER_TYPE']			=124;
 
 $GLOBALS['LOG_CALL_EDIT']			=29;		// 6/17/11
 $GLOBALS['LOG_CALL_DISP']			=30;		// 1/20/09
@@ -402,7 +407,6 @@ $GLOBALS['LOC_TYPES_TEXT']	= array('#FFFFFF','#FFFFFF','#000000','#000000','#FFF
 $GLOBALS['wl_icons'] = array("square_red.png", "square_black.png", "square_white.png", "square_yellow.png", "square_blue.png");
 $GLOBALS['wl_sm_icons']	= array("sm_square_red.png", "sm_square_black.png", "sm_square_white.png", "sm_square_yellow.png", "sm_square_blue.png");
 
-
 $evenodd = array ("even", "odd", "heading");	// class names for alternating table row css colors
 
 /* connect to mysql database */
@@ -436,28 +440,67 @@ if ($failed) {
 
 $expiry = expires();		// note global
 
-$timezone = get_variable('timezone');
+$timezone = (get_variable('timezone') != "") ? get_variable('timezone') : "America/New_York";
 date_default_timezone_set($timezone);
+$internet = intval(get_variable("internet"));
 
-require_once ('login.inc.php');				// 8/21/10
-require_once('status_cats.inc.php');				// 12/03/10
+require_once ('login.inc.php');
+require_once('status_cats.inc.php');
 
-$timezone = get_variable('timezone');
-date_default_timezone_set($timezone);
+$useMdb = get_variable('use_mdb');
+$useMdbContact = (get_mdb_variable('use_mdb_contact')) ? get_mdb_variable('use_mdb_contact'): 0;
+$useMdbStatus = (get_mdb_variable('use_mdb_status')) ? get_mdb_variable('use_mdb_status') : 0;
+$validStatuses = array();
+$validFacStatuses = array();
+
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status`";
+$result = mysql_query($query);
+if($result) {
+	while($row = mysql_fetch_assoc($result)) {
+		$validStatuses[$row['id']] = $row['status_val'];
+		}
+	}
+	
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status`";
+$result = mysql_query($query);
+if($result) {
+	while($row = mysql_fetch_assoc($result)) {
+		$validFacStatuses[$row['id']] = $row['status_val'];
+		}
+	}
 
 function remove_nls($instr) {                // 10/20/09
 	$nls = array("\r\n", "\n", "\r");        // note order
 	return str_replace($nls, " ", $instr);
 	}        // end function
 
-function mysql_table_exists($table) {/* check if mysql table exists */
-	$query = "SELECT COUNT(*) FROM `$table`";
-	$result = mysql_query($query);
-	$num_rows = @mysql_num_rows($result);
-	if($num_rows)
-		return TRUE;
-	else
-		return FALSE;
+//function mysql_table_exists($table) {/* check if mysql table exists */
+//	$query = "SELECT COUNT(*) FROM `$table`";
+//	$result = mysql_query($query);
+//	$num_rows = @mysql_num_rows($result);
+//	if($num_rows)
+//		return TRUE;
+//	else
+//		return FALSE;
+//	}
+	
+function mysql_table_exists($name) {
+	$result = mysql_query("SHOW TABLES LIKE '$name'");
+	$table_exists = mysql_num_rows($result) > 0;
+	if($table_exists) {return true;} else {return false;}
+/* 	$tablename = "$GLOBALS[mysql_prefix]" . "$name";
+	$query 	= "SELECT COUNT(*) FROM $tablename";
+    $result = mysql_query($query);
+	if($result) {
+		$num_rows = mysql_num_rows($result);
+		if($num_rows > 0) {
+			return true;
+			} else {
+			return false;
+			}
+		} else {
+		return false;
+		} */
 	}
 
 function get_issue_date($id){
@@ -628,7 +671,6 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$responderlist[$act_row['id']] = $act_row['handle'];
 		}
-															/* list patients */
 	$query = "SELECT *, `p`.`id` AS `pat_id` 
 		FROM `$GLOBALS[mysql_prefix]patient` `p` 
  		LEFT JOIN `$GLOBALS[mysql_prefix]insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
@@ -639,18 +681,18 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			
 	$pctr=0;
 	$genders = array("", "M", "F", "T", "U");
 	if(mysql_num_rows($result) > 0) {
-		$print .= "<TABLE style='width: 98%;' ID='patients'>";	//	Patients Table
-		$print .= "<TR CLASS='heading' style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
+		$print .= "<TABLE style='width: 100%;' ID='patients'>";	//	Patients Table
+		$print .= "<TR CLASS='heading' style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
 		while ($pat_row = stripslashes_deep(mysql_fetch_assoc($result))){
 			$the_gender = ($pat_row['gender'] != 0) ? $genders[$pat_row['gender']] : $genders[4];	//	7/12/13
 			$tipstr = addslashes("Name: {$pat_row['name']}<br> Fullname: {$pat_row['fullname']}<br> DOB: {$pat_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$pat_row['ins_value']}<br>    Facility_contact: {$pat_row['facility_contact']}<br>    Date: {$pat_row['date']}<br>Description:{$pat_row['description']}");
-			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' style='width: 98%; vertical-align: middle;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
+			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' style='width: 100%; vertical-align: middle;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
 			$print .= "<TD CLASS='text text_left' NOWRAP>{$pat_row['name']}</TD><TD CLASS='text text_left' NOWRAP> Z ". format_date_2($pat_row['updated']) . "</TD>";
 			$print .= "<TD CLASS='text text_left text_bolder' NOWRAP> by ". get_owner($pat_row['user']);
 			$print .= ($pat_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD><TD CLASS='text text_left'>" . shorten($pat_row['description'], 24) . "</TD>";
 			if ($links) {
 				if($mode == 0) {
-					$print .= "\<TD CLASS='text'>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A> | <A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>";	
+					$print .= "<TD CLASS='text'>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A> | <A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>";	
 					} elseif($mode ==1) {
 					$print .= "<TD CLASS='text'>&nbsp;[<A HREF='patient_w.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A> | <A HREF='patient_w.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>";	
 					} else {
@@ -665,18 +707,17 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			
 			}
 		$print .= "</TABLE>";	//	End of Patients Table
 		}
-
-																	/* list actions */
+														/* list actions */
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = '$the_id' ORDER BY `date`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$caption = get_text("Actions");
 	$actr=0;	
 	if (mysql_num_rows($result) > 0) {
 		$print .= "<TABLE style='width: 100%;' ID='actions'>";	//	Actions Table
-		$print .= "<TR CLASS='heading' style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";		
+		$print .= "<TR CLASS='heading' style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";		
 		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 			$tipstr = addslashes(replace_newline($act_row['description']));		
-			$print .= "<TR CLASS='{$evenodd[$actr%2]}' style='width: 98%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
+			$print .= "<TR CLASS='{$evenodd[$actr%2]}' style='width: 100%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
 			$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array
 			$sep = $respstring = "";
 			for ($i=0 ;$i< count($responders);$i++) {				// build string of responder names
@@ -687,7 +728,6 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			
 					$respstring .= "&nbsp;";	
 					}
 				}
-
 			$print .= "<TD CLASS='text text_left' NOWRAP>" . $respstring . "</TD><TD CLASS='text text_left' NOWRAP> ". format_date_2($act_row['updated']) ." </TD>";	//	3/15/11
 			$print .= "<TD CLASS='text text_left' NOWRAP> by <B>".get_owner($act_row['user'])." </B> ";	//	3/15/11
 			$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'])? '*' : '-';
@@ -953,7 +993,7 @@ function get_un_status_cols($id) {
 	$stat_cols = array();
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
 	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
+	if($result && mysql_num_rows($result) > 0) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 		$stat_cols[0] = $row['bg_color'];
 		$stat_cols[1] = $row['text_color'];
@@ -967,7 +1007,7 @@ function get_un_status_cols($id) {
 function get_fac_status_name($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $id;
 	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
+	if($result && mysql_num_rows($result) > 0) {
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
 		return $row['status_val'];
 		} else {
@@ -1118,6 +1158,24 @@ function get_allocates($type, $resource) {	//	6/10/11
 	return $al_groups;
 	}
 	
+function get_allocated_names($type, $resource) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= " . $type . " AND `resource_id` = " . $resource . " ORDER BY `group`;";
+	$result = mysql_query($query);
+	$temp_ary = array();	
+	if(mysql_num_rows($result) != 0) {
+		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id` = " . $row['group'];
+			$result2 = mysql_query($query2);
+			$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+			$temp_ary[] = $row2['group_name'];
+			}
+		$theReturn = "Allocated to regions " . implode(", ", $temp_ary);
+		} else {
+		$theReturn = "";
+		}
+	return $theReturn;
+	}
+	
 function get_tickets_allocated($group) {	//	6/10/11
 	$x=0;	
 	$cwi = get_variable('closed_interval');			// closed window interval in hours
@@ -1254,7 +1312,7 @@ function get_groupname($groupid) {		//	6/10/11
 			$groupname = $row['group_name'];
 			}
 		} else {
-			$groupname = "N/A";
+		$groupname = "N/A";
 		}
 	return $groupname;
 	}
@@ -1383,8 +1441,12 @@ function get_status($status){							/* return status text from code */
 
 function get_owner($id){								/* get owner name from id */
 	$result	= mysql_query("SELECT user FROM `$GLOBALS[mysql_prefix]user` WHERE `id`= '$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row	= stripslashes_deep(mysql_fetch_assoc($result));
-	return (mysql_affected_rows()==0 )? "unk?" : $row['user'];
+	if($result) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		return (mysql_affected_rows()==0 )? "unk?" : $row['user'];
+		} else {
+		return "unk";
+		}
 	}
 	
 function get_user_facility($id){								/* get owner facility from id */
@@ -1418,9 +1480,17 @@ function get_severity_field($severity){			/* return severity string from value *
 	}
 
 function get_responder($id){			/* return responder-type string from value */
-	$result	= mysql_query("SELECT `name` FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$id' LIMIT 1") or do_error("get_responder(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$temprow	= stripslashes_deep(mysql_fetch_assoc($result));
-	return $temprow['name'];
+	$query = "SELECT `name` FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$id' LIMIT 1";
+	$result	= mysql_query($query);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	return $row['name'];
+	}
+	
+function get_member($id){			/* return responder-type string from value */
+	$query = "SELECT `field1`, `field2`, `field4` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $id . " LIMIT 1";
+	$result	= mysql_query($query);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	return $row['field2'] . " " . $row['field1'] . " " . $row['field4'];
 	}
 
 function strip_html($html_string) {						/* strip HTML tags/special characters and fix custom ones to prevent bad HTML, CrossSiteScripting etc */
@@ -1469,6 +1539,21 @@ function get_msg_variable($which){								/* get variable from db msg_settings t
 			}
 		}
 	return (array_key_exists($which, $msg_variables))? $msg_variables[$which] : FALSE ;
+	}
+	
+$mdb_variables = array();	
+function get_mdb_variable($which){								/* get variable from db msg_settings table, returns FALSE if absent  */
+	global $mdb_variables;
+	if (empty($mdb_variables)) {
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mdb_settings`";
+		$result = mysql_query($query);
+		if(!$result) {return FALSE;}
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+			$mdb_name = $row['name']; $mdb_value=$row['value'] ;
+			$mdb_variables[$mdb_name] = $mdb_value;
+			}
+		}
+	return (array_key_exists($which, $mdb_variables))? $mdb_variables[$which] : FALSE ;
 	}
 
 $css = array();			//	3/15/11
@@ -1525,12 +1610,10 @@ function add_header($ticket_id, $no_edit = FALSE, $show_ed_button = FALSE) {		//
 	$win_width = get_variable('map_width') + 80;
 	print "<SPAN STYLE='margin-left: 40px;'><NOBR><SPAN class='text_large text_bold text_white'>This Call: </SPAN>";	
 	print "<A id='pop_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='#' onClick = \"var popWindow = window.open('incident_popup.php?id=$ticket_id', 'PopWindow', 'resizable=1, scrollbars, height={$win_height}, width={$win_width}, left=50,top=50,screenX=50,screenY=50'); popWindow.focus();\"><SPAN STYLE='float: left;'>" . get_text("Popup") . "</SPAN><IMG STYLE='float: right;' SRC='./images/popup_small.png' BORDER=0></A>"; // 7/3/10
-
 	if (can_edit()){
 		if($show_ed_button) {
 			print "<A id='ed_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF='{$_SESSION['editfile']}?id=$ticket_id'><SPAN STYLE='float: left;'>" . get_text("Edit") . "</SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></A>";
 			}
-
 		if (!is_closed($ticket_id)) {
 			print "<A id='act_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"do_add_action('" . $ticket_id . "');\" HREF='#'><SPAN STYLE='float: left;'>+ " . get_text("Action") . "</SPAN><IMG STYLE='float: right;' SRC='./images/action_small.png' BORDER=0></A>";
 			print "<A id='pat_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"do_add_patient('" . $ticket_id . "');\" HREF='#'><SPAN STYLE='float: left;'>+ " . get_text("Patient") . "</SPAN><IMG STYLE='float: right;' SRC='./images/patient_small.png' BORDER=0></A>";
@@ -1586,6 +1669,9 @@ function is_statistics(){					/* is user statistics? */
 function is_service_user(){					/* is user service user? */			
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_SERVICE_USER']));						// 10/23/12, 4/29/14
 	}
+function is_manager(){					/* is user service user? */			
+	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_MANAGER']));						// 10/23/12, 4/29/14
+	}
 function see_buttons() {
 	return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']) || ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) || ($_SESSION['level'] == $GLOBALS['LEVEL_USER']) || ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER'])));		// 10/11/12, 4/29/14
 	}
@@ -1626,22 +1712,22 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 	$locale = get_variable('locale');				// Added use of Locale switch for Date entry pulldown to change display for locale 08/07/09
 	switch($locale) { 
 		case "0":
-			print "<SELECT name='frm_year_$date_suffix' $dis_str>";
+			print "<SELECT class='text' id='dateselect_$date_suffix' name='frm_year_$date_suffix' $dis_str>";
 			for($i = date("Y")-1; $i < date("Y")+1; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 				
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_month_$date_suffix' $dis_str>";
 			for($i = 1; $i < 13; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			
-			print "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
+			print "</SELECT>\n&nbsp;<SELECT class='text' name='frm_day_$date_suffix' $dis_str>";
 			for($i = 1; $i < 32; $i++){
-				print "<OPTION VALUE=\"$i\"";
+				print "<OPTION class='text' VALUE=\"$i\"";
 				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
@@ -1650,23 +1736,23 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 			break;
 	
 		case "1":
-			print "<SELECT name='frm_day_$date_suffix' $dis_str>";
+			print "<SELECT class='text' id='dateselect_$date_suffix' name='frm_day_$date_suffix' $dis_str>";
 			for($i = 1; $i < 32; $i++){
-				print "<OPTION VALUE=\"$i\"";
+				print "<OPTION class='text' VALUE=\"$i\"";
 				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 	
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_month_$date_suffix' $dis_str>";
 			for($i = 1; $i < 13; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_year_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_year_$date_suffix' $dis_str>";
 			for($i = date("Y")-1; $i < date("Y")+1; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
@@ -1674,23 +1760,23 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 			print "\n<!-- default:$default_date,$day-$month-$year $hour:$minute -->\n";
 			break;
 		case "2":				// 11/29/10
-			print "<SELECT name='frm_day_$date_suffix' $dis_str>";
+			print "<SELECT class='text' id='dateselect_$date_suffix' name='frm_day_$date_suffix' $dis_str>";
 			for($i = 1; $i < 32; $i++){
-				print "<OPTION VALUE=\"$i\"";
+				print "<OPTION class='text' VALUE=\"$i\"";
 				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 	
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_month_$date_suffix' $dis_str>";
 			for($i = 1; $i < 13; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_year_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_year_$date_suffix' $dis_str>";
 			for($i = date("Y")-1; $i < date("Y")+1; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
@@ -1703,16 +1789,136 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {
 		}
 
 	
-	print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_hour_$date_suffix' VALUE='$hour' $dis_str>:";
-	print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_minute_$date_suffix' VALUE='$minute' $dis_str>";
+	print "\n<INPUT class='text' TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_hour_$date_suffix' VALUE='$hour' $dis_str>:";
+	print "\n<INPUT class='text' TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_minute_$date_suffix' VALUE='$minute' $dis_str>";
 	$show_ampm = (!get_variable('military_time')==1);
 	if ($show_ampm){	//put am/pm optionlist if not military time
-		print "\n<SELECT NAME='frm_meridiem_$date_suffix' $dis_str><OPTION value='am'";
+		print "\n<SELECT class='text' NAME='frm_meridiem_$date_suffix' $dis_str><OPTION class='text' value='am'";
 		if ($meridiem == 'am') print ' selected';
-		print ">am</OPTION><OPTION value='pm'";
+		print ">am</OPTION><OPTION class='text' value='pm'";
 		if ($meridiem == 'pm') print ' selected';
 		print ">pm</OPTION></SELECT>";
 		}
+	}		// end function generate_date_dropdown(
+	
+function return_date_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {			// 'extra allows 'disabled'
+	$output = "";
+	$dis_str = ($disabled)? " disabled" : "" ;
+	$td = array ("E" => "5", "C" => "6", "M" => "7", "W" => "8");							// hours west of GMT
+	$deltam = intval(get_variable('delta_mins'));													// align server clock minutes
+	$local = (time() - (intval(get_variable('delta_mins'))*60));
+	$default_date = ($default_date == 0) ? $local : $default_date;
+
+	if ($default_date)	{	//default to current date/time if no values are given
+		$year  		= date('Y',$default_date);
+		$month 		= date('m',$default_date);
+		$day   		= date('d',$default_date);
+		$minute		= date('i',$default_date);
+		$meridiem		= date('a',$default_date);
+		if (get_variable('military_time')==1) 	$hour = date('H',$default_date);
+		else 									$hour = date('h',$default_date);;
+		}
+	else {
+		$year 		= date('Y', $local);
+		$month 		= date('m', $local);
+		$day 		= date('d', $local);
+		$minute		= date('i', $local);
+		$meridiem	= date('a', $local);
+		if (get_variable('military_time')==1) 	$hour = date('H', $local);
+		else 									$hour = date('h', $local);
+		}
+
+	$locale = get_variable('locale');				// Added use of Locale switch for Date entry pulldown to change display for locale 08/07/09
+	switch($locale) { 
+		case "0":
+			$output .= "<SELECT id='dateselect_$date_suffix' name='frm_year_$date_suffix' $dis_str>";
+			for($i = date("Y")-1; $i < date("Y")+1; $i++){
+				$output .= "<OPTION VALUE='$i'";
+				$year == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+				
+			$output .= "</SELECT>";
+			$output .= "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			for($i = 1; $i < 13; $i++){
+				$output .= "<OPTION VALUE='$i'";
+				$month == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+			
+			$output .= "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
+			for($i = 1; $i < 32; $i++){
+				$output .= "<OPTION VALUE=\"$i\"";
+				$day == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+			$output .= "</SELECT>\n&nbsp;&nbsp;";
+		
+			$output .= "\n<!-- default:$default_date,$year-$month-$day $hour:$minute -->\n";
+			break;
+	
+		case "1":
+			$output .= "<SELECT id='dateselect_$date_suffix' name='frm_day_$date_suffix' $dis_str>";
+			for($i = 1; $i < 32; $i++){
+				$output .= "<OPTION VALUE=\"$i\"";
+				$day == $i ? $output .= " SELECTED>$i</OPTION>" :$output .= ">$i</OPTION>";
+				}
+	
+			$output .= "</SELECT>";
+			$output .= "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			for($i = 1; $i < 13; $i++){
+				$output .= "<OPTION VALUE='$i'";
+				$month == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+
+			$output .= "</SELECT>";
+			$output .= "&nbsp;<SELECT name='frm_year_$date_suffix' $dis_str>";
+			for($i = date("Y")-1; $i < date("Y")+1; $i++){
+				$output .= "<OPTION VALUE='$i'";
+				$year == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+			$output .= "</SELECT>\n&nbsp;&nbsp;";
+		
+			$output .= "\n<!-- default:$default_date,$day-$month-$year $hour:$minute -->\n";
+			break;
+		case "2":				// 11/29/10
+			$output .= "<SELECT id='dateselect_$date_suffix' name='frm_day_$date_suffix' $dis_str>";
+			for($i = 1; $i < 32; $i++){
+				$output .= "<OPTION VALUE=\"$i\"";
+				$day == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+	
+			$output .= "</SELECT>";
+			$output .= "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			for($i = 1; $i < 13; $i++){
+				$output .= "<OPTION VALUE='$i'";
+				$month == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+
+			$output .= "</SELECT>";
+			$output .= "&nbsp;<SELECT name='frm_year_$date_suffix' $dis_str>";
+			for($i = date("Y")-1; $i < date("Y")+1; $i++){
+				$output .= "<OPTION VALUE='$i'";
+				$year == $i ? $output .= " SELECTED>$i</OPTION>" : $output .= ">$i</OPTION>";
+				}
+			$output .= "</SELECT>\n&nbsp;&nbsp;";
+		
+			$output .= "\n<!-- default:$default_date,$day-$month-$year $hour:$minute -->\n";
+			break;
+																						// 8/10/09
+		default:
+		    $output .= "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";				
+		}
+
+	
+	$output .= "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_hour_$date_suffix' VALUE='$hour' $dis_str>:";
+	$output .= "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_minute_$date_suffix' VALUE='$minute' $dis_str>";
+	$show_ampm = (!get_variable('military_time')==1);
+	if ($show_ampm){	//put am/pm optionlist if not military time
+		$output .= "\n<SELECT NAME='frm_meridiem_$date_suffix' $dis_str><OPTION value='am'";
+		if ($meridiem == 'am') $output .= ' selected';
+		$output .= ">am</OPTION><OPTION value='pm'";
+		if ($meridiem == 'pm') $output .= ' selected';
+		$output .= ">pm</OPTION></SELECT>";
+		}
+	return $output;
 	}		// end function generate_date_dropdown(
 	
 function generate_dateonly_dropdown($date_suffix,$default_date=0, $disabled=FALSE) {			// 10/23/12
@@ -1736,22 +1942,22 @@ function generate_dateonly_dropdown($date_suffix,$default_date=0, $disabled=FALS
 	$locale = get_variable('locale');				// Added use of Locale switch for Date entry pulldown to change display for locale 08/07/09
 	switch($locale) { 
 		case "0":
-			print "<SELECT name='frm_year_$date_suffix' $dis_str>";
+			print "<SELECT class='text' name='frm_year_$date_suffix' $dis_str>";
 			for($i = date("Y")-70; $i < date("Y")+1; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 				
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_month_$date_suffix' $dis_str>";
 			for($i = 1; $i < 13; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			
-			print "</SELECT>\n&nbsp;<SELECT name='frm_day_$date_suffix' $dis_str>";
+			print "</SELECT>\n&nbsp;<SELECT class='text' name='frm_day_$date_suffix' $dis_str>";
 			for($i = 1; $i < 32; $i++){
-				print "<OPTION VALUE=\"$i\"";
+				print "<OPTION class='text' VALUE=\"$i\"";
 				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
@@ -1760,23 +1966,23 @@ function generate_dateonly_dropdown($date_suffix,$default_date=0, $disabled=FALS
 			break;
 	
 		case "1":
-			print "<SELECT name='frm_day_$date_suffix' $dis_str>";
+			print "<SELECT class='text' name='frm_day_$date_suffix' $dis_str>";
 			for($i = 1; $i < 32; $i++){
-				print "<OPTION VALUE=\"$i\"";
+				print "<OPTION class='text' VALUE=\"$i\"";
 				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 	
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_month_$date_suffix' $dis_str>";
 			for($i = 1; $i < 13; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_year_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_year_$date_suffix' $dis_str>";
 			for($i = date("Y")-70; $i < date("Y")+1; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
@@ -1784,23 +1990,23 @@ function generate_dateonly_dropdown($date_suffix,$default_date=0, $disabled=FALS
 			print "\n<!-- default:$default_date,$year-$month-$day -->\n";
 			break;
 		case "2":				// 11/29/10
-			print "<SELECT name='frm_day_$date_suffix' $dis_str>";
+			print "<SELECT class='text' name='frm_day_$date_suffix' $dis_str>";
 			for($i = 1; $i < 32; $i++){
-				print "<OPTION VALUE=\"$i\"";
+				print "<OPTION class='text' VALUE=\"$i\"";
 				$day == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 	
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_month_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_month_$date_suffix' $dis_str>";
 			for($i = 1; $i < 13; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$month == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 
 			print "</SELECT>";
-			print "&nbsp;<SELECT name='frm_year_$date_suffix' $dis_str>";
+			print "&nbsp;<SELECT class='text' name='frm_year_$date_suffix' $dis_str>";
 			for($i = date("Y")-70; $i < date("Y")+1; $i++){
-				print "<OPTION VALUE='$i'";
+				print "<OPTION class='text' VALUE='$i'";
 				$year == $i ? print " SELECTED>$i</OPTION>" : print ">$i</OPTION>";
 				}
 			print "</SELECT>\n&nbsp;&nbsp;";
@@ -1912,6 +2118,7 @@ function get_level_text ($level) {
 		case $GLOBALS['LEVEL_FACILITY'] 		: return "Facility"; break;			// 4/8/16
 		case $GLOBALS['LEVEL_STATS'] 			: return "Statistics"; break;		// 6/10/11
 		case $GLOBALS['LEVEL_SERVICE_USER'] 	: return "Service User"; break;		// 10/23/12
+		case $GLOBALS['LEVEL_MANAGER'] 			: return "Manager"; break;
 		default 								: return "level error"; break;
 		}
 	}		//end function
@@ -2101,6 +2308,126 @@ function get_stuff($in_file) {				// return file contents as string
 function get_ext($filename) {				// return extension in lower-case
 	$exts = explode(".", $filename) ;	// 8/2/09
 	return strtolower($exts[count($exts)-1]);
+	}
+	
+function get_field_index($table, $name) {
+	$table_arr = array();
+	$i = 0;
+	$result = mysql_query("DESCRIBE `$GLOBALS[mysql_prefix]$table`");
+	while($row = mysql_fetch_array($result)) {
+		if($row[0] == $name) {
+			return $i;
+			}
+		$i++;
+		}
+	}
+	
+function get_field_type($table, $field) {
+	$enum = "enum";
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]$table`");
+	$field_type  = mysql_field_type($result, $field);
+	$flags = mysql_field_flags($result, $field);
+	if($field_type == "blob") {
+		$field_type = "STRING";
+		} elseif($field_type == "real") {
+		$field_type = "REAL";
+		} elseif($field_type == "int") {
+		$field_type = "INT";
+		} elseif($field_type == "datetime") {
+		$field_type = "DATETIME";
+		} elseif($field_type == "DATETIME") {
+		$field_type = "DATETIME";
+		} elseif($field_type == "DATE") {
+		$field_type = "DATE";
+		} elseif($field_type == "date") {
+		$field_type = "DATE";
+		} elseif($field_type == "string" || $field_type == "STRING") {
+		if($flags == "not_null enum" || $flags == "enum") {
+			$field_type = "ENUM";
+			} else {
+			$field_type = "STRING";
+			}
+		}
+	return $field_type;
+	}
+	
+function get_field_name($table, $field) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]$table`");
+	$field_name  = mysql_field_name($result, $field);
+	return $field_name;
+	}
+	
+function get_field_size($table, $field) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]$table`");
+	$field_size  = mysql_field_len($result, $field);
+	return $field_size;
+	}
+
+function get_display_field_size($table, $field) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]$table`");
+	$row = mysql_fetch_array($result);	
+	$field_size  = $row['size'];
+	return $field_size;
+	}
+	
+function wizard_field_exists($field) {
+	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]wizard_settings` WHERE `fieldname` = '" . $field . "'");
+	if(mysql_num_rows($result) > 0) {
+		return true;
+		} else {
+		return false;
+		}
+	}
+
+function get_wizard_field_select($current, $id = NULL) {
+	$result = mysql_query("DESCRIBE `$GLOBALS[mysql_prefix]ticket`");
+	$row = mysql_fetch_array($result);
+	if($id) {
+		$output = "<SELECT id='frm_fieldname_" . $id . "' NAME='frm_fieldname[" . $id . "]' STYLE='width: 90%;'>\n";
+		$output .= "\t<OPTION VALUE='0'>Select One</OPTION>\n";
+		while($row = mysql_fetch_array($result)) {
+			$field = $row['Field'];
+			if($field == 'street') {$field = "address";}
+			if($field == "address") {
+				$sel = ($field == $current) ? "SELECTED" : "";
+				$output .= "\t<OPTION VALUE='" . $field . "' " . $sel . ">" . $field . "</OPTION>";				
+				} else {
+				if($field != 'city' && $field != "state" && $field != "severity" && $field != "lat" && $field != "lng" && $field != "date" && $field != "affected" && $field != "status" && $field != "owner" && $field != "problemend" && $field != "updated" && $field != "_by") {
+					$sel = ($row['Field'] == $current) ? "SELECTED" : "";
+					$output .= "\t<OPTION VALUE='" . $field . "' " . $sel . ">" . $field . "</OPTION>";
+					}
+				}
+			}
+		$output .= "</SELECT>";
+		} else {
+		$options = array();
+		$output = "<SELECT id='frm_fieldname_0' NAME='frm_fieldname[0]' STYLE='width: 90%;'>\n";
+		$output .= "\t<OPTION VALUE='0'>Select One</OPTION>\n";
+		while($row = mysql_fetch_array($result)) {
+			$field = $row['Field'];
+			if($field == 'street') {$field = "address";}
+			if($field == "address") {
+				if(!wizard_field_exists($field)) {
+					$options[] = $field;
+					$output .= "\t<OPTION VALUE='" . $field . "'>" . $field . "</OPTION>";
+					}
+				} else {
+				if($field != 'city' && $field != "state" && $field != "severity" && $field != "lat" && $field != "lng" && $field != "date" && $field != "affected" && $field != "status" && $field != "owner" && $field != "problemend" && $field != "updated" && $field != "_by") {
+					if(!wizard_field_exists($field)) {
+						$options[] = $field;	
+						$output .= "\t<OPTION VALUE='" . $row['Field'] . "'>" . $row['Field'] . "</OPTION>";
+						}
+					}
+				}
+			}
+		$numOptions = count($options);
+		if($numOptions > 0) {
+			$output .= "</SELECT>";
+			} else {
+			$output = "";
+			}
+		}
+	return $output;
 	}
 
 function ezDate($d) {
@@ -2591,10 +2918,9 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
 				if($the_responders == "") { $the_responders = $theaddresses;}
 						//								($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)	
 				if (count($my_smtp_ary)>1) {
-					$count_ll = do_swift_mail ($my_smtp_ary, $ary_ll_addrs, $subject_str, $text_str, $my_from_ary, $my_replyto_str );	
+					$count_ll = do_smtp_mail ($my_smtp_ary, $ary_ll_addrs, $subject_str, $text_str, $my_from_ary, $my_replyto_str );	
 					store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets');	// 7/9/12	
-					}
-				else {
+					} else {
 		//								($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)
 					$count_ll = do_native_mail ($my_smtp_ary, $ary_ll_addrs, $subject_str, $text_str, $my_from_ary, $my_replyto_str );
 					store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets'); // 7/9/12				
@@ -2611,7 +2937,7 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
 					$subject_ex = $subject_str . "/part " . $i . "/";					// 10/21/08
 		//										 ($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)	
 					if (count($my_smtp_ary)>1) {
-						$count_cells = do_swift_mail ($my_smtp_ary, $ary_cell_addrs, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $my_from_ary, $my_replyto_str);
+						$count_cells = do_smtp_mail ($my_smtp_ary, $ary_cell_addrs, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $my_from_ary, $my_replyto_str);
 						store_email(1, $the_responders, "email", $subject_str, $text_str, $ticket_id, $the_resp_ids, date("Y/m/d H:i:s", $now), $my_replyto_str, 'Tickets');	 // 7/9/12			
 						} else {
 		//										  ($my_smtp_ary, $my_to_ary, $my_subject_str, $my_message_str, $my_from_ary, $my_replyto_str)
@@ -2664,12 +2990,25 @@ function is_email($email){		   //  validate email, code courtesy of Jerrett Tayl
 function is_twitter($address) {
 	$isTwitter = (substr($address, 0, 1) == "@") ? TRUE : FALSE;
 	return $isTwitter;
-	}	
-
+	}
+	
+function get_scope($id) {
+	$query = "SELECT `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $id;
+	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	if(!$result || mysql_num_rows($result) == 0) {
+		return "";
+		} else {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		return $row['scope'];
+		}
+	}
+		
 function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28/13
 	if (get_variable('allow_notify') != '1') return FALSE;						//should we notify?
+	$actionText = "";
 	$query = "SELECT `scope`, `severity`, `facility`, `rec_facility`, `in_types_id` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id;
 	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	if(!$result || mysql_num_rows($result) == 0) {return;}
 	$row = stripslashes_deep(mysql_fetch_assoc($result));
 	$scope = $row['scope'];
 	$facility = $row['facility'];
@@ -2710,11 +3049,14 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 						array_push($addrs, $row_c['email']); // save for emailing
 						}
 					} elseif($row_mg['responder'] != 0) {
-					$query_r = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $row_mg['responder'] . " LIMIT 1";
-					$result_r	= mysql_query($query_r) or do_error($query_r,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);	
-					$row_r = stripslashes_deep(mysql_fetch_assoc($result_r));
-					if (is_email($row_r['contact_via'])) {
-						array_push($addrs, $row_r['contact_via']); // save for emailing
+					$addrs_arr = get_contact_via($row_mg['responder']);
+//					$query_r = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $row_mg['responder'] . " LIMIT 1";
+//					$result_r	= mysql_query($query_r) or do_error($query_r,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);	
+//					$row_r = stripslashes_deep(mysql_fetch_assoc($result_r));
+					foreach($addrs_arr as $val) {
+						if (is_email($val)) {
+							array_push($addrs, $val); // save for emailing
+							}
 						}
 					}
 				}
@@ -2751,11 +3093,11 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 								array_push($facaddrs, $row_c['email']); // save for emailing
 								}
 							} elseif($row_mg['responder'] != 0) {
-							$query_r = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $row_mg['responder'] . " LIMIT 1";
-							$result_r	= mysql_query($query_r) or do_error($query_r,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);	
-							$row_r = stripslashes_deep(mysql_fetch_assoc($result_r));
-							if (is_email($row_r['contact_via'])) {
-								array_push($facaddrs, $row_r['contact_via']); // save for emailing
+							$addrs_arr = get_contact_via($row_mg['responder']);
+							foreach($addrs_arr as $val) {
+								if (is_email($val)) {
+									array_push($facaddrs, $val); // save for emailing
+									}
 								}
 							}
 						}
@@ -2801,11 +3143,11 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 								array_push($intypeaddrs, $row_c['email']); // save for emailing
 								}
 							} elseif($row_mg['responder'] != 0) {
-							$query_r = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $row_mg['responder'] . " LIMIT 1";
-							$result_r	= mysql_query($query_r) or do_error($query_r,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);	
-							$row_r = stripslashes_deep(mysql_fetch_assoc($result_r));
-							if (is_email($row_r['contact_via'])) {
-								array_push($intypeaddrs, $row_r['contact_via']); // save for emailing
+							$addrs_arr = get_contact_via($row_mg['responder']);
+							foreach($addrs_arr as $val) {
+								if (is_email($val)) {
+									array_push($intypeaddrs, $val); // save for emailing
+									}
 								}
 							}
 						}
@@ -2820,62 +3162,63 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 		}
 	$notify_assigns = get_variable('notify_assigns');
 	$defaultSMS = get_msg_variable('default_sms');
-	$actionText = "";
 	// notify assigns options - 0 is off, 1 notify assigns on close, 2  notify on close and inc change, 3 notify on close, inc change and action or patient change, 4 notify changes only not close
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . strip_tags($ticket_id);
 	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//	Assignments this Ticket
 		$responderID = $row['responder_id'];
 		$tick_id = $row['ticket_id'];
-		$query_resp = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $responderID;	//	Responders assigned
-		$result_resp	= mysql_query($query_resp) or do_error($query_resp,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-		while($row_resp = stripslashes_deep(mysql_fetch_assoc($result_resp))) {
-			$continue = false;
-			if($action_id == "0" || $action_id == "1" || $action_id == "2" || $action_id == "4") {
-				switch ($action_id) {
-					case ("0") :
-						$actionText .= "changed";
-						break;
-					case ("1") :
-						$actionText .= "changed";
-						break;
-					case ("2") :
-						$actionText .= "changed";
-						break;
-					case ("3") :
-						$actionText .= "";
-						break;
-					case ("4") :
-						$actionText .= "closed";
-						break;
-					default:
-						$actionText .= "changed";
+		$addrs_arr = get_contact_via($responderID);
+		$smsgaddrs_arr = get_smsgid($responderID);
+		$continue = false;
+		if($action_id == "0" || $action_id == "1" || $action_id == "2" || $action_id == "4") {
+			switch ($action_id) {
+				case ("0") :
+					$actionText = "changed";
+					break;
+				case ("1") :
+					$actionText = "changed";
+					break;
+				case ("2") :
+					$actionText = "changed";
+					break;
+				case ("3") :
+					$actionText = "";
+					break;
+				case ("4") :
+					$actionText = "closed\r\n";
+					break;
+				default:
+					$actionText = "changed";
+					}
+			switch ($notify_assigns) {		// what types of incident changes to send notify to assigned units
+				case ("0") :
+					$continue = false;	//	off
+					break;
+				case ("1") :
+					$continue = ($action_id == 4) ? true : false;	//	close only
+					break;
+				case ("2") :
+					$continue = ($action_id == 0 || $action_id == 4) ? true : false;	//	Incident change and close
+					break;
+				case ("3") :
+					$continue = ($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 3 || $action_id == 4) ? true : false;	//	all changes and close
+					break;
+				case ("4") :
+					$continue = ($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 3) ? true : false;	//	changes only, not on close
+					break;
+				default:
+					$continue = false;	
+					}							
+			if($continue) {
+				foreach($smsgaddrs_arr as $val) {
+					if($val != "") {
+						array_push($assignssmsaddrs, $val); // save for SMS						
 						}
-				switch ($notify_assigns) {		// what types of incident changes to send notify to assigned units
-					case ("0") :
-						$continue = false;	//	off
-						break;
-					case ("1") :
-						$continue = ($action_id == 4) ? true : false;	//	close only
-						break;
-					case ("2") :
-						$continue = ($action_id == 0 || $action_id == 4) ? true : false;	//	Incident change and close
-						break;
-					case ("3") :
-						$continue = ($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 3 || $action_id == 4) ? true : false;	//	all changes and close
-						break;
-					case ("4") :
-						$continue = ($action_id == 0 || $action_id == 1 || $action_id == 2 || $action_id == 3) ? true : false;	//	changes only, not on close
-						break;
-					default:
-						$continue = false;	
-						}							
-				if($continue) {
-					if($row_resp['smsg_id'] != "") {
-						array_push($assignssmsaddrs, $row_resp['smsg_id']); // save for SMS						
-						}
-					if (is_email($row_resp['contact_via'])) {
-						array_push($assignsaddrs, $row_resp['contact_via']); // save for emailing
+					}
+				foreach($addrs_arr as $val2) {
+					if (is_email($val2)) {
+						array_push($assignsaddrs, $val2); // save for emailing
 						}
 					}
 				}
@@ -2887,10 +3230,9 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 			$theSMSTo = implode(",", array_unique($assignssmsaddrs));
 			$theText = "Incident " . $scope . " has " . $actionText;
 			mail_it ($theTo, $theSMSTo, $theText, $ticket_id, 4 );
-
 			}
 		}
-	$temp = array_values(array_unique($addrs));	
+	$temp = array_values(array_unique($addrs));		// 5/22/10	
 	return (empty($temp))? FALSE: $temp;
 	}
 	
@@ -3059,11 +3401,9 @@ function my_date_diff($d1_in, $d2_in) {		// end, start datetime strings in, retu
 		$temp = $d2;
 		$d2 = $d1;
 		$d1 = $temp;
-		}
-	else {
+		} else {
 		$temp = $d1; //temp can be used for day count if required
 		}
-
 	$d1 = date_parse(date("Y-m-d H:i:s", (integer)$d1));
 	$d2 = date_parse(date("Y-m-d H:i:s", (integer)$d2));
 		
@@ -3142,11 +3482,12 @@ function get_elapsed_time ($in_row) {						// ex: 2012-03-29 14:37:10	- 5/20/201
 	}
 
 function expires() {
-	$now = time() - (intval(intval(get_variable('delta_mins')))*60); 				// 6/17/10
-//	return mysql_format_date($now + $GLOBALS['SESSION_TIME_LIMIT']);
-	return $now + $GLOBALS['SESSION_TIME_LIMIT'];				// 8/25/10
+	$deltamins = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
+	$now = time() - ($deltamins*60);
+	$sessionTimeout = (intval(get_variable('session_timeout')) != 0) ? intval(get_variable('session_timeout')) : 60;
+	return $now + (60*$sessionTimeout);
 	}
-	
+
 function get_unit_icon($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -3306,7 +3647,6 @@ function get_units_legend() {		// returns string as centered span - 2/8/10
 	$query = "SELECT DISTINCT `type`, `icon`,  `$GLOBALS[mysql_prefix]unit_types`.`name` AS `mytype` FROM `$GLOBALS[mysql_prefix]responder` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` ON `$GLOBALS[mysql_prefix]unit_types`.`id` = `$GLOBALS[mysql_prefix]responder`.`type` ORDER BY `mytype`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
 	$out_str = "<SPAN CLASS = 'even text' ALIGN = 'center'><SPAN CLASS = 'even text' ALIGN = 'center'> Units Types: </SPAN>&nbsp;";
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$the_bg_color = array_key_exists($row['icon'], $GLOBALS['UNIT_TYPES_BG']) ?	$GLOBALS['UNIT_TYPES_BG'][$row['icon']] : "#FFFFFF";	
@@ -3335,7 +3675,6 @@ function get_facilities_legend() {		// returns string as centered row - 2/8/10
 	$query = "SELECT DISTINCT `type`, `icon`,  `$GLOBALS[mysql_prefix]fac_types`.`name` AS `mytype` FROM `$GLOBALS[mysql_prefix]facilities` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]fac_types`.`id` = `$GLOBALS[mysql_prefix]facilities`.`type` ORDER BY `mytype`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
 	$out_str = "<SPAN class = 'even text' ALIGN = 'center'><SPAN CLASS = 'even text' ALIGN='center'> Facilitiy types: </SPAN>&nbsp;";	//	3/15/11
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
 		$the_bg_color = array_key_exists($row['icon'], $GLOBALS['FACY_TYPES_BG']) ? $GLOBALS['FACY_TYPES_BG'][$row['icon']] : "#FFFFFF";
@@ -3358,7 +3697,7 @@ function get_unit_status_legend() {		// returns string as div - 3/21/10
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$out_str = "<DIV style='width: 100%;'><DIV STYLE='width: 5%; display: inline-block; vertical-align: top;'> Status legend: </DIV>&nbsp;<DIV STYLE='width: 92%; display: inline-block;'>";
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$out_str .= "<SPAN STYLE='padding: 2px; border: 1px outset #707070; display: inline-block; background-color:{$row['bg_color']}; color:{$row['text_color']}; word-break: normal; padding: 3px; white-space: nowrap; padding: 2px;'>{$row['status_val']}</SPAN>&nbsp;";
+		$out_str .= "<SPAN class='text' STYLE='padding: 2px; border: 1px outset #707070; display: inline-block; background-color:{$row['bg_color']}; color:{$row['text_color']}; word-break: normal; padding: 3px; white-space: nowrap; padding: 2px;'>{$row['status_val']}</SPAN>&nbsp;";
 		}
 	return $out_str .= "</DIV></DIV>";
 	}										// end function get_unit_status_legend()
@@ -3524,11 +3863,21 @@ function get_tip($which){		/* get replacement text from db tips table, returns F
 
 function can_edit() {
 	$retval = false;
-	if(is_administrator() || is_super()) {
+	if(is_administrator() || is_super() || is_manager()) {
 		$retval = true;
 		} elseif(is_user() && get_variable('oper_can_edit') == 1) {
 		$retval = true;
 		} elseif(is_unit() && get_variable('unit_can_edit') == 1) {
+		$retval = true;
+		} else {
+		$retval = false;
+		}
+	return $retval;
+	} 	// end function can_edit()
+	
+function can_view() {
+	$retval = false;
+	if(is_administrator() || is_super() || is_manager() || is_user()) {
 		$retval = true;
 		} else {
 		$retval = false;
@@ -3639,13 +3988,21 @@ function get_speed ($instr, $inspeed) {					// 11/26/10
 function get_remote($url, $json=TRUE) {				// 11/26/10	, 4/23/11
 	if (function_exists("curl_init")) {
 		$ch = curl_init();
-		$timeout = 5;
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+		$timeout = 10;
+		curl_setopt($ch,CURLOPT_URL,$url);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch,CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,$timeout);	
+		curl_setopt($ch,CURLOPT_TIMEOUT,$timeout);
 		$data = curl_exec($ch);
+		$curl_errno = curl_errno($ch);
+		$curl_error = curl_error($ch);
 		curl_close($ch);
+		if ($curl_errno > 0) {
+			print $curl_error . "<BR />";
+			}
 		} else {				// no CURL
+		$data = "";
 		if ($fp = @fopen($url, "r")) {
 			while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
 			fclose($fp);
@@ -3780,21 +4137,37 @@ function is_cloud() {						// 12/4/10
 	}
 
 function get_unit(){									//			returns unit index string - 3/19/11
-	if  (!(array_key_exists('user_unit_id', $_SESSION)) && 
-		(!@intval($_SESSION['user_unit_id'])> 0)) {return FALSE;}
-	else {
+	if  (!(array_key_exists('user_unit_id', $_SESSION)) && (!@intval($_SESSION['user_unit_id'])> 0)) {
+		return FALSE;
+		} else {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = {$_SESSION['user_unit_id']} LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			if ((mysql_num_rows($result))==0)  {unset($result); return FALSE;}
-			else {
-				$row = stripslashes_deep(mysql_fetch_array($result));
-				$temp = explode("/", $row['name'] );
-				$index = substr($temp[count($temp) -1], -6,strlen($temp[count($temp) -1]));	
-				unset($result);
-				return $index;
-				}
-			}		// end if/else
-		}		// end function get_unit()
+		if ((mysql_num_rows($result))==0)  {
+			unset($result); 
+			return FALSE;
+			} else {
+			$row = stripslashes_deep(mysql_fetch_array($result));
+			$temp = explode("/", $row['name'] );
+			$index = substr($temp[count($temp) -1], -6,strlen($temp[count($temp) -1]));	
+			unset($result);
+			return $index;
+			}
+		}		// end if/else
+	}		// end function get_unit()
+
+function get_handle(){									//			returns unit index string - 3/19/11
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = {$_SESSION['user_unit_id']} LIMIT 1";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if ((mysql_num_rows($result))==0)  {
+		unset($result); 
+		return "Mobile";
+		} else {
+		$row = stripslashes_deep(mysql_fetch_array($result));
+		$handle = ($row['handle'] != "") ? $row['handle'] : "Mobile";
+		unset($result);
+		return $handle;
+		}		// end if/else
+	}		// end function get_unit()
 
 function get_respondername($id) {
 	if(!$id) {return "N/A";}
@@ -3888,6 +4261,10 @@ function get_index_str ($in_str) {
 */
 	function format_sb_date_2($date_in){							// datetime: 2012-11-03 14:13:45 - 11/29/2012
 		return substr($date_in, 8, 8);
+		}
+		
+	function format_sb_date_3($date_in){
+		return date("d H", intval($date_in));	//	Day and Hour
 		}
 
 	function format_date_2($date_in){								// datetime: 2012-11-03 14:13:45 - 11/29/2012
@@ -3995,7 +4372,7 @@ function list_files($ticket_id=0, $responder_id=0, $facility_id=0, $type=0, $por
 function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls = TRUE, $more=FALSE, $allowedit=FALSE, $ticket_id = 0, $responder_id = 0, $facility_id = 0, $mi_id = 0) {
 	$theHeight = $_SESSION['scr_height'] / 2.5;
 	$theHeight2 = $theHeight * .8;
-	$theHeight3 = $theHeight * .65;
+	$theHeight3 = $theHeight * .58;
 	$use_twitter = (get_variable('twitter_consumerkey') != "" && get_variable('twitter_consumersecret') != "" && get_variable('twitter_accesstoken') != "" && get_variable('twitter_accesstokensecret') != "") ? true : false;
 	$print = "<DIV id='window_sidebar' style='position: fixed; top: 30px; right: 0px; width: auto; height: " . $theHeight . "px; font-size: 1.2em; z-index: 50000; background-color: #000000;'>";
 	if((!(is_guest())) && $regions) {
@@ -4049,10 +4426,10 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			<DIV ID = 'message_list' class='even' style='position: relative; height: " . $theHeight2 . "px; width: 810px; float: right; display: none; border: 1px outset #707070;'>
 				<SPAN class='heading' style='width: 810px; text-align: center; display: inline-block;'>Messages&nbsp;&nbsp;<SPAN id='foldername'>Inbox</SPAN></SPAN></BR>
 				<DIV id='folderlist' class='odd' style='width: 90px; border: 1px outset #707070; display: inline-block; float: left; height: " . $theHeight3 . "px;'>
-				<SPAN id='in_but' class='plain text_small' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
-				<SPAN id='sent_but' class='plain text_small' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
+				<SPAN id='in_but' class='plain text' style='width: 70px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
+				<SPAN id='sent_but' class='plain text' style='width: 70px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
 				</DIV>
-				<DIV id='messages' style='width: 710px; border: 1px outset #707070;  display: inline-block; float: right;'>
+				<DIV id='messages' style='width: 710px; border: 1px outset #707070; display: inline-block; float: right;'>
 					<DIV class=\"scrollableContainer2\" id='messageslist' style='display: none; float: right;'>
 						<DIV class=\"scrollingArea2\" style='height: " . $theHeight3 . "px;' id='the_msglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 					</DIV>	
@@ -4090,9 +4467,9 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 					<FORM NAME = 'tweetForm'>
 					<SPAN style='width: 96%; font-size: .7em; display: block; background-color: #DEDEDE; margin: 2%;'>Input Message and (optional) User ID or Screen Name. If not using User ID or Screen Name, tweet will be a public status update. Using User ID or Screen Name it will be a Direct Message to that user.</SPAN><BR />
 					<DIV style='height: 60px; width: 80%; float: left;'><DIV style='width: 30%; display: inline-block; font-size: .9em;'>User ID: </DIV><DIV style='width: 70%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;; 'TYPE = 'text' NAME = 'frm_userid' SIZE='24' MAXLENGTH='64' VALUE = '' style='display: inline; vertical-align: middle;'></DIV>
-					<DIV style='width: 30%; display: inline-block; font-size: .9em;'>Screen Name: </DIV><DIV style='width: 70%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;; TYPE = 'text' NAME = 'frm_screenname' SIZE='24' MAXLENGTH='64' VALUE = '' style='display: inline; vertical-align: middle;'></DIV>
-					<DIV style='width: 30%; display: inline-block; font-size: .9em;'>Message: </DIV><DIV style='width: 55%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;; TYPE = 'text' NAME = 'frm_message' SIZE='32' MAXLENGTH='140' VALUE = '' style='display: inline; vertical-align: middle;'></DIV></DIV>
-					<DIV style='height: 60px; width: 20%: float: right;'><BR /><BR /><IMG id='sub_tweet' class='plain text' TITLE='Submit Tweet to Twitter account.' SRC='./buttons/tweetbutton.png' style='float: right; margin: 0px; padding: 0px; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'doTweet(document.tweetForm);'></DIV>
+					<DIV style='width: 30%; display: inline-block; font-size: .9em;'>Screen Name: </DIV><DIV style='width: 70%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;' TYPE = 'text' NAME = 'frm_screenname' SIZE='24' MAXLENGTH='64' VALUE = '' style='display: inline; vertical-align: middle;'></DIV>
+					<DIV style='width: 30%; display: inline-block; font-size: .9em;'>Message: </DIV><DIV style='width: 55%; display: inline-block; font-size: .9em;'><INPUT style='font-size: .9em;' TYPE = 'text' NAME = 'frm_message' SIZE='32' MAXLENGTH='140' VALUE = '' style='display: inline; vertical-align: middle;'></DIV></DIV>
+					<DIV style='height: 60px; width: 20%; float: right;'><BR /><BR /><IMG id='sub_tweet' class='plain text' TITLE='Submit Tweet to Twitter account.' SRC='./buttons/tweetbutton.png' style='float: right; margin: 0px; padding: 0px; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'doTweet(document.tweetForm);'></DIV>
 					<DIV style='width: 96%; height: 25px; display: inline-block;'><SPAN id='theFlag' style='margin-left: 20px; width: 100%; height: 25px; display: inline-block; float: left;'></SPAN></DIV></FORM>
 					<DIV style='width: 100%; display: inline-block; text-align: center;'><SPAN id='tweets_but' class='plain text' style='float: none; text-align: center;' TITLE='Show Twitter Account Timeline - last 40 tweets' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onclick='twitter_window();'>Timeline</SPAN></DIV>
 					<BR /></DIV>
@@ -4100,7 +4477,6 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 				}
 		$print .= "</DIV></DIV>";
 		}
-
 	$print .= "</DIV>";
 	return $print;
 	}
@@ -4393,7 +4769,7 @@ function multi_array_key_exists($key, $array) {
     return false;
 	}
 	
-function valid_status($id) {
+/* function valid_status($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if(mysql_num_rows($result) > 0) {
@@ -4411,7 +4787,7 @@ function valid_fac_status($id) {
 		} else {
 		return false;
 		}
-	}
+	} */
 
 function get_roster($current=null) {	//	9/6/13
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` ORDER BY `person_identifier`";
@@ -4443,6 +4819,459 @@ function get_user_details($rosterID) {	//	9/6/13
 		}
 	return $the_ret;
 	}
+	
+function get_teamname($id) {
+	$result	= mysql_query("SELECT `name` FROM `$GLOBALS[mysql_prefix]team` WHERE `id` = " . $id . " LIMIT 1") or do_error("get team name(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$row	= stripslashes_deep(mysql_fetch_assoc($result));
+	return (mysql_affected_rows()==0 )? "Error?" : $row['name'];
+	}
+	
+function get_member_assigned($id, $responder) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $id . " AND `responder_id` = " . $responder . " LIMIT 1";
+	$result = mysql_query($query);
+	if(mysql_num_rows($result) == 1) {
+		return 1;
+		} else {
+		return 0;
+		}
+	}
+	
+function get_member_assigned_other($id, $responder) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $id . " AND `responder_id` <> " . $responder . " LIMIT 1";
+	$result = mysql_query($query);
+	if($result) {
+		return mysql_num_rows($result);
+		} else {
+		return 0;
+		}
+	}
+	
+function get_member_already_assigned($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $id;
+	$result = mysql_query($query);
+	if($result) {
+		return mysql_num_rows($result);
+		} else {
+		return 0;
+		}
+	}
+	
+function get_member_assigned_addons($id, $responder) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $id . " AND `responder_id` = " . $responder . " LIMIT 1";
+	$result = mysql_query($query);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	return $row;
+	}
+	
+function get_responder_members($id) {
+	$output = "<DIV style='width: 100%; height: 150px; overflow-y: auto; overflow-z: hidden;'>";
+	if($id == NULL) {
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member`";
+		$result = mysql_query($query);
+		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$theFlag = (get_member_already_assigned($row['id']) > 0) ? "background-color: red; color: white;'" : "";
+			$output .= "<SPAN style='width: 95%; " . $theFlag . "'><SPAN style='width: 40%; display: inline-block;'><INPUT TYPE='checkbox' name='frm_memname[" . $row['id'] . "]' VALUE=1 />" . get_member_name($row['id'], TRUE) . "&nbsp;&nbsp;</SPAN>";
+			$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Email Address from Member' name='frm_use_email[" . $row['id'] . "]' VALUE=1 />E</SPAN>";
+			$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Cellphone Number from Member' name='frm_use_cell[" . $row['id'] . "]' VALUE=1 />C</SPAN>";
+			$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Home Phobe Number from Member' name='frm_use_homephone[" . $row['id'] . "]' VALUE=1 />H</SPAN>";
+			$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Work Phobe Number from Member' name='frm_use_workphone[" . $row['id'] . "]' VALUE=1 />W</SPAN>";
+			$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use SMS Gateway ID from Member' name='frm_use_smsg[" . $row['id'] . "]' VALUE=1 />S</SPAN></SPAN><BR />";
+			}
+		} else {
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` ORDER BY `field1` ASC, `field2` ASC";
+		$result = mysql_query($query);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$theFlag = (get_member_assigned_other($row['id'], $id) > 0) ? "background-color: red; color: white;'" : "";
+			if(get_member_assigned($row['id'], $id) == 1) {
+				$chkd_arr = get_member_assigned_addons($row['id'], $id);
+				$chkd_email = ($chkd_arr['use_email'] == 1) ? "CHECKED" : "";
+				$chkd_cell = ($chkd_arr['use_cellphone'] == 1) ? "CHECKED" : "";
+				$chkd_homephone = ($chkd_arr['use_homephone'] == 1) ? "CHECKED" : "";
+				$chkd_workphone = ($chkd_arr['use_workphone'] == 1) ? "CHECKED" : "";
+				$chkd_smsgid = ($chkd_arr['use_smsg_id'] == 1) ? "CHECKED" : "";
+				$output .= "<SPAN style='width: 95%; " . $theFlag . "'><SPAN style='width: 40%; display: inline-block;'><INPUT TYPE='checkbox' name='frm_memname[" . $row['id'] . "]' VALUE=1 CHECKED />" . get_member_name($row['id'], TRUE) . "&nbsp;&nbsp;</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Email Address from Member' name='frm_use_email[" . $row['id'] . "]' VALUE=1 " . $chkd_email . " />E</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Cellphone Number from Member' name='frm_use_cell[" . $row['id'] . "]' VALUE=1 " . $chkd_cell . " />C</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Home Phobe Number from Member' name='frm_use_homephone[" . $row['id'] . "]' VALUE=1 " . $chkd_homephone . " />H</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Work Phobe Number from Member' name='frm_use_workphone[" . $row['id'] . "]' VALUE=1 " . $chkd_workphone . " />W</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use SMS Gateway ID from Member' name='frm_use_smsg[" . $row['id'] . "]' VALUE=1 " . $chkd_smsgid . " />S</SPAN></SPAN><BR />";
+				} else {
+				$output .= "<SPAN style='width: 95%; " . $theFlag . "'><SPAN style='width: 40%; display: inline-block;'><INPUT TYPE='checkbox' name='frm_memname[" . $row['id'] . "]' VALUE=1 />" . get_member_name($row['id'], TRUE) . "&nbsp;&nbsp;</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Email Address from Member' name='frm_use_email[" . $row['id'] . "]' VALUE=1 />E</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Cellphone Number from Member' name='frm_use_cell[" . $row['id'] . "]' VALUE=1 />C</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Home Phobe Number from Member' name='frm_use_homephone[" . $row['id'] . "]' VALUE=1 />H</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use Work Phobe Number from Member' name='frm_use_workphone[" . $row['id'] . "]' VALUE=1 />W</SPAN>";
+				$output .= "<SPAN style='width: 10%; display: inline-block;'><INPUT TYPE='checkbox' TITLE='Use SMS Gateway ID from Member' name='frm_use_smsg[" . $row['id'] . "]' VALUE=1 />S</SPAN></SPAN><BR />";
+				}
+			}
+		}
+	$output .= "</DIV>";
+	return $output;
+	}
+	
+function get_member_contact_details($id) {
+	$ret_arr = array();
+	$query = "SELECT `field1`, `field2`, `field24`, `field25`, `field26` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $id . " LIMIT 1"; 
+	$result = mysql_query($query);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	foreach($row as $key => $val) {
+		$fieldid = substr($key, 5);
+		$fieldname = get_fieldlabel($fieldid);
+		$ret_arr[$fieldname] = $val;
+		}
+	return $ret_arr;
+	}
+	
+function get_member_full_details($id) {
+	$ret_arr = array();
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $id . " LIMIT 1"; 
+	$result = mysql_query($query);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	foreach($row as $key => $val) {
+		if($key != "_on" && $key != "_by" && $key != "_from" && $key != "id") {
+			$fieldid = substr($key, 5);
+			$fieldname = get_fieldlabel($fieldid);
+			if($fieldname == "Team") {
+				$ret_arr[$fieldname] = get_teamname($val);
+				} elseif($fieldname == "Member Status") {
+				$ret_arr[$fieldname] = get_status_name($id);
+				} elseif($fieldname == "Picture") {
+				if($val != "") {
+					$ret_arr[$fieldname] = "<IMG width='40px' SRC='" . $val . "' />";
+					} else {
+					$ret_arr[$fieldname] = "<IMG width='40px' SRC='./images/no_image.jpg' />";
+					}					
+				} else {
+				$ret_arr[$fieldname] = $val;
+				}
+			}
+		}
+	return $ret_arr;
+	}
+	
+function get_mdb_email($id) {
+	if(!get_mdb_variable('use_mdb_contact')) {return "";}
+	$theReturn = false;
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id . " AND `use_email` = 1 LIMIT 1";
+	$result = mysql_query($query);
+	if($result && mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$memberid = $row['member_id'];
+		$field = get_mdb_variable('mdb_contact_via_field');
+		$query2 = "SELECT " . $field . " FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+		$result2 = mysql_query($query2);
+		if($result2 && mysql_num_rows($result2) > 0) {
+			$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+			if($row2[$field] != "") {
+				$theReturn = $row2[$field];
+				}
+			}
+		}
+	return $theReturn;
+	}
+	
+function get_contact_via($id) {
+	global $useMdb, $useMdbContact;
+	if($useMdb == "1" && $useMdbContact == "1") {
+		$ret_arr = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id . " AND `use_email` = 1";
+		$result = mysql_query($query);
+		if($result && mysql_num_rows($result) > 0) {	//	member(s) assigned to responder - use member details
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$memberid = $row['member_id'];
+				$field = get_mdb_variable('mdb_contact_via_field');
+				$query2 = "SELECT " . $field . " FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+				$result2 = mysql_query($query2);
+				if($result2 && mysql_num_rows($result2) > 0) {
+					$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+					if($row2[$field] != "") {
+						$ret_arr[] = $row2[$field];
+						}
+					}
+				}
+			} else {	//	No member assigned, use information from responder table
+			$query = "SELECT `contact_via` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+			$result = mysql_query($query);
+			if($result) {
+				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				$ret_arr[] = $row['contact_via'];
+				} else {
+				$ret_arr = "";
+				}
+			}
+		} else {
+		$query = "SELECT `contact_via` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+		$result = mysql_query($query);
+		if($result) {
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$temp = (strpos($row['contact_via'], "|")) ? explode(" | ", $row['contact_via']) : $row['contact_via'];
+			if(is_array($temp)) {
+				$ret_arr = $temp;
+				} else {
+				$ret_arr[] = $temp;
+				}
+			} else {
+			$ret_arr = "";
+			}
+		}
+	return $ret_arr;
+	}
 
+function get_smsgid($id) {
+	global $useMdb, $useMdbContact;
+	if($useMdb == "1" && $useMdbContact == "1") {
+		$ret_arr = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id . " AND `use_smsg_id` = 1";
+		$result = mysql_query($query);
+		if($result && mysql_num_rows($result) > 0) {	//	member(s) assigned to responder - use member details
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$memberid = $row['member_id'];
+				$field = get_mdb_variable('mdb_smsg_id_field');
+				$query2 = "SELECT " . $field . " FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+				$result2 = mysql_query($query2);
+				if($result2 && mysql_num_rows($result2) > 0) {
+					$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+					if($row2[$field] != "") {
+						$ret_arr[] = $row2[$field];
+						}
+					}
+				}
+			} else {	//	No member assigned, use information from responder table
+			$query = "SELECT `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+			$result = mysql_query($query);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$ret_arr[] = $row['smsg_id'];				
+			}
+		} else {
+		$query = "SELECT `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+		$result = mysql_query($query);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$ret_arr[] = $row['smsg_id'];
+		$temp = (strpos($row['smsg_id'], "|")) ? explode(" | ", $row['smsg_id']) : $row['smsg_id'];
+		if(is_array($temp)) {
+			$ret_arr = $temp;
+			} else {
+			$ret_arr[] = $temp;
+			}
+		}
+	return $ret_arr;
+	}
+	
+function get_member_count($id) {
+	if(get_variable('use_mdb') == "0") {return 0;}
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id;
+	$result = mysql_query($query);
+	if($result) {return mysql_num_rows($result);} else {return 0;}
+	}
+	
+function get_mdb_names($id) {
+	global $useMdb, $useMdbContact;
+	if($useMdb == "1" && $useMdbContact == "1") {
+		$ret_arr = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id;
+		$result = mysql_query($query);
+		if($result && mysql_num_rows($result) > 0) {	//	member(s) assigned to responder - use member details
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$memberid = $row['member_id'];
+				$query2 = "SELECT `field1`, `field2` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+				$result2 = mysql_query($query2);
+				if($result2 && mysql_num_rows($result2) > 0) {
+					$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+					if($row2['field1'] != "" && $row2['field2']) {
+						$ret_arr[] = $row2['field2'] . " " . $row2['field1'];
+						}
+					}
+				}
+			} else {	//	No member assigned, use information from responder table
+			$query = "SELECT `name` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+			$result = mysql_query($query);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$temp = explode('/', $row['name']);
+			$ret_arr[] = $temp[0];				
+			}
+		} else {
+		$query = "SELECT `name` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+		$result = mysql_query($query);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$temp1 = explode(',', $row['name']);
+		if(is_array($temp1)) {
+			foreach($temp1 as $val) {
+				$temp2 = explode("/", $val);		
+				$ret_arr[] = $temp2[0];
+				}
+			} else {
+			$temp2 = explode("/", $temp1);
+			$ret_arr[] = $temp2[0];	
+			}
+		}
+	return $ret_arr;
+	}
+	
+function get_mdb_cell($id) {
+	global $useMdb, $useMdbContact;
+	if($useMdb == "1" && $useMdbContact == "1") {
+		$ret_arr = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id . " AND `use_smsg_id` = 1";
+		$result = mysql_query($query);
+		if($result && mysql_num_rows($result) > 0) {	//	member(s) assigned to responder - use member details
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$memberid = $row['member_id'];
+				$field = get_mdb_variable('mdb_cellphone_field');
+				$query2 = "SELECT " . $field . " FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+				$result2 = mysql_query($query2);
+				if($result2 && mysql_num_rows($result2) > 0) {
+					$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+					if($row2[$field] != "") {
+						$ret_arr[] = $row2[$field];
+						}
+					}
+				}
+			} else {	//	No member assigned, use information from responder table
+			$query = "SELECT `cellphone` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+			$result = mysql_query($query);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$temp = explode(',', $row['cellphone']);
+			foreach($temp as $val) {
+				$ret_arr[] = $val;
+				}
+			}
+		} else {
+		$query = "SELECT `cellphone` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+		$result = mysql_query($query);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$temp = explode(',', $row['cellphone']);
+		foreach($temp as $val) {
+			$ret_arr[] = $val;
+			}
+		}
+	return $ret_arr;
+	}
+	
+function get_mdb_phone($id) {
+	if(!get_mdb_variable('use_mdb_contact')) {return "";}
+	global $useMdb, $useMdbContact;
+	if($useMdb == "1" && $useMdbContact == "1") {
+		$ret_arr = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id . " AND `use_smsg_id` = 1";
+		$result = mysql_query($query);
+		if($result && mysql_num_rows($result) > 0) {	//	member(s) assigned to responder - use member details
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$memberid = $row['member_id'];
+				$field = get_mdb_variable('mdb_homephone_field');
+				$query2 = "SELECT " . $field . " FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+				$result2 = mysql_query($query2);
+				if($result2 && mysql_num_rows($result2) > 0) {
+					$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+					if($row2[$field] != "") {
+						$ret_arr[] = $row2[$field];
+						}
+					}
+				}
+			} else {	//	No member assigned, use information from responder table
+			$query = "SELECT `phone` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+			$result = mysql_query($query);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$temp = explode(',', $row['phone']);
+			foreach($temp as $val) {
+				$ret_arr[] = $val;
+				}
+			}
+		} else {
+		$query = "SELECT `phone` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+		$result = mysql_query($query);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$temp = explode(',', $row['phone']);
+		if(is_array($temp)) {
+			$ret_arr = $temp;
+			} else {
+			$ret_arr[] = $temp;
+			}
+		}
+	return $ret_arr;
+	}
+	
+function get_members($id = NULL) {
+	if(!get_mdb_variable('use_mdb_contact')) {return "";}
+	global $useMdb, $useMdbContact;
+	if($useMdb == "1" && $useMdbContact == "1" && $id != NULL) {
+		$ret_arr = array();
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $id . " AND `use_smsg_id` = 1";
+		$result = mysql_query($query);
+		if($result && mysql_num_rows($result) > 0) {	//	member(s) assigned to responder - use member details
+			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$memberid = $row['member_id'];
+				$field = get_mdb_variable('mdb_smsg_id_field');
+				$query2 = "SELECT " . $field . " FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberid;
+				$result2 = mysql_query($query2);
+				if($result2 && mysql_num_rows($result2) > 0) {
+					$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+					if($row2[$field] != "") {
+						$ret_arr[] = $row2[$field];
+						}
+					}
+				}
+			} else {	//	No member assigned, use information from responder table
+			$query = "SELECT `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
+			$result = mysql_query($query);
+			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$ret_arr[] = $row['smsg_id'];				
+			}
+		} else {
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]members`";
+		$result = mysql_query($query);
+		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			print "<DIV style='float: left;'><INPUT TYPE='checkbox' CHECKED name='frm_member[" . $row['id'] . "]' VALUE='" . $row['id'] . "'></INPUT>" . get_member_name($row['id']) . "&nbsp;&nbsp;</DIV>";
+			}
+		}
+	}
+	
+function get_roadcondition_types() {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` ORDER BY `id`";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if($result && mysql_num_rows($result) > 0) {
+		return mysql_num_rows($result);
+		} else {
+		return 0;
+		}
+	}
+	
+function get_tickets_status_select($selectname, $selected=NULL) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status`";
+	$result = $result = mysql_query($query);
+	if(mysql_num_rows($result) > 0) {
+		$output = "<SELECT name='$selectname' style='width: 100%;'>";
+		$output .= "<OPTION style='color:#FFFF00; background-color:#CC0000;' selected>Select Unit Status</OPTION>";	
+		while ($row = mysql_fetch_assoc($result)) {
+			$name = $row['status_val'];
+			$id = $row['id'];
+			$sel = ($row['id'] == $selected) ? "selected" : "";
+			$output .= "<OPTION VALUE='" . $id . "' {$sel}>" . $name . "</OPTION>";
+			}
+		$output .= "</SELECT>";
+		} else {
+		$output = "ERROR";
+		}
+	return $output;
+	}
+	
+function get_mdb_status_select($selectname, $selected=NULL) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_status`";
+	$result = $result = mysql_query($query);
+	if(mysql_num_rows($result) > 0) {
+		$output = "<SELECT name='$selectname' style='width: 100%;'>";
+		$output .= "<OPTION style='color:#FFFF00; background-color:#CC0000;' selected>Select Member Status</OPTION>";	
+		while ($row = mysql_fetch_assoc($result)) {
+			$name = $row['status_val'];
+			$id = $row['id'];
+			$sel = ($row['id'] == $selected) ? "selected" : "";
+			$output .= "<OPTION VALUE='" . $id . "' {$sel}>" . $name . "</OPTION>";
+			}
+		$output .= "</SELECT>";
+		} else {
+		$output = "ERROR";
+		}
+	return $output;
+	}
+	
 if(checkColExists('std_msgs', 'name')) {$std_messages = get_standard_messages();}
 ?>

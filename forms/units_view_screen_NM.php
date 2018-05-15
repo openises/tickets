@@ -50,6 +50,8 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, 'fullscreen');
+	if(use_mdb && use_mdb_contact) {show_member_contact_info();}
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
 	leftcolwidth = outerwidth * .70;
@@ -68,7 +70,6 @@ function set_size() {
 	$('rightcol').style.width = rightcolwidth + "px";
 	$('view_unit').style.width = leftcolwidth + "px";
 	$('rightcol').style.height = colheight + "px";
-	set_fontsizes(viewportwidth);
 	}
 
 function do_disp(){												// show incidents for dispatch - added 6/7/08
@@ -216,10 +217,6 @@ $the_type = $temp[0];			// name of type
 				<TD CLASS="td_label text">City: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
 				<TD CLASS='td_data text'><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
 			</TR>
-			<TR CLASS = "even">
-				<TD CLASS="td_label text">Phone: &nbsp;</TD>
-				<TD CLASS='td_data text' COLSPAN=3><?php print $row['phone'] ;?></TD>
-			</TR>
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
@@ -284,13 +281,38 @@ $the_type = $temp[0];			// name of type
 				<TD CLASS="td_label text">Located at Facility: </TD>	
 				<TD CLASS='td_data text'><?php print get_facilityname($row['at_facility']);?></TD>
 			</TR>
-			<TR CLASS = "even">
+			<TR ID = 'members_info_row' CLASS = "even" style='display: none;'>
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Member Data">Member Information</A>:&nbsp;					
+				</TD>
+				<TD CLASS='td_data_wrap text'>
+					<DIV class='text top' id='member_info_div' style='vertical-align: text-top; max-height: 200px; width: 100%;'>
+<?php
+						$theName = (is_array(get_mdb_names($id))) ? implode(" , ", get_mdb_names($id)) : get_mdb_names($id);
+						$contactVia = (is_array(get_contact_via($id))) ? implode(" | ", get_contact_via($id)) : get_contact_via($id);
+						$thePhone = (is_array(get_mdb_phone($id))) ? implode(",", get_mdb_phone($id)) : get_mdb_phone($id);
+						$cellphone = (is_array(get_mdb_cell($id))) ? implode(" , ", get_mdb_cell($id)) : get_mdb_cell($id);
+						$smsgid = (is_array(get_smsgid($id))) ? implode(" | ", get_smsgid($id)) : get_smsgid($id);
+?>
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Member Names assigned to this unit.">Contact Names</SPAN><SPAN class='td_data_wrap text top' style='width: 70%;'><?php print $theName;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Contact emails for units assigned to this unit.">Contact Via</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block; word-wrap: break-word;'><?php print $contactVia;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Phone numbers of members assigned to this unit.">Phone</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block; word-wrap: break-word;'><?php print $thePhone;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Cellphone numbers of members assigned to this unit.">Cellphone</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block;'><?php print $cellphone;?></SPAN><BR />
+						<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="SMS Gateway IDs for Members assigned to this unit - this is not the cellphone number but the short ID for the Gateway Provider - If provider uses Cellphones as IDs use the Handle here.">SMS Gateway ID</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block;'><?php print $smsgid;?></SPAN><BR />								
+					</DIV>
+				</TD>
+			</TR>
+			<TR CLASS = "odd">
 				<TD CLASS="td_label text">Contact name:</TD>	
 				<TD CLASS='td_data text'><?php print $row['contact_name'] ;?></TD>
 			</TR>
-			<TR CLASS = "odd">
+			<TR CLASS = "even">
 				<TD CLASS="td_label text">Contact via:</TD>	
 				<TD CLASS='td_data text'><?php print $row['contact_via'] ;?></TD>
+			</TR>
+			<TR CLASS = "odd">
+				<TD CLASS="td_label text">Phone: &nbsp;</TD>
+				<TD CLASS='td_data text' COLSPAN=3><?php print $row['phone'] ;?></TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Cellphone:</TD>	
@@ -357,7 +379,7 @@ $the_type = $temp[0];			// name of type
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=2></TD>
 			</TR>
-			<TR class='even'>
+			<TR class='odd'>
 				<TD COLSPAN=2>
 					<TABLE WIDTH='100%'>
 						<TR>
@@ -520,6 +542,8 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
+set_fontsizes(viewportwidth, 'fullscreen');
+if(use_mdb && use_mdb_contact) {show_member_contact_info();}
 outerwidth = viewportwidth * .99;
 outerheight = viewportheight * .95;
 leftcolwidth = outerwidth * .70;
@@ -538,7 +562,6 @@ $('leftcol').style.height = colheight + "px";
 $('rightcol').style.width = rightcolwidth + "px";
 $('view_unit').style.width = leftcolwidth + "px";
 $('rightcol').style.height = colheight + "px";
-set_fontsizes(viewportwidth);
 </SCRIPT>
 </BODY>
 </HTML>

@@ -112,6 +112,8 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, 'fullscreen');
+	if(use_mdb && use_mdb_contact) {show_member_contact_info();}
 	outerwidth = viewportwidth * .99;
 	outerheight = viewportheight * .95;
 	leftcolwidth = outerwidth * .70;
@@ -137,7 +139,6 @@ function set_size() {
 	for (var i = 0; i < smallfields.length; i++) {
 		if($(smallfields[i])) {$(smallfields[i]).style.width = smallfieldwidth + "px";}
 		}
-	set_fontsizes(viewportwidth);
 	}
 
 function contains(array, item) {
@@ -223,6 +224,15 @@ function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific
 <?php
 
 $id = mysql_real_escape_string($_GET['id']);
+$members = array();
+$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id`= " . $id;
+$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+while($row	= mysql_fetch_array($result)) {
+	$members[] = $row['member_id'];
+	}
+	
+$assigned_members = (count($members > 0)) ? implode(",", $members) : "";
+
 $query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`= " . $id;
 $result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 $row	= mysql_fetch_array($result);
@@ -278,19 +288,47 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
-				</TR>	
-				<TR CLASS = "even">
-					<TD CLASS="td_label text">
-						<A HREF="#" TITLE="Roster User">Roster User</A>
-					</TD>
-					<TD>&nbsp;</TD>
-					<TD CLASS='td_data text' COLSPAN=2 style='text-align: left; vertical-align: top;'>
-						<?php print get_roster($row['roster_user']);?>
-						<DIV id='user_details' style='width: 300px; vertical-align: top; display: none; font-size: 1.3em; word-wrap: normal;'>
-							<?php print get_user_details($row['roster_user']);?>
-						</DIV>
-					</TD>
-				</TR>	
+				</TR>
+<?php
+				if($useMdb == "0") {
+?>
+					<TR CLASS = "even">
+						<TD CLASS="td_label text">
+							<A CLASS="td_label text" HREF="#" TITLE="Roster User">Roster User</A>
+						</TD>
+						<TD>&nbsp;</TD>
+						<TD COLSPAN=2 CLASS='td_data text'>
+							<?php print get_roster($row['roster_user']);?>
+							<DIV id='user_details' style='width: 300px; vertical-align: top; display: none; font-size: 1.3em; word-wrap: normal;'>
+								<?php print get_user_details($row['roster_user']);?>
+							</DIV>
+						</TD>
+					</TR>
+<?php
+					} else {
+?>
+					<INPUT TYPE="hidden" NAME="frm_roster_id" VALUE="0" />
+<?php
+					}
+
+				if($useMdb == "1" && $useMdbContact == "1") {
+?>
+					<TR ID = 'members_row' CLASS = "even" style='display: none;'>
+						<TD CLASS="td_label text top">
+							<A CLASS="td_label text" HREF="#" TITLE="Members on Unit">Members Assigned to Unit</A>:<BR /><SPAN CLASS='text_white'>Red shows members already assigned to other units.</SPAN>					
+						</TD>
+						<TD>&nbsp;</TD>				
+						<TD COLSPAN=2 CLASS='td_data_wrap text'>
+							<?php print get_responder_members($id);?>
+						</TD>
+						<INPUT TYPE="hidden" NAME = "frm_name" VALUE="<?php print $row['name'] ;?>" />
+					</TR>
+					<TR class='spacer'>
+						<TD class='spacer' COLSPAN=99></TD>
+					</TR>
+<?php				
+					}
+?>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<font color='red' size='-1'>*</font>
@@ -584,7 +622,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='phone' SIZE="12" MAXLENGTH="48" TYPE="text" NAME="frm_phone" VALUE="<?php print $row['phone'] ;?>" />
+						<INPUT id='phone' SIZE="12" MAXLENGTH="48" TYPE="text" NAME="frm_phone" VALUE="<?php print $row['phone'];?>" />
 					</TD>
 				</TR>
 				<TR class='spacer'>
@@ -608,40 +646,62 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						<TEXTAREA ID='capability' NAME="frm_capab" COLS=56 ROWS=2><?php print $row['capab'];?></TEXTAREA>
 					</TD>
 				</TR>
-				<TR CLASS = "even">
+				<TR ID = 'members_info_row' CLASS = "even" style='display: none;'>
+					<TD CLASS="td_label text top">
+						<A CLASS="td_label text" HREF="#" TITLE="Member Data">Member Information</A>:&nbsp;					
+					</TD>
+					<TD>&nbsp;</TD>				
+					<TD COLSPAN=2 CLASS='td_data_wrap text'>
+						<DIV class='text top' id='member_info_div' style='vertical-align: text-top; max-height: 200px; width: 100%;'>
+<?php
+							$theName = (is_array(get_mdb_names($id))) ? implode(" , ", get_mdb_names($id)) : get_mdb_names($id);
+							$contactVia = (is_array(get_contact_via($id))) ? implode(" | ", get_contact_via($id)) : get_contact_via($id);
+							$thePhone = (is_array(get_mdb_phone($id))) ? implode(",", get_mdb_phone($id)) : get_mdb_phone($id);
+							$cellphone = (is_array(get_mdb_cell($id))) ? implode(" , ", get_mdb_cell($id)) : get_mdb_cell($id);
+							$smsgid = (is_array(get_smsgid($id))) ? implode(" | ", get_smsgid($id)) : get_smsgid($id);
+?>
+							<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Member Names assigned to this unit.">Contact Names</SPAN><SPAN class='td_data_wrap text top' style='width: 70%;'><?php print $theName;?></SPAN><BR />
+							<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Contact emails for units assigned to this unit.">Contact Via</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block; word-wrap: break-word;'><?php print $contactVia;?></SPAN><BR />
+							<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Phone numbers of members assigned to this unit.">Phone</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block; word-wrap: break-word;'><?php print $thePhone;?></SPAN><BR />
+							<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="Cellphone numbers of members assigned to this unit.">Cellphone</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block;'><?php print $cellphone;?></SPAN><BR />
+							<SPAN CLASS='td_label text top' style='width: 25%; display: inline-block;' TITLE="SMS Gateway IDs for Members assigned to this unit - this is not the cellphone number but the short ID for the Gateway Provider - If provider uses Cellphones as IDs use the Handle here.">SMS Gateway ID</SPAN><SPAN class='td_data_wrap text top' style='width: 70%; display: inline-block;'><?php print $smsgid;?></SPAN><BR />								
+						</DIV>
+					</TD>
+				</TR>
+				<TR ID = 'contact_name_row' CLASS = "odd">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Unit Contact name">Contact Name</A>:&nbsp;
-					</TD>
+					</TD>	
 					<TD>&nbsp;</TD>
-					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" />
+					<TD COLSPAN=2 CLASS='td_data text'>
+						<INPUT id='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['name'];?>" />
 					</TD>
 				</TR>
-				<TR CLASS = "odd">
+				<TR ID = 'contact_via_row' CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address">Contact Via</A>:&nbsp;
-					</TD>
+						<A CLASS="td_label text" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address. For Twitter, input the Screen Name preceded by a '@'.">Contact Via</A>:&nbsp;
+					</TD>	
 					<TD>&nbsp;</TD>
-					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='contact_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'] ;?>" />
+					<TD COLSPAN=2 CLASS='td_data text'>
+						<INPUT id='contact_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'];?>" />
 					</TD>
 				</TR>
-				<TR CLASS = "even">
+				<TR ID = 'cellphone_row' CLASS = "odd">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Cellphone number - input as country code then number without first 0">Cellphone</A>:&nbsp;
-					</TD>
+					</TD>	
 					<TD>&nbsp;</TD>
-					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='cellphone' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_cell" VALUE="<?php print $row['cellphone'] ;?>" />
+					<TD COLSPAN=2 CLASS='td_data text'>
+						<INPUT id='cellphone' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_cell" VALUE="<?php print $row['cellphone'];?>" />
 					</TD>
 				</TR>
-				<TR CLASS = "odd">
+				<TR ID = 'smsg_provider_row' CLASS = "even">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="<?php get_provider_name(get_msg_variable('smsg_provider'));?> ID - This is for <?php get_provider_name(get_msg_variable('smsg_provider'));?> Integration and is the ID used by <?php get_provider_name(get_msg_variable('smsg_provider'));?> to send SMS messages"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID</A>:&nbsp;
-					</TD>
+					</TD>	
 					<TD>&nbsp;</TD>
-					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='smsgid' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_smsg_id" VALUE="<?php print $row['smsg_id'] ;?>" />
+					<TD COLSPAN=2 CLASS='td_data text'>
+						<INPUT id='smsgid' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_smsg_id" VALUE="<?php print $row['smsg_id'] ;?>" />
 					</TD>
 				</TR>
 <?php
@@ -758,7 +818,8 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 			<INPUT TYPE="hidden" NAME = "frm_direcs" VALUE=<?php print $row['direcs'] ;?> />
 			<INPUT TYPE="hidden" NAME = "frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">
 			<INPUT TYPE="hidden" NAME = "frm_status_updated" VALUE="<?php print $row['status_updated'] ;?>" />	
-			<INPUT TYPE="hidden" NAME = "frm_status_update" VALUE=0 />		
+			<INPUT TYPE="hidden" NAME = "frm_status_update" VALUE=0 />
+			<INPUT TYPE="hidden" NAME = "frm_exist_members" VALUE="<?php print $assigned_members;?>" />			
 
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
@@ -804,6 +865,8 @@ if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 	viewportheight = document.getElementsByTagName('body')[0].clientHeight
 	}
+set_fontsizes(viewportwidth, 'fullscreen');
+if(use_mdb && use_mdb_contact) {show_member_contact_info();}
 outerwidth = viewportwidth * .99;
 outerheight = viewportheight * .95;
 leftcolwidth = outerwidth * .70;
@@ -829,7 +892,6 @@ for (var i = 0; i < medfields.length; i++) {
 for (var i = 0; i < smallfields.length; i++) {
 	if($(smallfields[i])) {$(smallfields[i]).style.width = smallfieldwidth + "px";}
 	}
-set_fontsizes(viewportwidth);
 <?php
 if($good_internet) {
 ?>

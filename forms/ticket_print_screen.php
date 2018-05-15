@@ -9,8 +9,8 @@ $iw_width = 	"300px";		// map infowindow with
 $col_width= max(320, intval($_SESSION['scr_width']* 0.45));
 $zoom_tight = false;
 $get_print = 			(array_key_exists('print', ($_GET)))?			$_GET['print']: 		NULL;
-$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-$id = mysql_real_escape_string($id);
+$get_id = 				(array_key_exists('ticket_id', ($_GET)))?		$_GET['ticket_id']:		NULL;
+$id = mysql_real_escape_string($get_id);
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 $u_types = array();												// 1/1/09
@@ -266,7 +266,8 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		print "POST<br />\n";
 		dump($_POST);
 		}
-
+	$get_id = (array_key_exists('ticket_id', ($_GET)))? $_GET['ticket_id']: NULL;
+	$id = mysql_real_escape_string($get_id);
 	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
 		print "Invalid Ticket ID: '$id'<BR />";
 		return;

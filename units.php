@@ -229,7 +229,7 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
-	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
 		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
@@ -237,9 +237,9 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
-	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
+	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4js.js"></script>
 	<script src="./js/proj4-compressed.js"></script>
@@ -272,6 +272,7 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 		}
 ?>
 	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/member.js"></SCRIPT>
 	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
 	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 	<script type="application/x-javascript" src="./js/geotools2.js"></script>
@@ -504,8 +505,8 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 				`at_facility`= " . 	$theFac . ",
 				`updated`= " . 		quote_smart(trim($now)) . ",
 				`status_updated`= '" . $status_updated . "'
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	5/11/11 added internal Tickets tracker, 6/21/13 added field status_updated for auto status function. 9/6/13, 11/18/13, 1/30/14 added xastir tracker, 6/30/17 added Traccar and javaprssrvr
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+				WHERE `id`= " . quote_smart(trim($resp_id)) . ";";
+				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
@@ -536,6 +537,68 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 						(1, 2, '$now', $resp_stat, $resp_id, 'Allocated to Group' , $by)";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
 				}
+				
+			$existing_members = explode(",", $_POST['frm_exist_members']);
+				
+			if(array_key_exists('frm_memname', $_POST)) {
+				foreach($_POST['frm_memname'] AS $key => $val) {
+					if(!in_array($key, $existing_members)) {
+						$query_rxm = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id'])) . " LIMIT 1";
+						$result_rxm = mysql_query($query_rxm);
+						if(mysql_num_rows($result_rxm) == 0) {
+							$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
+							$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
+							$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
+							$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
+							$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
+							$query_ins_rxm  = "INSERT INTO `$GLOBALS[mysql_prefix]responder_x_member` (
+								`responder_id` , `member_id`, `use_email` , `use_cellphone` , `use_homephone` , `use_workphone` , `use_smsg_id`) 
+								VALUES (" .	quote_smart(trim($resp_id)) . ", " . $key . ", " . $use_email . ", " . $use_cellphone . ", " . $use_homephone . ", " . $use_workphone . "," . $use_smsgid . ");";							
+							$result_ins_rxm = mysql_query($query_ins_rxm);		
+							} else {
+							$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
+							$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
+							$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
+							$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
+							$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
+							$query_ins_rxm  = "UPDATE `$GLOBALS[mysql_prefix]responder_x_member` 
+									SET `use_email` = " . $use_email . ", 
+									`use_cellphone` " . $use_cellphone . ",
+									`use_homephone` " . $use_homephone . ", 
+									`use_workphone` " . $use_workphone . ", 
+									`use_smsg_id` = " . $use_smsgid . " 
+									WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($resp_id));
+							$result_ins_rxm = mysql_query($query_ins_rxm);								
+							}
+						} else {
+						$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
+						$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
+						$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
+						$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
+						$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
+						$query_ins_rxm  = "UPDATE `$GLOBALS[mysql_prefix]responder_x_member` 
+								SET `use_email` = " . $use_email . ", 
+								`use_cellphone` " . $use_cellphone . ",
+								`use_homephone` " . $use_homephone . ", 
+								`use_workphone` " . $use_workphone . ", 
+								`use_smsg_id` = " . $use_smsgid . " 
+								WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($resp_id));
+						$result_ins_rxm = mysql_query($query_ins_rxm);
+						}
+					}
+				}
+				
+			foreach($existing_members AS $key => $val) {
+				if(in_array('frm_memname', $_POST)) {
+					if(!in_array($val, $_POST['frm_memname'])) {
+						$query_dxm = "DELETE FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $val . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id']));
+						$result_dxm = mysql_query($query_dxm);
+						}
+					} else {
+					$query_dxm = "DELETE FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $val . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id']));
+					$result_dxm = mysql_query($query_dxm);
+					}
+				}			
 			
 			$mobstr = (($frm_mobile) && ($frm_aprs)||($frm_instam))? "Mobile": "Unit ";
 			$caption = "<B>Unit<i> " . stripslashes_deep($_POST['frm_handle']) . "</i>' data has been updated </B><BR /><BR />";
@@ -596,18 +659,18 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 				quote_smart(trim($_POST['frm_callsign'])) . "," .
 				quote_smart(trim($_POST['frm_mobile'])) . "," .
 				quote_smart(trim($_POST['frm_multi'])) . "," .
-				quote_smart(trim($_POST['frm_aprs'])) . "," .
-				quote_smart(trim($_POST['frm_instam'])) . "," .
-				quote_smart(trim($_POST['frm_locatea'])) . "," .
-				quote_smart(trim($_POST['frm_gtrack'])) . "," .
-				quote_smart(trim($_POST['frm_glat'])) . "," .
-				quote_smart(trim($_POST['frm_t_tracker'])) . "," .	
-				quote_smart(trim($_POST['frm_ogts'])) . "," .
-				quote_smart(trim($_POST['frm_mob_tracker'])) . "," .
-				quote_smart(trim($_POST['frm_xastir_tracker'])) . "," .
-				quote_smart(trim($_POST['frm_followmee_tracker'])) . "," .
-				quote_smart(trim($_POST['frm_traccar'])) . "," .
-				quote_smart(trim($_POST['frm_javaprssrvr'])) . "," .
+				$aprs . "," .
+				$instam . "," .
+				$locatea . "," .
+				$gtrack . "," .
+				$glat . "," .
+				$t_tracker . "," .	
+				$ogts . "," .
+				$mob_tracker . "," .
+				$xastir_tracker . "," .
+				$followmee_tracker . "," .
+				$traccar . "," .
+				$javaprssrvr . "," .
 				quote_smart(trim($frm_ringfence)) . "," .	
 				quote_smart(trim($frm_excl_zone)) . "," .					
 				quote_smart(trim($_POST['frm_direcs'])) . "," .
@@ -622,7 +685,6 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 				$theFac . "," .
 				quote_smart(trim($now)) . "," .
 				quote_smart(trim($now)) . ");";								// 8/23/08, 5/11/11, 6/21/13, 9/6/13, 11/18/13
-
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$new_id=mysql_insert_id();
 		
@@ -703,6 +765,24 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 						(1, 2, '$now', $status_id, $new_id, 'Allocated to Group' , $by)";
 				$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
 			}	//	end if(!empty($_POST['frm_group']
+			
+			if(array_key_exists('frm_memname', $_POST)) {
+				foreach($_POST['frm_memname'] AS $key => $val) {
+					$query_rxm = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id'])) . " LIMIT 1";
+					$result_rxm = mysql_query($query_rxm);
+					if(mysql_num_rows($result_rxm) == 0) {
+						$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
+						$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
+						$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
+						$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
+						$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
+						$query_ins_rxm  = "INSERT INTO `$GLOBALS[mysql_prefix]responder_x_member` (
+							`responder_id` , `member_id`, `use_email` , `use_cellphone` , `use_homephone` , `use_workphone` , `use_smsg_id`) 
+							VALUES (" .	quote_smart(trim($resp_id)) . ", " . $key . ", " . $use_email . ", " . $use_cellphone . ", " . $use_homephone . ", " . $use_workphone . "," . $use_smsgid . ");";							
+						$result_ins_rxm = mysql_query($query_ins_rxm);
+						}
+					}
+				}
 
 		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, mysql_insert_id(), $_POST['frm_un_status_id']);	// 6/2/08
 

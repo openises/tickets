@@ -153,7 +153,7 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	<script type="application/x-javascript" src="./js/usng.js"></script>
 	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
-	if ($_SESSION['internet']) {
+	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 		$api_key = get_variable('gmaps_api_key');
 		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {

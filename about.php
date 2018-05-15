@@ -793,7 +793,7 @@ Changes for 3.12A - Maintenance release
 312.  Rework to geocoding to improve stability and accuracy.
 313.  Other minor fixes.
 
-Changes for 3.20A - Major re-write
+Changes for 3.20 - Major re-write
 
 314.  Screen look and feel, buttons and responsiveness to different screen sizes.
 315.  Reworking of No Maps mode so that it can be used to simplify the screen but not limiting ability to geocode 
@@ -826,26 +826,25 @@ Changes for 3.20A - Major re-write
 330.  Added “Txtlocal” as an SMS broadcast provider.
 331.  Added setting to allow default SMS for message sending.
 
-Changes for 3.21A - Maintenance release
+Changes for 3.30 - Major re-write
 
-332.  Performance improvements to screen load times
-333.  Addition of ability to notify assigned units when Incident is closed or changes.
-
-Changes for 3.22A - Maintenance Release
-
-334.  Fixes to no-maps mode - failure to add new unit, situation screen not loading, not able to add incident.
-335.  Addition of Incident Nature to call board, fix to non show of apply all button when call board in frame.
-336.  Fix to incident close, shows error when notify units is switched on.
-
-Changes for 3.23A - Maintenance Release
-
-337.  Fixes consituents - debug code removed.
-338.  Fixes to ticket popup from reports, captures error status values (where status value has subsequently been
-      removed.
+332.  Incorporation of Tickets MDB into Tickets core. Responders can now be allocated with 1 or more members with information
+      from the member table being brought into the responder screen automatically. Tickets MDB functionality can be switched
+	  on or off. There is also a script to import data from an existing Tickets MDB installation into Tickets. Only manual
+	  requirement is to copy across pictures and files from the existing Tickets MDBinstallation.
+333.  A new Full Screen Operations Situation screen is available which combines functionality of the situation screen with
+      functions of the call board to enable in somecases quicker operation.
+334.  Fixes to reports download when using custom time periods.
+335.  Started rework of main screens to support screen readers and to simplify operations.
+336.  New script to backup Tickets Database, manage backups and also restore a backup onto the current live system.
+337.  New Incident wizard. Configurable Wizard which provides a simplified way of creating a new incident. Configurable
+      fields and screens to allow workflow to follow local operational principles. Can be switched on and off as a global 
+      setting. Configuration is done via config.	  
+338.  Various other fixes.
 	 
 <A NAME = 'bottom'></A>
 
-August '17
+April '18
 Arnie Shore
 Andy Harvey, UK
 

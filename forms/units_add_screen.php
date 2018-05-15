@@ -49,6 +49,7 @@ var viewportheight;
 var colheight;
 var outerwidth;
 var outerheight;
+
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 	}
@@ -99,6 +100,7 @@ function set_size() {
 		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 		viewportheight = document.getElementsByTagName('body')[0].clientHeight
 		}
+	set_fontsizes(viewportwidth, "fullscreen");
 	mapWidth = viewportwidth * .40;
 	mapHeight = mapWidth * .9;
 	outerwidth = viewportwidth * .99;
@@ -136,7 +138,6 @@ function set_size() {
 	load_basemarkup();
 	load_groupbounds();
 	map.invalidateSize();
-	set_fontsizes(viewportwidth, "fullscreen");
 	}
 
 var icons=[];
@@ -183,45 +184,44 @@ var lon = <?php print get_variable('def_lng');?>;
 var lat = <?php print get_variable('def_lat');?>;
 
 function to_routes(id) {
-	document.routes_Form.ticket_id.value=id;			// 10/16/08, 10/25/08
+	document.routes_Form.ticket_id.value=id;
 	document.routes_Form.submit();
 	}
 
 function to_fac_routes(id) {
-	document.fac_routes_Form.fac_id.value=id;			// 10/6/09
+	document.fac_routes_Form.fac_id.value=id;
 	document.fac_routes_Form.submit();
 	}
 
-function validate(theForm) {						// Responder form contents validation	8/11/09
+function validate(theForm) {						// Responder form contents validation
 	if (theForm.frm_remove) {
 		if (theForm.frm_remove.checked) {
 			var str = "Please confirm removing '" + theForm.frm_name.value + "'";
 			if(confirm(str)) 	{
-				theForm.submit();					// 8/11/09
+				theForm.submit();
 				return true;}
 			else 				{return false;}
 			}
 		}
 	theForm.frm_mobile.value = (theForm.frm_mob_disp.checked)? 1:0;
-	theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;		// 4/27/09
+	theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;
 
 	theForm.frm_direcs.value = (theForm.frm_direcs_disp.checked)? 1:0;
 	var errmsg="";
-							// 2/24/09, 3/24/10
-	if (theForm.frm_name.value.trim()=="")													{errmsg+="Unit NAME is required.\n";}
+
+	if (theForm.frm_name.value.trim()=="" && !theForm.frm_memname)							{errmsg+="Unit NAME is required.\n";}
 	if (theForm.frm_handle.value.trim()=="")												{errmsg+="Unit HANDLE is required.\n";}
 	if (theForm.frm_icon_str.value.trim()=="")												{errmsg+="Unit ICON is required.\n";}
 
-	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)					{errmsg+="Unit TYPE selection is required.\n";}			// 1/1/09
-	if (any_track(theForm)){	//	9/6/13
+	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)					{errmsg+="Unit TYPE selection is required.\n";}
+	if (any_track(theForm)){
 		if (theForm.frm_callsign.value.trim()==""){
 			if(theForm.frm_track_disp.selectedIndex == 8) {
 				} else {
 				errmsg+="License information is required with Tracking.\n";
 				}
 			}
-		}
-	else {
+		} else {
 		if (!(theForm.frm_callsign.value.trim()==""))										{errmsg+="License information used ONLY with Tracking.\n";}
 		}
 
@@ -229,18 +229,49 @@ function validate(theForm) {						// Responder form contents validation	8/11/09
 	if (theForm.frm_un_status_id.options[theForm.frm_un_status_id.selectedIndex].value==0)	{errmsg+="Unit STATUS selection is required.\n";}
 	
 	if (theForm.frm_descr.value.trim()=="")													{errmsg+="Unit DESCRIPTION is required with Tracking.\n";}
-	if ((!(theForm.frm_mob_disp.checked)) && (theForm.frm_lat.value.trim().length == 0)) 	{errmsg+="Map location is required for non-mobile units.\n";}
+	if(allow_nogeo == "0") {
+		if (theForm.frm_lat.value.trim().length == 0) 	{
+			errmsg+="Map location is required for non-mobile units.\n";
+			}
+		} else {
+		if(theForm.frm_lat.value.trim().length == 0) {
+			theForm.frm_lat.value = def_lat;
+			theForm.frm_lng.value = def_lng;
+			}
+		}			
 	
 	if (errmsg!="") {
 		alert ("Please correct the following and re-submit:\n\n" + errmsg);
 		return false;
-		}
-	else {																	// good to go!
-//			top.upper.calls_start();											// 1/21/09
-		theForm.submit();													// 7/21/09
-//			return true;
+		} else {
+		theForm.submit();
 		}
 	}				// end function validate(theForm)
+	
+function any_track(theForm) {
+	return (theForm.frm_track_disp.selectedIndex > 0);
+	}
+
+var track_captions = ["", "Callsign", "Device key", "Userid ", "Userid ", "Badge", "Device", "Userid", "Automatic"];	//	9/6/13
+function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific code to switch off unselected,
+	theForm.frm_aprs.value=theForm.frm_instam.value=theForm.frm_locatea.value=theForm.frm_gtrack.value=theForm.frm_glat.value=theForm.frm_ogts.value=theForm.frm_t_tracker.value=theForm.frm_mob_tracker.value=theForm.frm_xastir_tracker.value=theForm.frm_followmee_tracker.value=theForm.frm_traccar.value=theForm.frm_javaprssrvr.value=0;		//	 9/6/13
+	switch(parseInt(theVal)) {
+		case <?php print $GLOBALS['TRACK_NONE'];?>:		 	break;
+		case <?php print $GLOBALS['TRACK_APRS'];?>:		 	theForm.frm_aprs.value=1;	 break;
+		case <?php print $GLOBALS['TRACK_INSTAM'];?>:	 	theForm.frm_instam.value=1;	 break;
+		case <?php print $GLOBALS['TRACK_LOCATEA'];?>:	 	theForm.frm_locatea.value=1; break;
+		case <?php print $GLOBALS['TRACK_GTRACK'];?>:	 	theForm.frm_gtrack.value=1;  break;
+		case <?php print $GLOBALS['TRACK_GLAT'];?>:		 	theForm.frm_glat.value=1;	 break;
+		case <?php print $GLOBALS['TRACK_T_TRACKER'];?>:	theForm.frm_t_tracker.value=1;	break;
+		case <?php print $GLOBALS['TRACK_OGTS'];?>:		 	theForm.frm_ogts.value=1;	 break;
+		case <?php print $GLOBALS['TRACK_MOBILE'];?>:	 	theForm.frm_mob_tracker.value=1;	 break;	//	9/6/13
+		case <?php print $GLOBALS['TRACK_XASTIR'];?>:	 	theForm.frm_xastir_tracker.value=1;	 break;	//	1/30/14
+		case <?php print $GLOBALS['TRACK_FOLLOWMEE'];?>:	theForm.frm_followmee_tracker.value=1;	 break;	//	1/30/14
+		case <?php print $GLOBALS['TRACK_TRACCAR'];?>:	 	theForm.frm_traccar.value=1;	 break;	//	6/29/17
+		case <?php print $GLOBALS['TRACK_JAVAPRSSRVR'];?>:	theForm.frm_javaprssrvr.value=1;	 break;	//	6/29/17
+		default:  alert("error <?php print __LINE__;?>");
+		}		// end switch()
+	}				// end function do tracking()		
 
 function contains(array, item) {
 	for (var i = 0, I = array.length; i < I; ++i) {
@@ -253,14 +284,14 @@ function collect(){				// constructs a string of id's for deletion
 	var str = sep = "";
 	for (i=0; i< document.del_Form.elements.length; i++) {
 		if (document.del_Form.elements[i].type == 'checkbox' && (document.del_Form.elements[i].checked==true)) {
-			str += (sep + document.del_Form.elements[i].name.substring(1));		// drop T
+			str += (sep + document.del_Form.elements[i].name.substring(1));
 			sep = ",";
 			}
 		}
 	document.del_Form.idstr.value=str;
 	}
 
-function all_ticks(bool_val) {									// set checkbox = true/false
+function all_ticks(bool_val) {
 	for (i=0; i< document.del_Form.elements.length; i++) {
 		if (document.del_Form.elements[i].type == 'checkbox') {
 			document.del_Form.elements[i].checked = bool_val;
@@ -290,18 +321,47 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			</TR>
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=99></TD>
-			</TR>	
-			<TR CLASS = "even">
-				<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Roster User">Roster User</A></TD>	<!-- 9/6/13 -->
-				<TD>&nbsp;</TD>
-				<TD COLSPAN=2 CLASS='td_data text'>
-					<?php print get_roster();?>
-					<DIV id='user_details' style='width: 300px; vertical-align: top; display: none; font-size: 1.3em; word-wrap: normal;'></DIV>
-				</TD>
-			</TR>	
+			</TR>
+<?php
+			if($useMdb == "0") {
+?>
+				<TR CLASS = "even">
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="Roster User">Roster User</A>
+					</TD>
+					<TD>&nbsp;</TD>
+					<TD COLSPAN=2 CLASS='td_data text'>
+						<?php print get_roster();?>
+						<DIV id='user_details' style='width: 300px; vertical-align: top; display: none; font-size: 1.3em; word-wrap: normal;'></DIV>
+					</TD>
+				</TR>
+<?php
+				} else {
+?>
+				<INPUT TYPE="hidden" NAME="frm_roster_id" VALUE="0" />
+<?php
+				}
+
+			if($useMdb == "1" && $useMdbContact == "1") {
+?>
+				<TR ID = 'members_row' CLASS = "odd">
+					<TD CLASS="td_label text top">
+						<A CLASS="td_label text" HREF="#" TITLE="Members on Unit">Members Assigned to Unit</A>:<BR /><SPAN CLASS='text_white'>Red shows members already assigned to other units.</SPAN>
+					</TD>
+					<TD>&nbsp;</TD>				
+					<TD COLSPAN=2 CLASS='td_data_wrap text'>
+						<?php print get_responder_members(NULL);?>
+					</TD>
+				</TR>
+				<TR class='spacer'>
+					<TD class='spacer' COLSPAN=99></TD>
+				</TR>
+<?php				
+				}
+?>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit Name - enter, well, the name">Name</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<font color='red' size='-1'>*</font>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -309,13 +369,13 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Handle - local rules, could be callsign or badge number, generally for radio comms use">Handle</A>:&nbsp;<font color='red' size='-1'>*</font>
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Handle - local rules, could be callsign or badge number, generally for radio comms use">Handle</A>:&nbsp;<font color='red' size='-1'>*</font>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
 					<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" />
-					<SPAN STYLE = 'margin-left:30px'  CLASS="td_label_text"> Icon: </SPAN>&nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;<INPUT TYPE = "text" NAME = "frm_icon_str" SIZE = 3 MAXLENGTH=3 VALUE="" />
+					<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;<INPUT TYPE = "text" NAME = "frm_icon_str" SIZE = 3 MAXLENGTH=3 VALUE="" />
 				</TD>
 			</TR>
 
@@ -324,8 +384,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {
 ?>		
 			<TR CLASS='odd' VALIGN="top">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>:
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>:
 					<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 					<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 				</TD>
@@ -345,7 +405,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {	//	6/10/11
 ?>		
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
-				<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>: 
+				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>: 
 					<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 					<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 				</TD>
@@ -365,7 +425,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			} else {
 ?>
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
-				<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>: 
+				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>: 
 					<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 					<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 				</TD>
@@ -392,14 +452,14 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 ?>
 			<TR CLASS='even' VALIGN="top">
 				<TD CLASS='td_label text'>
-					<A CLASS="td_label_text" HREF="#"  TITLE="Sets Boundaries for Ring Fences and exclusion zones"><?php print get_text("Boundaries");?></A>:
+					<A CLASS="td_label text" HREF="#"  TITLE="Sets Boundaries for Ring Fences and exclusion zones"><?php print get_text("Boundaries");?></A>:
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2>
 					<TABLE STYLE='width: 100%;'>
 						<TR>
 							<TD CLASS='td_label text text_right'>
-								<A CLASS="td_label_text" HREF="#"  TITLE="Sets boundary used to ring-fence the area this unit is allowed in"><?php print get_text("Ringfence");?></A>:&nbsp;
+								<A CLASS="td_label text" HREF="#"  TITLE="Sets boundary used to ring-fence the area this unit is allowed in"><?php print get_text("Ringfence");?></A>:&nbsp;
 							</TD>
 							<TD CLASS='td_data text text_left'>
 								<SELECT id='ringfence' NAME="frm_ringfence" onChange = "this.value=JSfnTrim(this.value)">
@@ -416,7 +476,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 						</TR>
 						<TR>
 							<TD CLASS='td_label text text_right'>
-								<A CLASS="td_label_text" HREF="#" TITLE="Sets exclusion zone for this unit"><?php print get_text("Exclusion Zone");?></A>:&nbsp
+								<A CLASS="td_label text" HREF="#" TITLE="Sets exclusion zone for this unit"><?php print get_text("Exclusion Zone");?></A>:&nbsp
 							</TD>
 							<TD CLASS='td_data text text_left'>
 								<SELECT id='exclusion' NAME="frm_excl_zone" onChange = "this.value=JSfnTrim(this.value)">
@@ -442,7 +502,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>			
 			<TR CLASS = "even" VALIGN='middle'>
-				<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Unit Type - Select from pulldown menu">Type</A>: <font color='red' size='-1'>*</font></TD>
+				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Unit Type - Select from pulldown menu">Type</A>: <font color='red' size='-1'>*</font></TD>
 				<TD>&nbsp;</TD>
 				<TD CLASS='td_data text'>
 					<SELECT id='unittype' NAME='frm_type'><OPTION VALUE=0>Select one</OPTION>
@@ -455,14 +515,14 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 					</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</TD>
 				<TD CLASS='td_data text'>
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit is mobile unit?">Mobile</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" /><BR />
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit can be dispatched to multiple incidents?">Multiple</A>  &raquo;<INPUT TYPE="checkbox" NAME="frm_multi_disp" /><BR />
-					<A CLASS="td_label_text" HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked />
+					<A CLASS="td_label text" HREF="#" TITLE="Unit is mobile unit?">Mobile</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_mob_disp" /><BR />
+					<A CLASS="td_label text" HREF="#" TITLE="Unit can be dispatched to multiple incidents?">Multiple</A>  &raquo;<INPUT TYPE="checkbox" NAME="frm_multi_disp" /><BR />
+					<A CLASS="td_label text" HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked />
 				</TD>
 			</TR>
 			<TR CLASS = "odd" VALIGN='top'  TITLE = 'Select one'>
-				<TD CLASS="td_label_text" >
-					<A CLASS="td_label_text" HREF="#" TITLE="Tracking Type - select from the pulldown menu - you must also fill in the callsign or tracking id which is used by the tracking provider to identify the unit - each unit should have a unique id.">Tracking</A>:&nbsp;
+				<TD CLASS="td_label text" >
+					<A CLASS="td_label text" HREF="#" TITLE="Tracking Type - select from the pulldown menu - you must also fill in the callsign or tracking id which is used by the tracking provider to identify the unit - each unit should have a unique id.">Tracking</A>:&nbsp;
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -492,8 +552,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>	
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit Status - Select from pulldown menu">Status</A>:&nbsp;<font color='red' size='-1'>*</font>
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Status - Select from pulldown menu">Status</A>:&nbsp;<font color='red' size='-1'>*</font>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -520,8 +580,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="About unit status - information about particular status values for this unit">About Status</A>
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="About unit status - information about particular status values for this unit">About Status</A>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -532,8 +592,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>	
 			<TR CLASS='odd'>
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Location - type in location in fields or click location on map ">Location</A>:
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Location - type in location in fields or click location on map ">Location</A>:
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -541,14 +601,14 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS='even'>
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required">City</A>:&nbsp;&nbsp;&nbsp;&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required">City</A>:&nbsp;&nbsp;&nbsp;&nbsp;
 					<button type="button" onClick="Javascript:loc_lkup(document.res_add_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
 					<INPUT id='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A CLASS="td_label_text" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A CLASS="td_label text" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;
 					<INPUT id='state' SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="<?php print $st_size;?>">
 				</TD>
 			</TR>
@@ -560,8 +620,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			if (mysql_num_rows($result_fac) > 0) {
 ?>
 				<TR CLASS = "odd" VALIGN='middle'>
-					<TD CLASS="td_label_text">
-						<A CLASS="td_label_text" HREF="#" TITLE="Unit is located at the selected facility as a home base">Locate at Facility:&nbsp;</A>
+					<TD CLASS="td_label text">
+						<A CLASS="td_label text" HREF="#" TITLE="Unit is located at the selected facility as a home base">Locate at Facility:&nbsp;</A>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
@@ -583,8 +643,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>	
 			<TR CLASS = "odd">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Phone Number">Phone</A>:&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Phone Number">Phone</A>:&nbsp;
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -595,8 +655,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>	
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -604,8 +664,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit Capability - training, equipment on board etc">Capability</A>:&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Capability - training, equipment on board etc">Capability</A>:&nbsp;
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -613,8 +673,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Unit Contact name">Contact Name</A>:&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Contact name">Contact Name</A>:&nbsp;
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -622,8 +682,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address. For Twitter, input the Screen Name preceded by a '@'.">Contact Via</A>:&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Contact via - for email to unit this must be a valid email address or email to SMS address. For Twitter, input the Screen Name preceded by a '@'.">Contact Via</A>:&nbsp;
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -631,8 +691,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="Cellphone number - input as country code then number without first 0">Cellphone</A>:&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="Cellphone number - input as country code then number without first 0">Cellphone</A>:&nbsp;
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -640,8 +700,8 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label_text">
-					<A CLASS="td_label_text" HREF="#" TITLE="<?php get_provider_name(get_msg_variable('smsg_provider'));?> ID - This is for <?php get_provider_name(get_msg_variable('smsg_provider'));?> Integration and is the ID used by <?php get_provider_name(get_msg_variable('smsg_provider'));?> to send SMS messages"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID</A>:&nbsp;
+				<TD CLASS="td_label text">
+					<A CLASS="td_label text" HREF="#" TITLE="<?php get_provider_name(get_msg_variable('smsg_provider'));?> ID - This is for <?php get_provider_name(get_msg_variable('smsg_provider'));?> Integration and is the ID used by <?php get_provider_name(get_msg_variable('smsg_provider'));?> to send SMS messages"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID</A>:&nbsp;
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
@@ -649,7 +709,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 				</TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Latitude and Longitude - set from map click">
+				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Latitude and Longitude - set from map click">
 					<SPAN onClick = 'javascript: do_coords(document.res_add_Form.frm_lat.value ,document.res_add_Form.frm_lng.value)'>
 						Lat/Lng</A></SPAN>
 
@@ -715,6 +775,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			<TR>
 				<TD>&nbsp;</TD>
 			</TR>
+			</TABLE> <!-- end inner left -->
 			<INPUT TYPE='hidden' NAME = 'frm_lat' VALUE=''/>
 			<INPUT TYPE='hidden' NAME = 'frm_lng' VALUE=''/>
 			<INPUT TYPE='hidden' NAME = 'frm_log_it' VALUE=''/>
@@ -733,7 +794,6 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			<INPUT TYPE='hidden' NAME = 'frm_traccar' VALUE=0 />	<!-- 6/29/17 -->
 			<INPUT TYPE='hidden' NAME = 'frm_javaprssrvr' VALUE=0 />	<!-- 6/29/17 -->
 			<INPUT TYPE='hidden' NAME = 'frm_direcs' VALUE=1 />  <!-- note default -->
-			</TABLE> <!-- end inner left -->
 			</FORM>
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
@@ -777,6 +837,7 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 			viewportheight = document.getElementsByTagName('body')[0].clientHeight
 			}
+		set_fontsizes(viewportwidth, "fullscreen");
 		mapWidth = viewportwidth * .40;
 		mapHeight = mapWidth * .9;
 		outerwidth = viewportwidth * .99;
@@ -810,7 +871,6 @@ function all_ticks(bool_val) {									// set checkbox = true/false
 		load_ringfences();
 		load_basemarkup();
 		load_groupbounds();		
-		set_fontsizes(viewportwidth, "fullscreen");
 		var latLng;
 		var boundary = [];			//	exclusion zones array
 		var bound_names = [];

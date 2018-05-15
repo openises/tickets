@@ -123,13 +123,12 @@ $query = "SELECT *, `r`.`id` AS `the_responder_id` FROM `$GLOBALS[mysql_prefix]r
 		WHERE  `callsign` > '' AND (`aprs` = 1 OR  `instam` = 1 OR  `locatea` = 1 OR  `gtrack` = 1 OR  `glat` = 1 ) $where2 ORDER BY `r`.`updated` DESC LIMIT 1";
 $result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;			// 2/10/12
 $row = (mysql_num_rows($result)>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
-//	Changed 8/3/12
+
 if ($row ) {	//	Latest unit Status update written by current user.
-	$_SESSION['unit_flag_1'] = $row['the_responder_id'];			// 2/21/12
-//	$_SESSION['unit_flag_2'] = $me;		// 6/11/10
+	$_SESSION['unit_flag_1'] = $row['the_responder_id'];
 	} else {				// latest unit status updates written by others
 	if(!isset($curr_viewed)) {
-		if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.
 			$where2 = "AND `a`.`type` = 2";
 			} else {
 			$x=0;
@@ -143,7 +142,7 @@ if ($row ) {	//	Latest unit Status update written by current user.
 			$where2 .= " AND `a`.`type` = 2";
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.
 			$where2 = " AND `a`.`type` = 2";
 			} else {
 			$x=0;
@@ -158,17 +157,15 @@ if ($row ) {	//	Latest unit Status update written by current user.
 			}
 		}
 
-										// 2/21/12
 	$query = "SELECT *, `r`.`id` AS `the_responder_id` FROM `$GLOBALS[mysql_prefix]responder` `r`
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON `r`.`id` = `a`.`resource_id`
-	WHERE `r`.`user_id` != {$me} $where2 ORDER BY `r`.`updated` DESC LIMIT 1";		// get most recent
-	$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
+	WHERE `r`.`user_id` != {$me} $where2 ORDER BY `r`.`updated` DESC LIMIT 1";
+	$result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;
 	$row =  (mysql_num_rows($result)>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
 	}
 
 if ($row) {
-	$_SESSION['unit_flag_1'] = $row['the_responder_id'];			// 2/21/12
-//	$_SESSION['unit_flag_2'] = $me;		// 6/11/10
+	$_SESSION['unit_flag_1'] = $row['the_responder_id'];
 	}
 
 						//	9/10/13 Most recent status updates
@@ -214,8 +211,6 @@ if ($row2) {		//	9/10/13
 	$status_updated_time = $row2['un_status_id'];
 	}
 
-						// 1/21/11 - get most recent dispatch
-
 if(!isset($curr_viewed)) {
 	if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where2 = " AND `a`.`type` = 1";
@@ -253,8 +248,6 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` `as`
 $result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
 $assign_row = (mysql_num_rows($result)>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
 
-// 2/25/12 - AS
-
 $query = "SELECT `updated` FROM `$GLOBALS[mysql_prefix]action` WHERE `updated` = ( SELECT MAX(`updated`) FROM `$GLOBALS[mysql_prefix]action` ) LIMIT 1";
 $result = mysql_query($query) or error_out(basename(__FILE__) . "@"  . __LINE__) ;		// 2/10/12
 $act_row =  (mysql_num_rows($result)>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
@@ -282,8 +275,6 @@ $the_status =($row2)? $row2['un_status_id'] : "0";		//	9/10/13
 $status_updated_time = ($row2)? $row2['status_updated'] : "0";		//	9/10/13
 
 $the_dispatch_change = ($assign_row)? $assign_row['as_of']: "";
-
-//	3/23/2015
 
 //	ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `watch` INT(2) NOT NULL DEFAULT '0' COMMENT 'Used in on-scene-watch' AFTER `set_severity`;
 
@@ -369,9 +360,9 @@ if ( ( ! ( is_empty() ) ) && ( is_ok() ) ) {
 
 $the_hash = md5($the_chat_id . $the_tick_id . $the_unit_id . $the_updated . $the_dispatch_change . $the_act_id . $the_pat_id . $the_reqs . $the_reqs2 . $status_updated . $the_status . $status_updated_time . $watch_val . $osw_str);	//	10/23/12
 $ret_arr = array ($the_chat_id, $the_tick_id, $the_unit_id, $the_updated, $the_dispatch_change, $the_act_id, $the_pat_id, $the_reqs, $the_reqs2, $status_updated, $the_status, $status_updated_time, $watch_val, $osw_str, $the_hash);	//	10/23/12
-// snap( __LINE__, $ret_arr[12] );
 
-// 3/23/2015
+
+session_write_close();
 get_current();								// update remotes position - 5/30/2013
 print json_encode($ret_arr);				// 1/6/11
 exit();
