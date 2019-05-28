@@ -45,9 +45,9 @@ var colors = new Array ('odd', 'even');
 
 function loadData() {
 	get_mi_totals();
+	get_assignments();
+	get_unit_categories();
 	load_responderlist2('icon', 'ASC');
-	load_status_bgcolors();
-	load_status_textcolors();
 	}
 
 function set_size() {

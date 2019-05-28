@@ -4,10 +4,10 @@ require_once('../incs/status_cats.inc.php');
 set_time_limit(0);
 @session_start();
 session_write_close();
-if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
-$screen = 
+//if($_GET['q'] != $_SESSION['id']) {
+//	exit();
+//	}
+
 $iw_width= "300px";
 $nature = get_text("Nature");
 $disposition = get_text("Disposition");
@@ -26,7 +26,7 @@ $responderAvail = intval(get_mdb_variable('tickets_status_available'));
 $memberStatusAvailVal = intval(get_mdb_variable('member_status_available'));
 $enforceMemberStatus = intval(get_mdb_variable('enforce_status'));
 $removeStatusSelect = intval(get_mdb_variable('no_status_select'));
-$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+$delta = (get_variable('delta_mins') != "") ? get_variable('delta_mins') : 0;
 $now = time() - ($delta*60);
 $sortby = (!(array_key_exists('sort', $_GET))) ? 'icon' : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];

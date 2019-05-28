@@ -2012,10 +2012,10 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				
 			$soundnames = array();
 			$soundnames[1] = "Incident";
-			$soundnames[3] = "Responder";
-			$soundnames[6] = "Message";
-			$soundnames[7] = "Chat";
-			$soundnames[8] = "Broadcast";
+			$soundnames[2] = "Responder";
+			$soundnames[3] = "Message";
+			$soundnames[4] = "Chat";
+			$soundnames[5] = "Broadcast";
 			$output_arr = array();
 			foreach($_POST as $key=>$setting) {
 				foreach($setting as $key2=>$value) {
@@ -2042,10 +2042,17 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 			<A NAME="top" /> <!-- 11/11/09 -->
 
 <?php
+			$soundnames = array();
+			$soundnames[1] = "Incident";
+			$soundnames[2] = "Responder";
+			$soundnames[3] = "Message";
+			$soundnames[4] = "Chat";
+			$soundnames[5] = "Broadcast";
+
 			$theSounds = array();
 			$theDirectory = getcwd().'/sounds/';
 			$theSounds = read_directory($theDirectory, "wav");
-			
+
 			$theMP3Sounds = array();
 			$theDirectory = getcwd().'/sounds/';
 			$theMP3Sounds = read_directory($theDirectory, "mp3"); 
@@ -2060,11 +2067,11 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				$counter++;
 				print "<TR id='settingRow_" . $row['id'] . "' CLASS='" . $evenodd[$counter%2] . "' STYLE='width: 100%; padding: 2px;'>\n";
 				$id = $row['id'];
-				$name = $row['name'];
+				$name = ($row['name'] != "") ? $row['name'] : $soundnames[$row['id']];
 				$filename = $row['filename'];
 				$ison = $row['ison'];
 				print "<TD style='border-right: 1px solid red; padding: 2px;' class='td_data text text_left'>".$id."</TD>\n";
-				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'><INPUT id='frm_name_" . $id . "' type='text' name='frm_name[" . $id . "]' value='".$name."' DISABLED/></TD>\n";
+				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'><INPUT id='frm_name_" . $id . "' type='text' name='frm_name[" . $id . "]' value='".$name."' READONLY/></TD>\n";
 				print "<TD style='border-right: 1px solid red; padding: 2px;' CLASS='td_data text text_center'>";
 				print "<SELECT ID='frm_filename_" . $id . "' NAME='frm_filename[" . $id . "]'>";				
 				print "\t<OPTION VALUE=0 SELECTED>Select Sound</OPTION>\n";
@@ -3517,29 +3524,31 @@ ul {
 			</DIV>
 <?php
 			}
-		if(is_super() && intval(get_variable('use_mdb')) != 0) {
+		if(is_super()) {
+			if(intval(get_variable('use_mdb')) != 0) {
 ?>
-			<DIV class='config_heading text' id='mdb_section' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-				<DIV class='config_heading text' style='display: block; clear: both;'>Membership Database</DIV>
-					<A id='mdb_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=mdb_settings">MDB Settings</A>
-					<A id='memberlist' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="member.php">Member List</A>
-					<A id='vehicles' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('vehicles');">Vehicles</A>
-					<A id='vehicle_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('vehicle_types');">Vehicle Types</A>
-					<A id='equipment' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('equipment_types');">Equipment</A>
-					<A id='capabilities' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('capability_types');">Capabilities</A>
-					<A id='clothing' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('clothing_types');">Clothing</A>
-					<A id='events' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('events');">Events</A>
-					<A id='event_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('event_types');">Event Types</A>
-					<A id='training' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('training_packages');">Training Packages</A>
-					<A id='member_status' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('member_status');">Member Status</A>
-					<A id='member_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('member_types');">Member Types</A>
-					<A id='teams' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('team');">Teams</A>
-					<A id='defined_fields' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='revisable_fields.php'">Custom Field Definitions</A>
-					<A id='fieldsets' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('fieldsets');">Fieldsets</A>
-					<A id='bulk_allocations' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='./bulk_admin/bulk_add_capab.php'">Bulk Allocations</A>
-					<A id='bulk_allocations_selective' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='./bulk_admin/bulk_add_allocation.php'">Selective Bulk Allocations</A>
-				</DIV>
+				<DIV class='config_heading text' id='mdb_section' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
+					<DIV class='config_heading text' style='display: block; clear: both;'>Membership Database</DIV>
+						<A id='mdb_set' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=mdb_settings">MDB Settings</A>
+						<A id='memberlist' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="member.php">Member List</A>
+						<A id='vehicles' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('vehicles');">Vehicles</A>
+						<A id='vehicle_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('vehicle_types');">Vehicle Types</A>
+						<A id='equipment' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('equipment_types');">Equipment</A>
+						<A id='capabilities' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('capability_types');">Capabilities</A>
+						<A id='clothing' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('clothing_types');">Clothing</A>
+						<A id='events' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('events');">Events</A>
+						<A id='event_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('event_types');">Event Types</A>
+						<A id='training' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('training_packages');">Training Packages</A>
+						<A id='member_status' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('member_status');">Member Status</A>
+						<A id='member_types' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('member_types');">Member Types</A>
+						<A id='teams' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('team');">Teams</A>
+						<A id='defined_fields' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='revisable_fields.php'">Custom Field Definitions</A>
+						<A id='fieldsets' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_Post('fieldsets');">Fieldsets</A>
+						<A id='bulk_allocations' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='./bulk_admin/bulk_add_capab.php'">Bulk Allocations</A>
+						<A id='bulk_allocations_selective' class='plain text' style='width: 150px; float: left;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "window.location='./bulk_admin/bulk_add_allocation.php'">Selective Bulk Allocations</A>
+					</DIV>
 <?php
+				}
 			if(get_variable('use_disp_autostat') == 1) {		//9/10/13
 ?>
 				<DIV class='config_heading text' id='ad_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>

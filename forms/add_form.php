@@ -47,11 +47,12 @@ if(can_edit()) {
 
 	function get_data_cb(req) {
 		var the_id_arr=JSON.decode(req.responseText);
-			var lat = the_id_arr[0];
-			var lng = the_id_arr[1];
-			document.mem_add_form.frm_field12.value = lat;
-			document.mem_add_form.frm_field13.value = lng;
-			addMarker(lat, lng, "New", 'markers/sm_red.png');		
+		var lat = the_id_arr[0];
+		var lng = the_id_arr[1];
+		document.mem_add_form.frm_field12.value = lat;
+		document.mem_add_form.frm_field13.value = lng;
+		addMarker(lat, lng, "New Member", './markers/sm_yellow.png');
+		map.setView([lat, lng], 12);
 		}	
 		
 </SCRIPT>

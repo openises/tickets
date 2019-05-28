@@ -1054,7 +1054,7 @@ if(empty($_SESSION)) {		// expired?
 //			dump($_POST);
 			$unit_ids = explode(",", $_POST['frm_unit_id_str']);		//  4/23/10
 			for ($i=0; $i< count($unit_ids)-1; $i++) {
-				$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+				$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 				$now = mysql_format_date(time() - ($delta*60));
 
 				$temp = trim($frm_miles_strt);				// 11/4/09
@@ -1440,7 +1440,7 @@ if(empty($_SESSION)) {		// expired?
 					} else 	{										// otherwise show
 					$temp =  get_variable('closed_interval');
 					$cwi = ( empty($temp) ) ? "24" : $temp;		// default to 24 hours if no user setting
-					$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+					$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 					$time_back = mysql_format_date(time() - ($delta*60) - ($cwi*3600));
 					$hide_sql = " OR `clear`>= '$time_back' ";
 					$butn_txt = "Hide ";
@@ -1551,7 +1551,7 @@ if(empty($_SESSION)) {		// expired?
 <?php
 					$doUnit = (($guest)||($user))? "viewU" : "editU";		// 5/11/10
 					$doTick = ($guest)? "viewT" : "editT";				// 06/26/08
-					$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+					$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 					$now = time() - ($delta*60);
 					$items = mysql_num_rows($result);
 					$tags_arr = explode("/", get_variable('disp_stat'));		// 8/29/10
@@ -2187,7 +2187,7 @@ if(empty($_SESSION)) {		// expired?
 							</TD>
 						</TR>
 <?php
-						$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+						$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 						$now = mysql_format_date(time() - ($delta*60)); 		// mysql format
 
 						if (is_date($asgn_row['dispatched'])) {
@@ -2355,7 +2355,7 @@ if(empty($_SESSION)) {		// expired?
 				break;			// end 	case 'edit': == } ==
 
 			case 'edit_db':		// ==== {  ================================================
-				$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+				$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 				$now = mysql_format_date(time() - ($delta*60));
 
 				if (isset($frm_inc_status_id)) {
@@ -2630,7 +2630,7 @@ if(empty($_SESSION)) {		// expired?
 <?php
 					$doUnit = (($guest)||($user))? "viewU" : "editU";	// 5/11/10
 					$doTick = ($guest)? "viewT" : "editT";				// 06/26/08
-					$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+					$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 					$now = time() - ($delta*60);
 
 					$items = mysql_num_rows($result_temp);

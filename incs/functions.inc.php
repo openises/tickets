@@ -474,33 +474,8 @@ function remove_nls($instr) {                // 10/20/09
 	return str_replace($nls, " ", $instr);
 	}        // end function
 
-//function mysql_table_exists($table) {/* check if mysql table exists */
-//	$query = "SELECT COUNT(*) FROM `$table`";
-//	$result = mysql_query($query);
-//	$num_rows = @mysql_num_rows($result);
-//	if($num_rows)
-//		return TRUE;
-//	else
-//		return FALSE;
-//	}
-	
 function mysql_table_exists($name) {
-	$result = mysql_query("SHOW TABLES LIKE '$name'");
-	$table_exists = mysql_num_rows($result) > 0;
-	if($table_exists) {return true;} else {return false;}
-/* 	$tablename = "$GLOBALS[mysql_prefix]" . "$name";
-	$query 	= "SELECT COUNT(*) FROM $tablename";
-    $result = mysql_query($query);
-	if($result) {
-		$num_rows = mysql_num_rows($result);
-		if($num_rows > 0) {
-			return true;
-			} else {
-			return false;
-			}
-		} else {
-		return false;
-		} */
+	return boolVal ( mysql_num_rows(mysql_query("SHOW TABLES LIKE '{$name}'") )  > 0 );
 	}
 
 function get_issue_date($id){

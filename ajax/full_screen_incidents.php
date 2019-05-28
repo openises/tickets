@@ -142,10 +142,13 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	switch($func) {		
 		case 0: 
 			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR 
-				(`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND (`$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR) OR `$GLOBALS[mysql_prefix]ticket`.`booked_date` > NOW())) OR 
+				(`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR)) OR 
 				(`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}' AND `$GLOBALS[mysql_prefix]ticket`.`problemend` >= '{$time_back}'))
 				{$where2} 
-				AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2 OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR) AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2) OR (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 0 AND `$GLOBALS[mysql_prefix]allocates`.`al_as_of` >= '{$time_back}')";	//	11/29/10, 4/18/11, 4/18/11
+				AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' 
+				AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR) 
+				AND `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2) 
+				OR (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 0 AND `$GLOBALS[mysql_prefix]allocates`.`al_as_of` >= '{$time_back}')";	//	11/29/10, 4/18/11, 4/18/11
 			break;
 		case 1:
 		case 2:

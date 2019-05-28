@@ -1191,8 +1191,8 @@ function send_message() {
 	var theForm = document.forms['reply_form'];
 	var theTo = theForm.elements["frm_to"].value;
 	var theFrom = theForm.elements["frm_from"].value;
-	var theSubject = urlencode(theForm.elements["frm_subject"].value);
-	var theMessage = urlencode(theForm.elements["frm_msg"].value);
+	var theSubject = URLEncode(theForm.elements["frm_subject"].value);
+	var theMessage = URLEncode(theForm.elements["frm_msg"].value);
 	var theTicket = tick_id;
 	randomnumber=Math.floor(Math.random()*99999999);
 	url ='./ajax/send_email.php?resp_id=' + responder_id + '&ticket_id=' + theTicket + '&from_address=' + theFrom + '&fromname=' + responder_name + '&subject=' + theSubject + '&message=' + theMessage + '&version=' + randomnumber;

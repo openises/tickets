@@ -1420,10 +1420,14 @@ function get_daynight() {
 <?php
 			}
 		if (!(is_guest())) {
-			$call_disp_attr = (get_variable('call_board')==1)?  "inline" : "none";
 ?>
 			<SPAN ID = 'links' roll='button' tabindex=15 aria-label='Links' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "light_butt('links'); parent.main.$('links').style.display='inline';"><?php print get_text("Links"); ?></SPAN>
+<?php
+			}
+		if (!(is_guest())) {
+			$call_disp_attr = (get_variable('call_board')==1)?  "inline" : "none";
+?>
 			<SPAN ID = 'call' roll='button' tabindex=16 aria-label='Call Board' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false;do_callBoard()" STYLE = 'display:<?php print $call_disp_attr; ?>'><?php print get_text("Board"); ?></SPAN> <!-- 5/12/10 -->
 <?php
@@ -1480,7 +1484,6 @@ function get_daynight() {
 
 <!-- ================== -->
 	</TABLE>
-	<TABLE ALIGN='center'>
 	<FORM NAME="go" action="#" TARGET = "main"></FORM>
 	<FORM NAME="gout_form" action="main.php" TARGET = "main">
 	<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />

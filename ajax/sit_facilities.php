@@ -4,9 +4,9 @@ require_once('../incs/status_cats.inc.php');
 @session_start();
 session_write_close();
 
-//if($_GET['q'] != $_SESSION['id']) {
-//	exit();
-//	}
+if($_GET['q'] != $_SESSION['id']) {
+	exit();
+	}
 
 $iw_width= "300px";					// map infowindow with
 $iw_width2= "250px";					// map infowindow with
@@ -54,15 +54,14 @@ function fac_cat($id) {
 	}
 	
 function get_day() {
-	$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
-	$timestamp = (time() - (intval($delta)*60));
+	$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
+	$timestamp = (time() - ($delta*60));
 	return strftime("%A",$timestamp);
 	}
 	
 function get_currenttime() {
-	$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
-	$timestamp = (time() - (intval($delta)*60));
-//	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
+	$timestamp = (time() - ($delta*60));
 	return strftime("%R",$timestamp);
 	}
 	
@@ -71,8 +70,6 @@ function isTimeBetween($lower, $higher) {
 	$timecurrent = strtotime($current_time);
 	$timelower = strtotime($lower);
 	$timehigher = strtotime($higher);
-//	print $current_time . " -- " . $timecurrent . " -- " . $timelower . " -- " . $timehigher . "<BR />";
-//	print date("Y-m-d H:i:s", $timecurrent) . " -- " . date("Y-m-d H:i:s", $timelower) . " -- " . date("Y-m-d H:i:s", $timehigher) . "<BR />";	
 	if($timecurrent >= $timelower && $timecurrent <= $timehigher) {
 		return true;
 		} else {
@@ -103,7 +100,7 @@ function openStatus() {
 	}
 
 function setStatus($statval, $id) {
-	$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+	$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 	$now = mysql_format_date(time() - ($delta*60));
 	$query = "UPDATE `$GLOBALS[mysql_prefix]facilities` SET
 		`status_id`= " .	quote_smart(trim($statval)) . ",

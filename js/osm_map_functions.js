@@ -1140,30 +1140,32 @@ function set_bnds() {			//	12/03/10 - checks current session values and sets che
 	for (var key in bnd_curr) {
 		var bnds = bnd_curr[key];
 		var bnd_nm = bnd_names_curr[key];
-		if(bnds == "s") {
-			if(bnd_nm) {$(bnd_nm).checked = true;}
-			if(window.boundary[key]) {window.boundary[key].addTo(map);}
-			} else {
-			if(window.boundary[key]) {map.removeLayer(boundary[key]);}				
-			if(bnd_nm) {$(bnd_nm).checked = false;}
-			}				
-		if(bnd_hidden!=0) {
-			if($('BND_ALL')) { $('BND_ALL').style.display = '';}
-			if($('BND_ALL_BUTTON')) { $('BND_ALL_BUTTON').style.display = '';}
-			if($('BND_ALL')) { $('BND_ALL').checked = false;}	
-			} else {			
-			if($('BND_ALL')) { $('BND_ALL').style.display = 'none';}
-			if($('BND_ALL_BUTTON')) { $('BND_ALL_BUTTON').style.display = 'none';}
-			if($('BND_ALL')) { $('BND_ALL').checked = false;}
-			}
-		if(bnd_shown!=0) {
-			if($('BND_NONE')) { $('BND_NONE').style.display = '';}
-			if($('BND_NONE_BUTTON')) { $('BND_NONE_BUTTON').style.display = '';}
-			if($('BND_NONE')) { $('BND_NONE').checked = false;}
-			} else {
-			if($('BND_NONE')) { $('BND_NONE').style.display = 'none';}
-			if($('BND_NONE_BUTTON')) { $('BND_NONE_BUTTON').style.display = 'none';}
-			if($('BND_NONE')) { $('BND_NONE').checked = false;}
+		if(boundary[key]) {
+			if(bnds == "s") {
+				if(bnd_nm) {$(bnd_nm).checked = true;}
+				if(boundary[key]) {boundary[key].addTo(map);}
+				} else {
+				if(boundary[key]) {map.removeLayer(boundary[key]);}				
+				if(bnd_nm) {$(bnd_nm).checked = false;}
+				}
+			if(bnd_hidden!=0) {
+				if($('BND_ALL')) { $('BND_ALL').style.display = '';}
+				if($('BND_ALL_BUTTON')) { $('BND_ALL_BUTTON').style.display = '';}
+				if($('BND_ALL')) { $('BND_ALL').checked = false;}	
+				} else {
+				if($('BND_ALL')) { $('BND_ALL').style.display = 'none';}
+				if($('BND_ALL_BUTTON')) { $('BND_ALL_BUTTON').style.display = 'none';}
+				if($('BND_ALL')) { $('BND_ALL').checked = false;}
+				}
+			if(bnd_shown!=0) {
+				if($('BND_NONE')) { $('BND_NONE').style.display = '';}
+				if($('BND_NONE_BUTTON')) { $('BND_NONE_BUTTON').style.display = '';}
+				if($('BND_NONE')) { $('BND_NONE').checked = false;}
+				} else {
+				if($('BND_NONE')) { $('BND_NONE').style.display = 'none';}
+				if($('BND_NONE_BUTTON')) { $('BND_NONE_BUTTON').style.display = 'none';}
+				if($('BND_NONE')) { $('BND_NONE').checked = false;}
+				}
 			}
 		}
 	}
@@ -1956,6 +1958,8 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 			if(!map_is_fixed) {
 				map.fitBounds(bounds);
 				}
+			} else {
+			map.fitBounds(bounds);
 			}
 		window.inczindexno++;
 		return marker;
@@ -2027,6 +2031,8 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 			if(!map_is_fixed) {
 				map.fitBounds(bounds);
 				}
+			} else {
+			map.fitBounds(bounds);				
 			}
 		window.unitzindexno++;
 		return marker;
@@ -2801,11 +2807,10 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			var layerName = eventLayer.name;
 			var layerName = layerName.replace(" ", "_");
 			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=" + sess_id;
-			var url = "persist3.php";	//	3/15/11	
+			var url = "persist3.php";
 			sendRequest (url, layer_handleResult, params);	
 			});
 		} else {
-		var latLng;
 		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 		var	cmAttr = '';
 		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
@@ -2867,8 +2872,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			if(window.GoogleKey.length > 0 && window.GoogleKey.length < 39) {
 				alert("Google set as Geo-coding provider but invalid Google Maps API Key");
 				}
-			if(!map) { map = L.map('map_canvas',
-				{
+			if(!map) { map = L.map('map_canvas', {
 				maxZoom: max_zoom,
 				minZoom: theZoom,
 				zoom: initzoom,
@@ -2961,7 +2965,6 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 					"Dark": dark,
 					};
 				}
-			
 			var overlays = {
 				"Clouds": cloudscls,
 				"Precipitation": precipitationcls,
@@ -2974,9 +2977,6 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				"Grid": grid,
 				"City Weather": city,
 			};
-			map.setView([lat, lng], initzoom);
-			bounds = map.getBounds();	
-			zoom = map.getZoom();
 			} else {	//	remove all but OSM if using local maps
 			var baseLayers = {
 				"Open Streetmaps": OSM,
@@ -2988,9 +2988,6 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				map.setMaxBounds(maxBounds);
 				}
 			var overlays = {};
-			map.setView([lat, lng], initzoom);
-			bounds = map.getBounds();	
-			zoom = map.getZoom();		
 			}
 			
 			if(control_position == "tl") {
@@ -3026,6 +3023,9 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			sendRequest (url, layer_handleResult, params);	
 			});
 		}
+	map.setView([lat, lng], initzoom);
+	bounds = map.getBounds();	
+	zoom = map.getZoom();
 	return map;
 	}
 	
@@ -3129,7 +3129,6 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			sendRequest (url, layer_handleResult, params);	
 			});
 		} else {
-		var latLng;
 		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 		var	cmAttr = '';
 		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
@@ -3343,7 +3342,6 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 
 function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	var protocol = (https == "1") ? "https://" : "http://";
-	var latLng;
 	var my_Path = "http://127.0.0.1/_osm/tiles/";
 	var osmUrl = (my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 	var	cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
@@ -3612,6 +3610,7 @@ function load_incidentlist(sort, dir) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var sessID = sess_id;
 	var url = './ajax/sit_incidents.php?sort='+window.inc_field+'&dir='+ window.inc_direct+'&func='+window.inc_period+'&version='+randomnumber+'&q='+sessID;
+	if(doDebug) {alert(url);}
 	sendRequest (url,incidentlist_cb, "");
 	function incidentlist_cb(req) {
 		var inc_arr = JSON.decode(req.responseText);
@@ -3820,6 +3819,7 @@ function load_incidentlist(sort, dir) {
 function incidentlist_setwidths() {
 	var viewableRow = 1;
 	var inctbl = document.getElementById('respondertable');
+	if(!inctbl) {return;}
 	var headerRow = inctbl.rows[0];
 	for (i = 1; i < inctbl.rows.length; i++) {
 		if(!isViewable(inctbl.rows[i])) {
@@ -3829,30 +3829,15 @@ function incidentlist_setwidths() {
 			}
 		}
 	var tableRow = inctbl.rows[viewableRow];
-	if(tableRow && i != inctbl.rows.length) {
+	if(tableRow &&i != inctbl.rows.length) {
 		for (var i = 0; i < tableRow.cells.length; i++) {
 			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 			}
 		} else {
-		var cellwidthBase = window.listwidth / 32;
-		tcell1 = cellwidthBase * 4;
-		tcell2 = cellwidthBase * 5.75;
-		tcell3 = cellwidthBase * 7;
-		tcell4 = cellwidthBase * 5;
-		tcell5 = cellwidthBase * 2;
-		tcell6 = cellwidthBase * 2;
-		tcell7 = cellwidthBase * 2;
-		tcell8 = cellwidthBase * 5;
-		tcell9 = cellwidthBase * 0.25;
-		headerRow.cells[0].style.width = tcell1 + "px";
-		headerRow.cells[1].style.width = tcell2 + "px";
-		headerRow.cells[2].style.width = tcell3 + "px";
-		headerRow.cells[3].style.width = tcell4 + "px";
-		headerRow.cells[4].style.width = tcell5 + "px";
-		headerRow.cells[5].style.width = tcell6 + "px";
-		headerRow.cells[6].style.width = tcell7 + "px";
-		headerRow.cells[7].style.width = tcell8 + "px";
-		headerRow.cells[8].style.width = tcell9 + "px";				
+		var cellwidthBase = window.listwidth / 9;
+		for (var i = 0; i < tableRow.cells.length; i++) {		
+			headerRow.cells[0].style.width = cellwidthBase + "px";
+			}
 		}
 	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = inctbl.insertRow(1);
@@ -3866,12 +3851,15 @@ function incidentlist_setwidths() {
 	
 function incidentlist_get() {								// set cycle
 	if (i_interval!=null) {return;}
-	if(window.incFin == true || window.respLoading == true || window.facLoading == true || window.logLoading == true) {return;}
 	i_interval = window.setInterval('incidentlist_loop()', 60000);
 	}			// end function incidentlist_get()
 
 function incidentlist_loop() {
-	load_incidentlist(window.inc_field, window.inc_direct);
+	if(window.respLoading == true) {
+		setTimeout(function() {load_incidentlist(window.inc_field, window.inc_direct);},10000);		
+		} else {
+		load_incidentlist(window.inc_field, window.inc_direct);
+		}
 	}			// end function incidentlist_loop()
 	
 function do_inc_sort_fw(id, field, header_text) {
@@ -4185,8 +4173,18 @@ function load_full_incidentlist_incbuttons() {
 			window.inc_last_display = window.latest_ticket;
 			window.do_inc_refresh = false;
 			},500);
+		full_incidentlist_alt_get();
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
+	
+function full_incidentlist_alt_get() {								// set cycle
+	if (i_interval!=null) {return;}
+	i_interval = window.setInterval('full_incidentlist_alt_loop()', 20000);
+	}			// end function full_incidentlist_get()
+
+function full_incidentlist_alt_loop() {
+	load_full_incidentlist_incbuttons();
+	}			// end function incidentlist_loop()
 
 function ringfence_alert(respid) {
 	var the_responders = JSON.decode(window.theResponderHandles);
@@ -4387,11 +4385,13 @@ function load_responderlist(sort, dir) {
 		}
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/sit_responders.php?sort='+window.resp_field+'&dir='+ window.resp_direct+'&screen=sit&version='+randomnumber+'&q='+sess_id;
+	if(doDebug) {alert(url);}
 	sendRequest (url,responderlist_cb, "");		
 	function responderlist_cb(req) {
 		var i = 1;
 		var responder_number = 0;
 		var resp_arr = JSON.decode(req.responseText);
+		if(doDebug) {alert(url);}
 		if(!resp_arr) {
 			if(doDebug) {
 				log_debug(req.responseText); 
@@ -4485,8 +4485,12 @@ function load_responderlist(sort, dir) {
 							if(rmarkers[unit_no]) {
 								if(window.changed_resp_sort == false) {
 									var curPos = rmarkers[unit_no].getLatLng();
-									if((curPos.lat != resp_arr[key][3]) || (curPos.lng != resp_arr[key][4])) {
-										theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][4]);
+									var oldLat = curPos.lat;
+									var oldLng = curPos.lng;
+									var newLat = resp_arr[key][3];
+									var newLng = resp_arr[key][4];
+									if((oldLat != newLat) || (oldLng != newLng)) {
+										var theLatLng = new L.LatLng(newLat, newLng);
 										rmarkers[unit_no].setLatLng(theLatLng);
 										}
 									}
@@ -4570,13 +4574,22 @@ function load_responderlist(sort, dir) {
 				var resptbl = document.getElementById('respondertable');
 				if(resptbl) {
 					var headerRow = resptbl.rows[0];
-					var tableRow = resptbl.rows[1];
-					if(tableRow) {
+					var viewableRow = 1;
+					var headerRow = resptbl.rows[0];
+					for (i = 1; i < resptbl.rows.length; i++) {
+						if(!isViewable(resptbl.rows[i])) {
+							} else {
+							viewableRow = i;
+							break;
+							}
+						}
+					var tableRow = resptbl.rows[viewableRow];
+					if(tableRow && i != resptbl.rows.length) {
 						for (var i = 0; i < tableRow.cells.length; i++) {
 							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 							}
 						} else {
-						var cellwidthBase = window.listwidth / 8;
+						var cellwidthBase = window.listwidth / 9;
 						for (var i = 0; i < tableRow.cells.length; i++) {		
 							headerRow.cells[0].style.width = cellwidthBase + "px";
 							}
@@ -4602,6 +4615,7 @@ function load_responderlist(sort, dir) {
 				},3000);
 			}
 		window.respLoading = false;
+		responderlist_get();
 		}				// end function responderlist_cb()
 	}				// end function load_responderlist()
 
@@ -4627,7 +4641,7 @@ function responderlist_setwidths() {
 			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 			}
 		} else {
-		var cellwidthBase = window.listwidth / 8;
+		var cellwidthBase = window.listwidth / 9;
 		for (var i = 0; i < tableRow.cells.length; i++) {		
 			headerRow.cells[0].style.width = cellwidthBase + "px";
 			}
@@ -4644,12 +4658,15 @@ function responderlist_setwidths() {
 	
 function responderlist_get() {
 	if (r_interval!=null) {return;}
-	if(window.incLoading == true || window.respFin == true || window.facLoading == true || window.logLoading == true) {return;}
-	r_interval = window.setInterval('responderlist_loop()', 120000); 
+	r_interval = window.setInterval('responderlist_loop()', 60000); 
 	}			// end function mu get()
 
 function responderlist_loop() {
-	load_responderlist(resp_field, resp_direct);
+	if(window.respLoading == true) {
+		setTimeout(function() {load_responderlist(resp_field, resp_direct);},10000);		
+		} else {
+		load_responderlist(resp_field, resp_direct);
+		}
 	}			// end function do_loop()
 	
 //	Responderlist for Units screen
@@ -4785,6 +4802,7 @@ function load_responderlist2(sort, dir) {
 		}
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/sit_responders.php?sort='+window.resp_field+'&dir='+ window.resp_direct+'&screen=responder&version='+randomnumber+'&q='+sess_id;
+	if(doDebug) {alert(url);}
 	sendRequest (url,responderlist2_cb, "");		
 	function responderlist2_cb(req) {
 		var i = 1;
@@ -4831,10 +4849,6 @@ function load_responderlist2(sort, dir) {
 			outputtext += "<tbody>";
 			for(var key in resp_arr) {
 				if(key != 0) {
-					if((i == 1) && ((window.dzf == 0) || (window.dzf == 1))) {
- 						var thePoint = L.latLng(resp_arr[key][3],resp_arr[key][4]);
-						window.bounds = L.latLngBounds(thePoint);
-						}
 					if(resp_arr[key][2]) {
 						var unit_id = resp_arr[key][2];
 						var unit_no = resp_arr[key][17];
@@ -4890,8 +4904,12 @@ function load_responderlist2(sort, dir) {
 							if(rmarkers[unit_no]) {
 								if(window.changed_resp_sort == false) {
 									var curPos = rmarkers[unit_no].getLatLng();
-									if((curPos.lat != resp_arr[key][3]) || (curPos.lng != resp_arr[key][4])) {
-										theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][4]);
+									var oldLat = curPos.lat;
+									var oldLng = curPos.lng;
+									var newLat = resp_arr[key][3];
+									var newLng = resp_arr[key][4];
+									if((oldLat != newLat) || (oldLng != newLng)) {
+										var theLatLng = new L.LatLng(newLat, newLng);
 										rmarkers[unit_no].setLatLng(theLatLng);
 										}
 									}
@@ -4952,12 +4970,10 @@ function load_responderlist2(sort, dir) {
 					}
 				if(window.resp_last_display == 0) {		//	first display
 					$('the_rlist').innerHTML = outputtext;
-					if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 					if($('boxes')) {set_categories();}
 					} else {
 					if((responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true) || (window.do_resp_refresh == true)) {	//	Data changed
 						$('the_rlist').innerHTML = outputtext;
-						if($('boxes')) {$('boxes').innerHTML = resp_arr[0][21];}
 						if($('boxes')) {set_categories();}
 						window.respFin = window.facFin = window.incFin = window.logFin = window.facstatSel = true;
 						window.statSel = false;
@@ -4976,31 +4992,26 @@ function load_responderlist2(sort, dir) {
 						}
 					}
 				var resptbl = document.getElementById('respondertable');
+				var viewableRow = 1;
 				if(resptbl) {
 					var headerRow = resptbl.rows[0];
-					var tableRow = resptbl.rows[1];
-					if(tableRow) {
+					for (i = 1; i < resptbl.rows.length; i++) {
+						if(!isViewable(resptbl.rows[i])) {
+							} else {
+							viewableRow = i;
+							break;
+							}
+						}
+					var tableRow = resptbl.rows[viewableRow];
+					if(tableRow && i != resptbl.rows.length) {
 						for (var i = 0; i < tableRow.cells.length; i++) {
 							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 							}
 						} else {
-						var cellwidthBase = window.listwidth / 28;
-						cell1 = cellwidthBase * 2;
-						cell2 = cellwidthBase * 4;
-						cell3 = cellwidthBase * 4;
-						cell4 = cellwidthBase * 5;
-						cell5 = cellwidthBase * 5;
-						cell6 = cellwidthBase * 3;
-						cell7 = cellwidthBase * 4;
-						cell8 = cellwidthBase * 1;
-						headerRow.cells[0].style.width = cell1 + "px";
-						headerRow.cells[1].style.width = cell2 + "px";
-						headerRow.cells[2].style.width = cell3 + "px";
-						headerRow.cells[3].style.width = cell4 + "px";						
-						headerRow.cells[4].style.width = cell5 + "px";							
-						headerRow.cells[5].style.width = cell6 + "px";						
-						headerRow.cells[6].style.width = cell7 + "px";		
-						headerRow.cells[7].style.width = cell8 + "px";		
+						var cellwidthBase = window.listwidth / 9;
+						for (var i = 0; i < tableRow.cells.length; i++) {		
+							headerRow.cells[0].style.width = cellwidthBase + "px";
+							}
 						}
 					if((window.resp_last_display == 0) || (responder_number != window.latest_responder) || (window.do_resp_update == true) || (window.changed_resp_sort == true) || (window.do_resp_refresh == true)) {
 						if(getHeaderHeight(headerRow) >= listheader_height) {
@@ -5029,6 +5040,7 @@ function load_responderlist2(sort, dir) {
 function responderlist2_setwidths() {
 	var viewableRow = 1;
 	var resptbl = document.getElementById('respondertable');
+	if(!resptbl) {return;}
 	var headerRow = resptbl.rows[0];
 	for (i = 1; i < resptbl.rows.length; i++) {
 		if(!isViewable(resptbl.rows[i])) {
@@ -5038,28 +5050,15 @@ function responderlist2_setwidths() {
 			}
 		}
 	var tableRow = resptbl.rows[viewableRow];
-	if(tableRow &&i != resptbl.rows.length) {
+	if(tableRow && i != resptbl.rows.length) {
 		for (var i = 0; i < tableRow.cells.length; i++) {
 			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 			}
 		} else {
-		var cellwidthBase = window.listwidth / 28;
-		cell1 = cellwidthBase * 2;
-		cell2 = cellwidthBase * 4;
-		cell3 = cellwidthBase * 4;
-		cell4 = cellwidthBase * 5;
-		cell5 = cellwidthBase * 5;
-		cell6 = cellwidthBase * 3;
-		cell7 = cellwidthBase * 4;
-		cell8 = cellwidthBase * 1;
-		headerRow.cells[0].style.width = cell1 + "px";
-		headerRow.cells[1].style.width = cell2 + "px";
-		headerRow.cells[2].style.width = cell3 + "px";
-		headerRow.cells[3].style.width = cell4 + "px";
-		headerRow.cells[4].style.width = cell5 + "px";
-		headerRow.cells[5].style.width = cell6 + "px";
-		headerRow.cells[6].style.width = cell7 + "px";
-		headerRow.cells[7].style.width = cell8 + "px";
+		var cellwidthBase = window.listwidth / 9;
+		for (var i = 0; i < tableRow.cells.length; i++) {		
+			headerRow.cells[0].style.width = cellwidthBase + "px";
+			}
 		}
 	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = resptbl.insertRow(1);
@@ -5173,6 +5172,7 @@ function load_facilitylist(sort, dir) {
 		}
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/sit_facilities.php?sort='+window.fac_field+'&dir='+ window.fac_direct+'&version='+randomnumber+'&q='+sess_id;
+	if(doDebug) {alert(url);}
 	sendRequest (url,facilitylist_cb, "");
 	function facilitylist_cb(req) {
 		var i = 1;
@@ -5301,27 +5301,26 @@ function load_facilitylist(sort, dir) {
 						}
 					}
 				var factbl = document.getElementById('facilitiestable');
+				var viewableRow = 1;
 				if(factbl) {
 					var headerRow = factbl.rows[0];
-					var tableRow = factbl.rows[1];
-					if(tableRow) {
+					for (i = 1; i < factbl.rows.length; i++) {
+						if(!isViewable(factbl.rows[i])) {
+							} else {
+							viewableRow = i;
+							break;
+							}
+						}
+					var tableRow = factbl.rows[viewableRow];
+					if(tableRow && i != factbl.rows.length) {
 						for (var i = 0; i < tableRow.cells.length; i++) {
 							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 							}
 						} else {
-						var cellwidthBase = window.listwidth / 20;
-						fcell1 = cellwidthBase * 2;
-						fcell2 = cellwidthBase * 6.55;
-						fcell3 = cellwidthBase * 3;
-						fcell4 = cellwidthBase * 5;
-						fcell5 = cellwidthBase * 3;
-						fcell6 = cellwidthBase * .45;
-						headerRow.cells[0].style.width = fcell1 + "px";
-						headerRow.cells[1].style.width = fcell2 + "px";
-						headerRow.cells[2].style.width = fcell3 + "px";
-						headerRow.cells[3].style.width = fcell4 + "px";						
-						headerRow.cells[4].style.width = fcell5 + "px";
-						headerRow.cells[5].style.width = fcell6 + "px";	
+						var cellwidthBase = window.listwidth / 6;
+						for (var i = 0; i < tableRow.cells.length; i++) {		
+							headerRow.cells[0].style.width = cellwidthBase + "px";
+							}
 						}
 					if((window.fac_last_display == 0) || (facility_number != window.latest_facility) || (window.do_fac_update == true) || (window.changed_fac_sort == true) || (window.do_fac_refresh == true)) {
 						if(getHeaderHeight(headerRow) >= listheader_height) {
@@ -5343,11 +5342,12 @@ function load_facilitylist(sort, dir) {
 			}
 		window.facLoading = false;
 		}				// end function facilitylist_cb()
-	}				// end function load_facilitylist()	
+	}				// end function load_facilitylist()
 
 function facilitylist_setwidths() {
 	var viewableRow = 1;
 	var factbl = document.getElementById('facilitiestable');
+	if(!factbl) {return;}
 	var headerRow = factbl.rows[0];
 	for (i = 1; i < factbl.rows.length; i++) {
 		if(!isViewable(factbl.rows[i])) {
@@ -5362,19 +5362,10 @@ function facilitylist_setwidths() {
 			if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth -1 + "px";}
 			}
 		} else {
-		var cellwidthBase = window.listwidth / 20;
-		fcell1 = cellwidthBase * 2;
-		fcell2 = cellwidthBase * 6.55;
-		fcell3 = cellwidthBase * 3;
-		fcell4 = cellwidthBase * 5;
-		fcell5 = cellwidthBase * 3;
-		fcell6 = cellwidthBase * .45;
-		headerRow.cells[0].style.width = fcell1 + "px";
-		headerRow.cells[1].style.width = fcell2 + "px";
-		headerRow.cells[2].style.width = fcell3 + "px";
-		headerRow.cells[3].style.width = fcell4 + "px";						
-		headerRow.cells[4].style.width = fcell5 + "px";	
-		headerRow.cells[5].style.width = fcell6 + "px";	
+		var cellwidthBase = window.listwidth / 6;
+		for (var i = 0; i < tableRow.cells.length; i++) {		
+			headerRow.cells[0].style.width = cellwidthBase + "px";
+			}
 		}
 	if(getHeaderHeight(headerRow) >= listheader_height) {
 		var theRow = factbl.insertRow(1);
@@ -5385,15 +5376,18 @@ function facilitylist_setwidths() {
 			}
 		}
 	}
-	
+
 function facilitylist_get() {
 	if (f_interval!=null) {return;}
-	if(window.facFin == true || window.respLoading == true || window.incLoading == true || window.logLoading == true) {return;}
 	f_interval = window.setInterval('facilitylist_loop()', 240000);
 	}			// end function mu get()
 
 function facilitylist_loop() {
-	load_facilitylist(fac_field, fac_direct);
+	if(window.respLoading == true || window.incLoading == true) {
+		setTimeout(function() {load_facilitylist(fac_field, fac_direct);},10000);		
+		} else {
+		load_facilitylist(fac_field, fac_direct);
+		}
 	}			// end function do_loop()
 	
 var changed_wl_sort = false;
@@ -6256,7 +6250,7 @@ function load_poly_controls() {
 		var pol_arr = JSON.decode(req.responseText);
 		outputtext = pol_arr[0];
 		$('poly_boxes').innerHTML = outputtext;
-		setTimeout(function() {set_bnds();},2000);
+		setTimeout(function() {set_bnds();},3000);
 		}				// end function polys_cb()
 	}				// end function load_poly_controls()
 	

@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.30A Beta - 05/03/18";	
+$version = "3.30A Beta - 05/15/18";	
 $temp = explode(" ", get_variable('_version'));	
 $disp_version = $temp[0];
 
@@ -236,7 +236,7 @@ function table_exists($name) {
 		return false;
 		}
 	}
-	
+
 function remove_setting ($which) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '$which' LIMIT 1";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -259,6 +259,18 @@ function check_field_exists($table, $field) {
 		} else {
 		return false;
 		}
+	}
+	
+function table_type($table) {
+	$query = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = database() AND TABLE_NAME = '$GLOBALS[mysql_prefix]" . $table . "'";
+	$result = mysql_query($query); 
+	if($result) {
+		$row = stripslashes_deep(mysql_fetch_array($result));
+		$ret = $row['ENGINE'];
+		} else {
+		$ret = "";
+		}
+	return $ret;
 	}
 
 function do_insert_day_colors($name,$value) {			//	3/15/11
@@ -965,7 +977,6 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 		if (mysql_num_rows ($result) == 0) {
 			$query = "INSERT INTO `{$the_table}` (`capt`, `repl`) VALUES ({$temp}, {$temp});";
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			if($result) { print "Added caption " . $temp . " to Captions table<BR />";}
 			}
 		}		
 	unset ($result);	
@@ -1225,37 +1236,43 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 											
 	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]log` CHANGE `info` `info` VARCHAR( 2048 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL";
 	$result = mysql_query($query);
-
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `icon_str` CHAR( 3 ) NULL DEFAULT NULL COMMENT 'map icon value' AFTER `handle` ";
-	$result = mysql_query($query);
-	if($result) { print "Addes icon_str field to responder table<BR />";}
 	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities` ADD `icon_str` CHAR( 3 ) NULL DEFAULT NULL COMMENT 'map icon value' AFTER `handle` ";
-	$result = mysql_query($query);
-	if($result) { print "Addes icon_str field to facilities table<BR />";}	
+	if(!check_field_exists("responder", "icon_str")) {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `icon_str` CHAR( 3 ) NULL DEFAULT NULL COMMENT 'map icon value' AFTER `handle` ";
+		$result = mysql_query($query);
+		if($result) {print "Added icon_str field to responder table<BR />";}
+		}
+		
+	if(!check_field_exists("facilities", "icon_str")) {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities` ADD `icon_str` CHAR( 3 ) NULL DEFAULT NULL COMMENT 'map icon value' AFTER `handle` ";
+		$result = mysql_query($query);
+		if($result) {print "Added icon_str field to facilities table<BR />";}
+		}
 
-	$query_update = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `handle`= SUBSTR(`description`,1,24) WHERE ((`handle` = '') OR (`handle` IS NULL));";
+	$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `handle`= SUBSTR(`description`,1,24) WHERE ((`handle` = '') OR (`handle` IS NULL));";
 	$result = mysql_query($query);
-	if($result) { print "Set handle field to a default setting if it is empty for all responders<BR />";}
+	if(mysql_affected_rows() > 0) {print "Set handle field to a default setting if it is empty for all responders<BR />";}
 
 	$query_update = "UPDATE `$GLOBALS[mysql_prefix]facilities` SET `handle`= SUBSTR(`description`,1,24) WHERE ((`handle` = '') OR (`handle` IS NULL));";
 	$result = mysql_query($query);
-	if($result) { print "Set handle field to a default setting if it is empty for all facilities<BR />";}
-
+	if(mysql_affected_rows() > 0) {print "Set handle field to a default setting if it is empty for all facilities<BR />";}
+	
+	$counter = 0;
 	$tables = array("$GLOBALS[mysql_prefix]responder", "$GLOBALS[mysql_prefix]facilities");		// 4/27/11	
 	for ($i=0; $i< count($tables); $i++) {
 		$query = "SELECT * FROM `{$tables[$i]}`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
-			if ( ($row['icon_str'] == "") || is_null($row['icon_str']) ) {
+		$result = mysql_query($query);
+		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
+			if($row['icon_str'] == "" || is_null($row['icon_str'])) {
 				$temp = explode("/", $row['name']);
 				$icon_val = trim(substr($temp[count($temp) -1], -3, strlen($temp[count($temp) -1])));	
-				
+				$counter ++;
+				$icon_val = ($icon_val != "") ? $icon_val : "?";
 				$query2 = "UPDATE `{$tables[$i]}` SET `icon_str` = '$icon_val' WHERE `id` = {$row['id']} LIMIT 1";
-				$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					if($result) { print "Updated icon_str field to default value in " . $tables[$i] . " table<BR />";}
+				$result2 = mysql_query($query2);
 				}
 			}		// end inner while()
+		if($counter > 0) { print "Updated icon_str field to default value in " . $tables[$i] . " table<BR />";}
 		}		// end outer while()
 
 	$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `handle` = REPLACE(`handle`, '\r', ' '),
@@ -3912,37 +3929,53 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 	do_mdb_setting ('enforce_status','0');
 	do_mdb_setting ('no_status_select','0');
 	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]ticket` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed ticket table to type InnoDB<BR />";}
-	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed responder table to type InnoDB<BR />";}
-	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed facilities table to type InnoDB<BR />";}
-	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]settings` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed settings table to type InnoDB<BR />";}
-	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]requests` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed requests table to type InnoDB<BR />";}
-	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]member` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed member table to type InnoDB<BR />";}
-	
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]assigns` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed assigns table to type InnoDB<BR />";}
+	if(table_type("ticket") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]ticket` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed ticket table to type InnoDB<BR />";}
+		}
 
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]allocates` ENGINE = InnoDB;;";
-	$result = mysql_query($query);
-	if($result) { print "Changed allocates table to type InnoDB<BR />";}
+	if(table_type("responder") != "InnoDB") {		
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed responder table to type InnoDB<BR />";}
+		}
+
+	if(table_type("facilities") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed facilities table to type InnoDB<BR />";}
+		}
+
+	if(table_type("settings") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]settings` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed settings table to type InnoDB<BR />";}
+		}
+
+	if(table_type("requests") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]requests` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed requests table to type InnoDB<BR />";}
+		}
+
+	if(table_type("member") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]member` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed member table to type InnoDB<BR />";}
+		}
+
+	if(table_type("assigns") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]assigns` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed assigns table to type InnoDB<BR />";}
+		}
+
+	if(table_type("allocates") != "InnoDB") {
+		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]allocates` ENGINE = InnoDB;;";
+		$result = mysql_query($query);
+		if($result) { print "Changed allocates table to type InnoDB<BR />";}
+		}
 
 	do_setting('tracks_length','12');
 	

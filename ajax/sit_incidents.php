@@ -98,7 +98,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			}
 		}
 	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
-	$deltamins = (!empty(get_variable('delta_mins'))) ? intval(get_variable('delta_mins')) : 0;
+	$deltamins = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 	$time_back = mysql_format_date(time() - ($deltamins*60) - ($cwi*3600));
 	$sort_by_severity = ($func == 0)? "`severity` DESC ": "";
 
@@ -216,7 +216,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 		$i = 1;
 		while ($row = mysql_fetch_assoc($result)) 	{
 			$problemstart = strtotime($row['problemstart']);
-			$delta = (!empty(get_variable('delta_mins'))) ? get_variable('delta_mins') : 0;
+			$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 			$now = time() - ($delta*60);
 			$difference = round(abs($now - $problemstart) / 60,2);
 			$grp_names = get_allocated_names(1, $row['tick_id']);	//	6/10/11

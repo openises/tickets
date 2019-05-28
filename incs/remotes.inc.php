@@ -70,8 +70,7 @@ function get_current() {		// 3/16/09, 6/10/11, 7/25/09  2/14/2014
 	$when = get_variable('_aprs_time');				// misnomer acknowledged
 	if(time() < $when) {
 		return;
-		}
-	else {
+		} else {
 		$next = time() + $delay*60;
 		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$next' WHERE `name`='_aprs_time'";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -653,6 +652,10 @@ function do_xastir() {				// 1/30/14 - track responder locations with Xastir ser
 	if(!$tickets_connect = mysql_connect($tickets_server, $tickets_user, $tickets_pass)) {
 		exit();
 		}
+		
+	if(!mysql_select_db($tickets_db, $tickets_connect)) {
+		exit();
+		}	
 
 	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL 7 DAY)";
 	$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -694,7 +697,7 @@ function do_xastir() {				// 1/30/14 - track responder locations with Xastir ser
 					AND (`callsign` = '{$callsign_in}' ) )";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 //									any movement?
-				if (mysql_affected_rows() > 0 ) {
+				if (mysql_affected_rows() > 0) {
 					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
 						`updated` = '" . now_ts() . "'
 						WHERE ( (`xastir_tracker` = 1)
@@ -825,7 +828,7 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 	$tickets_user = $GLOBALS['mysql_user'];
 	$tickets_pass = $GLOBALS['mysql_passwd']; 
 
-	if(($traccar_server == "") || ($traccar_db == "") || ($traccar_user == "") || ($traccar_pass == "")) {
+	if(($traccar_server == "") || ($traccar_db == "") || ($traccar_user == "")) {
 		log_traccar_err("traccar settings not complete, check in settings");
 		return FALSE;
 		}
@@ -838,14 +841,16 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 		exit();
 		}
 
+	if(!mysql_select_db($tickets_db, $tickets_connect)) {
+		exit();
+		}	
 // added to test tracks_length
-   $tracks_length = get_variable("tracks_length");
-
+    $tracks_length = get_variable("tracks_length");
+  
 	$query  = "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL " . $tracks_length . " HOUR)";         // altered for hours in settings instead of days
-//	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL 7 DAY)";
 	$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	unset($resultd);
-	
+
 	$query = "SELECT `callsign`, `traccar`, `mobile` FROM `$GLOBALS[mysql_prefix]responder`
 		WHERE (	( `mobile`= 1 )
 		AND  	(`traccar`= 1 )
@@ -853,7 +858,6 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 	$result1 = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	while ($row1 = mysql_fetch_assoc($result1)) {
 		$callsign_in = $row1['callsign'];
-			
 		if(!mysql_select_db($traccar_db, $traccar_connect)) {
 			exit();
 			}
@@ -863,7 +867,8 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 		$result2 = mysql_query($query);
 		$row2 = mysql_fetch_assoc($result2);
 		$positionid = $row2['positionid'];
-
+		$positionids[] = $positionid;
+		
 // Use position ID to query last position
 		$query = 'select latitude, longitude, speed, course, altitude, devicetime from positions where id = "' . $positionid . '"';
 		$result3 = mysql_query($query);
@@ -871,7 +876,8 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 		while ($row3 = mysql_fetch_assoc($result3)) {
 			$result_ary[] = $row3;
 			}
-		if(!mysql_select_db($tickets_connect, $tickets_db)) {
+
+		if(!mysql_select_db($tickets_db, $tickets_connect)) {
 			exit();
 			}			
 		foreach($result_ary as $theRow) {
@@ -882,7 +888,6 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 			$altitude = $theRow['altitude'];
 			$updated =  mysql2timestamp($theRow['devicetime']);
 			$packet_date =  mysql2timestamp($theRow['devicetime']);
-//			$p_d_timestamp = mysql_format_date($theRow['devicetime']); 
 			$p_d_timestamp = $theRow['devicetime'];
 
 			if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) ) {
@@ -894,7 +899,7 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 					AND (`callsign` = '{$callsign_in}' ) )";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	//									any movement?
-				if (mysql_affected_rows() > 0 ) {
+				if (mysql_affected_rows() > 0) {
 					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
 						`updated` = '" . now_ts() . "'
 						WHERE ( (`traccar` = 1)
@@ -905,11 +910,10 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 					$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
 						packet_id, source, latitude, longitude, speed, course, altitude, packet_date, updated) VALUES (
 						'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$speed}', '{$course}', '{$altitude}', '{$p_d_timestamp}', '{$now}')";
-					$result = mysql_query($query);				// ignore duplicate/errors
+					$result = mysql_query($query);
 					}				// end if (mysql_affected_rows() > 0 )
 				}			// end if (sane())
 			}			// end foreach $result_ary
-			
 		}			// end while $row1
 	mysql_close($traccar_connect);
 	mysql_close($tickets_connect);
@@ -949,12 +953,15 @@ function do_javaprssrvr() {				// 5/30/17 - track responder locations with javAP
 	if(!$tickets_connect = mysql_connect($tickets_server, $tickets_user, $tickets_pass)) {
 		exit();
 		}
+		
+	if(!mysql_select_db($tickets_db, $tickets_connect)) {
+		exit();
+		}
 
 // added to test tracks_length
-   $tracks_length = get_variable("tracks_length");
+	$tracks_length = get_variable("tracks_length");
    
 	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL " . $tracks_length . " HOUR)";         // altered for hours in settings instead of days
-//	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]tracks` WHERE `updated` < (NOW() - INTERVAL 7 DAY)";
 	$resultd = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	unset($resultd);
 
@@ -988,7 +995,6 @@ function do_javaprssrvr() {				// 5/30/17 - track responder locations with javAP
 			$altitude = $theRow['Altitude'];
 			$updated =  mysql2timestamp($theRow['ReportTime']);
 			$packet_date =  mysql2timestamp($theRow['ReportTime']);
-//			$p_d_timestamp = mysql_format_date($theRow['ReportTime']);
 			$p_d_timestamp = $theRow['ReportTime'];
 			if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) ) {
 				$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
@@ -999,7 +1005,7 @@ function do_javaprssrvr() {				// 5/30/17 - track responder locations with javAP
 					AND (`callsign` = '{$callsign_in}' ) )";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 //									any movement?
-				if (mysql_affected_rows() > 0 ) {
+				if (mysql_affected_rows() > 0) {
 					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
 						`updated` = '" . now_ts() . "'
 						WHERE ( (`javaprssrvr` = 1)

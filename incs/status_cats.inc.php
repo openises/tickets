@@ -328,7 +328,7 @@ function get_sess_boundaries() {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`ring_fence`)
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )	
-				{$where2} AND `use_with_u_rf`=1 GROUP BY `l`.`id`";
+				{$where2} AND `use_with_u_rf`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
 	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$all_boundaries[] = $row['ring_fence'];		
@@ -337,10 +337,34 @@ function get_sess_boundaries() {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`excl_zone`)
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )	
-				{$where2} AND `use_with_u_ex`=1 GROUP BY `l`.`id`";
+				{$where2} AND `use_with_u_ex`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
 	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$all_boundaries[] = $row['excl_zone'];		
+		}	//	End while
+		
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
+				LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON ( `l`.`id` = `f`.`boundary`)
+				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `f`.`id` = `a`.`resource_id` )	
+				{$where2} AND `use_with_f`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
+	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$all_boundaries[] = $row['boundary'];		
+		}	//	End while
+		
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`	
+				LEFT JOIN `$GLOBALS[mysql_prefix]region` `r` ON ( `l`.`id` = `r`.`boundary`)
+				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )		
+				{$where2} AND `use_with_r` = 1 AND `line_status` = 0 GROUP BY `l`.`id`";
+	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$all_boundaries[] = $row['boundary'];		
+		}	//	End while
+		
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`	WHERE `use_with_bm` = 1 AND `line_status` = 0 GROUP BY `l`.`id`";
+	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$all_boundaries[] = $row['id'];		
 		}	//	End while
 	return array_unique($all_boundaries);
 	}
@@ -351,7 +375,7 @@ function get_bnd_session() {
 	$bnds_sess = array();
 	if(!empty($boundaries)) {
 		foreach($boundaries as $key => $value) {	
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id` = " . $value;
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `line_status` = 0 AND `id` = " . $value;
 			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 			if(mysql_num_rows($result) != 0) {
 				$row = stripslashes_deep(mysql_fetch_assoc($result));
@@ -362,11 +386,12 @@ function get_bnd_session() {
 			$bnd_key = "show_hide_bnds_" . $value;
 			if(isset($_SESSION[$bnd_key])) {
 				$bnds_sess[$key] = ($_SESSION[$bnd_key]);
-			} else {
+				} else {
+				$_SESSION[$bnd_key] = "s";
 				$bnds_sess[$key] = "s";
-			}		
+				}		
 			}
-			return $bnds_sess;
+		return $bnds_sess;
 		} else {
 		return 0;
 		}
@@ -377,7 +402,7 @@ function get_bnd_session_names() {
 	$tmp = get_sess_boundaries();
 	if(!empty($tmp)) {
 		foreach($tmp as $key => $value) {	
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`='{$value}'";	
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `line_status` = 0 AND `id`='{$value}'";	
 			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 			if(mysql_num_rows($result) != 0) {
 				$row = stripslashes_deep(mysql_fetch_assoc($result));

@@ -49,6 +49,16 @@ var viewportheight;
 var colheight;
 var outerwidth;
 var outerheight;
+var fac_lat = [];
+var fac_lng = [];
+<?php
+$query = "SELECT `id`, `lat`, `lng` FROM `$GLOBALS[mysql_prefix]facilities`";
+$result = mysql_query($query);
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	print "\tfac_lat[" . $row['id'] . "] = " . $row['lat'] . " ;\n";
+	print "\tfac_lng[" . $row['id'] . "] = " . $row['lng'] . " ;\n";
+	}
+?>
 
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
@@ -298,6 +308,33 @@ function all_ticks(bool_val) {
 			}
 		}			// end for (...)
 	}				// end function all ticks()
+
+function do_lat (lat) {							// 9/14/08
+	document.res_edit_Form.frm_lat.value=lat.toFixed(6);			// 9/9/08
+	document.res_edit_Form.show_lat.disabled=false;
+	document.res_edit_Form.show_lat.value=do_lat_fmt(document.forms[0].frm_lat.value);
+	document.res_edit_Form.show_lat.disabled=true;
+	}
+function do_lng (lng) {
+	document.res_edit_Form.frm_lng.value=lng.toFixed(6);			// 9/9/08
+	document.res_edit_Form.show_lng.disabled=false;
+	document.res_edit_Form.show_lng.value=do_lng_fmt(document.forms[0].frm_lng.value);
+	document.res_edit_Form.show_lng.disabled=true;
+	}
+	
+function do_fac_to_loc(index){			// 9/22/09
+	var curr_lat = fac_lat[index];
+	var curr_lng = fac_lng[index];
+	do_lat(curr_lat);
+	do_lng(curr_lng);
+	if(marker) {map.removeLayer(marker);}
+	var iconurl = "./our_icons/yellow.png";
+	icon = new baseIcon({iconUrl: iconurl});
+	var LatLng = new L.LatLng(curr_lat, curr_lng);
+	marker = new L.marker(LatLng, {icon:icon, draggable:'false'});
+	marker.addTo(map);
+	map.setView(LatLng, initZoom);
+	}					// end function do_fac_to_loc	
 
 </SCRIPT>
 </HEAD>
@@ -626,7 +663,7 @@ function all_ticks(bool_val) {
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
 						<FONT SIZE='-2'>
-						<SELECT id='atfacility' NAME='frm_facility_sel'>
+						<SELECT id='atfacility' NAME='frm_facility_sel' onChange="do_fac_to_loc(this.options[selectedIndex].value.trim());">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 							while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac))) {

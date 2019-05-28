@@ -686,7 +686,7 @@ if(empty($_GET)) {
 		for($i = 0; $i < $tableCount; $i++) {
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]" . $tables[$i] . "`";
 			$result = mysql_query($query);
-			if(mysql_num_rows($result) > 0) {
+			if($result && mysql_num_rows($result) > 0) {
 				$existingDataCount++;
 				}
 			}

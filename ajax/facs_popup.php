@@ -49,8 +49,7 @@ function isTimeBetween($lower, $higher) {
 	$timecurrent = strtotime($current_time);
 	$timelower = strtotime($lower);
 	$timehigher = strtotime($higher);
-//	print $current_time . " -- " . $timecurrent . " -- " . $timelower . " -- " . $timehigher . "<BR />";
-//	print date("Y-m-d H:i:s", $timecurrent) . " -- " . date("Y-m-d H:i:s", $timelower) . " -- " . date("Y-m-d H:i:s", $timehigher) . "<BR />";	
+
 	if($timecurrent >= $timelower && $timecurrent <= $timehigher) {
 		return true;
 		} else {
@@ -125,106 +124,107 @@ if(is_guest() || is_unit()) {
 		} else {
 		$tomail = "";
 		}
-	}	
+	}
+	
 
-if (my_is_float($row_fac['lat'])) {										// position data of any type?
-	$temptype = $f_types[$row_fac['type_id']];
-	$the_type = $temptype[0];
-	$line_ctr = 0;
-	$temp_array[0] = $row_fac['lat'];
-	$temp_array[1] = $row_fac['lng'];
-	$temp_array[2] = htmlentities(shorten($facility_display_name, 48), ENT_QUOTES);
-	$temp_array[3] = htmlentities(shorten(str_replace($eols, " ", $facility_display_name), 48), ENT_QUOTES);
-	$theTabs = "<div class='infowin'><BR />";
-	$theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
-	$theTabs .= '<div class="tabArea">';
-	$theTabs .= '<span id="tab1" class="tabinuse" style="cursor: pointer;" onClick="do_tab(\'tab1\', 1, null, null);">Summary</span>';
-	$theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $row_fac['lat'] . ',' . $row_fac['lng'] . ');">Location</span>';
-	$theTabs .= '</div>';
-	$theTabs .= '<div class="contentwrapper">';		
 
-	$tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";	
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Status:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . $the_status . " </TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['contact_name']). " Via: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
-	if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left' STYLE= 'width:50%'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Security email:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security phone:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
-	if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security reqs:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
-	if(!(isempty(trim($row_fac['opening_hours']))))  	{
-		$opening_arr_serial = base64_decode($row_fac['opening_hours']);
-		$opening_arr = unserialize($opening_arr_serial);
-		$outputstring = "";
-		$the_day = "";
-		$z = 0;
-		foreach($opening_arr as $val) {
-			switch($z) {
-				case 0:
-				$dayname = "Monday";
-				break;
-				case 1:
-				$dayname = "Tuesday";
-				break;
-				case 2:
-				$dayname = "Wednesday";
-				break;
-				case 3:
-				$dayname = "Thursday";
-				break;
-				case 4:
-				$dayname = "Friday";
-				break;
-				case 5:
-				$dayname = "Saturday";
-				break;
-				case 6:
-				$dayname = "Sunday";
-				break;
-				}
+$temptype = $f_types[$row_fac['type_id']];
+$the_type = $temptype[0];
+$line_ctr = 0;
+$temp_array[0] = $row_fac['lat'];
+$temp_array[1] = $row_fac['lng'];
+$temp_array[2] = htmlentities(shorten($facility_display_name, 48), ENT_QUOTES);
+$temp_array[3] = htmlentities(shorten(str_replace($eols, " ", $facility_display_name), 48), ENT_QUOTES);
+$theTabs = "<div class='infowin'><BR />";
+$theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
+$theTabs .= '<div class="tabArea">';
+$theTabs .= '<span id="tab1" class="tabinuse" style="cursor: pointer;" onClick="do_tab(\'tab1\', 1, null, null);">Summary</span>';
+$theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $row_fac['lat'] . ',' . $row_fac['lng'] . ');">Location</span>';
+$theTabs .= '</div>';
+$theTabs .= '<div class="contentwrapper">';		
 
-			if($dayname == get_day()) {			
-				$openstring = (array_key_exists(0, $val) && $val[0] == "on") ? "Open" : "Closed";
-				if($openstring == "Open") {
-					$outputstring .= "Opens: " . $val[1] . "<BR />Closes: " . $val[2];
-//					print $val[1] . ", " . $val[2] . "<BR />";
-					if(isTimeBetween($val[1], $val[2])) {
-						$calculatedStatus = 1;
-						} else {
-						$calculatedStatus = 0;
-						}
+$tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";	
+$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Status:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . $the_status . " </TD></TR>";
+$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['contact_name']). " Via: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
+if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left' STYLE= 'width:50%'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";}
+if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Security email:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";}
+if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security phone:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";}
+if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
+if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security reqs:&nbsp;</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
+if(!(isempty(trim($row_fac['opening_hours']))))  	{
+	$opening_arr_serial = base64_decode($row_fac['opening_hours']);
+	$opening_arr = unserialize($opening_arr_serial);
+	$outputstring = "";
+	$the_day = "";
+	$z = 0;
+	foreach($opening_arr as $val) {
+		switch($z) {
+			case 0:
+			$dayname = "Monday";
+			break;
+			case 1:
+			$dayname = "Tuesday";
+			break;
+			case 2:
+			$dayname = "Wednesday";
+			break;
+			case 3:
+			$dayname = "Thursday";
+			break;
+			case 4:
+			$dayname = "Friday";
+			break;
+			case 5:
+			$dayname = "Saturday";
+			break;
+			case 6:
+			$dayname = "Sunday";
+			break;
+			}
+
+		if($dayname == get_day()) {			
+			$openstring = (array_key_exists(0, $val) && $val[0] == "on") ? "Open" : "Closed";
+			if($openstring == "Open") {
+				$outputstring .= "Opens: " . $val[1] . "<BR />Closes: " . $val[2];
+				if(isTimeBetween($val[1], $val[2])) {
 					$calculatedStatus = 1;
 					} else {
-					$outputstring .= "(" . $dayname . ")  ---  " . $openstring;
 					$calculatedStatus = 0;
 					}
+				$calculatedStatus = 1;
+				} else {
+				$outputstring .= "(" . $dayname . ")  ---  " . $openstring;
+				$calculatedStatus = 0;
 				}
-			$z++;
 			}
-
-		$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Opening Times<BR />(" . get_day() . "):</TD><TD CLASS='td_data text' ALIGN='left'>" . $outputstring . "</TD></TR>";
+		$z++;
 		}
-	if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Prim pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Sec pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";}
-	$tab_1 .= "</TABLE></TD></TR>";
-	$tab_1 .= "<TR><TD COLSPAN=99>&nbsp;</TD></TR>";
-	$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE>";
-	$tab_1 .= "<TR style='height: 20px;'><TD COLSPAN=2 ALIGN='center'>" . $toedit . $tomail;
-	$tab_1 .= "<A id='view_" . $row_fac['fac_id'] . "' CLASS='plain text' style='float: none; color: #000000;'  HREF='{$_SESSION['facilitiesfile']}?func=responder&view=true&id=" . $row_fac['fac_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A>";
-	if(($internet) && ($locale == 1)) {
-		$tab_1 .= "<A id='osmap_but' class='plain text' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row_fac['fac_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"facility\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A></TD></TR>";
-			}
-	if ($use_twitter) {							//7/23/15
-		$theInformation = $row_fac['facility_name'] . " at " . $address . ", " . $description . ". <small>Latitude: " . $row_fac['lat'] . ", Longitude: " . $row_fac['lng'] . "</small>";
-		$tab_1 .= 	"<TR style='height: 25px;'>
-			<TD style='text-align: center;'>
-				<IMG id='twit_" . $fac_id . "' class='plain text' SRC='./buttons/tweetbutton.png' style='float: none; margin: 0px; padding: 0px; vertical-align: middle;' 
-				onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'tweetInfo(\"" . $theInformation . "\");'>";
-			}
-	$tab_1 .= "</TD></TR>";
-	$tab_1 .= "</TABLE></TD></TR></TABLE>";
+	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Opening Times<BR />(" . get_day() . "):</TD><TD CLASS='td_data text' ALIGN='left'>" . $outputstring . "</TD></TR>";
+	}
+if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Prim pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";}
+if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Sec pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";}
+$tab_1 .= "</TABLE></TD></TR>";
+$tab_1 .= "<TR><TD COLSPAN=99>&nbsp;</TD></TR>";
+$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE>";
+$tab_1 .= "<TR style='height: 20px;'><TD COLSPAN=2 ALIGN='center'>" . $toedit . $tomail;
+$tab_1 .= "<A id='view_" . $row_fac['fac_id'] . "' CLASS='plain text' style='float: none; color: #000000;'  HREF='{$_SESSION['facilitiesfile']}?func=responder&view=true&id=" . $row_fac['fac_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A>";
+if(($internet) && ($locale == 1)) {
+	$tab_1 .= "<A id='osmap_but' class='plain text' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row_fac['fac_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"facility\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A></TD></TR>";
+		}
+if ($use_twitter) {							//7/23/15
+	$theInformation = $row_fac['facility_name'] . " at " . $address . ", " . $description . ". <small>Latitude: " . $row_fac['lat'] . ", Longitude: " . $row_fac['lng'] . "</small>";
+	$tab_1 .= 	"<TR style='height: 25px;'>
+		<TD style='text-align: center;'>
+			<IMG id='twit_" . $fac_id . "' class='plain text' SRC='./buttons/tweetbutton.png' style='float: none; margin: 0px; padding: 0px; vertical-align: middle;' 
+			onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick= 'tweetInfo(\"" . $theInformation . "\");'>";
+		}
+$tab_1 .= "</TD></TR>";
+$tab_1 .= "</TABLE></TD></TR></TABLE>";
+	
+if (my_is_float($row_fac['lat'])) {										// position data of any type?
 	$tab_2 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
 	$tab_2 .= "<TABLE width='98%'>";
 
@@ -247,7 +247,7 @@ if (my_is_float($row_fac['lat'])) {										// position data of any type?
 		}
 	$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lat</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_fac['lat'] . "</TD></TR>";
 	$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lng</TD><TD class='td_data text' style='font-size: 80%;'>" . $row_fac['lng'] . "</TD></TR>";
-	$tab_2 .= "</TABLE></TD></TR><RR><TD><TABLE width='100%'>";			// 11/6/08
+	$tab_2 .= "</TABLE></TD></TR><TR><TD><TABLE width='100%'>";			// 11/6/08
 	$tab_2 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 	$tab_2 .= "</TABLE></TD</TR></TABLE>";
 		

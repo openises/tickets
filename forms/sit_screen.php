@@ -379,8 +379,12 @@ function pageLoaded() {		//	Follows on from loading responderlist within functio
  	if(respFin && !facFin && !incFin && !logFin) {	//	Load Facilitylist
 		load_facilitylist(window.fac_field, window.fac_direct);
 		} else if(respFin && facFin && !incFin && !logFin) {	//	Load Incidentlist
-		load_incidentlist(window.inc_field, window.inc_direct);			
+		load_incidentlist(window.inc_field, window.inc_direct);
 		} else if(respFin && facFin && incFin && !logFin) {	//	Load loglist
+		responderlist_get();
+		facilitylist_get();
+		incidentlist_get();
+		conditions_get();	
 		if(!isGuest) {
 			if(showEvents == 1) {
 				load_log(window.log_field, window.log_direct);
@@ -394,25 +398,12 @@ function pageLoaded() {		//	Follows on from loading responderlist within functio
 			}
 		get_scheduled_number();
 		} else if(incFin && respFin && facFin && logFin) {	//	Load everything elase
-		load_exclusions();
-		load_ringfences();
-		load_catchments();
-		load_basemarkup();
-		load_groupbounds();
-		do_conditions();
-		load_regions();
-		set_initial_pri_disp();
-		load_poly_controls();
 		window.incFin = false;
 		window.respFin = false;
 		window.facFin = false;
 		window.logFin = false;
 		window.statSel = false;
 		window.facstatSel = false;
-		responderlist_get();
-		facilitylist_get();
-		incidentlist_get();
-		conditions_get();	
 		if(showEvents == 1) {
 			log_get();
 			}
@@ -457,6 +448,15 @@ function loadData() {
 	load_warnlocations("situation");
 	load_status_bgcolors();
 	load_status_textcolors();
+	load_exclusions();
+	load_ringfences();
+	load_catchments();
+	load_basemarkup();
+	load_groupbounds();
+	do_conditions();
+	load_regions();
+	set_initial_pri_disp();
+	load_poly_controls();
 	}
 
 function pageUnload() {
@@ -913,7 +913,7 @@ if(!isGuest) {
 	}
 // end of set widths
 init_map(1, def_lat, def_lng, "", parseInt(initZoom), locale, useOSMAP, "tr");
-map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
+map.setView([def_lat, def_lng], parseInt(initZoom));
 bounds = map.getBounds();	
 zoom = map.getZoom();
 var got_points = false;

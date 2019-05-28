@@ -15,7 +15,7 @@ print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 $useMDBContact = (get_mdb_variable('use_mdb_contact') && get_mdb_variable('use_mdb_contact') != "") ? get_mdb_variable('use_mdb_contact') : "0";
 $useMDBStatus =  (get_mdb_variable('use_mdb_status') && get_mdb_variable('use_mdb_status') != "") ? get_mdb_variable('use_mdb_status') : "0";
 ?>
-window.onresize=function(){set_size()};
+window.onresize=function(){set_size();}
 var use_mdb = <?php echo get_variable('use_mdb');?>;
 var use_mdb_contact = <?php echo get_mdb_variable('use_mdb_contact');?>;
 var use_mdb_status = <?php echo get_mdb_variable('use_mdb_status');?>;
@@ -67,8 +67,20 @@ var colors = new Array ('odd', 'even');
 
 function loadData() {
 	get_mi_totals();
+	get_assignments();
+	get_unit_categories();
 	load_responderlist2(window.resp_field2, 'ASC');
-	load_warnlocations();
+	load_warnlocations("situation");
+	load_status_bgcolors();
+	load_status_textcolors();
+	load_exclusions();
+	load_ringfences();
+	load_catchments();
+	load_basemarkup();
+	load_groupbounds();	
+	do_conditions();
+	load_regions();
+	load_poly_controls();
 	}
 
 function set_size() {
@@ -124,14 +136,6 @@ function set_size() {
 	
 function pageLoaded() {
 	if(respFin) {
-		load_exclusions();
-		load_ringfences();
-		load_catchments();
-		load_basemarkup();
-		load_groupbounds();	
-		do_conditions();
-		load_regions();
-		load_poly_controls();
 		mapCenter = map.getCenter();
 		mapZoom = map.getZoom();
 		map.invalidateSize();
@@ -321,25 +325,11 @@ $('the_rlist').style.maxHeight = listHeight + "px";
 $('the_rlist').style.width = leftlistwidth + "px";
 $('respondersheading').style.width = leftlistwidth + "px";
 // end of set widths
-
-var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
-	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [0, 0],	shadowAnchor: [5, -5], popupAnchor: [6, -5]
-	}
-	});
-var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [0, 0], popupAnchor: [6, -5]
-	}
-	});
-var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [0, 0], popupAnchor: [6, -5]
-}
-});
-var theLocale = <?php print get_variable('locale');?>;
-var useOSMAP = <?php print get_variable('use_osmap');?>;
-var initZoom = <?php print get_variable('def_zoom');?>;
-init_map(1, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
-map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], parseInt(initZoom));
-var bounds = map.getBounds();	
-var zoom = map.getZoom();
-var got_points = false;	// map is empty of points
+init_map(1, def_lat, def_lng, "", parseInt(initZoom), locale, useOSMAP, "tr");
+map.setView([def_lat, def_lng], parseInt(initZoom));
+bounds = map.getBounds();	
+zoom = map.getZoom();
+var got_points = false;
 $('controls').innerHTML = controlsHTML;
 <?php
 do_kml();

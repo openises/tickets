@@ -209,8 +209,10 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$print = "";											// output string
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$temp = $u_types[$row['type']];
-		$print .= "\t\t<SPAN class='legend' style='height: 3em; text-align: center; vertical-align: middle; float: none;'> ". $temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$temp[1]] . "' STYLE = 'vertical-align: middle' BORDER=0 PADDING='10'>&nbsp;&nbsp;&nbsp;</SPAN>";
+		if($row['type'] != 0) {
+			$temp = $u_types[$row['type']];
+			$print .= "\t\t<SPAN class='legend' style='height: 3em; text-align: center; vertical-align: middle; float: none;'> ". $temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$temp[1]] . "' STYLE = 'vertical-align: middle' BORDER=0 PADDING='10'>&nbsp;&nbsp;&nbsp;</SPAN>";
+			}
 		}
 	return $print;
 	}			// end function get_icon_legend ()
@@ -219,16 +221,14 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	require_once('./incs/modules.inc.php');
 	}	
 ?>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<HEAD><TITLE>Tickets - Units Module</TITLE>
-	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-	<META HTTP-EQUIV="Expires" CONTENT="0">
-	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
-	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
+<!DOCTYPE HTML>															  
+<HTML>
+	<HEAD><TITLE>Tickets - Main Module</TITLE>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+	<META HTTP-EQUIV="Expires" CONTENT="0" />
+	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
+	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
+	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 	<!--[if lte IE 8]>
@@ -236,20 +236,32 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	<![endif]-->
 	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
 	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
+	<STYLE>
+		.text-labels {font-size: 2em; font-weight: 700;}
+		.leaflet-control-layers-expanded { padding: 10px 10px 10px 10px; color: #333; background-color: #F1F1F1; border: 3px outset #707070;}
+		.leaflet-control-layers-expanded .leaflet-control-layers-list {height: auto; display: block; position: relative; margin-bottom: 20px;}
+		.centerbuttons {width: 80px; font-size: 1.2em;}
+	</STYLE>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>
-	<script src="./js/leaflet/gpx.js"></script>  
-	<script src="./js/osopenspace.js"></script>
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
+	<SCRIPT TYPE="application/x-javascript" SRC="./js/messaging.js"></SCRIPT>
+<?php
+require_once('./incs/all_forms_js_variables.inc.php');
+if(file_exists("./incs/modules.inc.php")) {
+	require_once('./incs/modules.inc.php');
+	}	
+?>
+	<script type="application/x-javascript" src="./js/proj4js.js"></script>
+	<script type="application/x-javascript" src="./js/proj4-compressed.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet/leaflet.js"></script>
+	<script type="application/x-javascript" src="./js/proj4leaflet.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet/KML.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet/gpx.js"></script>  
+	<script type="application/x-javascript" src="./js/osopenspace.js"></script>
+	<script type="application/x-javascript" src="./js/leaflet-openweathermap.js"></script>
+	<script type="application/x-javascript" src="./js/esri-leaflet.js"></script>
+	<script type="application/x-javascript" src="./js/Control.Geocoder.js"></script>
 	<script type="application/x-javascript" src="./js/usng.js"></script>
 	<script type="application/x-javascript" src="./js/osgb.js"></script>
 <?php
@@ -272,13 +284,9 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 		}
 ?>
 	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
-	<SCRIPT TYPE="application/x-javascript" SRC="./js/member.js"></SCRIPT>
 	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
 	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 	<script type="application/x-javascript" src="./js/geotools2.js"></script>
-<?php
-	require_once('./incs/all_forms_js_variables.inc.php');
-?>
 	<SCRIPT>
 	var sortby = '`date`';	//	11/18/13
 	var sort = "DESC";	//	11/18/13
