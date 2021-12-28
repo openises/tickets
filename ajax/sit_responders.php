@@ -1,5 +1,21 @@
 <?php
+// 12/4/2021
+
 require_once('../incs/functions.inc.php');
+snap ( basename (__FILE__), date("D h:i") );
+
+function ErHdlr($errno, $errstr) {			// error handler function
+	snap ($errno . $errstr . " " , basename (__FILE__) );
+
+	$dump = debug_backtrace();
+//	for ($i = 0, $i < count ( $dump)-1; $i++ ) {
+//		$temp = implode (":", $dump [$i] );
+//		snap ($temp, $i);
+//		};
+	}		// end func
+
+set_error_handler("ErHdlr");				// all errors
+
 require_once('../incs/status_cats.inc.php');
 set_time_limit(0);
 @session_start();
@@ -47,7 +63,7 @@ function subval_sort($a, $subkey, $dd) {
 	foreach($a as $k=>$v) {
 		$b[$k] = strtolower($v[$subkey]);
 		}
-	if($dd == 1) {	
+	if($dd == 1) {
 		asort($b);
 		} else {
 		arsort($b);
@@ -64,17 +80,17 @@ function can_do_dispatch($the_row) {
 	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {
 		if (!(is_date($row_temp['clear']))) {
-			unset ($result_temp, $row_temp); 
+			unset ($result_temp, $row_temp);
 			return FALSE;
 			}
 		}
-	unset ($result_temp, $row_temp); 
+	unset ($result_temp, $row_temp);
 	return TRUE;
 	}
-	
+
 function unit_cat($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row = stripslashes_deep(mysql_fetch_array($result));
 	return $row['name'];
 	}
@@ -90,11 +106,13 @@ $categories = $curr_cats;
 $assigns = array();
 $tickets = array();
 
-$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, 
-	`$GLOBALS[mysql_prefix]assigns`.`responder_id`, 
-	`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` 
-	FROM `$GLOBALS[mysql_prefix]assigns` 
+$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`,
+	`$GLOBALS[mysql_prefix]assigns`.`responder_id`,
+	`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket`
+	FROM `$GLOBALS[mysql_prefix]assigns`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
+
+
 $result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
 	$assigns[$row_as['responder_id']] = $row_as['ticket'];
@@ -108,6 +126,7 @@ $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
+
 $result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 	$temp = $row_st['id'];
@@ -121,11 +140,13 @@ $assigns_ary = array();				// construct array of responder_id's on active calls
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
 		WHERE (`t`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `t`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}') AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
+
+
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$assigns_ary[$row['responder_id']] = TRUE;
 	}
-$numAssigns = count($assigns_ary);	
+$numAssigns = count($assigns_ary);
 $order_values = array(1 => "`nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC", 2 => "`type_descr` ASC, `handle` ASC",  3 => "`stat_descr` ASC, `handle` ASC" , 4 => "`handle` ASC");
 
 if ((array_key_exists ('order' , $_POST)) && (isset($_POST['order'])))	{$_SESSION['unit_flag_2'] =  $_POST['order'];}
@@ -137,14 +158,14 @@ $al_groups = $_SESSION['user_groups'];
 if(array_key_exists('viewed_groups', $_SESSION)) {
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 	}
-if(count($al_groups) == 0) {	
+if(count($al_groups) == 0) {
 	$where2 = "WHERE `a`.`type` = 2";
-	} else {	
-	if(!isset($curr_viewed)) {	
+	} else {
+	if(!isset($curr_viewed)) {
 		$x=0;
 		$where2 = "WHERE (";
 		foreach($al_groups as $grp) {
-			$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+			$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
 			$where2 .= "`a`.`group` = '{$grp}'";
 			$where2 .= $where3;
 			$x++;
@@ -153,7 +174,7 @@ if(count($al_groups) == 0) {
 		$x=0;
 		$where2 = "WHERE (";
 		foreach($curr_viewed as $grp) {
-			$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+			$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
 			$where2 .= "`a`.`group` = '{$grp}'";
 			$where2 .= $where3;
 			$x++;
@@ -161,21 +182,21 @@ if(count($al_groups) == 0) {
 		}
 	$where2 .= "AND `a`.`type` = 2";
 	}
-	
+
 $query1 = "SELECT *, r.updated AS `r_updated`,
 	`r`.`status_updated` AS `status_updated`,
 	`r`.`id` AS `unit_id`,
 	`r`.`name` AS `name`,
-	`r`.`description` AS `unit_descr`, 
-	`r`.`ring_fence` AS `ring_fence`,	
-	`r`.`excl_zone` AS `excl_zone`	
-	FROM `$GLOBALS[mysql_prefix]responder` `r` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
+	`r`.`description` AS `unit_descr`,
+	`r`.`ring_fence` AS `ring_fence`,
+	`r`.`excl_zone` AS `excl_zone`
+	FROM `$GLOBALS[mysql_prefix]responder` `r`
+	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )
 	{$where2} ORDER BY `unit_id` DESC LIMIT 1";
 
 $result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $row1 = stripslashes_deep(mysql_fetch_assoc($result1));
-$latest_id = (mysql_num_rows($result1) >0) ? $row1['unit_id'] : 0;
+$latest_id = (mysql_num_rows($result1) >0) ? $row1['unit_id'] : 0;		// 12/4/2021
 
 $query = "SELECT *, r.updated AS `r_updated`,
 	`r`.`status_updated` AS `status_updated`,
@@ -185,19 +206,19 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	`r`.`name` AS `name`,
 	`t`.`name` AS `un_type_name`,
 	`s`.`description` AS `stat_descr`,
-	`r`.`description` AS `unit_descr`, 
-	`r`.`ring_fence` AS `ring_fence`,	
-	`r`.`excl_zone` AS `excl_zone`,		
+	`r`.`description` AS `unit_descr`,
+	`r`.`ring_fence` AS `ring_fence`,
+	`r`.`excl_zone` AS `excl_zone`,
 	(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns`
-	WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id` AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )) AS `nr_assigned` 
-	FROM `$GLOBALS[mysql_prefix]responder` `r` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
-	LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
-	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
+	WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id` AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )) AS `nr_assigned`
+	FROM `$GLOBALS[mysql_prefix]responder` `r`
+	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )
+	LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )
+	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id )
 	{$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";
 
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$units_ct = mysql_affected_rows();			// 1/4/10
+$units_ct = mysql_num_rows($result);			// 1/4/10
 if ($units_ct != 0){
 	$checked = array ("", "", "", "");
 	$checked[$_SESSION['unit_flag_2']] = " CHECKED";
@@ -225,7 +246,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		}
 
 	$tip =  addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));
-	$latitude = ($row['lat']) ? $row['lat'] : $def_lat;	
+	$latitude = ($row['lat']) ? $row['lat'] : $def_lat;
 	$longitude = ($row['lng']) ? $row['lng'] : $def_lng;
 	$got_point = FALSE;
 
@@ -234,7 +255,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$callsign = ($track_type == 8) ? "999_" . $row['unit_id']: $row['callsign'];
 	$hide_unit = ($row['hide']=="y")? "1" : "0" ;
 	$fac_type_name = $row['un_type_name'];
-	
+
 	$type = $row['icon'];
 
 	$row_track = FALSE;
@@ -243,7 +264,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
 			WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
 		$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_track = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+		$row_track = (mysql_num_rows($result_tr)>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
 		$aprs_updated = $row_track['updated'];
 		$aprs_speed = $row_track['speed'];
 		if (($row_track) && (my_is_float($row_track['latitude']))) {
@@ -262,7 +283,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$name = htmlentities(shorten($tempname[0], 14),ENT_QUOTES);
 	$handle = htmlentities($row['handle'],ENT_QUOTES);
 
-// MAIL						
+// MAIL
 	if ((!is_guest()) && (is_email($row['contact_via']) || $row["smsg_id"] !="" || is_twitter($row['contact_via']))) {
 		$mail_link = $row['contact_via'] . $row['smsg_id'];
 		} else {
@@ -272,6 +293,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 // STATUS
 	if($useMdb == "1" && $useMdbStatus == "1" && get_member_count($row['unit_id']) == 1) {
 		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $row['unit_id'];
+
 		$result2 = mysql_query($query2);
 		if($result && mysql_num_rows($result2) == 1) {
 			$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
@@ -285,13 +307,14 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 
 	if($memberID != 0) {
 		$query_updated = "SELECT `id`, `_on` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberID;
+
 		$result_updated = mysql_query($query_updated);
 		$row_updated = stripslashes_deep(mysql_fetch_assoc($result_updated));
 		$memUpdated = strtotime($row_updated['_on']);
 		$responderStatusUpdated = strtotime($row['status_updated']);
 		$member_status = (($useMdb == "1" && $useMdbStatus && "1") && (get_member_count($row['unit_id']) == 1) && ($memberID != 0)) ? get_member_status($memberID) : 0;
 		if($member_status == $memberStatusAvailVal) {
-			$doChange = false; 
+			$doChange = false;
 			} else {
 			$doChange = true;
 			}
@@ -307,8 +330,8 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$changeStatus = true;
 		} else {
 		$changeStatus = false;
-		}		
-	
+		}
+
 	if(!$changeStatus) {
 		$status = (array_key_exists($row['un_status_id'], $validStatuses)) ? get_status_sel($row['unit_id'], $row['un_status_id'], "u") : "Status Error";
 		$status_name = (array_key_exists($row['un_status_id'], $validStatuses)) ? $status_vals[$row['un_status_id']] : "Status Error" ;
@@ -325,6 +348,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$query_upd .= " WHERE `id` = ";
 		$query_upd .= quote_smart($row['unit_id']);
 		$query_upd .=" LIMIT 1";
+
 		$result_upd = mysql_query($query_upd);
 		$status = (array_key_exists($row['un_status_id'], $validStatuses)) ? get_status_sel($row['unit_id'], $responderUnavail, "u") : "Status Error";
 		$status_name = (array_key_exists($row['un_status_id'], $validStatuses)) ? $status_vals[$row['un_status_id']] : "Status Error" ;
@@ -352,15 +376,15 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$bull_color = '#000000';
 		}
 
-	$cstip = htmlentities($row['callsign'], ENT_QUOTES); 
-	$tip_str = $cstip; 
+	$cstip = htmlentities($row['callsign'], ENT_QUOTES);
+	$tip_str = $cstip;
 
 	// as of - 7/2/2013
 	$the_class = "";
 	$the_flag = $name . "_flag";
 
-	$strike_ary = ( abs ( ( now() - strtotime ($row['updated'] ) ) ) <  $GLOBALS['TOLERANCE'] ) ? 
-		array ( "", "") : 
+	$strike_ary = ( abs ( ( now() - strtotime ($row['updated'] ) ) ) <  $GLOBALS['TOLERANCE'] ) ?
+		array ( "", "") :
 		array ( "<strike>", "<strike>") ;
 	$strike = $strike_ary[0];
 	$updated = format_sb_date_2($row['updated']);
@@ -387,7 +411,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$ret_arr[$i][15] = $status_id;
 	$ret_arr[$i][16] = $updated;
 	$ret_arr[$i][17] = $row['unit_id'];
-	$ret_arr[$i][18] = $the_color;	
+	$ret_arr[$i][18] = $the_color;
 	$ret_arr[$i][20] = $resp_cat;
 	$ret_arr[$i][23] = $status_name;
 //	$ret_arr[$i][24] = $name;
@@ -442,7 +466,7 @@ switch($sortby) {
 	}
 
 if($units_ct > 0 ) {
-	
+
 	if((isset($ret_arr[0])) && ($ret_arr[0][22] == 0)) {
 		$the_output = $ret_arr;
 		} else {
@@ -457,10 +481,12 @@ if($units_ct > 0 ) {
 	} else {
 	$the_output[0][0] = 0;
 	}
-$the_output[0][22] = $units_ct;	
+$the_output[0][22] = $units_ct;
 $the_output[0][23] = $latest_id;
 
 //dump($the_output);
+snap ( basename (__FILE__), "END");
+
 print json_encode($the_output);
 exit();
 ?>

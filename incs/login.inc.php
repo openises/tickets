@@ -6,7 +6,7 @@
 8/31/10 set_filenames($internet) if in 'maybe' mode
 11/6/10 remove redundant <body... >
 11/15/10 meta description added
-11/18/10 defer="defer" added for IE	
+11/18/10 defer="defer" added for IE
 12/2/10 list_type added - AH
 3/15/11 Revised show hide session variables.
 2/16/11 Add fac_flag_2 session variable to persist facilities listing sort order
@@ -30,7 +30,7 @@ function userlist(){		/* list users */
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` ORDER BY `u`.`user` ASC ";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	if (mysql_num_rows($result)==0) 	 {
-		print '<B>[no users found]</B><BR />'; 
+		print '<B>[no users found]</B><BR />';
 		return;
 		}
 
@@ -65,29 +65,29 @@ function userlist(){		/* list users */
 function do_logout($return=FALSE){						/* logout - destroy session data */
 	global $hide_dispatched, $hide_status_groups;
 	@session_start();
- 	$_SESSION['expires'] = 0;							
+ 	$_SESSION['expires'] = 0;
 	if (array_key_exists ('user_id', $_SESSION)) {			// 7/27/10 - 8/10/10
 		$query = "DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_RESERVED']} AND `_by` = {$_SESSION['user_id']};";	//8/10/10
 		$result = mysql_query($query);
 		}
 	$sid = session_id();
 												// 1/8/10
-	$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET 
-		`sid` = NULL, 
-		`expires` = NULL 
+	$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET
+		`sid` = NULL,
+		`expires` = NULL
 		WHERE `$GLOBALS[mysql_prefix]user`.`sid` = '{$sid}' LIMIT 1 ;";	 // 8/10/10
 	$result = mysql_query($query);				// toss any error
 	$browser = checkBrowser(FALSE);
 	$the_id = array_key_exists ('user_id', $_SESSION)? $_SESSION['user_id'] : 0;	// possibly already logged out
-	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $browser);								// log this logout	
+	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $browser);								// log this logout
 
 	if (isset($_COOKIE[session_name()])) { setcookie(session_name(), '', time()-42000, '/'); }		// 8/25/10
 	unset ($sid);
 	$_SESSION = array();
 	@session_destroy();						// 2/18/08
-	
+
 	if ($return) return;
-	
+
 	do_login('main.php', TRUE);				// wait for login
 	}
 // ==========================================================================
@@ -96,7 +96,7 @@ function check_conn () {				// returns TRUE/FALSE
 	$response="";
 	$parts=parse_url($url);
 	if(!$parts) return false; /* the URL was seriously wrong */
-	
+
 	if (function_exists("curl_init")) {
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -107,12 +107,12 @@ function check_conn () {				// returns TRUE/FALSE
 		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 		curl_setopt($ch, CURLOPT_NOBODY, true);
 		curl_setopt($ch, CURLOPT_HEADER, true);
-	
+
 		if($parts['scheme']=='https'){
 			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  1);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 			}
-	
+
 		$response = curl_exec($ch);
 		curl_close($ch);
 		if(preg_match('/HTTP\/1\.\d+\s+(\d+)/', $response, $matches)){
@@ -125,7 +125,7 @@ function check_conn () {				// returns TRUE/FALSE
 			return TRUE;
 			} else {
 			return FALSE;
-			}		
+			}
 		} else {				// not CURL
 		if ($fp = @fopen($url, "r")) {
 			while (!feof($fp) && (strlen($response)<9000)) $response .= fgets($fp, 128);
@@ -155,15 +155,15 @@ function set_filenames($internet, $userchoice) {
 		} else {
 		$normal = 0;
 		}
-	$_SESSION['internet'] = $normal;   
+	$_SESSION['internet'] = $normal;
 	$_SESSION['good_internet'] = $internet_good;
 	$_SESSION['fip'] ="./incs/functions.inc.php";                        // 8/27/10
-	$_SESSION['fmp'] = ($normal)? "./incs/functions_major.inc.php": "./incs/functions_major_nm.inc.php";                              
-	$_SESSION['addfile'] = ($normal)? "add.php": "add.php";											
-	$_SESSION['editfile'] = ($normal)? "edit.php":	"edit.php";										  
-	$_SESSION['unitsfile'] = ($normal)? "units.php": "units_nm.php";								     
-	$_SESSION['facilitiesfile'] = ($normal)?	"facilities.php": "facilities_nm.php";		                    
-	$_SESSION['routesfile'] = ($normal)?	"routes.php": "routes_nm.php";						        
+	$_SESSION['fmp'] = ($normal)? "./incs/functions_major.inc.php": "./incs/functions_major_nm.inc.php";
+	$_SESSION['addfile'] = ($normal)? "add.php": "add.php";
+	$_SESSION['editfile'] = ($normal)? "edit.php":	"edit.php";
+	$_SESSION['unitsfile'] = ($normal)? "units.php": "units_nm.php";
+	$_SESSION['facilitiesfile'] = ($normal)?	"facilities.php": "facilities_nm.php";
+	$_SESSION['routesfile'] = ($normal)?	"routes.php": "routes_nm.php";
 	$_SESSION['facroutesfile'] = ($normal)? "fac_routes.php": "fac_routes_nm.php";
 	$_SESSION['warnlocationsfile'] = ($normal)? "warn_locations.php": "warn_locations_nm.php";
 	}
@@ -180,9 +180,9 @@ function is_expired($id) {		// returns boolean
 
 function redir($url, $time = 0) {
 	echo '<meta http-equiv="refresh" content="', $time, ';URL=', $url, '">';
-	die; 
+	die;
 	}
-	
+
 function dupe_user($id, $ip) {
 	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user` = " . $id . " AND `_from` != '" . $ip . "' LIMIT 1";
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -204,7 +204,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 	$the_sid = (isset($_SESSION['id']))? $_SESSION['id'] : null;
 //																			7/3/11
 	$warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
-	
+
 	$internet = (get_variable('internet') != "") ? intval(get_variable("internet")) : 3;
 	if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
 		if(dupe_user($_SESSION['user_id'], $_SERVER['REMOTE_ADDR'])) {
@@ -220,12 +220,13 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		set_filenames($internet, $userchoice);
 		}				// end if((!(empty($_SESSION)))  && ...)
 
-	else { 				// not logged in; now either get form data or db check form entries 	
+	else { 				// not logged in; now either get form data or db check form entries
 		if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
 																						// 6/25/10
 			$userchoice = $_POST['frm_maps'];
 			$categories = array();													// 3/15/11
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";	// 3/15/11
+//			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";	// 3/15/11
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ISNULL (`clear`)";	// 12/2/2021
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			$num_disp = mysql_num_rows($result);	//
 			if(($num_disp > 0) && ($hide_dispatched == 1)) { $category_butts[0] = "Deployed"; $i=1; } else { $i=0; }
@@ -254,32 +255,32 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$i++;
 				}
 			unset($result);
-			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` 
-				WHERE `user`=" . quote_smart($_POST['frm_user']). " 	 
-				AND (`passwd`=PASSWORD('" . $_POST['frm_passwd'] . "') 
-				OR `passwd`=MD5('" . strtolower($_POST['frm_passwd']) . "') OR `passwd`=MD5('" . $_POST['frm_passwd'] . "')) 
+			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user`
+				WHERE `user`=" . quote_smart($_POST['frm_user']). "
+				AND (`passwd`=PASSWORD('" . $_POST['frm_passwd'] . "')
+				OR `passwd`=MD5('" . strtolower($_POST['frm_passwd']) . "') OR `passwd`=MD5('" . $_POST['frm_passwd'] . "'))
 				LIMIT 1";
 			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			if (mysql_affected_rows()==1) {
-				
+
 				$row = stripslashes_deep(mysql_fetch_assoc($result));
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
-		
+
 				$sid = session_id();							// 1/8/10
 				$browser = checkBrowser(FALSE);
 				$the_date = mysql_format_date($expiry) ;
 
-				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET 
-					`sid` = '{$sid}', 
-					`expires`= '{$the_date}', 
-					`login` = '{$now}', 
-					`_from`= '{$_SERVER['REMOTE_ADDR']}', 
-					`browser` = '{$browser}'  
+				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET
+					`sid` = '{$sid}',
+					`expires`= '{$the_date}',
+					`login` = '{$now}',
+					`_from`= '{$_SERVER['REMOTE_ADDR']}',
+					`browser` = '{$browser}'
 					WHERE `id` = {$row['id']} LIMIT 1";
-					
+
 				$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				
+
 				$query_gp = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = {$row['id']} ORDER BY `id` ASC;";
 				$result_gp = mysql_query($query_gp);
 				while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
@@ -291,15 +292,15 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['id'] = 			$sid;
 				$_SESSION['expires'] = 		time();
 				$_SESSION['user_id'] = 		$row['id'];
-				$_SESSION['user'] = 		$row['user'];				
-				$_SESSION['level'] = 		$row['level']; 
-				$_SESSION['login_at'] = 	$now; 
-				$_SESSION['scr_height'] = 	$_POST['scr_height'];		
+				$_SESSION['user'] = 		$row['user'];
+				$_SESSION['level'] = 		$row['level'];
+				$_SESSION['login_at'] = 	$now;
+				$_SESSION['scr_height'] = 	$_POST['scr_height'];
 				$_SESSION['scr_width'] = 	$_POST['scr_width'];		// monitor dimensions this user
 				$_SESSION['allow_dirs'] = 	TRUE;						// allow directions
 				$_SESSION['show_closed'] = 	TRUE;						// show closed dispatched
-				$_SESSION['sortorder'] = ($row['sortorder']==NULL)? "date" : $row['sortorder']; 
-				$_SESSION['sort_desc'] = ($row['sort_desc']==NULL)? " DESC " : $row['sort_desc']; 
+				$_SESSION['sortorder'] = ($row['sortorder']==NULL)? "date" : $row['sortorder'];
+				$_SESSION['sort_desc'] = ($row['sort_desc']==NULL)? " DESC " : $row['sort_desc'];
 				$_SESSION['ticket_per_page'] = 0;
 				$_SESSION['show_hide_unit'] =  "s";		// show/hide units
 				$_SESSION['show_hide_unav'] = "s";		// show/hide unavailable units - 4/27/10
@@ -308,8 +309,8 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['unit_flag_2'] = "";		// usage tbd 4/7/10
 				$_SESSION['tick_flag_1'] = "";		// usage tbd 4/7/10
 				$_SESSION['tick_flag_2'] = "";		// usage tbd 4/7/10
-				$_SESSION['fac_flag_2'] = 2;		// 2/16/11			
-				$_SESSION['list_type'] = 0;		// 12/2/10			
+				$_SESSION['fac_flag_2'] = 2;		// 2/16/11
+				$_SESSION['list_type'] = 0;		// 12/2/10
 				$_SESSION['show_hide_Deployed'] = "s";	// Show all deployed tickets 3/15/11
 				$_SESSION['day_night'] = $_POST['frm_daynight'];	// 01/20/11 Set Day or Night Colors
 				$_SESSION['maps_sh'] = $_POST['frm_maps'];	// 9/10/13 Show or Hide Maps
@@ -317,7 +318,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['incs_list'] = "s";		// 3/15/11
 				$_SESSION['resp_list'] = "s";		// 3/15/11
 				$_SESSION['facs_list'] = "s";		// 3/15/11
-				$_SESSION['regions_boxes'] = "s";		// 6/10/11				
+				$_SESSION['regions_boxes'] = "s";		// 6/10/11
 				$_SESSION['user_unit_id'] = $row['responder_id'];		//3/19/11
 				$_SESSION['show_hide_upper'] = "s";		//6/10/11
 				$_SESSION['sh_cond'] = "s";
@@ -328,7 +329,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['facilitylist'] = "s";
 				$_SESSION['loglist'] = "s";
 				$initLayer = intval(get_variable('default_map_layer'));
-				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");	
+				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");
 				$_SESSION['layer_inuse'] = $baseLayerNamesArr[$initLayer];
 				foreach($categories as $key => $value) {				// 3/15/11
 					$sess_flag = "show_hide_" . $value;
@@ -342,32 +343,32 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 //				$temp = implode(";",  $_SESSION);
 
 				set_filenames($internet, $userchoice);			// 8/31/10
-	
+
 				do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");		// log it - 12/1/2012
-																		
+
 				$query = "DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_RESERVED']} AND `_by` = {$_SESSION['user_id']};";
 				$result = mysql_query($query);
-	
+
 				$to = "";
 				$subject = "Tickets Login";
 				$message = "From: " . gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\nBrowser:" . $_SERVER['HTTP_USER_AGENT'];
 				$message .= "\nBy: " . $_POST['frm_user'];
 				$message .= "\nScreen: " . $_POST['scr_width'] . " x " .$_POST['scr_height'];
 				$message .= "\nReferrer: " . $_POST['frm_referer'];
-		
+
 //				@mail  ($to, $subject, $message);				// 1/11/09
-							
+
 				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 				header('Cache-Control: no-store, no-cache, must-revalidate');
 				header('Cache-Control: post-check=0, pre-check=0', FALSE);
 				header('Pragma: no-cache');
-	
+
 				$host  = $_SERVER['HTTP_HOST'];
 				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
 				$unit_id = get_unit();				// 3/19/11
 				$level = $row['level'];
-				
+
 				if($level == $GLOBALS['LEVEL_UNIT']) {	//	3/1/12
 					$extra = 'mobile.php';
 					} else if($level == $GLOBALS['LEVEL_STATS']) {
@@ -375,7 +376,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					} else if($level == $GLOBALS['LEVEL_SERVICE_USER']) {	//	10/11/12
 					$extra = 'portal.php';
 					} else if($level == $GLOBALS['LEVEL_FACILITY']) {	//	10/11/12
-					$extra = 'facility_board.php';	
+					$extra = 'facility_board.php';
 					} else if($level == $GLOBALS['LEVEL_MEMBER']){
 					$_SESSION = array();
 					@session_destroy();
@@ -383,18 +384,18 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					} else {
 					$extra = 'main.php?log_in=1';
 					}
-					
+
 				$protocol = ($https) ? "https" : "http";
 				$url = $protocol . "://" . $host . $uri . "/" . $extra;
 //				$url = "http://" . $host . $uri . "/" . $extra;
 				redir($url);
-				exit();				
+				exit();
 				}			// end if (mysql_affected_rows()==1)
 			}			// end if((!empty($_POST))&&(check_for_rows(...)
 
 //		if no form data or values fail
 		@session_destroy();				// 4/29/10
-		
+
 ?>
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 		<HTML xmlns="http://www.w3.org/1999/xhtml">
@@ -416,7 +417,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		window.onresize=function(){set_size()};
 		var viewportwidth;
 		var viewportheight;
-		
+
 		function set_size() {
 			if (typeof window.innerWidth != 'undefined') {
 				viewportwidth = window.innerWidth,
@@ -429,12 +430,12 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				viewportheight = document.getElementsByTagName('body')[0].clientHeight
 				}
 			set_fontsizes(viewportwidth,"fullscreen");
-			}		
-		
+			}
+
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 			};
-			
+
 		function getBrowserWidth(){
 			var val="";
 		    if (window.innerWidth){
@@ -457,17 +458,17 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		    else if (document.body){var val= document.body.clientHeight;}
 		        return(isNaN(val))? 740: val;
 			}
-	
+
 		function Set_Cookie( name, value, expires, path, domain, secure ) {
 			var today = new Date();	// set time in milliseconds
 			today.setTime( today.getTime() );
 			if ( expires )	{
 				expires = expires * 1000 * 60 ;
 				}
-			var expires_date = new Date( today.getTime() + (expires) );	
+			var expires_date = new Date( today.getTime() + (expires) );
 			document.cookie = name + "=" +escape( value ) +
 				( ( expires ) ? ";expires=" + expires_date.toGMTString() : "" ) + //expires.toGMTString()
-				( ( path ) ? ";path=" + path : "" ) + 
+				( ( path ) ? ";path=" + path : "" ) +
 				( ( domain ) ? ";domain=" + domain : "" ) +
 				( ( secure ) ? ";secure" : "" );
 			}
@@ -476,22 +477,22 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			// for hours, delete * 24, for minutes, delete * 60 * 24
 			// alert('expires ' + expires_date.toGMTString());// this is for testing purposes only
 			// alert( 'today ' + today.toGMTString() );// this is for testing purpose only
-			
+
 			function Get_Cookie( check_name ) {
 				var a_all_cookies = document.cookie.split( ';' ); 	// first we'll split this cookie up into name/value pairs
 				var a_temp_cookie = '';							  	// note: document.cookie only returns name=value, not the other components
 				var cookie_name = '';
 				var cookie_value = '';
 				var b_cookie_found = false; // set boolean t/f default f
-				var i = '';		
+				var i = '';
 				for ( i = 0; i < a_all_cookies.length; i++ ) {
 					a_temp_cookie = a_all_cookies[i].split( '=' );					// plit each name=value pair
-					cookie_name = a_temp_cookie[0].replace(/^\s+|\s+$/g, '');		// and trim left/right whitespace 	
-					if ( cookie_name == check_name ){								// if the extracted name matches passed check_name			
-						b_cookie_found = true;			
-						if ( a_temp_cookie.length > 1 ){	// we need to handle case where cookie has no value but exists (no = sign, that is):				
+					cookie_name = a_temp_cookie[0].replace(/^\s+|\s+$/g, '');		// and trim left/right whitespace
+					if ( cookie_name == check_name ){								// if the extracted name matches passed check_name
+						b_cookie_found = true;
+						if ( a_temp_cookie.length > 1 ){	// we need to handle case where cookie has no value but exists (no = sign, that is):
 							cookie_value = unescape( a_temp_cookie[1].replace(/^\s+|\s+$/g, '') );
-							}				
+							}
 						return cookie_value;// note that in cases where cookie is initialized but no value, null is returned
 						break;
 						}
@@ -502,14 +503,14 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					return null;
 					}
 				}		// end function Get_Cookie(
-		
+
 		function do_hh_onload () {				// 2/24/09
 			document.login_form.scr_width.value=getBrowserWidth();
 			document.login_form.scr_height.value=getBrowserHeight();
 			document.login_form.frm_user.focus();
-			}		// end function 
-	
-	
+			}		// end function
+
+
 		function do_onload () {
 			if (this.window.name!="main") {self.close();}			// in a popup
 			if(self.location.href==parent.location.href) {			// prevent frame jump
@@ -540,52 +541,52 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		window.setTimeout("document.forms[0].frm_user.focus()", 1000);
 		var selected = [];
 		selected['show_maps_but'] = true;
-		selected['hide_maps_but'] = false;		
+		selected['hide_maps_but'] = false;
 		selected['day_but'] = true;
-		selected['night_but'] = false;	
-		
+		selected['night_but'] = false;
+
 		function do_is_set(the_id) {
 			CngClass(the_id, 'isselected text')
 			return true;
 			}
-			
+
 		function do_not_set(the_id) {
 			CngClass(the_id, 'plain_centerbuttons text')
-			return true;			
+			return true;
 			}
-			
+
 		function set_maps(val) {
 			if(val == 1) {
-				do_is_set("show_maps_but"); 
-				do_not_set("hide_maps_but"); 
-				selected['show_maps_but'] = true; 
+				do_is_set("show_maps_but");
+				do_not_set("hide_maps_but");
+				selected['show_maps_but'] = true;
 				selected['hide_maps_but'] = false;
 				document.login_form.frm_maps.value="Show";
 				} else {
-				do_is_set("hide_maps_but"); 
-				do_not_set("show_maps_but"); 
-				selected['show_maps_but'] = false; 
+				do_is_set("hide_maps_but");
+				do_not_set("show_maps_but");
+				selected['show_maps_but'] = false;
 				selected['hide_maps_but'] = true;
-				document.login_form.frm_maps.value="Hide";				
+				document.login_form.frm_maps.value="Hide";
 				}
 			}
-			
+
 		function set_daynight(val) {
 			if(val == 1) {
-				do_is_set("day_but"); 
-				do_not_set("night_but"); 
-				selected['day_but'] = true; 
+				do_is_set("day_but");
+				do_not_set("night_but");
+				selected['day_but'] = true;
 				selected['night_but'] = false;
 				document.login_form.frm_daynight.value="Day";
 				} else {
-				do_is_set("night_but"); 
-				do_not_set("day_but"); 
-				selected['day_but'] = false; 
+				do_is_set("night_but");
+				do_not_set("day_but");
+				selected['day_but'] = false;
 				selected['night_but'] = true;
-				document.login_form.frm_daynight.value="Night";				
+				document.login_form.frm_daynight.value="Night";
 				}
 			}
-			
+
 		function do_hover_centerbuttons(the_id) {
 			if(selected[the_id]) {return;}
 			CngClass(the_id, 'hover_centerbuttons text');
@@ -597,12 +598,12 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			CngClass(the_id, 'plain_centerbuttons text');
 			return true;
 			}
-			
+
 		</SCRIPT>
 		</HEAD>
 <?php
 		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload(); set_size();'>\n" : "\n\t<BODY onLoad = 'do_onload(); set_size();'>\n";		// 2/24/09
-?>		
+?>
 		<CENTER>
 		<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 		<DIV CLASS='even' style='position: absolute; top: 5%; right: 20%; width: 60%; border: 1px outset #707070;'><BR /><BR />
@@ -610,12 +611,12 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		if(get_variable('_version') != '') print "<SPAN CLASS='text_large text_bold text_black'>" . get_variable('login_banner')."</SPAN><BR /><BR />";
 ?>
 		</FONT>
-		
+
 		<FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form"  onSubmit="return true;">
 		<TABLE BORDER=0>
 <?php
 		if(array_key_exists('frm_passwd', $_POST)) {$warn = "Login failed. Pls enter correct values and try again.";}
-		if(!(empty($warn))) { 
+		if(!(empty($warn))) {
 			print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>
 			{$warn}
 			</FONT><BR /><BR /></TH></TR>";
@@ -626,7 +627,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		$query_guest 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`='guest' LIMIT 1";
 		$result_guest = mysql_query($query_guest) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$guest_exists =  (mysql_num_rows($result_guest)==1);
-		
+
 // End of code to check for guest account existence
 ?>
 		<TR CLASS='even'>
@@ -661,7 +662,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<TR CLASS='even'>
 			<TD COLSPAN=99 STYLE='text-align: center;'>
 				<SPAN ID='day_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Day Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(1);"><IMG id='can_img' SRC='./images/sun.png' /></SPAN>
-				<SPAN ID='night_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Night Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(0);"><IMG id='can_img' SRC='./images/moon.png' /></SPAN>		
+				<SPAN ID='night_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Night Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(0);"><IMG id='can_img' SRC='./images/moon.png' /></SPAN>
 			</TD>
 		</TR>
 		<TR CLASS="even">
@@ -675,7 +676,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<TR CLASS='even' STYLE='text-align: center;'>
 			<TD COLSPAN=99>
 				<SPAN ID='show_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Show Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(1);"><IMG id='can_img' SRC='./images/maps.png' /></SPAN>
-				<SPAN ID='hide_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Hide Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(0);"><IMG id='can_img' SRC='./images/no_maps.png' /></SPAN>			
+				<SPAN ID='hide_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Hide Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(0);"><IMG id='can_img' SRC='./images/no_maps.png' /></SPAN>
 			</TD>
 		</TR>
 <?php
@@ -714,7 +715,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				<TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 			</TR>
 <?php
-			}			
+			}
 ?>
 		<TR CLASS='even'>
 			<TD CLASS='text_medium' COLSPAN=99 ALIGN='CENTER'><BR />
@@ -760,7 +761,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					}
 				}
 			});
-			
+
 		if (typeof window.innerWidth != 'undefined') {
 			viewportwidth = window.innerWidth,
 			viewportheight = window.innerHeight
@@ -771,7 +772,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
 			viewportheight = document.getElementsByTagName('body')[0].clientHeight
 			}
-		set_fontsizes(viewportwidth, "fullscreen");	
+		set_fontsizes(viewportwidth, "fullscreen");
 		set_maps(1);
 		set_daynight(1);
 </SCRIPT>

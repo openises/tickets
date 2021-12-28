@@ -258,11 +258,11 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 			$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 			if(empty($post_frm_owner)) {$post_frm_owner=0;}
-			
+
 			//$inc_num_ary = unserialize (get_variable('_inc_num'));											// 11/13/10
 			$temp = get_variable('_inc_num');										// 3/2/11
 			$inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
-			
+
 			// Show serial and format
 			switch ((int) $inc_num_ary[0]) {
 				case 0:			// none
@@ -283,9 +283,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				default:
 					alert("ERROR @ " + "<?php print __LINE__;?>");
 				}
-			
+
 			$inc_nature = get_type($_POST['frm_in_types_id']);
-			
+
 			$prepend_nature = (bool)($inc_num_ary[4]==1)? $inc_nature: "" ;
 
 			switch (get_variable('serial_no_ap')) {								// incident name revise -1/22/09
@@ -303,11 +303,11 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				}				// end switch
 															// 8/23/08, 9/20/08, 8/13/09
 			$spacer = ($inc_num_ary[2] != "") ? $inc_num_ary[2] : "";
-					
+
 			$scope = $inc_serial . $name_rev . $spacer . $prepend_nature;	//	set final scope to be inserted to ticket_id
-			
+
 			// increment the serial if used
-			
+
 			$the_year = date("y");
 			if ((((int) $inc_num_ary[0]) == 3) && (!($inc_num_ary[5] == $the_year))) {				// year style and change?
 				$inc_num_ary[3] = 1;																// roll over and start at 1
@@ -322,7 +322,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 			$query = "UPDATE`$GLOBALS[mysql_prefix]settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			
+
 			// end of serial increment
 
 			$facility_id = 		empty($_POST['frm_facility_id'])?		0 : trim($_POST['frm_facility_id']);				// 9/28/09
@@ -520,21 +520,21 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 					$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 					}
 				}
-				
+
 // If Major Incident Set
 			if(array_key_exists('frm_maj_inc', $_POST) && $_POST['frm_maj_inc'] != 0) {
 				// Delete existing entries to avoid dupes
-				$query = "DELETE FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `ticket_id` = '$id'"; 
+				$query = "DELETE FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `ticket_id` = '$id'";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 				// Insert new entry
 				$maj_inc = intval($_POST['frm_maj_inc']);
 				$query  = "INSERT INTO `$GLOBALS[mysql_prefix]mi_x` (
-					`mi_id`, 
+					`mi_id`,
 					`ticket_id`)
 					VALUES (
 					" . $maj_inc . ",
 					" . $id . ")";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 				}
 
 			do_log($GLOBALS['LOG_INCIDENT_OPEN'], $id);
@@ -613,14 +613,14 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>
 			<FORM NAME='to_main' METHOD='post' ACTION='main.php'></FORM>
 			<CENTER>
-			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_main.submit();'>Main</SPAN><BR />			
+			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_main.submit();'>Main</SPAN><BR />
 			<BR />
 			<FORM NAME='to_routes' METHOD='get' ACTION='<?php print $_SESSION['routesfile'];?>'>
 			<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print $_POST['ticket_id'];?>' />
 			</FORM>
 			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_routes.submit();'>Routes</SPAN>
 			</CENTER>
-			
+
 <?php
 			}
 		exit();
@@ -696,7 +696,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>
 				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
 				<script src="./js/Google.js"></script>
-<?php				
+<?php
 				}
 			}
 		}
@@ -734,7 +734,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 	var winleftcolwidth;
 	var rightcolwidth
 	var isinwin = <?php print $in_win;?>;
-	
+
 	var fields = ["about",
 				"street",
 				"scope",
@@ -760,7 +760,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 					"sel_status",
 					"sel_maj_inc"];
 	var smallfields = ["show_lat", "show_lng", "griddisp"];
-	
+
 	function set_size() {
 		if (typeof window.innerWidth != 'undefined') {
 			viewportwidth = window.innerWidth,
@@ -783,7 +783,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		winleftcolwidth = viewportwidth * .90;
 		rightcolwidth = viewportwidth * .35;
 		fieldwidth = leftcolwidth * .45;
-		medfieldwidth = colwidth * .20;	
+		medfieldwidth = colwidth * .20;
 		smallfieldwidth = colwidth * .10;
 		if($('outer')) {$('outer').style.width = outerwidth + "px";}
 		if($('outer')) {$('outer').style.height = outerheight + "px";}
@@ -797,7 +797,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		if($('map_caption')) {$('map_caption').style.width = mapWidth + "px";}
 		for (var i = 0; i < fields.length; i++) {
 			if($(fields[i])) {$(fields[i]).style.width = fieldwidth + "px";}
-			} 
+			}
 		for (var i = 0; i < medfields.length; i++) {
 			if($(medfields[i])) {$(medfields[i]).style.width = medfieldwidth + "px";}
 			}
@@ -806,7 +806,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			}
 		map.invalidateSize();
 		}
-	
+
 	function get_new_colors() {				// 5/4/11
 		window.location.href = '<?php print basename(__FILE__);?>';
 		}
@@ -1191,7 +1191,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				}			// end if (broadcast)
 ?>
 			find_warnings(theForm.frm_lat.value, theForm.frm_lng.value);	//	9/10/13
-			document.add.submit();			
+			document.add.submit();
 			return true;	//	11/18/13
 			}
 		}				// end function validate(theForm)
@@ -1339,7 +1339,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			document.wiz_add.wiz_frm_day_booked_date.disabled = theBool;
 			document.wiz_add.wiz_frm_hour_booked_date.disabled = theBool;
 			document.wiz_add.wiz_frm_minute_booked_date.disabled = theBool;
-			if (document.wiz_add.wiz_frm_meridiem_booked_date) {document.wiz_add.wiz_frm_meridiem_booked_date.disabled = theBool;}			
+			if (document.wiz_add.wiz_frm_meridiem_booked_date) {document.wiz_add.wiz_frm_meridiem_booked_date.disabled = theBool;}
 			}
 		}
 
@@ -1424,7 +1424,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		}
 
 	if(!isset($curr_viewed)) {
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
+		if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13 - 12/2/2021
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
 			$x=0;	//	6/10/11
@@ -1511,8 +1511,8 @@ require_once('./incs/all_forms_js_variables.inc.php');
 	function set_datselectvalue(thecontrol, inval) {
 		var formfield = document.forms['add'][thecontrol];
 		if(document.wiz_add) {formfield.selectedIndex = inval;}
-		}		
-		
+		}
+
 	function do_set_priority(inval) {
 		if(document.wiz_add) {document.add.frm_severity.selectedIndex = inval;}
 		}
@@ -1550,13 +1550,13 @@ require_once('./incs/all_forms_js_variables.inc.php');
 		else {
 			}
 		}
-		
+
 	function load_markup() {
 		load_exclusions();
 		load_ringfences();
 		load_catchments();
 		load_basemarkup();
-		load_groupbounds();	
+		load_groupbounds();
 		load_regions();
 		}
 
@@ -1641,7 +1641,7 @@ function createAutoComplete() {
 		obj_sugg = new autoComplete(aNames,document.getElementById('wiz_my_txt'),document.getElementById('suggest'),50);
 		$('my_txt').value = $('wiz_my_txt').value;
 		} else {
-		obj_sugg = new autoComplete(aNames,document.getElementById('my_txt'),document.getElementById('suggest'),50);	
+		obj_sugg = new autoComplete(aNames,document.getElementById('my_txt'),document.getElementById('suggest'),50);
 		}
 	}
 var aNames =[<?php print $city_name_array_str;?>];
@@ -1740,7 +1740,7 @@ if (intval (get_variable('addr_source')) > 0 ) {
 			sendRequest ('./ajax/get_addrs.php', handle_lookup_list, params);	// url, return handler, data sent
 			}
 	 	}
-<?php	
+<?php
 	}
 ?>
 </SCRIPT>
@@ -1860,7 +1860,7 @@ if($in_win) {
 ?>
 					<LABEL for="lock_p" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_coords"];?>');"><?php print $incident;?> Lat/Lng: <font color='red' size='-1'>*</font>
 						<img id='lock_p' border=0 src='./markers/unlock2.png' STYLE='float: right; vertical-align: middle; margin-left: 20px;' onClick = 'do_unlock_pos(document.add);'>
-					</LABEL>				
+					</LABEL>
 					<INPUT ID='show_lat' SIZE="11" TYPE="text" NAME="show_lat" VALUE="" />
 					<INPUT ID='show_lng' SIZE="11" TYPE="text" NAME="show_lng" VALUE="" />
 <?php
@@ -1908,7 +1908,7 @@ if($in_win) {
 					}				// end switch()
 				}				// end if (empty($inc_name))
 ?>
-				
+
 				<LABEL for="scope" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_name"];?>');"><?php print get_text("Incident name");?>: <font color='red' size='-1'>*</font></LABEL>
 <?php
 				if (!(empty($inc_name))) {				// 11/13/10
@@ -1920,7 +1920,7 @@ if($in_win) {
 					<INPUT id='scope' NAME="frm_scope" tabindex=130 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="61" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}" onkeypress='user_inc_name = true;'/><?php print $append;?>
 <?php
 					}										// end else {} 11/13/10
-?>	
+?>
 				<BR />
 				<LABEL for="description" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_synop"];?>');"><?php print get_text("Synopsis");?>: <font color='red' size='-1'>*</font></LABEL>
 				<TEXTAREA id='description' NAME="frm_description" tabindex=80 COLS="48" ROWS="2" WRAP="virtual"></TEXTAREA>
@@ -1945,7 +1945,7 @@ if($in_win) {
 						document.add.frm_comments.value+= lh_sep  + temp_ary[1] + ' ';
 						document.add.frm_comments.focus();
 						}		// end function set_signal()
-</SCRIPT>				
+</SCRIPT>
 					<LABEL for="signals" onmouseout="UnTip()" onmouseover="Tip('Signal');">Signal &raquo;</LABEL>
 					<SELECT ID='signals' NAME='signals' tabindex=90 onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
@@ -2047,23 +2047,23 @@ if($in_win) {
 ?>
 					<INPUT TYPE = 'hidden' NAME = 'frm_facility_id' VALUE=''>
 					<INPUT TYPE = 'hidden' NAME = 'frm_rec_facility_id' VALUE=''>
-					<BR />				
+					<BR />
 <?php
 					}
-?>				
+?>
 			</DIV>
 		</FIELDSET>
 		<FIELDSET>
 			<LEGEND class='text_large text_bold'>Contacts</LEGEND>
-			<DIV style='position: relative;'>				
+			<DIV style='position: relative;'>
 				<LABEL for="frm_phone" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_phone"];?>');"><?php print get_text("Phone"); ?>:
 <?php
 				if(get_variable('locale') == 0) {
-?>				
+?>
 					<BUTTON type="button" style='float: right;' onClick="Javascript:phone_lkup(document.add.frm_phone.value);"><img src="./markers/glasses.png" alt="Lookup phone no." ></button>&nbsp;&nbsp;
 <?php
 					}
-?>				
+?>
 				</LABEL>
 				<INPUT ID='frm_phone' NAME="frm_phone" tabindex=50 SIZE="16" TYPE="text" VALUE="<?php print $phone;?>"  MAXLENGTH="16" />
 				<SPAN ID='repeats'></SPAN>
@@ -2075,7 +2075,7 @@ if($in_win) {
 				if($has_portal == 1) {
 ?>
 					<LABEL for="contact" onmouseout="UnTip()" onmouseover="Tip('Associate this ticket with a specific portal user so they can see it.');"><?php print get_text("Portal User");?>:</LABEL>
-					<?php print $portal_user_control;?>					
+					<?php print $portal_user_control;?>
 					<BR />
 <?php
 					} else {
@@ -2097,7 +2097,7 @@ if($in_win) {
 
 				<LABEL for="comments" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_disp"];?>');"><?php print $disposition;?>:</LABEL>
 				<TEXTAREA id='comments' NAME="frm_comments" COLS="45" ROWS="2" WRAP="virtual"></TEXTAREA>
-				<BR />		
+				<BR />
 <?php											// 2/8/11
 				if (mysql_num_rows($result_sigs)>0)	{
 ?>
@@ -2175,7 +2175,7 @@ if($in_win) {
 						<SPAN id='sub_but_but' roll='button' aria-label='Submit' CLASS='plain text' style='float: right; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate(document.add);"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 					</DIV>
 					</DIV>
-<?php							
+<?php
 					}
 				} else {
 ?>
@@ -2249,7 +2249,7 @@ if ($gmaps || $good_internet) {
 	var bound_names = [];
 	var cmarkers;
 	var latLng;
-	
+
 	// set widths
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
@@ -2272,7 +2272,7 @@ if ($gmaps || $good_internet) {
 	winleftcolwidth = viewportwidth * .90;
 	rightcolwidth = viewportwidth * .35;
 	fieldwidth = leftcolwidth * .45;
-	medfieldwidth = leftcolwidth * .20;	
+	medfieldwidth = leftcolwidth * .20;
 	smallfieldwidth = leftcolwidth * .10;
 	if($('outer')) {$('outer').style.width = outerwidth + "px";}
 	if($('outer')) {$('outer').style.height = outerheight + "px";}
@@ -2286,13 +2286,13 @@ if ($gmaps || $good_internet) {
 	if($('map_caption')) {$('map_caption').style.width = mapWidth + "px";}
 	for (var i = 0; i < fields.length; i++) {
 		if($(fields[i])) {$(fields[i]).style.width = fieldwidth + "px";}
-		} 
+		}
 	for (var i = 0; i < medfields.length; i++) {
 		if($(medfields[i])) {$(medfields[i]).style.width = medfieldwidth + "px";}
 		}
 	for (var i = 0; i < smallfields.length; i++) {
 		if($(smallfields[i])) {$(smallfields[i]).style.width = smallfieldwidth + "px";}
-		}	
+		}
 	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 		iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 		}

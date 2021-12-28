@@ -1,5 +1,7 @@
 <?php
 require_once('./incs/functions.inc.php');
+// dump ($_SESSION);
+
 $nature = get_text("Nature");
 $disposition = get_text("Disposition");
 $patient = get_text("Patient");
@@ -34,14 +36,14 @@ if (array_key_exists('frm_mode', $_GET)) {
 		$mode = UNIT;
 		$initScreen = (get_variable('restrict_units') == "1") ? "hide_topframe(); hide_barselect();" : "";
 		} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";			
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$user_row = stripslashes_deep(mysql_fetch_assoc($result));
 		$mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;		// $mode => 'all' if no unit associated this user - 10/3/10
 		}
 	}		// end if/else initialize $mode
-	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";			
+
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $user_row = stripslashes_deep(mysql_fetch_assoc($result));
 $unit_id =  intval($user_row['responder_id']);
@@ -97,7 +99,7 @@ function get_butts($ticket_id, $unit_id) {
 	print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller text_big' VALUE = 'Dispatch' onClick = \"open_dispatch_window();\" />\n";
 	if (is_administrator() || is_super() || is_unit()){
 		print "<BR /><INPUT TYPE='button' ID='all_switch' CLASS = 'btn_smaller text_big' VALUE = 'All " . get_text("Calls") . "' onClick = 'switch_allcalls();' />\n";
-		}		
+		}
 	}				// end function get butts()
 
 
@@ -123,9 +125,9 @@ function get_butts($ticket_id, $unit_id) {
 #leftcol {float: left; text-align: center;}
 #middlecol {float: left; padding: 10px; text-align: center; margin-right: 30px;}
 #rightcol {float: left; text-align: center;}
-input.btn_chkd {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#EFEFEF;  border:1px solid;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: inset;text-align: center; border-radius:.5em; } 
-input.btn_not_chkd {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; border-radius:.5em;} 
-input.btn_smaller {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; border-radius:.5em;} 
+input.btn_chkd {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#EFEFEF;  border:1px solid;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: inset;text-align: center; border-radius:.5em; }
+input.btn_not_chkd {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; border-radius:.5em;}
+input.btn_smaller {margin-top: 5px; width: 160px; height: 50px; color:#050; background-color:#DEE3E7;  border-color: #696 #363 #363 #696; border-width: 4px; border-STYLE: outset;text-align: center; border-radius:.5em;}
 input:hover {background-color: white; border-width: 4px; border-STYLE: outset;}
 </STYLE>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
@@ -137,7 +139,7 @@ input:hover {background-color: white; border-width: 4px; border-STYLE: outset;}
 <script src="./js/leaflet/leaflet.js"></script>
 <script src="./js/proj4leaflet.js"></script>
 <script src="./js/leaflet/KML.js"></script>
-<script src="./js/leaflet/gpx.js"></script>  
+<script src="./js/leaflet/gpx.js"></script>
 <script src="./js/osopenspace.js"></script>
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
@@ -158,7 +160,7 @@ input:hover {background-color: white; border-width: 4px; border-STYLE: outset;}
 ?>
 				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
 				<script src="./js/Google.js"></script>
-<?php				
+<?php
 				}
 			}
 		}
@@ -231,20 +233,20 @@ function do_logout() {
 
 function do_save_handleResult(req) {			// the called-back function
 	}			// end function handle Result()
-	
+
 function mobile_selected(in_val) {
 	window.current_selected = in_val;
 	var params = "f_n=mobile_selected&v_n=" + in_val + "&sess_id=<?php print get_sess_key(__LINE__); ?>";
 	var url = "persist2.php";
 	sendRequest (url, do_save_handleResult, params);
-	}		// end function	
-	
+	}		// end function
+
 function do_save(in_val) {
 	if(in_val == "h") {topisHidden = true;} else {topisHidden = false;}
 	var params = "f_n=show_hide_upper&v_n=" + in_val + "&sess_id=<?php print get_sess_key(__LINE__); ?>";
 	var url = "persist2.php";								//	3/15/11
 	sendRequest (url, do_save_handleResult, params);
-	}		// end function	
+	}		// end function
 
 var row_str;
 var frames_obj = window.top.document.getElementsByTagName("frameset")[0];
@@ -264,13 +266,13 @@ if (parseInt(rows_arr[0]) > 0) { 							// save as the normalizing string
 
 function hide_topframe() {
 	frames_obj = window.top.document.getElementsByTagName("frameset")[0];
-	rows_arr = frames_obj.rows.split(",", 4);	
+	rows_arr = frames_obj.rows.split(",", 4);
 	rows_arr[0] = 0;
 	frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
 	do_save("h");
 	$('logout_but').style.display = "inline-block";
 	}
-	
+
 function show_topframe() {
 	frames_obj.rows = row_str;								// make top frame visible
 	$('logout_but').style.display = "none";
@@ -278,8 +280,8 @@ function show_topframe() {
 
 function showhideFrame(btn) {
 	frames_obj = window.top.document.getElementsByTagName("frameset")[0];
-	rows_arr = frames_obj.rows.split(",", 4);		
-	if (parseInt(rows_arr[0]) > 0){ 
+	rows_arr = frames_obj.rows.split(",", 4);
+	if (parseInt(rows_arr[0]) > 0){
 		rows_arr[0] = 0;
 		frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
 		do_save("h");
@@ -303,7 +305,7 @@ function checkUpper() {
 		frames_obj.rows = row_str;				// make top frame visible
 		if($('b1')) { $('b1').value = "Hide Menu"; }
 		}
-	}	
+	}
 
 function replaceButtonText(buttonId, text) {
 	if (document.getElementById) {
@@ -315,19 +317,19 @@ function replaceButtonText(buttonId, text) {
 			else if (button.value) {
 				button.value=text;
 				}
-			else {					//if (button.innerHTML) 
+			else {					//if (button.innerHTML)
 				button.innerHTML=text;
 				}
 			}
 		}
 	}		// end function replaceButtonText()
-	
+
 function hide_barselect() {
 	if($('hide_topbar')) {$('hide_topbar').style.display = 'none';}
 	if($('show_topbar')) {$('show_topbar').style.display = 'none';}
 	if($('logout_but')) {$('logout_but').style.display = 'inline-block';}
 	}
-	
+
 function show_btns_closed() {						// 4/30/10
 	$('btn_go').style.display = 'inline';
 	$('btn_can').style.display = 'inline';
@@ -367,14 +369,14 @@ function do_watch() {								// monitor for changes - 4/10/10, 6/10/11
 		($("div_ticket_id").innerHTML != parent.frames["upper"].$("div_ticket_id").innerHTML) ||
 		($("div_assign_id").innerHTML != parent.frames["upper"].$("div_assign_id").innerHTML) ||
 		($("div_action_id").innerHTML != parent.frames["upper"].$("div_action_id").innerHTML) ||
-		($("div_patient_id").innerHTML != parent.frames["upper"].$("div_patient_id").innerHTML)			
+		($("div_patient_id").innerHTML != parent.frames["upper"].$("div_patient_id").innerHTML)
 		)
 			{			  // a change
 			end_watch();
-			do_reload();			
+			do_reload();
 		}
-	}			// end function do_watch()	
-	
+	}			// end function do_watch()
+
 dbfns = new Array ();					//  field names per assigns_t.php expectations
 dbfns['d'] = 'frm_dispatched';
 dbfns['r'] = 'frm_responding';
@@ -383,7 +385,7 @@ dbfns['c'] = 'frm_clear';
 dbfns['e'] = 'frm_u2fenr';
 dbfns['a'] = 'frm_u2farr';
 
-btn_ids = new Array ();					//  
+btn_ids = new Array ();					//
 btn_ids['d'] = 'disp_btn';
 btn_ids['r'] = 'resp_btn';
 btn_ids['s'] = 'onsc_btn';
@@ -391,7 +393,7 @@ btn_ids['c'] = 'clear_btn';
 btn_ids['e'] = 'f_enr_btn';
 btn_ids['a'] = 'f_arr_btn';
 
-btn_labels = new Array ();				//  
+btn_labels = new Array ();				//
 btn_labels['d'] = '<?php print get_text("Disp"); ?> @ ';
 btn_labels['r'] = '<?php print get_text("Resp"); ?> @ ';
 btn_labels['s'] = '<?php print get_text("Onsc"); ?> @ ';
@@ -399,7 +401,7 @@ btn_labels['c'] = '<?php print get_text("Clear"); ?> @';
 btn_labels['e'] = 'Fac enr @';
 btn_labels['a'] = 'Fac arr @';
 
-btn_labels_full = new Array ();				//  
+btn_labels_full = new Array ();				//
 btn_labels_full['d'] = '<?php print get_text("Dispatched"); ?> @ ';
 btn_labels_full['r'] = '<?php print get_text("Responding"); ?> @ ';
 btn_labels_full['s'] = '<?php print get_text("On-scene"); ?> @ ';
@@ -412,7 +414,7 @@ function isFramed() {
 	}
 
 function set_assign(which) {
-	if (!(parseInt(theAssign)) > 0) {return;}		
+	if (!(parseInt(theAssign)) > 0) {return;}
 	var params = "frm_id=" + theAssign;
 	params += "&frm_tick=" + theTicket;
 	params += "&frm_unit=" + theUnit;
@@ -433,18 +435,18 @@ function set_assign(which) {
 	}		// end function set_assign()
 
 function set_rec_fac(which) {	//	10/18/11 function to update receiving facility
-	if (!(parseInt(theAssign)) > 0) {return;}		
+	if (!(parseInt(theAssign)) > 0) {return;}
 	var params = "rec_fac=" +which;
 	params += "&unit=" + theUnit;
 	params += "&tick_id=" + theTicket;
-	params += "&frm_id=" + theAssign;		
-	sendRequest ('rec_fac_t.php',handleResult, params);			// does the work	
+	params += "&frm_id=" + theAssign;
+	sendRequest ('rec_fac_t.php',handleResult, params);			// does the work
 	if(isFramed()) {
 		parent.frames['upper'].show_msg ("Receiving Facility Updated");
 		}
 	load_ticket(theTicket, theAssign, current_selected);
 	}	//	end function set_rec_fac
-		
+
 function do_blink() {																// 2/27/12
 	for(i=0; i<document.getElementsByTagName("blink").length; i++){					// each element
 		s=document.getElementsByTagName("blink")[i];
@@ -467,14 +469,14 @@ function start_blink () {
 function end_blink() {
 	for(i=0; i<document.getElementsByTagName("blink").length; i++){		//  force visibility each element
 		s=document.getElementsByTagName("blink")[i];
-		s.style.visibility='visible';	
-		}	
+		s.style.visibility='visible';
+		}
 	if (blink_var) {clearInterval(blink_var);}
 	}
 
 function do_incident_refresh() {
-	window.do_inc_refresh = true; 
-	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>"; 
+	window.do_inc_refresh = true;
+	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 	load_incidentlist(window.inc_field, window.inc_direct);
 	}
 
@@ -486,7 +488,7 @@ function secondsToTime(secs) {
 	var outputText =  numdays + "D " + numhours + ":" + numminutes + ":" + Math.round(numseconds);
 	return outputText;
 	}
-	
+
 function set_size() {
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
@@ -503,11 +505,11 @@ function set_size() {
 	colwidth = outerwidth * .15;
 	colheight = outerheight * .95;
 	middlecolwidth = outerwidth * .6;
-	middlecolheight = outerheight * .95;	
+	middlecolheight = outerheight * .95;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
+	$('leftcol').style.height = colheight + "px";
 	$('middlecol').style.width = middlecolwidth + "px";
 	$('middlecol').style.height = middlecolheight + "px";
 	$('rightcol').style.width = colwidth + "px";
@@ -516,7 +518,7 @@ function set_size() {
 	load_buttons(theTicket, theAssign);
 	load_tickets();
 	}
-	
+
 function loadData() {
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
@@ -533,11 +535,11 @@ function loadData() {
 	colwidth = outerwidth * .15;
 	colheight = outerheight * .95;
 	middlecolwidth = outerwidth * .6;
-	middlecolheight = outerheight * .95;	
+	middlecolheight = outerheight * .95;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
+	$('leftcol').style.height = colheight + "px";
 	$('middlecol').style.width = middlecolwidth + "px";
 	$('middlecol').style.height = middlecolheight + "px";
 	$('rightcol').style.width = colwidth + "px";
@@ -546,9 +548,9 @@ function loadData() {
 	load_buttons(theTicket, theAssign);
 	load_tickets();
 	}
-	
+
 function pageUnload() {
-	clearInterval(t_interval); 
+	clearInterval(t_interval);
 	}
 
 var thelevel = '<?php print $the_level;?>';
@@ -556,49 +558,49 @@ var thelevel = '<?php print $the_level;?>';
 function get_new_colors() {
 	window.location.href = 'main.php';
 	}
-	
+
 function out_frames() {		//  onLoad = "out_frames()"
 	if (top.location != location) {
 		top.location.href = document.location.href;
-		location.href = '#top'; 
+		location.href = '#top';
 		} else {
 		location.href = '#top';
 		}
 	}		// end function out_frames()
-	
+
 function ck_frames() {
 	if(self.location.href==parent.location.href) {
 		self.location.href = 'index.php';
 		} else {
 		try {
 			parent.upper.show_butts();
-			} 
+			}
 		catch (e) {
 			}
 		parent.upper.do_day_night("<?php print $_SESSION['day_night'];?>")
 		try {
 			parent.upper.theConnection();
-			} 
+			}
 		catch (e) {
 			}
 		}
 	}
-	
+
 function switch_allcalls() {
 	if(!window.theMode) {window.theMode = 1; $('all_switch').value="My Calls";} else {window.theMode = 0; $('all_switch').value="All Calls";}
 	load_tickets();
 	}
-	
+
 function load_buttons(tick_id, assign_id) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	if(tick_id == 0) {
 		var url = './ajax/mobile_buttons.php?version=' + randomnumber;
 		} else if(tick_id != 0 && assign_id != 0) {
-		var url = './ajax/mobile_buttons.php?ticket_id=' + tick_id + '&assign_id=' + assign_id + '&version=' + randomnumber;			
+		var url = './ajax/mobile_buttons.php?ticket_id=' + tick_id + '&assign_id=' + assign_id + '&version=' + randomnumber;
 		} else if(tick_id != 0 && assign_id == 0) {
-		var url = './ajax/mobile_buttons.php?ticket_id=' + tick_id + '&version=' + randomnumber;				
+		var url = './ajax/mobile_buttons.php?ticket_id=' + tick_id + '&version=' + randomnumber;
 		} else {
-		var url = './ajax/mobile_buttons.php?version=' + randomnumber;			
+		var url = './ajax/mobile_buttons.php?version=' + randomnumber;
 		}
 	sendRequest (url,buttons_cb, "");
 	function buttons_cb(req) {
@@ -611,15 +613,17 @@ function load_buttons(tick_id, assign_id) {
 		$('rightcol').innerHTML = the_info;
 		}				// end function buttons_cb()
 	}				// end function load_buttons()
-	
+
 function load_tickets() {
 	var selected = window.current_selected;
 	var randomnumber=Math.floor(Math.random()*99999999);
 	if(window.theMode ==0) {
 		var url = './ajax/mobile_tktlist.php?selected=' + selected + '&version=' + randomnumber;
 		} else {
-		var url = './ajax/mobile_tktlist.php?frm_mode=2&selected=' + selected + '&version=' + randomnumber;			
+		var url = './ajax/mobile_tktlist.php?frm_mode=2&selected=' + selected + '&version=' + randomnumber;
 		}
+//	alert ("xxxx " . url);
+
 	sendRequest (url,tktlst_cb, "");
 	function tktlst_cb(req) {
 		var theOutput = "";
@@ -627,7 +631,7 @@ function load_tickets() {
 		var unitStr = tkts_arr[0][4];
 		theOutput += "<TABLE BORDER=0 CLASS='calls' WIDTH='100%'>";
 		if(tkts_arr[0][5] == 0) {
-			theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>No Current calls for " + unitStr + "</TH></TR>";	
+			theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>No Current calls for " + unitStr + "</TH></TR>";
 			theOutput += "</TABLE>";
 			$('m_top').innerHTML = theOutput;
 			$('m_middle').innerHTML = "";
@@ -636,8 +640,8 @@ function load_tickets() {
 			tickets_get();
 			} else {
 			if(num_tickets != tkts_arr[0][5]) {
-				theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Current calls for " + unitStr + "</TH></TR>";	
-				theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";	
+				theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Current calls for " + unitStr + "</TH></TR>";
+				theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";
 				theOutput += "<TR CLASS = 'even' WIDTH='100%'>";
 				theOutput += "<TH class='heading text_large text_left'>&nbsp;&nbsp;</TH>";
 				theOutput += "<TH class='heading text_large text_left'>Unit</TH>";
@@ -646,7 +650,7 @@ function load_tickets() {
 				theOutput += "<TH class='heading text_large text_left'>Address</TH>";
 				theOutput += "<TH class='heading text_large text_left'>Date</TH>";
 				theOutput += "<TH class='heading text_large text_left'>&nbsp;</TH>";
-				theOutput += "<TH class='heading text_large text_left'>Type</TH></TR>";	
+				theOutput += "<TH class='heading text_large text_left'>Type</TH></TR>";
 				for (i = 0; i < tkts_arr.length; i++) {
 					theOutput += tkts_arr[i][3];
 					var tickId = tkts_arr[i][0];
@@ -659,18 +663,18 @@ function load_tickets() {
 				num_tickets = tkts_arr[0][5];
 				}
 			}
-		}				// end function tktlst_cb()	
+		}				// end function tktlst_cb()
 	}
-	
+
 function tickets_get() {
 	if (tkts_interval!=null) {return;}
 	tkts_interval = window.setInterval('tickets_loop()', 5000);
 	}			// end function mu get()
-	
+
 function tickets_loop() {
 	load_tickets();
 	}			// end function do_loop()
-	
+
 function load_messages() {
 	if(is_messaging == 0) {
 		return;
@@ -690,16 +694,16 @@ function load_messages() {
 			} else {
 			var title1 = "Messages for " + msgs_arr[0][10] + " regarding ";
 			}
-		theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>" + title1 + "Ticket <SPAN style='background-color: #CECECE; color: #000000;'>" + msgs_arr[0][9] + "</SPAN></TH></TR>";	
-		theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";	
+		theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>" + title1 + "Ticket <SPAN style='background-color: #CECECE; color: #000000;'>" + msgs_arr[0][9] + "</SPAN></TH></TR>";
+		theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";
 		if(msgs_arr[0][12] == 0) {
 			theOutput = "<TABLE BORDER=0 CLASS='calls' WIDTH='100%'>";
-			theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>No " + title1 + "Ticket <SPAN style='background-color: #CECECE; color: #000000;'>" + msgs_arr[0][9] + "</SPAN></TH></TR>";	
+			theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>No " + title1 + "Ticket <SPAN style='background-color: #CECECE; color: #000000;'>" + msgs_arr[0][9] + "</SPAN></TH></TR>";
 			theOutput += "</TABLE>";
 			$('m_middle').innerHTML = theOutput;
 			} else {
 			var theClass = "odd";
-			theOutput += "<TR CLASS = 'even'><TH class='heading text text_left' style='text-align: left;'>Type</TH><TH class='heading text text_left' style='text-align: left;'>From</TH><TH class='heading text text_left' style='text-align: left;'>Subject</TH><TH class='heading text text_left' style='text-align: left;'>Message</TH><TH class='heading text text_left' style='text-align: left;'>Date</TH></TR>";	
+			theOutput += "<TR CLASS = 'even'><TH class='heading text text_left' style='text-align: left;'>Type</TH><TH class='heading text text_left' style='text-align: left;'>From</TH><TH class='heading text text_left' style='text-align: left;'>Subject</TH><TH class='heading text text_left' style='text-align: left;'>Message</TH><TH class='heading text text_left' style='text-align: left;'>Date</TH></TR>";
 			for (i = 0; i < msgs_arr.length; i++) {
 				theOutput += "<TR CLASS = '" + theClass + "' style='text-align: center;' onClick=\"window.open('message.php?mode=1&id=" + msgs_arr[i][0] + "&screen=mobile&folder=inbox','view_message','width=600,height=800,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0, toolbar=0, menubar=0, location=0, right=100,top=300,screenX=500,screenY=300')\">";
 				theOutput += "<TD class='td_data tablecell text' style='" + msgs_arr[i][8] + "'>" + msgs_arr[i][2] + "</TD>";
@@ -712,9 +716,9 @@ function load_messages() {
 			theOutput += "</TABLE>";
 			$('m_middle').innerHTML = theOutput;
 			}
-		}				// end function msglst_cb()	
+		}				// end function msglst_cb()
 	}
-	
+
 function load_message(id) {
 	$('message_details').innerHTML = "";
 	var randomnumber=Math.floor(Math.random()*99999999);
@@ -724,8 +728,8 @@ function load_message(id) {
 		var theOutput = "";
 		var msg_arr = JSON.decode(req.responseText);
 		theOutput += "<TABLE BORDER=0 CLASS='calls' WIDTH='100%'>";
-		theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Message " + id + "</TH></TR>";	
-		theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";	
+		theOutput += "<TR CLASS = 'even'><TH COLSPAN=99 ALIGN='center'>Message " + id + "</TH></TR>";
+		theOutput += "<TR CLASS = 'even'><TD COLSPAN=99 CLASS='even'>&nbsp;</TD></TR>";
 		var theClass = "odd";
 		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Message Type</TD><TD class='td_data' style='" + msg_arr[8] + "'>" + msg_arr[2] + "</TD></TR>";
 		theOutput += "<TR CLASS = '" + theClass + "'><TD class='td_label text'>Ticket Number</TD><TD>" + msg_arr[2] + "</TD></TR>";
@@ -737,9 +741,9 @@ function load_message(id) {
 		theOutput += "</TABLE>";
 		$('message_details').innerHTML = theOutput;
 		$('message_popup').style.display = 'block';
-		}				// end function msg_cb()	
+		}				// end function msg_cb()
 	}
-	
+
 function refresh_ticket(id, assign_id) {
 	theTicket = id;
 	theAssign = assign_id;
@@ -754,14 +758,14 @@ function refresh_ticket(id, assign_id) {
 			load_buttons(id, assign_id);
 			load_tickets();
 			}
-		}				// end function tkt_cb2()		
+		}				// end function tkt_cb2()
 	}
-	
+
 function incident_get() {
 	if (t_interval!=null) {return;}
 	t_interval = window.setInterval('incident_loop()', 5000);
 	}			// end function mu get()
-	
+
 function incident_loop() {
 	refresh_ticket(theTicket, theAssign);
 	}			// end function do_loop()
@@ -781,7 +785,7 @@ function load_ticket(id, assign_id, selectedID) {
 	load_messages();
 	incident_get();
 	}
-	
+
 function open_map_window () {
 	var url = "map_popup.php?id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
@@ -789,7 +793,7 @@ function open_map_window () {
 	var popWindow = window.open(url, 'mapWindow', 'resizable=1, scrollbars, height=' + theHeight + ', width=' + theWidth + ', left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function open_act_window(ticket_id, id, action) {
 	var url = "action_w.php?mode=1&ticket_id=" + ticket_id + "&id=" + id + "&action=" + action;
 	var theHeight = window.theWinHeight;
@@ -813,7 +817,7 @@ function open_add_window () {
 	var popWindow = window.open(url, 'addWindow', 'resizable=1, scrollbars, height=640, width=800, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function open_edit_window () {
 	var url = "edit_nm.php?mode=1&id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
@@ -821,7 +825,7 @@ function open_edit_window () {
 	var popWindow = window.open(url, 'editWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function open_closein_window () {
 	var url = "close_in.php?mode=1&ticket_id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
@@ -829,7 +833,7 @@ function open_closein_window () {
 	var popWindow = window.open(url, 'closeinWindow', 'resizable=1, scrollbars, height=480, width=700, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function open_action_window () {
 	var url = "action_w.php?mode=1&ticket_id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
@@ -837,23 +841,23 @@ function open_action_window () {
 	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=800, width=800, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function open_patient_window () {
 	var url = "patient_w.php?mode=1&ticket_id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
 	var theWidth = window.theWinWidth;
 	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=480, width=720, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
-	}	
-	
+	}
+
 function open_notify_window () {
 	var url = "config.php?mode=1&func=notify&id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
 	var theWidth = window.theWinWidth;
 	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=400, width=600, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
-	}	
-	
+	}
+
 function open_note_window () {
 	var url = "add_note.php?ticket_id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
@@ -861,14 +865,14 @@ function open_note_window () {
 	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=240, width=600, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function open_mail_window () {
 	var url = "mail.php?ticket_id=" + window.theTicket;
 	var theHeight = window.theWinHeight;
 	var theWidth = window.theWinWidth;
 	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
-	}	
+	}
 
 function open_dispatch_window () {
 	var url = "routes_nm.php?frm_mode=1&ticket_id=" + window.theTicket;
@@ -877,7 +881,7 @@ function open_dispatch_window () {
 	var popWindow = window.open(url, 'actionWindow', 'resizable=1, scrollbars, height=480, width=' + dispWin_width + ', left=100,top=100,screenX=100,screenY=100');
 	popWindow.focus();
 	}
-	
+
 function checkWS() {
 	if(typeof parent.frames["main"].theConnection == 'function') {
 		parent.frames["main"].theConnection();
@@ -888,22 +892,22 @@ function checkWS() {
 	if(parent.frames["upper"].isLocal == 1) {
 		if(!parent.frames["upper"].checkConn) {
 			if(parent.frames["main"].$('has_button')) {parent.frames["main"].$('has_button').style.display = "none";}
-			if($('help_but')) {$('help_but').style.display = 'none';}	
+			if($('help_but')) {$('help_but').style.display = 'none';}
 			} else {
 			if(parent.frames["main"].$('has_button')) {parent.frames["main"].$('has_button').style.display = "block";}
-			if($('help_but')) {$('help_but').style.display = 'inline-block';}				
+			if($('help_but')) {$('help_but').style.display = 'inline-block';}
 			}
 		} else {
 		if(!parent.frames["upper"].checkConn) {
 			if(parent.frames["main"].$('has_button')) {parent.frames["main"].$('has_button').style.display = "none";}
-			if($('help_but')) {$('help_but').style.display = 'none';}	
+			if($('help_but')) {$('help_but').style.display = 'none';}
 			} else {
 			if(parent.frames["main"].$('has_button')) {parent.frames["main"].$('has_button').style.display = "block";}
-			if($('help_but')) {$('help_but').style.display = 'inline-block';}				
+			if($('help_but')) {$('help_but').style.display = 'inline-block';}
 			}
 		}
 	}
-	
+
 </SCRIPT>
 </HEAD>
 <?php
@@ -949,7 +953,7 @@ $gunload = "pageUnload();";
 		</DIV>
 		<BR /><BR />
 		<DIV id = "m_bottom" CLASS='even' style='height: 45%; overflow-y: auto; border: 2px inset #CECECE; padding: 10px;'>
-		</DIV><BR /><BR />		
+		</DIV><BR /><BR />
 	</DIV>
 	<DIV id="message_popup" class='even' style='position: fixed; top: 20%; left: 20%; width: 40%; max-height: 60%; z-index=9999; display: none; border: 2px outset #707070;'>
 		<BR />
@@ -968,6 +972,6 @@ $gunload = "pageUnload();";
 <DIV id='has_line' style='display: none;'>
 	<SPAN id='closeHas' class='plain' onMouseover='do_hover(this.id)' onMouseout='do_plain(this.id)' onClick="$('has_line').style.display = 'none';">Close</SPAN>
 	<SPAN id='has_wrapper'><marquee id='has_text' behavior="scroll" direction="left"></marquee></SPAN>
-<DIV>	
+<DIV>
 </BODY>
 </HTML>

@@ -1,4 +1,4 @@
-function isIE() { 
+function isIE() {
 	if((navigator.appName == 'Microsoft Internet Explorer') || ((navigator.appName == 'Netscape') && (new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})").exec(navigator.userAgent) != null))) {
 		return true;
 		} else {
@@ -30,7 +30,7 @@ var fac_icons=[];
 fac_icons[0] = 1;
 fac_icons[1] = 2;
 fac_icons[2] = 3;
-fac_icons[3] = 4;	
+fac_icons[3] = 4;
 fac_icons[4] = 5;
 fac_icons[5] = 6;
 fac_icons[6] = 7;
@@ -141,17 +141,17 @@ String.prototype.rpad = function(padString, length) {
 		str = str + padString;
 	return str;
 	}
-	
+
 String.prototype.trunc = String.prototype.trunc ||
       function(n){
           return this.length>n ? this.substr(0,n-1)+'&hellip;' : this;
       };
-	
-function pad(width, string, padding) { 
+
+function pad(width, string, padding) {
 	return (width <= string.length) ? string : pad(width, string + padding, padding)
 	}
-	
-function bothpad(width, string, padding) { 
+
+function bothpad(width, string, padding) {
 	return (width <= string.length) ? string : pad(width, padding + string + padding, padding)
 	}
 
@@ -175,7 +175,7 @@ function circleInside(point, center, radius) {
 		}
 	return theRet;
 	}
-	
+
 var check_initialized = false;
 var check_interval = null;
 
@@ -184,13 +184,13 @@ var na=document.getElementsByTagName("blink");
 
 function blink_continue() {
 	if (b_interval!=null) {return;}
-	b_interval = window.setInterval('blink_loop()', 500); 
+	b_interval = window.setInterval('blink_loop()', 500);
 	}			// end function blink_continue()
 
 function blink_loop() {
 	do_blink();
 	}			// end function blink_loop()
-	
+
 function bringPopupToFront(id) {
 	if(frontPopup == id) {return;}
 	var theText = "<DIV style='position: relative;'>";
@@ -200,7 +200,7 @@ function bringPopupToFront(id) {
 	infoPopups[id] = popup;
 	rmarkers[id].closePopup();
 	rmarkers[id].bindPopup(popup).openPopup();
-	frontPopup=id; 
+	frontPopup=id;
 	}
 
 function do_assignment_flags() {
@@ -220,7 +220,7 @@ function do_assignment_flags() {
 			}
 		}
 	}
-	
+
 function do_fs_assignment_flags() {
 	$('fs_show_asgn').onclick = function() {hide_fs_assignment_flags();};
 	$('fs_show_asgn').innerHTML = "Hide Assigned <IMG ID='fs_show_asgn_img' SRC='./images/hide_assigned_small.png' BORDER=0>";
@@ -238,7 +238,7 @@ function do_fs_assignment_flags() {
 			}
 		}
 	}
-	
+
 function do_indv_assignment_flag(id) {
 	var theText = "<DIV style='position: relative;'>";
 	theText += "<SPAN id='iw_" + id + "' class='plain' style='position: relative; top: 2px; right: 5px; display: inline; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='get_resppopup(" + id + ");'>...</SPAN>";
@@ -247,11 +247,11 @@ function do_indv_assignment_flag(id) {
 	infoPopups[id] = popup;
 	if(rmarkers[id] && rmarkers[id].latlng) {rmarkers[id].bindPopup(popup).openPopup();}
 	}
-	
+
 function isNumeric(n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
 	}
-	
+
 function hide_assignment_flags() {
 	$('show_asgn').onclick = function() {do_assignment_flags();};
 	$('show_asgn').innerHTML = "Show Assigned<BR /><IMG ID='show_asgn_img' SRC='./images/assigned.png' BORDER=0>";
@@ -261,7 +261,7 @@ function hide_assignment_flags() {
 			}
 		}
 	}
-	
+
 function hide_fs_assignment_flags() {
 	$('fs_show_asgn').onclick = function() {do_fs_assignment_flags();};
 	$('fs_show_asgn').innerHTML = "Show Assigned <IMG ID='fs_show_asgn_img' SRC='./images/assigned_small.png' BORDER=0>";
@@ -294,7 +294,7 @@ function change_status_sel(the_control, the_val, theIcon, the_unit) {
 	if(document.getElementById(the_control)) {
 		thelength = document.getElementById(the_control).options.length;
 		existing = document.getElementById(the_control).selectedIndex;
-		if(document.getElementById(the_control).options[existing].value) {		
+		if(document.getElementById(the_control).options[existing].value) {
 			oldval = document.getElementById(the_control).options[existing].value;
 			}
 		for(var f = 0; f < thelength; f++) {
@@ -309,7 +309,7 @@ function change_status_sel(the_control, the_val, theIcon, the_unit) {
 			}
 		}
 	}
-	
+
 function logged_in() {								// returns boolean
 	var temp = parent.frames["upper"].$("whom").innerHTML==NOT_STR;
 	return !temp;
@@ -317,53 +317,53 @@ function logged_in() {								// returns boolean
 
 function fence_get() {								// set cycle
 	if (check_interval!=null) {return;}			// ????
-	check_interval = window.setInterval('check_fence_loop()', 60000);		// 4/7/10 
+	check_interval = window.setInterval('check_fence_loop()', 60000);		// 4/7/10
 	}			// end function mu get()
 
 function fence_init() {								// get initial values from server -  4/7/10
 	if (check_initialized) { return; }
 	check_initialized = true;
 		ring_fence();
-		exclude();				
+		exclude();
 		fence_get();				// start loop
-	}				// end function mu_init()		
-	
-function check_fence_loop() {								// monitor for changes - 4/10/10, 6/10/11	
+	}				// end function mu_init()
+
+function check_fence_loop() {								// monitor for changes - 4/10/10, 6/10/11
 		ring_fence();
-		exclude();			
-	}			// end function do_loop()			
+		exclude();
+	}			// end function do_loop()
 
 function blink_text(id, bgcol, bgcol2, maincol, seccol) {	//	6/10/11
 	if(!document.getElementById(id)) {
 		alert("A unit in your group is\noutside a ring fence\nhowever you aren't currently\nviewing the group it is allocated to");
-	} else {	
+	} else {
 		function BlinkIt () {
 			if(document.getElementById (id)) {
 				var blink = document.getElementById (id);
-				var flag = id + "_flag";	
+				var flag = id + "_flag";
 				color = (color == maincol) ? seccol : maincol;
 				back = (back == bgcol) ? bgcol2 : bgcol;
 				blink.style.background = back;
 				blink.style.color = color;
 				document.getElementById(id).title = "Outside Ringfence";
-				if($(flag)) {	
+				if($(flag)) {
 					$(flag).innerHTML = "RF";
-					}							
+					}
 				}
 			}
 		window.setInterval (BlinkIt, 1000);
 		var color = maincol;
-		var back = bgcol;				
+		var back = bgcol;
 		}
 	}
-	
+
 function unblink_text(id) {	//	6/10/11
 	if(!document.getElementById(id)) {
-	} else {	
+	} else {
 	if(document.getElementById (id)) {
 		var unblink = document.getElementById (id);
 		unblink.style.background = "";
-		unblink.style.color = "";			
+		unblink.style.color = "";
 			}
 		}
 	}
@@ -371,7 +371,7 @@ function unblink_text(id) {	//	6/10/11
 function blink_text2(id, bgcol, bgcol2, maincol, seccol) {	//	6/10/11
 	if(!document.getElementById(id)) {
 		alert("A unit in your group is\ninside an exclusion zone\nhowever you aren't currently\nviewing the group it is allocated to");
-	} else {	
+	} else {
 		function BlinkIt () {
 			if(document.getElementById (id)) {
 				var blink = document.getElementById (id);
@@ -381,28 +381,28 @@ function blink_text2(id, bgcol, bgcol2, maincol, seccol) {	//	6/10/11
 				blink.style.background = back;
 				blink.style.color = color;
 				document.getElementById(id).title = "Inside Exclusion Zone";
-				if($(flag)) {	
+				if($(flag)) {
 					$(flag).innerHTML = "EZ";
-					}				
+					}
 				}
 			}
 		window.setInterval (BlinkIt, 1000);
 		var color = maincol;
-		var back = bgcol;				
+		var back = bgcol;
 		}
-	}			
-	
+	}
+
 function unblink_text2(id) {	//	6/10/11
 	if(!document.getElementById(id)) {
-	} else {	
+	} else {
 	if(document.getElementById (id)) {
 		var unblink = document.getElementById (id);
 		unblink.style.background = "";
-		unblink.style.color = "";			
+		unblink.style.color = "";
 			}
 		}
-	}	
-	
+	}
+
 //	Tickets show / hide by Priority functions
 
 function set_initial_pri_disp() {
@@ -436,10 +436,10 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
-					tmarkers[i].addTo(map);	
+					tmarkers[i].addTo(map);
 					}
 				if ((tmarkers[i].id != priority) && (tmarkers[i].category == category)) {
-					map.removeLayer(tmarkers[i]);		
+					map.removeLayer(tmarkers[i]);
 					}
 
 				}		// end if (tmarkers[i])
@@ -456,10 +456,10 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
-					tmarkers[i].addTo(map);		
+					tmarkers[i].addTo(map);
 					}
 				if ((tmarkers[i].id != priority) && (tmarkers[i].category == category)) {
-					map.removeLayer(tmarkers[i]);		
+					map.removeLayer(tmarkers[i]);
 					}
 
 				}		// end if (tmarkers[i])
@@ -476,7 +476,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if ((tmarkers[i].id == priority) && (tmarkers[i].category == category)) {
-					tmarkers[i].addTo(map);		
+					tmarkers[i].addTo(map);
 					}
 				if ((tmarkers[i].id != priority) && (tmarkers[i].category == category)) {
 					map.removeLayer(tmarkers[i]);
@@ -496,7 +496,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if (tmarkers[i].category == category) {
-					tmarkers[i].addTo(map);		
+					tmarkers[i].addTo(map);
 					}
 				}		// end if (tmarkers[i])
 			} 	// end for ()
@@ -512,7 +512,7 @@ function hideGroup(color, category) {			// 8/7/09 Revised function to correct in
 		for (var i = 1; i < tmarkers.length; i++) {
 			if (tmarkers[i]) {
 				if (tmarkers[i].category == category) {
-					map.removeLayer(tmarkers[i]);	
+					map.removeLayer(tmarkers[i]);
 					}
 				}		// end if (tmarkers[i])
 			} 	// end for ()
@@ -537,8 +537,8 @@ function set_pri_chkbox(control) {
 
 //	End of Tickets show / hide by Priority functions
 
-// 	Units show / hide functions				
-	
+// 	Units show / hide functions
+
 function set_categories() {			//	12/03/10 - checks current session values and sets checkboxes and view states for hide and show.
 	if(!$('RESP_ALL')) {return;}
 	var resptbl = document.getElementById('respondertable');
@@ -560,7 +560,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 	if(hidden != 0) {
 		$('RESP_ALL').style.display = 'inline';
 		$('RESP_ALL_BUTTON').style.display = 'inline';
-		$('RESP_ALL').checked = false;	
+		$('RESP_ALL').checked = false;
 		} else {
 		$('RESP_ALL').style.display = 'none';
 		$('RESP_ALL_BUTTON').style.display = 'none';
@@ -569,7 +569,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 	if((shown != 0) && (number_of_units != 0)) {
 		$('RESP_NONE').style.display = 'inline';
 		$('RESP_NONE_BUTTON').style.display = 'inline';
-		$('RESP_NONE').checked = false;	
+		$('RESP_NONE').checked = false;
 		} else {
 		$('RESP_NONE').style.display = 'none';
 		$('RESP_NONE_BUTTON').style.display = 'none';
@@ -580,7 +580,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 		if(cat_sess_stat[i]=="s") {
 			for (var j = 1; j < rmarkers.length; j++) {
 				if ((rmarkers[j]) && (rmarkers[j].category) && (rmarkers[j].category == catname)) {
-					rmarkers[j].addTo(map);		
+					rmarkers[j].addTo(map);
 					var catid = catname + j;
 					if($(catid)) {
 						$(catid).style.display = "";
@@ -599,7 +599,7 @@ function set_categories() {			//	12/03/10 - checks current session values and se
 					}
 				}
 			if($(catname)) {$(catname).checked = false;}
-			}				
+			}
 		}
 	if(typeof(resptbl) !== 'undefined') {
 		if($('screenname').innerHTML == "responders") {responderlist2_setwidths();} else if($('screenname').innerHTML == "situation") {responderlist_setwidths();}
@@ -630,7 +630,7 @@ function set_chkbox(control) {
 		}
 	do_view_cats();
 	}
-	
+
 function set_buttons(theType) {
 	if(theType == "category") {
 		for (var i = 0; i < curr_cats.length; i++) {
@@ -645,7 +645,7 @@ function set_buttons(theType) {
 		} else if (theType == "all") {
 		if($('RESP_ALL').checked == true) {
 			for (var i = 0; i < curr_cats.length; i++) {
-				var category = curr_cats[i];				
+				var category = curr_cats[i];
 				$(category).checked = true;
 				}
 			return true;
@@ -653,7 +653,7 @@ function set_buttons(theType) {
 		} else if (theType == "none") {
 		if($('RESP_NONE').checked == true) {
 			for (var i = 0; i < curr_cats.length; i++) {
-				var category = curr_cats[i];				
+				var category = curr_cats[i];
 				$(category).checked = false;
 				}
 			return true;
@@ -668,7 +668,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 			var params = "f_n=show_hide_" +URLEncode(category)+ "&v_n=s&sess_id=" + sess_id;
 			var url = "persist2.php";	//	3/15/11
 			sendRequest (url, gb_handleResult, params);
-			$(category).checked = true;				
+			$(category).checked = true;
 			for (var j = 1; j < rmarkers.length; j++) {
 				var catid = category + j;
 				if($(catid)) {
@@ -679,17 +679,17 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 			}
 		$('RESP_ALL').checked = false;
 		$('RESP_ALL').style.display = 'none';
-		$('RESP_ALL_BUTTON').style.display = 'none';				
+		$('RESP_ALL_BUTTON').style.display = 'none';
 		$('RESP_NONE').style.display = 'inline';
-		$('RESP_NONE_BUTTON').style.display = 'inline';				
+		$('RESP_NONE_BUTTON').style.display = 'inline';
 		$('go_button').style.display = 'none';
-		$('can_button').style.display = 'none';				
+		$('can_button').style.display = 'none';
 		} else if ($('RESP_NONE').checked == true) {
 		for (var i = 0; i < curr_cats.length; i++) {
 			var category = curr_cats[i];
 			var params = "f_n=show_hide_" +URLEncode(category)+ "&v_n=h&sess_id=" + sess_id;
 			var url = "persist2.php";	//	3/15/11
-			sendRequest (url, gb_handleResult, params);	
+			sendRequest (url, gb_handleResult, params);
 			$(category).checked = false;
 			for (var j = 1; j < rmarkers.length; j++) {
 				var catid = category + j;
@@ -701,9 +701,9 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 			}
 		$('RESP_NONE').checked = false;
 		$('RESP_ALL').style.display = 'inline';
-		$('RESP_ALL_BUTTON').style.display = 'inline';				
+		$('RESP_ALL_BUTTON').style.display = 'inline';
 		$('RESP_NONE').style.display = 'none';
-		$('RESP_NONE_BUTTON').style.display = 'none';					
+		$('RESP_NONE_BUTTON').style.display = 'none';
 		$('go_button').style.display = 'none';
 		$('can_button').style.display = 'none';
 		} else {
@@ -716,7 +716,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 				var params = "f_n=show_hide_" +URLEncode(category)+ "&v_n=s&sess_id=" + sess_id;
 				var url = "persist2.php";	//	3/15/11
 				sendRequest (url, gb_handleResult, params);
-				$(category).checked = true;			
+				$(category).checked = true;
 				for (var j = 1; j < rmarkers.length; j++) {
 					var catid = category + j;
 					if($(catid)) {
@@ -727,7 +727,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 				}
 			}
 		for (var i = 0; i < curr_cats.length; i++) {
-			var category = curr_cats[i];				
+			var category = curr_cats[i];
 			if ($(category).checked == false) {
 				y++;
 				var params = "f_n=show_hide_" +URLEncode(category)+ "&v_n=h&sess_id=" + sess_id;
@@ -744,7 +744,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 						map.removeLayer(rmarkers[j]);
 						}
 					}
-				}	
+				}
 			}
 		}
 		$('go_button').style.display = 'none';
@@ -776,7 +776,7 @@ function do_go_button() {							// 12/03/10	Show Hide categories
 function gb_handleResult(req) {							// 12/03/10	The persist callback function
 	}
 
-// Facilities show / hide functions		
+// Facilities show / hide functions
 
 function set_fac_categories() {
 	var factbl = document.getElementById('facilitiestable');
@@ -794,8 +794,8 @@ function set_fac_categories() {
 	if(fac_hidden!=0) {
 		$('fac_ALL').style.display = '';
 		$('fac_ALL_BUTTON').style.display = '';
-		$('fac_ALL').checked = false;	
-		} else {			
+		$('fac_ALL').checked = false;
+		} else {
 		$('fac_ALL').style.display = 'none';
 		$('fac_ALL_BUTTON').style.display = 'none';
 		$('fac_ALL').checked = false;
@@ -814,7 +814,7 @@ function set_fac_categories() {
 		if(fac_cat_sess_stat[i]=="s") {
 			for (var j = 0; j < fmarkers.length; j++) {
 				if((fmarkers[j]) && (fmarkers[j].category == fac_catname)) {
-					fmarkers[j].addTo(map);		
+					fmarkers[j].addTo(map);
 					var fac_catid = fac_catname + j;
 					if($(fac_catid)) {
 						$(fac_catid).style.display = "";
@@ -825,7 +825,7 @@ function set_fac_categories() {
 			} else {
 			for (var j = 0; j < fmarkers.length; j++) {
 				if((fmarkers[j]) && (fmarkers[j].category == fac_catname)) {
-					map.removeLayer(fmarkers[j]);		
+					map.removeLayer(fmarkers[j]);
 					var fac_catid = fac_catname + j;
 					if($(fac_catid)) {
 						$(fac_catid).style.display = "none";
@@ -833,7 +833,7 @@ function set_fac_categories() {
 					}
 				}
 			$(fac_catname).checked = false;
-			}				
+			}
 		}
 	if(factbl) {
 		facilitylist_setwidths();
@@ -864,7 +864,7 @@ function set_fac_chkbox(control) {
 		}
 	do_view_fac_cats();
 	}
-	
+
 function set_fac_buttons(theType) {
 	if(theType == "category") {
 		for (var i = 0; i < fac_curr_cats.length; i++) {
@@ -879,7 +879,7 @@ function set_fac_buttons(theType) {
 		} else if (theType == "all") {
 		if($('fac_ALL').checked == true) {
 			for (var i = 0; i < fac_curr_cats.length; i++) {
-				var category = fac_curr_cats[i];				
+				var category = fac_curr_cats[i];
 				$(category).checked = true;
 				}
 			return true;
@@ -887,7 +887,7 @@ function set_fac_buttons(theType) {
 		} else if (theType == "none") {
 		if($('fac_NONE').checked == true) {
 			for (var i = 0; i < fac_curr_cats.length; i++) {
-				var category = fac_curr_cats[i];				
+				var category = fac_curr_cats[i];
 				$(category).checked = false;
 				}
 			return true;
@@ -903,22 +903,22 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 			var params = "f_n=show_hide_fac_" +URLEncode(fac_category)+ "&v_n=s&sess_id=" + sess_id;
 			var url = "persist2.php";	//	3/15/11
 			sendRequest (url, gb_handleResult, params);
-			$(fac_category).checked = true;		
+			$(fac_category).checked = true;
 			for (var j = 0; j < fmarkers.length; j++) {
 				var fac_catid = fac_category + j;
 				if($(fac_catid)) {
 					$(fac_catid).style.display = "";
 					}
-				if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
-					fmarkers[j].addTo(map);		
+				if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {
+					fmarkers[j].addTo(map);
 					}
 				}
 			}
 			$('fac_ALL').checked = false;
 			$('fac_ALL').style.display = 'none';
-			$('fac_ALL_BUTTON').style.display = 'none';				
+			$('fac_ALL_BUTTON').style.display = 'none';
 			$('fac_NONE').style.display = '';
-			$('fac_NONE_BUTTON').style.display = '';				
+			$('fac_NONE_BUTTON').style.display = '';
 			$('fac_go_button').style.display = 'none';
 			$('fac_can_button').style.display = 'none';
 
@@ -927,23 +927,23 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 			var fac_category = fac_curr_cats[i];
 			var params = "f_n=show_hide_fac_" +URLEncode(fac_category)+ "&v_n=h&sess_id=" + sess_id;
 			var url = "persist2.php";	//	3/15/11
-			sendRequest (url, gb_handleResult, params);	
-			$(fac_category).checked = false;				
+			sendRequest (url, gb_handleResult, params);
+			$(fac_category).checked = false;
 			for (var j = 0; j < fmarkers.length; j++) {
 				var fac_catid = fac_category + j;
 				if($(fac_catid)) {
 					$(fac_catid).style.display = "none";
 				}
-				if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
-					map.removeLayer(fmarkers[j]);		
+				if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {
+					map.removeLayer(fmarkers[j]);
 					}
 				}
 			}
 			$('fac_NONE').checked = false;
 			$('fac_ALL').style.display = '';
-			$('fac_ALL_BUTTON').style.display = '';				
+			$('fac_ALL_BUTTON').style.display = '';
 			$('fac_NONE').style.display = 'none';
-			$('fac_NONE_BUTTON').style.display = 'none';					
+			$('fac_NONE_BUTTON').style.display = 'none';
 			$('fac_go_button').style.display = 'none';
 			$('fac_can_button').style.display = 'none';
 		} else {
@@ -956,20 +956,20 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 				var params = "f_n=show_hide_fac_" +URLEncode(fac_category)+ "&v_n=s&sess_id=" + sess_id;
 				var url = "persist2.php";	//	3/15/11
 				sendRequest (url, gb_handleResult, params);
-				$(fac_category).checked = true;			
+				$(fac_category).checked = true;
 				for (var j = 0; j < fmarkers.length; j++) {
 					var fac_catid = fac_category + j;
 					if($(fac_catid)) {
 						$(fac_catid).style.display = "";
 						}
-					if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
-						fmarkers[j].addTo(map);		
+					if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {
+						fmarkers[j].addTo(map);
 						}
 					}
 				}
 			}
 		for (var i = 0; i < fac_curr_cats.length; i++) {
-			var fac_category = fac_curr_cats[i];				
+			var fac_category = fac_curr_cats[i];
 			if ($(fac_category).checked == false) {
 				y++;
 				var params = "f_n=show_hide_fac_" +URLEncode(fac_category)+ "&v_n=h&sess_id=" + sess_id;
@@ -983,11 +983,11 @@ function do_go_facilities_button() {							// 12/03/10	Show Hide categories
 					if($(fac_catid)) {
 						$(fac_catid).style.display = "none";
 						}
-					if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {			
-						map.removeLayer(fmarkers[j]);		
+					if ((fmarkers[j]) && (fmarkers[j].category) && (fmarkers[j].category == fac_category)) {
+						map.removeLayer(fmarkers[j]);
 						}
 					}
-				}	
+				}
 			}
 		}
 	$('fac_go_button').style.display = 'none';
@@ -1053,15 +1053,15 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 			var params = "f_n=show_hide_bnds_" +URLEncode(bnds)+ "&v_n=s&sess_id=" + sess_id;
 			var url = "persist2.php";	//	3/15/11
 			sendRequest (url, gbb_handleResult, params);
-			$(bnds).checked = true;	
-			if(bound_names[key]) {				
-				boundary[key].addTo(map);		
+			$(bnds).checked = true;
+			if(bound_names[key]) {
+				boundary[key].addTo(map);
 				}
 			$('BND_ALL').checked = false;
 			$('BND_ALL').style.display = 'none';
-			$('BND_ALL_BUTTON').style.display = 'none';				
+			$('BND_ALL_BUTTON').style.display = 'none';
 			$('BND_NONE').style.display = '';
-			$('BND_NONE_BUTTON').style.display = '';				
+			$('BND_NONE_BUTTON').style.display = '';
 			$('bnd_go_button').style.display = 'none';
 			$('bnd_can_button').style.display = 'none';
 			}
@@ -1073,13 +1073,13 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 			sendRequest (url, gbb_handleResult, params);
 			$(bnds).checked = false;
 			if(bound_names[key]) {
-				map.removeLayer(boundary[key]);		
+				map.removeLayer(boundary[key]);
 				}
 			$('BND_NONE').checked = false;
 			$('BND_ALL').style.display = '';
-			$('BND_ALL_BUTTON').style.display = '';				
+			$('BND_ALL_BUTTON').style.display = '';
 			$('BND_NONE').style.display = 'none';
-			$('BND_NONE_BUTTON').style.display = 'none';					
+			$('BND_NONE_BUTTON').style.display = 'none';
 			$('bnd_go_button').style.display = 'none';
 			$('bnd_can_button').style.display = 'none';
 			}
@@ -1093,9 +1093,9 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 				var params = "f_n=show_hide_bnds_" +URLEncode(bnds)+ "&v_n=s&sess_id=" + sess_id;
 				var url = "persist2.php";	//	3/15/11
 				sendRequest (url, gbb_handleResult, params);
-				$(bnds).checked = true;		
-				if(bound_names[key]) {			
-					boundary[key].addTo(map);		
+				$(bnds).checked = true;
+				if(bound_names[key]) {
+					boundary[key].addTo(map);
 					}
 				}
 			}
@@ -1108,10 +1108,10 @@ function do_go_bnd_button() {							// 12/03/10	Show Hide categories
 				sendRequest (url, gbb_handleResult, params);
 				$(bnds).checked = false;
 				if(bound_names[key]) {
-					map.removeLayer(boundary[key]);	
+					map.removeLayer(boundary[key]);
 					}
 				}
-			}	
+			}
 		}
 	$('bnd_go_button').style.display = 'none';
 	$('bnd_can_button').style.display = 'none';
@@ -1145,13 +1145,13 @@ function set_bnds() {			//	12/03/10 - checks current session values and sets che
 				if(bnd_nm) {$(bnd_nm).checked = true;}
 				if(boundary[key]) {boundary[key].addTo(map);}
 				} else {
-				if(boundary[key]) {map.removeLayer(boundary[key]);}				
+				if(boundary[key]) {map.removeLayer(boundary[key]);}
 				if(bnd_nm) {$(bnd_nm).checked = false;}
 				}
 			if(bnd_hidden!=0) {
 				if($('BND_ALL')) { $('BND_ALL').style.display = '';}
 				if($('BND_ALL_BUTTON')) { $('BND_ALL_BUTTON').style.display = '';}
-				if($('BND_ALL')) { $('BND_ALL').checked = false;}	
+				if($('BND_ALL')) { $('BND_ALL').checked = false;}
 				} else {
 				if($('BND_ALL')) { $('BND_ALL').style.display = 'none';}
 				if($('BND_ALL_BUTTON')) { $('BND_ALL_BUTTON').style.display = 'none';}
@@ -1169,14 +1169,14 @@ function set_bnds() {			//	12/03/10 - checks current session values and sets che
 			}
 		}
 	}
-	
+
 function gbb_handleResult(req) {							// 12/03/10	The persist callback function
 	}
 
 // end of functions for showing and hiding boundaries
 var show_cont;
-var hide_cont;	
-var divarea;	
+var hide_cont;
+var divarea;
 
 function hideDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 	if (div_area == "buttons_sh") {
@@ -1206,9 +1206,9 @@ function hideDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 	if (div_area == "loglist") {
 		var controlarea = "loglist";
 		}
-	var divarea = div_area 
-	var hide_cont = hide_cont 
-	var show_cont = show_cont 
+	var divarea = div_area
+	var hide_cont = hide_cont
+	var show_cont = show_cont
 	if($(divarea)) {
 		$(divarea).style.display = 'none';
 		$(hide_cont).style.display = 'none';
@@ -1218,8 +1218,8 @@ function hideDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		var params = "f_n=" +controlarea+ "&v_n=h&sess_id=" + sess_id;
 		var url = "persist2.php";
 		sendRequest (url, gb_handleResult, params);
-		}		
-	} 
+		}
+	}
 
 function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 	if (div_area == "buttons_sh") {
@@ -1248,10 +1248,10 @@ function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		}
 	if (div_area == "loglist") {
 		var controlarea = "loglist";
-		}		
+		}
 	var divarea = div_area
-	var hide_cont = hide_cont 
-	var show_cont = show_cont 
+	var hide_cont = hide_cont
+	var show_cont = show_cont
 	if($(divarea)) {
 		$(divarea).style.display = '';
 		$(hide_cont).style.display = '';
@@ -1261,14 +1261,14 @@ function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 		var params = "f_n=" +controlarea+ "&v_n=s&sess_id=" + sess_id;
 		var url = "persist2.php";
 		sendRequest (url, gb_handleResult, params);
-		}		
-	} 
+		}
+	}
 
 function show_All() {						// 8/7/09 Revised function to correct incorrect display, 12/03/10, revised to remove units show and hide from this function
 	for (var i = 0; i < gmarkers.length; i++) {
 		if (gmarkers[i]) {
 			if (gmarkers[i].category == "Incident") {
-			gmarkers[i].addTo(map)		
+			gmarkers[i].addTo(map)
 			}
 			}
 		} 	// end for ()
@@ -1299,35 +1299,35 @@ function hide_btns_scheduled() {
 	$('btn_scheduled').style.display = 'none';
 	$('btn_can').style.display = 'none';
 	}
-	
+
 function do_print_ticket (id) {
 	var url = "print_screen.php?ticket_id="+ id;
 	var printWindow = window.open(url, 'printWindow', 'resizable=1, scrollbars, height=800, width=1000, left=100, top=100, screenX=100, screenY=100');
 	close_context();
 	printWindow.focus();
 	}
-	
+
 function do_add_note (id) {
 	var url = "add_note.php?ticket_id="+ id;
 	var noteWindow = window.open(url, 'noteWindow', 'resizable=1, scrollbars, height=240, width=600, left=100, top=100, screenX=100, screenY=100');
 	close_context();
 	noteWindow.focus();
 	}
-	
+
 function do_add_action (id) {
 	var url = "action_w.php?ticket_id="+ id;
 	var actionWindow = window.open(url, 'actWindow', 'resizable=1, scrollbars, height=800, width=800, left=100, top=100, screenX=100, screenY=100');
 	close_context();
 	actionWindow.focus();
 	}
-	
+
 function do_edit_action (id) {
 	var url = "action_w.php?id="+ id + "&action=edit";
 	var actionWindow = window.open(url, 'actWindow', 'resizable=1, scrollbars, height=800, width=800, left=100, top=100, screenX=100, screenY=100');
 	close_context();
 	actionWindow.focus();
 	}
-	
+
 function do_add_patient (id) {
 	var url = "patient_w.php?ticket_id="+ id;
 	var patientWindow = window.open(url, 'patWindow', 'resizable=1, scrollbars, height=240, width=600, left=100, top=100, screenX=100, screenY=100');
@@ -1360,7 +1360,7 @@ function do_track(callsign) {
 		newwindow.focus();
 		}
 	}				// end function
-	
+
 function do_tracks() {
 	if (parent.frames["upper"].logged_in()) {
 		try  {open_iw.close()} catch (e) {;}
@@ -1373,7 +1373,7 @@ function do_tracks() {
 			return;
 			}
 		newwindow.focus();
-		}	
+		}
 	}
 
 function checkAll() {	//	9/10/13
@@ -1389,7 +1389,7 @@ function uncheckAll() {	//	9/10/13
 		theField[i].checked = false ;
 		}
 	}
-	
+
 function to_str(instr) {			// 0-based conversion - 2/13/09
 	function ord( string ) {
 		return (string+'').charCodeAt(0);
@@ -1406,11 +1406,11 @@ function to_str(instr) {			// 0-based conversion - 2/13/09
 	var hop = ((instr - lop)==0)? "" : to_char(((instr - lop)/26)-1) ;		// high-order portion, a string
 	return hop+to_char(lop);
 	}
-	
+
 function loc_lkup(my_form) {
 	if(!$('map_canvas')) {return; }
 	var theLat = my_form.frm_lat.value;
-	var theLng = my_form.frm_lng.value;	
+	var theLng = my_form.frm_lng.value;
 	var theCity = my_form.frm_city.value.trim();
 	var theStreet = my_form.frm_street.value.trim();
 	if (theCity == "" || my_form.frm_state.value.trim() == "") {
@@ -1420,7 +1420,7 @@ function loc_lkup(my_form) {
 	if(theStreet != "" && theCity != "") {
 		var myAddress = theStreet + ", " + theCity + " " + my_form.frm_state.value.trim();
 		} else if(theStreet == "" && theCity != "") {
-		var myAddress = theCity + " " + my_form.frm_state.value.trim();			
+		var myAddress = theCity + " " + my_form.frm_state.value.trim();
 		}
 	control.options.geocoder.geocode(myAddress, function(results) {
 		if(!results[0]) {
@@ -1443,59 +1443,59 @@ function loc_lkup(my_form) {
 		if(my_form == document.add) { find_warnings(theLat, theLng);}
 		});
 	}				// end function loc_lkup()
-	
+
 function pt_to_map (my_form, lat, lng) {
 	if(!$('map_canvas')) {return; }
 	if(marker) {map.removeLayer(marker);}
 	if(myMarker) {map.removeLayer(myMarker);}
 	var theLat = parseFloat(lat).toFixed(6);
 	var theLng = parseFloat(lng).toFixed(6);
-	my_form.frm_lat.value=theLat;	
-	my_form.frm_lng.value=theLng;		
+	my_form.frm_lat.value=theLat;
+	my_form.frm_lng.value=theLng;
 	my_form.show_lat.value=do_lat_fmt(theLat);
-	my_form.show_lng.value=do_lng_fmt(theLng);	
+	my_form.show_lng.value=do_lng_fmt(theLng);
 	if(locale == 0) { my_form.frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
 	if(locale == 1) { my_form.frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
 	if(locale == 2) { my_form.frm_ngs.value=LLtoUTM(theLat, theLng, 5); }
 	if(document.wiz_add) {
 		document.wiz_add.wiz_show_lat.value=do_lat_fmt(theLat);
-		document.wiz_add.wiz_show_lng.value=do_lng_fmt(theLng);	
+		document.wiz_add.wiz_show_lng.value=do_lng_fmt(theLng);
 		if(locale == 0) { document.wiz_add.wiz_frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
 		if(locale == 1) { document.wiz_add.wiz_frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
-		if(locale == 2) { document.wiz_add.wiz_frm_ngs.value=LLtoUTM(theLat, theLng, 5); }		
+		if(locale == 2) { document.wiz_add.wiz_frm_ngs.value=LLtoUTM(theLat, theLng, 5); }
 		}
 	var iconurl = "./our_icons/yellow.png";
-	icon = new baseIcon({iconUrl: iconurl});	
+	icon = new baseIcon({iconUrl: iconurl});
 	marker = L.marker([theLat, theLng], {icon: icon});
 	marker.addTo(map);
 	map.setView([theLat, theLng], 16);
 	}				// end function pt_to_map ()
-	
+
 function dummy_pt_to_map(my_form) {
 	if(!$('map_canvas')) {return; }
 	if(marker) {map.removeLayer(marker);}
 	if(myMarker) {map.removeLayer(myMarker);}
 	var theLat = def_lat;
 	var theLng = def_lng;
-	my_form.frm_lat.value=theLat;	
-	my_form.frm_lng.value=theLng;		
+	my_form.frm_lat.value=theLat;
+	my_form.frm_lng.value=theLng;
 	my_form.show_lat.value=do_lat_fmt(theLat);
-	my_form.show_lng.value=do_lng_fmt(theLng);	
+	my_form.show_lng.value=do_lng_fmt(theLng);
 	if(locale == 0) { my_form.frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
 	if(locale == 1) { my_form.frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
 	if(locale == 2) { my_form.frm_ngs.value=LLtoUTM(theLat, theLng, 5); }
 	if(document.wiz_add) {
 		document.wiz_add.wiz_show_lat.value=do_lat_fmt(theLat);
-		document.wiz_add.wiz_show_lng.value=do_lng_fmt(theLng);	
+		document.wiz_add.wiz_show_lng.value=do_lng_fmt(theLng);
 		if(locale == 0) { document.wiz_add.wiz_frm_ngs.value=LLtoUSNG(theLat, theLng, 5); }
 		if(locale == 1) { document.wiz_add.wiz_frm_ngs.value=LLtoOSGB(theLat, theLng, 5); }
-		if(locale == 2) { document.wiz_add.wiz_frm_ngs.value=LLtoUTM(theLat, theLng, 5); }		
+		if(locale == 2) { document.wiz_add.wiz_frm_ngs.value=LLtoUTM(theLat, theLng, 5); }
 		}
 	var iconurl = "./our_icons/question1.png";
-	icon = new baseIcon({iconUrl: iconurl});	
+	icon = new baseIcon({iconUrl: iconurl});
 	marker = L.marker([def_lat, def_lng], {icon: icon});
 	marker.addTo(map);
-	map.setView([def_lat, def_lng], 16);	
+	map.setView([def_lat, def_lng], 16);
 	}
 
 function newGetAddress(latlng, currform) {
@@ -1503,7 +1503,7 @@ function newGetAddress(latlng, currform) {
 	control.options.geocoder.reverse(latlng, 20, function(results) {
 		if(!results) {alert("Try again"); return;}
 		if(window.geo_provider == 0){
-			var r1 = results[0]; 
+			var r1 = results[0];
 			var r = r1['properties']['address'];
 			if(r.neighbourhood && r.neighbourhood != "") {
 				r.city = r.neighbourhood;
@@ -1524,7 +1524,7 @@ function newGetAddress(latlng, currform) {
 					}
 				}
 			} else if(window.geo_provider == 2) {
-			var r = results[0]; 
+			var r = results[0];
 			if(!r.city) {
 				if(r.suburb && (r.suburb != "")) {
 				theCity = r.suburb;
@@ -1568,14 +1568,14 @@ function newGetAddress(latlng, currform) {
 						}
 					if(locale == 1) {state = "UK";}
 					document.res_add_Form.frm_state.value = state;
-					document.res_add_Form.frm_lat.value = lat; 
-					document.res_add_Form.frm_lng.value = lng; 
-					document.res_add_Form.show_lat.value = lat; 
+					document.res_add_Form.frm_lat.value = lat;
+					document.res_add_Form.frm_lng.value = lng;
+					document.res_add_Form.show_lat.value = lat;
 					document.res_add_Form.show_lng.value = lng;
 					if(locale == 0) { document.res_add_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(locale == 1) { document.res_add_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-					if(locale == 2) { document.res_add_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
-					document.res_add_Form.frm_street.focus();	
+					if(locale == 2) { document.res_add_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
+					document.res_add_Form.frm_street.focus();
 					break;
 
 				case "e":
@@ -1590,16 +1590,16 @@ function newGetAddress(latlng, currform) {
 						}
 					if(locale == 1) {state = "UK";}
 					document.res_edit_Form.frm_state.value = state;
-					document.res_edit_Form.frm_lat.value = lat; 
-					document.res_edit_Form.frm_lng.value = lng; 
-					document.res_edit_Form.show_lat.value = lat; 
+					document.res_edit_Form.frm_lat.value = lat;
+					document.res_edit_Form.frm_lng.value = lng;
+					document.res_edit_Form.show_lat.value = lat;
 					document.res_edit_Form.show_lng.value = lng;
 					if(locale == 0) { document.res_edit_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(locale == 1) { document.res_edit_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-					if(locale == 2) { document.res_edit_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
-					document.res_edit_Form.frm_street.focus();					
+					if(locale == 2) { document.res_edit_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
+					document.res_edit_Form.frm_street.focus();
 					break;
-					
+
 				case "wa":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
@@ -1612,14 +1612,14 @@ function newGetAddress(latlng, currform) {
 						}
 					if(locale == 1) {state = "UK";}
 					document.loc_add_Form.frm_state.value = state;
-					document.loc_add_Form.frm_lat.value = lat; 
-					document.loc_add_Form.frm_lng.value = lng; 
-					document.loc_add_Form.show_lat.value = lat; 
+					document.loc_add_Form.frm_lat.value = lat;
+					document.loc_add_Form.frm_lng.value = lng;
+					document.loc_add_Form.show_lat.value = lat;
 					document.loc_add_Form.show_lng.value = lng;
 					if(locale == 0) { document.loc_add_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(locale == 1) { document.loc_add_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-					if(locale == 2) { document.loc_add_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
-					document.loc_add_Form.frm_street.focus();	
+					if(locale == 2) { document.loc_add_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
+					document.loc_add_Form.frm_street.focus();
 					break;
 
 				case "we":
@@ -1634,16 +1634,16 @@ function newGetAddress(latlng, currform) {
 						}
 					if(locale == 1) {state = "UK";}
 					document.loc_edit_Form.frm_state.value = state;
-					document.loc_edit_Form.frm_lat.value = lat; 
-					document.loc_edit_Form.frm_lng.value = lng; 
-					document.loc_edit_Form.show_lat.value = lat; 
+					document.loc_edit_Form.frm_lat.value = lat;
+					document.loc_edit_Form.frm_lng.value = lng;
+					document.loc_edit_Form.show_lat.value = lat;
 					document.loc_edit_Form.show_lng.value = lng;
 					if(locale == 0) { document.loc_edit_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(locale == 1) { document.loc_edit_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-					if(locale == 2) { document.loc_edit_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }	
-					document.loc_edit_Form.frm_street.focus();					
+					if(locale == 2) { document.loc_edit_Form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
+					document.loc_edit_Form.frm_street.focus();
 					break;
-					
+
 				case "c":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
@@ -1654,13 +1654,13 @@ function newGetAddress(latlng, currform) {
 					var address1 = (number != "") ? number + " " : "";
 					var address2 = (street != "") ? street + ", " : "";
 					var address3 = (theCity != "") ? theCity + ", " : "";
-					var address4 = (state != "") ? state : "";					
+					var address4 = (state != "") ? state : "";
 					document.c.frm_address.value = address1 + address2 + address3 + address4;
-					document.c.frm_lat.value = lat; 
-					document.c.frm_lng.value = lng; 
+					document.c.frm_lat.value = lat;
+					document.c.frm_lng.value = lng;
 					document.c.frm_address.focus();
 					break;
-					
+
 				case "u":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
@@ -1671,13 +1671,13 @@ function newGetAddress(latlng, currform) {
 					var address1 = (number != "") ? number + " " : "";
 					var address2 = (street != "") ? street + ", " : "";
 					var address3 = (theCity != "") ? theCity + ", " : "";
-					var address4 = (state != "") ? state : "";					
+					var address4 = (state != "") ? state : "";
 					document.u.frm_address.value = address1 + address2 + address3 + address4;
-					document.u.frm_lat.value = lat; 
-					document.u.frm_lng.value = lng; 
+					document.u.frm_lat.value = lat;
+					document.u.frm_lng.value = lng;
 					document.u.frm_address.focus();
 					break;
-					
+
 				case "ni":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
@@ -1691,16 +1691,16 @@ function newGetAddress(latlng, currform) {
 					if(locale == 1) {state = "UK";}
 					if(r.properState) { state = r.properState;}
 					document.add.frm_state.value = state;
-					document.add.frm_lat.value = lat; 
-					document.add.frm_lng.value = lng; 
-					document.add.show_lat.value = lat; 
-					document.add.show_lng.value = lng; 
+					document.add.frm_lat.value = lat;
+					document.add.frm_lng.value = lng;
+					document.add.show_lat.value = lat;
+					document.add.show_lng.value = lng;
 					document.add.frm_street.focus();
 					if(locale == 0) { document.add.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(locale == 1) { document.add.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 					if(locale == 2) { document.add.frm_ngs.value=LLtoUTM(lat, lng, 5); }
 					break;
-					
+
 				case "ei":
 					var street = (r.road) ? r.road : "";
 					var number = (r.house_number) ? r.house_number : "";
@@ -1713,16 +1713,16 @@ function newGetAddress(latlng, currform) {
 						}
 					if(locale == 1) {state = "UK";}
 					document.edit.frm_state.value = state;
-					document.edit.frm_lat.value = lat; 
-					document.edit.frm_lng.value = lng; 
-					document.edit.show_lat.value = lat; 
-					document.edit.show_lng.value = lng; 
+					document.edit.frm_lat.value = lat;
+					document.edit.frm_lng.value = lng;
+					document.edit.show_lat.value = lat;
+					document.edit.show_lng.value = lng;
 					document.edit.frm_street.focus();
 					if(locale == 0) { document.edit.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(locale == 1) { document.edit.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-					if(locale == 2) { document.edit.frm_ngs.value=LLtoUTM(lat, lng, 5); }							
+					if(locale == 2) { document.edit.frm_ngs.value=LLtoUTM(lat, lng, 5); }
 					break;
-					
+
 				default:
 					alert ("596: error");
 				}		// end switch()
@@ -1738,7 +1738,7 @@ function newGetAddress(latlng, currform) {
 			}
 		});
 	}
-	
+
 function getTheAddress(latlng) {
 	control.options.geocoder.reverse(latlng, 20, function(results) {
 		var r = results[0];
@@ -1774,10 +1774,10 @@ function getTheAddress(latlng) {
 			document.add.frm_city.value = theCity;
 			var theState = (state != "") ? states_arr[state] : "";
 			document.add.frm_state.value = theState;
-			document.add.frm_lat.value = lat; 
-			document.add.frm_lng.value = lng; 
-			document.add.show_lat.value = lat; 
-			document.add.show_lng.value = lng; 
+			document.add.frm_lat.value = lat;
+			document.add.frm_lng.value = lng;
+			document.add.show_lat.value = lat;
+			document.add.show_lng.value = lng;
 			document.add.frm_street.focus();
 			if(locale == 0) { document.add.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 			if(locale == 1) { document.add.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
@@ -1791,8 +1791,8 @@ function do_usng_conv(theForm){						// usng to LL array			- 12/4/08
 	USNGtoLL(theForm.frm_ngs.value, tolatlng);
 	var point = new L.LatLng(tolatlng[0].toFixed(2) ,tolatlng[1].toFixed(2));
 	map.setCenter(point, def_zoom);
-	var iconurl = "./markers/crosshair.png";		
-	var icon = new baseIcon({iconUrl: iconurl});	
+	var iconurl = "./markers/crosshair.png";
+	var icon = new baseIcon({iconUrl: iconurl});
 	var marker = L.marker(point, {icon: icon});
 	theForm.frm_lat.value = point.lat(); theForm.frm_lng.value = point.lng();
 	do_lat (point.lat());
@@ -1805,8 +1805,8 @@ function do_unlock_pos(theForm) {				// 12/20/08
 	theForm.frm_ngs.disabled=false;
 	$("lock_p").style.visibility = "hidden";
 	if($("usng_link")) {$("usng_link").style.textDecoration = "underline";}
-	if($("osgb_link")) {$("osgb_link").style.textDecoration = "underline";}	
-	if($("utm_link")) {$("utm_link").style.textDecoration = "underline";}			
+	if($("osgb_link")) {$("osgb_link").style.textDecoration = "underline";}
+	if($("utm_link")) {$("utm_link").style.textDecoration = "underline";}
 	}
 
 function do_coords(inlat, inlng) {
@@ -1875,7 +1875,7 @@ function do_lng_fmt(inlng) {
 	default:
 		alert ("invalid LL format selector");
 		}
-	}	
+	}
 
 function test(location) {
 	alert(location);
@@ -1883,27 +1883,27 @@ function test(location) {
 
 function createcrossMarker(lat, lon) {
 	if((isFloat(lat)) && (isFloat(lon))) {
-		var iconurl = "./markers/crosshair.png";		
-		icon = new basecrossIcon({iconUrl: iconurl});	
+		var iconurl = "./markers/crosshair.png";
+		icon = new basecrossIcon({iconUrl: iconurl});
 		marker = L.marker([lat, lon], {icon: icon});
 		marker.addTo(map);
 		}
 	}
-	
+
 function createstdMarker(lat, lon) {
 	if(marker) { map.removeLayer(marker); }
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconurl = "./our_icons/yellow.png";
-		icon = new baseIcon({iconUrl: iconurl});	
+		icon = new baseIcon({iconUrl: iconurl});
 		marker = L.marker([lat, lon], {icon: icon});
 		marker.addTo(map);
 		}
 	}
-	
+
 function createmmMarker(lat, lon) {
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconurl = "./our_icons/yellow.png";
-		icon = new baseIcon({iconUrl: iconurl});	
+		icon = new baseIcon({iconUrl: iconurl});
 		marker = L.marker([lat, lon], {icon: icon});
 		marker.addTo(minimap);
 		}
@@ -1912,8 +1912,8 @@ function createmmMarker(lat, lon) {
 function createMarker(lat, lon, info, color, stat, theid, sym, category, region, tip) {
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconStr = sym;
-		var iconurl = "./our_icons/gen_icon.php?blank=" + escape(window.icons[color]) + "&text=" + iconStr;	
-		icon = new baseIcon({iconUrl: iconurl});	
+		var iconurl = "./our_icons/gen_icon.php?blank=" + escape(window.icons[color]) + "&text=" + iconStr;
+		icon = new baseIcon({iconUrl: iconurl});
 		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.inczindexno, riseOnHover: true, riseOffset: 30000});
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
@@ -1922,14 +1922,14 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 			if($('screenname').innerHTML == "fullscreen") {
 				get_fs_tickpopup(theid);
 				} else if($('screenname').innerHTML == "popup") {
-				get_fs_tickpopup(theid);	
+				get_fs_tickpopup(theid);
 				} else {
 				get_tickpopup(theid);
 				}
-			});	
+			});
 		marker.id = color;
 		marker.category = category;
-		marker.region = region;		
+		marker.region = region;
 		marker.stat = stat;
 		tmarkers[theid] = marker;
 		var point = new L.LatLng(lat, lon);
@@ -1942,7 +1942,7 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 				bounds.extend(point);
 				}
 			} else {
-			bounds.extend(point);				
+			bounds.extend(point);
 			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
@@ -2001,7 +2001,7 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 			});
 		marker.id = color;
 		marker.category = category;
-		marker.region = region;		
+		marker.region = region;
 		marker.stat = stat;
 		rmarkers[theid] = marker;
 		var point = new L.LatLng(lat, lon);
@@ -2015,7 +2015,7 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 				bounds.extend(point);
 				}
 			} else {
-			bounds.extend(point);				
+			bounds.extend(point);
 			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
@@ -2032,7 +2032,7 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 				map.fitBounds(bounds);
 				}
 			} else {
-			map.fitBounds(bounds);				
+			map.fitBounds(bounds);
 			}
 		window.unitzindexno++;
 		return marker;
@@ -2040,14 +2040,14 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 		return false;
 		}
 	}
-	
+
 function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category, region, tip) {
 	if((isFloat(lat)) && (isFloat(lon))) {
 		if(!sym) { sym = "UNK"; }
 		var origin = ((sym.length)>3)? (sym.length)-3: 0;
 		var iconStr = sym.substring(origin);
 		var iconurl = "./our_icons/gen_fac_icon.php?blank=" + color + "&text=" + iconStr;
-		icon = new baseFacIcon({iconUrl: iconurl});	
+		icon = new baseFacIcon({iconUrl: iconurl});
 		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.faczindexno, riseOnHover: true, riseOffset: 30000});
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
@@ -2058,14 +2058,14 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 				} else {
 				get_facspopup(theid);
 				}
-			});	
+			});
 		marker.id = color;
 		marker.category = category;
-		marker.region = region;	
+		marker.region = region;
 		marker.stat = stat;
 		fmarkers[theid] = marker;
 		var point = new L.LatLng(lat, lon);
-		fmarkers[theid].latlng = point;		
+		fmarkers[theid].latlng = point;
 		if(my_Local == "1" && (theBounds instanceof Array)) {
 			var southWest = L.latLng(theBounds[3], theBounds[0]);
 			var northEast = L.latLng(theBounds[1], theBounds[2]);
@@ -2074,7 +2074,7 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 				bounds.extend(point);
 				}
 			} else {
-			bounds.extend(point);				
+			bounds.extend(point);
 			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
@@ -2091,7 +2091,7 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 				map.fitBounds(bounds);
 				}
 			} else {
-			map.fitBounds(bounds);				
+			map.fitBounds(bounds);
 			}
 		window.faczindexno++;
 		return marker;
@@ -2099,23 +2099,23 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 		return false;
 		}
 	}
-	
+
 function createWlocationMarker(lat, lon, info, color, stat, theid, sym, category, region, tip) {
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconStr = sym;
 		var iconurl = "./our_icons/gen_fac_icon.php?blank=" + escape(window.wl_icons[color]) + "&text=" + iconStr;
-		icon = new baseFacIcon({iconUrl: iconurl});	
+		icon = new baseFacIcon({iconUrl: iconurl});
 		var marker = L.marker([lat, lon], {icon: icon, title: tip}).bindPopup(info).openPopup();
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
 		marker.id = color;
 		marker.category = category;
-		marker.region = region;	
+		marker.region = region;
 		marker.stat = stat;
 		wlmarkers[theid] = marker;
 		var point = new L.LatLng(lat, lon);
-		wlmarkers[theid].latlng = point;			
+		wlmarkers[theid].latlng = point;
 		if(my_Local == "1" && (theBounds instanceof Array)) {
 			var southWest = L.latLng(theBounds[3], theBounds[0]);
 			var northEast = L.latLng(theBounds[1], theBounds[2]);
@@ -2124,7 +2124,7 @@ function createWlocationMarker(lat, lon, info, color, stat, theid, sym, category
 				bounds.extend(point);
 				}
 			} else {
-			bounds.extend(point);				
+			bounds.extend(point);
 			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
@@ -2146,23 +2146,23 @@ function createWlocationMarker(lat, lon, info, color, stat, theid, sym, category
 		return false;
 		}
 	}
-	
+
 function createWlocationMarkerSit(lat, lon, info, color, stat, theid, sym, category, region, tip) {
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var iconStr = sym;
 		var iconurl = "./our_icons/info.png";
-		icon = new baseFacIcon({iconUrl: iconurl});	
+		icon = new baseFacIcon({iconUrl: iconurl});
 		var marker = L.marker([lat, lon], {icon: icon}).bindPopup(info).openPopup();
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
 		marker.id = color;
 		marker.category = category;
-		marker.region = region;	
+		marker.region = region;
 		marker.stat = stat;
 		wlmarkers[theid] = marker;
 		var point = new L.LatLng(lat, lon);
-		wlmarkers[theid].latlng = point;			
+		wlmarkers[theid].latlng = point;
 		if(my_Local == "1" && (theBounds instanceof Array)) {
 			var southWest = L.latLng(theBounds[3], theBounds[0]);
 			var northEast = L.latLng(theBounds[1], theBounds[2]);
@@ -2171,7 +2171,7 @@ function createWlocationMarkerSit(lat, lon, info, color, stat, theid, sym, categ
 				bounds.extend(point);
 				}
 			} else {
-			bounds.extend(point);				
+			bounds.extend(point);
 			}
 		if($('screenname')) {
 			var theScreen = $('screenname').innerHTML;
@@ -2193,18 +2193,18 @@ function createWlocationMarkerSit(lat, lon, info, color, stat, theid, sym, categ
 		return false;
 		}
 	}
-	
+
 function createConditionMarker(lat, lon, theid, info, category, image_file) {
 	if((isFloat(lat)) && (isFloat(lon))) {
-		var icon = new baseSqIcon({iconUrl: image_file});	
+		var icon = new baseSqIcon({iconUrl: image_file});
 		var cmarker = L.marker([lat, lon], {icon: icon}).bindPopup(info).openPopup();
 		cmarker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
-			
+
 		cmarkers[theid] = cmarker;
 		var point = new L.LatLng(lat, lon);
-		cmarkers[theid].latlng = point;					
+		cmarkers[theid].latlng = point;
 		cmarker.addTo(roadalerts);
 		return cmarker;
 		} else {
@@ -2239,11 +2239,11 @@ function createdummyMarker(lat, lon, info, icon, title){
 		return false;
 		}
 	}
-	
+
 function createdummyUnitMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		icon = new baseIcon({iconUrl: image_file});	
+		icon = new baseIcon({iconUrl: image_file});
 		var marker = L.marker([lat, lon], {icon: icon}).addTo(map);
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
@@ -2263,11 +2263,11 @@ function createdummyUnitMarker(lat, lon, info, icon, title, theid){
 		return false;
 		}
 	}
-	
+
 function createdummyIncMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		icon = new baseIcon({iconUrl: image_file});	
+		icon = new baseIcon({iconUrl: image_file});
 		var marker = L.marker([lat, lon], {icon: icon}).addTo(map);
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
@@ -2288,11 +2288,11 @@ function createdummyIncMarker(lat, lon, info, icon, title, theid){
 		return false;
 		}
 	}
-	
+
 function createdummyFacMarker(lat, lon, info, icon, title, theid){
 	if((isFloat(lat)) && (isFloat(lon))) {
 		var image_file = "./our_icons/question1.png";
-		icon = new baseIcon({iconUrl: image_file});	
+		icon = new baseIcon({iconUrl: image_file});
 		var marker = L.marker([lat, lon], {icon: icon}).addTo(map);
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
@@ -2318,7 +2318,7 @@ function destroy_unitmarkers() {
 		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 		}
 	}
-	
+
 function sendInfo(theText) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var theURL = base64_encode(theText);
@@ -2346,7 +2346,7 @@ function log_debug(theText) {
 		if(theResult == 99) {
 			alert("Can't create debug file - check file permissions on Tickets Directory");
 			} else if(theResult == 0){
-			alert("Can't write to debug file - check file permissions on Tickets Directory");	
+			alert("Can't write to debug file - check file permissions on Tickets Directory");
 			}
 		}
 	}
@@ -2398,7 +2398,7 @@ function get_tickpopup(id) {
 			}, 200)
 		}
 	}
-		
+
 function get_resppopup(id) {
 	if(typeof(rmarkers) !== 'undefined') {
 		for(var key in rmarkers) {
@@ -2449,7 +2449,7 @@ function get_resppopup(id) {
 			}, 200)
 		}
 	}
-		
+
 function get_facspopup(id) {
 	if(typeof(fmarkers) !== 'undefined') {
 		for(var key in fmarkers) {
@@ -2497,7 +2497,7 @@ function get_facspopup(id) {
 			}, 200)
 		}
 	}
-		
+
 function get_fs_tickpopup(id) {
 	for(var key in tmarkers) {
 		if (tmarkers[key] && typeof(tmarkers[key]._popup)=='undefined') {
@@ -2543,7 +2543,7 @@ function get_fs_tickpopup(id) {
 			}, 200)
 		}
 	}
-		
+
 function get_fs_resppopup(id) {
 	for(var key in tmarkers) {
 		if (tmarkers[key] && typeof(tmarkers[key]._popup)=='undefined') {
@@ -2585,7 +2585,7 @@ function get_fs_resppopup(id) {
 			}, 200)
 		}
 	}
-		
+
 function get_fs_facspopup(id) {
 	for(var key in tmarkers) {
 		if (tmarkers[key] && typeof(tmarkers[key]._popup)=='undefined') {
@@ -2627,7 +2627,7 @@ function get_fs_facspopup(id) {
 			}, 200)
 		}
 	}
-	
+
 function mytclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	if((quick) || (!tmarkers[id]) || (internet == 0)) {
 		document.tick_form.id.value=id;
@@ -2642,7 +2642,7 @@ function mytclick(id) {					// Responds to sidebar click, then triggers listener
 		}
 	return false;
 	}
-	
+
 function myrclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	if((quick) || (!rmarkers[id]) || (internet == 0)) {
 		document.resp_form.id.value=id;
@@ -2657,7 +2657,7 @@ function myrclick(id) {					// Responds to sidebar click, then triggers listener
 		document.resp_form.view.value='true';
 		document.resp_form.edit.value='false';
 		document.resp_form.action='units.php';
-		document.resp_form.submit();			
+		document.resp_form.submit();
 		} else {
 		if($('screenname').innerHTML == "fullscreen") {
 			get_fs_resppopup(id);
@@ -2667,7 +2667,7 @@ function myrclick(id) {					// Responds to sidebar click, then triggers listener
 		}
 	return false;
 	}
-	
+
 function myfclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	if((quick) || (typeof fmarkers == 'undefined') || (!fmarkers[id]) || (internet == 0)) {
 		document.fac_form.id.value=id;
@@ -2686,7 +2686,7 @@ function myfclick(id) {					// Responds to sidebar click, then triggers listener
 		document.fac_form.view.value='true';
 		document.fac_form.edit.value='false';
 		document.fac_form.action='units.php';
-		document.fac_form.submit();			
+		document.fac_form.submit();
 		} else {
 		if($('screenname').innerHTML == "fullscreen") {
 			get_fs_facspopup(id);
@@ -2696,7 +2696,7 @@ function myfclick(id) {					// Responds to sidebar click, then triggers listener
 		}
 	return false;
 	}
-	
+
 function mywlclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	if((quick) || (!wlmarkers[id]) || (internet == 0)) {
 		document.wl_form.id.value=id;
@@ -2707,20 +2707,20 @@ function mywlclick(id) {					// Responds to sidebar click, then triggers listene
 		}
 	return false;
 	}
-	
+
 function myrssclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	map.panTo(rss_markers[id].getLatLng());
 	rss_markers[id].openPopup();
 	return false;
 	}
-	
+
 function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_position) {
 	var protocol = (https == "1") ? "https://" : "http://";
 	if(locale == 1 && useOSMAP == 1) {	//	UK Use Ordnance Survey as Basemap
 		openspaceLayer = L.tileLayer.OSOpenSpace(openspace_api, {debug: true});
 		var grid = L.graticule({ interval: .5 })
 		roadalerts = new L.LayerGroup();
-		var baseLayerNamesArr = ["Ordnance Survey"];	
+		var baseLayerNamesArr = ["Ordnance Survey"];
 		var baseLayerVarArr = [openspaceLayer];
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
 		theLayer = baseLayerVarArr[a];
@@ -2735,7 +2735,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			});
 
 		if(window.geo_provider == 1) {
-			geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+			geocoder = L.Control.Geocoder.google(window.GoogleKey),
 			control = L.Control.geocoder({
 				showResultIcons: false,
 				collapsed: true,
@@ -2746,7 +2746,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				geocoder: geocoder
 				});
 			} else if(window.geo_provider == 2) {
-			geocoder = L.Control.Geocoder.bing(window.BingKey), 
+			geocoder = L.Control.Geocoder.bing(window.BingKey),
 			control = L.Control.geocoder({
 				showResultIcons: false,
 				collapsed: true,
@@ -2755,9 +2755,9 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				placeholder: 'Search...',
 				errorMessage: 'Nothing found.',
 				geocoder: geocoder
-				});				
+				});
 			} else {
-			geocoder = L.Control.Geocoder.nominatim(), 
+			geocoder = L.Control.Geocoder.nominatim(),
 			control = L.Control.geocoder({
 				showResultIcons: false,
 				collapsed: true,
@@ -2801,14 +2801,14 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			createstdMarker(lat, lng);
 			}
 		map.setView([lat, lng], initzoom);
-		bounds = map.getBounds();	
+		bounds = map.getBounds();
 		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
 			var layerName = eventLayer.name;
 			var layerName = layerName.replace(" ", "_");
 			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=" + sess_id;
 			var url = "persist3.php";
-			sendRequest (url, layer_handleResult, params);	
+			sendRequest (url, layer_handleResult, params);
 			});
 		} else {
 		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -2845,7 +2845,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			attribution: "",
 		});
 		var shade = L.tileLayer.wms(protocol + "ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
-			layers: "HR-NED.IMAGE", 
+			layers: "HR-NED.IMAGE",
 			format: 'image/png',
 			attribution: "",
 		});
@@ -2860,10 +2860,10 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			alert("please change your default map layer, Google is not available,\n Tickets has set the map to Open Street Maps.\n After changing you will need to log out and log in again.");
 			}
 		if(good_gmapsapi == 1) {
-			var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark"];	
+			var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark"];
 			var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark];
 			} else {
-			var baseLayerNamesArr = ["Open_Streetmaps","USGS_Topo","Dark"];	
+			var baseLayerNamesArr = ["Open_Streetmaps","USGS_Topo","Dark"];
 			var baseLayerVarArr = [OSM,usgstopo,dark];
 			}
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
@@ -2881,7 +2881,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				closePopupOnClick: false,
 				}
 				)};
-				geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+				geocoder = L.Control.Geocoder.google(window.GoogleKey),
 				control = L.Control.geocoder({
 					showResultIcons: false,
 					collapsed: true,
@@ -2908,7 +2908,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				closePopupOnClick: false,
 				}
 				)};
-				geocoder = L.Control.Geocoder.bing(window.BingKey), 
+				geocoder = L.Control.Geocoder.bing(window.BingKey),
 				control = L.Control.geocoder({
 					showResultIcons: false,
 					collapsed: true,
@@ -2920,7 +2920,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 					});
 				if(!isIE()) {
 					control.addTo(map);
-					}			
+					}
 			} else {
 			if(!map) {map = L.map('map_canvas',
 				{
@@ -2932,7 +2932,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				closePopupOnClick: false,
 				}
 				)};
-				geocoder = L.Control.Geocoder.nominatim(), 
+				geocoder = L.Control.Geocoder.nominatim(),
 				control = L.Control.geocoder({
 					showResultIcons: false,
 					collapsed: true,
@@ -2989,7 +2989,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				}
 			var overlays = {};
 			}
-			
+
 			if(control_position == "tl") {
 				ctrlPos = 'topleft';
 				} else if(control_position == "tr") {
@@ -3001,7 +3001,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 				} else {
 				ctrlPos = 'none';
 				}
-			
+
 		if(ctrlPos != "none") {
 			layercontrol = L.control.layers(baseLayers, overlays, {position: ctrlPos}).addTo(map);
 			map.addLayer(roadalerts);
@@ -3019,27 +3019,27 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			var layerName = eventLayer.name;
 			var layerName = layerName.replace(" ", "_");
 			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=" + sess_id;
-			var url = "persist3.php";	//	3/15/11	
-			sendRequest (url, layer_handleResult, params);	
+			var url = "persist3.php";	//	3/15/11
+			sendRequest (url, layer_handleResult, params);
 			});
 		}
 	map.setView([lat, lng], initzoom);
-	bounds = map.getBounds();	
+	bounds = map.getBounds();
 	zoom = map.getZoom();
 	return map;
 	}
-	
+
 function layer_handleResult(req) {
 //	alert(req.responseText);
 	}
-	
+
 function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_position) {
 	var protocol = (https == "1") ? "https://" : "http://";
 	if(locale == 1 && useOSMAP == 1) {	//	UK Use Ordnance Survey as Basemap
 		openspaceLayer = L.tileLayer.OSOpenSpace(openspace_api, {debug: true});
 		var grid = L.graticule({ interval: .5 })
 		roadalerts = new L.LayerGroup();
-		var baseLayerNamesArr = ["Ordnance Survey"];	
+		var baseLayerNamesArr = ["Ordnance Survey"];
 		var baseLayerVarArr = [openspaceLayer];
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
 		theLayer = baseLayerVarArr[a];
@@ -3054,7 +3054,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			});
 
 		if(window.geo_provider == 1) {
-			geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+			geocoder = L.Control.Geocoder.google(window.GoogleKey),
 			control = L.Control.geocoder({
 				showResultIcons: false,
 				collapsed: true,
@@ -3065,7 +3065,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 				geocoder: geocoder
 				});
 			} else if(window.geo_provider == 2) {
-			geocoder = L.Control.Geocoder.bing(window.BingKey), 
+			geocoder = L.Control.Geocoder.bing(window.BingKey),
 			control = L.Control.geocoder({
 				showResultIcons: false,
 				collapsed: true,
@@ -3074,9 +3074,9 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 				placeholder: 'Search...',
 				errorMessage: 'Nothing found.',
 				geocoder: geocoder
-				});				
+				});
 			} else {
-			geocoder = L.Control.Geocoder.nominatim(), 
+			geocoder = L.Control.Geocoder.nominatim(),
 			control = L.Control.geocoder({
 				showResultIcons: false,
 				collapsed: true,
@@ -3119,14 +3119,14 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			createstdMarker(lat, lng);
 			}
 		map.setView([lat, lng], theZoom);
-		bounds = map.getBounds();	
+		bounds = map.getBounds();
 		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
 			var layerName = eventLayer.name;
 			var layerName = layerName.replace(" ", "_");
 			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=" + sess_id;
-			var url = "persist3.php";	//	3/15/11	
-			sendRequest (url, layer_handleResult, params);	
+			var url = "persist3.php";	//	3/15/11
+			sendRequest (url, layer_handleResult, params);
 			});
 		} else {
 		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -3162,7 +3162,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			attribution: "",
 		});
 		var shade = L.tileLayer.wms(protocol + "ims.cr.usgs.gov:80/servlet19/com.esri.wms.Esrimap/USGS_EDC_Elev_NED_3", {
-			layers: "HR-NED.IMAGE", 
+			layers: "HR-NED.IMAGE",
 			format: 'image/png',
 			attribution: "",
 		});
@@ -3177,10 +3177,10 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			alert("please change your default map layer, Google is not available,\n Tickets has set the map to Open Street Maps.\n After changing you will need to log out and log in again.");
 			}
 		if(good_gmapsapi == 1) {
-			var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark"];	
+			var baseLayerNamesArr = ["Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark"];
 			var baseLayerVarArr = [OSM,ggl,ggl1,ggl2,ggl3,usgstopo,dark];
 			} else {
-			var baseLayerNamesArr = ["Open_Streetmaps","USGS_Topo","Dark"];	
+			var baseLayerNamesArr = ["Open_Streetmaps","USGS_Topo","Dark"];
 			var baseLayerVarArr = [OSM,usgstopo,dark];
 			}
 		var a = baseLayerNamesArr.indexOf(currentSessionLayer);
@@ -3198,7 +3198,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 				zoomControl: false,
 				}
 				)};
-				geocoder = L.Control.Geocoder.google(window.GoogleKey), 
+				geocoder = L.Control.Geocoder.google(window.GoogleKey),
 				control = L.Control.geocoder({
 					showResultIcons: false,
 					collapsed: true,
@@ -3224,7 +3224,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 				zoomControl: false,
 				}
 				)};
-				geocoder = L.Control.Geocoder.bing(window.BingKey), 
+				geocoder = L.Control.Geocoder.bing(window.BingKey),
 				control = L.Control.geocoder({
 					showResultIcons: false,
 					collapsed: true,
@@ -3236,7 +3236,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 					});
 				if(!isIE()) {
 					control.addTo(map);
-					}			
+					}
 			} else {
 			if(!map) {map = L.map('map_canvas',
 				{
@@ -3247,7 +3247,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 				zoomControl: false,
 				}
 				)};
-				geocoder = L.Control.Geocoder.nominatim(), 
+				geocoder = L.Control.Geocoder.nominatim(),
 				control = L.Control.geocoder({
 					showResultIcons: false,
 					collapsed: true,
@@ -3280,7 +3280,7 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 					"Dark": dark,
 					};
 				}
-			
+
 			var overlays = {
 				"Clouds": cloudscls,
 				"Precipitation": precipitationcls,
@@ -3298,8 +3298,8 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			var baseLayers = {
 				"Open Streetmaps": OSM,
 			};
-			
-			var overlays = {};				
+
+			var overlays = {};
 			}
 			if(control_position == "tl") {
 				ctrlPos = 'topleft';
@@ -3327,14 +3327,14 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			createstdMarker(lat, lng);
 			}
 		map.setView([lat, lng], setZoom);
-		bounds = map.getBounds();	
+		bounds = map.getBounds();
 		zoom = map.getZoom();
 		map.on('baselayerchange', function (eventLayer) {
 			var layerName = eventLayer.name;
 			var layerName = layerName.replace(" ", "_");
 			var params = "f_n=layer_inuse&v_n=" +URLEncode(layerName)+ "&sess_id=" + sess_id;
-			var url = "persist3.php";	//	3/15/11	
-			sendRequest (url, layer_handleResult, params);	
+			var url = "persist3.php";	//	3/15/11
+			sendRequest (url, layer_handleResult, params);
 			});
 		}
 	return map;
@@ -3358,7 +3358,7 @@ function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	createmmMarker(lat, lng);
 	return minimap;
 	}
-	
+
 function checkArray(form, arrayName)	{	//	5/3/11
 	var retval = new Array();
 	for(var i=0; i < form.elements.length; i++) {
@@ -3369,14 +3369,14 @@ function checkArray(form, arrayName)	{	//	5/3/11
 		}
 	return retval;
 	}
-	
+
 function checkForm(form)	{
 	var errmsg="";
 	var itemsChecked = checkArray(form, "frm_group[]");
 	if(itemsChecked.length != 0) {
 		var params = "f_n=viewed_groups&v_n=" +itemsChecked+ "&sess_id=" + sess_id;
-		var url = "persist3.php";	//	3/15/11	
-		sendRequest (url, fvg_handleResult, params);				
+		var url = "persist3.php";	//	3/15/11
+		sendRequest (url, fvg_handleResult, params);
 		} else {
 		errmsg+= "\tYou cannot Hide all the regions\n";
 		if (errmsg!="") {
@@ -3391,7 +3391,7 @@ function fvg_handleResult(req) {	// 6/10/11	The persist callback function for vi
 	show_regsmsg("Viewed Regions have changed");
 	window.resp_last_display = 0;
 	window.inc_last_display = 0;
-	window.do_inc_update = true;	
+	window.do_inc_update = true;
 	window.do_resp_update = true;
 	window.do_fac_update = true;
 	do_log_refresh = true;
@@ -3406,30 +3406,30 @@ function fvg_handleResult(req) {	// 6/10/11	The persist callback function for vi
 	loadData();
 	update_regions_text();
 	}
-	
+
 function form_validate(theForm) {	//	5/3/11
 	checkForm(theForm);
 	}				// end function validate(theForm)
-	
+
 function show_regsmsg(msg) {
 	if($('regs_conf_span')) {
-		$('regs_conf_span').innerHTML = msg;			
+		$('regs_conf_span').innerHTML = msg;
 		setTimeout("$('regs_conf_span').innerHTML =''", 3000);	// show for 3 seconds
 		}
 	}
-	
+
 function getWidth(ele) {
 	return ele.getBoundingClientRect().width;
 	}
-	
+
 function getHeight(ele) {
 	return ele.getBoundingClientRect().height;
 	}
-	
+
 function getHeaderHeight(element) {
 	return element.clientHeight;
 	}
-	
+
 function set_inc_headers(id, header_text, the_bull) {
 	if(id == "t1") {
 		window.t1_text = header_text + the_bull;
@@ -3505,7 +3505,7 @@ function set_inc_headers(id, header_text, the_bull) {
 		window.t7_text = textU;
 		}
 	}
-	
+
 function do_inc_sort(id, field, header_text) {
 	if($('spinner_i')) {
 		$('spinner_i').style.display = "block";
@@ -3514,14 +3514,14 @@ function do_inc_sort(id, field, header_text) {
 	window.changed_inc_sort = true;
 	if(inc_field == field) {
 		if(window.inc_direct == "ASC") {
-			window.inc_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.inc_direct = "DESC";
+			var the_bull = "&#9660";
 			window.inc_header = header_text;
 			set_inc_headers(id, header_text, the_bull);
-			} else if(window.inc_direct == "DESC") { 
-			window.inc_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.inc_header = header_text; 
+			} else if(window.inc_direct == "DESC") {
+			window.inc_direct = "ASC";
+			var the_bull = "&#9650";
+			window.inc_header = header_text;
 			set_inc_headers(id, header_text, the_bull);
 			}
 		} else {
@@ -3536,7 +3536,7 @@ function do_inc_sort(id, field, header_text) {
 	load_incidentlist(window.inc_field, window.inc_direct);
 	return true;
 	}
-	
+
 var cursorX = 0;
 var cursorY = 0;
 
@@ -3545,7 +3545,7 @@ function getPos(e, id){
 	window.cursorY=e.clientY;
 	return true;
 	}
-	
+
 function close_context() {
 //	document.body.removeChild(divTag);
 	if(divTag) {divTag.style.display = "none";}
@@ -3561,7 +3561,7 @@ function getPosition(element) {
 	theRet[1] = left;
 	return theRet;
 	}
-	
+
 function localContext(id) {
 	if(divTag) {divTag.style.display = "none";}
 	document.oncontextmenu = function() {return false; }
@@ -3616,7 +3616,7 @@ function load_incidentlist(sort, dir) {
 		var inc_arr = JSON.decode(req.responseText);
 		if(!inc_arr) {
 			if(doDebug) {
-				log_debug(req.responseText); 
+				log_debug(req.responseText);
 				sendInfo(req.responseText);
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......Error loading Incident list.........</marquee>";
@@ -3624,9 +3624,9 @@ function load_incidentlist(sort, dir) {
 			window.incFin = true;
 			pageLoaded();
 			return;
-			}	
+			}
 		if(window.inc_period_changed == 1) {
-			if($('map_canvas')) {	
+			if($('map_canvas')) {
 				for(var key in tmarkers) {
 					if(tmarkers[key]) {map.removeLayer(tmarkers[key]); tmarkers[key] = false;}
 					}
@@ -3637,7 +3637,7 @@ function load_incidentlist(sort, dir) {
 			}
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;
-			if($('map_canvas')) {	
+			if($('map_canvas')) {
 				for(var key in tmarkers) {
 					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 					}
@@ -3648,7 +3648,7 @@ function load_incidentlist(sort, dir) {
 			$('the_list').innerHTML = outputtext;
 			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
 			the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
-			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";
 			$('sev_counts').innerHTML = the_sev_str;
 			return false;
 			}
@@ -3691,7 +3691,7 @@ function load_incidentlist(sort, dir) {
 						// Changed sort, don't refresh markers
 						}
 					} else {
-					if($('map_canvas')) {	
+					if($('map_canvas')) {
 						if((isFloat(inc_arr[key][2])) && (isFloat(inc_arr[key][3]))) {
 							var marker = createMarker(inc_arr[key][2], inc_arr[key][3], infowindowtext, inc_arr[key][5], inc_arr[key][4], inc_id, i, category, 0, inc_arr[key][11]);
 							marker.addTo(map);
@@ -3716,7 +3716,7 @@ function load_incidentlist(sort, dir) {
 				if(inc_arr[key][21] == 0) {
 					var datestring = "<SPAN>" + inc_arr[key][10] + "</SPAN>";
 					} else if(inc_arr[key][21] != 0 && inc_arr[key][6] == 2) {
-					var datestring = "<SPAN style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";						
+					var datestring = "<SPAN style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";
 					} else {
 					var datestring = "<SPAN style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
 					}
@@ -3749,7 +3749,7 @@ function load_incidentlist(sort, dir) {
 		outputtext += "</TABLE>";
 		var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
 		the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
-		the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+		the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";
 		$('sev_counts').innerHTML = the_sev_str;
 		setTimeout(function() {
 			if(window.inc_last_display == 0) {
@@ -3763,7 +3763,7 @@ function load_incidentlist(sort, dir) {
 							$('spinner_i').innerHTML = "";
 							$('spinner_i').style.display = "none";
 							}
-						}	
+						}
 					}
 				}
 			var inctbl = document.getElementById('incidenttable');
@@ -3815,7 +3815,7 @@ function load_incidentlist(sort, dir) {
 		window.incLoading = false;
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
-	
+
 function incidentlist_setwidths() {
 	var viewableRow = 1;
 	var inctbl = document.getElementById('respondertable');
@@ -3835,7 +3835,7 @@ function incidentlist_setwidths() {
 			}
 		} else {
 		var cellwidthBase = window.listwidth / 9;
-		for (var i = 0; i < tableRow.cells.length; i++) {		
+		for (var i = 0; i < tableRow.cells.length; i++) {
 			headerRow.cells[0].style.width = cellwidthBase + "px";
 			}
 		}
@@ -3848,7 +3848,7 @@ function incidentlist_setwidths() {
 			}
 		}
 	}
-	
+
 function incidentlist_get() {								// set cycle
 	if (i_interval!=null) {return;}
 	i_interval = window.setInterval('incidentlist_loop()', 60000);
@@ -3856,12 +3856,12 @@ function incidentlist_get() {								// set cycle
 
 function incidentlist_loop() {
 	if(window.respLoading == true) {
-		setTimeout(function() {load_incidentlist(window.inc_field, window.inc_direct);},10000);		
+		setTimeout(function() {load_incidentlist(window.inc_field, window.inc_direct);},10000);
 		} else {
 		load_incidentlist(window.inc_field, window.inc_direct);
 		}
 	}			// end function incidentlist_loop()
-	
+
 function do_inc_sort_fw(id, field, header_text) {
 	if($('spinner_i')) {
 		$('spinner_i').style.display = "block";
@@ -3870,14 +3870,14 @@ function do_inc_sort_fw(id, field, header_text) {
 	window.changed_inc_sort = true;
 	if(inc_field == field) {
 		if(window.inc_direct == "ASC") {
-			window.inc_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.inc_direct = "DESC";
+			var the_bull = "&#9660";
 			window.inc_header = header_text;
 			set_inc_headers(id, header_text, the_bull);
-			} else if(window.inc_direct == "DESC") { 
-			window.inc_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.inc_header = header_text; 
+			} else if(window.inc_direct == "DESC") {
+			window.inc_direct = "ASC";
+			var the_bull = "&#9650";
+			window.inc_header = header_text;
 			set_inc_headers(id, header_text, the_bull);
 			}
 		} else {
@@ -3892,7 +3892,7 @@ function do_inc_sort_fw(id, field, header_text) {
 	load_full_incidentlist(window.inc_field, window.inc_direct);
 	return true;
 	}
-	
+
 function load_full_incidentlist(sort, dir) {
 	window.counter++;
 	window.incFin = false;
@@ -3913,13 +3913,13 @@ function load_full_incidentlist(sort, dir) {
 		var inc_arr = JSON.decode(req.responseText);
 		if(!inc_arr) {
 			if(doDebug) {
-				log_debug(req.responseText); 
+				log_debug(req.responseText);
 				sendInfo(req.responseText);
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......Error loading Incident list.........</marquee>";
 			$('the_list').innerHTML = outputtext;
 			return;
-			}	
+			}
 		if(window.inc_period_changed == 1) {
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
@@ -3930,7 +3930,7 @@ function load_full_incidentlist(sort, dir) {
 			$('the_list').innerHTML = outputtext;
 			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
 			the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
-			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";
 			$('sev_counts').innerHTML = the_sev_str;
 			return false;
 			}
@@ -3955,7 +3955,7 @@ function load_full_incidentlist(sort, dir) {
 		outputtext += "<TH id='r13' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
 		outputtext += "<TH id='r14' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
 		outputtext += "<TH id='r15' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
-		outputtext += "<TH id='r16' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";		
+		outputtext += "<TH id='r16' class='plain_listheader text'>" + pad(3, " ", "\u00a0") + "</TH>";
 		outputtext += "</TR>";
 		outputtext += "</thead>";
 		outputtext += "<tbody>";
@@ -3979,7 +3979,7 @@ function load_full_incidentlist(sort, dir) {
 				if(inc_arr[key][21] == 0) {
 					var datestring = "<SPAN>" + inc_arr[key][10] + "</SPAN>";
 					} else if(inc_arr[key][21] != 0 && inc_arr[key][6] == 2) {
-					var datestring = "<SPAN style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";						
+					var datestring = "<SPAN style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";
 					} else {
 					var datestring = "<SPAN style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
 					}
@@ -4006,7 +4006,7 @@ function load_full_incidentlist(sort, dir) {
 				tabindex++;
 				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Add Note to Incident " + inc_id + "' tabindex=" + tabindex + " id='note" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"get_auxForm(" + inc_id + ", 'Add Note', 'note');\"><SPAN style='float: left;'>Add " + notebuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN></TD>";
 				tabindex++;
-				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Dispatch Incident " + inc_id + "' tabindex=" + tabindex + " id='disp_" + inc_id + "' CLASS='plain text' style='height: auto; width: 85%; display: block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"load_dispatch(" + inc_id + ", window.disp_field, window.disp_direct, window.searchitem);\"><SPAN style='float: left;'>" + dispatchbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/dispatch_small.png' BORDER=0></SPAN></TD>";			
+				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Dispatch Incident " + inc_id + "' tabindex=" + tabindex + " id='disp_" + inc_id + "' CLASS='plain text' style='height: auto; width: 85%; display: block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"load_dispatch(" + inc_id + ", window.disp_field, window.disp_direct, window.searchitem);\"><SPAN style='float: left;'>" + dispatchbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/dispatch_small.png' BORDER=0></SPAN></TD>";
 				tabindex++;
 				outputtext += "<TD aria-hidden='true'><SPAN roll='button' aria-label='Print Incident " + inc_id + "' tabindex=" + tabindex + " id='prt" + inc_id + "' class='plain text' style='height: auto; width: 85%; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick=\"do_print_ticket(" + inc_id + ");\"><SPAN style='float: left;'>" + printbuttonText + "</SPAN>&nbsp;&nbsp;<IMG style='vertical-align: middle; float: right;' SRC='./images/print_small.png' BORDER=0></SPAN></TD>";
 				tabindex++;
@@ -4033,7 +4033,7 @@ function load_full_incidentlist(sort, dir) {
 		outputtext += "</TABLE>";
 		var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
 		the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
-		the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+		the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";
 		$('sev_counts').innerHTML = the_sev_str;
 		setTimeout(function() {
 			if(window.inc_last_display == 0) {
@@ -4047,7 +4047,7 @@ function load_full_incidentlist(sort, dir) {
 							$('spinner_i').innerHTML = "";
 							$('spinner_i').style.display = "none";
 							}
-						}	
+						}
 					}
 				}
 			},500);
@@ -4072,9 +4072,9 @@ function load_full_incidentlist(sort, dir) {
 			},1500);
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
-	
-	
-	
+
+
+
 function full_incidentlist_setwidths() {
 	var viewableRow = 1;
 	var inctbl = document.getElementById('respondertable');
@@ -4096,10 +4096,10 @@ function full_incidentlist_setwidths() {
 		var cellwidth = cellwidthBase * 4;
 		for (var i = 0; i < headerRow.cells.length; i++) {
 			if(headerRow.cells[i]) {headerRow.cells[i].style.width = cellwidth + "px";}
-			}		
+			}
 		}
 	}
-	
+
 function full_incidentlist_get() {								// set cycle
 	if (i_interval!=null) {return;}
 	i_interval = window.setInterval('full_incidentlist_loop()', 20000);
@@ -4108,7 +4108,7 @@ function full_incidentlist_get() {								// set cycle
 function full_incidentlist_loop() {
 	load_full_incidentlist(window.inc_field, window.inc_direct);
 	}			// end function incidentlist_loop()
-	
+
 function load_full_incidentlist_incbuttons() {
 	window.counter++;
 	window.incFin = false;
@@ -4120,11 +4120,11 @@ function load_full_incidentlist_incbuttons() {
 		var inc_arr = JSON.decode(req.responseText);
 		if(!inc_arr) {
 			if(doDebug) {
-				log_debug(req.responseText); 
+				log_debug(req.responseText);
 				sendInfo(req.responseText);
 				}
 			return;
-			}	
+			}
 		if(window.inc_period_changed == 1) {
 			}
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
@@ -4140,7 +4140,7 @@ function load_full_incidentlist_incbuttons() {
 				if(inc_arr[key][21] == 0) {
 					var datestring = "<SPAN class='text text_white text_bold'>" + inc_arr[key][10] + "</SPAN>";
 					} else if(inc_arr[key][21] != 0 && inc_arr[key][6] == 2) {
-					var datestring = "<SPAN class='text text_bold' style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";						
+					var datestring = "<SPAN class='text text_bold' style='background-color: cyan; color: #000000;'>" + inc_arr[key][10] + "</SPAN>";
 					} else {
 					var datestring = "<SPAN class='text text_bold' style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
 					}
@@ -4176,7 +4176,7 @@ function load_full_incidentlist_incbuttons() {
 		full_incidentlist_alt_get();
 		}				// end function incidentlist_cb()
 	}				// end function load_incidentlist()
-	
+
 function full_incidentlist_alt_get() {								// set cycle
 	if (i_interval!=null) {return;}
 	i_interval = window.setInterval('full_incidentlist_alt_loop()', 20000);
@@ -4214,7 +4214,7 @@ function ringfence_alert(respid) {
 		// Do nothing
 		}
 	}
-	
+
 function exclusion_alert(respid) {
 	var the_responders = JSON.decode(window.theResponderHandles);
 	try {
@@ -4235,7 +4235,7 @@ function exclusion_alert(respid) {
 		alertspan.style.margin = "10px";
 		alertspan.onmouseover = function() {newwindow_incfs.do_hover_centerbuttons(this.id);}
 		alertspan.onmouseout = function() {newwindow_incfs.do_plain_centerbuttons(this.id);}
-		alertspan.onclick = function() {alert("Exclusion Zone alert responder " + theID);}	
+		alertspan.onclick = function() {alert("Exclusion Zone alert responder " + theID);}
 		alertspan.innerHTML = "Exclusion Zone Alert , Responder - <SPAN class='text_large' style='color: red; background-color: yellow; font-weight: bold;'>" + handle + "</SPAN>";
 		alertsdiv.appendChild(alertspan);
 		}
@@ -4288,7 +4288,7 @@ function set_resp_headers(id, header_text, the_bull) {
 		window.r4_text = header_text + the_bull;
 		window.r1_text = textIcon;
 		window.r2_text = textHandle;
-		window.r3_text = textName;		
+		window.r3_text = textName;
 		window.r5_text = textIncs;
 		window.r6_text = textStatus;
 		window.r7_text = textM;
@@ -4327,10 +4327,10 @@ function set_resp_headers(id, header_text, the_bull) {
 		window.r4_text = textMail;
 		window.r5_text = textIncs;
 		window.r6_text = textStatus;
-		window.r7_text = textM;		
+		window.r7_text = textM;
 		}
 	}
-	
+
 function do_resp_sort(id, field, header_text) {
 	if($('spinner_r')) {
 		$('spinner_r').style.display = "block";
@@ -4342,15 +4342,15 @@ function do_resp_sort(id, field, header_text) {
 	window.changed_resp_sort = true;
 	if(window.resp_field == field) {
 		if(window.resp_direct == "ASC") {
-			window.resp_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.resp_direct = "DESC";
+			var the_bull = "&#9660";
 			window.resp_header = header_text;
 			window.resp_field = field;
 			set_resp_headers(id, header_text, the_bull);
-			} else if(window.resp_direct == "DESC") { 
-			window.resp_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.resp_header = header_text; 
+			} else if(window.resp_direct == "DESC") {
+			window.resp_direct = "ASC";
+			var the_bull = "&#9650";
+			window.resp_header = header_text;
 			window.resp_field = field;
 			set_resp_headers(id, header_text, the_bull);
 			}
@@ -4386,7 +4386,7 @@ function load_responderlist(sort, dir) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/sit_responders.php?sort='+window.resp_field+'&dir='+ window.resp_direct+'&screen=sit&version='+randomnumber+'&q='+sess_id;
 	if(doDebug) {alert(url);}
-	sendRequest (url,responderlist_cb, "");		
+	sendRequest (url,responderlist_cb, "");
 	function responderlist_cb(req) {
 		var i = 1;
 		var responder_number = 0;
@@ -4394,9 +4394,11 @@ function load_responderlist(sort, dir) {
 		if(doDebug) {alert(url);}
 		if(!resp_arr) {
 			if(doDebug) {
-				log_debug(req.responseText); 
+				log_debug(req.responseText);
 				sendInfo(req.responseText);
 				}
+			alert(987);
+
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......Error loading Responder list.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
 			window.respFin = true;
@@ -4463,9 +4465,9 @@ function load_responderlist(sort, dir) {
 						outputtext += "<TD id='rsupd_" + unit_no + "' class='plain_list text' onClick='myrclick(" + unit_no + ");'><SPAN id = '" + resp_arr[key][27] + "'>" + resp_arr[key][16] + "</SPAN></TD>";
 						outputtext += "<TD class='plain_list text'>" + pad(5, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
-						
+
 						if(resp_assigns[unit_no] && resp_assigns[unit_no].length != 0) {
-							theAssigned[unit_no] = true; 
+							theAssigned[unit_no] = true;
 							infowindowtext = "<B>" + resp_arr[key][2] + "</B><BR />" + get_assigns_flag(unit_no);
 							} else {
 							infowindowtext = " ";
@@ -4480,8 +4482,8 @@ function load_responderlist(sort, dir) {
 							window.responders_updated[resp_arr[key][17]] = resp_arr[key][16];
 							window.do_resp_update = true;
 							}
-											
-						if($('map_canvas')) {						
+
+						if($('map_canvas')) {
 							if(rmarkers[unit_no]) {
 								if(window.changed_resp_sort == false) {
 									var curPos = rmarkers[unit_no].getLatLng();
@@ -4528,7 +4530,7 @@ function load_responderlist(sort, dir) {
 						$('fs_show_asgn').onmouseover = function() {do_hover(this.id); Tip("Click to show flags for assigned units or hide flags");};
 						$('fs_show_asgn').onmouseout = function() {do_plain(this.id); UnTip();};
 						$('fs_show_asgn').style.cursor = "pointer";
-						}					
+						}
 					} else {
 					if($('show_asgn')) {
 						$('show_asgn').style.color = "#CFCFCF";
@@ -4536,7 +4538,7 @@ function load_responderlist(sort, dir) {
 						$('show_asgn').onclick = null;
 						$('show_asgn').onmouseover = null;
 						$('show_asgn').onmouseout = null;
-						$('show_asgn').style.cursor = "default";				
+						$('show_asgn').style.cursor = "default";
 						}
 					if($('fs_show_asgn')) {
 						$('fs_show_asgn').style.color = "#CFCFCF";
@@ -4544,7 +4546,7 @@ function load_responderlist(sort, dir) {
 						$('fs_show_asgn').onclick = null;
 						$('fs_show_asgn').onmouseover = null;
 						$('fs_show_asgn').onmouseout = null;
-						$('fs_show_asgn').style.cursor = "default";				
+						$('fs_show_asgn').style.cursor = "default";
 						}
 					}
 				if(window.resp_last_display == 0) {		//	first load
@@ -4562,7 +4564,7 @@ function load_responderlist(sort, dir) {
 								$('spinner_r').innerHTML = "";
 								$('spinner_r').style.display = "none";
 								}
-							}		
+							}
 						}
 					}
 				for(var key in resp_arr) {
@@ -4590,7 +4592,7 @@ function load_responderlist(sort, dir) {
 							}
 						} else {
 						var cellwidthBase = window.listwidth / 9;
-						for (var i = 0; i < tableRow.cells.length; i++) {		
+						for (var i = 0; i < tableRow.cells.length; i++) {
 							headerRow.cells[0].style.width = cellwidthBase + "px";
 							}
 						}
@@ -4622,7 +4624,7 @@ function load_responderlist(sort, dir) {
 function isViewable(element){
 	return (element.clientHeight > 0);
 	}
-	
+
 function responderlist_setwidths() {
 	var viewableRow = 1;
 	var resptbl = document.getElementById('respondertable');
@@ -4642,7 +4644,7 @@ function responderlist_setwidths() {
 			}
 		} else {
 		var cellwidthBase = window.listwidth / 9;
-		for (var i = 0; i < tableRow.cells.length; i++) {		
+		for (var i = 0; i < tableRow.cells.length; i++) {
 			headerRow.cells[0].style.width = cellwidthBase + "px";
 			}
 		}
@@ -4655,20 +4657,20 @@ function responderlist_setwidths() {
 			}
 		}
 	}
-	
+
 function responderlist_get() {
 	if (r_interval!=null) {return;}
-	r_interval = window.setInterval('responderlist_loop()', 60000); 
+	r_interval = window.setInterval('responderlist_loop()', 60000);
 	}			// end function mu get()
 
 function responderlist_loop() {
 	if(window.respLoading == true) {
-		setTimeout(function() {load_responderlist(resp_field, resp_direct);},10000);		
+		setTimeout(function() {load_responderlist(resp_field, resp_direct);},10000);
 		} else {
 		load_responderlist(resp_field, resp_direct);
 		}
 	}			// end function do_loop()
-	
+
 //	Responderlist for Units screen
 
 function set_resp_headers2(id, header_text, the_bull) {
@@ -4746,7 +4748,7 @@ function set_resp_headers2(id, header_text, the_bull) {
 		window.rr7_text = textM;
 		}
 	}
-	
+
 function do_resp_sort2(id, field, header_text) {
 	if($('spinner_r')) {
 		$('spinner_r').style.display = "block";
@@ -4758,15 +4760,15 @@ function do_resp_sort2(id, field, header_text) {
 	window.changed_resp_sort = true;
 	if(window.resp_field == field) {
 		if(window.resp_direct == "ASC") {
-			window.resp_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.resp_direct = "DESC";
+			var the_bull = "&#9660";
 			window.resp_header = header_text;
 			window.resp_field = field;
 			set_resp_headers2(id, header_text, the_bull);
-			} else if(window.resp_direct == "DESC") { 
-			window.resp_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.resp_header = header_text; 
+			} else if(window.resp_direct == "DESC") {
+			window.resp_direct = "ASC";
+			var the_bull = "&#9650";
+			window.resp_header = header_text;
 			window.resp_field = field;
 			set_resp_headers2(id, header_text, the_bull);
 			}
@@ -4803,16 +4805,17 @@ function load_responderlist2(sort, dir) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/sit_responders.php?sort='+window.resp_field+'&dir='+ window.resp_direct+'&screen=responder&version='+randomnumber+'&q='+sess_id;
 	if(doDebug) {alert(url);}
-	sendRequest (url,responderlist2_cb, "");		
+	sendRequest (url,responderlist2_cb, "");
 	function responderlist2_cb(req) {
 		var i = 1;
-		var responder_number = 0;	
+		var responder_number = 0;
 		var resp_arr = JSON.decode(req.responseText);
 		if(!resp_arr) {
 			if(doDebug) {
-				log_debug(req.responseText); 
+				log_debug(req.responseText);
 				sendInfo(req.responseText);
 				}
+			alert(123);
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......Error loading Responder list.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
 			window.respFin = true;
@@ -4885,7 +4888,7 @@ function load_responderlist2(sort, dir) {
 						outputtext += "<TD class='plain_list text'>" + pad(12, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
 						if(resp_assigns[unit_no] && resp_assigns[unit_no].length != 0) {
-							theAssigned[unit_no] = true; 
+							theAssigned[unit_no] = true;
 							infowindowtext = "<B>" + resp_arr[key][2] + "</B><BR />" + get_assigns_flag(unit_no);
 							} else {
 							infowindowtext = " ";
@@ -4949,7 +4952,7 @@ function load_responderlist2(sort, dir) {
 						$('fs_show_asgn').onmouseover = function() {do_hover(this.id); Tip("Click to show flags for assigned units or hide flags");};
 						$('fs_show_asgn').onmouseout = function() {do_plain(this.id); UnTip();};
 						$('fs_show_asgn').style.cursor = "pointer";
-						}					
+						}
 					} else {
 					if($('show_asgn')) {
 						$('show_asgn').style.color = "#CFCFCF";
@@ -4957,7 +4960,7 @@ function load_responderlist2(sort, dir) {
 						$('show_asgn').onclick = null;
 						$('show_asgn').onmouseover = null;
 						$('show_asgn').onmouseout = null;
-						$('show_asgn').style.cursor = "default";				
+						$('show_asgn').style.cursor = "default";
 						}
 					if($('fs_show_asgn')) {
 						$('fs_show_asgn').style.color = "#CFCFCF";
@@ -4965,7 +4968,7 @@ function load_responderlist2(sort, dir) {
 						$('fs_show_asgn').onclick = null;
 						$('fs_show_asgn').onmouseover = null;
 						$('fs_show_asgn').onmouseout = null;
-						$('fs_show_asgn').style.cursor = "default";				
+						$('fs_show_asgn').style.cursor = "default";
 						}
 					}
 				if(window.resp_last_display == 0) {		//	first display
@@ -4982,7 +4985,7 @@ function load_responderlist2(sort, dir) {
 								$('spinner_r').innerHTML = "";
 								$('spinner_r').style.display = "none";
 								}
-							}	
+							}
 						}
 					}
 				for(var key in resp_arr) {
@@ -5009,7 +5012,7 @@ function load_responderlist2(sort, dir) {
 							}
 						} else {
 						var cellwidthBase = window.listwidth / 9;
-						for (var i = 0; i < tableRow.cells.length; i++) {		
+						for (var i = 0; i < tableRow.cells.length; i++) {
 							headerRow.cells[0].style.width = cellwidthBase + "px";
 							}
 						}
@@ -5056,7 +5059,7 @@ function responderlist2_setwidths() {
 			}
 		} else {
 		var cellwidthBase = window.listwidth / 9;
-		for (var i = 0; i < tableRow.cells.length; i++) {		
+		for (var i = 0; i < tableRow.cells.length; i++) {
 			headerRow.cells[0].style.width = cellwidthBase + "px";
 			}
 		}
@@ -5069,10 +5072,10 @@ function responderlist2_setwidths() {
 			}
 		}
 	}
-	
+
 function responderlist2_get() {
 	if (r_interval != null) {return;}
-	r_interval = window.setInterval('responderlist2_loop()', 6000); 
+	r_interval = window.setInterval('responderlist2_loop()', 6000);
 	}			// end function mu get()
 
 function responderlist2_loop() {
@@ -5088,13 +5091,13 @@ function set_fac_headers(id, header_text, the_bull) {
 	if(id == "f1") {
 		window.f1_text = header_text + the_bull;
 		window.f2_text = textFacName;
-		window.f3_text = textFacMail;		
+		window.f3_text = textFacMail;
 		window.f4_text = textFacStatus;
 		window.f5_text = textFacUpdated;
 		} else if(id == "f2") {
 		window.f2_text = header_text + the_bull;
 		window.f1_text = textFacIcon;
-		window.f3_text = textFacMail;		
+		window.f3_text = textFacMail;
 		window.f4_text = textFacStatus;
 		window.f5_text = textFacUpdated;
 		} else if(id == "f3") {
@@ -5107,17 +5110,17 @@ function set_fac_headers(id, header_text, the_bull) {
 		window.f4_text = header_text + the_bull;
 		window.f1_text = textFacIcon;
 		window.f2_text = textFacName;
-		window.f3_text = textFacMail;	
+		window.f3_text = textFacMail;
 		window.f5_text = textFacUpdated;
 		} else if(id == "f5") {
 		window.f5_text = header_text + the_bull;
 		window.f1_text = textFacIcon;
 		window.f2_text = textFacName;
-		window.f3_text = textFacMail;	
+		window.f3_text = textFacMail;
 		window.f4_text = textFacStatus;
 		}
 	}
-	
+
 function do_fac_sort(id, field, header_text) {
 	if($('spinner_f')) {
 		$('spinner_f').style.display = "block";
@@ -5129,15 +5132,15 @@ function do_fac_sort(id, field, header_text) {
 	window.changed_fac_sort = true;
 	if(window.fac_field == field) {
 		if(window.fac_direct == "ASC") {
-			window.fac_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.fac_direct = "DESC";
+			var the_bull = "&#9660";
 			window.fac_header = header_text;
 			window.fac_field = field;
 			set_fac_headers(id, header_text, the_bull);
-			} else if(window.fac_direct == "DESC") { 
-			window.fac_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.fac_header = header_text; 
+			} else if(window.fac_direct == "DESC") {
+			window.fac_direct = "ASC";
+			var the_bull = "&#9650";
+			window.fac_header = header_text;
 			window.fac_field = field;
 			set_fac_headers(id, header_text, the_bull);
 			}
@@ -5156,7 +5159,7 @@ function do_fac_sort(id, field, header_text) {
 	load_facilitylist(fac_field, fac_direct);
 	return true;
 	}
-	
+
 function load_facilitylist(sort, dir) {
 	window.facstatSel = false;
 	window.facFin = false;
@@ -5180,7 +5183,7 @@ function load_facilitylist(sort, dir) {
 		var fac_arr = JSON.decode(req.responseText);
 		if(!fac_arr) {
 			if(doDebug) {
-				log_debug(req.responseText); 
+				log_debug(req.responseText);
 				sendInfo(req.responseText);
 				}
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......Error loading Facilities list.........</marquee>";
@@ -5249,8 +5252,8 @@ function load_facilitylist(sort, dir) {
 						window.facilities_updated[fac_id] = fac_arr[key][9];
 						window.do_fac_update = true;
 						}
-						
-					if($('map_canvas')) {						
+
+					if($('map_canvas')) {
 						if(fmarkers[fac_id]) {
 							if(window.changed_resp_sort == false) {
 								// not changed sort order but don't refresh markers
@@ -5273,9 +5276,9 @@ function load_facilitylist(sort, dir) {
 								marker.addTo(map);
 								}
 							}
-						}					
+						}
 					facility_number = fac_id;
-					i++;					
+					i++;
 					}
 				}
 			outputtext += "</tbody>";
@@ -5318,7 +5321,7 @@ function load_facilitylist(sort, dir) {
 							}
 						} else {
 						var cellwidthBase = window.listwidth / 6;
-						for (var i = 0; i < tableRow.cells.length; i++) {		
+						for (var i = 0; i < tableRow.cells.length; i++) {
 							headerRow.cells[0].style.width = cellwidthBase + "px";
 							}
 						}
@@ -5363,7 +5366,7 @@ function facilitylist_setwidths() {
 			}
 		} else {
 		var cellwidthBase = window.listwidth / 6;
-		for (var i = 0; i < tableRow.cells.length; i++) {		
+		for (var i = 0; i < tableRow.cells.length; i++) {
 			headerRow.cells[0].style.width = cellwidthBase + "px";
 			}
 		}
@@ -5384,12 +5387,12 @@ function facilitylist_get() {
 
 function facilitylist_loop() {
 	if(window.respLoading == true || window.incLoading == true) {
-		setTimeout(function() {load_facilitylist(fac_field, fac_direct);},10000);		
+		setTimeout(function() {load_facilitylist(fac_field, fac_direct);},10000);
 		} else {
 		load_facilitylist(fac_field, fac_direct);
 		}
 	}			// end function do_loop()
-	
+
 var changed_wl_sort = false;
 var wl_direct = "ASC";
 var wl_field = "id";
@@ -5428,21 +5431,21 @@ function set_warnloc_headers(id, header_text, the_bull) {
 		window.w4_text = textWlAddress;
 		}
 	}
-	
+
 function do_warnloc_sort(id, field, header_text) {
 	window.changed_wl_sort = true;
 	window.wl_last_display = 0;
 	if(window.wl_field == field) {
 		if(window.wl_direct == "ASC") {
-			window.wl_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.wl_direct = "DESC";
+			var the_bull = "&#9660";
 			window.wl_header = header_text;
 			window.wl_field = field;
 			set_warnloc_headers(id, header_text, the_bull);
-			} else if(window.wl_direct == "DESC") { 
-			window.wl_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.wl_header = header_text; 
+			} else if(window.wl_direct == "DESC") {
+			window.wl_direct = "ASC";
+			var the_bull = "&#9650";
+			window.wl_header = header_text;
 			window.wl_field = field;
 			set_warnloc_headers(id, header_text, the_bull);
 			}
@@ -5458,7 +5461,7 @@ function do_warnloc_sort(id, field, header_text) {
 	load_warnloclist(field, fac_direct);
 	return true;
 	}
-	
+
 function load_warnloclist(sort, dir) {
 	if(sort != window.wl_field) {
 		window.wl_field = sort;
@@ -5535,7 +5538,7 @@ function load_warnloclist(sort, dir) {
 				}
 			outputtext += "</tbody>";
 			outputtext += "</TABLE>";
-			setTimeout(function() {	
+			setTimeout(function() {
 				if(window.latest_wlocation == 0) {
 					$('the_wllist').innerHTML = outputtext;
 					window.latest_wlocation = location_number;
@@ -5579,7 +5582,7 @@ function load_warnloclist(sort, dir) {
 			}
 		}				// end function warnloclist_cb()
 	warnloclist_get();
-	}				// end function load_warnloclist()	
+	}				// end function load_warnloclist()
 
 function warnloclist_setwidths() {
 	var viewableRow = 1;
@@ -5616,7 +5619,7 @@ function warnloclist_setwidths() {
 			}
 		}
 	}
-	
+
 function warnloclist_get() {
 	if (wl_interval!=null) {return;}
 	wl_interval = window.setInterval('warnloc_loop()', 600000);
@@ -5625,7 +5628,7 @@ function warnloclist_get() {
 function warnloc_loop() {
 	load_warnloclist(fac_field, fac_direct);
 	}			// end function do_loop()
-	
+
 function load_warnlocations(screen) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/list_warnlocations.php?sort='+window.wl_field+'&dir='+ window.wl_direct+'&version='+randomnumber+'&q='+sess_id+'&screen='+screen;
@@ -5646,15 +5649,15 @@ function load_warnlocations(screen) {
 			}
 		}				// end function warnloclist_cb()
 
-	}				// end function load_warnloclist()	
-	
+	}				// end function load_warnloclist()
+
 function load_fs_incidentlist() {
 	if($('the_list').innerHTML == "") {
 		$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 		}
-	var randomnumber=Math.floor(Math.random()*99999999);	
+	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/full_screen_incidents.php?func='+inc_period+'&version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,incidentlist_cb, "");		
+	sendRequest (url,incidentlist_cb, "");
 	function incidentlist_cb(req) {
 		var inc_arr = JSON.decode(req.responseText);
 		if(window.inc_period_changed == 1) {
@@ -5673,14 +5676,14 @@ function load_fs_incidentlist() {
 			$('the_list').innerHTML = outputtext;
 			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
 			the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
-			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";
 			$('sev_counts').innerHTML = the_sev_str;
 			} else {
 			if(window.changed_inc_sort == true) {
 				for(var key in tmarkers) {
 					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 					}
-				}	
+				}
 			var i = 1;
 			var blinkstart = "";
 			var blinkend = "";
@@ -5748,7 +5751,7 @@ function load_fs_incidentlist() {
 			outputtext += "</TABLE>";
 			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
 			the_sev_str += "<font color='green'>Medium " + inc_arr[0][23] + "</FONT>, ";
-			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";			
+			the_sev_str += "<font color='red'>High " + inc_arr[0][24] + "</FONT>";
 			$('sev_counts').innerHTML = the_sev_str;
 			setTimeout(function() {
 				if(window.inc_last_display == 0) {
@@ -5781,13 +5784,13 @@ function load_fs_incidentlist() {
 					$('t5').style.width = cell5 + "px";
 					$('t6').style.width = cell6 + "px";
 					$('t7').style.width = cell7 + "px";
-					}				
+					}
 				},500);
 			}
 		}				// end function incidentlist_cb()
 	fs_incidentlist_get();
 	}				// end function load_incidentlist()
-	
+
 function fs_incidentlist_get() {								// set cycle
 	if (i_interval!=null) {return;}
 	i_interval = window.setInterval('fs_incidentlist_loop()', 30000);
@@ -5795,16 +5798,16 @@ function fs_incidentlist_get() {								// set cycle
 
 function fs_incidentlist_loop() {
 	load_fs_incidentlist();
-	}			// end function do_loop()	
+	}			// end function do_loop()
 
 function load_fs_responders() {
 	var resp_assigns = JSON.decode(window.theAssigns);
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/full_screen_responders.php?version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,responderlist_cb, "");		
+	sendRequest (url,responderlist_cb, "");
 	function responderlist_cb(req) {
 		var i = 1;
-		var responder_number = 0;	
+		var responder_number = 0;
 		var resp_arr = JSON.decode(req.responseText);
 		if(resp_arr[0][22] == 0) {
 			for(var key in rmarkers) {
@@ -5818,7 +5821,7 @@ function load_fs_responders() {
 					if(resp_arr[key][17]) {
 						var unit_id = resp_arr[key][17];
 						if(resp_assigns[unit_id] && resp_assigns[unit_id].length != 0) {
-							theAssigned[unit_id] = true; 
+							theAssigned[unit_id] = true;
 							infowindowtext = "<B>" + resp_arr[key][2] + "</B><BR />" + get_assigns_flag(unit_id);
 							} else {
 							infowindowtext = " ";
@@ -5844,7 +5847,7 @@ function load_fs_responders() {
 								var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_id, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 								marker.addTo(map);
 								}
-							}							
+							}
 						responder_number = unit_id;
 						}
 					}
@@ -5867,7 +5870,7 @@ function load_fs_responders() {
 						$('fs_show_asgn').onmouseover = function() {do_hover(this.id); Tip("Click to show flags for assigned units or hide flags");};
 						$('fs_show_asgn').onmouseout = function() {do_plain(this.id); UnTip();};
 						$('fs_show_asgn').style.cursor = "pointer";
-						}					
+						}
 					} else {
 					if($('show_asgn')) {
 						$('show_asgn').style.color = "#CFCFCF";
@@ -5875,7 +5878,7 @@ function load_fs_responders() {
 						$('show_asgn').onclick = null;
 						$('show_asgn').onmouseover = null;
 						$('show_asgn').onmouseout = null;
-						$('show_asgn').style.cursor = "default";				
+						$('show_asgn').style.cursor = "default";
 						}
 					if($('fs_show_asgn')) {
 						$('fs_show_asgn').style.color = "#CFCFCF";
@@ -5883,7 +5886,7 @@ function load_fs_responders() {
 						$('fs_show_asgn').onclick = null;
 						$('fs_show_asgn').onmouseover = null;
 						$('fs_show_asgn').onmouseout = null;
-						$('fs_show_asgn').style.cursor = "default";				
+						$('fs_show_asgn').style.cursor = "default";
 						}
 					}
 				if(window.resp_last_display == 0) {
@@ -5897,7 +5900,7 @@ function load_fs_responders() {
 						if($('boxes')) {set_categories();}
 						}
 					}
-				},500);			
+				},500);
 			}
 		}				// end function responderlist_cb()
 	fs_responders_get();
@@ -5905,7 +5908,7 @@ function load_fs_responders() {
 
 function fs_responders_get() {
 	if (r_interval!=null) {return;}
-	r_interval = window.setInterval('fs_responders_loop()', 60000); 
+	r_interval = window.setInterval('fs_responders_loop()', 60000);
 	}			// end function mu get()
 
 function fs_responders_loop() {
@@ -5957,7 +5960,7 @@ function load_fs_facilities() {
 					}
 				i++;
 				}
-			setTimeout(function() {	
+			setTimeout(function() {
 				if(window.fac_last_display == 0) {
 					$('fac_boxes').innerHTML = fac_arr[0][12];
 					set_fac_categories();
@@ -5973,11 +5976,11 @@ function load_fs_facilities() {
 			}
 		}				// end function facilitylist_cb()
 	fs_facilities_get();
-	}				// end function load_facilitylist()	
+	}				// end function load_facilitylist()
 
 function fs_facilities_get() {
 	if (r_interval!=null) {return;}
-	r_interval = window.setInterval('fs_facilities_loop()', 120000); 
+	r_interval = window.setInterval('fs_facilities_loop()', 120000);
 	}			// end function mu get()
 
 function fs_facilities_loop() {
@@ -5994,7 +5997,7 @@ function draw_poly(linename, category, color, opacity, width, filled, fillcolor,
 	if(!(boundary[theID])) {
 		var path = new Array();
 		var thelineData = linedata.split(';');
-		for (var i = 0; i < thelineData.length; i++) { 
+		for (var i = 0; i < thelineData.length; i++) {
 			var theCoords = thelineData[i].split(',');
 			var theLatLng = new L.LatLng(theCoords[0], theCoords[1]);
 			path[i] = theLatLng;
@@ -6014,17 +6017,17 @@ function draw_poly(linename, category, color, opacity, width, filled, fillcolor,
 			boundary[theID] = polygon;
 			if(linename && !bound_names[theID]) {
 				bound_names[theID] = linename;
-				}		
+				}
 			}
 		}
 	return polygon;
 	}
-	
+
 function draw_polyline(linename, color, opacity, width, linedata, theID) {
 	if(!linedata) {return;}
 	var path = new Array();
 	var thelineData = linedata.split(';');
-	for (i = 0; i < thelineData.length; i++) { 
+	for (i = 0; i < thelineData.length; i++) {
 		var theCoords = thelineData[i].split(',');
 		var theLatLng = new L.LatLng(theCoords[0], theCoords[1]);
 		path[i] = theLatLng;
@@ -6041,11 +6044,11 @@ function draw_polyline(linename, color, opacity, width, linedata, theID) {
 		boundary[theID] = polyline;
 		if(linename && !bound_names[theID]) {
 			bound_names[theID] = linename;
-			}		
+			}
 		}
 	return polyline;
 	}
-	
+
 function drawCircle(linename, linedata, strokeColor, strokeWidth, strokeOpacity, filled, fillColor, fillOpacity, theType, theID) {
 	if(filled == 0) { filled = false; } else { filled = true;}
 	var theData = linedata.split(';');
@@ -6066,7 +6069,7 @@ function drawCircle(linename, linedata, strokeColor, strokeWidth, strokeOpacity,
 			boundary[theID] = draw_circle;
 			if(linename && !bound_names[theID]) {
 				bound_names[theID] = linename;
-				}		
+				}
 			}
 		}
 	}
@@ -6093,10 +6096,10 @@ function drawBanner(linename, linedata, width, color, category, theID) {        
 		boundary[theID] = myTextLabel;
 		if(linename && !bound_names[theID]) {
 			bound_names[theID] = linename;
-			}		
+			}
 		}
 	}				// end function draw Banner()
-	
+
 function load_catchments() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_mmarkup.php?func=c&version=' + randomnumber;
@@ -6124,11 +6127,11 @@ function load_catchments() {
 			}
 		}				// end function catchments_cb()
 	}				// end function load_catchments()
-	
+
 function load_basemarkup() {
-	var randomnumber=Math.floor(Math.random()*99999999);		
+	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_mmarkup.php?func=b&version=' + randomnumber;
-	sendRequest (url,basemarkup_cb, "");		
+	sendRequest (url,basemarkup_cb, "");
 	function basemarkup_cb(req) {
 		var base_arr = JSON.decode(req.responseText);
 		for(var key in base_arr[0]) {
@@ -6151,16 +6154,16 @@ function load_basemarkup() {
 				} else if(theType == "c") {
 				var circle = drawCircle(theLinename, theData, theColor, theWidth, theOpacity, theFilled, theFillcolor, theFillopacity, "basemarkup", theID);
 				} else if(theType == "b") {
-				var banner = drawBanner(theLinename, theData, theWidth, theColor, "basemarkup", theID);				
+				var banner = drawBanner(theLinename, theData, theWidth, theColor, "basemarkup", theID);
 				}
 			}
 		}				// end function basemarkup_cb()
 	}				// end function load_basemarkup()
-	
+
 function load_groupbounds() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_mmarkup.php?func=g&version=' + randomnumber;
-	sendRequest (url,groupbound_cb, "");		
+	sendRequest (url,groupbound_cb, "");
 	function groupbound_cb(req) {
 		var gpb_arr = JSON.decode(req.responseText);
 		for(var key in gpb_arr[0]) {
@@ -6184,11 +6187,11 @@ function load_groupbounds() {
 			}
 		}				// end function groupbound_cb()
 	}				// end function load_groupbounds()
-	
+
 function load_exclusions() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_mmarkup.php?func=e&version=' + randomnumber;
-	sendRequest (url,exclusions_cb, "");		
+	sendRequest (url,exclusions_cb, "");
 	function exclusions_cb(req) {
 		var exc_arr = JSON.decode(req.responseText);
 		for(var key in exc_arr[0]) {
@@ -6212,11 +6215,11 @@ function load_exclusions() {
 			}
 		}				// end function exclusions_cb()
 	}				// end function load_exclusions()
-	
+
 function load_ringfences() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_mmarkup.php?func=r&version=' + randomnumber;
-	sendRequest (url,ringfences_cb, "");		
+	sendRequest (url,ringfences_cb, "");
 	function ringfences_cb(req) {
 		var rf_arr = JSON.decode(req.responseText);
 		for(var key in rf_arr[0]) {
@@ -6239,13 +6242,13 @@ function load_ringfences() {
 				}
 			}
 		}				// end function ringfences_cb()
-	}				// end function load_ringfences()	
-	
+	}				// end function load_ringfences()
+
 function load_poly_controls() {
 	var outputtext = "<DIV style='font-size: 1.1em;'>";
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_poly_buttons.php?version=' + randomnumber;
-	sendRequest (url,polys_cb, "");		
+	sendRequest (url,polys_cb, "");
 	function polys_cb(req) {
 		var pol_arr = JSON.decode(req.responseText);
 		outputtext = pol_arr[0];
@@ -6253,11 +6256,11 @@ function load_poly_controls() {
 		setTimeout(function() {set_bnds();},3000);
 		}				// end function polys_cb()
 	}				// end function load_poly_controls()
-	
+
 function load_regions() {
 	var outputtext = "<DIV style='font-size: 1.1em;'>";
-	var randomnumber=Math.floor(Math.random()*99999999);		
-	sendRequest ('./ajax/get_regions_control.php?version=' + randomnumber,regions_cb, "");		
+	var randomnumber=Math.floor(Math.random()*99999999);
+	sendRequest ('./ajax/get_regions_control.php?version=' + randomnumber,regions_cb, "");
 	function regions_cb(req) {
 		var reg_arr = JSON.decode(req.responseText);
 		outputtext = reg_arr[0];
@@ -6273,11 +6276,11 @@ function load_regions() {
 			}
 		}				// end function regions_cb()
 	}				// end function load_regions()
-	
+
 function update_regions_text() {
 	var outputtext = "<DIV style='font-size: 1.1em;'>";
-	var randomnumber=Math.floor(Math.random()*99999999);		
-	sendRequest ('./ajax/get_regions_control.php?version=' + randomnumber,regions_cb2, "");		
+	var randomnumber=Math.floor(Math.random()*99999999);
+	sendRequest ('./ajax/get_regions_control.php?version=' + randomnumber,regions_cb2, "");
 	function regions_cb2(req) {
 		var reg_arr = JSON.decode(req.responseText);
 		if($('theRegions')) {
@@ -6291,7 +6294,7 @@ function update_regions_text() {
 function check_excl(resp_id, lat, lng, flag) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/check_exclzone.php?resp_id=' + resp_id + '&lat=' + lat + '&lng=' + lng + '&version=' + randomnumber;
-	sendRequest (url,fencecheckcb, "");		
+	sendRequest (url,fencecheckcb, "");
 	function fencecheckcb(req) {
 		var ez_arr = JSON.decode(req.responseText);
 		var theResponse = parseInt(ez_arr[0]);
@@ -6305,7 +6308,7 @@ function check_excl(resp_id, lat, lng, flag) {
 function check_ringfence(resp_id, lat, lng, flag) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/check_ringfence.php?resp_id=' + resp_id + '&lat=' + lat + '&lng=' + lng + '&version=' + randomnumber;
-	sendRequest (url,fencecheckcb, "");		
+	sendRequest (url,fencecheckcb, "");
 	function fencecheckcb(req) {
 		var rf_arr = JSON.decode(req.responseText);
 		var theResponse =  parseInt(rf_arr[0]);
@@ -6324,18 +6327,18 @@ function sleep(milliseconds) {
 			}
 		}
 	}
-	
+
 function load_status_control() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_status_controls.php?version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,sc_cb, "");		
+	sendRequest (url,sc_cb, "");
 	function sc_cb(req) {
 		var sc_arr = JSON.decode(req.responseText);
 		for(var key in sc_arr) {
 			window.status_control[key] = sc_arr[key];
 			}
 		}				// end function sc_cb()
-	if($('screenname').innerHTML == "responders") { 
+	if($('screenname').innerHTML == "responders") {
 		setTimeout(function() {
 			load_status_bgcolors();
 			load_status_textcolors();
@@ -6349,15 +6352,15 @@ function load_status_control() {
 			},1000);
 		}
 	}				// end function load_status_control()
-	
+
 function IsNumeric(input) {
 	return (input - 0) == input && input.length > 0;
 	}
-	
+
 function load_status_bgcolors() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_status_bgcolors.php?version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,sc_bgcol_cb, "");		
+	sendRequest (url,sc_bgcol_cb, "");
 	function sc_bgcol_cb(req) {
 		var scbgcol_arr = JSON.decode(req.responseText);
 		for(var key in scbgcol_arr) {
@@ -6365,11 +6368,11 @@ function load_status_bgcolors() {
 			}
 		}				// end function sc_bgcol_cb()
 	}				// end function load_status_bgcolors()
-	
+
 function load_status_textcolors() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_status_textcolors.php?version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,sc_textcol_cb, "");		
+	sendRequest (url,sc_textcol_cb, "");
 	function sc_textcol_cb(req) {
 		var sctextcol_arr = JSON.decode(req.responseText);
 		for(var key in sctextcol_arr) {
@@ -6377,11 +6380,11 @@ function load_status_textcolors() {
 			}
 		}				// end function sc_textcol_cb()
 	}				// end function load_status_textcolors()
-	
+
 function get_mi_totals() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/list_mi_total.php?version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,mi_total_cb, "");		
+	sendRequest (url,mi_total_cb, "");
 	function mi_total_cb(req) {
 		var response_arr = JSON.decode(req.responseText);
 		if(response_arr[0] != 0) {
@@ -6389,19 +6392,19 @@ function get_mi_totals() {
 			if(response_arr[0] > 1) {
 				$('maj_incs').innerHTML = response_arr[0] + " Major Incidents.";
 				} else {
-				$('maj_incs').innerHTML = response_arr[0] + " Major Incident.";				
+				$('maj_incs').innerHTML = response_arr[0] + " Major Incident.";
 				}
 			} else {
-			$('maj_incs').style.display = "none";	
+			$('maj_incs').style.display = "none";
 			}
-		}				// end function mi_total_cb()	
+		}				// end function mi_total_cb()
 	}
-	
+
 function load_fac_status_control() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var sessID = sess_id;
 	var url = './ajax/get_fac_status_controls.php?version='+randomnumber+'&q='+sess_id;
-	sendRequest (url,fsc_cb, "");		
+	sendRequest (url,fsc_cb, "");
 	function fsc_cb(req) {
 		var fsc_arr = JSON.decode(req.responseText);
 		for(var key in fsc_arr) {
@@ -6442,21 +6445,21 @@ function set_file_headers(id, header_text, the_bull) {
 		window.file3_text = textFiDate;
 		}
 	}
-	
+
 function do_file_sort(id, field, header_text) {
 	window.changed_file_sort = true;
 	window.file_last_display = 0;
 	if(window.file_field == field) {
 		if(window.file_direct == "ASC") {
-			window.file_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+			window.file_direct = "DESC";
+			var the_bull = "&#9660";
 			window.file_header = header_text;
 			window.file_field = field;
 			set_file_headers(id, header_text, the_bull);
-			} else if(window.file_direct == "DESC") { 
-			window.file_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.file_header = header_text; 
+			} else if(window.file_direct == "DESC") {
+			window.file_direct = "ASC";
+			var the_bull = "&#9650";
+			window.file_header = header_text;
 			window.file_field = field;
 			set_file_headers(id, header_text, the_bull);
 			}
@@ -6472,7 +6475,7 @@ function do_file_sort(id, field, header_text) {
 	load_files(window.theTicket, window.theResponder, window.theFacility, window.theMI, window.allowedit, window.file_field, window.file_direct, window.thefiletype);
 	return true;
 	}
-	
+
 function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type) {
 	window.theTicket = ticket;
 	window.theResponder = responder;
@@ -6490,7 +6493,7 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 		$('file_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 		}
 	var randomnumber=Math.floor(Math.random()*99999999);
-	if(window.theTicket != 0) { 
+	if(window.theTicket != 0) {
 		theString = "ticket_id=" + window.theTicket + "&type=" + window.thefiletype + "&";
 		} else if(window.theResponder != 0) {
 		theString = "responder_id=" + window.theResponder + "&type=" + window.thefiletype + "&";
@@ -6529,7 +6532,7 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 					var the_title = (file_arr[key][3] != "") ? file_arr[key][3] : "Untitled";
 					var theURL = "./ajax/download.php?filename=" + file_arr[key][0] + "&origname=" + file_arr[key][1] + "&type=" + file_arr[key][2];
 					outputtext += "<TR CLASS='" + colors[i%2] + "' style='width: 100%;'>";
-					outputtext += "<TD class='plain_list_fs text text_normal'><input type='checkbox' name='frm_file[]' value='" + file_id + "'></TD>";					
+					outputtext += "<TD class='plain_list_fs text text_normal'><input type='checkbox' name='frm_file[]' value='" + file_id + "'></TD>";
 					outputtext += "<TD class='plain_list_fs text text_normal' style='white-space: nowrap;' onClick='location.href=\"" + theURL + "\"'>" + pad(30, the_title, "\u00a0") + "</TD>";
 					outputtext += "<TD class='plain_list_fs text text_normal' onClick='location.href=\"" + theURL + "\"'>" + pad(17, file_arr[key][4], "\u00a0") + "</TD>";
 					outputtext += "<TD class='plain_list_fs text text_normal' style='white-space: nowrap;' onClick='location.href=\"" + theURL + "\"'>" + pad(20, file_arr[key][5], "\u00a0") + "</TD>";
@@ -6564,12 +6567,12 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 					headerRow.cells[2].style.width = (cellwidthBase * 3) + "px";
 					headerRow.cells[3].style.width = (cellwidthBase * 3) + "px";
 					headerRow.cells[4].style.width = (cellwidthBase * 4) + "px";
-					}			
+					}
 				},1000);
 			}
 		}				// end function filelist_cb()
 	}				// end function load_files()
-	
+
 var log_direct = 'DESC';
 var log_field = 'id';
 var log_id = "fil1";
@@ -6620,18 +6623,18 @@ function set_log_headers(id, header_text, the_bull) {
 		window.fil1_text = textLogOwner;
 		}
 	}
-	
+
 function do_sort(id, field, header_text) {
 	if(log_field == field) {
-		if(log_direct == "ASC") { 
-			window.log_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+		if(log_direct == "ASC") {
+			window.log_direct = "DESC";
+			var the_bull = "&#9660";
 			window.log_header = header_text;
 			set_log_headers(id, header_text, the_bull);
-			} else if(log_direct == "DESC") { 
-			window.log_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.log_header = header_text; 
+			} else if(log_direct == "DESC") {
+			window.log_direct = "ASC";
+			var the_bull = "&#9650";
+			window.log_header = header_text;
 			set_log_headers(id, header_text, the_bull);
 			}
 		} else {
@@ -6666,7 +6669,7 @@ function load_log(sort, dir) {
 		var i = 1;
 		var log_arr = JSON.decode(req.responseText);
 		if(log_arr[0][0] == 0) {
-			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold; color: #000000;'>......Log empty.........</marquee>";	
+			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold; color: #000000;'>......Log empty.........</marquee>";
 			$('the_loglist').innerHTML = outputtext;
 			window.logFin = true;
 			pageLoaded();
@@ -6733,7 +6736,7 @@ function load_log(sort, dir) {
 							for (var i = 0; i < headerRow.cells.length; i++) {
 								headerRow.cells[i].style.width = (cellwidthBase * 4) + "px";
 								}
-							}				
+							}
 						}
 					window.logFin = true;
 					pageLoaded();
@@ -6753,7 +6756,7 @@ function log_get() {								// set cycle
 
 function log_loop() {
 	load_log(window.log_field, window.log_direct);
-	}			// end function log_loop()	
+	}			// end function log_loop()
 
 /* function load_tickerMarkers() {
 	var randomnumber=Math.floor(Math.random()*99999999);
@@ -6785,11 +6788,11 @@ function log_loop() {
 			}
 		}				// end function ticker_cb()
 	}				// end function load_ticker()	 */
-	
+
 function get_mainmessages(ticket_id, responder_id, facility_id, mi_id, sortby, sortdir, theBox) {
 	get_theMessages(ticket_id, responder_id, facility_id, mi_id, sortby, sortdir, window.inorout);
 	}
-	
+
 var msg_direct = 'DESC';
 var msg_field = 'id';
 var msg_id = "m1";
@@ -6873,18 +6876,18 @@ function set_msg_headers(id, header_text, the_bull) {
 		window.msg8_text = header_text + the_bull;
 		}
 	}
-	
+
 function do_msg_sort(id, field, header_text) {
 	if(msg_field == field) {
-		if(msg_direct == "ASC") { 
-			window.msg_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+		if(msg_direct == "ASC") {
+			window.msg_direct = "DESC";
+			var the_bull = "&#9660";
 			window.msg_header = header_text;
 			set_msg_headers(id, header_text, the_bull);
-			} else if(msg_direct == "DESC") { 
-			window.msg_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.msg_header = header_text; 
+			} else if(msg_direct == "DESC") {
+			window.msg_direct = "ASC";
+			var the_bull = "&#9650";
+			window.msg_header = header_text;
 			set_msg_headers(id, header_text, the_bull);
 			}
 		} else {
@@ -6899,7 +6902,7 @@ function do_msg_sort(id, field, header_text) {
 	get_theMessages(window.msg_ticket, window.msg_responder, window.msg_facility, window.msg_mi, field, window.msg_direct, window.inorout);
 	return true;
 	}
-	
+
 function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir, inorout) {
 	if(sort != window.msgs_field) {
 		window.msgs_field = sort;
@@ -6924,13 +6927,13 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 		window.msg_facility = 0;
 		window.msg_mi = 0;
 		} else if(facility_id != 0) {
-		theSearchstring = "?facility_id=" + facility_id + "&";	
+		theSearchstring = "?facility_id=" + facility_id + "&";
 		window.msg_ticket = 0;
 		window.msg_responder = 0;
 		window.msg_facility = facility_id;
 		window.msg_mi = 0;
 		} else if(mi_id != 0) {
-		theSearchstring = "?mi_id=" + mi_id + "&";	
+		theSearchstring = "?mi_id=" + mi_id + "&";
 		window.msg_ticket = 0;
 		window.msg_responder = 0;
 		window.msg_facility = 0;
@@ -6953,9 +6956,9 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 		var the_messages=JSON.decode(req.responseText);
 		if((!the_messages) || (the_messages[0][0] == "No Messages")) {
 			if(($('inbox_new')) && ($('sent_new'))) { get_message_totals(); }
-			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Messages.........</marquee>";	
+			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Messages.........</marquee>";
 			setTimeout(function() {$('the_msglist').innerHTML = outputtext;},2000);
-			setTimeout(function() {get_theMessages(ticket_id, responder_id, facility_id, sort, dir, window.inorout);},60000);	
+			setTimeout(function() {get_theMessages(ticket_id, responder_id, facility_id, sort, dir, window.inorout);},60000);
 			return false;
 			}
 		var theClass = "even";
@@ -6980,14 +6983,14 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 		msgtabindex++;
 		outputtext += "<TH id='m7' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Date' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgDateTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'date', '" + textMsgDate + "')\">" + window.msg7_text + "</TH>";
 		msgtabindex++;
-		outputtext += "<TH id='m8' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Owner' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgOwnerTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'owner', '" + textMsgOwner + "')\">" + window.msg8_text + "</TH>";		
+		outputtext += "<TH id='m8' class='plain_listheader text' tabindex=" + msgtabindex + " roll='button' aria-label='Sort by Message Owner' onMouseOver=\"do_hover_listheader(this.id); Tip('" + msgOwnerTip + "');\" onMouseOut=\"do_plain_listheader(this.id); UnTip();\" onClick=\"do_msg_sort(this.id, 'owner', '" + textMsgOwner + "')\">" + window.msg8_text + "</TH>";
 		msgtabindex++;
 		outputtext += "</TR>";
 		outputtext += "</thead>";
-		outputtext += "<tbody>";			
-		for (var key = 0; key < the_messages.length; key++) { 
+		outputtext += "<tbody>";
+		for (var key = 0; key < the_messages.length; key++) {
 			var the_message_id = the_messages[key][0];
-			var the_record_id = the_messages[key][10];				
+			var the_record_id = the_messages[key][10];
 			if(the_messages[key][9] == 0) {
 				theStatus = "font-weight: bold; font-style: normal;";
 				theNew++;
@@ -7031,7 +7034,7 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 			if(theClass == "even") {
 				theClass = "odd";
 				} else {
-				theClass = "even";	
+				theClass = "even";
 				}
 			}
 		outputtext += "</tbody>";
@@ -7069,7 +7072,7 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 			},500);
 		}				// end function main_mess_cb()
 	}				// end function get_theMessages()
-	
+
 function messagelist_setwidths() {
 	var viewableRow = 1;
 	var msgtbl = document.getElementById('messagestable');
@@ -7110,14 +7113,14 @@ function messagelist_setwidths() {
 		}
 	}
 
-function any_track(theForm) {					// returns boolean  - 3/24/12 
+function any_track(theForm) {					// returns boolean  - 3/24/12
 	return (theForm.frm_track_disp.selectedIndex > 0);
 	}
 
 function isNullOrEmpty(str) {
 	if (null == str || "" == str) {return true;} else { return false;}
 	}
-	
+
 function do_popup(id) {					// added 7/9/09
 	if (parent.frames["upper"].logged_in()) {
 		try  {map.closeInfoWindow()} catch(err){;}
@@ -7134,7 +7137,7 @@ function do_popup(id) {					// added 7/9/09
 		newwindow.focus();
 		}
 	}				// end function do popup()
-	
+
 function do_osmap(lat, lng, id, scope, description, type) {					// added 7/9/09
 	if (parent.frames["upper"].logged_in()) {
 		try  {map.closeInfoWindow()} catch(err){;}
@@ -7151,7 +7154,7 @@ function do_osmap(lat, lng, id, scope, description, type) {					// added 7/9/09
 		newwindow.focus();
 		}
 	}				// end function do_osmap()
-	
+
 window.getRoute = function (response) {
 	var point, points = [];
 	var theText = "";
@@ -7165,7 +7168,7 @@ window.getRoute = function (response) {
 			}
 		theText += response.route_instructions[x][0] + " ";
 		theText += response.route_instructions[x][4] + "<BR />";
-		}	
+		}
 	route= new L.Polyline(points, {
 		weight: 3,
 		opacity: 0.5,
@@ -7174,11 +7177,11 @@ window.getRoute = function (response) {
 	route.bringToFront();
 	$('directions').innerHTML = theText;
 	}
-			
+
 function setDirections(toAddress, recfacAddress) {
 	$('menu_but2').style.display = 'none';
-	$('ticket_detail').style.display = 'none';		
-	$('directions_wrapper').style.display = 'block';	
+	$('ticket_detail').style.display = 'none';
+	$('directions_wrapper').style.display = 'block';
 	$('directions').innerHTML = "Getting Route.....";
 	fromAddress = the_lat + " " + the_lng;
 	fromMarker = new L.Marker(new L.latLng([12.999070,77.568679])).addTo(map);
@@ -7192,10 +7195,10 @@ function setDirections(toAddress, recfacAddress) {
         console.log('http://routes.cloudmade.com/' + theAPI + '/api/0.3/' + the_lat + ',' + the_lng + transit + toAddress + '/car.js?callback=getRoute');
         addScript('http://routes.cloudmade.com/' + theAPI + '/api/0.3/' + the_lat + ',' + the_lng + transit + toAddress + '/car.js?callback=getRoute');
 	}
-	
+
 function sidebar_buttonactions(id) {
 	if(id == "s_rc") {
-		if($('regions_control')) {$('regions_control').style.display = 'block';} 
+		if($('regions_control')) {$('regions_control').style.display = 'block';}
 		if($('s_ct')) {$('s_ct').style.display='none';}
 		if($('s_rc')) {$('s_rc').style.display='none';}
 		if($('s_fl')) {$('s_fl').style.display='none';}
@@ -7204,21 +7207,21 @@ function sidebar_buttonactions(id) {
 		if($('h_rc')) {$('h_rc').style.display='inline-block';}
 		} else if(id == "h_rc") {
 		if($('regions_control')) {$('regions_control').style.display= 'none';}
-		if($('h_rc')) {$('h_rc').style.display='none';} 
-		if($('s_rc')) {$('s_rc').style.display='inline-block';} 
+		if($('h_rc')) {$('h_rc').style.display='none';}
+		if($('s_rc')) {$('s_rc').style.display='inline-block';}
 		if($('s_fl')) {$('s_fl').style.display='inline-block';}
 		if($('s_ct')) {$('s_ct').style.display='inline-block';}
 		if($('s_ms')) {$('s_ms').style.display='inline-block';}
 		if($('s_mo')) {$('s_mo').style.display='inline-block';}
 		} else if(id == "s_fl") {
 		if($('fileList')) {$('fileList').style.display= 'block';}
-		if($('thefileslist')) {$('thefileslist').style.display='block';} 
+		if($('thefileslist')) {$('thefileslist').style.display='block';}
 		if($('s_ct')) {$('s_ct').style.display='none';}
 		if($('s_fl')) {$('s_fl').style.display='none';}
 		if($('s_rc')) {$('s_rc').style.display='none';}
 		if($('s_ms')) {$('s_ms').style.display='none';}
 		if($('s_mo')) {$('s_mo').style.display='none';}
-		if($('h_fl')) {$('h_fl').style.display='inline-block';} 
+		if($('h_fl')) {$('h_fl').style.display='inline-block';}
 		} else if(id == "h_fl") {
 		if($('fileList')) {$('fileList').style.display= 'none';}
 		if($('thefileslist')) {$('thefileslist').style.display='none';}
@@ -7254,7 +7257,7 @@ function sidebar_buttonactions(id) {
 		if($('s_fl')) {$('s_fl').style.display='none';}
 		if($('s_ms')) {$('s_ms').style.display='none';}
 		if($('s_mo')) {$('s_mo').style.display='none';}
-		if($('h_ct')) {$('h_ct').style.display='inline-block';}	
+		if($('h_ct')) {$('h_ct').style.display='inline-block';}
 		} else if(id == "h_ct") {
 		if($('controls')) {$('controls').style.display= 'none';}
 		if($('s_ct')) {$('s_ct').style.display='inline-block';}
@@ -7269,9 +7272,9 @@ function sidebar_buttonactions(id) {
 		if($('s_rc')) {$('s_rc').style.display='none';}
 		if($('s_fl')) {$('s_fl').style.display='none';}
 		if($('s_ms')) {$('s_ms').style.display='none';}
-		if($('s_ct')) {$('h_ct').style.display='none';}	
+		if($('s_ct')) {$('h_ct').style.display='none';}
 		if($('s_mo')) {$('s_mo').style.display='none';}
-		if($('h_mo')) {$('h_mo').style.display='inline-block';}	
+		if($('h_mo')) {$('h_mo').style.display='inline-block';}
 		} else if(id == "h_mo") {
 		if($('more')) {$('more').style.display= 'none';}
 		if($('s_ct')) {$('s_ct').style.display='inline-block';}
@@ -7289,7 +7292,7 @@ function inboxorsent(ticket_id, responder_id, facility_id, mi_id, sortby, sort, 
 	window.folderchanged = true;
 	get_theMessages(ticket_id, responder_id, facility_id, mi_id, sortby, sort, window.inorout);
 	}
-	
+
 function full_scr_ass() {
 	$('assignments_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 	var randomnumber=Math.floor(Math.random()*99999999);
@@ -7299,7 +7302,7 @@ function full_scr_ass() {
 		var i=1;
 		var ass_arr = JSON.decode(req.responseText);
 		if(ass_arr[0][0] == 0) {
-			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Current Assignments.........</marquee>";	
+			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Current Assignments.........</marquee>";
 			$('assignments_list').innerHTML = outputtext;
 			} else {
 			var outputtext = "<TABLE id='assignmentstable' class='fixedheadscrolling scrollable' style='width: 100%;'>";
@@ -7336,13 +7339,13 @@ function full_scr_ass() {
 					if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].offsetWidth + "px";}
 					if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].offsetWidth + "px";}
 					if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].offsetWidth + "px";}
-					}				
+					}
 				},1000);
 			}
 		}				// end function asslist_cb()
-	full_scr_ass_get();	
+	full_scr_ass_get();
 	}				// end function full_scr_ass()
-	
+
 function full_scr_ass_get() {
 	if (fs_interval!=null) {return;}
 	fs_interval = window.setInterval('full_scr_ass_loop()', 60000);
@@ -7351,7 +7354,7 @@ function full_scr_ass_get() {
 function full_scr_ass_loop() {
 	full_scr_ass();
 	}			// end function do_loop()
-	
+
 function do_conditions() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/alertlist.php?version=' + randomnumber;
@@ -7378,17 +7381,17 @@ function do_conditions() {
 				}
 			}
 		}				// end function cond_cb()
-	}				// end function do_conditions()	
-	
+	}				// end function do_conditions()
+
 function conditions_get() {
 	if (c_interval!=null) {return;}			// ????
 	c_interval = window.setInterval('do_conditions_loop()', 30000);
-	}			// end function conditions_get()	
-	
+	}			// end function conditions_get()
+
 function do_conditions_loop() {
 	do_conditions();
 	}			// end function do_conditions_loop()
-	
+
 function delfiles(myForm){
 	for (i=0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type == 'checkbox'){
@@ -7396,13 +7399,13 @@ function delfiles(myForm){
 				theID = myForm.elements[i].value;
 				randomnumber=Math.floor(Math.random()*99999999);
 				var url ="./ajax/delfile.php?id=" + theID + "&version=" + randomnumber;
-				sendRequest (url, del_handleResult, "");	
+				sendRequest (url, del_handleResult, "");
 				}
 			}
 		}		// end for ()
 	load_files(window.theTicket, window.theResponder, window.theFacility, window.theMI, window.allowedit, window.file_field, window.file_direct, window.thefiletype);
 	}		// end function delfiles
-	
+
 function del_handleResult(req) {
 	}
 
@@ -7417,16 +7420,16 @@ function check_checkboxes(myForm, checkControl, uncheckControl) {
 		}		// end for ()
 	if(myForm.elements.length == boxesChecked) {
 		$(uncheckControl).style.display = "inline-block";
-		$(checkControl).style.display = "none";	
+		$(checkControl).style.display = "none";
 		} else if(boxesChecked == 0) {
 		$(uncheckControl).style.display = "none";
-		$(checkControl).style.display = "inline-block";		
+		$(checkControl).style.display = "inline-block";
 		} else {
 		$(uncheckControl).style.display = "inline-block";
-		$(checkControl).style.display = "inline-block";	
+		$(checkControl).style.display = "inline-block";
 		}
 	}
-	
+
 function do_check(myForm, checkControl, uncheckControl){
 	for (i=0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type =='checkbox'){
@@ -7435,7 +7438,7 @@ function do_check(myForm, checkControl, uncheckControl){
 		}		// end for ()
 	check_checkboxes(myForm, checkControl, uncheckControl);
 	}		// end function do_clear
-	
+
 function do_clear(myForm, checkControl, uncheckControl){
 	for (i=0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type =='checkbox'){
@@ -7444,7 +7447,7 @@ function do_clear(myForm, checkControl, uncheckControl){
 		}		// end for ()
 	check_checkboxes(myForm, checkControl, uncheckControl);
 	}		// end function do_clear
-	
+
 function htmlspecialchars_decode(string, quote_style) {
   var optTemp = 0,
     i = 0,
@@ -7505,7 +7508,7 @@ function doTweet(myForm) {
 	if(tUserid == "" && tScreenname == ""){
 		var url = './ajax/twitter_send.php?message=' + tMessage + '&version=' + randomnumber + '&q=' + sess_id;
 		} else {
-		var url = './ajax/twitter_direct_send.php?message=' + tMessage + tUserid + tScreenname + '&version=' + randomnumber + '&q=' + sessID;		
+		var url = './ajax/twitter_direct_send.php?message=' + tMessage + tUserid + tScreenname + '&version=' + randomnumber + '&q=' + sessID;
 		}
 	sendRequest (url, theCB, "");
 	function theCB(req) {
@@ -7529,7 +7532,7 @@ function doTweet(myForm) {
 				$('theFlag').innerHTML = "";
 				},5000);
 			},5000);
-		}		
+		}
 	}
 
 function tweetInfo(message) {
@@ -7559,7 +7562,7 @@ function tweetInfo(message) {
 		alert(theOutput2);
 		}
 	}
-	
+
 function get_status_sel(unit_id, status_val, handle) {
 	var status_details = JSON.decode(window.responder_sel);
 	var def_bg = "#FFFFFF";
@@ -7584,7 +7587,7 @@ function get_status_sel(unit_id, status_val, handle) {
 	outputtext += "</SELECT>";
 	return outputtext;
 	}
-	
+
 function get_fac_status_sel(fac_id, status_val, handle) {
 	var status_details = JSON.decode(window.facility_sel);
 	var def_bg = "#FFFFFF";
@@ -7609,7 +7612,7 @@ function get_fac_status_sel(fac_id, status_val, handle) {
 	outputtext += "</SELECT>";
 	return outputtext;
 	}
-	
+
 function get_assigns(unit_id) {
 	var retval = "";
 	var titleval = "";
@@ -7639,7 +7642,7 @@ function get_assigns(unit_id) {
 		return retval;
 		}
 	}
-	
+
 function get_assigns_flag(unit_id) {
 	var resp_assigns = JSON.decode(window.theAssigns);
 	var the_tickets = JSON.decode(window.theTickets);
@@ -7659,12 +7662,12 @@ function get_assigns_flag(unit_id) {
 			}
 		}
 	}
-	
+
 function get_incidentinfo(ticket_id) {
 	get_tickpopup(ticket_id);
 	}
 
-	
+
 function setTableCells(theTable, tableWidth) {
 	var table = document.getElementById(theTable);
 	if(table) {
@@ -7679,7 +7682,7 @@ function setTableCells(theTable, tableWidth) {
 			var cellwidth = tableWidth / numCols;
 			for (var i = 0; i < headerRow.cells.length; i++) {
 				headerRow.cells[i].style.width = cellwidth + "px";
-				}				
+				}
 			}
 		if(getHeaderHeight(headerRow) >= listheader_height) {
 			var theRow = table.insertRow(1);
@@ -7689,9 +7692,9 @@ function setTableCells(theTable, tableWidth) {
 				theCell.innerHTML = " ";
 				}
 			}
-		}	
+		}
 	}
-	
+
 function get_requests() {
 	window.reqs_interval = null;
 	$('all_requests').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
@@ -7713,10 +7716,10 @@ function get_requests() {
 		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textRequested + "</TH>";
 		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textUpdated + "</TH>";
 		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textBy + "</TH>";
-		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>...</TH>";				
+		the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>...</TH>";
 		the_string += "</TR>";
 		the_string += "</thead>";
-		the_string += "<tbody>";		
+		the_string += "<tbody>";
 		theClass = "background-color: #CECECE";
 		for(var key in the_requests) {
 			if(the_requests[key][0] == "No Current Requests") {
@@ -7741,7 +7744,7 @@ function get_requests() {
 				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][4] + "</TD>";
 				the_string += "<TD CLASS='plain_list text' style='width: 15%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + theField + "</TD>";
 				the_string += "<TD CLASS='plain_list text' title='" + the_requests[key][14] + "' style='width: 10%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap: sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][14].substring(0,24)+"..." + "</TD>";
-				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' " + the_onclick + ">" + the_requests[key][16] + "</TD>";	
+				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' " + the_onclick + ">" + the_requests[key][16] + "</TD>";
 				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][18] + "</TD>";
 				the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][25] + "</TD>";
 				the_string += "<TD CLASS='plain_list text'style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][26] + "</TD>";
@@ -7760,12 +7763,12 @@ function get_requests() {
 			requests_get();
 			},1500);
 		}
-	}		
-	
+	}
+
 function requests_get() {
 	reqs_interval = window.setInterval('do_requests_loop()', 30000);
-	}	
-	
+	}
+
 function do_requests_loop() {
 	randomnumber=Math.floor(Math.random()*99999999);
 	var url ="./ajax/list_requests_admin.php?showall=" + showall + "&version=" + randomnumber;
@@ -7793,10 +7796,10 @@ function requests_cb2(req) {
 	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textRequested + "</TH>";
 	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textUpdated + "</TH>";
 	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>" + textBy + "</TH>";
-	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>...</TH>";		
+	the_string += "<TH class='plain_listheader text' style='border-right: 1px solid #FFFFFF;'>...</TH>";
 	the_string += "</TR>";
 	the_string += "</thead>";
-	the_string += "<tbody>";		
+	the_string += "<tbody>";
 	theClass = "background-color: #CECECE";
 	for(var key in the_requests) {
 		if(the_requests[key][0] == "No Current Requests") {
@@ -7821,7 +7824,7 @@ function requests_cb2(req) {
 			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][4] + "</TD>";
 			the_string += "<TD CLASS='plain_list text' style='width: 15%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + theField + "</TD>";
 			the_string += "<TD CLASS='plain_list text' title='" + the_requests[key][14] + "' style='width: 10%; " + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap: sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][14].substring(0,24)+"..." + "</TD>";
-			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' " + the_onclick + ">" + the_requests[key][16] + "</TD>";	
+			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' " + the_onclick + ">" + the_requests[key][16] + "</TD>";
 			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][18] + "</TD>";
 			the_string += "<TD CLASS='plain_list text' style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][25] + "</TD>";
 			the_string += "<TD CLASS='plain_list text'style='" + the_requests[key][17] + " white-space: normal; word-wrap: break-word; -ms-word-wrap : sWrap; border-right: 1px solid #707070;' onClick=\"window.open('request.php?id=" + the_request_id + "','view_message','width=600,height=600,titlebar=1, location=0, resizable=1, scrollbars=yes, status=0,toolbar=0,menubar=0,location=0, right=100,top=300,screenX=500,screenY=300')\">" + the_requests[key][26] + "</TD>";
@@ -7839,11 +7842,11 @@ function requests_cb2(req) {
 		setTableCells("requeststable", window.listwidth);
 		},1500);
 	}
-	
+
 function summary_get() {
 	summary_interval = window.setInterval('do_summary_loop()', 10000);
-	}	
-	
+	}
+
 function do_summary_loop() {
 	randomnumber=Math.floor(Math.random()*99999999);
 	var url ="./ajax/requests_wallboard.php?version=" + randomnumber;
@@ -7859,7 +7862,7 @@ function get_summary() {
 		var theColor = "style='background-color: #CECECE; color: #000000;'";
 		if(the_summary[0] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
 		var numOpen = "<TD class='summ_td_label text'>Requests Open (not accepted): </TD><TD class='summ_td_data text' " + theColor + ">" + the_summary[0] + "</TD>";
-		if(the_summary[1] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }			
+		if(the_summary[1] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
 		var numAcc = "<TD class='summ_td_label text'>Requests Accepted (not resourced): </TD><TD class='summ_td_data text'>" + the_summary[1] + "</TD>";
 		var numComp = "<TD class='summ_td_label text'>Requests Completed: </TD><TD class='summ_td_data text'>" + the_summary[3] + "</TD>";
 		if(the_summary[7] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
@@ -7871,16 +7874,16 @@ function get_summary() {
 		summaryText += "<TR>" + totTent + totCan + totDec + "</TR>";
 		summaryText += "</TABLE>";
 		$('theSummary').innerHTML = summaryText;
-		summary_get();			
+		summary_get();
 		}
 	}
-	
+
 function summary_cb2(req) {
 	var the_summary=JSON.decode(req.responseText);
 	var theColor = "style='background-color: #CECECE; color: #000000;'";
 	if(the_summary[0] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
 	var numOpen = "<TD class='summ_td_label text'>Requests Open (not accepted): </TD><TD class='summ_td_data text' " + theColor + ">" + the_summary[0] + "</TD>";
-	if(the_summary[1] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }			
+	if(the_summary[1] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
 	var numAcc = "<TD class='summ_td_label text'>Requests Accepted (not resourced): </TD><TD class='summ_td_data text'>" + the_summary[1] + "</TD>";
 	var numComp = "<TD class='summ_td_label text'>Requests Completed: </TD><TD class='summ_td_data text'>" + the_summary[3] + "</TD>";
 	if(the_summary[7] > 5) { theColor = "style='background-color: red; color: yellow; font-weight: bold;'"; }
@@ -7893,7 +7896,7 @@ function summary_cb2(req) {
 	summaryText += "</TABLE>";
 	$('theSummary').innerHTML = summaryText;
 	}
-	
+
 
 function hide_closed() {
 	showall = "no";
@@ -7908,7 +7911,7 @@ function show_closed() {
 	$('hideBut').style.display = "inline-block";
 	get_requests();
 	}
-	
+
 var disp_direct = 'ASC';
 var disp_field = 'distance';
 var disp_id = "disp1";
@@ -7977,18 +7980,18 @@ function set_disp_headers(id, header_text, the_bull) {
 		window.disp1_text = textDispHandle;
 		}
 	}
-	
+
 function do_disp_sort(id, field, header_text) {
 	if(disp_field == field) {
-		if(disp_direct == "ASC") { 
-			window.disp_direct = "DESC"; 
-			var the_bull = "&#9660"; 
+		if(disp_direct == "ASC") {
+			window.disp_direct = "DESC";
+			var the_bull = "&#9660";
 			window.disp_header = header_text;
 			set_disp_headers(id, header_text, the_bull);
-			} else if(disp_direct == "DESC") { 
-			window.disp_direct = "ASC"; 
-			var the_bull = "&#9650"; 
-			window.disp_header = header_text; 
+			} else if(disp_direct == "DESC") {
+			window.disp_direct = "ASC";
+			var the_bull = "&#9650";
+			window.disp_header = header_text;
 			set_disp_headers(id, header_text, the_bull);
 			}
 		} else {
@@ -8003,7 +8006,7 @@ function do_disp_sort(id, field, header_text) {
 	load_dispatch(window.currentTicket, window.disp_field, window.disp_direct, window.searchitem);
 	return true;
 	}
-	
+
 function load_dispatch(ticket_id, sort, dir, searchitem) {
 	window.currentTicket = ticket_id;
 	if(sort != window.disp_field) {
@@ -8021,12 +8024,12 @@ function load_dispatch(ticket_id, sort, dir, searchitem) {
 			}
 		}
 	var wrappertext = "<DIV id='disp_outer' style='width: " + window.disp_winWidth + "; height: 90%; display: block;'><BR />";
-	wrappertext += 			"<DIV id = 'dispmailform' style='position: relative; top: 10px; left: 30%; height: 50%; width: 40%; display: none; z-index: 9999;'></DIV>";		
+	wrappertext += 			"<DIV id = 'dispmailform' style='position: relative; top: 10px; left: 30%; height: 50%; width: 40%; display: none; z-index: 9999;'></DIV>";
 	wrappertext += 			"<DIV id = 'leftcol' style='position: relative; top: 10px; float: left; width: 50%;'>";
 	wrappertext += 				"<DIV id='dispatches' style='display: block; width: 100%;'>";
 	wrappertext += 					"<DIV id='dispatchheader' class='header text_center text_bold text_biggest' style='display: block; width: 100%; text-align: middle;'>Incident Dispatch - <SPAN id='theScope'></SPAN></DIV>";
 	wrappertext += 					"<DIV class='scrollableContainer' id='dispatchlist' style='display: block; height: 80%; width: 100%;'>";
-	wrappertext += 						"<DIV class='scrollingArea' id='the_displist' style='max-height: 90%; ><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>";		
+	wrappertext += 						"<DIV class='scrollingArea' id='the_displist' style='max-height: 90%; ><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>";
 	wrappertext += 					"</DIV>";
 	wrappertext += 				"</DIV>";
 	wrappertext += "		<SPAN ID='sub_but' class='plain text' style='display: inline-block; float: none; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate_disp(document.dispatch_frm);'><SPAN STYLE='float: left;'>Next</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>";
@@ -8037,7 +8040,7 @@ function load_dispatch(ticket_id, sort, dir, searchitem) {
 	wrappertext += "		<SPAN class='td_label text middle' style='display: inline;'>Filter by capability</SPAN><SPAN class='td_data text middle'><INPUT TYPE='text' style='display: inline;' NAME='frm_searchstring' VALUE= '" + searchitem + "' /></SPAN>";
 	wrappertext += "		<SPAN ID='search_but' class='plain text' style='display: inline-block; float: none; width: 100px; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_filter_by_capab(" + ticket_id + ");'><SPAN STYLE='float: left;'>Filter</SPAN><IMG STYLE='float: right;' SRC='./images/filter_small.png' BORDER=0></SPAN>";
 	wrappertext += "		</FORM>";
-	wrappertext += 			"</DIV>";		
+	wrappertext += 			"</DIV>";
 	wrappertext += "		<DIV id='rightcol' style='position: relative; top: 10px; float: right; width: 45%;'>";
 	wrappertext += "			<DIV id='map_canvas' style = 'border: 1px outset #707070;'></DIV>";
 	wrappertext += "			<SPAN id='map_caption' class='text_center bold text_big' style='display: inline-block;'>Map</SPAN><BR /><BR />";
@@ -8064,7 +8067,7 @@ function load_dispatch(ticket_id, sort, dir, searchitem) {
 	if(window.map) {window.map = null;}
 	init_map(1, def_lat, def_lng, "", 13, theLocale, useOSMAP, "br");
 	map.setView([def_lat, def_lng], 13);
-	var bounds = map.getBounds();	
+	var bounds = map.getBounds();
 	var zoom = map.getZoom();
 	var got_points = false;	// map is empty of points
 	var randomnumber=Math.floor(Math.random()*99999999);
@@ -8077,14 +8080,14 @@ function load_dispatch(ticket_id, sort, dir, searchitem) {
 		$('theScope').innerHTML = disp_arr[3];
 		$('legend').innerHTML = disp_arr[2];
 		if(disp_arr[0] == 0) {
-			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold; color: #000000;'>......No Responders.........</marquee>";	
+			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold; color: #000000;'>......No Responders.........</marquee>";
 			return false;
 			} else {
 			var disp_resp = disp_arr[1];
 			window.theLat = disp_arr[0].lat;
 			window.theLng = disp_arr[0].lng
 			var facility = disp_arr[0].facility;
-			var rec_facility = disp_arr[0].rec_facility;			
+			var rec_facility = disp_arr[0].rec_facility;
 			var outputtext = "<FORM METHOD='post' NAME='dispatch_frm' ACTION='./ajax/form_post.php?ticket_id=" + ticket_id + "&q=" + sess_id + "&function=dispatch'>";
 			outputtext += "<TABLE id='disptable' class='fixedheadscrolling scrollable' style='width: 98%;'>";
 			outputtext += "<thead>";
@@ -8149,13 +8152,13 @@ function load_dispatch(ticket_id, sort, dir, searchitem) {
 			setTimeout(function() {
 				$('the_displist').innerHTML = outputtext;
 				},500);
-			setTimeout(function() {				
+			setTimeout(function() {
 				var disptbl = document.getElementById('disptable');
 				if(disptbl) {
 					var headerRow = disptbl.rows[0];
 					var tableRow = disptbl.rows[1];
 					if(tableRow) {
-						for (var i = 0; i < tableRow.cells.length; i++) {				
+						for (var i = 0; i < tableRow.cells.length; i++) {
 							if(tableRow.cells[i] && headerRow.cells[i]) {headerRow.cells[i].style.width = tableRow.cells[i].clientWidth - 2 + "px";}
 							}
 						if(getHeaderHeight(headerRow) >= 30) {
@@ -8171,13 +8174,13 @@ function load_dispatch(ticket_id, sort, dir, searchitem) {
 						for (var i = 0; i < headerRow.cells.length; i++) {
 							headerRow.cells[i].style.width = (cellwidthBase * 4) + "px";
 							}
-						}				
+						}
 					}
 				$('the_displist').style.height = window.disp_listheight;
 				},1000);
 		}				// end function dispatchlist_cb()
 	}				// end function load_dispatch()
-	
+
 function get_assignments() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_assignments.php?version=' + randomnumber + '&q=' + sess_id;
@@ -8194,7 +8197,7 @@ function get_assignments() {
 		allAssigns = assign_arr;
 		}				// end function assignments_cb()
 	}				// end function get_assignments()
-	
+
 function get_unit_assigns(unit_id) {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_unit_assignments.php?unit=' + unit_id + '&version=' + randomnumber + '&q=' + sess_id;
@@ -8210,9 +8213,9 @@ function get_unit_assigns(unit_id) {
 					}
 				}
 			}
-		}				// end function assignments_cb()	
+		}				// end function assignments_cb()
 	}
-	
+
 function get_unit_categories() {
 	var randomnumber=Math.floor(Math.random()*99999999);
 	var url = './ajax/get_unit_categories.php?version=' + randomnumber + '&q=' + sess_id;

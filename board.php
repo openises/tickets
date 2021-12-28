@@ -137,7 +137,7 @@ if((isset($_SESSION['level'])) && ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT'])
 	print "Not Authorized";
 	exit();
 	}
-	
+
 function show_top() {				// generates the document introduction
 ?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -235,7 +235,7 @@ function show_top() {				// generates the document introduction
 			}
 		return elements;
 		}
-		
+
 	function do_hover (the_id) {
 		CngClass(the_id, 'hover text');
 		return true;
@@ -245,7 +245,7 @@ function show_top() {				// generates the document introduction
 		CngClass(the_id, 'plain text');
 		return true;
 		}
-		
+
 	function CngClass(obj, the_class){
 		$(obj).className=the_class;
 		return true;
@@ -364,7 +364,7 @@ if(empty($_SESSION)) {		// expired?
 <CENTER><BR><SPAN ID='isguest' ><H3>Call board not provided for guest access</H3></span>
 </BODY>
 </HTML>
-<?php		
+<?php
 	} else {
 	@session_start();
 	set_sess_exp();				// update session time
@@ -606,7 +606,7 @@ if(empty($_SESSION)) {		// expired?
 		case 'add': 					//  ==== { ==== first build JS array of existing assigns for dupe prevention
 
 			$al_groups = $_SESSION['user_groups'];
-			
+
 			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "";
 				} else {
@@ -821,7 +821,7 @@ if(empty($_SESSION)) {		// expired?
 						if (get_variable('call_board')==1) {
 ?>
 							<SPAN id='ref_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="do_refresh();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
-<?php		
+<?php
 							} else {
 ?>
 							<SPAN id='ref_but' CLASS='plain text' style='float: left; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR />
@@ -880,7 +880,7 @@ if(empty($_SESSION)) {		// expired?
 							}
 						$em_arr = array_unique($temp_arr);
 						$em_addr = implode(",", $em_arr);
-?>						
+?>
 						<TR CLASS='<?php print $evenodd[($i+1)%2];?>' VALIGN='baseline'>
 							<TD ALIGN='right' CLASS='td_label'><?php print $capt;?> </TD>
 							<TD ALIGN='left'>
@@ -1307,7 +1307,7 @@ if(empty($_SESSION)) {		// expired?
 						$('refr_btn').style.display='inline-block';
 //						if(window.opener && typeof window.opener.parent.frames["main"].do_responder_refresh() == 'function') {
 //							window.opener.parent.frames["main"].do_responder_refresh();
-//							}		
+//							}
 						if(window.opener && typeof window.opener.parent.frames["main"].do_statistics() == 'function') {
 							window.opener.parent.frames["main"].do_statistics();
 							}
@@ -1405,7 +1405,7 @@ if(empty($_SESSION)) {		// expired?
 									</TD>
 <?php
 									if(get_variable('call_board') == 1) {
-?>										
+?>
 										<TD ALIGN='left'>
 											<SPAN id='close_btn' CLASS='plain text' style='width: 70px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="self.close();"><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
 										</TD>
@@ -1423,7 +1423,7 @@ if(empty($_SESSION)) {		// expired?
 									</TD>
 								</TR>
 								<TR>
-									<TD ALIGN='left' COLSPAN=2>Cleared: 
+									<TD ALIGN='left' COLSPAN=2>Cleared:
 										<SPAN onClick = "do_hors('<?php print $frm_val ;?>')"><U><?php print $btn_text ;?></U></SPAN>
 									</TD>
 								</TR>
@@ -1472,7 +1472,7 @@ if(empty($_SESSION)) {		// expired?
 						$where .= " AND `a`.`type` = 1) ";
 						}	//	end if count($al_groups ==0)
 					} else {
-					if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+					if(count($curr_viewed) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13 12/2/2021
 						$where = "WHERE `a`.`type` = 1";
 						} else {
 						$x=0;
@@ -1489,10 +1489,10 @@ if(empty($_SESSION)) {		// expired?
 
 // ================================ end of regions stuff
 
-				$query = "SELECT *, 
+				$query = "SELECT *,
 					`as`.`id` AS `assign_id` ,
 					`as`.`comments` AS `assign_comments`,
-					`u`.`user` AS `theuser`, 
+					`u`.`user` AS `theuser`,
 					`t`.`scope` AS `tick_scope`,
 					`t`.`description` AS `tick_descr`,
 					`t`.`status` AS `tick_status`,
@@ -1645,7 +1645,7 @@ if(empty($_SESSION)) {		// expired?
 								$incType = addslashes ($row['inc_type']);
 								$short_inctype = cb_shorten($row['inc_type'], $COLS_DESCR);
 								print "\t<TD onClick = $doTick(" . $row['ticket_id'] . ") CLASS='{$theClass}' ALIGN='left'
-									onmouseover=\"Tip('$incType')\" onmouseout=\"UnTip()\">{$in_strike} {$short_inctype}{$in_strikend}</TD>\n";		// call 8/24/08, 4/26/09							
+									onmouseover=\"Tip('$incType')\" onmouseout=\"UnTip()\">{$in_strike} {$short_inctype}{$in_strikend}</TD>\n";		// call 8/24/08, 4/26/09
 								} else {
 								print "<TD COLSPAN=4>[#{$row['ticket_id']}]</TD>";				// id only if absent
 								}
@@ -2140,7 +2140,7 @@ if(empty($_SESSION)) {		// expired?
 										$set_color[0] = "#FFFFFF";
 										$set_color[1] = "#000000";
 										}
-									}										
+									}
 ?>
 								<SELECT id='frm_status_id_f_<?php print $asgn_row['resp_id'];?>' name="frm_unit_status_id" STYLE='background-color: <?php print $set_color[0];?>; color: <?php print $set_color[1];?>;' onChange = "Javascript: unit_st=false; document.edit_Form.frm_log_it.value='1'" <?php print $disabled;?> >
 <?php																// UNIT STATUS
@@ -2208,7 +2208,7 @@ if(empty($_SESSION)) {		// expired?
 								<SPAN ID = 'dispatched' STYLE = 'visibility: <?php print $the_vis;?>;'><?php print generate_date_dropdown("dispatched",totime($the_date), $the_dis);?></SPAN>
 							</TD>
 						</TR>
-<?php 
+<?php
 						if (is_date($asgn_row['responding'])) {
 							$the_date = $asgn_row['responding'];
 							$the_vis = "visible";

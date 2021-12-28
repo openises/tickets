@@ -17,7 +17,7 @@ improvements to datatype 'time' handling
 10/6/09 Added Facilities icons handling
 10/10/09 quotes corrected
 10/13/09 referential integrity checks added
-10/20/09 disallow edit/delete unit status = 'available' 
+10/20/09 disallow edit/delete unit status = 'available'
 11/2/09 correction to 10/20/09 entry
 11/8/09 ereg_replace() deprecated and replaced
 2/8/10 PHP parseInt added, plus c_un_status.php, u_un_status.php
@@ -52,7 +52,7 @@ require_once('./incs/functions.inc.php');
 $query = "SET @@global.sql_mode= '';";		// 6/25/10
 $result = mysql_query($query) ;
 
-if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
+if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
 $istest=FALSE;
 if ($istest) {
@@ -61,7 +61,7 @@ if ($istest) {
 do_login(basename(__FILE__));	// 9/18/08
 if(is_administrator() || (get_variable('oper_can_edit') == "1")) {
 
-$key_str			= "_id";			// FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier 
+$key_str			= "_id";			// FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier
 
 /* cosmetic stuff from here - MAY  be changed */
 
@@ -85,7 +85,7 @@ $api_key			= "ABQIAAAAiLlX5dJnXCkZR5Yil2cQ5BQOqXXamPs-BOuxLXsFgzG1vgHGdBTx978MQ0
 
 $def_state			= "10";				// Florida
 $def_county			= "58";				// Sarasota
-$def_lat			= NULL;				// default center lattitude - if present, overrides county centroid 
+$def_lat			= NULL;				// default center lattitude - if present, overrides county centroid
 $def_lon			= NULL;				// guess!
 $radius				= 10;				// radius of circle on default center (miles)
 $do_hints			= TRUE;				// if true, print data hints at input fields
@@ -99,19 +99,19 @@ $can_edit = ((is_super()) || (is_administrator()) || (get_variable('oper_can_edi
 if (!array_key_exists('func', $_POST)) {
 	$func = "l";					// Select table, of C R U D or Select
 	$tablename = "";				// set per user selection
-	$indexname = "";				// set per schema 
+	$indexname = "";				// set per schema
 	}
 
 extract($_POST);
-$sortby = (!(isset($sortby)) || empty($sortby))?		 "id" : $sortby; 
-$sortdir = (!(isset($sortdir)) || empty($sortdir))?		 0 : $sortdir; 
-//$sortby = (!(isset($index)) || empty($index))?			 "id" : $index; 
+$sortby = (!(isset($sortby)) || empty($sortby))?		 "id" : $sortby;
+$sortdir = (!(isset($sortdir)) || empty($sortdir))?		 0 : $sortdir;
+//$sortby = (!(isset($index)) || empty($index))?			 "id" : $index;
 function get_comments($the_table) {  				// returns array key=> name, value=> comment - 10/31/10
 	$_array = array();								// 12/15/10
 	$query = "SHOW FULL COLUMNS FROM `$GLOBALS[mysql_prefix]{$the_table}`;";
 	$result = mysql_query($query) ;			// use $result for meta-information reference
 	if (!($result)) {return $_array;}		// 12/15/10
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// 
+	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//
 		$_array[$row['Field']] = $row['Comment'];
 		}
 	return $_array;
@@ -119,50 +119,50 @@ function get_comments($the_table) {  				// returns array key=> name, value=> co
 
 function is_in_use($index_val) {	// 11/9/10 - return boolean based on whether the identified entry is in use
 	global $tablename, $mysql_prefix;
-	switch ($tablename) {		
-		case "unit_types":	
+	switch ($tablename) {
+		case "unit_types":
 			$the_table = $mysql_prefix . "responder";
 			$query ="SELECT * FROM `$the_table` WHERE `type` = {$index_val} LIMIT 1";						// get in_row count only
 			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
 			$in_use = (mysql_num_rows($res_test)>0);
 		    break;
-		case "un_status":	
+		case "un_status":
 			$the_table = $mysql_prefix . "responder";
 			$query ="SELECT * FROM `$the_table` WHERE `un_status_id` = {$index_val} LIMIT 1";						// get in_row count only
 			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
 			$in_use = ((mysql_num_rows($res_test)>0) || (intval ($index_val)==1));	// 11/2/09
 		    break;
-		case "fac_status":	
+		case "fac_status":
 			$the_table = $mysql_prefix . "facilities";
 			$query ="SELECT * FROM `$the_table` WHERE `status_id` = {$index_val} LIMIT 1";						// get in_row count only
 			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
 			$in_use = (mysql_num_rows($res_test)>0);
 		    break;
-		case "fac_types":			
+		case "fac_types":
 			$the_table = $mysql_prefix . "facilities";
 			$query ="SELECT * FROM `$the_table` WHERE `type` = {$index_val} LIMIT 1";						// get in_row count only
 			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
 			$in_use = (mysql_num_rows($res_test)>0);
 		    break;
-		case "in_types":						// 
+		case "in_types":						//
 			$the_table = $mysql_prefix . "ticket";
 			$query ="SELECT * FROM `$the_table` WHERE `in_types_id` = {$index_val} LIMIT 1";						// get in_row count only
 			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
 			$in_use = (mysql_num_rows($res_test)>0);
-		    break;						    
+		    break;
 		case "region":						// 6/10/11
 			$the_table = $mysql_prefix . "allocates";
 			$query ="SELECT * FROM `$the_table` WHERE `group` = {$index_val} LIMIT 1";						// get in_row count only
 			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
 			$in_use = (mysql_num_rows($res_test)>0);
-		    break;				
+		    break;
 		default:
 			$in_use = FALSE;
 		}				// end switch
 //	dump($in_use);
 	return $in_use;
 	}				// end function  is_in_use()
-	
+
 $evenodd = array ("even", "odd");	// for table row colors
 $hints = array("int"=>"numeric", "blob"=>"blob", "string"=>"text", "datetime"=>"date/time", "time"=>"time", "timestamp"=>"date/time", "date"=>"date", "real"=>"float'g pt.");
 $primaries = array();				// table names
@@ -183,9 +183,9 @@ if ((isset($tablename)) && (!isset($indexname))) {
 	}
 
 function fnQuote_Smart($value) {    // Stripslashes
-    if (get_magic_quotes_gpc()) {
-        $value = stripslashes($value);
-    	}
+//    if (@ get_magic_quotes_gpc()) {
+//        $value = stripslashes($value);
+//    	}
     if (!is_numeric($value)) {    // Quote if not integer
         $value = "'" . mysql_real_escape_string($value) . "'";
 	    }
@@ -207,7 +207,7 @@ function myerror($script,$line,$custom_err='', $query = '')	{	/* raise an error 
 function get_file($mystr) {								// returns extracted script name
 	if (!$temp=(strrchr ($mystr, "/"))) {$temp=(strrchr ( $mystr, "\\"));} 		// win32 or *nix?
 	return $temp;
-	}													
+	}
 
 function fnDatabaseExists($dbName) {					//Verifies existence of a MySQL database
 	global $mysql_host, $mysql_user, $mysql_passwd;
@@ -228,12 +228,12 @@ function fnSubTableExists($TableName) {					// returns name of substitution tabl
 	global $id_lg, $primaries, $secondaries ;
 	$thename = substr( $TableName, 0, strlen($TableName)-$id_lg);				// high-order portion possible base name?
 	if ((in_array($thename, $primaries)) || (in_array ($thename, $secondaries))) {
-		return $thename; 
+		return $thename;
 		}
 	else 																		{
 		return FALSE;}
 	}
-	
+
 function fnDoCal($id) {
 	global $calstuff;
 	$calstuff .= "Calendar.setup({";
@@ -254,10 +254,10 @@ $calstuff="";						// JS calendar string gets built here
 
 $ctrp = $ctrs = 0;
 $sql = "SHOW TABLES ";													// populate array of table names
-$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db  
+$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
 while ($row = mysql_fetch_row($result)) {
 	$sql ="SELECT * FROM `$row[0]` LIMIT 1";
-	$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db  
+	$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
 	$row2 = mysql_fetch_array($result2);
 	$gotit = FALSE;
 	for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field
@@ -271,7 +271,7 @@ while ($row = mysql_fetch_row($result)) {
 	if (!$gotit) {														// not a primary
 		$secondaries[$ctrs] = $row[0];
 		$ctrs++;
-		}				
+		}
 	}
 unset ($result);
 unset ($result2);
@@ -322,7 +322,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 <script src="./js/proj4-compressed.js"></script>
 <script src="./js/proj4leaflet.js"></script>
 <script src="./js/leaflet/KML.js"></script>
-<script src="./js/leaflet/gpx.js"></script>  
+<script src="./js/leaflet/gpx.js"></script>
 <script src="./js/osopenspace.js"></script>
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
@@ -341,7 +341,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 ?>
 				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
 				<script src="./js/Google.js"></script>
-<?php				
+<?php
 				}
 			}
 		}
@@ -411,7 +411,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 				return argvalue;
 			}									// end rtrim()
 		}										// end JSfnTrim()
-	
+
 <?php
 	switch ($tablename) {
 		case "unit_types":
@@ -427,7 +427,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 	for ($i=0; $i<count($icons); $i++) {										// onto JS array
 		print "\ticons.push(\"{$icons[$i]}\");\n";								// 11/20/10
 		}
-	
+
 	$sm_icons = $GLOBALS['sm_icons'];
 	for ($i=0; $i<count($sm_icons); $i++) {
 		print "\tsm_icons.push(\"{$sm_icons[$i]}\");\n";								// 11/20/10
@@ -439,7 +439,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 			print "\n\ttype_names.push(\"{$row_un['name']}\");\n";		// onto JS array - 11/20/10
 			}				// end while ()
 		}				// end if()
-?>	
+?>
 	function validate_u_t(theForm) {			// unit type entry validation - c and u
 		var errmsg="";
 		if (theForm.frm_name.value == "")				{errmsg+= "\tType name is required\n";}
@@ -450,8 +450,8 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 ?>
 		if (type_names.inArray(theForm.frm_name.value))	{errmsg+= "\tDuplicated Type name\n";}
 <?php
-		}			// end if ($func =="c") 
-?>		
+		}			// end if ($func =="c")
+?>
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -467,7 +467,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 		document.forms[1].frm_icon.value=the_index;			// icon index to form variable
 		$('ID3').style.visibility = "visible";				// initially hidden for 'create'
 		return;
-		}			
+		}
 
 	function gen_img_str(the_index) {						// returns image string for nth icon
 		var the_sm_image = icons_dir + sm_icons[the_index];
@@ -477,7 +477,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 		}
 <?php
 		if ($row) {
-?>		
+?>
 			var which = "<?php print $row['icon'];?>";	// full size icon
 			icon_to_form(which);						// must be update or view
 <?php
@@ -499,7 +499,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 	for ($i=0; $i<count($icons); $i++) {										// onto JS array
 		print "\ticons.push(\"{$icons[$i]}\");\n";								// 11/20/10
 		}
-	
+
 	$sm_icons = $GLOBALS['fac_icons'];
 	for ($i=0; $i<count($sm_icons); $i++) {
 		print "\tsm_icons.push(\"{$sm_icons[$i]}\");\n";						// 11/20/10
@@ -511,7 +511,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 			print "\n\ttype_names.push(\"{$row_fac['name']}\");\n";		// onto JS array - 11/20/10
 			}				// end while ()
 		}				// end if()
-?>	
+?>
 	function validate_f_t(theForm) {			// unit type entry validation - c and u
 		var errmsg="";
 		if (theForm.frm_name.value == "")				{errmsg+= "\tType name is required\n";}
@@ -522,8 +522,8 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 ?>
 		if (type_names.inArray(theForm.frm_name.value))	{errmsg+= "\tDuplicated Type name\n";}
 <?php
-		}			// end if ($func =="c") 
-?>		
+		}			// end if ($func =="c")
+?>
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
@@ -533,13 +533,13 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 			}
 		}				// end function validate_f_t(theForm)
 
-	function icon_to_form(the_index) {	
+	function icon_to_form(the_index) {
 		var the_img = $('ID3');
 		the_img.src = icons_dir+sm_icons[the_index];		// display small icon
 		document.forms[1].frm_icon.value=the_index;			// icon index to form variable
 		$('ID3').style.visibility = "visible";				// initially hidden for 'create'
 		return;
-		}			
+		}
 
 	function gen_img_str(the_index) {						// returns image string for nth icon
 		var the_sm_image = icons_dir + sm_icons[the_index];
@@ -547,11 +547,11 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 		var the_title = icons[the_index].substr (0, icons[the_index].length-4).toUpperCase();	// extract color name
 		return "<IMG SRC='" + the_sm_image + "' onClick  = 'icon_to_form(" + the_index + ")' TITLE='" + the_title +"' />";
 		}
-		
+
 
 <?php
 		if ($row) {
-?>		
+?>
 			var which = "<?php print $row['icon'];?>";	// full size icon
 			icon_to_form(which);						// must be update or view
 <?php
@@ -577,9 +577,9 @@ function $() {									// 12/20/08
 	return elements;
 	}
 
-function getElement(aID){ 
+function getElement(aID){
 	return (document.getElementById) ? document.getElementById(aID) : document.all[aID];
-	} 
+	}
 
 JSfnBrowserSniffer();
 function JSfnBrowserSniffer() {													//detects the capabilities of the browser
@@ -589,18 +589,18 @@ function JSfnBrowserSniffer() {													//detects the capabilities of the br
 		else if (!document.all && document.getElementById) type="MO";			//Mozila e.g. Netscape 6 upwards
 		else type = "IE";														//????????????
 		}
-	
-	
+
+
 	function JSfnShowLayer(id, action){												// Show and hide a span/layer -- Seems to work with all versions NN4 plus other browsers
 		if (type=="IE") 				eval("document.all." + id + ".style.visibility='" + action + "'");  	// id is the name of the span/layer, action is either hidden or visible
 		if (type=="NN") 				eval("document." + id + ".visibility='" + action + "'");
 		if (type=="MO" || type=="OP") 	eval("document.getElementById('" + id + "').style.visibility='" + action + "'");
 		}
-	
+
 	function JSfnHideit (spanid) {
 		JSfnShowLayer(spanid, "hidden");
 		}
-	
+
 	function JSfnShowit (spanid) {
 		JSfnShowLayer(spanid, "visible");
 		}
@@ -612,9 +612,9 @@ function JSfnBrowserSniffer() {													//detects the capabilities of the br
 
 	function JSfnDisallow (thefunc, theid) {		// 10/20/09
 		alert("Disallowed");
-		return false;	
+		return false;
 		}
-		
+
 	function JSfnToFunc (thefunc, theid) {
 		if (thefunc == "d" ) {
 			if (!confirm ("Please confirm item deletion?\n\n" )) {
@@ -632,7 +632,7 @@ function JSfnBrowserSniffer() {													//detects the capabilities of the br
 		document.r.func.value="r";
 		document.r.submit();
 		}				// end function JSfnToNav()
-		
+
 	var currsort = '<?php print $sortby;?>';
 
 	function JSfnToSort(thevalue) {				// column name
@@ -654,7 +654,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 	function JSfnMyDate() {							// returns local date/time string per MySQL date format
 		var curdate = new Date();
 		var year = curdate.getYear();
-		if (year < 1000) {year+=1900;}			// resolves different JS's issue 
+		if (year < 1000) {year+=1900;}			// resolves different JS's issue
 		var month = curdate.getMonth()
 		if (month <10) { month = "0"+ month;}
 		var mday = curdate.getDate()
@@ -680,7 +680,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 		if (parseFloat(strin)== strin) 	{return true;}
 		else 							{return false;}
 		}
-	function Ck_Range(realin) {					// 
+	function Ck_Range(realin) {					//
 		if ((parseFloat(realin) >= 180.0 ) || (parseFloat(realin) <= -180.0 ) || (parseFloat(realin) == 0.0 )) {
 			return false;}
 		else {
@@ -707,41 +707,41 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 		if ((thearray[0]>23)||(thearray[0]>59)) 														{return false;}
 		return true;
 		}
-		
+
 	function JSfnCheckInput(myform, mybutton) {	// reject empty form elements
 		function JSfnAddError() {
 			errmsg +=  "'" + displayname +  "' format error\n" ;
-			}				// end function 
+			}				// end function
 
 		var errmsg = "";
 <?php
-		if (isset($tablename)){					// go column-by-column 
-		
-			print "\n\t\tmands = new Array();\t\t\t// array of mandatory fieldnames\n ";			
-			print "\t\ttypes = new Array();\t\t\t// array of fieldname types\n ";			
-			$query ="SHOW COLUMNS FROM `$mysql_prefix$tablename`";			// check value where possible - by mysql_field_type			
+		if (isset($tablename)){					// go column-by-column
+
+			print "\n\t\tmands = new Array();\t\t\t// array of mandatory fieldnames\n ";
+			print "\t\ttypes = new Array();\t\t\t// array of fieldname types\n ";
+			$query ="SHOW COLUMNS FROM `$mysql_prefix$tablename`";			// check value where possible - by mysql_field_type
 			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);		// check presence/absence
 			while ($row = mysql_fetch_assoc($result)) {
 				$thename = $row['Field'];
-				$thetype = $row['Type']; 
+				$thetype = $row['Type'];
 				print "\t\ttypes['frm_' + '$thename'] = \"$thetype\";\n";
 				if (($row['Null']) !=0) {								//
 					print "\t\tmands['frm_' + '$thename'] = \"$thetype\";\n";
-					}		// end if ... 
-				}				// end while ... 
+					}		// end if ...
+				}				// end while ...
 			print "\n";
-			unset($result);		
-		
+			unset($result);
+
 			}			// end if (isset($tablename)) ...
 ?>
 		for (i=0; i<myform.elements.length; i++) {					// check mandatories and values
-			if (myform.elements[i].name.substring(0, 4) == "frm_") { 
+			if (myform.elements[i].name.substring(0, 4) == "frm_") {
 				var displayname = myform.elements[i].name.substring(4, 99);
 				}
 			if (mands[myform.elements[i].name]) {					// defined in mandatory array?
 				if (myform.elements[i].type == 'select-one') { 			// field type = select?
 					if (myform.elements[i].options[myform.elements[i].selectedIndex].value==0) 	{
-						errmsg += "'" + displayname + "' is rqd\n"; 
+						errmsg += "'" + displayname + "' is rqd\n";
 						}
 					}							// end field type = select
 				else { 															// all other types
@@ -755,7 +755,7 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 					case "varchar":
 					case "char":
 						if (!ck_string(myform.elements[i].value))	{JSfnAddError();}
-						break;					
+						break;
 					case "blob":
 					case "BLOB":
 						if (!ck_blob(myform.elements[i].value))		{JSfnAddError();}
@@ -791,18 +791,18 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 					case "time":
 					case "TIME":
 						if (!ck_time(myform.elements[i].value))		{JSfnAddError();}
-						break;	
-				
+						break;
+
 					default :alert ("414 " + types[myform.elements[i].name] + " ??");
 					}
-				}									// end if (types ...) 
+				}									// end if (types ...)
 			}									// end for (i=0 ...
 		if (errmsg!= "") {
 			mybutton.disabled=false;			// allow clicks
 			alert ("Input errors - please correct the following:\n\n" + errmsg)
 			}
 		else {myform.submit(); }
-		
+
 		}			// end function check input()
 <?php
 	}			// end if (($func == ...
@@ -820,7 +820,7 @@ function do_focus(in_form) {
 		if (in_form.elements[i].type == 'text') {
 			in_form.elements[i].focus();
 			return;
-			}		
+			}
 		}
 	}
 
@@ -838,7 +838,7 @@ if(array_key_exists('srch_str', $_POST)) {		//	3/18/11
 <?php $the_table = (strlen($tablename)>0)? $tablename : "tbd"; ?>
 <BR />
 <CENTER>
-	<SPAN CLASS='header text_biggest text_center' style='padding-top: 10px; padding-bottom: 10px; width: 100%; display: block;'>Table: 
+	<SPAN CLASS='header text_biggest text_center' style='padding-top: 10px; padding-bottom: 10px; width: 100%; display: block;'>Table:
 		<SPAN STYLE="background: white">&nbsp;<?php print $the_table; ?>&nbsp;</SPAN>
 	</SPAN>
 </CENTER>
@@ -889,7 +889,7 @@ switch ($func) {		// ================================== case "c" ===============
 			}
 		else {$row = NULL;}
 ?>
-	
+
 		<FORM NAME="c" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>">
 		<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ;?>"/>
 		<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
@@ -897,13 +897,13 @@ switch ($func) {		// ================================== case "c" ===============
 		<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 		<INPUT TYPE="hidden" NAME="func" 		VALUE="pc"/>
 		<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-		
-	
+
+
 		<TABLE BORDER="0" ALIGN="center">
 		<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Add New Entry</FONT></TD></TR>
 		<TR><TD>&nbsp;</TD></TR>
 	<?php
-	
+
 		$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 		$lineno = 0;
@@ -944,7 +944,7 @@ switch ($func) {		// ================================== case "c" ===============
 						case "TIMESTAMP":
 						case "datetime":
 						case "date":
-						case "timestamp":						
+						case "timestamp":
 							fnDoCal($i);				// generates JS Calendar stuff
 							$max = 16;
 							$value = date($date_out_format);
@@ -952,9 +952,9 @@ switch ($func) {		// ================================== case "c" ===============
 							fnCalButt ($i);
 //							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 							$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-							print "{$hint_str}</TD></TR>\n\t"; 
+							print "{$hint_str}</TD></TR>\n\t";
 							break;
-							
+
 						case "TIME":
 						case "time":
 							$value = date ("H:i");
@@ -962,9 +962,9 @@ switch ($func) {		// ================================== case "c" ===============
 							print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 							$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-							print "{$hint_str}</TD></TR>\n\t"; 
+							print "{$hint_str}</TD></TR>\n\t";
 							break;
-				
+
 						case "int":
 						case "bigint":
 						case "INTEGER":
@@ -979,18 +979,18 @@ switch ($func) {		// ================================== case "c" ===============
 								if (mysql_table_exists($thetable)) {											// does non-empty table exist?
 									$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
 									$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-									$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name		
-									
+									$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name
+
 									$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";
 									$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 									print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
 									while ($temp_row = mysql_fetch_array($temp_result))  {							// each row
-										print "\t\t<OPTION VALUE='" . trim($temp_row[0]) . "'>" . trim($temp_row[1]) . "</OPTION>\n";	
+										print "\t\t<OPTION VALUE='" . trim($temp_row[0]) . "'>" . trim($temp_row[1]) . "</OPTION>\n";
 										}
 									print "\t\t</SELECT>";
 //									print ($do_hints)? "<SPAN class='$mand_opt' >(" . mysql_affected_rows() . ")</SPAN>": "";
 									$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-									print "{$hint_str}</TD></TR>\n\t"; 
+									print "{$hint_str}</TD></TR>\n\t";
 									unset ($temp_result);
 									$gotit = TRUE;
 									}											// end if (mysql_table_exists($thetable)) ...
@@ -999,10 +999,10 @@ switch ($func) {		// ================================== case "c" ===============
 								print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-								print "{$hint_str}</TD></TR>\n\t"; 
+								print "{$hint_str}</TD></TR>\n\t";
 								}				// end if (!$gotit)
 							break;
-				
+
 						case "BLOB":
 						case "blob":
 						case "VAR_STRING":
@@ -1019,13 +1019,13 @@ switch ($func) {		// ================================== case "c" ===============
 								$default = (isset($arrayattr[$i][4]))? $arrayattr[$i][4] : "";
 								for ($j = 0; $j < count($temparray); $j++) {
 									$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
-									$checked=($temparray[$j]==$default)? " CHECKED ": "";		
+									$checked=($temparray[$j]==$default)? " CHECKED ": "";
 									print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked STYLE='vertical-align:middle;'/>&nbsp;&nbsp;&nbsp;&nbsp;";
 									}				// end for ($j = 0;
 								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-								print "</B>{$hint_str}</TD></TR>\n\t"; 
+								print "</B>{$hint_str}</TD></TR>\n\t";
 								}				// end if ("enum")
-							else	{					
+							else	{
 								if (($max> $text_type_max) || (mysql_field_type($result, $i)=="blob")){
 									print "\n\t\t<TD><TEXTAREA ID='ID{$i}' CLASS='{$class}' NAME='frm_" . mysql_field_name($result, $i) . "' COLS='90' ROWS = '3' onFocus=\"JSfnChangeClass(this.id, 'dirty');\" STYLE='vertical-align:text-top;'>{$last_data}</TEXTAREA> ";
 									}
@@ -1034,10 +1034,10 @@ switch ($func) {		// ================================== case "c" ===============
 									}
 //								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-								print "{$hint_str}</TD></TR>\n\t"; 
+								print "{$hint_str}</TD></TR>\n\t";
 			 					}				// end else
 							break;
-				
+
 						case "real":
 						case "DOUBLE":
 						case "double":
@@ -1045,18 +1045,18 @@ switch ($func) {		// ================================== case "c" ===============
 							print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 							$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-							print "{$hint_str}</TD></TR>\n\t"; 
+							print "{$hint_str}</TD></TR>\n\t";
 							break;
-				
-					
+
+
 						default:
 							print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
-						}					// end switch 
-					}		// end if ... != "auto_increment") 
+						}					// end switch
+					}		// end if ... != "auto_increment")
 				}		// end else ...
 			}		// end for ($i = ...
 		unset ($result);
-	
+
 	?>
 		<TR><TD COLSPAN="99" ALIGN="center">
 		<BR />
@@ -1070,7 +1070,7 @@ switch ($func) {		// ================================== case "c" ===============
 		}
 
 	break;														// end 'Create record'
-	
+
 	case "r":																			// Retrieve/List =================
 	function fnLinkTDm ( $theclass, $theid, $thestring, $the_in_use) {		// returns <td ... /td>
 		global $tablename, $mysql_prefix, $disallow, $can_edit;				// 2/25/10, 3/19/11
@@ -1082,7 +1082,7 @@ switch ($func) {		// ================================== case "c" ===============
 			} else {
 			$on_click = "onclick = \"{$the_js_func}('d', '" . $theid. "');\"";
 			}
-	
+
 		$breakat = 24;
 		if (strlen($thestring) > $breakat) {
 			$return = " CLASS='" . $theclass . " text text_center' onmouseover =\"document.getElementById('b" . $theid . "').style.visibility='hidden' ; document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; document.getElementById('b" . $theid . "').style.visibility='visible' ; \" >\n";
@@ -1103,7 +1103,7 @@ switch ($func) {		// ================================== case "c" ===============
 			$return .= "<SPAN id=\"c" . $theid . "\" style=\"visibility: hidden\">\n";
 			$return .= " <IMG SRC='markers/view.png' BORDER=0 TITLE = 'click to view this' onclick = \"JSfnToFunc('v', '" . $theid . "');\">";
 			$return .= " | ";
-			if($can_edit) {										// 3/19/11			
+			if($can_edit) {										// 3/19/11
 				$return .= "<IMG SRC='markers/edit.png' BORDER=0 TITLE = 'click to edit this' onclick = \"{$the_js_func}('u', '" . $theid . "');\">";
 				}
 			$return .= " | ";
@@ -1115,7 +1115,7 @@ switch ($func) {		// ================================== case "c" ===============
 		return "<TD ALIGN='center'" . $return . $thestring ."</TD>\n";
 		}			// end function fnLinkTDm ()
 
-			
+
 
 	$dirs = array (" ASC ", " DESC ");
 	$arrowdir = array ("<IMG SRC='./markers/up.png' HEIGHT='20px' style='vertical-align: text-top; float: right;'>", "<IMG SRC='./markers/down.png' HEIGHT='20px' style='vertical-align: text-top; float: right;'>");			// sort direction arrows
@@ -1129,12 +1129,12 @@ switch ($func) {		// ================================== case "c" ===============
 		unset ($result);
 		$pageNum = 1;
 		} else {
-		$pageNum = $page; 
+		$pageNum = $page;
 		}
 	$offset = ($pageNum - 1) * $rowsPerPage;									// calculate 0-based offset	from 1-based page no.
 	$special = "`id`, `name`, `office`, `street`, `city`, `state`, `zip`, `phone`, `status`, `contract`, `email`, `website`, `type`, `chief`, `chief_title`, `emergency_contact`, `emergency_phone`, `contact_via`, `contact_via_use`, `admin_contact`, `admin_phone`, `hours`, `contact_date`";
 	$select ="SELECT * FROM `$mysql_prefix$tablename` ";
-	
+
 	$order_by = " ORDER BY `{$sortby}` {$dirs[$sortdir]}";
 
 	$limit = " LIMIT $offset, $rowsPerPage";
@@ -1149,9 +1149,9 @@ switch ($func) {		// ================================== case "c" ===============
 			$the_or = " OR ";
 			}				// end for ($i=...)
 		$where .= ")";
-		
-		}		// end if/else 
-		
+
+		}		// end if/else
+
 	$query = $select . $where . $order_by . $limit ;
 
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
@@ -1177,7 +1177,7 @@ switch ($func) {		// ================================== case "c" ===============
 		for ($i = 0; $i < $cols; $i++) {							// write table header, etc.
 			if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
-				$query = "SELECT * FROM $mysql_prefix$temp";	 
+				$query = "SELECT * FROM $mysql_prefix$temp";
 				$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 				while ($temp_row = mysql_fetch_array($temp_result))  {											// each row/value => $substitutions array
 					if (($temp == 'user') && (array_key_exists('user', $temp_row))) {							// 12/12/11 - special case table user
@@ -1201,19 +1201,19 @@ switch ($func) {		// ================================== case "c" ===============
 		while ($row = mysql_fetch_array($result))  {			// write each data row - highlight($term, $string)
 			$lineno++;
 			$on_click = " onClick=JSfnToFunc('v',{$row[$indexname]});";		// 9/15/10
-			
+
 			print "<TR valign=\"top\" CLASS=\"" . $evenodd [$lineno % 2] . "\" style='width: 100%;'>";			// alternate line bg colors
 			for($i = 0; $i < $cols; $i++){													// each column
-						
+
 				$in_use = FALSE;				// test for index value in use - 10/13/09
 				if ($i==0) {					// index column only
 					$in_use = is_in_use($row[$i]);								// 11/9/10
 					}
-				
+
 				$lgth = strlen(mysql_field_name($result, $i));								// shortened column name
 				if (isset($row[$i])) {														// not empty
 
-					if (mysql_field_type($result, $i)=="time") { 
+					if (mysql_field_type($result, $i)=="time") {
 						print "<TD CLASS='mylink text text-center' {$on_click} >" . substr($row[$i],0,5) . "</TD>\n";
 						} else {
 						if ($i == $links_col) {												// 'name' or 'descr' or default
@@ -1222,10 +1222,10 @@ switch ($func) {		// ================================== case "c" ===============
 							if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {	// check terminal 3 chars
 								$thearray = substr(mysql_field_name($result, $i), 0, $lgth-$id_lg);	// extract table name
 								if (isset($subst[$thearray][$row[$i]])) {					// defined?
-									$thedata = $subst[$thearray][$row[$i]];					// yes - pull substitution data	
+									$thedata = $subst[$thearray][$row[$i]];					// yes - pull substitution data
 									} else {
-									$thedata = $row[$i]; 
-									}								// no substitution data		
+									$thedata = $row[$i];
+									}								// no substitution data
 								} else { 									// not substitution or date
 								$thedata = (strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
@@ -1237,7 +1237,7 @@ switch ($func) {		// ================================== case "c" ===============
 								}
 							$out_str = ((isset($ary_srch)) && (in_array ( mysql_field_name($result, $i),$ary_srch )))?
 								highlight($srch_term, $thedata): $thedata;
-								
+
 							print "<TD CLASS='mylink text'{$on_click} >" . $out_str . "</TD>\n";			// type not "datetime" and name not "descript"
 							}		// end else ...
 						}	// end not "datetime"
@@ -1253,8 +1253,8 @@ switch ($func) {		// ================================== case "c" ===============
 		print "</TABLE>";
 
 		for($page = 1; $page <= $maxPage; $page++) {  				// set link to each page no.
-			$nav .= ($page == $pageNum)? 
-				"<SPAN id='page_" . $page . "' class='plain text text_red text_boldest' style='background-color: blue; color: white; float: none; display: inline-block;'>" . $page . "</SPAN>" : 
+			$nav .= ($page == $pageNum)?
+				"<SPAN id='page_" . $page . "' class='plain text text_red text_boldest' style='background-color: blue; color: white; float: none; display: inline-block;'>" . $page . "</SPAN>" :
 				"<SPAN id='page_" . $page . "' class='plain text' style='float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='JSfnToNav(\"" . $page . "\");'>" . $page . "</SPAN>" ;
 			}
 		if ($pageNum > 1) {											// create prior/next links
@@ -1283,7 +1283,7 @@ switch ($func) {		// ================================== case "c" ===============
 					<SPAN ID='srch_but' CLASS='plain text' style='width: auto; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.func.value='s'; document.retform.submit();"><SPAN STYLE='float: left;'>Search <?php print ucfirst($tablename);?></SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/search_small.png' BORDER=0></SPAN>
 <?php
 					}
-?>	
+?>
 				<SPAN ID='prop_but' CLASS='plain text' style='width: auto; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.retform.func.value='p'; document.retform.submit();"><SPAN STYLE='float: left;'><?php print ucfirst($tablename);?> Properties</SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/exclamation_small.png' BORDER=0></SPAN>
 <?php
 				if ($can_edit) {
@@ -1319,7 +1319,7 @@ case "u":	// =======================================  Update 	==================
 		$types[$i] = $row['Type'];
 		$i++;
 		}
-	
+
 	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `" . $indexname . "` = " . $_POST['id'] . " LIMIT 1";					// target row
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
 	$row = mysql_fetch_array($result);																		// $row has data
@@ -1340,7 +1340,7 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>  <!-- process update -->
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-	
+
 
 	<TABLE BORDER="0" ALIGN="center">
 	<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Update/Delete Entry</FONT></TD></TR>
@@ -1383,18 +1383,18 @@ case "u":	// =======================================  Update 	==================
 					print "<TD><INPUT MAXLENGTH=$max SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
 //					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-					print "{$hint_str}</TD></TR>\n\t"; 
+					print "{$hint_str}</TD></TR>\n\t";
 					break;
-			
+
 				case "time":
 				case "TIME":
 					$max = 5;
 					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-					print "{$hint_str}</TD></TR>\n\t"; 
+					print "{$hint_str}</TD></TR>\n\t";
 					break;
-		
+
 				case "int":
 				case "bigint":
 				case "INTEGER":
@@ -1409,8 +1409,8 @@ case "u":	// =======================================  Update 	==================
 						if (mysql_table_exists($thetable)) {											// does table exist?
 							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
 							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-							$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column 
-							
+							$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column
+
 							$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";	// get option values
 							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 							print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
@@ -1421,7 +1421,7 @@ case "u":	// =======================================  Update 	==================
 								}
 					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
 							print "\t\t</SELECT>";
-							print "{$hint_str}</TD></TR>\n\t"; 
+							print "{$hint_str}</TD></TR>\n\t";
 							unset ($temp_result);
 							$gotit = TRUE;
 							}											// end if (mysql_table_exists($thetable)) ...
@@ -1432,10 +1432,10 @@ case "u":	// =======================================  Update 	==================
 						print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
 //						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-						print "{$hint_str}</TD></TR>\n\t"; 
+						print "{$hint_str}</TD></TR>\n\t";
 						}
 					break;
-			
+
 					case "BLOB":
 					case "blob":
 					case "VAR_STRING":
@@ -1449,16 +1449,16 @@ case "u":	// =======================================  Update 	==================
 						$temparray = explode( ",", $temp);
 						print "<TD VALIGN='baseline'><B>&nbsp;";
 						$drops = array("'","(",")");
-						
+
 						for ($j = 0; $j < count($temparray); $j++) {
 							$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
-							$checked=($row[$i]==$temparray[$j])? " CHECKED": "";		
+							$checked=($row[$i]==$temparray[$j])? " CHECKED": "";
 							print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 							}				// end for ($j = 0;
 						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-						print "</B>{$hint_str}</TD></TR>\n\t"; 
+						print "</B>{$hint_str}</TD></TR>\n\t";
 						}				// end if ("enum")
-					else {							
+					else {
 						if ($max> $text_type_max) {
 							print "\n\t\t<TD><TEXTAREA NAME='frm_" . mysql_field_name($result, $i) . "' COLS='90' ROWS = '1' STYLE='vertical-align:text-top;'>{$row[$i]}</TEXTAREA> ";
 							}
@@ -1470,10 +1470,10 @@ case "u":	// =======================================  Update 	==================
 							}
 //						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-						print "{$hint_str}</TD></TR>\n\t"; 
+						print "{$hint_str}</TD></TR>\n\t";
 			 			}
 					break;
-			
+
 				case "real":
 				case "DOUBLE":
 				case "double":
@@ -1481,12 +1481,12 @@ case "u":	// =======================================  Update 	==================
 					print "<TD><INPUT MAXLENGTH={$max} SIZE={$max} TYPE=text NAME='frm_" . mysql_field_name($result, $i) . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'/> ";
 //					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
 					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
-					print "{$hint_str}</TD></TR>\n\t"; 
+					print "{$hint_str}</TD></TR>\n\t";
 					break;
-			
+
 				default:
 					print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
-				}					// end switch 
+				}					// end switch
 			}				// end else
 		}		// end for ($i = ...
 
@@ -1501,10 +1501,10 @@ case "u":	// =======================================  Update 	==================
 	</FORM>
 	</TD></TR></TABLE>
 <?php
-	}				// end else 
+	}				// end else
 
 	break;		// end Update ==========================
-	
+
 	case "pc":													// Process 'Create record' data =================
 	$query = "DESCRIBE `$mysql_prefix$tablename` ";				// 6/21/10
 	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
@@ -1536,7 +1536,7 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0>
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-	
+
 	</FORM>
 <?php
 	$query = "SELECT MAX(id) AS id FROM `$mysql_prefix$tablename`" ;
@@ -1572,7 +1572,7 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/>
-	
+
 <?php
 	print "<TABLE BORDER=\"0\" ALIGN=\"center\" >";
 	if ($func == "pc") 	{print "<TR CLASS=\"even\" VALIGN=\"top\"><TD COLSPAN=\"2\"  ALIGN=\"CENTER\"><FONT SIZE=\"+1\">New '$tablename' entry accepted.</FONT></TD></TR>";}
@@ -1581,14 +1581,14 @@ case "u":	// =======================================  Update 	==================
 	for ($i = 0; $i < mysql_num_fields($result); $i++) {
 		$lineno++;
 		print "\n\t<TR CLASS=" . $evenodd [$lineno % 2] . " VALIGN=\"top\"><TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD><TD>";
-		if ((mysql_field_name($result, $i) != $indexname) 
+		if ((mysql_field_name($result, $i) != $indexname)
 				&& (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 				&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))
 				&& (intval ($row[$i]) > 0)) {							// prepare to replace with indexed values - 9/15/10
 
 
-			$query ="SELECT * FROM `$mysql_prefix" . $temp . "` WHERE `" . $indexname . "` = " . $row[$i] . " LIMIT 1";				
-			$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query); 
+			$query ="SELECT * FROM `$mysql_prefix" . $temp . "` WHERE `" . $indexname . "` = " . $row[$i] . " LIMIT 1";
+			$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
 			if (mysql_affected_rows()>0) 	{										// defined?
 				$temp_row = mysql_fetch_array($temp_result);						// yes
 				dump($temp_row);
@@ -1611,7 +1611,7 @@ case "u":	// =======================================  Update 	==================
 				case "time":
 					print substr($row[$i],0,5);
 					break;
-			
+
 				case "blob":
 					print ($showblobastext)? $row[$i] : "Blob". $empty ;
 					break;
@@ -1632,7 +1632,7 @@ case "u":	// =======================================  Update 	==================
 		</TR>
 <?php
 		}
-	}			// end else ... 
+	}			// end else ...
 ?>
 
 	<TR>
@@ -1651,7 +1651,7 @@ case "u":	// =======================================  Update 	==================
 			<SPAN ID='edit_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc('u', '<?php print $_POST["id"] ?>');"><SPAN STYLE='float: left;'><?php print get_text("Edit entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
 <?php
 			}
-?>		
+?>
 	</TR>
 	</FORM>
 	</TABLE>
@@ -1669,7 +1669,7 @@ case "u":	// =======================================  Update 	==================
 
 	$query = "UPDATE $mysql_prefix$tablename SET ";
 	foreach ($_POST as $VarName=>$VarValue) {
-		if ((substr($VarName, 0, 4)=="frm_") && ($VarName != $indexname)) { 
+		if ((substr($VarName, 0, 4)=="frm_") && ($VarName != $indexname)) {
 			if (((boolean) strpos( " double float real ",  $types[substr($VarName, 4, 99)])) && (empty($VarValue))){
 				$query .= "`" . substr($VarName, 4, 99) . "` = NULL,";
 				} else {
@@ -1695,7 +1695,7 @@ case "u":	// =======================================  Update 	==================
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="r"/>  <!-- retrieve -->
 	<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.pu.submit();"><SPAN STYLE='float: left;'><?php print get_text("Continue");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 	<INPUT TYPE="hidden" NAME="srch_str"  	VALUE=""/> <!-- 9/12/10 -->
-	
+
 	</FORM>
 <?php
 	break;		// end Process Update 	=================
@@ -1723,7 +1723,7 @@ case "u":	// =======================================  Update 	==================
 	break;		// end Delete ======================
 
 	case "p":	// Properties  ===========================
-	
+
 ?>
 	<TABLE BORDER="0" ALIGN="center">
 		<TR>
@@ -1760,7 +1760,7 @@ case "u":	// =======================================  Update 	==================
 	print "</table>\n";
 	unset ($result);
 
-?>	
+?>
 	<FORM NAME="p" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
@@ -1775,10 +1775,10 @@ case "u":	// =======================================  Update 	==================
 		if ($can_edit) {
 ?>
 			<SPAN id='add_but' CLASS='plain text' style='float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.p.func.value='c'; document.p.submit();"><SPAN STYLE='float: left;'>Add new <?php print str_replace( "_", " ", ucfirst($tablename)); ?> entry </SPAN>&nbsp;&nbsp;<IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
-<?php			
+<?php
 			}
-?>	
-	
+?>
+
 	</FORM>
 	<?php
 
@@ -1797,7 +1797,7 @@ case "u":	// =======================================  Update 	==================
 					sep = "|";
 					}
 				}
-		
+
 			var errmsg="";
 			if (JSfnTrim(theForm.argument.value) == "")	{errmsg+= "\tSearch value is required\n";}
 			if (str == "")								{errmsg+= "\tField(s) to search is required\n" ;}
@@ -1850,9 +1850,9 @@ case "u":	// =======================================  Update 	==================
 <?php
 	echo "<TR CLASS='odd'><TD COLSPAN=99 ALIGN='left'><H3>In:</H3></TD></TR>\n";
 	echo "<TR VALIGN='top'><TD COLSPAN=2>";
-	
+
 	$out_str = "<TABLE ALIGN='left' CELLSPACING = 0  border=0 width=100%>\n";
-	
+
 	$i = 0;
 	$j = 1;
 	for ($n=0; $n<count($name); $n++) {
@@ -1899,8 +1899,8 @@ function do_check(the_bool) {
 	</TABLE>
 	</TABLE>
 	</FORM>
-	<?php	
-	print "</TABLE></TABLE></FORM>\n";		
+	<?php
+	print "</TABLE></TABLE></FORM>\n";
 	break;			// end Search ======================
 
 	case "l":	// Select table ====================
@@ -1916,17 +1916,17 @@ function do_check(the_bool) {
 //if (($func == "r") || ($func == "p")) {			// limit visibility
 //	fnTables();
 //	}
-	
+
 function fnTables () {							/// displays tables comprising db $mysql_db
 	global $mysql_db, $mysql_prefix, $FK_id, $id_lg, $primaries, $secondaries;
 	$ctrp=$ctrs=0;
 	$pref_lgth = strlen($mysql_prefix);
-	
+
 	$sql = "SHOW TABLES ";
-	$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db  
+	$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
 	while ($row = mysql_fetch_row($result)) {
 		$sql ="SELECT * FROM `$row[0]` LIMIT 1";
-		$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db  
+		$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
 		$row2 = mysql_fetch_array($result2);
 		$gotit = FALSE;
 		for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field - substr ( string, start, 999)
@@ -1943,7 +1943,7 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 			$secondaries[$ctrs] = $row[0];
 			$secondaries[$ctrs] = substr($row[0], $pref_lgth, 999);
 			$ctrs++;
-			}				
+			}
 		}
 	mysql_free_result($result);
 	print "<BR /><BR /><BR /><TABLE ALIGN=\"center\" BORDER=0><TR CLASS=\"even\"><TD ALIGN=\"center\" CLASS=\"td_link\" COLSPAN=\"2\"><FONT SIZE=\"+1\">Available '$mysql_db ' tables</FONT></TD></TR>";

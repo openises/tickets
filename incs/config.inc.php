@@ -228,7 +228,7 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 				return FALSE;
 				}
 			else {
-				$NTPtime = ord($data{0	})*pow(256, 3) + ord($data{1	})*pow(256, 2) + ord($data{2	})*256 + ord($data{3	});
+//				$NTPtime = ord($data{0	})*pow(256, 3) + ord($data{1	})*pow(256, 2) + ord($data{2	})*256 + ord($data{3	});
 				$TimeFrom1990 = $NTPtime - 2840140800;			// convert the seconds to the present date & time
 				$TimeNow = $TimeFrom1990 + 631152000;			// 2840140800 = Thu, 1 Jan 2060 00:00:00 UTC
 				return 	$TimeNow;
@@ -564,7 +564,7 @@ function get_setting_help($setting){/* get help for settings */
 		default: 								return "No help for '$setting'"; break;
 		}
 	}
-	
+
 function get_css_day_help($setting){			/* get help for color settings	3/15/11 */
 	switch($setting) {
 		case "page_background":				return "Main Page Background color."; break;
@@ -648,7 +648,7 @@ function get_msg_settings_help($setting){/* get help for messaging settings */
 		default: 							return "No help for '$setting'"; break;	//		default: 						return "No help for '$setting'"; break;	//
 		}
 	}
-	
+
 function get_mdb_settings_help($setting){/* get help for membership database settings*/
 	switch($setting) {
 		case "use_mdb_contact": 			return "Use contact details from Tickets Membership Database"; break;
