@@ -60,6 +60,7 @@ function do_file ($dir, $subdir, $file) {
 		if ($got_curl) {
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_USERAGENT, "nice_guy_trying_with_TicketsCAD");
 			curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
 			$the_tile = curl_exec ($ch);
 			$completed[1] = "{$theFileName} downloaded";
