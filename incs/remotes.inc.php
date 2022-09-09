@@ -863,14 +863,14 @@ function do_traccar() {				// 5/30/17 - track responder locations with Traccar s
 			}
 	
 // Find position id
-		$query = 'select uniqueid, positionid from devices where uniqueid = "' . $row1['callsign'] . '" limit 1';
+		$query = 'select uniqueid, positionid from tc_devices where uniqueid = "' . $row1['callsign'] . '" limit 1';
 		$result2 = mysql_query($query);
 		$row2 = mysql_fetch_assoc($result2);
 		$positionid = $row2['positionid'];
 		$positionids[] = $positionid;
 		
 // Use position ID to query last position
-		$query = 'select latitude, longitude, speed, course, altitude, devicetime from positions where id = "' . $positionid . '"';
+		$query = 'select latitude, longitude, speed, course, altitude, devicetime from tc_positions where id = "' . $positionid . '"';
 		$result3 = mysql_query($query);
 		$result_ary = array();
 		while ($row3 = mysql_fetch_assoc($result3)) {
