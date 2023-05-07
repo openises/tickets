@@ -96,3 +96,4 @@ Comments/questions are most welcome!
 The Tickets Development Team
 
 Arnie Shore - Lead Developer
+Eric Osterberg - Project Manager as of May 2nd 2023

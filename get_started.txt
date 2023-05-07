@@ -1,6 +1,6 @@
 =========================================================================
-
- Tickets 2.10 BETA Release README  - Installation Instructions (Jan 29, 09)                           
+ Tickets 3.4A Release README  - Installation Instructions (May 02, 2023)
+ Directly copied from Tickets 2.10 BETA Release README  - Installation Instructions (Jan 29, 09)                           
 
 =========================================================================
 
@@ -150,3 +150,4 @@ Comments/questions are most welcome!
 The Tickets Development Team
 
 Arnie Shore - Lead Developer
+Eric Osterberg - Project Manager as of May 2nd 2023
