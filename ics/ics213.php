@@ -547,7 +547,7 @@ switch ( $func ) {
 		function html_mail ( $to, $subject, $html_message, $from_address, $from_display_name='' ) {
 		//	$headers = 'From: ' . $from_display_name . ' <shoreas@gmail.com>' . "\n";
 			$from = get_variable ( 'email_from' ) ;
-			$from = is_email ( $from ) ? $from : "info@ticketscad.org";
+			$from = is_email ( $from ) ? $from : "no-reply@ticketscad.com";
 			$headers = "From: {$from_display_name}<{$from}>\n";
 			$headers .= 'MIME-Version: 1.0' . "\r\n";
 			$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";

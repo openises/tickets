@@ -206,7 +206,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 		</TD></TD></TR></TABLE>
 	</TD></TR>				<!-- 3/15/11 -->			
 	<TR><TD CLASS='td_label' COLSPAN='99' ALIGN='center'>
-		<A HREF="mailto:info@TicketsCAD.org?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
+		<A HREF="mailto:ejosterberg+TicketsCADhelp@gmail.com?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
 		</TD></TR></TABLE></DIV>
 		
 	<FORM NAME='unit_form' METHOD='get' ACTION='<?php echo $_SESSION['unitsfile'];?>'>

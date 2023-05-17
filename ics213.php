@@ -15,7 +15,7 @@ function html_mail ($to, $subject, $html_message, $from_address, $from_display_n
 
 //	$headers = 'From: ' . $from_display_name . ' <shoreas@gmail.com>' . "\n";
 	$from = get_variable('email_from');
-	$from = is_email($from)? $from : "info@ticketscad.org";
+	$from = is_email($from)? $from : "no-reply@ticketscad.com";
 	$headers = "From: {$from_display_name}<{$from}>\n";
 
 	$headers .= 'MIME-Version: 1.0' . "\r\n";
@@ -352,7 +352,7 @@ switch ($step) {
 			}		// end for ()
 		$subject ="ICS-213 Message - {$item[5]}";		// subject, per form data
 		$temp = get_variable('email_from');
-		$from_address = (is_email($temp))? $temp: "ticketscad.org";
+		$from_address = (is_email($temp))? $temp: "ticketscad.com";
 		$from_display_name=get_variable('title_string');
 		$temp = shorten(strip_tags(get_variable('title_string')), 30);
 		$from_display_name = str_replace ( "'", "", $temp);

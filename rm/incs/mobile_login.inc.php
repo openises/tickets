@@ -417,7 +417,7 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 			<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
 			<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
 			</FORM><BR /><BR />
-			<a href="http://www.ticketscad.org/"><SPAN CLASS='text_small'>Tickets CAD Project home</SPAN></a><BR /><BR />
+			<a href="http://www.ticketscad.com/"><SPAN CLASS='text_small'>Tickets CAD Project home</SPAN></a><BR /><BR />
 			<div><IMG BORDER=0 SRC='../open_source_button.png' <?php print $my_click; ?>>&nbsp;&nbsp;<img src="../php.png" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>	
 			<FORM NAME="norm_form" method='post' action="../index.php">
 			<INPUT TYPE='hidden' NAME = 'noautoforward' VALUE=1>			

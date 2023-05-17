@@ -3693,8 +3693,8 @@ ul {
 ?>
 			<DIV class='config_heading text' id='cloud_cfg' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 				<DIV class='config_heading text' style='display: block; clear: both;'>Cloud</DIV>		
-				<A id='spt_link' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.org/support" target="_blank">Support</A>
-				<A id='dbadmin_link' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.org/dbadmin" target="_blank">DB Admin</A>
+				<A id='spt_link' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="https://github.com/openises/tickets/issues" target="_blank">Support</A>
+<!--				<A id='dbadmin_link' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.com/dbadmin" target="_blank">DB Admin</A>-->
 			</DIV>
 <?php	
 			}	

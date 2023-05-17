@@ -4290,7 +4290,7 @@ function replace_newline($string) {
 function get_contact_addr () {		// 6/1/2013 - returns user email addr if available
 	$contact_addr =  is_email(get_variable('email_reply_to'))? get_variable('email_reply_to') :  FALSE;
 	if (!($contact_addr)) {$contact_addr = 	is_email(get_variable('email_from'))? get_variable('email_from') :  FALSE; }
-	if (!($contact_addr)) {$contact_addr =	"info@TicketsCAD.org"; }			// default to project home
+	if (!($contact_addr)) {$contact_addr =	"no-reply@TicketsCAD.com"; }			// default to project home
 	return trim($contact_addr);
 	}
 

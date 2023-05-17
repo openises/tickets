@@ -1232,7 +1232,7 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		if (!in_array("markers", $files)) 	{$dirsOK=FALSE;}
 
 		if (!$dirsOK) {
-			print "<br><br><br><center><h3>At least one of the Tickets subdirectories is missing, and this needs to be corrected.<br /><br />You might check into how the Tickets zip file was unzipped or otherwise installed.<br><br><br><br><A HREF='mailto:info@TicketsCAD.org?subject=Tickets Install Problem'><u>Or click here to contact the developer.</u></A></h3></center>";
+			print "<br><br><br><center><h3>At least one of the Tickets subdirectories is missing, and this needs to be corrected.<br /><br />You might check into how the Tickets zip file was unzipped or otherwise installed.<br><br><br><br><A HREF='mailto:ejosterberg+TicketsInstallHelp@gmail.com?subject=Tickets Install Problem'><u>Or click here to contact the developer.</u></A></h3></center>";
 			}
 		else {
 ?>
