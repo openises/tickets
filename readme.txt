@@ -115,4 +115,5 @@ secure passwords are fundamental.
 
 
 -- Misc
-Personal contact is shoreas [at] gmail [dot] com
+Current maintainer is Eric, email ejosterberg [at] gmail [dot] com as of May 2nd 2023
+Special thanks to Arnie Shore, his personal contact is shoreas [at] gmail [dot] com
