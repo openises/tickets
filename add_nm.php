@@ -1473,7 +1473,8 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 <TR CLASS='even'>
 	<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a1"];?>');"><?php print get_text("Location"); ?></A>:</TD>
 	<TD></TD>
-	<TD><INPUT NAME="frm_street" tabindex=1 SIZE="72" TYPE="text" VALUE="<?php print $res_row['street'];?>" MAXLENGTH="96"></TD>
+	<TD><div class="autocomplete-container" id="autocomplete-container">
+		<INPUT NAME="frm_street" tabindex=1 SIZE="72" TYPE="text" VALUE="<?php print $res_row['street'];?>" MAXLENGTH="96"></div></TD>
 	</TR>
 <TR CLASS='odd'>
 	<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a2"];?>')"><?php print get_text("City");?></A>:</TD>

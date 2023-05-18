@@ -59,6 +59,13 @@ if (mysql_affected_rows()> 0) {							// build return string from newest inciden
 else {													// no priors or constituents - do WP
 		$wp_key = trim(get_variable("wp_key"));				// 1/26/09
 		
+// 2023-May-17 - WIP - It appears the whitepages.com URL is dead and this service no longer available.
+// A substitute service may be available at: https://apilayer.com/marketplace/number_verification-api?live_demo=show
+//    --url 'https://api.apilayer.com/number_verification/validate?number={$phone}' \
+//    --header 'apikey: '{$wp_key}'
+//  Returned values are:   "carrier": "country_code": "country_name": "country_prefix": "international_format": "line_type": "local_format": "location": "number": "valid"
+//  Unfortunately the location data is not specific enough to have value.
+
 		$url = "http://api.whitepages.com/reverse_phone/1.0/?phone={$phone};api_key={$wp_key};outputtype=JSON";	// 4507191994
 			
 		$data = "";

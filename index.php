@@ -792,7 +792,7 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 			PRIMARY KEY (`id`)
 			) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;";
 		$result = mysql_query($query);
-		if($result) { print "Added Consituents Table to supportfrequent users functionality<BR />"; }
+		if($result) { print "Added Consituents Table to support frequent users functionality<BR />"; }
 		}
 
 	//			// 3/24/10
