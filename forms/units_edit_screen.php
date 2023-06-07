@@ -46,6 +46,9 @@ window.onresize=function(){set_size();}
 </SCRIPT>
 <?php
 require_once('./incs/all_forms_js_variables.inc.php');
+echo "<SCRIPT>\n";
+require_once('./js/member.js');
+echo "\n</SCRIPT>";
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
@@ -282,7 +285,7 @@ while($row	= mysql_fetch_array($result)) {
 	$members[] = $row['member_id'];
 	}
 	
-$assigned_members = (count($members > 0)) ? implode(",", $members) : "";
+$assigned_members = ( intval ( count($members) > 0 ) ) ? implode(",", $members) : ""; 
 
 $query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`= " . $id;
 $result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -487,7 +490,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					<TD CLASS='td_data text'>
 						<SELECT id='track' NAME='frm_track_disp' onChange = "do_tracking(this.form, this.options[this.selectedIndex].value);">
 <?php
-							$selects = array("", "", "", "", "", "", "", "", "", "");	//	9/6/13
+							$selects = array("", "", "", "", "", "", "", "", "", "", "", "", ""); 	//	9/6/13 // Edits 2023-06-06
 							$selects[$track_type] = "SELECTED";
 
 							print "<OPTION VALUE={$GLOBALS['TRACK_NONE']} 		{$selects[$GLOBALS['TRACK_NONE']]} > 	None </OPTION>";

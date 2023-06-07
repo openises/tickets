@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');
 
-$version = "v3.40.1";
+$version = "v3.40.2";
 //$version = "3.4 Beta - 12/27/2021";
 //$version = "3.30A Beta - 05/15/18";
 $temp = explode(" ", get_variable('_version'));
@@ -102,6 +102,7 @@ $disp_version = $temp[0];
 10/31/13 Added fields to in_types.
 2/24/14 Added Setting to restrict units to only see their own mobile screen
 1/7/15 Changes for version 3.00
+6/6/2023 Corrections for "Edit unit with no map". Corrections supplied by Andy Harvey and Arnie Shore
 */
 
 //snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));
