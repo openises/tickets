@@ -17,9 +17,6 @@ window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
 require_once('./incs/all_forms_js_variables.inc.php');
-echo "<SCRIPT>\n";
-require_once('./js/member.js');
-echo "\n<SCRIPT>";
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;

@@ -1273,6 +1273,24 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 				$mysql = "<FONT COLOR='red'>MYSQL version is lower than 5.0</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>"; 	
 				}
 ?>
+ <?php
+$phpvers = phpversion ();
+$arr = explode (  "." , $phpvers , 2 );
+$reqd = "7"; // PHP version no.  required
+
+if ($arr [0] <> $reqd ) {
+?>
+<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 16pt;">&nbsp;&nbsp;&nbsp;&nbsp;Warning!&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
+<TABLE BORDER="0">
+<TR CLASS="even"><TD width=100%>Your installed PHP version is <b><?php echo $phpvers ; ?></b>, which is NOT recommended for use with Tickets CAD.</TD></TR>
+<TR CLASS="odd"><TD width=100%>PHP version 7 is known to work well.</TD></TR>
+<TR CLASS="even"><TD width=100%>Please heed this warning and do not proceed with this installation until this is corrected.  You may save yourself several days of fruitless troubleshooting.</TD></TR>
+</TABLE>
+</FIELDSET>
+<br />
+<?php
+}
+?>
 			<FORM NAME = 'install_frm' METHOD="post" ACTION="install.php?go=1"  onSubmit='return validate(document.install_frm)' >
 			<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;From your MySQL installation&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
 			<TABLE BORDER="0">

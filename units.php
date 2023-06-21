@@ -287,6 +287,7 @@ if(file_exists("./incs/modules.inc.php")) {
 	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
 	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+	<script type="application/x-javascript" src="./js/member.js"></script>
 	<SCRIPT>
 	var sortby = '`date`';	//	11/18/13
 	var sort = "DESC";	//	11/18/13
