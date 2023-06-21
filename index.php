@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');
 
-$version = "v3.40.2";
+$version = "v3.40.3";
 //$version = "3.4 Beta - 12/27/2021";
 //$version = "3.30A Beta - 05/15/18";
 $temp = explode(" ", get_variable('_version'));
