@@ -68,7 +68,7 @@ http://www.noc.kth.se/opentickets/index.html
 
 -- Requirements
 + A PHP capable webserver (either apache: http://www.apache.org or MS's IIS)
-+ PHP 4.1 or higher
++ PHP 7.4
 + MySQL, 3.x probably works, but 3.23.*/4 is preferred
 + You will need a GMaps API key. Obtain at http://www.google.com/apis/maps/signup.html
 + Clients must accept cookies for login info and handle CSS
@@ -79,7 +79,7 @@ http://www.noc.kth.se/opentickets/index.html
 + Unzip the file into your intended Tickets directory.
 + Create an empty MySQL database.  You'll need information re server parameters for the install 
   script, next step.
-+ Point yr browser to whatever/install.php, and go there.
++ Point your browser to whatever/install.php, and go there.
 + Fill in the install form, including the GMaps API key. (URL of source is provided on the form.)
 + The install script does a lot, including creating two login accounts - admin/admin and guest/guest.
   You'll be notified of success at the script's completion -- in a second or two.
@@ -99,7 +99,10 @@ http://www.noc.kth.se/opentickets/index.html
 Tickets was written by Arnie Shore, (shoreas@Gmail.com) as an adaptation of the original 
 written by Daniel Netz (netz at home dot se) using PHP, Apache and MySQL 3.x/4.x on 
 linux. Bug reports and feature requests  are always welcome and preferably discussed 
-in the forum (see link below). 
+in the forum (see link below).
+
+Tickets development is now lead by Eric Osterberg as of May 5th, 2023.
+Contributions welcome! Development now located on GitHub: https://github.com/openises/tickets
 
 This software is licensed under the GNU GPL license (see COPYING) and may be used and
 distributed in any way it may suit you as long as it's according to GPL.
@@ -115,4 +118,5 @@ secure passwords are fundamental.
 
 
 -- Misc
-Personal contact is shoreas [at] gmail [dot] com
+Eric Osterberg contact is ejosterberg [at] gmail [dot] com
+Arnie Shore contact is shoreas [at] gmail [dot] com
