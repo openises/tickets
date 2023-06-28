@@ -1,3 +1,4 @@
 .idea/**
 _osm/**
 incs/mysql.inc.php
+backups/**
