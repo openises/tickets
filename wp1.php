@@ -45,7 +45,7 @@ $apipath = "/$apisearch/1.0/?phone=$apiphone;api_key=$apikey;outputtype=JSON";
 $timeout = 10; // This is the max timeout limit for the API to respond, in seconds. Tune as needed
 
 $apiresponse = loadapijson ($apidomain, $apipath, $timeout);	//
-if($apiresponse != false) {
+if($apiresponse) {
 	// xml doc loaded
 	$jsonresp = json_decode ($apiresponse, true); // Output is placed in an array
 	

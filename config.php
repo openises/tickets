@@ -1601,7 +1601,7 @@ case 'settings' :
         $counter = 0;
         $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
         while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-            if ($row['name']{0} <> "_") {                                // hide these
+            if ($row['name'][0] <> "_") {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_setting_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                 print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
@@ -1691,19 +1691,19 @@ case 'msg_settings' :    //	10/23/12
         $counter = 0;
         $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
         while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-            if (($row['name']{0} <> "_") && (($row['name'] <> "columns") && ($row['name'] <> "smsg_provider") && ($row['name'] <> "email_password"))) {                                // hide these
+            if (($row['name'][0] <> "_") && (($row['name'] <> "columns") && ($row['name'] <> "smsg_provider") && ($row['name'] <> "email_password"))) {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_msg_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                 print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
                 $counter++;
             }
-            if (($row['name']{0} <> "_") && ($row['name'] == "email_password")) {        //	hide password characters
+            if (($row['name'][0] <> "_") && ($row['name'] == "email_password")) {        //	hide password characters
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_msg_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                 print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='password' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
                 $counter++;
             }
-            if (($row['name']{0} <> "_") && ($row['name'] == "columns")) {                                // hide these
+            if (($row['name'][0] <> "_") && ($row['name'] == "columns")) {                                // hide these
                 $columns_checked = explode(",", $row['value']);
                 $chkd1 = (in_array("1", $columns_checked)) ? "CHECKED" : "";
                 $chkd2 = (in_array("2", $columns_checked)) ? "CHECKED" : "";
@@ -1726,7 +1726,7 @@ case 'msg_settings' :    //	10/23/12
                 print "</TD></TR>\n";
                 $counter++;
             }
-            if (($row['name']{0} <> "_") && ($row['name'] == "smsg_provider")) {                                // hide these
+            if (($row['name'][0] <> "_") && ($row['name'] == "smsg_provider")) {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_msg_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                 print "<TD>";
@@ -1831,7 +1831,7 @@ case 'mdb_settings' :
         $counter = 0;
         $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]mdb_settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
         while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-            if (($row['name']{0} <> "_") && (($row['name'] <> "date_tracking") && ($row['name'] <> "mdb_contact_via_field") && ($row['name'] <> "mdb_cellphone_field") && ($row['name'] <> "mdb_homephone_field") && ($row['name'] <> "mdb_workphone_field") && ($row['name'] <> "mdb_phone_field") && ($row['name'] <> "mdb_smsg_id_field") && ($row['name'] <> "tickets_status_available") && ($row['name'] <> "tickets_status_unavailable") && ($row['name'] <> "member_status_available") && ($row['name'] <> "enforce_status") && ($row['name'] <> "no_status_select") && ($row['name'] <> "use_mdb_contact") && ($row['name'] <> "use_mdb_status"))) {                                // hide these
+            if (($row['name'][0] <> "_") && (($row['name'] <> "date_tracking") && ($row['name'] <> "mdb_contact_via_field") && ($row['name'] <> "mdb_cellphone_field") && ($row['name'] <> "mdb_homephone_field") && ($row['name'] <> "mdb_workphone_field") && ($row['name'] <> "mdb_phone_field") && ($row['name'] <> "mdb_smsg_id_field") && ($row['name'] <> "tickets_status_available") && ($row['name'] <> "tickets_status_unavailable") && ($row['name'] <> "member_status_available") && ($row['name'] <> "enforce_status") && ($row['name'] <> "no_status_select") && ($row['name'] <> "use_mdb_contact") && ($row['name'] <> "use_mdb_status"))) {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_mdb_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                 print "<TD><INPUT MAXLENGTH='512' SIZE='48' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
@@ -3181,7 +3181,8 @@ case 'user' :
                                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                                       onClick="validate_user(document.user_add_Form);"><SPAN
                                         STYLE='float: left;'><?php print get_text("Submit"); ?></SPAN><IMG
-                                        STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+                                        STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0 alt="submit"
+                                        width="20" height="20"></SPAN>
                             </TD>
                         </TR>
                         <INPUT TYPE="hidden" NAME="frm_responder_id" VALUE="0"/>
@@ -3333,7 +3334,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
           onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
           onClick="document.toConfig_form.submit();"><SPAN
             STYLE='float: left;'><?php print get_text("Cancel"); ?></SPAN><IMG STYLE='float: right;'
-                                                                               SRC='./images/cancel_small.png' BORDER=0></SPAN>
+                                                                               SRC='./images/cancel_small.png' BORDER=0 alt="cancel"></SPAN>
     <FORM NAME='toConfig_form' METHOD="post" ACTION="config.php"></FORM>
     <?php
     exit();
@@ -3403,30 +3404,30 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                       onClick="document.can_Form.submit();"><SPAN
                         STYLE='float: left;'><?php print get_text("Cancel"); ?></SPAN><IMG STYLE='float: right;'
                                                                                            SRC='./images/cancel_small.png'
-                                                                                           BORDER=0></SPAN>
+                                                                                           BORDER=0 alt="cancel"></SPAN>
                 <SPAN id='selall_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;'
                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                       onClick="document.del_Form.delcount.value=1; all_ticks('checked');"><SPAN
                         STYLE='float: left;'><?php print get_text("Select All"); ?></SPAN><IMG STYLE='float: right;'
                                                                                                SRC='./images/select_all_small.png'
-                                                                                               BORDER=0></SPAN>
+                                                                                               BORDER=0 alt="select_all"></SPAN>
                 <SPAN id='unselall_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;'
                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                       onClick="document.del_Form.delcount.value=1; all_ticks('');"><SPAN
                         STYLE='float: left;'><?php print get_text("Unselect All"); ?></SPAN><IMG STYLE='float: right;'
                                                                                                  SRC='./images/unselect_all_small.png'
-                                                                                                 BORDER=0></SPAN>
+                                                                                                 BORDER=0 alt="unselect_all"></SPAN>
                 <SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;'
                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                       onClick="document.del_Form.reset();"><SPAN
                         STYLE='float: left;'><?php print get_text("Reset"); ?></SPAN><IMG STYLE='float: right;'
                                                                                           SRC='./images/restore_small.png'
-                                                                                          BORDER=0></SPAN>
+                                                                                          BORDER=0 alt="restore"></SPAN>
                 <SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;'
                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="collect();"><SPAN
                         STYLE='float: left;'><?php print get_text("Submit"); ?></SPAN><IMG STYLE='float: right;'
                                                                                            SRC='./images/submit_small.png'
-                                                                                           BORDER=0></SPAN>
+                                                                                           BORDER=0 alt="submit"></SPAN>
             </DIV>
             <INPUT TYPE='hidden' NAME='idstr' VALUE=''>
             <INPUT TYPE='hidden' NAME='delcount' VALUE=0>
@@ -3445,7 +3446,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                   onClick="document.can_Form.submit();"><SPAN
                     STYLE='float: left;'><?php print get_text("Cancel"); ?></SPAN><IMG STYLE='float: right;'
                                                                                        SRC='./images/cancel_small.png'
-                                                                                       BORDER=0></SPAN>
+                                                                                       BORDER=0 alt="cancel"></SPAN>
             <?php
         }
         ?>
@@ -3835,7 +3836,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             $counter = 0;
             $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]css_day` ORDER BY id") or do_error('config.php::list_css_day', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
             while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-                if ($row['name']{0} <> "_") {
+                if ($row['name'][0] <> "_") {
                     $capt = str_replace("_", " ", $row['name']);
                     print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='" . get_css_day_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                     print "<TD><INPUT CLASS='color' MAXLENGTH='16' SIZE='16' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
@@ -3921,7 +3922,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             $counter = 0;
             $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]css_night` ORDER BY id") or do_error('config.php::list_css_day', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
             while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-                if ($row['name']{0} <> "_") {                                // hide these
+                if ($row['name'][0] <> "_") {                                // hide these
                     $capt = str_replace("_", " ", $row['name']);
                     print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='" . get_css_night_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                     print "<TD><INPUT CLASS='color' MAXLENGTH='16' SIZE='16' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";

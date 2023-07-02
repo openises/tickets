@@ -20,7 +20,7 @@ if (1 > 0) {			//
 //		Each group of 20 callsigns	
 
 		$call_str = implode(",", $temp_arr);			
-		$the_url = "http://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
+		$the_url = "https://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
 		print $the_url . "<BR />";
 		}
 	}

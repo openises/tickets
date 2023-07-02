@@ -394,7 +394,7 @@ function do_aprs() {				// 7/2/2013 - 6/20/2015 -  populates the APRS tracks tab
 		$allcall_arr = array_chunk($call_arr, 20);
 		foreach($allcall_arr as $temp_arr) {	//	Each group of 20 callsigns	
 			$call_str = implode(",", $temp_arr);			
-			$the_url = "http://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
+			$the_url = "https://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
 			$data=get_remote($the_url);				// returns JSON-decoded values
 			if ((!(is_array($data))) && (!(is_object($data)))) {				// 4/29/12
 				log_aprs_err("APRS JSON data format error");
