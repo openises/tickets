@@ -93,12 +93,12 @@ if(!empty($_POST)) {
 		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 		<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" />
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
-		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" />
+		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript"></META>
+		<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>"></META>
 		<TITLE>Tickets</TITLE>
 		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 		<link rel="shortcut icon" href="favicon.ico" />
-	<SCRIPT>
+	<SCRIPT type="application/javascript ">
 	function ck_frames() {
 		if(self.location.href==parent.location.href) {
 			self.location.href = 'index.php';
@@ -193,7 +193,7 @@ if(!empty($_POST)) {
 					<TH COLSPAN=99>SETTINGS</TH>
 				</TR>
 				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99>&nbsp;</TH>
+					<TD class='spacer' COLSPAN=99>&nbsp;</TD>
 				</TR>				
 <?php
 				$class='even';

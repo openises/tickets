@@ -2022,8 +2022,12 @@ function dump($variable) {
 	}
 
 function shorten($instring, $limit) {
-	return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
-	}
+	if (is_string($instring)) {
+		return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
+		} else {
+		return "ERROR: value is not a string";
+		}
+}
 
 function format_phone ($instr) { // 11/16/10 added check for locale for UK phone number format.
 	$locale = get_variable('locale');
@@ -3555,7 +3559,7 @@ function curr_regs() {	//	10/18/11	Gets currently allocated or viewed regions
 		}
 
 	if(!isset($curr_viewed)) {
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
 			$x=0;	//	6/10/11
@@ -3569,7 +3573,7 @@ function curr_regs() {	//	10/18/11	Gets currently allocated or viewed regions
 			$where .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	sets the region allocations searched for to type = 3 - Facilities.
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where = "WHERE `a`.`type` = 2";
 			} else {
 			$x=0;	//	6/10/11

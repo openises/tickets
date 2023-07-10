@@ -479,7 +479,7 @@ if (isset($rowtr)) {																	// got tracks?
 				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 AND (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2)";	//	6/10/11
 				}
 			} else {
-			if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
 				} else {					
 				$x=0;	//	6/10/11

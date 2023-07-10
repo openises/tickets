@@ -62,7 +62,7 @@ if(!isset($curr_viewed)) {
 		$where2 .= " AND `a`.`type` = 1";
 		}
 	} else {
-	if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+	if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where2 = "AND `a`.`type` = 1";
 		} else {
 		$x=0;
@@ -103,7 +103,7 @@ if(!isset($curr_viewed)) {
 		$where2 .= " AND `a`.`type` = 2";
 		}
 	} else {
-	if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+	if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where2 = " AND `a`.`type` = 2";
 		} else {
 		$x=0;
@@ -142,7 +142,7 @@ if ($row ) {	//	Latest unit Status update written by current user.
 			$where2 .= " AND `a`.`type` = 2";
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.
 			$where2 = " AND `a`.`type` = 2";
 			} else {
 			$x=0;
@@ -184,7 +184,7 @@ if(!isset($curr_viewed)) {
 		$where2 .= " AND `a`.`type` = 2";
 		}
 	} else {
-	if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.
+	if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.
 		$where2 = " AND `a`.`type` = 2";
 		} else {
 		$x=0;
@@ -226,7 +226,7 @@ if(!isset($curr_viewed)) {
 		$where2 .= " AND `a`.`type` = 1";
 		}
 	} else {
-	if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+	if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where2 = " AND `a`.`type` = 1";
 		} else {
 		$x=0;

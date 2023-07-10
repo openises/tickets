@@ -607,7 +607,7 @@ if(empty($_SESSION)) {		// expired?
 
 			$al_groups = $_SESSION['user_groups'];
 
-			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "";
 				} else {
 				if(array_key_exists('viewed_groups', $_SESSION)) {		//	6/10/11
@@ -701,7 +701,7 @@ if(empty($_SESSION)) {		// expired?
 		case 'add_b': 					//  ==== { ====
 			extract ($_POST);
 			$al_groups = $_SESSION['user_groups'];
-			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 2";
 				} else {
 				if(array_key_exists('viewed_groups', $_SESSION)) {		//	6/10/11
@@ -1458,7 +1458,7 @@ if(empty($_SESSION)) {		// expired?
 					}
 
 				if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
-					if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+					if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 						$where = "WHERE `a`.`type` = 1";
 						} else {
 						$x=0;
@@ -1472,7 +1472,7 @@ if(empty($_SESSION)) {		// expired?
 						$where .= " AND `a`.`type` = 1) ";
 						}	//	end if count($al_groups ==0)
 					} else {
-					if(count($curr_viewed) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13 12/2/2021
+					if(empty($curr_viewed)) { {	//	catch for errors - no entries in allocates for the user.	//	5/30/13 12/2/2021
 						$where = "WHERE `a`.`type` = 1";
 						} else {
 						$x=0;

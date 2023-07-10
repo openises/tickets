@@ -1321,9 +1321,9 @@ function get_daynight() {
 					<SPAN ID='day_but' CLASS='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='set_day_night("Day");'>Day</SPAN>
 					<SPAN ID='night_but' CLASS='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='set_day_night("Night");'>Night</SPAN>
 				</SPAN>
-				<DIV id='broadcastWrapper' class='plain text' TITLE='Click to Open Websocket Server Monitor' style='display: none; float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_wsm_scr();' />
-					<SPAN ID = 'timeText' CLASS="text" style='float: left; display: inline;' /></SPAN>&nbsp;&nbsp;
-					<SPAN ID = 'usercount' CLASS="text" style='float: right; display: inline;' /></SPAN>
+				<DIV id='broadcastWrapper' class='plain text' TITLE='Click to Open Websocket Server Monitor' style='display: none; float: none; vertical-align: middle;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_wsm_scr();'>
+					<SPAN ID = 'timeText' CLASS="text" style='float: left; display: inline;' />&nbsp;&nbsp;
+					<SPAN ID = 'usercount' CLASS="text" style='float: right; display: inline;' />
 				</DIV>
 <?php				// 5/26/11
 				$dir = "./manual";

@@ -79,7 +79,7 @@ if ($get_action == 'edit') {		//get and show action to update
 		$curr_viewed = $al_groups;
 		}
 	if(!isset($curr_viewed)) {	
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
 			$x=0;	//	6/10/11
@@ -93,7 +93,7 @@ if ($get_action == 'edit') {		//get and show action to update
 			$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11					
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {				
 			$x=0;	//	6/10/11
@@ -265,7 +265,7 @@ if ($get_action == 'edit') {		//get and show action to update
 	$regs_string = "<FONT SIZE='-1'>Showing " . get_text("Regions") . ":&nbsp;&nbsp;" . $curr_names . "</FONT>";	//	5/4/11	
 	
 	if(!isset($curr_viewed)) {	
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
 			$x=0;	//	6/10/11
@@ -279,7 +279,7 @@ if ($get_action == 'edit') {		//get and show action to update
 			$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11					
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {				
 			$x=0;	//	6/10/11

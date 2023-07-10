@@ -40,7 +40,7 @@ $query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (
 $result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
 @session_start();
 session_write_close();
-if (!(empty($_SESSION)) {
+if (!(empty($_SESSION)) [
 
-	}
+	]
 ?>

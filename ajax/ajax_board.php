@@ -146,7 +146,7 @@ if(array_key_exists('viewed_groups', $_SESSION)) {	//	5/4/11
 	}
 
 if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
-	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+	if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where = "WHERE `a`.`type` = 1";
 		} else {
 		$x=0;
@@ -160,7 +160,7 @@ if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		$where .= " AND `a`.`type` = 1) ";
 		}	//	end if count($al_groups ==0)
 	} else {
-	if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+	if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where = "WHERE `a`.`type` = 1";
 		} else {
 		$x=0;

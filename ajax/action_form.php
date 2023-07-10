@@ -140,7 +140,7 @@ if ($get_action == 'edit') {
 		}
 	$output .= "</SELECT><BR /><BR />";
 	if(!isset($curr_viewed)) {	
-		if(count($al_groups == 0)) {
+		if(empty($al_groups)) {
 			$where = "WHERE `a`.`type` = 2";
 			} else {
 			$x=0;	//	6/10/11
@@ -154,7 +154,7 @@ if ($get_action == 'edit') {
 			$where .= "AND `a`.`type` = 2";		
 			}
 		} else {
-		if(count($curr_viewed == 0)) {
+		if(empty($curr_viewed)) {
 			$where = "WHERE `a`.`type` = 2";
 			} else {				
 			$x=0;	//	6/10/11

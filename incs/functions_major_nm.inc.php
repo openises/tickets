@@ -769,7 +769,7 @@ function cs_handleResult(req) {					// the 'called-back' function for show curre
 if(array_key_exists('viewed_groups', $_SESSION)) {		//	5/4/11
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 	}
-if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
 	$where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
 	} else {	
 	if(!isset($curr_viewed)) {			//	5/4/11
@@ -1097,7 +1097,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 	if(array_key_exists('viewed_groups', $_SESSION)) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
-	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+	if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
 		$where2 = "WHERE `a`.`type` = 2";
 		} else {
 		if(!isset($curr_viewed)) {	
@@ -1317,7 +1317,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 	if(array_key_exists('viewed_groups', $_SESSION)) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
-	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+	if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
 		$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 		} else {	
 		if(!isset($curr_viewed)) {	

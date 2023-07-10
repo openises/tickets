@@ -310,7 +310,7 @@ function get_sess_boundaries() {
 			$where2 .= " AND `a`.`type` = 2";	//	6/24/13
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
 			$where2 = "WHERE `a`.`type` = 2";
 			} else {
 			$x=0;

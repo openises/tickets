@@ -629,12 +629,12 @@ if(empty($_GET)) {
 					<BR />
 					<BR />
 				</FIELDSET>
-				<CENTER>
+				<div style="text-align: center;">
 				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_form.submit();'>Submit<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				</CENTER>
-				<CENTER>
+				</div>
+				<div style="text-align: center;">
 				<SPAN id='restart_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restart_form.submit();'>Submit<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				</CENTER>
+				</div>
 			</DIV>
 		</DIV>
 

@@ -1346,22 +1346,22 @@ function set_size() {
 							$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 							}
 
-						if(!isset($curr_viewed)) {	
-							if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
-								$where2 = "WHERE `a`.`type` = 3";
-								} else {			
-								$x=0;	//	6/10/11
-								$where2 = "WHERE (";	//	6/10/11
-								foreach($al_groups as $grp) {	//	6/10/11
-									$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-									$where2 .= "`a`.`group` = '{$grp}'";
-									$where2 .= $where3;
-									$x++;
+						if(!isset($curr_viewed)) {
+							if (empty($al_groups))  { // Catch for errors - no entries in allocates for the user.	//	6/24/13
+									$where2 = "WHERE `a`.`type` = 3";
+									} else {
+									$x=0;	//	6/10/11
+									$where2 = "WHERE (";	//	6/10/11
+									foreach($al_groups as $grp) {	//	6/10/11
+										$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
+										$where2 .= "`a`.`group` = '{$grp}'";
+										$where2 .= $where3;
+										$x++;
+										}
+									$where2 .= " AND `a`.`type` = 3";	//	6/10/11
 									}
-								$where2 .= " AND `a`.`type` = 3";	//	6/10/11		
-								}
 							} else {
-							if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
+							if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
 								$where2 = "WHERE `a`.`type` = 3";
 								} else {				
 								$x=0;	//	6/10/11
@@ -1447,7 +1447,7 @@ function set_size() {
 					<FIELDSET>
 						<LEGEND class='text_large text_bold'>Contacts</LEGEND>
 						<DIV style='position: relative;'>
-						<LABEL for="phone" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_phone"];?>');"><?php print get_text('Phone');?>: <font color='red' size='-1'>*</font>
+						<LABEL for="phone" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_phone"];?>');"><?php print get_text('Phone');?>:
 						<button type='button' style='float: right;' onClick='Javascript:phone_lkup(document.edit.frm_phone.value);'><img src='./markers/glasses.png' alt='Lookup phone no' /></button></LABEL>
 						<INPUT SIZE='48' TYPE='text' ID='phone' NAME='frm_phone' VALUE='<?php print $row['phone'];?>' MAXLENGTH='16' <?php print $dis;?> />
 <?php
@@ -1575,8 +1575,8 @@ function set_size() {
 						<LEGEND class='text_large text_bold'>Attached Files</LEGEND>
 						<DIV style='position: relative;'>						
 						<LABEL for="sel_file" onmouseout="UnTip()" onmouseover="Tip('Select a file to upload to assoc');">Choose a file to upload: </LABEL>
-						<INPUT id='sel_file' NAME='frm_file' TYPE='file' /></TD>
-						<LABEL for="filename" onmouseout="UnTip()" onmouseover="Tip('Give the file a name');">File Name: </LABEL>
+						<INPUT id='sel_file' NAME='frm_file' TYPE='file' />
+							<LABEL for="filename" onmouseout="UnTip()" onmouseover="Tip('Give the file a name');">File Name: </LABEL>
 						<INPUT ID='filename' NAME='frm_file_title' TYPE='text' SIZE='48' MAXLENGTH='128' VALUE='' /><BR /><BR />
 						</DIV>
 					</FIELDSET>

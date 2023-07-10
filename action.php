@@ -628,7 +628,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 //				generate dropdown menu of responders
 
 				if(!isset($curr_viewed)) {	
-					if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+					if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 						$where = "WHERE `a`.`type` = 2";
 						} else {
 						$x=0;	//	6/10/11
@@ -642,7 +642,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 						$where .= "AND `a`.`type` = 2";	//	6/10/11					
 						}
 					} else {
-					if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+					if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 						$where = "WHERE `a`.`type` = 2";
 						} else {				
 						$x=0;	//	6/10/11

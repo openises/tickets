@@ -51,7 +51,7 @@ if (!empty($_GET)) {
 	$key_str =  $_GET['frm_key'];
 	$the_url = "https://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$key_str}&format=json";
 //		Call is VE6GG  API Key is 30429.mLY7wgrnfT2R6D
-	$data=get_remote($the_url, TRUE);				// returns JSON-decoded values, ($url, $json=TRUE) {				// 11/26/10	, 4/23/11
+	$data=get_remote($the_url, TRUE);				// returns JSON-decoded values, ($url, $json=TRUE) {				// 11/26/10	, 4/23/11 // Requires CURL
 	$temp = $data->result;
 	if (strtoupper($temp) != "OK"){
 		print "<BR /><H3>Test fails!  \"{$data->{'description'}}\"</H3><BR /><BR />";

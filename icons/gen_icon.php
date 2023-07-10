@@ -28,8 +28,8 @@ function do_icon ($icon, $text, $color) {
 	}
 				// the following array must be kept in synch with $GLOBALS['icons'] 
 				
-$icons =   array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");		// 1/9/09
-$light =   array( TRUE, 		TRUE, 		FALSE, 		 FALSE, 	FALSE, 		FALSE, 		FALSE, 			FALSE, 		FALSE);		// white text?
+$icons = array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");		// 1/9/09
+$light = array( TRUE, 		TRUE, 		FALSE, 		 FALSE, 	FALSE, 		FALSE, 		FALSE, 			FALSE, 		FALSE);		// white text?
 	
 $the_icon = $icons[$_GET['blank']];				// 0 thru 8 (note: total 9)
 $the_text = substr($_GET['text'], 0, 3);		// enforce 2-char limit

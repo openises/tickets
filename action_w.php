@@ -492,7 +492,7 @@ if ($get_action == 'add') {
 //						generate dropdown menu of responders
 
 			if(!isset($curr_viewed)) {
-				if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 					$where = "WHERE `a`.`type` = 2";
 					} else {
 					$x=0;	//	6/10/11
@@ -506,7 +506,7 @@ if ($get_action == 'add') {
 					$where .= "AND `a`.`type` = 2";
 					}
 				} else {
-				if(count($curr_viewed == 0)) {
+				if(empty($curr_viewed)) {
 					$where = "WHERE `a`.`type` = 2";
 					} else {
 					$x=0;	//	6/10/11

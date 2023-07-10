@@ -1330,7 +1330,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			}
 		$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
 		$time_back = mysql_format_date(time() - (get_variable('delta_mins')*60) - ($cwi*3600));
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
 			$where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
 			} else {		
 			if(!isset($_POST['frm_group'])) {
@@ -1605,7 +1605,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
-	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+	if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where2 = " AND `a`.`type` = 2";
 		} else {
 		if(!isset($curr_viewed)) {		
@@ -1853,7 +1853,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		
 		$al_groups = $_SESSION['user_groups'];
 		
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 .= " WHERE `a`.`type` = 2";
 			} else {
 			if(!isset($_POST['frm_group'])) {
@@ -2484,7 +2484,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 		$al_groups = $_SESSION['user_groups'];
 		
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
 			if(!isset($_POST['frm_group'])) {	//	5/4/11

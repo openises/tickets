@@ -112,7 +112,7 @@ if (empty($_POST)) {
 			if(intval($responder) != 0) {
 				$al_groups = $_SESSION['user_groups'];
 				
-				if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 					$where2 = "";
 					} else {
 					if(array_key_exists('viewed_groups', $_SESSION)) {		//	6/10/11

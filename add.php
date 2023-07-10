@@ -1438,7 +1438,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
 			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
 			} else {
 			$x=0;	//	6/10/11

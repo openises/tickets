@@ -20,7 +20,7 @@ $al_groups = $_SESSION['user_groups'];
 if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 	}
-if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 	$where2 = " AND `a`.`type` = 2";
 	} else {
 	if(!isset($curr_viewed)) {		

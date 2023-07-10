@@ -561,7 +561,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$where2 .= "AND `a`.`type` = 3";	//	6/10/11	
 			}
 		} else {
-		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `a`.`type` = 3";
 			} else {			
 			$x=0;	//	6/10/11
