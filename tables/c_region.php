@@ -12,7 +12,7 @@
 		<TR><TD>&nbsp;</TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Region or Group name:</TD>
 		<TD><INPUT ID="ID1" CLASS="dirty" MAXLENGTH="64" SIZE="48" type="text" NAME="frm_group_name" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
-	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label ALIGN="right">Group Category:</TD>
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Group Category:</TD>
 				<TD CLASS="td_data"><SELECT NAME="frm_category" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
