@@ -7,8 +7,14 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');	
+require_once('./incs/functions.inc.php');
 
+/**
+ * This is likely dead code. the function get_status_name is found in member.inc.php
+ * This function is nearly identical to get_un_status_name found in functions.inc.php
+ * @param $val
+ * @return string
+ */
 function get_broken_status_name($val) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $val;
 	$result = mysql_query($query);	
