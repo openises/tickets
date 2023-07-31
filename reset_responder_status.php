@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 session_write_close();
 require_once('./incs/functions.inc.php');	
 
-function get_status_name($val) {
+function get_broken_status_name($val) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $val;
 	$result = mysql_query($query);	
 	if(mysql_num_rows($result) > 0) {
