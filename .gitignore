@@ -2,3 +2,4 @@
 _osm/**
 incs/mysql.inc.php
 backups/**
+*.bak

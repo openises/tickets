@@ -1472,7 +1472,7 @@ if(empty($_SESSION)) {		// expired?
 						$where .= " AND `a`.`type` = 1) ";
 						}	//	end if count($al_groups ==0)
 					} else {
-					if(empty($curr_viewed)) { {	//	catch for errors - no entries in allocates for the user.	//	5/30/13 12/2/2021
+					if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13 12/2/2021
 						$where = "WHERE `a`.`type` = 1";
 						} else {
 						$x=0;
@@ -1560,7 +1560,7 @@ if(empty($_SESSION)) {		// expired?
 
 					$header .= "<TD COLSPAN=6 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_INC_PERC}%' onClick = 'document.can_Form.submit();' TITLE = 'Click to sort by Incident'><U>Incident</U></TD>";		// 9/27/08
 					$header .= "<TD>&nbsp;</TD>";
-					$header .= "<TD COLSPAN=9 ALIGN='center' CLASS='emphb 'WIDTH='{$TBL_UNIT_PERC}%' onClick = 'document.sort_Form.submit();'  TITLE = 'Click to sort by Unit'><U>" . get_text("Units") . "</U></TD>";			// 3/27/09
+					$header .= "<TD COLSPAN=9 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_UNIT_PERC}%' onClick = 'document.sort_Form.submit();'  TITLE = 'Click to sort by Unit'><U>" . get_text("Units") . "</U></TD>";			// 3/27/09
 					$header .= "<TD>&nbsp;</TD>";
 					$header .= "<TD COLSPAN=4 ALIGN='center' CLASS='emphb' WIDTH='{$TBL_CALL_PERC}%'>Dispatch</TD>";
 					$header .= "</TR>\n";
@@ -1720,7 +1720,7 @@ if(empty($_SESSION)) {		// expired?
 
 							$comment = addslashes (remove_nls($row['assign_comments']));
 
-							print "\t<TD onmouseover=\"Tip('{$comment}')\" onmouseout=\"UnTip()\" CLASS='$theClass' onClick = 'editA(" . $row['assign_id'] . ")'; >" . $strike .  cb_shorten ($comment, $COLS_COMMENTS) . $strikend . "</TD>\n";	// comment
+							print "\t<TD onmouseover=\"Tip('{$comment}')\" onmouseout=\"UnTip()\" CLASS='$theClass' onClick = 'editA(" . $row['assign_id'] . ")' ; >" . $strike .  cb_shorten ($comment, $COLS_COMMENTS) . $strikend . "</TD>\n";	// comment
 
 
 							print "\t<TD TITLE = 'Click to RESET R O FE FA C times' CLASS='mylink' ALIGN='center'>

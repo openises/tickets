@@ -919,7 +919,7 @@ function dump_db()
         exit();
     }
     if ($_GET['id'] != 0) {
-        $query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = ${_GET['id']} LIMIT 1";
+        $query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_GET['id']} LIMIT 1";
         $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
         $row = stripslashes_deep(mysql_fetch_assoc($result));
         $the_ticket_name = $row['scope'];

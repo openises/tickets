@@ -16,7 +16,8 @@ function get_modules($calling_file) {
     $result 	= mysql_query($query);
 	$num_rows 	= @mysql_num_rows($result);	
 	if($num_rows) {
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_status`=1 AND `affecting_files` LIKE '%{$calling_file}%'";
+		// AND `affecting_files` LIKE '%{$calling_file}%'" - this is a check in the below statement, but has been disabled for now
+		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_status`=1";
 		$result2 = mysql_query($query2) or do_error('mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$numb_rows = @mysql_num_rows($result2);
 		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))){

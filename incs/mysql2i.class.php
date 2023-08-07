@@ -416,15 +416,19 @@
       }
 
       public static function mysql_query($query,$link=null){
-          
+
           if( empty($link) ){
               $link = self::$currObj;
           }
-          
-          $r = mysqli_query($link,$query);
-          
+          try {
+              $r = mysqli_query($link,$query);
+          } catch (Exception $e) {
+              return;
+          }
+
           return $r;
       }
+
 
       public static function mysql_real_escape_string($escapestr,$link=null){
           

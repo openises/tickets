@@ -99,22 +99,24 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 //	foreach ($_GET as $VarName=>$VarValue) 	{echo "GET:$VarName => $VarValue, <BR />";};
 //	echo "<BR/>";
 
-	function table_exists($name,$drop_tables) {			//check if mysql table exists, if it's a re-install
-		$query 		= "SELECT COUNT(*) FROM $name";
-       	$result 	= mysql_query($query);
-		$num_rows 	= @mysql_num_rows($result);
+    function table_exists($name,$drop_tables) {            //check if mysql table exists, if it's a re-install
+        $query = "SELECT COUNT(*) FROM $name";
+        $result = mysql_query($query);
+        if(!empty($result)){
+            $num_rows = @mysql_num_rows($result);
 
-		if($num_rows) {
-			if($drop_tables) {
-				mysql_query("DROP TABLE $name");
-				print "<LI> Dropped table '<B>$name</B>'<BR />";
-				}
-			else {
-				print "<FONT CLASS=\"warn\">Table '$name' already exists, use Re-install option instead. Click back in your browser.</FONT></BODY></HTML>";
-				exit();
-				}
-			}
-		}
+            if($num_rows) {
+                if($drop_tables) {
+                    mysql_query("DROP TABLE $name");
+                    print "<LI> Dropped table '<B>$name</B>'<BR />";
+                }
+                else {
+                    print "<FONT CLASS=\"warn\">Table '$name' already exists, use Re-install option instead. Click back in your browser.</FONT></BODY></HTML>";
+                    exit();
+                }
+            }
+        }
+    }
 
 	function prefix ($tbl) {		/* returns concatenated string */
 		global $db_prefix;
@@ -549,6 +551,21 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		$tables .= $table_name . ", ";
 // -- --------------------------------------------------------
 
+// --
+// -- Table structure for table `modules`
+// --
+
+        $table_name = prefix("modules");
+        $query = "CREATE TABLE `$table_name` (
+        `id` bigint(8) NOT NULL auto_increment,
+        `mod_name` varchar(26) NOT NULL,
+        `mod_status` varchar(1) NOT NULL,
+        PRIMARY KEY (`id`)
+        ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Optional modules to load' AUTO_INCREMENT=1;";
+
+        mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+        $tables .= $table_name . ", ";
+// -- --------------------------------------------------------
 
 // --
 // -- Table structure for table `notify`				// 10/22/08

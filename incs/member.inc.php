@@ -57,7 +57,8 @@ function get_status_name($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_status` WHERE `id` = " . $id;
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	$row = mysql_fetch_array($result);
-	return $row['status_val'];
+	$return_value = is_null($row['status_val']) ? "Not Found" : $row['status_val'];
+    return $return_value;
 	}
 	
 function get_field_label($table, $fieldid) {
@@ -372,7 +373,13 @@ function objectToArray($d) {
 	else { return $d; }							// Return array -- ??		
 	}		// end function object ToArray()
 
-function generate_time_dropdown($date_suffix, $default_time=0, $disabled=FALSE, $readonly) {			// 'extra allows 'disabled'
+function generate_time_dropdown($date_suffix, $default_time, $disabled, $readonly) {			// 'extra allows 'disabled'
+	if(empty($default_time)) {
+		$default_time = 0;
+	}
+	if(empty($disabled)) {
+		$disabled = FALSE;
+	}
 	$dis_str = ($disabled==true) ? " DISABLED='disabled'" : "" ;
 	$dis_str = ($readonly==true) ? " DISABLED='disabled'" : "" ;		
 	$td = array ("E" => "5", "C" => "6", "M" => "7", "W" => "8");							// hours west of GMT
@@ -409,7 +416,13 @@ function generate_time_dropdown($date_suffix, $default_time=0, $disabled=FALSE, 
 	print "\n<!-- default:$default_time,$hour-$minute -->\n";
 }		// end function generate_time_dropdown(
 																	/* print date and time in dropdown menus */ 
-function generate_date_dropdown_olddates($date_suffix, $default_date=0, $disabled=FALSE, $readonly) {			// 'extra allows 'disabled'
+function generate_date_dropdown_olddates($date_suffix, $default_date, $disabled, $readonly) {			// 'extra allows 'disabled'
+	if(empty($default_time)) {
+		$default_time = 0;
+	}
+	if(empty($disabled)) {
+		$disabled = FALSE;
+	}
 	$dis_str = ($disabled==true) ? " DISABLED='disabled'" : "" ;
 	$dis_str = ($readonly==true) ? " DISABLED='disabled'" : "" ;	
 	$td = array ("E" => "5", "C" => "6", "M" => "7", "W" => "8");							// hours west of GMT
@@ -507,7 +520,13 @@ function generate_date_dropdown_olddates($date_suffix, $default_date=0, $disable
 		}
 	}		// end function generate_date_dropdown_olddates(
 	
-function generate_date_dropdown_middates($date_suffix, $default_date=0, $disabled=FALSE, $readonly) {			// 'extra allows 'disabled'
+function generate_date_dropdown_middates($date_suffix, $default_date, $disabled, $readonly) {			// 'extra allows 'disabled'
+	if(empty($default_time)) {
+		$default_time = 0;
+	}
+	if(empty($disabled)) {
+		$disabled = FALSE;
+	}
 	$dis_str = ($disabled==true) ? " DISABLED='disabled'" : "" ;
 	$dis_str = ($readonly==true) ? " DISABLED='disabled'" : "" ;	
 	$td = array ("E" => "5", "C" => "6", "M" => "7", "W" => "8");							// hours west of GMT

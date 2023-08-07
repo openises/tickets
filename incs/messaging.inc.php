@@ -499,8 +499,14 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=30 ) {	//	C
 	return $ret;
 	}	
 	
-function store_email($msg_type, $recipients, $messageid, $subject, $message, $ticket_id = 0, $resp_id = 0, $time, $from_address, $fromname) {	//	stores incoming and outgoing emails in messages table
+function store_email($msg_type, $recipients, $messageid, $subject, $message, $ticket_id, $resp_id, $time, $from_address, $fromname) {	//	stores incoming and outgoing emails in messages table
 	$counter = 0;
+	if(empty($ticket_id)) {
+		$ticket_id = 0;
+	}
+	if(empty($resp_id)) {
+		$resp_id = 0;
+	}
 	$message = addslashes($message);
 	$subject = addslashes($subject);
 	$resp_id =(($resp_id == "") || ($resp_id == 0) || ($resp_id == "")) ? '0' : $resp_id;

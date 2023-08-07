@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');
 
-$version = "v3.40.3";
+$version = "v3.41.0";
 //$version = "3.4 Beta - 12/27/2021";
 //$version = "3.30A Beta - 05/15/18";
 $temp = explode(" ", get_variable('_version'));
@@ -103,6 +103,7 @@ $disp_version = $temp[0];
 2/24/14 Added Setting to restrict units to only see their own mobile screen
 1/7/15 Changes for version 3.00
 6/6/2023 Corrections for "Edit unit with no map". Corrections supplied by Andy Harvey and Arnie Shore
+8/6/2023 Bugfixes for reset unit status. lot of deprecated language fixed for PHP 8.x, other misc bug fixes, fixed board.php errors
 */
 
 //snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));

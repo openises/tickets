@@ -633,8 +633,11 @@ function show_assigns($which, $id_in){				// 10/20/12
 	}		// end function show_assigns()
 
 
-function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			/* list actions and patient data belonging to ticket */
-	$print = "";
+function show_actions ($the_id, $theSort, $links, $display, $mode=0) {			/* list actions and patient data belonging to ticket */
+    $print = "";
+    if(empty($theSort)) {
+        $theSort = "date";
+    }
 	$evenodd = array("even", "odd");
 	if($display) {
 		$evenodd = array ("plain", "plain");
@@ -724,8 +727,11 @@ function show_actions ($the_id, $theSort="date", $links, $display, $mode=0) {			
 	return $print;
 	}			// end function show_actions
 
-function list_messages($the_id, $theSort="date", $links, $display) {
-	$print = "";
+function list_messages($the_id, $theSort, $links, $display) {
+    $print = "";
+    if(empty($theSort)) {
+        $theSort = "date";
+    }
 	if(get_variable('use_messaging') != 0) {
 		$evenodd = array ("even", "odd");		// class names for display table row colors
 		$actr=1;
@@ -774,7 +780,10 @@ function list_messages($the_id, $theSort="date", $links, $display) {
 	return $print;
 	}	//	End of function Show Messages
 
-function show_actions_orig ($the_id, $theSort="date", $links, $display) {			/* list actions and patient data belonging to ticket */
+function show_actions_orig ($the_id, $theSort, $links, $display) {			/* list actions and patient data belonging to ticket */
+    if(empty($theSort)) {
+        $theSort = "date";
+    }
 	if ($display) {
 		$evenodd = array ("even", "odd");		// class names for display table row colors
 		}
@@ -869,8 +878,11 @@ function show_actions_orig ($the_id, $theSort="date", $links, $display) {			/* l
 
 // } { -- dummy
 
-function show_messages ($the_id, $theSort="date", $links, $display) {			/* list messages belonging to ticket 10/23/12 */
-	global $evenodd;
+function show_messages ($the_id, $theSort, $links, $display) {			/* list messages belonging to ticket 10/23/12 */
+    global $evenodd;
+    if(empty($theSort)) {
+        $theSort = "date";
+    }
 	$actr=0;
 	$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder`";
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
@@ -2064,9 +2076,12 @@ function replace_quotes($instring) {		//	3/15/11
        }
 
 function stripslashes_deep($value) {
-    	$value = is_array($value) ? array_map('stripslashes_deep', $value) :	stripslashes($value);
-    	return $value;
-	}
+    if (is_array($value)) {
+        return array_map('stripslashes_deep', $value);
+    } else {
+        return is_string($value) ? stripslashes($value) : $value;
+    }
+}
 
 function trim_deep($value) {
     	$value = is_array($value) ?

@@ -64,7 +64,7 @@ if(!empty($_POST)) {
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$exclFromReset = get_noreset_status(intval($row['un_status_id']));
 		if($exclFromReset == "n") {
-			$debug .= $row['un_status_id'];
+			// $debug .= $row['un_status_id'];
 			$query2 = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status']) . " WHERE `id`= " . $row['id'];
 			$result2 = mysql_query($query2);	
 			if($result2) {
