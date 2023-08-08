@@ -251,16 +251,20 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 				}				// end if (intval($row['radius']) 
 			$color = isset($color) ? $color : "blue";
 			if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
-			if (get_variable('abbreviate_description'))	{	//do abbreviations on description, affected if neccesary
-				if (strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
-					$row['tick_descr'] = substr($row['tick_descr'],0,get_variable('abbreviate_description')).'...';
-					}
-				}
-			if (get_variable('abbreviate_affected')) {
-				if (strlen($row['affected']) > get_variable('abbreviate_affected')) {
-					$row['affected'] = substr($row['affected'],0,get_variable('abbreviate_affected')).'...';
-					}
-				}
+            if (get_variable('abbreviate_description')) {    //do abbreviations on description, affected if neccesary
+                if (isset($row['tick_descr'])) {
+                    if (strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
+                        $row['tick_descr'] = substr($row['tick_descr'], 0, get_variable('abbreviate_description')) . '...';
+                    }
+                }
+            }
+            if (get_variable('abbreviate_affected')) {
+                if (isset($row['affected'])) {
+                    if (strlen($row['affected']) > get_variable('abbreviate_affected')) {
+                        $row['affected'] = substr($row['affected'], 0, get_variable('abbreviate_affected')) . '...';
+                    }
+                }
+            }
 
 			$A = array_key_exists ($the_id , $acts_ary)? $acts_ary[$the_id]: "&nbsp;";		// 6/2/10
 			$P = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: "&nbsp;";
