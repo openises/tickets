@@ -255,14 +255,28 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$i++;
 				}
 			unset($result);
-			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user`
-				WHERE `user`=" . quote_smart($_POST['frm_user']). "
-				AND (`passwd`=PASSWORD('" . $_POST['frm_passwd'] . "')
-				OR `passwd`=MD5('" . strtolower($_POST['frm_passwd']) . "') OR `passwd`=MD5('" . $_POST['frm_passwd'] . "'))
-				LIMIT 1";
-			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			if (mysql_affected_rows()==1) {
+													
+			// 2026-02-24 Vulnerability reported here SQL INJECTION RISK reported by Dominick Walenczak <d.walenczak@gmail.com> 
+			//$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user`
+			//	WHERE `user`=" . quote_smart($_POST['frm_user']). "
+			//	AND (`passwd`=PASSWORD('" . $_POST['frm_passwd'] . "')
+			//	OR `passwd`=MD5('" . strtolower($_POST['frm_passwd']) . "') OR `passwd`=MD5('" . $_POST['frm_passwd'] . "'))
+			//	LIMIT 1";
+			//$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			//if (mysql_affected_rows()==1) {
 
+			// THIS CODE NEEDS TESTING
+			$stmt = mysqli_prepare($mysqli, "SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "user` WHERE `user` = ? LIMIT 1"); 
+            mysqli_stmt_bind_param($stmt, "s", $_POST['frm_user']); 
+            mysqli_stmt_execute($stmt) or do_error("", 'mysql query failed', mysqli_error($mysqli), basename(__FILE__), __LINE__); 
+            $result = mysqli_stmt_get_result($stmt); 
+            $row = mysqli_fetch_assoc($result); 
+            $authenticated = $row && ( password_verify($_POST['frm_passwd'], $row['passwd']) 
+                                                 || $row['passwd'] === md5(strtolower($_POST['frm_passwd'])) 
+                                                 || $row['passwd'] === md5($_POST['frm_passwd']) );
+            if ( $authenticated ) {
+            // END UNTESTED CODE
+				
 				$row = stripslashes_deep(mysql_fetch_assoc($result));
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
