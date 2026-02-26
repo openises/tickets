@@ -266,9 +266,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			//if (mysql_affected_rows()==1) {
 
 			// THIS CODE NEEDS TESTING
-			$stmt = mysqli_prepare($mysqli, "SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "user` WHERE `user` = ? LIMIT 1"); 
+			$stmt = mysqli_prepare(mysql2i::$currObj, "SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "user` WHERE `user` = ? LIMIT 1"); 
             mysqli_stmt_bind_param($stmt, "s", $_POST['frm_user']); 
-            mysqli_stmt_execute($stmt) or do_error("", 'mysql query failed', mysqli_error($mysqli), basename(__FILE__), __LINE__); 
+            mysqli_stmt_execute($stmt) or do_error("", 'mysql query failed', mysqli_error(mysql2i::$currObj), basename(__FILE__), __LINE__); 
             $result = mysqli_stmt_get_result($stmt); 
             $row = mysqli_fetch_assoc($result); 
             $authenticated = $row && ( password_verify($_POST['frm_passwd'], $row['passwd']) 
@@ -277,7 +277,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
             if ( $authenticated ) {
             // END UNTESTED CODE
 				
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				$row = stripslashes_deep($row);
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
 
