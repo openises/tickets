@@ -67,8 +67,8 @@ http://www.noc.kth.se/opentickets/index.html
 
 
 -- Requirements
-+ A PHP capable webserver (either apache: http://www.apache.org or MS's IIS)
-+ PHP 7.4
++ A PHP capable webserver (Apache, Microsoft IIS, Nginx)
++ PHP 7.4 - PHP 8.5
 + MySQL, 3.x probably works, but 3.23.*/4 is preferred
 + You will need a GMaps API key. Obtain at http://www.google.com/apis/maps/signup.html
 + Clients must accept cookies for login info and handle CSS
@@ -120,3 +120,7 @@ secure passwords are fundamental.
 -- Misc
 Eric Osterberg contact is ejosterberg [at] gmail [dot] com
 Arnie Shore contact is shoreas [at] gmail [dot] com
+
+-- Support and Bug Reports
+Visit the official TicketsCAD Google Group: https://groups.google.com/g/open-source-cad
+
