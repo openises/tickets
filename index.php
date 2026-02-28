@@ -1,266 +1,1341 @@
 <?php
-error_reporting(E_ALL);
-if(!(file_exists("./incs/mysql.inc.php"))) {
-	if(file_exists('./install.php')) {
-		header('Location: install.php');
-	} else {
-		print "Tickets is not configured (missing ./incs/mysql.inc.php). Restore install.php temporarily to run installation.";
-	}
-	exit();
-	}
-
-require_once('./incs/functions.inc.php');
-require_once('./incs/version.inc.php');
-
-$app_version = $tickets_current_version;
-$installed_version = get_variable('_version');
-$temp = explode(" ", $installed_version);
-$disp_version = (isset($temp[0]) && $temp[0] != '') ? $temp[0] : 'unknown';
-
 /*
-10/1/08 added error reporting
-1/11/09 added call frame, 'auto_route' setting
-1/17/09 "ALTER TABLE `assigns` CHANGE `in-quarters` `on_scene` DATETIME NULL DEFAULT NULL"
-2/1/09 version  no.
-2/2/09 un_status schemae changes, version no.
-2/24 comment re terrain setting
-3/25/09 schema update
-4/1/09 new settings added
-7/7/09 function do_setting added, smtp_acct, email_from, 'multi' to responders
-7/7/09 added protocol to in_types, utc_stamp
-7/14/09 auto-size CB frame
-7/29/09 added gtrack url setting, LocateA, Gtrack, Glat and Handle fields to responder table
-8/2/09 added maptype setting which controls google map type default display
-8/3/09 added locale setting which controls USNG, OSGB and UTM display plus date format
-8/5/09 added user defined function key settings (3 keys).
-8/19/09	added circle attrib's to in_types
-11/1/09 Added setting for reverse geocoding on or off when setting location of incident.
-11/11/09 Version no. to  11B
-11/23/09 Version no. to  11C
-1/3/10 added 'by' field to ticket table, for multi-user operation
-1/8/10 added fields to table 'user' to support multi-user operation
-1/23/10 session housekeeping
-2/4/10 added unit status and fac_status value coloring
-3/3/10 removed session destroy()
-3/12/10 table `constituents` added
-3/21/10 pie chart settings added
-3/24/10 tables `in_types`, `un_status` revised
-4/5/10 tag closure, version no.
-4/7/10 unit_status_chg setting added, 'mu_init.php' renamed to 'get_latest.php'
-4/11/10 added table 'pin_control' for asterisk integration
-4/30/10 added three add'l phone fields to consx table
-5/4/10 added responder_id (for use with level = 'unit') to user table
-5/11/10 added miscellaneous to table consx
-5/19/10 version update test added
-6/20/10 schema changes per KJ email
-6/25/10 user dob to text type
-6/26/10 added set_severity to table in_types
-6/27/10 corrected 911 field for prefix
-7/6/10 address elements to responder, facilities schema, by AH
-7/21/10 setting 'unit_status_chg' removed
-7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
-8/5/10 internet setting added
-8/8/10 install required if mysql.inc.php absent
-8/13/10 gettext table inserted
-8/17/10 gettext table renamed to 'captions'
-8/21/10 - capts.inc.php added
-8/25/10 utf8 collation set on table capts
-8/27/10 setting added
-8/30/10 captions data now handled as array
-10/8/10 version number date change
-10/31/10 facilities type description field size increased
-11/5/10 ticket street field size increased
-11/17/10 codes table added
-11/23/10 'state' schema expanded
-11/27/10 added codes, tweet tables, '_cloud' setting
-11/30/10 hints table added, 'Patient' caption added
-12/4/10 function do_caption() added
-12/8/10 version number
-12/9/10 assigns schema field addition
-12/16/10 added group or dispatch setting
-3/1/11 Added table of places for suggestions.
-3/15/11 added css color tables
-3/22/11 prepare for release - places table installs empty now.
-3/30/11 Revisions to creaton of capts table and default value insertion.
-3/30/11 corrections to _inc_num handling - AS
-4/5/11 Added group table and group fields for future multi-region use.
-4/19/11 revised log schema for larger info field.
-4/22/11 field icon_str added to responder and facilities schema
-6/6/11 Added table remote_devices for internal tickets tracker and added t_tracker field to responder table.
-6/10/11 Dropped old groups tables and added new tables for group functionality
-7/5/11 ogts field added to responder schema, settings
-8/2/11 tables mmarkup and cats schema added
-9/26/11 Changed Value field in settings table to varcahr (128) to fix issues with fiueld length for SMTP mail settings
-4/17/12 Version number change
-5/1/12 table captions field size increses from 38 to 64
-5/11/12 Added extra indexes to Assigns and log table.
-5/11/12 Added code for invocation of quick start choice on first login.
-6/21/12 Version number change
-10/23/12 New code for Messaging and Portal
-04/02/13 version no. change only
-6/6/2013 revisions to allocates schema re indexing, field size
-6/14/2013 Added line to empty the $_SESSION array on first load of Index
-5/7/13 Added new "status_updated" field to responder table
-8/1/13 Added Mobile redirect for mobile devices
-9/10/13 Added Warnings, mailgroups, personnel and various settings to support those features and mobile
-10/31/13 Added fields to in_types.
-2/24/14 Added Setting to restrict units to only see their own mobile screen
-1/7/15 Changes for version 3.00
-6/6/2023 Corrections for "Edit unit with no map". Corrections supplied by Andy Harvey and Arnie Shore
-8/6/2023 Bugfixes for reset unit status. lot of deprecated language fixed for PHP 8.x, other misc bug fixes, fixed board.php errors
+10/8/07 added domain detection for GMaps API key association
+1/8/08 added settings email_reply_to' and call_board;
+3/20/08 added settings map height and width;
+6/7/08  added kml files setting
+6/9/08  revised default 'admin' account level to 'super'
+6/12/08 revised version number only
+6/27/08 revised version number only
+6/28/08 revised version number only
+7/16/08 revised default military time
+9/13/08 added error_reporting, lat/lng setting entry
+9/13/08 added table `unit_types`
+9/13/08 added white pages key
+9/13/08 GSearch API key
+9/15/08 added tables 'login'
+9/16/08 corr's to undefined's
+9/17/08 dropped field 'hash', rearranged field 'user' in table 'user'
+9/17/08 added table 'photos'
+9/18/08 added table `cities`
+9/22/08 version # only
+10/08/08 version # only
+10/11/08 major schema update
+10/17/08 added '__sleep' setting
+10/19/08 added pager nos. to responder
+10/22/08 expanded table notify schema
+11/6/08 table user default corrections, sql_mode
+1/17/09 changed `in-quarters` to `on_scene`, insert `auto_route` settings
+1/17/09 version no. to '2.9 B beta'
+1/18/08 added 'in service' unit status
+1/25/09 team tables renamed
+1/27/09 added default area code setting, unit_types schema, responder schema updates
+2/3/09 version no.
+2/8/09 table tracks_hh added
+2/11/09 session table expanded
+2/14/09 session flags to varchar
+2/21/09 check file write-able
+2/24/09 added 'terrain' setting
+3/17/09 chgd aprs_poll to auto_poll
+3/22/09 removed redundant def_area_code
+4/10/09 responder schema update
+1/23/10 - removed table session
+8/5/10 version number base - to permit index.php to update schema, internet setting added
+8/8/10    accomodate absent mysql.inc.php - as install trigger
+10/29/10  'PASSWORD' => 'MD5' to accommodate old MySQL versions
+12/18/10   write permissions test corrected
+1/10/11 Added default setting for Group or dispatch
+5/11/12 Added code for quick start.
+1/9/2013 API key is no longer mandatory
+4/2/2013 removed API key value.
 */
 
-//snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));
-
-$cb_per_line = 22;				// 6/5/09
-$cb_fixed_part = 60;
-$cb_min = 96;
-$cb_max = 300;
-
-
-
-function tickets_version_to_compare($version_value) {
-	$version_value = strtolower(trim((string)$version_value));
-	$version_value = preg_replace('/[^0-9.]/', '', $version_value);
-	if($version_value == '') { return '0.0.0'; }
-	return $version_value;
-}
-
-$needs_install = ((!isset($installed_version)) || (trim((string)$installed_version) == ''));
-if(!$needs_install) {
-	$needs_install = version_compare(tickets_version_to_compare($installed_version), tickets_version_to_compare($app_version), '<');
-}
-if($needs_install) {
-	if(file_exists('./install.php')) {
-		header('Location: install.php');
-	} else {
-		print "Tickets requires installation/upgrade (DB version: " . htmlspecialchars((string)$disp_version, ENT_QUOTES, 'UTF-8') . ", app version: " . htmlspecialchars((string)$app_version, ENT_QUOTES, 'UTF-8') . "). Restore install.php temporarily to continue.";
+error_reporting(E_ALL);				// 2/3/09
+if( !extension_loaded('mysql') ){
+	require_once('./incs/mysql2i.class.php');
 	}
-	exit();
-}
 
-//	cache buster and logout from statistics module.
-$_SESSION = array();	//	6/14/13
-$noforward_string = "";
-// Mobile redirect
-if((!isset($_POST) || (!array_key_exists('noautoforward', $_POST))) && ((!isset($_SESSION)) || ((array_key_exists('noautoforward', $_SESSION)) && ($_SESSION['noautoforward'] == FALSE)))) {	//	1/30/14
-	if(get_variable('use_responder_mobile') == "1") {	//	8/1/13
-		$text = $_SERVER['HTTP_USER_AGENT'];
-		$var[0] = 'Mozilla/4.';
-		$var[1] = 'Mozilla/3.0';
-		$var[2] = 'AvantGo';
-		$var[3] = 'ProxiNet';
-		$var[4] = 'Danger hiptop 1.0';
-		$var[5] = 'DoCoMo/';
-		$var[6] = 'Google CHTML Proxy/';
-		$var[7] = 'UP.Browser/';
-		$var[8] = 'SEMC-Browser/';
-		$var[9] = 'J-PHONE/';
-		$var[10] = 'PDXGW/';
-		$var[11] = 'ASTEL/';
-		$var[12] = 'Mozilla/1.22';
-		$var[13] = 'Handspring';
-		$var[14] = 'Windows CE';
-		$var[15] = 'PPC';
-		$var[16] = 'Mozilla/2.0';
-		$var[17] = 'Blazer/';
-		$var[18] = 'Palm';
-		$var[19] = 'WebPro/';
-		$var[20] = 'EPOC32-WTL/';
-		$var[21] = 'Tungsten';
-		$var[22] = 'Netfront/';
-		$var[23] = 'Mobile Content Viewer/';
-		$var[24] = 'PDA';
-		$var[25] = 'MMP/2.0';
-		$var[26] = 'Embedix/';
-		$var[27] = 'Qtopia/';
-		$var[28] = 'Xiino/';
-		$var[29] = 'BlackBerry';
-		$var[30] = 'Gecko/20031007';
-		$var[31] = 'MOT-';
-		$var[32] = 'UP.Link/';
-		$var[33] = 'Smartphone';
-		$var[34] = 'portalmmm/';
-		$var[35] = 'Nokia';
-		$var[36] = 'Symbian';
-		$var[37] = 'AppleWebKit/413';
-		$var[38] = 'UPG1 UP/';
-		$var[39] = 'RegKing';
-		$var[40] = 'STNC-WTL/';
-		$var[41] = 'J2ME';
-		$var[42] = 'Opera Mini/';
-		$var[43] = 'SEC-';
-		$var[44] = 'ReqwirelessWeb/';
-		$var[45] = 'AU-MIC/';
-		$var[46] = 'Sharp';
-		$var[47] = 'SIE-';
-		$var[48] = 'SonyEricsson';
-		$var[49] = 'Elaine/';
-		$var[50] = 'SAMSUNG-';
-		$var[51] = 'Panasonic';
-		$var[52] = 'Siemens';
-		$var[53] = 'Sony';
-		$var[54] = 'Verizon';
-		$var[55] = 'Cingular';
-		$var[56] = 'Sprint';
-		$var[57] = 'AT&T;';
-		$var[58] = 'Nextel';
-		$var[59] = 'Pocket PC';
-		$var[60] = 'T-Mobile';
-		$var[61] = 'Orange';
-		$var[62] = 'Casio';
-		$var[63] = 'HTC';
-		$var[64] = 'Motorola';
-		$var[65] = 'Samsung';
-		$var[66] = 'NEC';
-		$var[67] = 'Mobi';
+$version = "2.20 A base beta";				// see usage below 8/5/10
 
-		$result = count($var);
+function dump($variable) {
+	echo "\n<PRE>";					// pretty it a bit
+	var_dump($variable) ;
+	echo "</PRE>\n";
+	}
 
-		$host  = $_SERVER['HTTP_HOST'];
-		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-		$extra = 'rm/index.php';
-		$url = "http://" . $host . $uri . "/" . $extra;
+$api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 
-		for ($i=0;$i<$result;$i++) {
-			$ausg = stristr($text, $var[$i]);
-			if((strlen($ausg)>0) && (!stristr($text, 'MSIE'))) {
-				echo '<meta http-equiv="refresh" content="', 0, ';URL=', $url, '">';
-				exit;
-				}
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<META HTTP-EQUIV="Expires" CONTENT="0">
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">
+<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
+<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+</HEAD><BODY>
+<FONT CLASS="header">Installing <?php print $version; ?> </FONT><BR /><BR />
+<SCRIPT>
+	function validate(theForm) {
+		var errmsg="";
+		if (theForm.frm_db_host.value == "")			{errmsg+= "\tMySQL HOST name is required\n";}
+		if (theForm.frm_db_dbname.value == "")			{errmsg+= "\tMySQL DATABASE name is required\n";}
+//		if (theForm.frm_api_key.value.length != 86)		{errmsg+= "\tGMaps API key is required - 86 chars\n";} -- 1/9/2013
+		if (errmsg!="") {
+			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			return false;
 			}
-		//	End of Mobile redirect
+		else {
+			return true;
+			}
+		}				// end function validate(theForm)
+
+</SCRIPT>
+<?php
+
+//	foreach ($_POST as $VarName=>$VarValue) {echo "POST:$VarName => $VarValue, <BR />";};
+//	foreach ($_GET as $VarName=>$VarValue) 	{echo "GET:$VarName => $VarValue, <BR />";};
+//	echo "<BR/>";
+
+    function table_exists($name,$drop_tables) {            //check if mysql table exists, if it's a re-install
+        $query = "SELECT COUNT(*) FROM $name";
+        $result = mysql_query($query);
+        if(!empty($result)){
+            $num_rows = @mysql_num_rows($result);
+
+            if($num_rows) {
+                if($drop_tables) {
+                    mysql_query("DROP TABLE $name");
+                    print "<LI> Dropped table '<B>$name</B>'<BR />";
+                }
+                else {
+                    print "<FONT CLASS=\"warn\">Table '$name' already exists, use Re-install option instead. Click back in your browser.</FONT></BODY></HTML>";
+                    exit();
+                }
+            }
+        }
+    }
+
+	function prefix ($tbl) {		/* returns concatenated string */
+		global $db_prefix;
+		return  $db_prefix . $tbl;
 		}
-	} else {
-	$noforward_string = "&noaf=1";	//	1/30/14
-	}
 
-if(isset($_POST['logout'])) {
-	$buster = strval(rand()) . "&logout=1";
-	} else {
-	$buster = strval(rand());
-	}
-if (get_variable('call_board') == 2) {
-?>
-	<FRAMESET ID = 'the_frames' ROWS="<?php print (get_variable('framesize') + 25);?>, 0 ,*" BORDER="<?php print get_variable('frameborder');?>" BORDERCOLOR="#ff0000">
-	<FRAME SRC="top.php?stuff=<?php print $buster;?>" NAME="upper" SCROLLING="no" />
-	<FRAME SRC='board.php?stuff=<?php print $buster;?>' ID = 'what' NAME='calls' SCROLLING='AUTO' />	<FRAME SRC="main.php?stuff=<?php print $buster;?>" NAME="main" />
-	<FRAME SRC="main.php?stuff=<?php print $buster;?><?php print $noforward_string;?>" NAME="main" />	<!-- 1/30/14 -->
-<?php
-	} else  {
-?>
-	<FRAMESET ID = 'the_frames' ROWS="<?php print (get_variable('framesize') + 25);?>, *" BORDER="<?php print get_variable('frameborder');?>">
-	<FRAME SRC="top.php?stuff=<?php print $buster;?>" NAME="upper" SCROLLING="no" />
-	<FRAME SRC="main.php?stuff=<?php print $buster;?><?php print $noforward_string;?>" NAME="main" />	<!-- 1/30/14 -->
-<?php
-	}
-?>
-	<NOFRAMES>
-	<BODY>
-		Tickets requires a frames-capable browser.
-	</BODY>
-	</NOFRAMES>
-</FRAMESET>
-</HTML>
-<?php
+	/* insert new values into settings table */
+	function do_insert_settings($name,$value) {
+		$tablename = prefix("settings");
+		$query = "INSERT INTO `$tablename` (name,value) VALUES('$name','$value')";
+		$result = mysql_query($query) or die("DO_INSERT_SETTINGS($name,$value) failed, execution halted");
+		}
+	//create tables
+	function create_tables($db_prefix,$drop_tables=1) {
+		//check if tables exists and if drop_tables is 1
 
+		table_exists($db_prefix."action",$drop_tables);		// 10/11/08	 - 1/25/09
+		table_exists($db_prefix."allocates",$drop_tables);		
+		table_exists($db_prefix."assigns",$drop_tables);
+		table_exists($db_prefix."captions",$drop_tables);		
+		table_exists($db_prefix."certs",$drop_tables);
+		table_exists($db_prefix."certs_x_user",$drop_tables);
+		table_exists($db_prefix."chat_invites",$drop_tables);		
+		table_exists($db_prefix."chat_messages",$drop_tables);
+		table_exists($db_prefix."chat_rooms",$drop_tables);
+		table_exists($db_prefix."cities",$drop_tables);
+		table_exists($db_prefix."clones",$drop_tables);
+		table_exists($db_prefix."codes",$drop_tables);		
+		table_exists($db_prefix."constituents",$drop_tables);		
+		table_exists($db_prefix."contacts",$drop_tables);
+		table_exists($db_prefix."courses",$drop_tables);
+		table_exists($db_prefix."courses_x_user",$drop_tables);
+		table_exists($db_prefix."css_day",$drop_tables);
+		table_exists($db_prefix."css_night",$drop_tables);		
+		table_exists($db_prefix."documents",$drop_tables);
+		table_exists($db_prefix."documents_log",$drop_tables);
+		table_exists($db_prefix."facilities",$drop_tables);		
+		table_exists($db_prefix."fac_status",$drop_tables);	
+		table_exists($db_prefix."fac_types",$drop_tables);	
+		table_exists($db_prefix."hints",$drop_tables);	
+		table_exists($db_prefix."insurance",$drop_tables);		
+		table_exists($db_prefix."in_types",$drop_tables);
+		table_exists($db_prefix."log",$drop_tables);
+		table_exists($db_prefix."logins",$drop_tables);
+		table_exists($db_prefix."mmarkup",$drop_tables);	
+		table_exists($db_prefix."mmarkup_cats",$drop_tables);	
+		table_exists($db_prefix."modules",$drop_tables);		
+		table_exists($db_prefix."notify",$drop_tables);
+		table_exists($db_prefix."patient",$drop_tables);
+		table_exists($db_prefix."photos",$drop_tables);
+		table_exists($db_prefix."pin_ctrl",$drop_tables);	
+		table_exists($db_prefix."places",$drop_tables);		
+		table_exists($db_prefix."region",$drop_tables);		
+		table_exists($db_prefix."region_type",$drop_tables);		
+		table_exists($db_prefix."remote_devices",$drop_tables);		
+		table_exists($db_prefix."responder",$drop_tables);
+		table_exists($db_prefix."rss",$drop_tables);		
+		table_exists($db_prefix."settings",$drop_tables);
+		table_exists($db_prefix."skills",$drop_tables);
+		table_exists($db_prefix."skills_x_user",$drop_tables);
+		table_exists($db_prefix."stats_settings",$drop_tables);		
+		table_exists($db_prefix."teams",$drop_tables);
+		table_exists($db_prefix."teams_x_user",$drop_tables);
+		table_exists($db_prefix."team_types",$drop_tables);
+		table_exists($db_prefix."ticket",$drop_tables);
+		table_exists($db_prefix."titles",$drop_tables);
+		table_exists($db_prefix."tracks",$drop_tables);
+		table_exists($db_prefix."tracks_hh",$drop_tables);
+		table_exists($db_prefix."unit_types",$drop_tables);
+		table_exists($db_prefix."un_status",$drop_tables);
+		table_exists($db_prefix."user",$drop_tables);
+
+		$tables = "";
+
+// -- phpMyAdmin SQL Dump
+// -- version 2.9.2
+// -- http://www.phpmyadmin.net
+// --
+// -- Host: localhost
+// -- Generation Time: Oct 11, 2008 at 12:35 PM
+// -- Server version: 5.0.27
+// -- PHP Version: 5.2.1
+// --
+// -- Database: `tickets_2_8_c`
+// --
+
+
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `action`
+// --
+		$table_name = prefix("action");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `ticket_id` int(8) NOT NULL default '0',
+		 `date` datetime default NULL,
+		 `description` text NOT NULL,
+		 `user` int(8) default NULL,
+		 `action_type` int(8) default NULL,
+		 `responder` text,
+		 `updated` datetime default NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables = $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `assigns`
+// --
+
+		$table_name = prefix("assigns");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `as_of` datetime default NULL,
+		 `status_id` int(4) default '1',
+		 `ticket_id` int(4) default NULL,
+		 `responder_id` int(4) default NULL,
+		 `comments` varchar(64) default NULL,
+		 `user_id` int(4) NOT NULL,
+		 `dispatched` datetime default NULL,
+		 `responding` datetime default NULL,
+		 `clear` datetime default NULL,
+		 `on_scene` datetime default NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `certs`
+// --
+
+		$table_name = prefix("certs");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `certificate` varchar(48) NOT NULL COMMENT 'certificate description',
+		 `source` varchar(48) NOT NULL COMMENT 'issuing agency',
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `certs_x_user`
+// --
+
+		$table_name = prefix("certs_x_user");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `certificate_id` int(3) NOT NULL COMMENT 'certification description',
+		 `user_id` int(4) NOT NULL COMMENT 'issued to - user id',
+		 `date` date default NULL COMMENT 'date issued',
+		 `comment` varchar(48) default NULL COMMENT 'comment re certification issued',
+		 `by` int(7) NOT NULL COMMENT 'entered by - user index',
+		 `from` varchar(16) default NULL COMMENT 'entered from - IP addr',
+		 `on` datetime default NULL COMMENT 'date last updated',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `chat_messages`
+// --
+
+		$table_name = prefix("chat_messages");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(10) unsigned NOT NULL auto_increment,
+		 `message` varchar(255) NOT NULL default '0',
+		 `when` datetime default NULL,
+		 `chat_room_id` int(7) NOT NULL default '0',
+		 `user_id` int(7) NOT NULL default '1',
+		 `from` varchar(16) NOT NULL COMMENT 'ip addr',
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `chat_rooms`
+// --
+
+		$table_name = prefix("chat_rooms");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(7) NOT NULL auto_increment,
+		 `room` varchar(16) NOT NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `cities`
+// --
+
+		$table_name = prefix("cities");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(11) NOT NULL auto_increment,
+		 `city_zip` int(5) unsigned zerofill NOT NULL,
+		 `city_name` varchar(50) NOT NULL,
+		 `city_state` char(2) NOT NULL,
+		 `city_lat` double NOT NULL,
+		 `city_lng` double NOT NULL,
+		 `city_county` varchar(50) NOT NULL,
+		 PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `clones`
+// --
+
+		$table_name = prefix("clones");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(4) NOT NULL auto_increment,
+		 `name` varchar(16) default NULL,
+		 `prefix` varchar(8) default NULL,
+		 `date` datetime default NULL COMMENT 'last used',
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `contacts`
+// --
+
+		$table_name = prefix("contacts");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(7) NOT NULL auto_increment,
+		 `name` varchar(48) NOT NULL,
+		 `organization` varchar(48) default NULL,
+		 `phone` varchar(24) default NULL,
+		 `mobile` varchar(24) default NULL,
+		 `email` varchar(48) NOT NULL,
+		 `other` varchar(24) default NULL,
+		 `as-of` datetime NOT NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `courses`
+// --
+
+		$table_name = prefix("courses");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `course` varchar(48) NOT NULL COMMENT 'certificate description',
+		 `source` varchar(48) NOT NULL COMMENT 'sponsor agency',
+		 `location` varchar(48) NOT NULL COMMENT 'location',
+		 `duration` varchar(48) NOT NULL COMMENT 'no. days or hours',
+		 `basis` varchar(48) NOT NULL COMMENT 'cost basis',
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `courses_x_user`
+// --
+
+		$table_name = prefix("courses_x_user");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `courses_id` int(4) NOT NULL COMMENT 'certification description',
+		 `user_id` int(4) NOT NULL COMMENT 'issued to - user id',
+		 `date` date default NULL COMMENT 'date taken',
+		 `comment` varchar(48) default NULL COMMENT 'comment re certification issued',
+		 `by` int(7) NOT NULL COMMENT 'entered by - user index',
+		 `from` varchar(16) default NULL COMMENT 'entered from - IP addr',
+		 `on` datetime default NULL COMMENT 'date last updated',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `documents`
+// --
+
+		$table_name = prefix("documents");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(10) unsigned NOT NULL auto_increment,
+		 `name` varchar(64) NOT NULL,
+		 `status` enum('locked','unlocked','na') NOT NULL default 'na',
+		 `locked_by` int(7) NOT NULL COMMENT 'user index',
+		 `locked_on` datetime default NULL,
+		 `info` tinytext,
+		 `keyword` varchar(64) default NULL,
+		 `type` varchar(64) default NULL,
+		 `size` int(10) unsigned NOT NULL,
+		 `author` int(10) unsigned default NULL,
+		 `source` int(10) unsigned default NULL,
+		 `maintainer` int(10) unsigned default NULL,
+		 `revision` varchar(64) default NULL COMMENT 'revision information',
+		 `created` datetime default NULL,
+		 `modified` datetime default NULL,
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `documents_log`
+// --
+
+		$table_name = prefix("documents_log");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(10) unsigned NOT NULL auto_increment,
+		 `user_id` int(10) unsigned NOT NULL,
+		 `document_id` int(10) unsigned NOT NULL,
+		 `revision` int(10) unsigned NOT NULL,
+		 `date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `in_types`
+// --
+
+		$table_name = prefix("in_types");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(4) NOT NULL auto_increment,
+		 `type` varchar(20) NOT NULL,
+		 `description` varchar(120) default NULL,
+		 `group` varchar(20) default NULL,
+		 `sort` int(11) NOT NULL default '0',
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Incident types' AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+//		--
+//		--  data for table `in_types`
+//		--
+
+			$query = "INSERT INTO `$table_name` (`id`, `type`, `description`, `group`, `sort`) VALUES
+				(NULL, 'examp1', 'Example one', 'grp 1', '1'),
+				(NULL, 'examp2', 'Example two', 'grp 2', '2');";
+			mysql_query($query) or die("INSERT INTO TABLE failed, execution halted at line ". __LINE__);
+
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `log`
+// --
+
+		$table_name = prefix("log");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `who` tinyint(7) default NULL,
+		 `from` varchar(20) default NULL,
+		 `when` datetime default NULL,
+		 `code` tinyint(7) NOT NULL default '0',
+		 `ticket_id` int(7) default NULL,
+		 `responder_id` int(7) default NULL,
+		 `info` varchar(40) default NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Log of station actions' AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `logins`
+// --
+
+		$table_name = prefix("logins");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `ip` varchar(15) NOT NULL,
+		 `salt` varchar(36) NOT NULL,
+		 `intime` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+		 PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='login authentication' AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `modules`
+// --
+
+        $table_name = prefix("modules");
+        $query = "CREATE TABLE `$table_name` (
+        `id` bigint(8) NOT NULL auto_increment,
+        `mod_name` varchar(26) NOT NULL,
+        `mod_status` varchar(1) NOT NULL,
+        PRIMARY KEY (`id`)
+        ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Optional modules to load' AUTO_INCREMENT=1;";
+
+        mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+        $tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `notify`				// 10/22/08
+// --
+
+		$table_name = prefix("notify");
+		$query = "CREATE TABLE `$table_name` (
+		  `id` bigint(8) NOT NULL auto_increment,
+		  `ticket_id` int(8) NOT NULL default '0',
+		  `user` int(8) NOT NULL default '0',
+		  `execute_path` tinytext,
+		  `severities` int(1) NOT NULL default '0' COMMENT '0=NA, 1=all, 2=top 2, 3=top only',
+		  `on_action` tinyint(1) default '0',
+		  `on_ticket` tinyint(1) default '0',
+		  `on_patient` tinyint(1) default '0',
+		  `email_address` varchar(255) default NULL,
+		  `pager` varchar(255) default NULL COMMENT 'pipe-sep''d ',
+		  `pager_cb` varchar(96) default NULL COMMENT 'pager call-back no.',
+		  `by` int(7) NOT NULL COMMENT 'user',
+		  `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		  `on` datetime NOT NULL COMMENT 'updated',
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `patient`
+// --
+
+		$table_name = prefix("patient");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `ticket_id` int(8) NOT NULL default '0',
+		 `name` varchar(32) default NULL,
+		 `fullname` varchar(64) NULL default NULL,
+		 `dob` varchar(32) NULL default NULL,
+		 `gender` int(1) NOT NULL default '0',
+		 `insurance_id` int(3) NOT NULL default '0' COMMENT 'see table insurance',
+		 `facility_contact` varchar(64) NULL,
+		 `facility_id` int(3) NOT NULL default '0',		 
+		 `date` datetime default NULL,
+		 `description` text NOT NULL,
+		 `user` int(8) default NULL,
+		 `action_type` int(8) default NULL,
+		 `updated` datetime default NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `photos`
+// --
+
+		$table_name = prefix("photos");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `description` varchar(256) NOT NULL,
+		 `ticket_id` int(7) NOT NULL COMMENT 'associated ticket id',
+		 `taken_by` varchar(48) default NULL,
+		 `taken_on` varchar(24) default NULL,
+		 `by` int(7) NOT NULL COMMENT 'user id',
+		 `on` datetime NOT NULL,
+		 `from` varchar(16) NOT NULL COMMENT 'ip address',
+		 PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `responder` 1/27/09, 4/10/09
+// --
+
+		$table_name = prefix("responder");
+		$query = "CREATE TABLE `$table_name` (
+		  `id` bigint(8) NOT NULL auto_increment,
+		  `name` text,
+		  `mobile` tinyint(2) default '0',
+		  `direcs` tinyint(2) NOT NULL default '1' COMMENT '0=>no directions, 1=> yes',
+		  `aprs` tinyint(2) NOT NULL default '0',
+		  `instam` tinyint(2) NOT NULL default '0' COMMENT 'instamapper',
+		  `description` text NOT NULL,
+		  `capab` varchar(255) default NULL COMMENT 'Capability',
+		  `un_status_id` int(4) NOT NULL default '0',
+		  `other` varchar(96) default NULL,
+		  `callsign` varchar(24) default NULL,
+		  `contact_name` varchar(64) default NULL,
+		  `contact_via` varchar(64) default NULL,
+		  `pager_p` varchar(64) default NULL,
+		  `pager_s` varchar(64) default NULL,
+		  `send_no` varchar(64) default NULL,
+		  `lat` double default NULL,
+		  `lng` double default NULL,
+		  `type` tinyint(1) default NULL,
+		  `updated` datetime default NULL,
+		  `user_id` int(4) default NULL,
+		  PRIMARY KEY  (`id`),
+		  UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `settings`
+// --
+
+		$table_name = prefix("settings");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `name` tinytext,
+		 `value` tinytext,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `skills`
+// --
+
+		$table_name = prefix("skills");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `skill` varchar(48) NOT NULL,
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `skills_x_user`
+// --
+
+		$table_name = prefix("skills_x_user");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `skills_id` int(3) NOT NULL COMMENT 'certification description',
+		 `user_id` int(4) NOT NULL COMMENT 'skill held - user id',
+		 `level` enum('b','m','h','x','na') NOT NULL default 'na' COMMENT ' beginner, moderate, high, expert, NA',
+		 `comment` varchar(48) default NULL COMMENT 'comment re certification issued',
+		 `by` int(7) NOT NULL COMMENT 'entered by - user index',
+		 `from` varchar(16) default NULL COMMENT 'entered from - IP addr',
+		 `on` datetime default NULL COMMENT 'date last updated',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `team_types`
+// --
+
+		$table_name = prefix("team_types");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `type` varchar(48) NOT NULL COMMENT 'team type',
+		 `comment` varchar(48) NOT NULL COMMENT 'issuing agency',
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `teams`
+// --
+
+		$table_name = prefix("teams");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `team` varchar(48) NOT NULL COMMENT 'team name- major',
+		 `sub-group` varchar(48) NOT NULL COMMENT 'team name- major',
+		 `ttypes_id` int(7) NOT NULL COMMENT 'team name',
+		 `mission` varchar(48) NOT NULL COMMENT 'issuing agency',
+		 `leader` int(4) NOT NULL COMMENT 'team leader - user id',
+		 `leader_dpty` int(4) NOT NULL COMMENT 'team leader deputy - user id',
+		 `formed` date default NULL COMMENT 'date formed',
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `teams_x_user`
+// --
+
+		$table_name = prefix("teams_x_user");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `teams_id` int(4) NOT NULL COMMENT 'certification description',
+		 `member_id` int(7) NOT NULL COMMENT 'team member - user id',
+		 `status` int(2) default NULL COMMENT 'team member status',
+		 `date_a` date default NULL COMMENT 'date assigned',
+		 `date_e` date default NULL COMMENT 'date assignment ended',
+		 `comment` varchar(48) default NULL COMMENT 'comment re assignment',
+		 `by` int(7) default NULL COMMENT 'entered by - user index',
+		 `from` varchar(16) default NULL COMMENT 'entered from - IP addr',
+		 `on` datetime default NULL COMMENT 'date last updated',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `ticket`
+// --
+
+		$table_name = prefix("ticket");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `in_types_id` int(4) NOT NULL,
+		 `contact` varchar(48) NOT NULL default '',
+		 `street` varchar(48) default NULL,
+		 `city` varchar(32) default NULL,
+		 `state` char(2) default NULL,
+		 `phone` varchar(16) default NULL,
+		 `lat` double default NULL,
+		 `lng` double default NULL,
+		 `date` datetime default NULL,
+		 `problemstart` datetime default NULL,
+		 `problemend` datetime default NULL,
+		 `scope` text NOT NULL,
+		 `affected` text,
+		 `description` text NOT NULL,
+		 `comments` text,
+		 `status` tinyint(1) NOT NULL default '0',
+		 `owner` tinyint(4) NOT NULL default '0',
+		 `severity` int(2) NOT NULL default '0',
+		 `updated` datetime default NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `titles`
+// --
+		$table_name = prefix("titles");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `title` varchar(24) NOT NULL,
+		 `by` int(7) NOT NULL COMMENT 'user index',
+		 `from` varchar(16) NOT NULL COMMENT 'IP addr',
+		 `on` datetime NOT NULL COMMENT 'last update',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+// --
+// -- Table structure for table `tracks`
+// --
+
+		$table_name = prefix("tracks");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(7) NOT NULL auto_increment,
+		 `packet_id` varchar(48) default NULL,
+		 `source` varchar(96) default NULL,
+		 `latitude` double default NULL,
+		 `longitude` double default NULL,
+		 `speed` int(8) default NULL,
+		 `course` int(8) default NULL,
+		 `altitude` int(8) default NULL,
+		 `symbol_table` varchar(96) default NULL,
+		 `symbol_code` varchar(96) default NULL,
+		 `status` varchar(96) default NULL,
+		 `closest_city` varchar(200) default NULL,
+		 `mapserver_url_street` varchar(200) default NULL,
+		 `mapserver_url_regional` varchar(200) default NULL,
+		 `packet_date` datetime default NULL,
+		 `updated` datetime NOT NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `packet_id` (`packet_id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+// --
+// -- Table structure for table `tracks_hh`		- 2/8/09
+// --
+		$table_name = prefix("tracks_hh");
+		$query = "CREATE TABLE `$table_name` (
+		  `id` bigint(7) NOT NULL auto_increment,
+		  `source` varchar(96) default NULL,
+		  `latitude` double default NULL,
+		  `longitude` double default NULL,
+		  `speed` int(8) default NULL,
+		  `course` int(8) default NULL,
+		  `altitude` int(8) default NULL,
+		  `status` varchar(96) default NULL,
+		  `updated` datetime NOT NULL,
+		  `from` varchar(16) NOT NULL COMMENT 'ip addr',
+		  PRIMARY KEY  (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `un_status`				- 1/18/08
+// --
+		$table_name = prefix("un_status");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(4) NOT NULL auto_increment,
+		 `status_val` varchar(20) NOT NULL,
+		 `description` varchar(60) default NULL,
+		 `group` varchar(20) default NULL,
+		 `sort` int(11) NOT NULL default '0',
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+
+//		--
+//		--  data for table `un_status`
+//		--
+
+		$tables .= $table_name . ", ";
+			$query = "INSERT INTO `$table_name` ( `id` , `status_val` , `description` , `group` , `sort` ) VALUES
+				(NULL, 'available', 'Available', 'av', 1),
+				(NULL, 'unavailable', 'Unavailable', 'unav', 3),
+				(NULL, 'in_service', 'In service', 'inserv', 0);
+				";
+			mysql_query($query) or die("INSERT INTO TABLE failed, execution halted at line ". __LINE__);
+
+
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `unit_types`				// 1/27/09
+// --
+
+		$table_name = prefix("unit_types");
+			$query = "CREATE TABLE `$table_name` (
+			  `id` int(11) NOT NULL auto_increment,
+			  `name` varchar(16) NOT NULL,
+			  `description` varchar(48) NOT NULL,
+			  `icon` int(3) NOT NULL default '0',
+			  `_on` datetime NOT NULL,
+			  `_from` varchar(16) NOT NULL COMMENT 'ip',
+			  `_by` int(7) NOT NULL COMMENT 'by',
+			  PRIMARY KEY  (`id`)
+			) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Allows for variable unit types' AUTO_INCREMENT=6 ;";
+
+//		dump ($query);
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+//		--
+//		--  data for table `unit_types`
+//		--
+
+			$query = "INSERT INTO `$table_name` (`id`, `name`, `description`, `icon`, `_on`, `_from`, `_by`) VALUES
+				(1, 'example', 'An example unit type', 3, '2009-01-28 14:13:06', '127.0.0.1', 1);
+				";
+
+			mysql_query($query) or die("INSERT INTO TABLE failed, execution halted at line ". __LINE__);
+
+
+// -- --------------------------------------------------------
+
+// --
+// -- Table structure for table `user`				 11/6/08
+// --
+		$DB = $db_prefix . $_POST['frm_db_dbname'];
+		$table_name = prefix("user");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `user` text NOT NULL COMMENT 'userid',
+		 `passwd` tinytext NOT NULL COMMENT 'MySQL hash',
+		 `name_l` text default NULL  COMMENT 'last',
+		 `name_f` text default NULL  COMMENT 'first',
+		 `name_mi` text default NULL  COMMENT 'middle',
+		 `dob` date default NULL,
+		 `title_id` tinyint(2) default NULL COMMENT 'title',
+		 `addr_street` text default NULL,
+		 `addr_city` text default NULL,
+		 `addr_st` text default NULL,
+		 `disp` tinyint(1) default 1 NULL COMMENT 'dispatch access',
+		 `files` tinyint(1) default 0 COMMENT 'docs data access',
+		 `pers` tinyint(1) default 0 COMMENT 'personnel data access',
+		 `teams` tinyint(1) default 0 COMMENT 'teams data access',
+		 `status` enum('approved','pending','na') NOT NULL default 'approved',
+		 `open_at` enum('d','f','p','t') NOT NULL default 'd' COMMENT 'after logon',
+		 `ident` text default NULL COMMENT 'identification',
+		 `info` text default NULL COMMENT 'account information',
+		 `phone_p` text default NULL COMMENT 'phone primary',
+		 `phone_s` text default NULL COMMENT 'phone secondary',
+		 `phone_m` text default NULL COMMENT 'phone mobile',
+		 `level` tinyint(1) NOT NULL  default 0 COMMENT 'privileges',
+		 `email` text  default NULL COMMENT 'email addr - primary',
+		 `email_s` text default NULL COMMENT 'email addr - secondary',
+		 `ticket_per_page` tinyint(1) default NULL,
+		 `sort_desc` tinyint(1) default 0,
+		 `sortorder` tinytext default NULL,
+		 `reporting` tinyint(1) default 1,
+		 `callsign` varchar(12) default NULL COMMENT 'added 9/23/07',
+		 `db_prefix` text  default NULL COMMENT 'db clone to use',
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);$tables .= $table_name . ", ";
+
+		print "<LI> Created tables " . substr($tables, 0, -2) . "<BR />";
+		}
+
+
+	function create_user() {	// create default super user (note: priv's level 'super') and guest // 6/9/08, 10/29/10
+		global $db_prefix;
+		$tablename = prefix("user");
+		print "<P>";
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('admin',MD5('admin'),'Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		print "<LI> Created user '<B>admin</B>'";
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('guest',MD5('guest'),'Guest',3,0,1,'date',0,'$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		print "<LI> Created user '<B>guest</B>'";
+		print "</P>";
+		}
+
+	//insert settings
+	function insert_settings() {
+		global $version, $api_key;
+
+		do_insert_settings('_aprs_time','0');
+		do_insert_settings('_sleep','5');				// 10/17/08 --
+		do_insert_settings('_version',$version);
+		do_insert_settings('abbreviate_affected','30');
+		do_insert_settings('abbreviate_description','30');
+		do_insert_settings('allow_custom_tags','0');
+		do_insert_settings('allow_notify','1');
+		do_insert_settings('auto_poll','0');			// new 10/15/07, rev'd 3/17/09
+		do_insert_settings('auto_route','1');					// 1/17/09
+		do_insert_settings('call_board','1');			// new 1/10/08
+		do_insert_settings('chat_time','4');			// new 1/16/08
+		do_insert_settings('closed_interval','');
+		do_insert_settings('date_format','n/j/y H:i');
+		do_insert_settings('def_area_code','');
+		do_insert_settings('def_city','');
+		do_insert_settings('def_lat','39.1');			// approx center US
+		do_insert_settings('def_lng','-90.7');
+		do_insert_settings('def_st','');
+		do_insert_settings('def_zoom','3');
+		do_insert_settings('def_zoom_fixed','0');
+		do_insert_settings('delta_mins','0');
+		do_insert_settings('email_reply_to','');		// new 1/10/08
+		do_insert_settings('frameborder','1');
+		do_insert_settings('framesize','50');
+		do_insert_settings('gmaps_api_key',$_POST['frm_api_key']);		//
+		do_insert_settings('group_or_dispatch','0');		//		1/10/11
+		do_insert_settings('guest_add_ticket','0');
+		do_insert_settings('host','www.yourdomain.com');
+		do_insert_settings('instam_key','');			// 4/10/09
+		do_insert_settings('kml_files','1');		// new 6/7/08
+		do_insert_settings('lat_lng','0');			// 9/13/08
+		do_insert_settings('link_capt','');
+		do_insert_settings('link_url','');
+		do_insert_settings('login_banner','Welcome to Tickets - an Open Source Dispatch System');
+		do_insert_settings('map_caption','Your area');
+		do_insert_settings('map_height','512');
+		do_insert_settings('map_width','512');
+		do_insert_settings('military_time','1');				// 7/16/08
+		do_insert_settings('msg_text_1','');
+		do_insert_settings('msg_text_2','');
+		do_insert_settings('msg_text_3','');
+		do_insert_settings('quick','0');
+		do_insert_settings('restrict_user_add','0');
+		do_insert_settings('restrict_user_tickets','0');
+		do_insert_settings('serial_no_ap','1');					// 1/17/09
+		do_insert_settings('situ_refr','');
+		do_insert_settings('terrain','1');						// 2/24/09
+		do_insert_settings('ticket_per_page','0');
+		do_insert_settings('ticket_table_width','640');
+		do_insert_settings('UTM','0');
+		do_insert_settings('validate_email','1');
+		do_insert_settings('wp_key','729c1a751fd3d2428cfe2a7b43442c64');		// 9/13/08
+		do_insert_settings ('internet','1');		// 8/5/10
+
+		print "<LI> Inserted default settings";
+		}
+
+	//output mysql settings to mysql.inc.php
+	function write_conf($host,$db,$user,$password,$prefix) {
+		if (!$fp = fopen('./incs/mysql.inc.php', 'a'))
+        	print '<LI> <FONT CLASS="warn">Cannot open mysql.inc.php for writing</FONT>';
+		else {
+			ftruncate($fp,0);
+			fwrite($fp, "<?php\n");
+			fwrite($fp, "	/* generated by '" . basename( __FILE__) . "' " . date('r') . " */\n");
+			fwrite($fp, '	$mysql_host 	= '."'$host';\n");
+			fwrite($fp, '	$mysql_db 		= '."'$db';\n");
+			fwrite($fp, '	$mysql_user 	= '."'$user';\n");
+			fwrite($fp, '	$mysql_passwd 	= '."'$password';\n");
+			fwrite($fp, '	$mysql_prefix 	= '."'$prefix';\n");
+			fwrite($fp, '?>');
+			}
+
+		fclose($fp);
+		print '<LI> Wrote configuration to \'<B>./incs/mysql.inc.php</B>\'';
+		}
+
+	//upgrade db from 0.65 to 0.7
+	function upgrade_065_07($prefix) {
+		print '<LI> Upgrading structure <B>0.65->0.7...</B><BR />';
+		mysql_query("ALTER TABLE $prefix"."ticket ADD severity int(2) NOT NULL default '0'") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #1 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."user ADD level tinyint(1) default NULL") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #2 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."user ADD ticket_per_page tinyint(1) default '0'") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #3 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."user ADD sort_desc tinyint(1) default '0'") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #4 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."user ADD sortorder tinytext") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #5 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."user ADD reporting tinyint(1) default '1'") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #6 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."action ADD user int(8) default NULL") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #7 failed</FONT>");
+		mysql_query("ALTER TABLE $prefix"."action ADD action_type int(8) default NULL") or die("<FONT CLASS=\"warn\">Could not upgrade 0.65->0.7, query #8 failed</FONT>");
+
+		print '<LI> Replacing permissions and actions...</B>';
+		mysql_query("UPDATE $prefix"."user SET level='1' WHERE admin='1'") or die("<FONT CLASS=\"warn\">Could not replace user permissions (admin)</FONT>");
+		mysql_query("UPDATE $prefix"."user SET level='2' WHERE admin='0'") or die("<FONT CLASS=\"warn\">Could not replace user permissions (user)</FONT>");
+		mysql_query("UPDATE $prefix"."action SET action_type='10', user='0'") or die("<FONT CLASS=\"warn\">Could not fix action data</FONT>");
+		mysql_query("ALTER TABLE $prefix"."user DROP admin") or die("<FONT CLASS=\"warn\">Could not drop user field 'admin'</FONT>");
+
+		print '<LI> Replacing settings...</B>';
+		mysql_query("DELETE FROM $prefix"."settings") or die("<FONT CLASS=\"warn\">Could not <remove old settings</FONT>");
+		insert_settings();
+		}
+
+//	if($_GET['go']) {				/* connect to mysql database if option isn't writeconf' */
+	if (array_key_exists('go', $_GET)) {		// 9/16/08
+
+		$db_prefix=$_POST['frm_db_prefix'];
+
+		if ($_POST['frm_option'] != 'writeconf') {
+			$query = "@mysql_connect({$_POST['frm_db_host']}, {$_POST['frm_db_user']}, {$_POST['frm_db_password']})";
+//			print __LINE__ . " " . $query . "<BR>";
+
+			if (!@mysql_connect($_POST['frm_db_host'], $_POST['frm_db_user'], $_POST['frm_db_password'])) {
+				$the_pw = (empty($_POST['frm_db_password']))? "<i>none entered</i>"  : $_POST['frm_db_password'] ;
+				print "<B>Connection to MySQL failed using the following entered values:</B><BR /><BR />\n";
+				print "MySQL Host:<B> " . $_POST['frm_db_host'] . "</B><BR />\n";
+				print "MySQL Username:<B> " . $_POST['frm_db_user'] . "</B><BR />\n";
+				print "MySQL Password:<B> " . $the_pw . "</B><BR /><BR />\n";
+				print "MySQL Database Name:<B> " . $_POST['frm_db_dbname'] . "</B><BR /><BR />\n";
+				print "Please correct these entries and try again.<BR /><BR />";
+?>
+				<FORM NAME='db_error' METHOD='post' ACTION = 'install.php'>
+				<INPUT TYPE='submit' VALUE='Try again'>
+				</FORM>
+				</BODY>
+				</HTML>
+<?php
+				die();
+				}		// end if (!$result)
+
+//			mysql_connect($_POST['frm_db_host'], $_POST['frm_db_user'], $_POST['frm_db_password']) or die("<FONT CLASS=\"warn\">Couldn't connect to database on '$_POST[frm_db_host]', make sure it is running and user has permissions. Click back in your browser.</FONT>");
+			mysql_select_db($_POST['frm_db_dbname']) or die("<FONT CLASS=\"warn\">Couldn't select database '$_POST[frm_db_dbname]', make sure it exists and user has permissions. Click back in your browser.</FONT>");
+
+//			$query = "SET GLOBAL sql_mode='STRICT_ALL_TABLES'";					// 11/6/08
+//			mysql_query($query) or die("<FONT CLASS=\"warn\">SQL error at line " . __LINE__ . " </FONT>");
+
+			}
+
+		//run the functions
+
+		switch($_POST['frm_option']) {
+			case 'install':{
+				create_tables($_POST['frm_db_prefix']);
+				create_user();
+				insert_settings();
+				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
+				print "<LI> Tickets version $version installation complete!";
+				break;
+				}
+			case 'install-drop':{
+				create_tables($_POST['frm_db_prefix'],1);
+				create_user();
+				insert_settings();
+				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
+				print "<LI> Re-Installation done!";
+				break;
+				}
+//			case 'upgrade-0.65':{
+//				upgrade_065_07($_POST['frm_db_prefix']);
+//				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
+//				print "<LI> Upgrade <B>0.65->0.7</B> complete!";
+//				break;
+//				}
+			case 'writeconf':{
+				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
+				print "<LI> All done.";
+				break;
+				}
+			default:
+				print "<LI> <FONT CLASS=\"warn\">'$_POST[frm_option]' is not a valid option!</FONT>";
+			}
+
+		print '<BR /><BR /><FONT CLASS="warn">Your Tickets installation is now complete - the start page is \'index.php\' .</FONT>';
+		print '<BR /><BR /><FONT CLASS="warn">It is strongly recommended that you move/delete/change rights on install.php after this</FONT>';
+		print '<BR /><BR /><A HREF="index.php?first_start=yes"><< Start Tickets >></A>';	//	5/11/12 Changed link for quick start.		
+		}
+//	else if ($_GET['help']) {		//
+	else if (array_key_exists('help', $_GET)) {		// 9/16/08
+?>
+		<BLOCKQUOTE>
+		1.  Fill in the install form with your mysql server settings. The 'table prefix' option enables you to prefix the tables with
+		an optional name if you're only using one database or need multiple instances. Thus a prefix of <B>my_</B> would name the
+		tables <B>my_action</B>, <B>my_user</B> etc.<BR /><BR />
+
+		2.  The Google Maps API key is obtained from them at http://www.google.com/apis/maps/signup.html and is free.  There, you'll be asked
+		for the domain name to which the key applies, and that will be the Tickets server and directory address.  If you're planning multiple
+		installations as many keys as you may need are available.  Please note:  That key is an 86-character string, which should be
+		copy/pasted from them into the form.  Hint: email that key to yourself, along with the other form entries.<BR /><BR />
+
+		3.  The <B>Re-install</B> option <FONT CLASS="warn">drops all Tickets data</FONT> in the specified database and re-installs them;
+		if the tables already exists this option is required. If the tables names are prefixed, you have to specify it in the form.<BR /><BR />
+<!--
+		The <B>Upgrade</B> option upgrades an existing Tickets database from the specified version to the newest available. If the database
+		structure has been modified in any way this script <FONT CLASS="warn">will most probably fail</FONT>. Please make sure to backup your database
+		before proceeding with this upgrade. All the settings will be replaced.<BR /><BR />
+-->
+
+		4.  The <B>Write Configuration Only</B> option writes the specified mysql settings to the file <B>'mysql.inc.php'</B> in the <B>'incs'</B>
+		subdirectory but doesn't alter the database	in any way.<BR /><BR />
+
+		5.  The file <B>'mysql.inc.php'</B> in the <B>'incs'</B> subdirectory <B>must be write-able in any install option</B>.
+
+		<BR /><BR /><A HREF="install.php"><< back to the install script</A></BLOCKQUOTE>
+<?php
+		}
+	else {
+		$filename = './incs';							// 12/18/10
+		if (!is_writable($filename)) {					// 8/8/10 - 
+		    die ("ERROR! Directory '{$filename}' is not writable. 'Write' permissions must be corrected for installation.");
+			}
+		$filename = './incs/mysql.inc.php';				// 2/21/09
+
+		$dir = "./";
+		$dh  = opendir($dir);
+		while (false !== ($filename = readdir($dh))) {
+			if (is_dir($filename)) {
+			    $files[] = $filename;
+			    }
+			}
+
+		$dirsOK = TRUE;
+		if (!in_array("incs", $files)) 		{$dirsOK=FALSE;}
+		if (!in_array("markers", $files)) 	{$dirsOK=FALSE;}
+
+		if (!$dirsOK) {
+			print "<br><br><br><center><h3>At least one of the Tickets subdirectories is missing, and this needs to be corrected.<br /><br />You might check into how the Tickets zip file was unzipped or otherwise installed.<br><br><br><br><A HREF='mailto:ejosterberg+TicketsInstallHelp@gmail.com?subject=Tickets Install Problem'><u>Or click here to contact the developer.</u></A></h3></center>";
+			}
+		else {
+?>
+			Complete this form to install Tickets version <?php print $version;?>. Make sure to read through the <A HREF="install.php?help=1"><U>help</U></A> information.<BR /><BR />
+<?php
+			if (extension_loaded('gd') && function_exists('gd_info')) {
+				$gd = "<FONT COLOR='green'>GD Installed</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>";
+				} else {
+				$gd = "<FONT COLOR='red'>GD not Installed</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>";
+				}
+
+			if (strnatcmp(phpversion(),'5.2.0') >= 0) { 
+				$php = "<FONT COLOR='green'>PHP 5.2 or higher is installed, this is OK, you have at least the recommended version</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>"; 
+				} else { 
+				$php = "<FONT COLOR='red'>PHP is less than version 5.2. You need to upgrade PHP to at least version 5.2.0</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>"; 
+				} 
+			
+			$docRoot = substr(getenv("DOCUMENT_ROOT"), -4);
+			$curr = getcwd() . "/";
+			$curr_dir = substr($curr , -4);
+			if ($docRoot == $curr_dir) {
+				$dir = "<FONT COLOR='red'>You need to Install the application in a directory off the web root not in the web root itself.</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>";
+				} else {
+				$dir = "<FONT COLOR='green'>The installation location is OK.</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>";
+				}
+				
+			ob_start(); 
+			phpinfo(INFO_MODULES); 
+			$info = ob_get_contents(); 
+			ob_end_clean(); 
+			$info = stristr($info, 'Client API version '); 
+			preg_match('/[1-9].[0-9].[1-9]/', $info, $match); 
+			$md = $match[0];
+			
+			if (strnatcmp($md,'5.0.0') >= 0) {
+				$mysql = "<FONT COLOR='green'>MYSQL 5.0 or better is installed</FONT>&nbsp;&nbsp;<span style='font-family: wingdings; font-size: 100%; color: green;'>&nbsp;&nbsp;&#9745</span>"; 
+				} else {
+				$mysql = "<FONT COLOR='red'>MYSQL version is lower than 5.0</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>"; 	
+				}
+?>
+ <?php
+$phpvers = phpversion ();
+$arr = explode (  "." , $phpvers , 2 );
+$reqd = "7"; // PHP version no.  required
+
+if ($arr [0] <> $reqd ) {
+?>
+<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 16pt;">&nbsp;&nbsp;&nbsp;&nbsp;Warning!&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
+<TABLE BORDER="0">
+<TR CLASS="even"><TD width=100%>Your installed PHP version is <b><?php echo $phpvers ; ?></b>, which is NOT recommended for use with Tickets CAD.</TD></TR>
+<TR CLASS="odd"><TD width=100%>PHP version 7 is known to work well.</TD></TR>
+<TR CLASS="even"><TD width=100%>Please heed this warning and do not proceed with this installation until this is corrected.  You may save yourself several days of fruitless troubleshooting.</TD></TR>
+</TABLE>
+</FIELDSET>
+<br />
+<?php
+}
+?>
+			<FORM NAME = 'install_frm' METHOD="post" ACTION="install.php?go=1"  onSubmit='return validate(document.install_frm)' >
+			<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;From your MySQL installation&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
+			<TABLE BORDER="0">
+			<TR CLASS="even"><TD width="200px">MySQL Host: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_host" VALUE=""></TD></TR>
+			<TR CLASS="odd"><TD>MySQL Username: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_user" VALUE=""></TD></TR>
+			<TR CLASS="even"><TD>MySQL Password: </TD><TD><INPUT TYPE="password" SIZE="45" MAXLENGTH="255" NAME="frm_db_password"  VALUE=""></TD></TR>
+			</TABLE>
+			</FIELDSET>
+			<br />
+			<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;Tickets Stuff&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
+			<TABLE BORDER="0">
+			<TR CLASS="even"><TD width="200px">MySQL Database: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_dbname" VALUE=""> your just-created MySQL database</TD></TR>
+			<TR CLASS="odd"><TD>MySQL Table Prefix (optional): </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_prefix" VALUE=""> your choice</TD></TR>
+			<!-- 4/2/2013 -->
+			<TR CLASS="even"><TD>Google API Key (optional):<BR /></TD><TD><INPUT TYPE="text" SIZE="70" MAXLENGTH="255" NAME="frm_api_key"  VALUE=""><BR>
+				&nbsp;&nbsp;&nbsp;&nbsp;Note: You may obtain your site's API key at https://code.google.com/apis/console/
+				</TD></TR>
+			<TR CLASS="odd"><TD>Install Option: </TD><TD>
+			<INPUT TYPE="radio" VALUE="install" NAME="frm_option" checked> Install Database - new<BR />
+			<INPUT TYPE="radio" VALUE="install-drop" NAME="frm_option"> Re-install Database<BR />
+	<!--	<INPUT TYPE="radio" VALUE="upgrade-0.65" NAME="frm_option"> Upgrade 0.65 -> 0.7<BR />	-->
+			<INPUT TYPE="radio" VALUE="writeconf" NAME="frm_option"> Write Configuration File Only<BR /><BR>
+			</TD></TR>
+			<TR CLASS="even"><TD></TD><TD><INPUT TYPE="Reset" VALUE="Reset form">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Do it"></TD></TR>
+			</TABLE>
+			</FORM>
+			<?php
+			}
+		}
+?>
+</BODY></HTML>
