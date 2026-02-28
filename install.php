@@ -4845,11 +4845,7 @@ if (get_variable('call_board') == 2) {
 		 `code` tinyint(7) NOT NULL default '0',
 		 `ticket_id` int(7) default NULL,
 		 `responder_id` int(7) default NULL,
-		 `info` varchar(2048) default NULL,
-		 `facility` int(7) default NULL,
-		 `rec_facility` int(7) default NULL,
-		 `mileage` int(8) default NULL,
-		 `member_id` int(7) default NULL,
+		 `info` varchar(40) default NULL,
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Log of station actions' AUTO_INCREMENT=1;";
