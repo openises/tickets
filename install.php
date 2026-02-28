@@ -4649,6 +4649,33 @@ if (get_variable('call_board') == 2) {
 // -- --------------------------------------------------------
 
 // --
+// -- Table structure for table `captions`
+// --
+
+		$table_name = prefix("captions");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `capt` varchar(64) NOT NULL,
+		 `repl` varchar(64) NOT NULL,
+		 `_by` int(7) NOT NULL DEFAULT '0',
+		 `_from` varchar(16) NOT NULL DEFAULT '',
+		 `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+		if(file_exists("./incs/capts.inc.php")) {
+			require_once("./incs/capts.inc.php");
+			for ($i=0; $i < count($capts); $i++) {
+				$temp = mysql_real_escape_string($capts[$i]);
+				$query = "INSERT INTO `$table_name` (`capt`,`repl`) VALUES('" . $temp . "','" . $temp . "')";
+				mysql_query($query);
+			}
+		}
+// -- --------------------------------------------------------
+
+// --
 // -- Table structure for table `cities`
 // --
 
@@ -4845,7 +4872,11 @@ if (get_variable('call_board') == 2) {
 		 `code` tinyint(7) NOT NULL default '0',
 		 `ticket_id` int(7) default NULL,
 		 `responder_id` int(7) default NULL,
-		 `info` varchar(40) default NULL,
+		 `info` varchar(2048) default NULL,
+		 `facility` int(7) default NULL,
+		 `rec_facility` int(7) default NULL,
+		 `mileage` int(8) default NULL,
+		 `member_id` int(7) default NULL,
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Log of station actions' AUTO_INCREMENT=1;";
