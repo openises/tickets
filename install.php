@@ -55,12 +55,22 @@ if( !extension_loaded('mysql') ){
 	require_once('./incs/mysql2i.class.php');
 	}
 
-$version = "2.20 A base beta";				// see usage below 8/5/10
+$base_install_version = "2.20 A base beta";
+$current_version = "v3.43.0";
+$version = $current_version;
+
+@ini_set('output_buffering', 'off');
+@ini_set('zlib.output_compression', 0);
+@ob_implicit_flush(true);
 
 function dump($variable) {
 	echo "\n<PRE>";					// pretty it a bit
 	var_dump($variable) ;
 	echo "</PRE>\n";
+	}
+
+function h($value) {
+	return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 	}
 
 $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
@@ -75,6 +85,13 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
+<style>
+	body { max-width: 980px; margin: 20px auto; background: #f6f8fb; padding: 14px; border-radius: 8px; }
+	fieldset { border: 1px solid #c9d2df; border-radius: 6px; background: #fff; }
+	legend { padding: 0 8px; }
+	input[type=text], input[type=password] { border: 1px solid #b3bfd1; border-radius: 4px; padding: 6px; }
+	.install-status { background: #fff; border: 1px solid #c9d2df; border-radius: 6px; padding: 10px; margin-top: 8px; }
+</style>
 </HEAD><BODY>
 <FONT CLASS="header">Installing <?php print $version; ?> </FONT><BR /><BR />
 <SCRIPT>
@@ -82,6 +99,10 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		var errmsg="";
 		if (theForm.frm_db_host.value == "")			{errmsg+= "\tMySQL HOST name is required\n";}
 		if (theForm.frm_db_dbname.value == "")			{errmsg+= "\tMySQL DATABASE name is required\n";}
+		if ((theForm.frm_option.value == "install") || (theForm.frm_option.value == "install-drop")) {
+			if (theForm.frm_admin_user.value == "")			{errmsg+= "\tAdmin username is required\n";}
+			if (theForm.frm_admin_pass.value.length < 8)			{errmsg+= "\tAdmin password must be at least 8 characters\n";}
+		}
 //		if (theForm.frm_api_key.value.length != 86)		{errmsg+= "\tGMaps API key is required - 86 chars\n";} -- 1/9/2013
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
@@ -1012,24 +1033,36 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		}
 
 
-	function create_user() {	// create default super user (note: priv's level 'super') and guest // 6/9/08, 10/29/10
+	function create_user($admin_user, $admin_pass) {	// create first super user and guest
 		global $db_prefix;
 		$tablename = prefix("user");
+		$admin_user = trim((string)$admin_user);
+		if($admin_user === '' || !preg_match('/^[A-Za-z0-9_.@-]{3,64}$/', $admin_user)) {
+			die("<FONT CLASS=\"warn\">Admin username must be 3-64 chars and use letters, numbers, ., _, @ or -</FONT>");
+			}
+		if(strlen((string)$admin_pass) < 8) {
+			die("<FONT CLASS=\"warn\">Admin password must be at least 8 characters.</FONT>");
+			}
+		$admin_hash = password_hash((string)$admin_pass, PASSWORD_BCRYPT);
+		if($admin_hash === false) {
+			die("<FONT CLASS=\"warn\">Unable to hash admin password safely.</FONT>");
+			}
+		$guest_hash = password_hash('guest', PASSWORD_BCRYPT);
 		print "<P>";
-		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('admin',MD5('admin'),'Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
-		print "<LI> Created user '<B>admin</B>'";
-		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('guest',MD5('guest'),'Guest',3,0,1,'date',0,'$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('". mysql_real_escape_string($admin_user) ."','". mysql_real_escape_string($admin_hash) ."','Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		print "<LI> Created user '<B>" . h($admin_user) . "</B>'";
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('guest','". mysql_real_escape_string($guest_hash) ."','Guest',3,0,1,'date',0,'$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
 		print "<LI> Created user '<B>guest</B>'";
 		print "</P>";
 		}
 
 	//insert settings
 	function insert_settings() {
-		global $version, $api_key;
+		global $version, $api_key, $base_install_version;
 
 		do_insert_settings('_aprs_time','0');
 		do_insert_settings('_sleep','5');				// 10/17/08 --
-		do_insert_settings('_version',$version);
+		do_insert_settings('_version',$base_install_version);
 		do_insert_settings('abbreviate_affected','30');
 		do_insert_settings('abbreviate_description','30');
 		do_insert_settings('allow_custom_tags','0');
@@ -1137,12 +1170,12 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 //			print __LINE__ . " " . $query . "<BR>";
 
 			if (!@mysql_connect($_POST['frm_db_host'], $_POST['frm_db_user'], $_POST['frm_db_password'])) {
-				$the_pw = (empty($_POST['frm_db_password']))? "<i>none entered</i>"  : $_POST['frm_db_password'] ;
+				$the_pw = (empty($_POST['frm_db_password']))? "<i>none entered</i>"  : str_repeat('*', 8);
 				print "<B>Connection to MySQL failed using the following entered values:</B><BR /><BR />\n";
-				print "MySQL Host:<B> " . $_POST['frm_db_host'] . "</B><BR />\n";
-				print "MySQL Username:<B> " . $_POST['frm_db_user'] . "</B><BR />\n";
+				print "MySQL Host:<B> " . h($_POST['frm_db_host']) . "</B><BR />\n";
+				print "MySQL Username:<B> " . h($_POST['frm_db_user']) . "</B><BR />\n";
 				print "MySQL Password:<B> " . $the_pw . "</B><BR /><BR />\n";
-				print "MySQL Database Name:<B> " . $_POST['frm_db_dbname'] . "</B><BR /><BR />\n";
+				print "MySQL Database Name:<B> " . h($_POST['frm_db_dbname']) . "</B><BR /><BR />\n";
 				print "Please correct these entries and try again.<BR /><BR />";
 ?>
 				<FORM NAME='db_error' METHOD='post' ACTION = 'install.php'>
@@ -1167,18 +1200,20 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		switch($_POST['frm_option']) {
 			case 'install':{
 				create_tables($_POST['frm_db_prefix']);
-				create_user();
+				create_user($_POST['frm_admin_user'], $_POST['frm_admin_pass']);
 				insert_settings();
 				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
-				print "<LI> Tickets version $version installation complete!";
+				print "<LI> Base install complete. Running full upgrade tasks to $version...</LI>";
+				print "<DIV class='install-status'><IFRAME title='install progress' src='index.php?installer_upgrade=1&first_start=yes' style='width:100%;height:360px;border:1px solid #c9d2df;background:#fff;'></IFRAME></DIV>";
 				break;
 				}
 			case 'install-drop':{
 				create_tables($_POST['frm_db_prefix'],1);
-				create_user();
+				create_user($_POST['frm_admin_user'], $_POST['frm_admin_pass']);
 				insert_settings();
 				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
-				print "<LI> Re-Installation done!";
+				print "<LI> Re-install complete. Running full upgrade tasks to $version...</LI>";
+				print "<DIV class='install-status'><IFRAME title='reinstall progress' src='index.php?installer_upgrade=1' style='width:100%;height:360px;border:1px solid #c9d2df;background:#fff;'></IFRAME></DIV>";
 				break;
 				}
 //			case 'upgrade-0.65':{
@@ -1187,6 +1222,12 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 //				print "<LI> Upgrade <B>0.65->0.7</B> complete!";
 //				break;
 //				}
+			case 'upgrade':{
+				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
+				print "<LI> Upgrade preparation complete. Running schema and settings updates now...</LI>";
+				print "<DIV class='install-status'><IFRAME title='upgrade progress' src='index.php?installer_upgrade=1' style='width:100%;height:360px;border:1px solid #c9d2df;background:#fff;'></IFRAME></DIV>";
+				break;
+				}
 			case 'writeconf':{
 				write_conf($_POST['frm_db_host'],$_POST['frm_db_dbname'],$_POST['frm_db_user'],$_POST['frm_db_password'],$_POST['frm_db_prefix']);
 				print "<LI> All done.";
@@ -1213,18 +1254,15 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		installations as many keys as you may need are available.  Please note:  That key is an 86-character string, which should be
 		copy/pasted from them into the form.  Hint: email that key to yourself, along with the other form entries.<BR /><BR />
 
-		3.  The <B>Re-install</B> option <FONT CLASS="warn">drops all Tickets data</FONT> in the specified database and re-installs them;
-		if the tables already exists this option is required. If the tables names are prefixed, you have to specify it in the form.<BR /><BR />
-<!--
-		The <B>Upgrade</B> option upgrades an existing Tickets database from the specified version to the newest available. If the database
-		structure has been modified in any way this script <FONT CLASS="warn">will most probably fail</FONT>. Please make sure to backup your database
-		before proceeding with this upgrade. All the settings will be replaced.<BR /><BR />
--->
+		3.  The <B>Upgrade Existing TicketsCAD</B> option preserves data and runs the full index.php schema/settings upgrade routine in-place.<BR /><BR />
 
-		4.  The <B>Write Configuration Only</B> option writes the specified mysql settings to the file <B>'mysql.inc.php'</B> in the <B>'incs'</B>
+		4.  The <B>Re-install</B> option <FONT CLASS="warn">drops all Tickets data</FONT> in the specified database and re-installs them;
+		if the tables already exists this option is required. If the tables names are prefixed, you have to specify it in the form.<BR /><BR />
+
+		5.  The <B>Write Configuration Only</B> option writes the specified mysql settings to the file <B>'mysql.inc.php'</B> in the <B>'incs'</B>
 		subdirectory but doesn't alter the database	in any way.<BR /><BR />
 
-		5.  The file <B>'mysql.inc.php'</B> in the <B>'incs'</B> subdirectory <B>must be write-able in any install option</B>.
+		6.  The file <B>'mysql.inc.php'</B> in the <B>'incs'</B> subdirectory <B>must be write-able in any install option</B>.
 
 		<BR /><BR /><A HREF="install.php"><< back to the install script</A></BLOCKQUOTE>
 <?php
@@ -1325,10 +1363,12 @@ if ($arr [0] <> $reqd ) {
 			<TR CLASS="even"><TD>Google API Key (optional):<BR /></TD><TD><INPUT TYPE="text" SIZE="70" MAXLENGTH="255" NAME="frm_api_key"  VALUE=""><BR>
 				&nbsp;&nbsp;&nbsp;&nbsp;Note: You may obtain your site's API key at https://code.google.com/apis/console/
 				</TD></TR>
+			<TR CLASS="odd"><TD>First Admin Username: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="64" NAME="frm_admin_user" VALUE="admin"> letters/numbers . _ @ - only</TD></TR>
+			<TR CLASS="even"><TD>First Admin Password: </TD><TD><INPUT TYPE="password" SIZE="45" MAXLENGTH="255" NAME="frm_admin_pass" VALUE=""> minimum 8 chars, stored with bcrypt</TD></TR>
 			<TR CLASS="odd"><TD>Install Option: </TD><TD>
-			<INPUT TYPE="radio" VALUE="install" NAME="frm_option" checked> Install Database - new<BR />
-			<INPUT TYPE="radio" VALUE="install-drop" NAME="frm_option"> Re-install Database<BR />
-	<!--	<INPUT TYPE="radio" VALUE="upgrade-0.65" NAME="frm_option"> Upgrade 0.65 -> 0.7<BR />	-->
+			<INPUT TYPE="radio" VALUE="install" NAME="frm_option" checked> Install Database - new (safe, no existing data dropped)<BR />
+			<INPUT TYPE="radio" VALUE="upgrade" NAME="frm_option"> Upgrade Existing TicketsCAD (keeps existing data)<BR />
+			<INPUT TYPE="radio" VALUE="install-drop" NAME="frm_option"> Re-install Database (drops Tickets tables)<BR />
 			<INPUT TYPE="radio" VALUE="writeconf" NAME="frm_option"> Write Configuration File Only<BR /><BR>
 			</TD></TR>
 			<TR CLASS="even"><TD></TD><TD><INPUT TYPE="Reset" VALUE="Reset form">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Do it"></TD></TR>
