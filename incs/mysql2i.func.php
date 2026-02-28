@@ -1,7 +1,7 @@
 <?php
 /*
-mysql2i.func.php rev 3
-member of mysql2i.class.php ver 1.3
+mysql2i.func.php rev 4
+member of mysql2i.class.php ver 1.4
 */
 
 //predifined fetch constants
@@ -332,4 +332,5 @@ function mysql_unbuffered_query($query,$link=null){
     
 }
 ?>
+
 
