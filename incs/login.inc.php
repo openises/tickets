@@ -367,7 +367,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				// 2/28/26 - Prepared statement hardening
 				$stmt = mysql_prepare("DELETE FROM `" . $GLOBALS['mysql_prefix'] . "ticket` WHERE `status` = ? AND `_by` = ?");
 				if($stmt) {
-					mysql_stmt_bind_param($stmt, "ii", intval($GLOBALS['STATUS_RESERVED']), intval($_SESSION['user_id']));
+					$reserved_status = intval($GLOBALS['STATUS_RESERVED']);
+					$user_id = intval($_SESSION['user_id']);
+					mysql_stmt_bind_param($stmt, "ii", $reserved_status, $user_id);
 					mysql_stmt_execute($stmt);
 					mysql_stmt_close($stmt);
 				}
