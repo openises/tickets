@@ -172,7 +172,16 @@ class LanguageConv {
 	    $c=ord( substr($isoline,$i,1) );
 	    $o .= ($c > 223) && ($c < 251) ? '&#'.(1264+$c).';' : chr($c);
 	}
-	return utf8_encode($o);
+	if (function_exists('mb_convert_encoding')) {
+	    return mb_convert_encoding($o, 'UTF-8', 'ISO-8859-1');
+	}
+	if (function_exists('iconv')) {
+	    $converted = @iconv('ISO-8859-1', 'UTF-8//IGNORE', $o);
+	    if ($converted !== false) {
+		return $converted;
+	    }
+	}
+	return $o;
     }
 }
 
