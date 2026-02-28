@@ -4,7 +4,7 @@
 * Version:      1.4
 * Date:         Aug 2006
 * Author:       Barry Andrew
-* Copyright:    © BA Andrew 2003
+* Copyright:    Â© BA Andrew 2003
 * Licence       Free for non-commercial use
 *               http://members.aol.com/barryaandrew/baaLic.html
 ***********************************************************
@@ -446,8 +446,10 @@ class baaChart  {
             $b = array_keys($this->stypes,'C');
             $colpos = 0;
             if (!$stacked){
-                while (list($k,$v)=each($b)) {
-                    if ($v==$i) break;
+                foreach ($b as $v) {
+                    if ($v == $i) {
+                        break;
+                    }
                     $colpos++;
                 }
             }
