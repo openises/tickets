@@ -137,7 +137,8 @@ class SMTP5 {
 					if ($user == null) $ret = true;
 					else if ($login != null) $ret = self::auth($conn, $user, $pass, $login, $debug);
 					else {
-						list($code, $arr) = each($_RESULT);
+						$code = key($_RESULT);
+						$arr = current($_RESULT);
 						$auth['default'] = $auth['login'] = $auth['plain'] = $auth['cram-md5'] = false;
 						foreach ($arr as $line) {
 							if (substr($line, 0, strlen('250-AUTH ')) == '250-AUTH ') {

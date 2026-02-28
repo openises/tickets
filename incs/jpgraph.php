@@ -1169,7 +1169,7 @@ class Graph {
 
 	// Now reconstruct any user URL argument
 	reset($_GET);
-	while( list($key,$value) = each($_GET) ) {
+	foreach ($_GET as $key => $value) {
 	    if( is_array($value) ) {
 		foreach ( $value as $k => $v ) {
 		    $urlarg .= '&amp;'.$key.'%5B'.$k.'%5D='.urlencode($v);
@@ -1184,7 +1184,7 @@ class Graph {
 	// but there is little else we can do. One idea for the 
 	// future might be recreate the POST header in case.
 	reset($_POST);
-	while( list($key,$value) = each($_POST) ) {
+	foreach ($_POST as $key => $value) {
 	    if( is_array($value) ) {
 		foreach ( $value as $k => $v ) {
 		    $urlarg .= '&amp;'.$key.'%5B'.$k.'%5D='.urlencode($v);

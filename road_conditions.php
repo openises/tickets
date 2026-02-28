@@ -1604,5 +1604,4 @@ var buttons_html = "";
 		print list_locations($buttons, 0);				// ($addon = '', $start)
 		print "\n</HTML> \n";
 		exit();
-    break;
 ?>
