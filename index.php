@@ -4120,7 +4120,7 @@ if(!is_dir($tiledir)) {
 	}	//	End if "Allocates does not exist"
 
 
-if((count_responders()== 0) && (get_variable('title_string') == "") && ((!empty($_GET)) && ($_GET['first_start'] == "yes"))) {	//	5/11/12 For quick start routine
+if((count_responders()== 0) && (get_variable('title_string') == "") && (isset($_GET['first_start']) && ($_GET['first_start'] == "yes"))) {	//	5/11/12 For quick start routine
 ?>
 <SCRIPT>
 	$('update_status').scrollTop = $('update_status').scrollHeight;

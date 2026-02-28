@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL ^ E_STRICT);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 $theTimezone = "America/New_York";
 date_default_timezone_set($theTimezone);
