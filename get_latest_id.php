@@ -33,7 +33,7 @@ function error_out($err_arg) {							// 2/10/12
 //	if (empty($_SESSION)) {error_out(basename(__FILE__) . "@"  . __LINE__);}
 $me = array_key_exists('user_id', $_SESSION)? $_SESSION['user_id'] :  1;
 
-$al_groups = $_SESSION['user_groups'];
+$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
 
 if(array_key_exists('viewed_groups', $_SESSION)) {		//	6/10/11
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);

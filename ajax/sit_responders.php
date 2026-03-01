@@ -153,7 +153,7 @@ if ((array_key_exists ('order' , $_POST)) && (isset($_POST['order'])))	{$_SESSIO
 elseif (empty ($_SESSION['unit_flag_2'])) 	{$_SESSION['unit_flag_2'] = 1;}
 
 $order_str = $order_values[1];
-$al_groups = $_SESSION['user_groups'];
+$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
 
 if(array_key_exists('viewed_groups', $_SESSION)) {
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
