@@ -2536,7 +2536,7 @@ case 'user' :
                         print get_all_group_butts(get_allocates(4, $id));    //	6/10/11
                         print "</DIV";
                     }
-                    $unit_visibility = (intval($row['level']) == intval($GLOBALS['LEVEL_UNIT']) || intval($row['level']) == intval($GLOBALS['LEVEL_SUPER']) || intval($row['level']) == intval($GLOBALS['LEVEL_ADMINITRATOR']) || intval($row['level']) == intval($GLOBALS['LEVEL_USER'])) ? "" : "style='display: none;'";
+                    $unit_visibility = (intval($row['level']) == intval($GLOBALS['LEVEL_UNIT']) || intval($row['level']) == intval($GLOBALS['LEVEL_SUPER']) || intval($row['level']) == intval($GLOBALS['LEVEL_ADMINISTRATOR']) || intval($row['level']) == intval($GLOBALS['LEVEL_USER'])) ? "" : "style='display: none;'";
                     ?>
                     <TR id='unit_sel' <?php print $unit_visibility; ?> VALIGN="baseline" CLASS="even">
                         <TD CLASS="td_label text" ALIGN="right">
