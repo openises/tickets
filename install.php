@@ -398,6 +398,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $logs
             );
             foreach ($logs as $line) { $messages[] = $line; }
+            if (!table_exists_mysqli($mysqli, $cfg['prefix'] . $baseName)) {
+                $ok = false;
+                $messages[] = 'Schema error: expected table missing after create/sync: ' . $baseName;
+            }
+            if (!empty($logs) && $mode === 'install_clean') {
+                $ok = false;
+                $messages[] = 'Schema sync warnings are treated as errors during clean install.';
+            }
             break;
         case 'seed':
             $i = (int)$current['index'];
@@ -506,7 +514,7 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
 .btn:disabled{opacity:.6;cursor:not-allowed}
 #progress{display:none;margin-top:14px}.spinner{width:28px;height:28px;border:4px solid #d1e0ff;border-top-color:#1570ef;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-#log{margin-top:12px;background:#101828;color:#d0d5dd;padding:12px;border-radius:8px;max-height:260px;overflow:auto;font-family:monospace;font-size:12px}
+#log{margin-top:12px;background:#101828;color:#d0d5dd;padding:12px;border-radius:8px;max-height:260px;overflow:auto;font-family:monospace;font-size:12px;white-space:pre-wrap}
 .notice{padding:8px 10px;border-radius:8px;background:#fffaeb;border:1px solid #fedf89;margin-bottom:10px}
 </style>
 </head>
