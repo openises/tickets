@@ -617,7 +617,7 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			$optgroup_close = "";
 
 			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-				$the_name = explode ("/", $row['name']);
+				$the_name = explode ("/", (string)$row['name']);
 				if (array_key_exists($row['type'], $unit_types)) {
 					if (!($curr_type == $row['type'])) {
 						$curr_type = $row['type'];
@@ -640,6 +640,7 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 //			Incident Selector ------------------------------------------
 
 			$query = "SELECT *, COUNT(`scope`) FROM `$GLOBALS[mysql_prefix]ticket` GROUP BY `scope` HAVING COUNT(`scope`)>=1  AND status > 0";  // build assoc array of all tickets
+			$tickets = array();
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 				$tickets[$row['id']] = shorten($row['scope'], 60);		// 1/2/2015

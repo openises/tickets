@@ -20,6 +20,8 @@ $map_size = .75;			// map size multiplier - as a percent of full size
 $butts_width = 0;
 $ret_arr = array();
 $id_array = array();
+$assigns_stack = array();
+$selected_indx = 0;
 
 $time_now = mysql_format_date(now());			// collect ticket id's into $id_array 
 
