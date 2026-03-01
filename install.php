@@ -49,7 +49,6 @@
 1/9/2013 API key is no longer mandatory
 4/2/2013 removed API key value.
 3/1/2026 install.php now exclusively handles install/upgrade/schema changes; adds centralized version checks, admin gating for existing installs, config prefill, and first-admin bcrypt setup.
-3/1/2026 add missing modern schema fields to fresh installs (log/assigns/ticket/responder/in_types/un_status) to match runtime SQL usage.
 */
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
