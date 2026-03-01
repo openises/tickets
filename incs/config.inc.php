@@ -261,7 +261,10 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TABLE BORDER='0'><TR CLASS='even'><TD CLASS='td_label'COLSPAN=2 ALIGN='center'>System Summary</TD></TR><TR>";
 
 
-	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . get_variable('_version') . "</B></TD></TR>";
+	if (!function_exists('tickets_get_versions')) { require_once __DIR__ . '/versions.inc.php'; }
+	$version_meta = tickets_get_versions();
+	$system_version = ($version_meta['installed'] !== null && $version_meta['installed'] !== '') ? $version_meta['installed'] : $version_meta['installer'];
+	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . $system_version . "</B></TD></TR>";
 	print "<TR CLASS='even'><TD CLASS='td_label'>Server OS:</TD><TD ALIGN='left'>" . php_uname() . "</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
 	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
@@ -358,9 +361,15 @@ function list_users(){		/* list users */
 		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$row['userid']}' \"": "";
 
 		$level = get_level_text($row['level']);
-		$login = format_sb_date_2(mysql_format_date(strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
-		$isonline = ($row['expires'] > $now) ? true: false;
-		$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
+		$login_ts = (!empty($row['login'])) ? strtotime((string)$row['login']) : false;
+		if ($login_ts !== false) {
+			$login = format_sb_date_2(mysql_format_date($login_ts + (intval(get_variable('delta_mins'))*60)));
+		} else {
+			$login = "";
+		}
+		$expires_val = isset($row['expires']) ? (string)$row['expires'] : "";
+		$isonline = ($expires_val !== "" && $expires_val > $now) ? true: false;
+		$online = ($isonline)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
 		print "<TR CLASS='{$colors[$i%2]}' {$onclick}>
 				<TD class='text'>{$row['userid']}</TD>
 				<TD class='text'>&nbsp;{$row['user']}</TD>

@@ -1,7 +1,7 @@
 <?php
 /*
-mysql2i.func.php rev 3
-member of mysql2i.class.php ver 1.3
+mysql2i.func.php rev 4
+member of mysql2i.class.php ver 1.4
 */
 
 //predifined fetch constants
@@ -248,6 +248,42 @@ function mysql_query($query,$link=null){
     
 }
 
+function mysql_prepare($query,$link=null){
+    
+    return mysql2i::mysql_prepare($query,$link);
+    
+}
+
+function mysql_stmt_bind_param($stmt,$types,&...$vars){
+    
+    return mysql2i::mysql_stmt_bind_param($stmt,$types,...$vars);
+    
+}
+
+function mysql_stmt_execute($stmt){
+    
+    return mysql2i::mysql_stmt_execute($stmt);
+    
+}
+
+function mysql_stmt_get_result($stmt){
+    
+    return mysql2i::mysql_stmt_get_result($stmt);
+    
+}
+
+function mysql_stmt_close($stmt){
+    
+    return mysql2i::mysql_stmt_close($stmt);
+    
+}
+
+function mysql_stmt_error($stmt){
+    
+    return mysql2i::mysql_stmt_error($stmt);
+    
+}
+
 function mysql_real_escape_string($escapestr,$link=null){
     
     return mysql2i::mysql_real_escape_string($escapestr,$link);
@@ -296,3 +332,5 @@ function mysql_unbuffered_query($query,$link=null){
     
 }
 ?>
+
+

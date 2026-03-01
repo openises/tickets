@@ -330,7 +330,7 @@ function auto_status($message, $responder, $datestring) {	//	6/21/13
 
 function ReplaceImap($txt) {	//	function to clean up body text
 	$carimap = array("=C3=A9", "=C3=A8", "=C3=AA", "=C3=AB", "=C3=A7", "=C3=A0", "=20", "=C3=80", "=C3=89");
-	$carhtml = array("é", "è", "ê", "ë", "ç", "à", "&nbsp;", "À", "É");
+	$carhtml = array("Ã©", "Ã¨", "Ãª", "Ã«", "Ã§", "Ã ", "&nbsp;", "Ã€", "Ã‰");
 	$txt = str_replace($carimap, $carhtml, $txt);
 	return $txt;
 	}
@@ -381,7 +381,8 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=30 ) {	//	C
 		}
 	$s = POP3::pStat($c);
 	// $i - total number of messages, $b - total bytes
-	list($i, $b) = each($s);
+	$i = key($s);
+	$b = current($s);
 	$x = intval($i);
 	if ($x >= 1) { // if we have messages
 		$the_message = array();

@@ -1,5 +1,6 @@
 <?php
 /*
+2/28/26 login hardening to fix SQL injection vulnerability using prepared statements
 */
 
 function do_mobile_logout($return=FALSE){						/* logout - destroy session data */
@@ -141,15 +142,19 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 	else { if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
 			$temp = $GLOBALS['LEVEL_USER'];
 			$tmp = $_POST['encoding'];
-			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` 
-				WHERE `user`=" . quote_smart($_POST['frm_user']). " 	 
-				AND (`passwd`=PASSWORD(" . quote_smart($_POST['frm_passwd']) . ") 
-				OR `passwd`=MD5(" . quote_smart(strtolower($_POST['frm_passwd'])) . " ))  
-				LIMIT 1";
-			$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			
-			if (mysql_affected_rows()==1) {
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+			// 2/28/26 - Prepared statement hardening
+			$login_user = strip_tags($_POST['frm_user']);
+			$login_passwd = $_POST['frm_passwd'];
+			$stmt = mysql_prepare("SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "user` WHERE `user` = ? LIMIT 1");
+			if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
+			mysql_stmt_bind_param($stmt, "s", $login_user);
+			if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
+			$result = mysql_stmt_get_result($stmt);
+			$row = mysql_fetch_assoc($result);
+			mysql_stmt_close($stmt);
+			$authenticated = $row && (password_verify($login_passwd, $row['passwd']) || $row['passwd'] === md5(strtolower($login_passwd)) || $row['passwd'] === md5($login_passwd));			
+			if ($authenticated) {
+				$row = stripslashes_deep($row);
 
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
@@ -157,9 +162,13 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				$sid = session_id();							// 1/8/10
 				$browser = checkBrowser(FALSE);
 				$the_date = mysql_format_date($expiry) ;				
-				$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `sid` = '{$sid}', `expires`= '{$the_date}', `login` = '{$now}', `_from`= '{$_SERVER['REMOTE_ADDR']}', `browser` = '{$browser}'  WHERE `id` = {$row['id']} LIMIT 1";
-				$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
+				$user_id = intval($row['id']);
+				$stmt = mysql_prepare("UPDATE `" . $GLOBALS['mysql_prefix'] . "user` SET `sid` = ?, `expires` = ?, `login` = ?, `_from` = ?, `browser` = ? WHERE `id` = ? LIMIT 1");
+				if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
+				mysql_stmt_bind_param($stmt, "sssssi", $sid, $the_date, $now, $_SERVER['REMOTE_ADDR'], $browser, $user_id);
+				if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
+				mysql_stmt_close($stmt);
+				
 				$_SESSION['noautoforward'] = FALSE;	//	1/30/14
 				$_SESSION['id'] = 			$sid;
 				$_SESSION['expires'] = 		time();
@@ -197,8 +206,14 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				set_filenames_mob($internet);			// 8/31/10
 				do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");		// log it - 12/1/2012											
 																		
-				$query = "DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_RESERVED']} AND `_by` = {$_SESSION['user_id']};";
-				$result = mysql_query($query);
+				$stmt = mysql_prepare("DELETE FROM `" . $GLOBALS['mysql_prefix'] . "ticket` WHERE `status` = ? AND `_by` = ?");
+				if($stmt) {
+					$reserved_status = intval($GLOBALS['STATUS_RESERVED']);
+					$user_id = intval($_SESSION['user_id']);
+					mysql_stmt_bind_param($stmt, "ii", $reserved_status, $user_id);
+					mysql_stmt_execute($stmt);
+					mysql_stmt_close($stmt);
+				}
 				
 				$to = "";
 				$subject = "Tickets Mobile Page Login";

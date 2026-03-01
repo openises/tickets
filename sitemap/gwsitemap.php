@@ -89,8 +89,8 @@ foreach($types as $type){
 	}
 }
 $index = $extension ="";
-$types=join($types,"|");
-$types="($types)";
+$types = array_map('preg_quote', $types, array_fill(0, count($types), '/'));
+$types='(' . join('|', $types) . ')';
 if(!is_array($htmltypes))
 	$htmltypes=array();
 if(count($htmltypes)==0)
@@ -101,7 +101,7 @@ echo "<li><img src=\"$imgpath/server.gif\" align=\"middle\" alt=\"\" /><strong><
 showlist($_SERVER['DOCUMENT_ROOT']."$startin");
 echo "</li></ul></div>\n";
 if (is_array($divs)){
-	$divs="'".join($divs,"','")."'";
+	$divs="'".join("','", $divs)."'";
 	echo "<script type=\"text/javascript\">\n";
 	echo "//<![CDATA[\n";
 	echo "d=Array($divs);\n";
@@ -131,7 +131,7 @@ function showlist($path){
 						else
 							$dirs[$file]=$file;
 					} else {
-						if (@ereg("$types$", $file)){
+						if (preg_match('/' . $types . '$/', $file)){
 							$files[$file]=getTitle("$path/$file");
 							if (strlen($files[$file])==0)
 								$files[$file]=$file;

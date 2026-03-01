@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL ^ E_STRICT);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 $theTimezone = "America/New_York";
 date_default_timezone_set($theTimezone);
@@ -246,6 +246,7 @@ $GLOBALS['SEVERITY_HIGH'] 			= 2;
 
 $GLOBALS['LEVEL_SUPER'] 			= 0;		// 6/9/08
 $GLOBALS['LEVEL_ADMINISTRATOR']		= 1;
+$GLOBALS['LEVEL_ADMINITRATOR']		= $GLOBALS['LEVEL_ADMINISTRATOR'];	// legacy misspelling alias
 $GLOBALS['LEVEL_USER'] 				= 2;
 $GLOBALS['LEVEL_GUEST'] 			= 3;
 $GLOBALS['LEVEL_MEMBER'] 			= 4;		// 12/15/08
@@ -2043,6 +2044,7 @@ function shorten($instring, $limit) {
 
 function format_phone ($instr) { // 11/16/10 added check for locale for UK phone number format.
 	$locale = get_variable('locale');
+	$instr = (string)$instr;
 	$temp = trim($instr);
 	switch($locale) {
 	case "0":
@@ -2062,10 +2064,10 @@ function format_phone ($instr) { // 11/16/10 added check for locale for UK phone
 function highlight($term, $string) {		// highlights search term
 	$replace = "<SPAN CLASS='found'>" .$term . "</SPAN>";
 	if (function_exists('str_ireplace')) {
-		return str_ireplace ($term,  $replace, $string);
+		return str_ireplace ((string)$term,  $replace, (string)$string);
 		}
 	else {
-		return str_replace ($term,  $replace, $string);
+		return str_replace ((string)$term,  $replace, (string)$string);
 		}
 	}
 
@@ -2127,6 +2129,7 @@ function mysql_format_date($indate="") {			// returns MySQL-format date given ar
 	}
 
 function is_date($DateEntry) {						// returns true for valid non-zero date
+	$DateEntry = (string)$DateEntry;
 	$Date_Array = explode('-',$DateEntry);			// "2007-00-00 00:00:00"
 	if (count($Date_Array)!=3) 									return FALSE;
 	if((strlen($Date_Array[0])!=4)|| ($Date_Array[0]=="0000")) 	return FALSE;
@@ -2655,7 +2658,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					$str3 = "";
 					$str3 .= (empty($t_row['to_address']))? 	""  : $t_row['to_address'] . " " ;
 					$message .= empty($str3) ? "" : " " . $str3 . $eol;
-					if ( $GLOBALS['NM_LAT_VAL'] != $t_row['lat'] ) {						// 1/4/2014
+					if (array_key_exists('lat', $t_row) && array_key_exists('lng', $t_row) && $GLOBALS['NM_LAT_VAL'] != $t_row['lat']) {						// 1/4/2014
 						$message .= "http://maps.google.com/?q=loc:" . $t_row['lat'] . "," . $t_row['lng'] .  $eol;
 						}
 				    break;
@@ -3320,8 +3323,8 @@ function LLtoOSGB($lat, $lng) {
 	}	//end function LLtoOSGB
 
 function my_date_diff_u ($d1_in, $d2_in) {		// end, start datetime strings in, returns string - 5/13/10 - 11/29/2012
-	$d1 = strtotime($d1_in);				// string to integer
-	$d2 = strtotime($d2_in);
+	$d1 = strtotime((string)$d1_in);				// string to integer
+	$d2 = strtotime((string)$d2_in);
 	if ($d1 < $d2){						// check higher timestamp and switch if neccessary
 		$temp = $d2;
 		$d2 = $d1;
@@ -3389,8 +3392,8 @@ function my_date_diff_u ($d1_in, $d2_in) {		// end, start datetime strings in, r
 	}
 
 function my_date_diff($d1_in, $d2_in) {		// end, start datetime strings in, returns string - 5/13/10 - 11/29/2012
-	$d1 = strtotime($d1_in);				// string to integer
-	$d2 = strtotime($d2_in);
+	$d1 = strtotime((string)$d1_in);				// string to integer
+	$d2 = strtotime((string)$d2_in);
 	if ($d1 < $d2){						// check higher timestamp and switch if neccessary
 		$temp = $d2;
 		$d2 = $d1;
@@ -3469,8 +3472,13 @@ function get_elapsed_time ($in_start, $in_end) {		// datetime strings - 11/30/20
 */
 
 function get_elapsed_time ($in_row) {						// ex: 2012-03-29 14:37:10	- 5/20/2013
-	$end_date = (good_date_time($in_row['problemend']))? $in_row['problemend'] :  now_ts();	// string
-	$start_date = ($in_row['status'] == $GLOBALS['STATUS_SCHEDULED'] )? $in_row['booked_date'] : $in_row['problemstart'];
+	if (!is_array($in_row)) { $in_row = array(); }
+	$problemend = array_key_exists('problemend', $in_row) ? $in_row['problemend'] : null;
+	$status = array_key_exists('status', $in_row) ? $in_row['status'] : null;
+	$booked = array_key_exists('booked_date', $in_row) ? $in_row['booked_date'] : null;
+	$problemstart = array_key_exists('problemstart', $in_row) ? $in_row['problemstart'] : now_ts();
+	$end_date = (good_date_time($problemend))? $problemend :  now_ts();	// string
+	$start_date = ($status == $GLOBALS['STATUS_SCHEDULED'] )? $booked : $problemstart;
 	if(is_numeric($start_date)) $start_date = date("Y-m-d H:i:s", $start_date);
 	return my_date_diff_u ( $start_date , $end_date);
 	}
@@ -4262,6 +4270,7 @@ function get_index_str ($in_str) {
 		}
 
 	function format_date_2($date_in){								// datetime: 2012-11-03 14:13:45 - 11/29/2012
+		$date_in = (string)$date_in;
 		$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
 		if (get_variable('locale')==1)	{ return date("j/n/y H:i", intval($date_wk));}					// 08/27/10 - Revised to show UK format for locale = 1
 		else 							{ return date(get_variable("date_format"), intval($date_wk)); }
@@ -4269,7 +4278,8 @@ function get_index_str ($in_str) {
 
 	if (!function_exists('format_dateonly')) {
 		function format_dateonly($date_in){								// 12/3/13
-			$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
+			$date_in = (string)$date_in;
+		$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
 			if (get_variable('locale')==0)	{ return date("n/j/y", intval($date_wk));}					//
 			else 							{ return date("j/n/y", intval($date_wk));}
 			}

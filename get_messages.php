@@ -27,7 +27,8 @@ function get_the_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	
 		}
 	$s = POP3::pStat($c);
 	// $i - total number of messages, $b - total bytes
-	list($i, $b) = each($s);
+	$i = key($s);
+	$b = current($s);
 	$x = intval($i);
 	if ($i >= 1) { // if we have messages
 		$the_message = array();

@@ -415,6 +415,47 @@
           
       }
 
+      // Prepared statements and supporting logic stuff
+      public static function mysql_prepare($query,$link=null){
+          
+          if( empty($link) ){
+              $link = self::$currObj;
+          }
+          
+          return mysqli_prepare($link,$query);
+          
+      }
+
+      public static function mysql_stmt_bind_param($stmt,$types,&...$vars){
+          
+          return mysqli_stmt_bind_param($stmt,$types,...$vars);
+          
+      }
+
+      public static function mysql_stmt_execute($stmt){
+          
+          return mysqli_stmt_execute($stmt);
+          
+      }
+
+      public static function mysql_stmt_get_result($stmt){
+          
+          return mysqli_stmt_get_result($stmt);
+          
+      }
+
+      public static function mysql_stmt_close($stmt){
+          
+          return mysqli_stmt_close($stmt);
+          
+      }
+
+      public static function mysql_stmt_error($stmt){
+          
+          return mysqli_stmt_error($stmt);
+          
+      }
+    
       public static function mysql_query($query,$link=null){
 
           if( empty($link) ){
@@ -534,3 +575,4 @@
   }
   
 ?>
+
