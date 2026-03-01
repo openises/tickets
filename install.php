@@ -276,7 +276,10 @@ $defaults = load_mysql_defaults();
 $detection = detect_install($defaults);
 
 session_start();
-if ($detection['exists']) {
+$action = isset($_POST['action']) ? (string)$_POST['action'] : '';
+$installerApiActions = array('execute_step', 'execute_stream', 'execute');
+$isInstallerApiCall = ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, $installerApiActions, true));
+if ($detection['exists'] && !$isInstallerApiCall) {
     $isAdmin = isset($_SESSION['level']) && ((int)$_SESSION['level'] === 0 || (int)$_SESSION['level'] === 1);
     if (!$isAdmin) {
         header('Location: ./incs/login.inc.php');
@@ -604,7 +607,7 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
       var payload = null;
       try { payload = JSON.parse(xhr.responseText || '{}'); }
       catch (err) {
-        appendLines(['Installer step parse error.', xhr.responseText || 'No response body.']);
+        appendLines(['Installer step parse error.', xhr.responseText || 'No response body.', 'Hint: if you see login HTML here, installer auth redirect intercepted the API call.']);
         prog.style.display='none';
         btn.disabled=false;
         document.getElementById('resetBtn').disabled=false;
