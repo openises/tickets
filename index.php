@@ -1,4 +1,10 @@
 <?php
+/*
+ * ticketsCAD runtime entrypoint hardening notes:
+ * - Removed installer/schema mutation logic from index bootstrap.
+ * - Added centralized version/config gate via incs/versions.inc.php.
+ * - Preserved runtime-only responsibilities (redirect/mobile/frame launch).
+ */
 error_reporting(E_ALL);
 
 if (!file_exists('./incs/mysql.inc.php')) {
@@ -19,8 +25,7 @@ if ($installedVersion === null || $installedVersion !== $version) {
     exit();
 }
 
-// cache buster and logout from statistics module.
-$_SESSION = array();
+// cache buster
 $noforward_string = '';
 
 // Mobile redirect

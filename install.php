@@ -1,4 +1,10 @@
 <?php
+/*
+ * ticketsCAD installer hardening notes:
+ * - Installer owns install/upgrade/schema operations; index.php no longer mutates schema.
+ * - Supports clean install, upgrade sync, and write-config modes.
+ * - Streams step-by-step progress and records installed _version for parity checks.
+ */
 error_reporting(E_ALL);
 if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
 
@@ -6,6 +12,13 @@ require_once __DIR__ . '/incs/versions.inc.php';
 require_once __DIR__ . '/incs/install_schema.inc.php';
 
 function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+
+function emit_line($line) {
+    echo $line . "
+";
+    if (function_exists('ob_flush')) { @ob_flush(); }
+    flush();
+}
 
 function load_mysql_defaults() {
     $defaults = array('host' => 'localhost', 'user' => '', 'pass' => '', 'db' => '', 'prefix' => '');
@@ -158,27 +171,33 @@ function ensure_admin_user($mysqli, $prefix, $username, $password, $displayName)
     return (bool)$mysqli->query("INSERT INTO `{$table}` (`user`,`passwd`,`info`,`level`,`status`,`open_at`,`sort_desc`,`reporting`) VALUES ('{$u}','{$h}','{$d}',1,'approved','d',1,0)");
 }
 
-function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion) {
+function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion, $emit = null) {
     global $INSTALL_SCHEMA_TABLES, $INSTALL_SCHEMA_SEED;
 
     $logs = array();
+    $push = function($msg) use (&$logs, $emit) {
+        $logs[] = $msg;
+        if ($emit) { call_user_func($emit, $msg); }
+    };
     $mysqli = connect_db($cfg);
     if (!$mysqli) {
         return array(false, array('Database connection failed. Check MySQL credentials.'));
     }
 
     if ($mode === 'write_config') {
+        $push('Writing configuration file...');
         $ok = write_mysql_config($cfg);
         $mysqli->close();
         return array($ok, array($ok ? 'Config file written to incs/mysql.inc.php.' : 'Failed to write incs/mysql.inc.php.'));
     }
 
     if ($mode === 'install_clean') {
+        $push('Clean install selected: dropping existing tables...');
         $tables = $mysqli->query('SHOW TABLES');
         if ($tables) {
             while ($row = $tables->fetch_array(MYSQLI_NUM)) {
                 if (!$mysqli->query("DROP TABLE IF EXISTS `{$row[0]}`")) {
-                    $logs[] = 'Drop warning: ' . $mysqli->error;
+                    $push('Drop warning: ' . $mysqli->error);
                 }
             }
             $tables->free();
@@ -186,6 +205,7 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
     }
 
     foreach ($INSTALL_SCHEMA_TABLES as $baseName => $createBase) {
+        $push('Applying table schema: ' . $baseName . ' ...');
         $tableName = $cfg['prefix'] . $baseName;
         $createSql = apply_prefix($createBase, $cfg['prefix']);
         create_or_sync_table($mysqli, $tableName, $createSql, $mode, $logs);
@@ -195,23 +215,26 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
         if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
             continue;
         }
+        if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertBase, $mSeed)) { $push('Seeding data: ' . $mSeed[1] . ' ...'); }
         $insertSql = apply_prefix($insertBase, $cfg['prefix']);
         if (!$mysqli->query($insertSql)) {
-            $logs[] = 'Seed warning: ' . $mysqli->error;
+            $push('Seed warning: ' . $mysqli->error);
         }
     }
 
     if (!ensure_admin_user($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName)) {
-        $logs[] = 'Warning: failed to create/update admin account.';
+        $push('Warning: failed to create/update admin account.');
     } else {
-        $logs[] = 'Admin account provisioned.';
+        $push('Admin account provisioned.');
     }
 
+    $push('Updating installed version setting...');
     upsert_version_setting($mysqli, $cfg['prefix'], $installerVersion);
+    $push('Writing mysql config file...');
     write_mysql_config($cfg);
     $mysqli->close();
 
-    $logs[] = 'Installer version recorded as ' . $installerVersion . '.';
+    $push('Installer version recorded as ' . $installerVersion . '.');
     return array(true, $logs);
 }
 
@@ -227,6 +250,38 @@ if ($detection['exists']) {
         header('Location: ./incs/login.inc.php');
         exit();
     }
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'execute_stream') {
+    @set_time_limit(0);
+    while (ob_get_level() > 0) { @ob_end_flush(); }
+    header('Content-Type: text/plain; charset=UTF-8');
+    header('Cache-Control: no-cache');
+
+    $cfg = array(
+        'host' => trim($_POST['db_host']),
+        'user' => trim($_POST['db_user']),
+        'pass' => (string)$_POST['db_pass'],
+        'db' => trim($_POST['db_name']),
+        'prefix' => trim($_POST['db_prefix'])
+    );
+
+    $mode = isset($_POST['mode']) ? $_POST['mode'] : 'install_clean';
+    $adminUser = trim((string)$_POST['admin_user']);
+    $adminPass = (string)$_POST['admin_pass'];
+    $adminName = trim((string)$_POST['admin_name']);
+
+    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+        emit_line('ERROR: Admin user, name, and password (min 6 chars) are required.');
+        emit_line('DONE:0');
+        exit();
+    }
+
+    emit_line('Starting installer...');
+    list($ok, $logs) = perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion, 'emit_line');
+    emit_line('DONE:' . ($ok ? '1' : '0'));
+    exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'execute') {
@@ -330,6 +385,7 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
       </div>
       <p id="passStatus" class="muted"></p>
       <button class="btn" id="runBtn" type="submit">Do It</button>
+      <button class="btn" id="resetBtn" type="reset" style="background:#475467;margin-left:8px;">Reset Form</button>
     </form>
 
     <div id="progress"><span class="spinner"></span> <strong>Working...</strong></div>
@@ -361,19 +417,44 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
     if(!validatePass()){return;}
 
     var data = new FormData(f);
-    data.append('action','execute');
+    data.append('action','execute_stream');
     prog.style.display='block';
     btn.disabled=true;
-    log.textContent='Starting...\n';
+    document.getElementById('resetBtn').disabled=true;
+    log.textContent='';
 
-    fetch('install.php', {method:'POST', body:data})
-      .then(function(r){return r.json();})
-      .then(function(res){
-        (res.logs||[]).forEach(function(line){ log.textContent += line + "\n";});
-        log.textContent += res.ok ? '\nDone.' : '\nCompleted with errors.';
-      })
-      .catch(function(err){ log.textContent += 'Installer error: ' + err; })
-      .finally(function(){ prog.style.display='none'; btn.disabled=false; });
+    var xhr = new XMLHttpRequest();
+    var seen = 0;
+    xhr.open('POST', 'install.php', true);
+    xhr.onprogress = function(){
+      var chunk = xhr.responseText.substring(seen);
+      seen = xhr.responseText.length;
+      if(chunk){ log.textContent += chunk; log.scrollTop = log.scrollHeight; }
+    };
+    xhr.onload = function(){
+      prog.style.display='none';
+      var text = xhr.responseText || '';
+      if(text.indexOf('DONE:1') !== -1){
+        log.textContent += '\nInstall complete. Open: index.php\n';
+        var doneLink = document.createElement('a');
+        doneLink.href='index.php'; doneLink.textContent='Go to TicketsCAD';
+        doneLink.style.display='inline-block'; doneLink.style.marginTop='10px'; doneLink.style.fontWeight='bold';
+        log.parentNode.appendChild(doneLink);
+        btn.textContent='Done';
+        btn.disabled=true;
+      } else {
+        log.textContent += '\nCompleted with errors.\n';
+        btn.disabled=false;
+        document.getElementById('resetBtn').disabled=false;
+      }
+    };
+    xhr.onerror = function(){
+      prog.style.display='none';
+      log.textContent += '\nInstaller request failed.';
+      btn.disabled=false;
+      document.getElementById('resetBtn').disabled=false;
+    };
+    xhr.send(data);
   });
 })();
 </script>
