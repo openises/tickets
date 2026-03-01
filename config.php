@@ -4032,7 +4032,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                         <?php
                     }
                 }
-                if (is_super()) {    // SHOW MENU BASED ON USER LEVEL
+                if (is_super() || is_administrator()) {    // SHOW MENU BASED ON USER LEVEL
                     ?>
                     <A id='add_user' class='plain text' style='clear: both; width: 150px;'
                        onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
@@ -4189,8 +4189,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 </DIV>
                 <?php
             }
-            if (is_super()) {
-                if (intval(get_variable('use_mdb')) != 0) {
+            if (is_super() || is_administrator()) {
+                if (is_super() && intval(get_variable('use_mdb')) != 0) {
                     ?>
                     <DIV class='config_heading text' id='mdb_section'
                          style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
@@ -4424,24 +4424,30 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                        HREF="reset_responder_status.php">Reset <?php print get_text("Unit"); ?> status</A>
                 </DIV>
                 <?php
-                if (mysql_table_exists("$GLOBALS[mysql_prefix]fac_status")) {
+                $has_fac_status = mysql_table_exists("$GLOBALS[mysql_prefix]fac_status");
+                $has_fac_types = mysql_table_exists("$GLOBALS[mysql_prefix]fac_types");
+                if ($has_fac_status || $has_fac_types) {
                     ?>
                     <DIV class='config_heading text' id='facs_cfg'
                          style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
                         <DIV class='config_heading text'
                              style='display: block; clear: both;'><?php print get_text("Facilities"); ?> Configuration
                         </DIV>
+                        <?php if ($has_fac_status) { ?>
                         <A id='fac_stat' class='plain text' style='width: 150px; float: left;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                            onClick="do_Post('fac_status');">Facility Status</A>
+                        <?php } ?>
+                        <?php if ($has_fac_types) { ?>
                         <A id='fac_types' class='plain text' style='width: 150px; float: left;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                            onClick="do_Post('fac_types');">Facility Types</A>
+                        <?php } ?>
                     </DIV>
                     <?php
 
                 }
-            }    // end if is super
+            }    // end if is super/admin
             if (is_administrator() || is_super() || is_user()) {
                 ?>
                 <DIV class='config_heading text' id='warn_locs'
