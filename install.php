@@ -20,6 +20,23 @@ function emit_line($line) {
     flush();
 }
 
+function installer_steps($mode, $tableCount, $seedCount) {
+    $steps = array();
+    if ($mode === 'install_clean') {
+        $steps[] = array('type' => 'drop_tables', 'label' => 'Drop existing tables');
+    }
+    for ($i = 0; $i < $tableCount; $i++) {
+        $steps[] = array('type' => 'schema', 'index' => $i, 'label' => 'Create/sync schema table #' . ($i + 1));
+    }
+    for ($i = 0; $i < $seedCount; $i++) {
+        $steps[] = array('type' => 'seed', 'index' => $i, 'label' => 'Seed data rowset #' . ($i + 1));
+    }
+    $steps[] = array('type' => 'users', 'label' => 'Provision initial users');
+    $steps[] = array('type' => 'version', 'label' => 'Record installer version');
+    $steps[] = array('type' => 'config', 'label' => 'Write mysql config');
+    return $steps;
+}
+
 function load_mysql_defaults() {
     $defaults = array('host' => 'localhost', 'user' => '', 'pass' => '', 'db' => '', 'prefix' => '');
     $inc = __DIR__ . '/incs/mysql.inc.php';
@@ -152,23 +169,37 @@ function upsert_version_setting($mysqli, $prefix, $version) {
     }
 }
 
-function ensure_admin_user($mysqli, $prefix, $username, $password, $displayName) {
+function ensure_initial_users($mysqli, $prefix, $username, $password, $displayName, $mode) {
     $table = $prefix . 'user';
     if (!table_exists_mysqli($mysqli, $table)) { return false; }
+
+    $guestMd5 = '084e0343a0486ff05530df6c705c8bb4';
+    $guestUser = 'guest';
+    $guestInfo = 'Guest';
+    $levelSuper = 0;
+    $levelGuest = 3;
+
+    if ($mode === 'install_clean') {
+        if (!$mysqli->query("DELETE FROM `{$table}`")) { return false; }
+    }
+
     $hash = password_hash($password, PASSWORD_BCRYPT);
     $u = $mysqli->real_escape_string($username);
     $d = $mysqli->real_escape_string($displayName);
     $h = $mysqli->real_escape_string($hash);
 
-    $check = $mysqli->query("SELECT `id` FROM `{$table}` WHERE `user`='{$u}' LIMIT 1");
-    if ($check && $check->num_rows > 0) {
-        $row = $check->fetch_assoc();
-        $id = (int)$row['id'];
-        $check->free();
-        return (bool)$mysqli->query("UPDATE `{$table}` SET `passwd`='{$h}', `info`='{$d}', `level`=1, `status`='approved' WHERE `id`={$id}");
-    }
-    if ($check) { $check->free(); }
-    return (bool)$mysqli->query("INSERT INTO `{$table}` (`user`,`passwd`,`info`,`level`,`status`,`open_at`,`sort_desc`,`reporting`) VALUES ('{$u}','{$h}','{$d}',1,'approved','d',1,0)");
+    $superSql = "INSERT INTO `{$table}` (`id`,`user`,`passwd`,`info`,`level`,`status`,`open_at`,`sort_desc`,`reporting`) "
+        . "VALUES (1,'{$u}','{$h}','{$d}',{$levelSuper},'approved','d',1,0) "
+        . "ON DUPLICATE KEY UPDATE `user`=VALUES(`user`), `passwd`=VALUES(`passwd`), `info`=VALUES(`info`), `level`=VALUES(`level`), `status`='approved', `open_at`='d', `sort_desc`=1, `reporting`=0";
+    if (!$mysqli->query($superSql)) { return false; }
+
+    $gUser = $mysqli->real_escape_string($guestUser);
+    $gInfo = $mysqli->real_escape_string($guestInfo);
+    $gHash = $mysqli->real_escape_string($guestMd5);
+    $guestSql = "INSERT INTO `{$table}` (`id`,`user`,`passwd`,`info`,`level`,`status`,`open_at`,`sort_desc`,`reporting`) "
+        . "VALUES (2,'{$gUser}','{$gHash}','{$gInfo}',{$levelGuest},'approved','d',1,0) "
+        . "ON DUPLICATE KEY UPDATE `user`=VALUES(`user`), `passwd`=VALUES(`passwd`), `info`=VALUES(`info`), `level`=VALUES(`level`), `status`='approved', `open_at`='d', `sort_desc`=1, `reporting`=0";
+    return (bool)$mysqli->query($guestSql);
 }
 
 function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion, $emit = null) {
@@ -202,6 +233,7 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
             }
             $tables->free();
         }
+        return;
     }
 
     foreach ($INSTALL_SCHEMA_TABLES as $baseName => $createBase) {
@@ -222,10 +254,10 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
         }
     }
 
-    if (!ensure_admin_user($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName)) {
-        $push('Warning: failed to create/update admin account.');
+    if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
+        $push('Warning: failed to create/update initial users.');
     } else {
-        $push('Admin account provisioned.');
+        $push('Super admin and guest accounts provisioned.');
     }
 
     $push('Updating installed version setting...');
@@ -273,7 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminName = trim((string)$_POST['admin_name']);
 
     if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
-        emit_line('ERROR: Admin user, name, and password (min 6 chars) are required.');
+        emit_line('ERROR: Super admin user, name, and password (min 6 chars) are required.');
         emit_line('DONE:0');
         exit();
     }
@@ -281,6 +313,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     emit_line('Starting installer...');
     list($ok, $logs) = perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion, 'emit_line');
     emit_line('DONE:' . ($ok ? '1' : '0'));
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'execute_step') {
+    header('Content-Type: application/json');
+
+    $cfg = array(
+        'host' => trim($_POST['db_host']),
+        'user' => trim($_POST['db_user']),
+        'pass' => (string)$_POST['db_pass'],
+        'db' => trim($_POST['db_name']),
+        'prefix' => trim($_POST['db_prefix'])
+    );
+
+    $mode = isset($_POST['mode']) ? $_POST['mode'] : 'install_clean';
+    $adminUser = trim((string)$_POST['admin_user']);
+    $adminPass = (string)$_POST['admin_pass'];
+    $adminName = trim((string)$_POST['admin_name']);
+    $step = isset($_POST['step']) ? max(0, (int)$_POST['step']) : 0;
+
+    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+        echo json_encode(array('ok' => false, 'done' => true, 'step' => $step, 'messages' => array('Super admin user, name, and password (min 6 chars) are required.')));
+        exit();
+    }
+
+    if ($mode === 'write_config') {
+        $ok = write_mysql_config($cfg);
+        echo json_encode(array(
+            'ok' => $ok,
+            'done' => true,
+            'step' => $step,
+            'messages' => array($ok ? 'Config file written to incs/mysql.inc.php.' : 'Failed to write incs/mysql.inc.php.')
+        ));
+        exit();
+    }
+
+    $mysqli = connect_db($cfg);
+    if (!$mysqli) {
+        echo json_encode(array('ok' => false, 'done' => true, 'step' => $step, 'messages' => array('Database connection failed. Check MySQL credentials.')));
+        exit();
+    }
+
+    $seed = array_values($INSTALL_SCHEMA_SEED);
+    $tables = array_keys($INSTALL_SCHEMA_TABLES);
+    $tableSql = array_values($INSTALL_SCHEMA_TABLES);
+    $steps = installer_steps($mode, count($tables), count($seed));
+
+    if ($step >= count($steps)) {
+        $mysqli->close();
+        echo json_encode(array('ok' => true, 'done' => true, 'step' => $step, 'messages' => array('Installer already complete.')));
+        exit();
+    }
+
+    $current = $steps[$step];
+    $messages = array();
+    $ok = true;
+
+    switch ($current['type']) {
+        case 'drop_tables':
+            $messages[] = 'Clean install selected: dropping existing tables...';
+            $res = $mysqli->query('SHOW TABLES');
+            if ($res) {
+                while ($row = $res->fetch_array(MYSQLI_NUM)) {
+                    if ($mysqli->query("DROP TABLE IF EXISTS `{$row[0]}`")) {
+                        $messages[] = 'Dropped table: ' . $row[0];
+                    } else {
+                        $messages[] = 'Drop warning for ' . $row[0] . ': ' . $mysqli->error;
+                    }
+                }
+                $res->free();
+            }
+            break;
+        case 'schema':
+            $i = (int)$current['index'];
+            $baseName = $tables[$i];
+            $messages[] = 'Applying table schema: ' . $baseName . ' ...';
+            $logs = array();
+            create_or_sync_table(
+                $mysqli,
+                $cfg['prefix'] . $baseName,
+                apply_prefix($tableSql[$i], $cfg['prefix']),
+                $mode,
+                $logs
+            );
+            foreach ($logs as $line) { $messages[] = $line; }
+            break;
+        case 'seed':
+            $i = (int)$current['index'];
+            $insertBase = $seed[$i];
+            if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
+                $messages[] = 'Skipping default user seed (installer provisions super admin + guest separately).';
+                break;
+            }
+            if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertBase, $mSeed)) {
+                $messages[] = 'Seeding data: ' . $mSeed[1] . ' ...';
+            }
+            $insertSql = apply_prefix($insertBase, $cfg['prefix']);
+            if (!$mysqli->query($insertSql)) {
+                $messages[] = 'Seed warning: ' . $mysqli->error;
+            }
+            break;
+        case 'users':
+            if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
+                $ok = false;
+                $messages[] = 'Failed to create/update initial users (super admin + guest).';
+            } else {
+                $messages[] = 'Super admin and guest accounts provisioned.';
+            }
+            break;
+        case 'version':
+            $messages[] = 'Updating installed version setting...';
+            upsert_version_setting($mysqli, $cfg['prefix'], $installerVersion);
+            $messages[] = 'Installer version recorded as ' . $installerVersion . '.';
+            break;
+        case 'config':
+            $messages[] = 'Writing mysql config file...';
+            if (!write_mysql_config($cfg)) {
+                $ok = false;
+                $messages[] = 'Failed to write incs/mysql.inc.php.';
+            } else {
+                $messages[] = 'Config file written to incs/mysql.inc.php.';
+            }
+            break;
+    }
+
+    $mysqli->close();
+    echo json_encode(array(
+        'ok' => $ok,
+        'done' => ($step + 1) >= count($steps),
+        'step' => $step,
+        'next_step' => $step + 1,
+        'total_steps' => count($steps),
+        'messages' => $messages
+    ));
     exit();
 }
 
@@ -301,7 +467,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if ($mode !== 'write_config') {
         if ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '') {
-            echo json_encode(array('ok' => false, 'logs' => array('Admin user, name, and password (min 6 chars) are required.')));
+            echo json_encode(array('ok' => false, 'logs' => array('Super admin user, name, and password (min 6 chars) are required.')));
             exit();
         }
     }
@@ -336,6 +502,7 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
 .mode-option.disabled{opacity:.55;cursor:not-allowed;background:#f9fafb}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef4ff;color:#3538cd;font-weight:bold;font-size:12px}
 .btn{background:#1570ef;color:#fff;border:none;padding:11px 16px;border-radius:10px;font-weight:bold;cursor:pointer}
+.btn-primary-lg{font-size:18px;padding:14px 24px;border-radius:12px}
 .btn:disabled{opacity:.6;cursor:not-allowed}
 #progress{display:none;margin-top:14px}.spinner{width:28px;height:28px;border:4px solid #d1e0ff;border-top-color:#1570ef;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -378,13 +545,13 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
         <div><label>MySQL username</label><input name="db_user" required value="<?php echo h($defaults['user']); ?>"></div>
         <div><label>MySQL password</label><input type="password" name="db_pass" value="<?php echo h($defaults['pass']); ?>"></div>
 
-        <div><label>First admin username</label><input id="admin_user" name="admin_user" value="admin"></div>
-        <div><label>First admin display name</label><input id="admin_name" name="admin_name" value="Administrator"></div>
-        <div><label>First admin password</label><input type="password" id="admin_pass" name="admin_pass"></div>
+        <div><label>Super admin username</label><input id="admin_user" name="admin_user" value="admin"></div>
+        <div><label>Super admin display name</label><input id="admin_name" name="admin_name" value="Super Administrator"></div>
+        <div><label>Super admin password</label><input type="password" id="admin_pass" name="admin_pass"></div>
         <div><label>Confirm password</label><input type="password" id="admin_pass_confirm"></div>
       </div>
       <p id="passStatus" class="muted"></p>
-      <button class="btn" id="runBtn" type="submit">Do It</button>
+      <button class="btn btn-primary-lg" id="runBtn" type="submit">Do It</button>
       <button class="btn" id="resetBtn" type="reset" style="background:#475467;margin-left:8px;">Reset Form</button>
     </form>
 
@@ -412,49 +579,78 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   modeInputs.forEach(function(i){ i.addEventListener('change', function(){ updateModeCards(); validatePass(); }); });
   updateModeCards();
 
-  f.addEventListener('submit', function(e){
-    e.preventDefault();
-    if(!validatePass()){return;}
+  function appendLines(lines){
+    if(!lines || !lines.length){ return; }
+    log.textContent += lines.join('\n') + '\n';
+    log.scrollTop = log.scrollHeight;
+  }
 
+  function runStep(step){
     var data = new FormData(f);
-    data.append('action','execute_stream');
-    prog.style.display='block';
-    btn.disabled=true;
-    document.getElementById('resetBtn').disabled=true;
-    log.textContent='';
+    data.append('action','execute_step');
+    data.append('step', String(step));
 
     var xhr = new XMLHttpRequest();
-    var seen = 0;
     xhr.open('POST', 'install.php', true);
-    xhr.onprogress = function(){
-      var chunk = xhr.responseText.substring(seen);
-      seen = xhr.responseText.length;
-      if(chunk){ log.textContent += chunk; log.scrollTop = log.scrollHeight; }
-    };
     xhr.onload = function(){
-      prog.style.display='none';
-      var text = xhr.responseText || '';
-      if(text.indexOf('DONE:1') !== -1){
-        log.textContent += '\nInstall complete. Open: index.php\n';
-        var doneLink = document.createElement('a');
-        doneLink.href='index.php'; doneLink.textContent='Go to TicketsCAD';
-        doneLink.style.display='inline-block'; doneLink.style.marginTop='10px'; doneLink.style.fontWeight='bold';
-        log.parentNode.appendChild(doneLink);
-        btn.textContent='Done';
-        btn.disabled=true;
-      } else {
-        log.textContent += '\nCompleted with errors.\n';
+      var payload = null;
+      try { payload = JSON.parse(xhr.responseText || '{}'); }
+      catch (err) {
+        appendLines(['Installer step parse error.', xhr.responseText || 'No response body.']);
+        prog.style.display='none';
         btn.disabled=false;
         document.getElementById('resetBtn').disabled=false;
+        return;
       }
+
+      appendLines(payload.messages || []);
+      if(payload.ok === false){
+        appendLines(['Installation stopped due to error.']);
+        prog.style.display='none';
+        btn.disabled=false;
+        document.getElementById('resetBtn').disabled=false;
+        return;
+      }
+
+      if(payload.done){
+        prog.style.display='none';
+        appendLines(['Install complete. Open: index.php']);
+        if(!document.getElementById('doneLink')){
+          var doneLink = document.createElement('a');
+          doneLink.id='doneLink';
+          doneLink.href='index.php'; doneLink.textContent='Go to TicketsCAD';
+          doneLink.className='btn btn-primary-lg';
+          doneLink.style.display='inline-block'; doneLink.style.marginTop='12px'; doneLink.style.fontWeight='bold';
+          log.parentNode.appendChild(doneLink);
+        }
+        btn.textContent='Done';
+        btn.disabled=true;
+        return;
+      }
+
+      runStep(payload.next_step || (step + 1));
     };
     xhr.onerror = function(){
       prog.style.display='none';
-      log.textContent += '\nInstaller request failed.';
+      appendLines(['Installer request failed.']);
       btn.disabled=false;
       document.getElementById('resetBtn').disabled=false;
     };
     xhr.send(data);
+  }
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!validatePass()){return;}
+
+    prog.style.display='block';
+    btn.disabled=true;
+    document.getElementById('resetBtn').disabled=true;
+    log.textContent='';
+    var oldDone = document.getElementById('doneLink');
+    if(oldDone){ oldDone.parentNode.removeChild(oldDone); }
+    appendLines(['Starting installer...']);
+    runStep(0);
   });
 })();
 </script>
