@@ -1617,6 +1617,12 @@ var zoom = map.getZoom();
 							// 3/30/2013
 function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10
 	global $iw_width, $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
+	if (!is_array($theRow)) { $theRow = array(); }
+	$theRow = array_merge(array(
+		'id'=>0,'severity'=>0,'scope'=>'','tick_street'=>'','tick_city'=>'','tick_state'=>'','in_types_id'=>0,
+		'tick_descr'=>'','protocol'=>'','nine_one_one'=>'','contact'=>'','phone'=>'','status'=>0,'call_taker'=>0,
+		'date'=>now_ts(),'updated'=>now_ts(),'booked_date'=>''
+	), $theRow);
 
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";			// 1/25/09
 

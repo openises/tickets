@@ -22,6 +22,11 @@ $ret_arr = array();
 $id_array = array();
 $assigns_stack = array();
 $selected_indx = 0;
+$time_disp = $time_resp = $time_onsc = $time_clear = $time_fenr = $time_farr = '';
+$display_val = 'none';
+$assign_id = 0;
+$ticket_id = 0;
+$unit_id = 0;
 
 $time_now = mysql_format_date(now());			// collect ticket id's into $id_array 
 
@@ -191,7 +196,7 @@ for ($i = 0; $i<count($assigns_stack); $i++) {
 		} else { 
 		$ret_arr[2] ="<INPUT ID='onsc_btn' TYPE= 'button' CLASS='btn_not_chkd text_big' VALUE='On-scene' onClick = \"set_assign('s');\" STYLE = 'display:" . $display_val . ";' />";
 		} 
-	if ($assigns_stack[$selected_indx]['rec_facility_id']>0) {
+	if (isset($assigns_stack[$selected_indx]) && !empty($assigns_stack[$selected_indx]['rec_facility_id']) && $assigns_stack[$selected_indx]['rec_facility_id']>0) {
 		if (is_date($time_fenr)) { 
 			$ret_arr[3] ="<INPUT ID='f_enr_btn' TYPE= 'button' CLASS='btn_chkd text_big' VALUE=\"Fac'y enr @ " . adj_time($time_fenr) . "\" onClick = 'toss();' STYLE = 'display:" . $display_val . ";' />";
 			} else { 
