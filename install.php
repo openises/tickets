@@ -49,6 +49,7 @@
 1/9/2013 API key is no longer mandatory
 4/2/2013 removed API key value.
 3/1/2026 install.php now exclusively handles install/upgrade/schema changes; adds centralized version checks, admin gating for existing installs, config prefill, and first-admin bcrypt setup.
+3/1/2026 add missing modern schema fields to fresh installs (log/assigns/ticket/responder/in_types/un_status) to match runtime SQL usage.
 */
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
@@ -412,6 +413,33 @@ input[type=submit].loading + .spinner{display:inline-block;}
 // -- --------------------------------------------------------
 
 // --
+// -- Table structure for table `captions`
+// --
+
+		$table_name = prefix("captions");
+		$query = "CREATE TABLE `$table_name` (
+		 `id` int(7) NOT NULL auto_increment,
+		 `capt` varchar(64) NOT NULL,
+		 `repl` varchar(64) NOT NULL,
+		 `_by` int(7) NOT NULL DEFAULT '0',
+		 `_from` varchar(16) NOT NULL DEFAULT '',
+		 `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		 PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;";
+
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+		if(file_exists("./incs/capts.inc.php")) {
+			require_once("./incs/capts.inc.php");
+			for ($i=0; $i < count($capts); $i++) {
+				$temp = mysql_real_escape_string($capts[$i]);
+				$query = "INSERT INTO `$table_name` (`capt`,`repl`) VALUES('" . $temp . "','" . $temp . "')";
+				mysql_query($query);
+			}
+		}
+// -- --------------------------------------------------------
+
+// --
 // -- Table structure for table `cities`
 // --
 
@@ -609,10 +637,11 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `code` tinyint(7) NOT NULL default '0',
 		 `ticket_id` int(7) default NULL,
 		 `responder_id` int(7) default NULL,
-		 `info` text,
-		 `facility` int(7) default '0',
-		 `rec_facility` int(7) default '0',
-		 `mileage` decimal(10,2) default '0.00',
+		 `info` varchar(2048) default NULL,
+		 `facility` int(7) default NULL,
+		 `rec_facility` int(7) default NULL,
+		 `mileage` int(8) default NULL,
+		 `member_id` int(7) default NULL,
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Log of station actions' AUTO_INCREMENT=1;";
@@ -1132,6 +1161,383 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 PRIMARY KEY (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
 		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);$tables .= $table_name . ", ";
+
+
+		// Additional runtime tables required by modern Tickets builds
+
+		$table_name = prefix("allocates");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` bigint(8) NOT NULL auto_increment,
+					`group` int(4) NOT NULL default '1',
+					`type` tinyint(1) NOT NULL default '1',
+					`al_as_of` datetime default NULL,
+					`al_status` int(4) default NULL,
+					`resource_id` int(4) default NULL,
+					`sys_comments` varchar(64) default NULL,
+					`user_id` int(4) NOT NULL default  '0',
+					PRIMARY KEY  (`id`)
+		) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("captions");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `capt` varchar(64) NOT NULL,
+		 `repl` varchar(64) NOT NULL,
+		 PRIMARY KEY (`id`),
+		 UNIQUE KEY `capt` (`capt`)
+		) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("chat_invites");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` int(7) NOT NULL AUTO_INCREMENT,
+					`to` varchar(64) NOT NULL COMMENT 'comma sep''d, 0 = all',
+					`_by` int(7) NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					`_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("codes");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` int(7) NOT NULL AUTO_INCREMENT,
+					`tag` varchar(8) COLLATE utf8_unicode_ci NOT NULL,
+					`hint` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+					`_by` int(7) NOT NULL DEFAULT '0',
+					`_from` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
+					`_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("constituents");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` bigint(8) NOT NULL AUTO_INCREMENT,
+					`contact` varchar(48) NOT NULL,
+					`street` varchar(48) DEFAULT NULL,
+					`apartment` varchar(48) DEFAULT NULL,
+					`city` varchar(48) DEFAULT NULL,
+					`state` char(2) DEFAULT NULL,
+					`miscellaneous` varchar(80) DEFAULT NULL,
+					`phone` varchar(16) NOT NULL,
+					`email` varchar(48) DEFAULT NULL,
+					`lat` double DEFAULT NULL,
+					`lng` double DEFAULT NULL,
+					`updated` varchar(16) DEFAULT NULL,
+					`_by` int(7) NOT NULL DEFAULT '0',
+					PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+
+		$table_name = prefix("css_day");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `name` varchar(64) NOT NULL,
+		 `value` varchar(24) NOT NULL,
+		 PRIMARY KEY (`id`),
+		 KEY `name` (`name`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("css_night");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `name` varchar(64) NOT NULL,
+		 `value` varchar(24) NOT NULL,
+		 PRIMARY KEY (`id`),
+		 KEY `name` (`name`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+		$table_name = prefix("facilities");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` bigint(8) NOT NULL auto_increment,
+					`name` text,
+					`direcs` tinyint(2) NOT NULL default '1' COMMENT '0=>no directions, 1=> yes',
+					`description` text NOT NULL,
+					`capab` varchar(255) default NULL COMMENT 'Capability',
+					`status_id` int(4) NOT NULL default '0',
+					`other` varchar(96) default NULL,
+					`handle` varchar(24) default NULL,
+					`contact_name` varchar(64) default NULL,
+					`contact_email` varchar(64) default NULL,
+					`contact_phone` varchar(15) default NULL,
+				`notify_email` varchar(255) default NULL,
+				`notify_mailgroup` int(11) default '0',
+				`notify_when` tinyint(1) default '0',
+				`icon_str` varchar(96) default NULL,
+				`status_about` varchar(255) default NULL,
+				`street` varchar(128) default NULL,
+				`city` varchar(64) default NULL,
+				`state` varchar(8) default NULL,
+				`boundary` text,
+				`beds_a` int(7) default '0',
+				`beds_o` int(7) default '0',
+				`beds_info` text,
+					`security_contact` varchar(64) default NULL,
+					`security_email` varchar(64) default NULL,
+					`security_phone` varchar(15) default NULL,
+					`opening_hours` mediumtext,
+					`access_rules` mediumtext,
+					`security_reqs` mediumtext,
+					`pager_p` varchar(64) default NULL,
+					`pager_s` varchar(64) default NULL,
+					`send_no` varchar(64) default NULL,
+					`lat` double default NULL,
+					`lng` double default NULL,
+					`type` tinyint(1) default NULL,
+					`updated` datetime default NULL,
+					`user_id` int(4) default NULL,
+					`callsign` varchar(24) default NULL,
+					`_by` int(7) NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					`_on` datetime NOT NULL,
+					PRIMARY KEY  (`id`),
+					UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM AUTO_INCREMENT=43 DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("fac_status");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` bigint(4) NOT NULL auto_increment,
+					`status_val` varchar(20) NOT NULL,
+					`description` varchar(60) NOT NULL,
+					`group` varchar(20) default NULL,
+					`sort` int(11) NOT NULL default '0',
+					`_by` int(7) NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					`_on` datetime NOT NULL,
+					PRIMARY KEY  (`id`),
+					UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("fac_types");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` int(11) NOT NULL auto_increment,
+					`name` varchar(16) NOT NULL,
+					`description` varchar(48) NOT NULL,
+					`icon` int(3) NOT NULL default '0',
+					`_by` int(7) NOT NULL,
+					`_from` varchar(16) NOT NULL COMMENT 'ip',
+					`_on` datetime NOT NULL,
+					PRIMARY KEY  (`id`)
+		) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1 COMMENT='Allows for variable facility types' AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("hints");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` int(7) NOT NULL AUTO_INCREMENT,
+					`tag` varchar(8) COLLATE utf8_unicode_ci NOT NULL,
+					`hint` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+					`_by` int(7) NOT NULL DEFAULT '0',
+					`_from` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
+					`_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("insurance");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					  `id` int(7) NOT NULL AUTO_INCREMENT,
+					  `ins_value` varchar(64) NOT NULL,
+					  `sort_order` int(3) NOT NULL DEFAULT '0',
+					  `_by` int(7) NOT NULL,
+					  `_from` varchar(16) DEFAULT NULL,
+					  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					  PRIMARY KEY (`id`)
+		) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("mmarkup");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+				  `id` bigint(4) NOT NULL AUTO_INCREMENT,
+				  `line_name` varchar(32) NOT NULL,
+				  `line_status` int(2) NOT NULL DEFAULT '0' COMMENT '0 => show, 1 => hide',
+				  `line_type` varchar(1) DEFAULT NULL COMMENT 'poly, circle, banner, ellipse',
+				  `line_ident` varchar(10) DEFAULT NULL,
+				  `line_cat_id` int(3) NOT NULL DEFAULT '0',
+				  `line_data` varchar(4096) NOT NULL,
+				  `use_with_bm` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'use with base map',
+				  `use_with_r` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'use with regions',
+				  `use_with_f` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'use with facilities',
+				  `use_with_u_ex` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'use with units - exclusion zone',
+				  `use_with_u_rf` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'use with units - ringfence',
+				  `line_color` varchar(8) DEFAULT NULL,
+				  `line_opacity` float DEFAULT NULL,
+				  `line_width` int(2) DEFAULT NULL,
+				  `fill_color` varchar(8) DEFAULT NULL,
+				  `fill_opacity` float DEFAULT NULL,
+				  `filled` int(1) DEFAULT '0',
+				  `_by` int(7) NOT NULL DEFAULT '0',
+				  `_from` varchar(16) DEFAULT NULL,
+				  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COMMENT='Lines and borders';";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("mmarkup_cats");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+				  `id` bigint(4) NOT NULL AUTO_INCREMENT,
+				  `category` varchar(24) COLLATE utf8_unicode_ci NOT NULL,
+				  `_by` int(7) NOT NULL DEFAULT '0',
+				  `_from` varchar(16) COLLATE utf8_unicode_ci DEFAULT NULL,
+				  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `ID` (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Map markup categories' ;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("pin_ctrl");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					  `id` int(7) NOT NULL AUTO_INCREMENT,
+					  `responder_id` int(7) NOT NULL DEFAULT '0' COMMENT 'link to responder record',
+					  `pin` varchar(4) NOT NULL COMMENT 'login authentication ',
+					  `_by` int(7) NOT NULL COMMENT 'user creating/updating this entry',
+					  `_from` varchar(30) DEFAULT NULL COMMENT 'IP address',
+					  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when',
+					  PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("places");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					  `id` int(7) NOT NULL AUTO_INCREMENT,
+					  `name` varchar(64) DEFAULT NULL,
+					  `lat` float DEFAULT '0',
+					  `lon` float DEFAULT '0',
+					  `zoom` int(2) DEFAULT '7',
+					  PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("region");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` bigint(8) NOT NULL AUTO_INCREMENT,
+					`group_name` varchar(60) NOT NULL,
+					`category` int(2) DEFAULT NULL,
+					`description` varchar(60) DEFAULT NULL,
+					`owner` int(2) NOT NULL DEFAULT '1',
+					`def_area_code` varchar(4) DEFAULT NULL,
+					`def_city` varchar(20) DEFAULT NULL,
+					`def_lat` double DEFAULT NULL,
+					`def_lng` double DEFAULT NULL,
+					`def_st` varchar(20) DEFAULT NULL,
+					`def_zoom` int(2) NOT NULL DEFAULT '10',
+					`boundary` int(4) DEFAULT NULL,
+					PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("region_type");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					`id` int(11) NOT NULL AUTO_INCREMENT,
+					`name` varchar(16) NOT NULL,
+					`description` varchar(48) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					`_by` int(7) NOT NULL,
+					PRIMARY KEY (`id`)
+		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("remote_devices");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+					  `id` bigint(64) NOT NULL AUTO_INCREMENT,
+					  `lat` double DEFAULT '0',
+					  `lng` double DEFAULT '0',
+					  `time` datetime NOT NULL,
+					  `speed` int(4) NOT NULL DEFAULT '0',
+					  `altitude` int(6) NOT NULL DEFAULT '0',
+					  `direction` double NOT NULL DEFAULT '0',
+					  `user` varchar(64) DEFAULT NULL,
+					  PRIMARY KEY (`id`)
+		) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("rss");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+		 `id` bigint(8) NOT NULL auto_increment,
+		 `title` varchar(255) default NULL,
+		 `description` text,
+		 `link` varchar(255) default NULL,
+		 `pubdate` datetime default NULL,
+		 PRIMARY KEY (`id`)
+		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
+
+		$table_name = prefix("stats_settings");
+		$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+				`id` int(3) NOT NULL AUTO_INCREMENT,
+				`user_id` int(3) NOT NULL,
+				`refresh_rate` int(3) NOT NULL DEFAULT '10',
+				`f1` int(3) NOT NULL DEFAULT '1',
+				`f2` int(3) NOT NULL DEFAULT '2',
+				`f3` int(3) NOT NULL DEFAULT '3',
+				`f4` int(3) NOT NULL DEFAULT '4',
+				`f5` int(3) NOT NULL DEFAULT '5',
+				`f6` int(3) NOT NULL DEFAULT '6',
+				`f7` int(3) NOT NULL DEFAULT '7',
+				`f8` int(3) NOT NULL DEFAULT '8',
+				`threshold_1` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_2` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_3` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_4` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_5` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_6` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_7` varchar(12) NOT NULL DEFAULT '0',
+				`threshold_8` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_1` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_2` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_3` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_4` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_5` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_6` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_7` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdw_8` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_1` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_2` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_3` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_4` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_5` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_6` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_7` varchar(12) NOT NULL DEFAULT '0',
+				`thresholdf_8` varchar(12) NOT NULL DEFAULT '0',
+				`t_type1` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type2` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type3` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type4` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type5` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type6` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type7` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				`t_type8` enum('Less','Less or Equal','Equal','More or Equal','More') NOT NULL DEFAULT 'More',
+				PRIMARY KEY (`id`)
+		) ENGINE=InnoDB  DEFAULT CHARSET=latin1 COMMENT='settings for statistics screen' AUTO_INCREMENT=1;";
+		mysql_query($query) or die("CREATE TABLE failed, execution halted at line ". __LINE__);
+		$tables .= $table_name . ", ";
 
 		print "<LI> Created tables " . substr($tables, 0, -2) . "<BR />";
 		}
