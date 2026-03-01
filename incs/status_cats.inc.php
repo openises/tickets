@@ -262,7 +262,7 @@ function get_sess_boundaries() {
 	$result = mysql_query($query);	//	6/10/11
 	$a_all_boundaries = array();
 	$all_boundaries = array();
-	$al_groups = $_SESSION['user_groups'];
+	$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
 	if(array_key_exists('viewed_groups', $_SESSION)) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}

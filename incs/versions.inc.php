@@ -9,6 +9,7 @@ $tickets_current_version = 'v3.43.0';
 
 if (!function_exists('tickets_get_versions')) {
     function tickets_get_versions() {
+        if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
         $installerVersion = isset($GLOBALS['tickets_current_version']) ? $GLOBALS['tickets_current_version'] : 'unknown';
         $installedVersion = null;
 
