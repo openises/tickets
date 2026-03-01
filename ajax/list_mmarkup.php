@@ -10,13 +10,13 @@ $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 function get_usergroups() {
 	global $user_id;
 	$ret_arr = array();
-	$al_groups = $_SESSION['user_groups'];
+	$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
 	
-	if(array_key_exists('viewed_groups', $_SESSION)) {
+	if(array_key_exists('viewed_groups', $_SESSION) && trim($_SESSION['viewed_groups']) !== '') {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 	if(count($al_groups) == 0) {	
-		return false;
+		return array();
 		} else {
 		if(!isset($curr_viewed)) {
 			$ret_arr = $al_groups;
@@ -41,7 +41,8 @@ function get_categoryName($id) {
 	
 function subval_sort($a,$subkey, $dd) {
 	foreach($a as $k=>$v) {
-		$b[$k] = strtolower($v[$subkey]);
+		$val = (is_array($v) && array_key_exists($subkey, $v) && !is_null($v[$subkey])) ? (string)$v[$subkey] : '';
+		$b[$k] = strtolower($val);
 		}
 	if($dd == 1) {	
 		asort($b);

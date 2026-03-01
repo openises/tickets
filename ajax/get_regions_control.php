@@ -26,8 +26,8 @@ function get_user_regions() {
 	}
 
 function get_regions_string() {
-	$al_groups = $_SESSION['user_groups'];
-	if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
+	$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
+	if(array_key_exists('viewed_groups', $_SESSION) && trim($_SESSION['viewed_groups']) !== '') {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		} else {
 		$curr_viewed = $al_groups;
