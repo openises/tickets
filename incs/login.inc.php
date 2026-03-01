@@ -300,6 +300,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				mysql_stmt_bind_param($stmt, "ii", $type, $user_id);
 				if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
 				$result_gp = mysql_stmt_get_result($stmt);
+				$al_groups = array();
 				while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
 					$al_groups[] = $row_gp['group'];
 					}
