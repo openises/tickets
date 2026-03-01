@@ -14,7 +14,7 @@ function get_usergroups() {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 	if(count($al_groups) == 0) {	
-		return false;
+		return array();
 		} else {
 		if(!isset($curr_viewed)) {
 			$ret_arr = $al_groups;
