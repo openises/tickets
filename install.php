@@ -48,14 +48,48 @@
 5/11/12 Added code for quick start.
 1/9/2013 API key is no longer mandatory
 4/2/2013 removed API key value.
+3/1/2026 install.php now exclusively handles install/upgrade/schema changes; adds centralized version checks, admin gating for existing installs, config prefill, and first-admin bcrypt setup.
 */
 
-error_reporting(E_ALL);				// 2/3/09
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
+session_start();
+require_once(__DIR__ . '/incs/versions.inc.php');
+$version_info = tickets_get_versions();
+$installer_version = $version_info['installer'];
+$installed_version = $version_info['installed'];
+$versions_match = $version_info['match'];
+$is_admin = (isset($_SESSION['level']) && intval($_SESSION['level']) === 0);
+
+$is_existing_install = ($installed_version !== NULL);
+
+$config_defaults = array(
+	'host' => '',
+	'user' => '',
+	'password' => '',
+	'db' => '',
+	'prefix' => ''
+);
+if (is_readable(__DIR__ . '/incs/mysql.inc.php')) {
+	require(__DIR__ . '/incs/mysql.inc.php');
+	$config_defaults['host'] = isset($mysql_host) ? $mysql_host : '';
+	$config_defaults['user'] = isset($mysql_user) ? $mysql_user : '';
+	$config_defaults['password'] = isset($mysql_passwd) ? $mysql_passwd : '';
+	$config_defaults['db'] = isset($mysql_db) ? $mysql_db : '';
+	$config_defaults['prefix'] = isset($mysql_prefix) ? $mysql_prefix : '';
+}
+
+$admin_gate_message = "";
+if (array_key_exists('go', $_GET) && $is_existing_install && !$is_admin) {
+    $admin_gate_message = "Installer changes are restricted. An existing installation was detected, so you must be logged in as an administrator for install.php actions to take effect.";
+    unset($_GET['go']);
+}
+
+// 2/3/09
 if( !extension_loaded('mysql') ){
 	require_once('./incs/mysql2i.class.php');
 	}
 
-$version = "2.20 A base beta";				// see usage below 8/5/10
+$version = $installer_version;
 
 function dump($variable) {
 	echo "\n<PRE>";					// pretty it a bit
@@ -75,19 +109,45 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
 <LINK REL=StyleSheet HREF="default.css" TYPE="text/css">
-</HEAD><BODY>
-<FONT CLASS="header">Installing <?php print $version; ?> </FONT><BR /><BR />
+<style>
+body{background:#f2f4f8;color:#1f2937;font-family:Arial,sans-serif;margin:0;padding:24px;}
+.install-wrap{display:flex;justify-content:center;}
+.install-card{width:min(980px,100%);background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 25px rgba(15,23,42,.08);padding:24px;}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;padding:10px;border-radius:8px;margin-bottom:16px;}
+.status.warn{background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:10px;border-radius:8px;margin-bottom:12px;}
+input[type=submit].loading{opacity:.8;cursor:wait;}
+.spinner{display:none;width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-left:8px;}
+input[type=submit].loading + .spinner{display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style></HEAD><BODY>
+<div class="install-wrap">
+<div class="install-card">
+<FONT CLASS="header">Tickets Installer <?php print htmlspecialchars($installer_version, ENT_QUOTES, "UTF-8"); ?> </FONT><BR /><BR />
+<?php if (!empty($admin_gate_message)) { ?><div class="status warn"><?php print htmlspecialchars($admin_gate_message, ENT_QUOTES, "UTF-8"); ?></div><?php } ?>
+<div class="status-grid">
+  <div><strong>Installer version:</strong> <?php print htmlspecialchars($installer_version, ENT_QUOTES, "UTF-8"); ?></div>
+  <div><strong>Installed version:</strong> <?php print htmlspecialchars(($installed_version !== null ? $installed_version : "Not installed"), ENT_QUOTES, "UTF-8"); ?></div>
+</div>
 <SCRIPT>
 	function validate(theForm) {
 		var errmsg="";
 		if (theForm.frm_db_host.value == "")			{errmsg+= "\tMySQL HOST name is required\n";}
 		if (theForm.frm_db_dbname.value == "")			{errmsg+= "\tMySQL DATABASE name is required\n";}
+		if (theForm.frm_option.value == "install" || theForm.frm_option.value == "install-drop") {
+			if (theForm.frm_admin_user && theForm.frm_admin_user.value == "") {errmsg+= "\tFirst admin username is required\n";}
+			if (theForm.frm_admin_password && theForm.frm_admin_password.value.length < 8) {errmsg+= "\tFirst admin password must be at least 8 characters\n";}
+		}
 //		if (theForm.frm_api_key.value.length != 86)		{errmsg+= "\tGMaps API key is required - 86 chars\n";} -- 1/9/2013
 		if (errmsg!="") {
 			alert ("Please correct the following and re-submit:\n\n" + errmsg);
 			return false;
 			}
 		else {
+			if (theForm.doit_btn) {
+				theForm.doit_btn.value = "Working...";
+				theForm.doit_btn.className = "loading";
+				theForm.doit_btn.disabled = true;
+			}
 			return true;
 			}
 		}				// end function validate(theForm)
@@ -122,6 +182,14 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 		global $db_prefix;
 		return  $db_prefix . $tbl;
 		}
+
+
+	function settings_table_exists() {
+		$tablename = prefix("settings");
+		$safe = mysql_real_escape_string($tablename);
+		$result = mysql_query("SHOW TABLES LIKE '{$safe}'");
+		return ($result && mysql_num_rows($result) > 0);
+	}
 
 	/* insert new values into settings table */
 	function do_insert_settings($name,$value) {
@@ -1015,9 +1083,19 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 	function create_user() {	// create default super user (note: priv's level 'super') and guest // 6/9/08, 10/29/10
 		global $db_prefix;
 		$tablename = prefix("user");
+		$admin_user = isset($_POST['frm_admin_user']) ? trim($_POST['frm_admin_user']) : 'admin';
+		$admin_user = preg_replace('/[^a-zA-Z0-9_\.\-]/', '', $admin_user);
+		if ($admin_user === '') { $admin_user = 'admin'; }
+		$admin_password = isset($_POST['frm_admin_password']) ? $_POST['frm_admin_password'] : '';
+		if (strlen($admin_password) < 8) {
+			die("<FONT CLASS=\"warn\">Admin password must be at least 8 characters long.</FONT>");
+		}
+		$admin_hash = password_hash($admin_password, PASSWORD_BCRYPT);
+		$admin_user_sql = mysql_real_escape_string($admin_user);
+		$admin_hash_sql = mysql_real_escape_string($admin_hash);
 		print "<P>";
-		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('admin',MD5('admin'),'Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
-		print "<LI> Created user '<B>admin</B>'";
+		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('$admin_user_sql','$admin_hash_sql','Super-administrator',0,0,1,'date',0, '$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
+		print "<LI> Created administrator '<B>" . htmlspecialchars($admin_user, ENT_QUOTES, 'UTF-8') . "</B>'";
 		mysql_query("INSERT INTO `$tablename` (`user`,`passwd`,`info`,`level`,`ticket_per_page`,`sort_desc`,`sortorder`,`reporting`,`db_prefix`) VALUES('guest',MD5('guest'),'Guest',3,0,1,'date',0,'$db_prefix')") or die("INSERT INTO user failed, execution halted at line " . __LINE__);
 		print "<LI> Created user '<B>guest</B>'";
 		print "</P>";
@@ -1026,6 +1104,10 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 	//insert settings
 	function insert_settings() {
 		global $version, $api_key;
+
+		if (!settings_table_exists()) {
+			die("<FONT CLASS=\"warn\">Settings table is missing; cannot write installer version/settings until schema creation has run.</FONT>");
+		}
 
 		do_insert_settings('_aprs_time','0');
 		do_insert_settings('_sleep','5');				// 10/17/08 --
@@ -1086,7 +1168,7 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 
 	//output mysql settings to mysql.inc.php
 	function write_conf($host,$db,$user,$password,$prefix) {
-		if (!$fp = fopen('./incs/mysql.inc.php', 'a'))
+		if (!$fp = fopen('./incs/mysql.inc.php', 'w'))
         	print '<LI> <FONT CLASS="warn">Cannot open mysql.inc.php for writing</FONT>';
 		else {
 			ftruncate($fp,0);
@@ -1196,9 +1278,9 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 				print "<LI> <FONT CLASS=\"warn\">'$_POST[frm_option]' is not a valid option!</FONT>";
 			}
 
-		print '<BR /><BR /><FONT CLASS="warn">Your Tickets installation is now complete - the start page is \'index.php\' .</FONT>';
-		print '<BR /><BR /><FONT CLASS="warn">It is strongly recommended that you move/delete/change rights on install.php after this</FONT>';
-		print '<BR /><BR /><A HREF="index.php?first_start=yes"><< Start Tickets >></A>';	//	5/11/12 Changed link for quick start.		
+		print '<BR /><BR /><FONT CLASS="warn">Install/upgrade tasks are complete and handled fully in install.php.</FONT>';
+		print '<BR /><BR /><FONT CLASS="warn">It is strongly recommended that you move/delete/change rights on install.php after this.</FONT>';
+		print '<BR /><BR /><A HREF="install.php"><< Back to installer >></A>';
 		}
 //	else if ($_GET['help']) {		//
 	else if (array_key_exists('help', $_GET)) {		// 9/16/08
@@ -1290,52 +1372,40 @@ $api_key = "AIzaSyBN2v_821i9ivnaWoNXb0MIV3Dz8RQ3xqc";			// 1/9/2013
 				$mysql = "<FONT COLOR='red'>MYSQL version is lower than 5.0</FONT>&nbsp;&nbsp;<span style='font-size: 100%; color: red;'>X</span>"; 	
 				}
 ?>
- <?php
-$phpvers = phpversion ();
-$arr = explode (  "." , $phpvers , 2 );
-$reqd = "7"; // PHP version no.  required
-
-if ($arr [0] <> $reqd ) {
-?>
-<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 16pt;">&nbsp;&nbsp;&nbsp;&nbsp;Warning!&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
-<TABLE BORDER="0">
-<TR CLASS="even"><TD width=100%>Your installed PHP version is <b><?php echo $phpvers ; ?></b>, which is NOT recommended for use with Tickets CAD.</TD></TR>
-<TR CLASS="odd"><TD width=100%>PHP version 7 is known to work well.</TD></TR>
-<TR CLASS="even"><TD width=100%>Please heed this warning and do not proceed with this installation until this is corrected.  You may save yourself several days of fruitless troubleshooting.</TD></TR>
-</TABLE>
-</FIELDSET>
-<br />
-<?php
-}
-?>
-			<FORM NAME = 'install_frm' METHOD="post" ACTION="install.php?go=1"  onSubmit='return validate(document.install_frm)' >
+ 			<FORM NAME = 'install_frm' METHOD="post" ACTION="install.php?go=1"  onSubmit='return validate(document.install_frm)' >
 			<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;From your MySQL installation&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
 			<TABLE BORDER="0">
-			<TR CLASS="even"><TD width="200px">MySQL Host: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_host" VALUE=""></TD></TR>
-			<TR CLASS="odd"><TD>MySQL Username: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_user" VALUE=""></TD></TR>
-			<TR CLASS="even"><TD>MySQL Password: </TD><TD><INPUT TYPE="password" SIZE="45" MAXLENGTH="255" NAME="frm_db_password"  VALUE=""></TD></TR>
+			<TR CLASS="even"><TD width="200px">MySQL Host: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_host" VALUE="<?php print htmlspecialchars($config_defaults['host'], ENT_QUOTES, 'UTF-8'); ?>"></TD></TR>
+			<TR CLASS="odd"><TD>MySQL Username: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_user" VALUE="<?php print htmlspecialchars($config_defaults['user'], ENT_QUOTES, 'UTF-8'); ?>"></TD></TR>
+			<TR CLASS="even"><TD>MySQL Password: </TD><TD><INPUT TYPE="password" SIZE="45" MAXLENGTH="255" NAME="frm_db_password"  VALUE="<?php print htmlspecialchars($config_defaults['password'], ENT_QUOTES, 'UTF-8'); ?>"></TD></TR>
 			</TABLE>
 			</FIELDSET>
 			<br />
 			<FIELDSET style="width: 900px;"><LEGEND style="font-weight: bold; color: #000; font-family: verdana; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;Tickets Stuff&nbsp;&nbsp;&nbsp;&nbsp;</LEGEND>
 			<TABLE BORDER="0">
-			<TR CLASS="even"><TD width="200px">MySQL Database: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_dbname" VALUE=""> your just-created MySQL database</TD></TR>
-			<TR CLASS="odd"><TD>MySQL Table Prefix (optional): </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_prefix" VALUE=""> your choice</TD></TR>
+			<TR CLASS="even"><TD width="200px">MySQL Database: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_dbname" VALUE="<?php print htmlspecialchars($config_defaults['db'], ENT_QUOTES, 'UTF-8'); ?>"> your just-created MySQL database</TD></TR>
+			<TR CLASS="odd"><TD>MySQL Table Prefix (optional): </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="255" NAME="frm_db_prefix" VALUE="<?php print htmlspecialchars($config_defaults['prefix'], ENT_QUOTES, 'UTF-8'); ?>"> your choice</TD></TR>
 			<!-- 4/2/2013 -->
 			<TR CLASS="even"><TD>Google API Key (optional):<BR /></TD><TD><INPUT TYPE="text" SIZE="70" MAXLENGTH="255" NAME="frm_api_key"  VALUE=""><BR>
 				&nbsp;&nbsp;&nbsp;&nbsp;Note: You may obtain your site's API key at https://code.google.com/apis/console/
 				</TD></TR>
+			<TR CLASS="odd"><TD>First Admin Username: </TD><TD><INPUT TYPE="text" SIZE="45" MAXLENGTH="64" NAME="frm_admin_user" VALUE="admin"> used for new install/re-install only</TD></TR>
+			<TR CLASS="even"><TD>First Admin Password: </TD><TD><INPUT TYPE="password" SIZE="45" MAXLENGTH="255" NAME="frm_admin_password" VALUE="" placeholder="At least 8 characters"> required for new install/re-install only</TD></TR>
 			<TR CLASS="odd"><TD>Install Option: </TD><TD>
 			<INPUT TYPE="radio" VALUE="install" NAME="frm_option" checked> Install Database - new<BR />
 			<INPUT TYPE="radio" VALUE="install-drop" NAME="frm_option"> Re-install Database<BR />
 	<!--	<INPUT TYPE="radio" VALUE="upgrade-0.65" NAME="frm_option"> Upgrade 0.65 -> 0.7<BR />	-->
 			<INPUT TYPE="radio" VALUE="writeconf" NAME="frm_option"> Write Configuration File Only<BR /><BR>
 			</TD></TR>
-			<TR CLASS="even"><TD></TD><TD><INPUT TYPE="Reset" VALUE="Reset form">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" VALUE="Do it"></TD></TR>
+			<?php if ($is_existing_install) { ?>
+			<TR CLASS="even"><TD colspan="2"><FONT CLASS="warn">Existing installation detected (version <?php print htmlspecialchars($installed_version, ENT_QUOTES, 'UTF-8'); ?>). You must be logged in as admin for install/update actions.</FONT></TD></TR>
+			<?php } ?>
+			<TR CLASS="even"><TD></TD><TD><INPUT TYPE="Reset" VALUE="Reset form">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="Submit" NAME="doit_btn" VALUE="Do it"><span class="spinner"></span></TD></TR>
 			</TABLE>
 			</FORM>
 			<?php
 			}
 		}
 ?>
+</div></div>
 </BODY></HTML>
