@@ -176,7 +176,8 @@ function is_expired($id) {		// returns boolean
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$id} LIMIT 1;";
 	$result = mysql_query($query);
 	$row = @stripslashes_deep(mysql_fetch_assoc($result));
-	return ((mysql_num_rows($result)==1) && (strtotime($row['expires']) > $now));
+	$expires = ($row && array_key_exists('expires', $row) && !is_null($row['expires'])) ? strtotime($row['expires']) : 0;
+	return ((mysql_num_rows($result)==1) && ($expires > $now));
 	}
 
 function redir($url, $time = 0) {
@@ -300,6 +301,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				mysql_stmt_bind_param($stmt, "ii", $type, $user_id);
 				if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
 				$result_gp = mysql_stmt_get_result($stmt);
+				$al_groups = array();
 				while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
 					$al_groups[] = $row_gp['group'];
 					}
