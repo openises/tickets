@@ -641,10 +641,11 @@ function doReset() {
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
-	$facility = $row_ticket['facility'];
-	$rec_fac = $row_ticket['rec_facility'];
-	$lat = $row_ticket['lat'];
-	$lng = $row_ticket['lng'];
+	if (!is_array($row_ticket)) { $row_ticket = array(); }
+	$facility = array_key_exists('facility', $row_ticket) ? $row_ticket['facility'] : 0;
+	$rec_fac = array_key_exists('rec_facility', $row_ticket) ? $row_ticket['rec_facility'] : 0;
+	$lat = array_key_exists('lat', $row_ticket) ? $row_ticket['lat'] : 0;
+	$lng = array_key_exists('lng', $row_ticket) ? $row_ticket['lng'] : 0;
 	
 	print "var thelat = " . $lat . ";\nvar thelng = " . $lng . ";\n";		// set js-accessible location data
 //	unset ($result);
@@ -763,10 +764,13 @@ $capabilities = (array_key_exists('capabilities', $_GET))? stripslashes(trim(str
 $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 
 function get_addr(){				// returns incident address
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . $_GET['ticket_id'] . " LIMIT 1";
+	$ticket_id = (array_key_exists('ticket_id', $_GET) && intval($_GET['ticket_id']) > 0) ? intval($_GET['ticket_id']) : 0;
+	if ($ticket_id <= 0) { return ''; }
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . $ticket_id . " LIMIT 1";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 	$row = stripslashes_deep(mysql_fetch_array($result));
-	return "{$row['street']} {$row['city']} {$row['state']}"; 
+	if (!is_array($row)) { return ''; }
+	return trim((string)$row['street'] . ' ' . (string)$row['city'] . ' ' . (string)$row['state']); 
 	}		// end function get_addr()
 
 $thefunc = (is_guest())? "guest()" : "validate()";		// disallow guest attempts
@@ -1017,10 +1021,11 @@ function do_list($unit_id ="", $capabilities ="", $searchtype) {
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
-	$facility = $row_ticket['facility'];
-	$rec_fac = $row_ticket['rec_facility'];
-	$lat = $row_ticket['lat'];
-	$lng = $row_ticket['lng'];
+	if (!is_array($row_ticket)) { $row_ticket = array(); }
+	$facility = array_key_exists('facility', $row_ticket) ? $row_ticket['facility'] : 0;
+	$rec_fac = array_key_exists('rec_facility', $row_ticket) ? $row_ticket['rec_facility'] : 0;
+	$lat = array_key_exists('lat', $row_ticket) ? $row_ticket['lat'] : 0;
+	$lng = array_key_exists('lng', $row_ticket) ? $row_ticket['lng'] : 0;
 	$problemstart = $row_ticket['problemstart'];
 	$problemend = $row_ticket['problemend'];
 //	dump(mysql_format_date($row_ticket['problemstart']));
