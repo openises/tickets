@@ -31,9 +31,22 @@ function do_icon ($icon, $text, $color) {
 $icons = array("square_red.png", "square_black.png", "square_white.png", "square_yellow.png", "square_blue.png", "square_green.png", "shield_red.png", "shield_grey.png", "shield_green.png", "shield_blue.png", "shield_orange.png");	// 1/9/09
 $light = array( TRUE, 		  TRUE,		FALSE, 		 FALSE, 		TRUE, 			FALSE, 		TRUE, 		   FALSE, 		  TRUE, 		FALSE, 		FALSE);		// white text?
 	
-$the_icon = $icons[$_GET['blank']];				// 0 thru 8 (note: total 9)
-$the_text = substr($_GET['text'], 0, 3);		// enforce 2-char limit
-do_icon ($the_icon, $the_text,$light[$_GET['blank']] );	
+$blank = (array_key_exists('blank', $_GET)) ? intval($_GET['blank']) : 0;
+if ($blank < 0 || $blank >= count($icons)) { $blank = 0; }
+$the_icon = $icons[$blank];				// bounded icon index
+$the_text = (array_key_exists('text', $_GET) && !is_null($_GET['text'])) ? substr((string)$_GET['text'], 0, 3) : '';
+
+if (!function_exists('imagecreatefrompng') || !function_exists('imagestring') || !function_exists('imagepng')) {
+	$icon_path = __DIR__ . '/' . $the_icon;
+	if (is_readable($icon_path)) {
+		readfile($icon_path);
+		exit();
+	}
+	http_response_code(500);
+	exit();
+}
+
+do_icon ($the_icon, $the_text, $light[$blank]);	
 
 ?>
 
