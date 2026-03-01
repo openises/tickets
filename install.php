@@ -233,6 +233,7 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
             }
             $tables->free();
         }
+        return;
     }
 
     foreach ($INSTALL_SCHEMA_TABLES as $baseName => $createBase) {
