@@ -287,6 +287,15 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `action_type` int(8) default NULL,
 		 `responder` text,
 		 `updated` datetime default NULL,
+		 `booked_date` datetime default NULL,
+		 `address_about` text,
+		 `to_address` text,
+		 `to` varchar(255) default NULL,
+		 `facility` int(7) default '0',
+		 `rec_facility` int(7) default '0',
+		 `org` int(7) default '0',
+		 `_by` int(7) default NULL,
+		 `_from` varchar(16) default NULL,
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
@@ -312,6 +321,12 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `responding` datetime default NULL,
 		 `clear` datetime default NULL,
 		 `on_scene` datetime default NULL,
+		 `facility_id` int(7) default '0',
+		 `rec_facility_id` int(7) default '0',
+		 `start_miles` decimal(10,2) default '0.00',
+		 `on_scene_miles` decimal(10,2) default '0.00',
+		 `end_miles` decimal(10,2) default '0.00',
+		 `miles` decimal(10,2) default '0.00',
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
@@ -562,6 +577,7 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `description` varchar(120) default NULL,
 		 `group` varchar(20) default NULL,
 		 `sort` int(11) NOT NULL default '0',
+		 `set_severity` tinyint(1) NOT NULL default '0',
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Incident types' AUTO_INCREMENT=1;";
@@ -593,7 +609,10 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `code` tinyint(7) NOT NULL default '0',
 		 `ticket_id` int(7) default NULL,
 		 `responder_id` int(7) default NULL,
-		 `info` varchar(40) default NULL,
+		 `info` text,
+		 `facility` int(7) default '0',
+		 `rec_facility` int(7) default '0',
+		 `mileage` decimal(10,2) default '0.00',
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Log of station actions' AUTO_INCREMENT=1;";
@@ -739,6 +758,31 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		  `type` tinyint(1) default NULL,
 		  `updated` datetime default NULL,
 		  `user_id` int(4) default NULL,
+		  `roster_user` int(4) default NULL,
+		  `street` varchar(128) default NULL,
+		  `city` varchar(64) default NULL,
+		  `state` varchar(8) default NULL,
+		  `phone` varchar(24) default NULL,
+		  `handle` varchar(64) default NULL,
+		  `icon_str` varchar(96) default NULL,
+		  `status_about` varchar(255) default NULL,
+		  `multi` tinyint(1) NOT NULL default '0',
+		  `locatea` varchar(255) default NULL,
+		  `gtrack` varchar(255) default NULL,
+		  `glat` varchar(255) default NULL,
+		  `t_tracker` tinyint(1) NOT NULL default '0',
+		  `ogts` tinyint(1) NOT NULL default '0',
+		  `mob_tracker` tinyint(1) NOT NULL default '0',
+		  `xastir_tracker` tinyint(1) NOT NULL default '0',
+		  `smsg_id` int(11) default NULL,
+		  `status_updated` datetime default NULL,
+		  `ring_fence` text,
+		  `excl_zone` text,
+		  `at_facility` int(7) default '0',
+		  `cellphone` varchar(24) default NULL,
+		  `followmee_tracker` tinyint(1) NOT NULL default '0',
+		  `javaprssrvr` tinyint(1) NOT NULL default '0',
+		  `traccar` tinyint(1) NOT NULL default '0',
 		  PRIMARY KEY  (`id`),
 		  UNIQUE KEY `ID` (`id`)
 		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;";
@@ -896,6 +940,15 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `owner` tinyint(4) NOT NULL default '0',
 		 `severity` int(2) NOT NULL default '0',
 		 `updated` datetime default NULL,
+		 `booked_date` datetime default NULL,
+		 `address_about` text,
+		 `to_address` text,
+		 `to` varchar(255) default NULL,
+		 `facility` int(7) default '0',
+		 `rec_facility` int(7) default '0',
+		 `org` int(7) default '0',
+		 `_by` int(7) default NULL,
+		 `_from` varchar(16) default NULL,
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
@@ -981,6 +1034,10 @@ input[type=submit].loading + .spinner{display:inline-block;}
 		 `description` varchar(60) default NULL,
 		 `group` varchar(20) default NULL,
 		 `sort` int(11) NOT NULL default '0',
+		 `dispatch` tinyint(1) NOT NULL default '1',
+		 `hide` tinyint(1) NOT NULL default '0',
+		 `bg_color` varchar(12) NOT NULL default '#FFFFFF',
+		 `text_color` varchar(12) NOT NULL default '#000000',
 		 PRIMARY KEY (`id`),
 		 UNIQUE KEY `ID` (`id`)
 		) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
