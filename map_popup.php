@@ -37,10 +37,13 @@ $id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
 
 $result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
 $row = mysql_fetch_assoc($result);
-$title = $row['scope'];
-$ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
-$ticket_updated = format_date_time($row['updated']);
-if($row['status'] == $GLOBALS['STATUS_CLOSED']) {
+if(!is_array($row)) { $row = array(); }
+$title = array_key_exists('scope', $row) ? $row['scope'] : '';
+$ticket_addr = trim((array_key_exists('street', $row)?$row['street']:'') . ', ' . (array_key_exists('city', $row)?$row['city']:'') . ' ' . (array_key_exists('state', $row)?$row['state']:''));
+$ticket_updated = format_date_time(array_key_exists('updated', $row) ? $row['updated'] : '');
+if((array_key_exists('status', $row)?$row['status']:null) == $GLOBALS['STATUS_CLOSED']) {
+	$ticket_start = array_key_exists('problemstart', $row) ? $row['problemstart'] : now_ts();
+	$ticket_end = array_key_exists('problemend', $row) ? $row['problemend'] : now_ts();
 	$elapsed = my_date_diff($ticket_start, $ticket_end);
 	} else {
 	$elapsed = get_elapsed_time($row);

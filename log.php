@@ -245,9 +245,9 @@ if (empty($_POST)) {
 						"<TD CLASS='plain_list text text_left'>&nbsp;". $the_date . "&nbsp;</TD>".
 						"<TD CLASS='plain_list text text_left'>". $types[$row['code']] . "</TD>".
 						"<TD CLASS='plain_list text text_left'>". $row['thename'] . "</TD>".
-						"<TD CLASS='plain_list text text_left'>" . str_pad($row['tick_scope'], 20, " ", STR_PAD_RIGHT) . "</TD>".
-						"<TD CLASS='plain_list text text_left'>" . str_pad($row['resp_name'], 20, " ", STR_PAD_RIGHT) . "</TD>".
-						"<TD CLASS='plain_list text text_left'>" . str_pad($row['theinfo'], 20, " ", STR_PAD_RIGHT) . "</TD>".
+						"<TD CLASS='plain_list text text_left'>" . str_pad((string)$row['tick_scope'], 20, " ", STR_PAD_RIGHT) . "</TD>".
+						"<TD CLASS='plain_list text text_left'>" . str_pad((string)$row['resp_name'], 20, " ", STR_PAD_RIGHT) . "</TD>".
+						"<TD CLASS='plain_list text text_left'>" . str_pad((string)$row['theinfo'], 20, " ", STR_PAD_RIGHT) . "</TD>".
 						"<TD CLASS='plain_list text text_left'>&nbsp;". $row['from'] . "</TD>".
 						"</TR>\n";
 					    break;
@@ -268,7 +268,7 @@ if (empty($_POST)) {
 						"<TD CLASS='plain_list text text_left'>". $types[$row['code']] . "</TD>".
 						"<TD CLASS='plain_list text text_left'>". $row['thename'] . "</TD>".
 						"<TD CLASS='plain_list text text_left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>".
-						"<TD CLASS='plain_list text text_left'>" . str_pad($row['resp_name'], 20, " ", STR_PAD_RIGHT) . "</TD>".
+						"<TD CLASS='plain_list text text_left'>" . str_pad((string)$row['resp_name'], 20, " ", STR_PAD_RIGHT) . "</TD>".
 						"<TD CLASS='plain_list text text_left'>" . str_pad($statusval, 20, " ", STR_PAD_RIGHT) . "</TD>".
 						"<TD CLASS='plain_list text text_left'>&nbsp;". $row['from'] . "</TD>".
 						"</TR>\n";
@@ -295,8 +295,8 @@ if (empty($_POST)) {
 						"<TD CLASS='plain_list text text_left'>&nbsp;". $the_date . "&nbsp;</TD>".
 						"<TD CLASS='plain_list text text_left'>". $types[$row['code']] . "</TD>".
 						"<TD CLASS='plain_list text text_left'>". $row['thename'] . "</TD>".
-						"<TD CLASS='plain_list text text_left'>" . str_pad($row['tick_scope'], 20, " ", STR_PAD_RIGHT) . "</TD>".
-						"<TD CLASS='plain_list text text_left'>" . str_pad($row['resp_name'], 20, " ", STR_PAD_RIGHT) . "</TD>".
+						"<TD CLASS='plain_list text text_left'>" . str_pad((string)$row['tick_scope'], 20, " ", STR_PAD_RIGHT) . "</TD>".
+						"<TD CLASS='plain_list text text_left'>" . str_pad((string)$row['resp_name'], 20, " ", STR_PAD_RIGHT) . "</TD>".
 						"<TD CLASS='plain_list text text_left'>" . str_pad($dispcodes[$row['code']], 20, " ", STR_PAD_RIGHT) . "</TD>".
 						"<TD CLASS='plain_list text text_left'>&nbsp;". $row['from'] . "</TD>".
 						"</TR>\n";
