@@ -1,4 +1,10 @@
 <?php
+/*
+ * ticketsCAD installer hardening notes:
+ * - Installer owns install/upgrade/schema operations; index.php no longer mutates schema.
+ * - Supports clean install, upgrade sync, and write-config modes.
+ * - Streams step-by-step progress and records installed _version for parity checks.
+ */
 error_reporting(E_ALL);
 if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
 
