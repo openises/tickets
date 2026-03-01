@@ -361,9 +361,15 @@ function list_users(){		/* list users */
 		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$row['userid']}' \"": "";
 
 		$level = get_level_text($row['level']);
-		$login = format_sb_date_2(mysql_format_date(strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
-		$isonline = ($row['expires'] > $now) ? true: false;
-		$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
+		$login_ts = (!empty($row['login'])) ? strtotime((string)$row['login']) : false;
+		if ($login_ts !== false) {
+			$login = format_sb_date_2(mysql_format_date($login_ts + (intval(get_variable('delta_mins'))*60)));
+		} else {
+			$login = "";
+		}
+		$expires_val = isset($row['expires']) ? (string)$row['expires'] : "";
+		$isonline = ($expires_val !== "" && $expires_val > $now) ? true: false;
+		$online = ($isonline)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
 		print "<TR CLASS='{$colors[$i%2]}' {$onclick}>
 				<TD class='text'>{$row['userid']}</TD>
 				<TD class='text'>&nbsp;{$row['user']}</TD>
