@@ -100,18 +100,19 @@ function do_my_instam($key) {				// 3/17/09
 //				quote_smart_deep(trim($stuff)));
 */
 //---------------------------------------------------------------------
-		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]tracks_hh` (`source`,`latitude`,`longitude`,`course`,`speed`,`altitude`,`updated`,`from`)
-							VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-								quote_smart($str_pos[1]),
-								quote_smart($str_pos[3]),
-								quote_smart($str_pos[4]),
-								quote_smart($str_pos[7]),
-								quote_smart($str_pos[6]),
-								quote_smart($str_pos[5]),
-								quote_smart(mysql_format_date($str_pos[2])),
-								quote_smart($str_pos[6])) ;
+		$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh` (`source`,`latitude`,`longitude`,`course`,`speed`,`altitude`,`updated`,`from`)
+							VALUES (?,?,?,?,?,?,?,?)";
 //		dump($query);
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+		$result = db_query($query, [
+			trim($str_pos[1]),
+			trim($str_pos[3]),
+			trim($str_pos[4]),
+			trim($str_pos[7]),
+			trim($str_pos[6]),
+			trim($str_pos[5]),
+			mysql_format_date($str_pos[2]),
+			trim($str_pos[6])
+		]);
 /*
 INSERT INTO `tracks_hh` (`source`,`latitude`,`longitude`,`course`,`speed`,`altitude`,`updated`,`from`),
 							VALUES ('AFbold',34.07655,-118.35032,304,0.1,52.0,'2009-03-19 07:51:10',0.1)
@@ -131,12 +132,12 @@ INSERT INTO `tracks_hh` (`source`,`latitude`,`longitude`,`course`,`speed`,`altit
 //				print "<br />\n";	
 				$the_time = ($str_pos[2] - date("Z") - (get_variable('delta_mins')*60));
 				$now = mysql_format_date($the_time);		// map UTC to local time equiv
-				$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
-					`lat`=		" . quote_smart(trim($str_pos[3])) . ",
-					`lng`=		" . quote_smart(trim($str_pos[4])) . ",
-					`updated` = " .	quote_smart(trim($now)) . "
-					WHERE `callsign`= " . quote_smart(trim($str_pos[1])) . " LIMIT 1";				// 3/17/09, 8/26/08  --
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
+					`lat`= ?,
+					`lng`= ?,
+					`updated` = ?
+					WHERE `callsign`= ? LIMIT 1";				// 3/17/09, 8/26/08  --
+				$result = db_query($query, [trim($str_pos[3]), trim($str_pos[4]), trim($now), trim($str_pos[1])]);
 				dump($query);
 				unset($result);
 					

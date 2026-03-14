@@ -12,18 +12,18 @@ session_write_close();
 require_once('incs/functions.inc.php');		//7/28/10
 //dump($_POST);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= 'ics_date' LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if ((mysql_affected_rows())==0) {		// copy user's date format
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= 'ics_date' LIMIT 1";
+$result = db_query($query);
+if (($result->num_rows)==0) {		// copy user's date format
 
-	$query_d = "SELECT `name`, `value` FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= 'date_format' LIMIT 1";
-	$result_d = mysql_query($query_d) or do_error($query_d, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row_d = stripslashes_deep(mysql_fetch_assoc($result_d));
+	$query_d = "SELECT `name`, `value` FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= 'date_format' LIMIT 1";
+	$result_d = db_query($query_d);
+	$row_d = stripslashes_deep($result_d->fetch_assoc());
 	$date_val = $row_d['value'];
 	unset($result_d);
 
-	$query = "INSERT INTO `$GLOBALS[mysql_prefix]settings` (`name`,`value`) VALUES('ics_date','{$date_val}')";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`,`value`) VALUES('ics_date','{$date_val}')";
+	$result = db_query($query);
 	}
 
 ?>

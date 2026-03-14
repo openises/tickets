@@ -18,10 +18,10 @@
 	require_once('./incs/config.inc.php');
 	require_once('./incs/usng.inc.php');				// 9/16/08
 	
- 	$query	= "SELECT `user` FROM `$GLOBALS[mysql_prefix]user` WHERE `id` <> '{$_SESSION['user_id']}'";		// 12/2/08
- 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+ 	$query	= "SELECT `user` FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` <> '{$_SESSION['user_id']}'";		// 12/2/08
+ 	$result	= db_query($query);
 	$users = "";
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$users .= trim($row['user']) . "\t";			
 		}			
 ?>
@@ -178,8 +178,8 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 				print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";		// 9/21/08
 				$evenodd = array ("even", "odd");
 				if((isset($_POST['hints_group'])) && ($_POST['hints_group'] != "All")) {
-					$group = $_POST['hints_group'];
-					$where = "WHERE `$GLOBALS[mysql_prefix]hints`.`group` = '{$group}' ORDER BY `tag` ASC";
+					$group = sanitize_string($_POST['hints_group']);
+					$where = "WHERE `{$GLOBALS['mysql_prefix']}hints`.`group` = '{$group}' ORDER BY `tag` ASC";
 //					dump($_POST);
 				} else {
 					$where = "ORDER BY `group` ASC";
@@ -191,16 +191,16 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
 			<A NAME="top" /> <!-- 11/11/09 -->
 
 			<?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]hints` {$where}";	
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}hints` {$where}";
 //				dump($query);
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				$result = db_query($query);
 				$i = 1;
 				print "\n<FORM NAME='hints_Form' METHOD = 'post' onSubmit='return validate_set(document.hints_Form);' ACTION='hints_config.php?func=hints&go=true'>
 					<table border=0 STYLE = 'MARGIN-LEFT:100PX'>\n";
 				print "\n<INPUT TYPE='hidden' NAME='func' VALUE='hints_update' />\n";
 				print "\n<TR><TH COLSPAN=2>Hover over hints - enter revisions</TH></TR>\n";
 				$dis = ((is_administrator()) || (is_super()))? "": " DISABLED ";				// 3/19/11
-				while ($row =  stripslashes_deep(mysql_fetch_array($result))) {
+				while ($row =  stripslashes_deep($result->fetch_array())) {
 					print "<TR CLASS = {$colors[$i%2]} VALIGN='middle'><TD><INPUT SIZE='10' TYPE='text' NAME='{$row['group']}' VALUE='{$row['group']}' MAXLENGTH='24'></TD></TD><TD><BR />" . substr($row['tag'], 1) . "</TD>
 						<TD><TEXTAREA COLS = 120 ROWS=1 NAME = '{$row['tag']}' {$dis}>" . trim($row['hint']) . "</TEXTAREA></TD></TR>\n";
 					$i++;	
@@ -258,9 +258,9 @@ ul {
 	<SELECT NAME='hints_group'>	<!--  11/17/10 -->
 	<OPTION VALUE="All" SELECTED>All</OPTION>
 <?php
-	$query = "SELECT DISTINCT `$GLOBALS[mysql_prefix]hints`.`group`	FROM `$GLOBALS[mysql_prefix]hints` ORDER BY `$GLOBALS[mysql_prefix]hints`.`group` ASC";	
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	$query = "SELECT DISTINCT `{$GLOBALS['mysql_prefix']}hints`.`group`	FROM `{$GLOBALS['mysql_prefix']}hints` ORDER BY `{$GLOBALS['mysql_prefix']}hints`.`group` ASC";
+	$result = db_query($query);
+	while ($row = $result->fetch_assoc()) {
 		print "\t<OPTION VALUE='{$row['group']}'>{$row['group']}</OPTION>\n";
 		}	?>
 	</SELECT></TD></TR>

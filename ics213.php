@@ -192,11 +192,11 @@ switch ($step) {
 	<BODY><CENTER><BR /><BR />
 <?php
 	$i=0;		// 3/6/2014
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts`
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts`
 		ORDER BY `organization` ASC,`name` ASC" ;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 
-	if(mysql_affected_rows()>0) {
+	if($result->num_rows>0) {
 
 	function do_row($i, $addr, $name, $org) {
 		global $evenodd;
@@ -221,7 +221,7 @@ switch ($step) {
 			</TD>
 		</TR>
 <?php
-		while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+		while($row = stripslashes_deep($result->fetch_assoc())){
 																					// count valid addresses
 			if (is_email($row['email']))	{ echo do_row($i, $row['email'], $row['name'], $row['organization']);$i++;}
 			if (is_email($row['mobile'])) 	{ echo do_row($i, $row['mobile'], $row['name'], $row['organization']);$i++;}
@@ -245,7 +245,7 @@ switch ($step) {
 	</FORM>
 <?php
 			}		// end if(mysql_affected_rows()>0)
-		if (($i==0) || (mysql_affected_rows()==0)){
+		if ($i==0){
 ?>
 			<H3>No Contact e-mail addresses!</H3><BR /><BR />
 			<INPUT TYPE='button' VALUE='Cancel' onClick = 'window.close();'><BR /><BR />
@@ -254,9 +254,9 @@ switch ($step) {
 // ------------------------------
 		break;		// end case 0
 	case 1:								/* present form to user */
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$_SESSION['user_id']} LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = {$_SESSION['user_id']} LIMIT 1";
+		$result = db_query($query);
+		$row = stripslashes_deep($result->fetch_assoc());
 
 		$the_date = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
 		$the_time =  date( "H:i",(time()- (intval(get_variable('delta_mins')*60)) ));

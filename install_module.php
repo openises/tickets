@@ -42,7 +42,7 @@ $query = "CREATE TABLE IF NOT EXISTS `$table_name` (
   `httppwd` varchar(48) DEFAULT NULL COMMENT 'For data sources behind protected areas',		  
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$result = db_query($query);
 if($result) {
 print "Module Table Created";
 }
@@ -51,10 +51,10 @@ function get_mod_to_install() {
 	$to_install = array();
 	$current = array();
 	if(mod_table_exists("modules") == 1) {
-		$query = "SELECT * FROM $GLOBALS[mysql_prefix]modules`";
-		$result = mysql_query($query);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules`";
+		$result = db_query($query);
 		if($result) {
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = $result->fetch_assoc()) {
 				$current[] = $row['mod_name'];
 				}
 			}
@@ -78,20 +78,21 @@ function get_mod_to_install() {
 	$ret_str = "<SELECT NAME='frm_module'>";
 	$i=1;
 	foreach($to_install as $val) {
-		$ret_str .= "<OPTION VALUE=" . $val . ">" . $val . "</OPTION>";
+		$ret_str .= "<OPTION VALUE=\"" . e($val) . "\">" . e($val) . "</OPTION>";
 		}
 	$ret_str .= "</SELECT>";
 	return $ret_str;
 	}
 
 function module_tabs_exist($name) {
-	$query 		= "SELECT COUNT(*) FROM `$GLOBALS[mysql_prefix]modules`";
-	$result 	= mysql_query($query);
-	$num_rows 	= @mysql_num_rows($result);
+	$query 		= "SELECT COUNT(*) FROM `{$GLOBALS['mysql_prefix']}modules`";
+	$result 	= db_query($query);
+	$num_rows 	= $result ? $result->num_rows : 0;
 	if($num_rows) {
-		$query_exists	= "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_name`=\"{$name}\"";
-		$result_exists	= mysql_query($query_exists) or do_error($query_exists, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$num_rows = mysql_num_rows($result_exists);
+		$name = sanitize_string($name);
+		$query_exists	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`=?";
+		$result_exists	= db_query($query_exists, [$name]);
+		$num_rows = $result_exists->num_rows;
 		if($num_rows != 0) {
 			return 1;
 		} else {
@@ -103,9 +104,9 @@ function module_tabs_exist($name) {
 	}
 	
 function mod_table_exists($tablename) {			//check if mysql table exists, if it's a re-install
-	$query 		= "SELECT COUNT(*) FROM $tablename";
-	$result 	= mysql_query($query);
-	$num_rows 	= @mysql_num_rows($result);
+	$query 		= "SELECT COUNT(*) FROM `$tablename`";
+	$result 	= db_query($query);
+	$num_rows 	= $result ? $result->num_rows : 0;
 	if($num_rows) {
 		return 1;
 	} else {
@@ -154,7 +155,7 @@ function write_path($filepath, $tickets_dir) {
 	}	
 
 if (isset($_POST['submit'])) { // Handle the form.
-	print $_POST['frm_module'];
+	print e($_POST['frm_module']);
 	
 
 	print "<DIV style='background-color:#CECECE; position: absolute; width: 60%; height: 60%; left: 20%; top: 10%; border:2px inset #FFF2BF; display: block; text-align: center'>";

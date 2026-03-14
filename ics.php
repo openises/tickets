@@ -26,10 +26,10 @@ require_once ( './incs/functions.inc.php');
 /**/
 $limit = 99999;
 //dump ( !mysql_table_exists ( "$GLOBALS[mysql_prefix]ics") );
-if (!mysql_table_exists( "$GLOBALS[mysql_prefix]ics")) {
+if (!mysql_table_exists( "{$GLOBALS['mysql_prefix']}ics")) {
 //	dump ( __LINE__ );
 
-	$query = "CREATE TABLE `$GLOBALS[mysql_prefix]ics` (
+	$query = "CREATE TABLE `{$GLOBALS['mysql_prefix']}ics` (
 	 `id` bigint ( 8) NOT NULL,
 	 `to` varchar ( 256) DEFAULT NULL COMMENT 'comma sep''d, 0 = all',
 	 `name` varchar ( 256) NOT NULL COMMENT 'form name',
@@ -45,13 +45,13 @@ if (!mysql_table_exists( "$GLOBALS[mysql_prefix]ics")) {
 	) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 	";
 
-	$result = mysql_query ( $query) or do_error ( $query, 'mysql query failed', mysql_error ( ), __FILE__, __LINE__);
+	$result = db_query($query);
 
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]ics` ADD PRIMARY KEY ( `id`);";
-	$result = mysql_query ( $query) or do_error ( $query, 'mysql query failed', mysql_error ( ), __FILE__, __LINE__);
+	$query = "ALTER TABLE `{$GLOBALS['mysql_prefix']}ics` ADD PRIMARY KEY ( `id`);";
+	$result = db_query($query);
 
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]ics` MODIFY `id` bigint ( 8) NOT NULL AUTO_INCREMENT;";
-	$result = mysql_query ( $query) or do_error ( $query, 'mysql query failed', mysql_error ( ), __FILE__, __LINE__);
+	$query = "ALTER TABLE `{$GLOBALS['mysql_prefix']}ics` MODIFY `id` bigint ( 8) NOT NULL AUTO_INCREMENT;";
+	$result = db_query($query);
 	}
 
 /*
@@ -79,13 +79,13 @@ if (!mysql_table_exists( "$GLOBALS[mysql_prefix]ics")) {
 </head>
 <body>
 <?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ics` WHERE `archived` IS NULL LIMIT {$limit}" ;				//
-	$result_act = mysql_query ( $query) or do_error ( $query, 'mysql query failed', mysql_error ( ), __FILE__, __LINE__);
-	$no_act_entries = mysql_num_rows ( $result_act);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `archived` IS NULL LIMIT {$limit}" ;				//
+	$result_act = db_query($query);
+	$no_act_entries = $result_act->num_rows;
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ics` WHERE `archived` IS NOT NULL LIMIT {$limit}" ;				//
-	$result_arch = mysql_query ( $query) or do_error ( $query, 'mysql query failed', mysql_error ( ), __FILE__, __LINE__);
-	$no_arch_entries = mysql_num_rows ( $result_arch);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `archived` IS NOT NULL LIMIT {$limit}" ;				//
+	$result_arch = db_query($query);
+	$no_arch_entries = $result_arch->num_rows;
 
 	if ( array_key_exists ( 'do_arch', $_POST) ) {		// show archived
 		$result_do = $result_arch;
@@ -107,7 +107,7 @@ if (!mysql_table_exists( "$GLOBALS[mysql_prefix]ics")) {
 		echo "<p style = 'margin-bottom: 16px;'><i>Click row to edit or send</i></p>\n";
 		echo "<table border = 1 style = 'border-collape: collapse; margin-top:10px;'>\n";
 		echo "<tr><th>Type</th><th>Name</th><th># sent</th><th>Last sent</th><th>as-of</th></tr>\n";
-		while ( $row = mysql_fetch_assoc ( $result_do)) {
+		while ( $row = $result_do->fetch_assoc()) {
 			$target = $row['script'];
 			echo "<tr onclick = \"get_ics ( 'u', '{$target}',{$row['id']});\">";
 			echo "<td>{$row['type']}</td><td>{$row['name']}</td><td align='center'>{$row['count']}</td><td>" . substr ( $row['_sent'], 5, 11 ) . "</td><td>" . substr ( $row['_as-of'], 5, 11) . "</td>";

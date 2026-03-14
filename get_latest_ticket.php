@@ -11,9 +11,9 @@ require_once($_SESSION['fip']);		//7/28/10
 $me = $_SESSION['user_id'];
 //$me =1;
 				// most recent ticket other than written by 'me'
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `_by` <> {$me} AND `status` = {$GLOBALS['STATUS_OPEN']} ORDER BY `id` DESC LIMIT 1";		// broadcasts
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$row = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `_by` <> {$me} AND `status` = {$GLOBALS['STATUS_OPEN']} ORDER BY `id` DESC LIMIT 1";		// broadcasts
+$result = db_query($query);
+$row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): FALSE;
 
 print ($row)? $row['id'] : "0";
 ?>

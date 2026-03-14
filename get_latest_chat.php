@@ -13,9 +13,9 @@ $me = $_SESSION['user_id'];
 //$me = 1;
 
 				// most recent chat invites other than written by 'me'
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]chat_invites` WHERE `_by` <> {$me}  AND (`to` = 0   OR `to` = {$me}) ORDER BY `id` DESC LIMIT 1";		// broadcasts
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$row = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result)): FALSE;
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}chat_invites` WHERE `_by` <> {$me}  AND (`to` = 0   OR `to` = {$me}) ORDER BY `id` DESC LIMIT 1";		// broadcasts
+$result = db_query($query);
+$row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): FALSE;
 //snap ($me, $query);
 //dump($row);
 print ($row)? $row['id'] : "0";

@@ -145,12 +145,12 @@ function get_theemails($url, $user, $password, $port, $ssl="", $timeout=30 ) {
 function store_theemail($email_arr) {
 	$messageid = $email_arr[0];
 	$subject = addslashes($email_arr[1]);
-	$message = mysql_real_escape_string(addslashes($email_arr[2]));
+	$message = addslashes($email_arr[2]);
 	$time = $email_arr[3];
 	$counter = 0;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `msg_type` = '2' AND `message_id` = '{$messageid}' AND `subject` = '{$subject}' AND `message` = '{$message}' AND `date` = '" . $time . "'";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 0) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `msg_type` = '2' AND `message_id` = ? AND `subject` = ? AND `message` = ? AND `date` = ?";
+	$result = db_query($query, [$messageid, $subject, $message, $time]);
+	if($result->num_rows == 0) {
 		$counter = 1;
 		}
 	$stored = ($counter == 1) ? "Stored" : "Not Stored";

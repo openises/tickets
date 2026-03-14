@@ -35,10 +35,10 @@ if ($istest) {
 //	$refresh = ((($remotes['aprs']) || ($remotes['instam']) || ($remotes['locatea']) || ($remotes['gtrack']) || ($remotes['glat'])) && ($interval>0))? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>\n": "";
 $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
-$id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
+$id =	(array_key_exists('id', ($_GET)))?	sanitize_int($_GET['id'])  :	NULL;
 
-$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
-$row = mysql_fetch_assoc($result);
+$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id]);
+$row = $result->fetch_assoc();
 $title = $row['scope'];
 $ticket_severity = get_severity($row['severity']);
 $ticket_type = get_type($row['in_types_id']);
@@ -116,21 +116,21 @@ echo "<BODY style='background-color:{$severities[$row['severity']]}; text-color:
 
 /* Creates statistics header and details of responding and en-route units 7/29/09 */
 
-$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'
-	AND `dispatched` IS NOT NULL AND `responding` IS NULL AND `on_scene` IS NULL AND `clear` IS NULL");
-$num_rows_dispatched = mysql_num_rows($result_dispatched);
+$result_dispatched = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
+	AND `dispatched` IS NOT NULL AND `responding` IS NULL AND `on_scene` IS NULL AND `clear` IS NULL", [$id]);
+$num_rows_dispatched = $result_dispatched->num_rows;
 
-$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'
-	AND `responding` IS NOT NULL AND `on_scene` IS NULL AND `clear` IS NULL");
-$num_rows_responding = mysql_num_rows($result_responding);
+$result_responding = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
+	AND `responding` IS NOT NULL AND `on_scene` IS NULL AND `clear` IS NULL", [$id]);
+$num_rows_responding = $result_responding->num_rows;
 
-$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id' 
-	AND `on_scene` IS NOT NULL AND `clear` IS NULL");
-$num_rows_on_scene = mysql_num_rows($result_on_scene);
-	
-$result_cleared = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id' 
-	AND `clear` IS NOT NULL");
-$num_rows_cleared = mysql_num_rows($result_cleared);
+$result_on_scene = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
+	AND `on_scene` IS NOT NULL AND `clear` IS NULL", [$id]);
+$num_rows_on_scene = $result_on_scene->num_rows;
+
+$result_cleared = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
+	AND `clear` IS NOT NULL", [$id]);
+$num_rows_cleared = $result_cleared->num_rows;
 	
 $end_date = (is_date($row['problemend']))? totime($row['problemend']) : (time() - (get_variable('delta_mins')*60));
 $elapsed = my_date_diff($end_date, totime($row['problemstart']));		// integer values req'd - 3/12/10
@@ -140,31 +140,31 @@ $stats = "<B>Severity:&nbsp;{$ticket_severity}, <SPAN STYLE='background-color:wh
 echo $stats;
 
 echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
-while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-	$row = mysql_fetch_assoc($result);
-	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+while ($row_base= $result_dispatched->fetch_assoc()) {
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+	$row = $result->fetch_assoc();
+	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
 	}
 
 echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
-while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-	$row = mysql_fetch_assoc($result);
-	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+while ($row_base= $result_responding->fetch_assoc()) {
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+	$row = $result->fetch_assoc();
+	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
 	}
 
 echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
-while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-	$row = mysql_fetch_assoc($result);
-	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+while ($row_base= $result_on_scene->fetch_assoc()) {
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+	$row = $result->fetch_assoc();
+	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
 	}
 
 echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
-while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-	$row = mysql_fetch_assoc($result);
-	echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+while ($row_base= $result_cleared->fetch_assoc()) {
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+	$row = $result->fetch_assoc();
+	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
 	}
 
 

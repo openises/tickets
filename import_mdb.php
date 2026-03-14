@@ -2,7 +2,7 @@
 ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 require_once('./incs/functions.inc.php');
-$dbms_schema = (array_key_exists('backup', $_GET)) ? $_GET['backup'] : "";
+$dbms_schema = (array_key_exists('backup', $_GET)) ? sanitize_string($_GET['backup']) : "";
 if($dbms_schema == "") {
 	print "Db Schema Backup not provided<BR />";
 	exit();
@@ -181,15 +181,15 @@ $user = 'tickets';
 $pass = '';
 $db = 'tickets_320';
 
-mysql_connect($host,$user,$pass) or die('error connection');
-mysql_select_db($db) or die('error database selection');
+$conn = new mysqli($host,$user,$pass,$db);
+if ($conn->connect_error) { die('error connection'); }
 
 $i=1;
 foreach($sql_query as $sql){
 	echo $i++;
 	echo "
 	";
-	mysql_query($sql) or die('error in query');
+	$conn->query($sql) or die('error in query');
 }
 
 ?>

@@ -4,22 +4,24 @@
 */
 
 require_once('./incs/functions.inc.php');		//7/28/10
-extract($_GET);
+$p1 = sanitize_string($_GET['p1']);
+$p2 = sanitize_string($_GET['p2']);
+$img_width = isset($_GET['img_width']) ? sanitize_int($_GET['img_width']) : null;
 
-$where = " WHERE `problemstart` > '{$p1}' AND `problemstart` < '{$p2}' ";
+$where = " WHERE `problemstart` > ? AND `problemstart` < ? ";
 
 $query = "SELECT `type`, COUNT(*) AS `nr`
-	FROM `$GLOBALS[mysql_prefix]ticket` `t`
-	LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `y` ON `t`.`in_types_id` = `y`.`id`
+	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `y` ON `t`.`in_types_id` = `y`.`id`
 	{$where}
 	AND  `t`.`status` != {$GLOBALS['STATUS_RESERVED']}
 	GROUP BY `type`
 	ORDER BY `nr` DESC
 	LIMIT 5";				// limit is a BAACHART issue
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+$result = db_query($query, [$p1, $p2]);
 
-if(mysql_num_rows($result) > 0) {	
+if($result->num_rows > 0) {	
 	$temp = explode ("/", get_variable('pie_charts'));
 	$type_diam = (count($temp)> 0 )? intval($temp[1]) : "450";		// 3/21/10
 	$width = isset($img_width)? $img_width: $type_diam;	// 3/21/10
@@ -29,7 +31,7 @@ if(mysql_num_rows($result) > 0) {
 	$incidents_capt = get_text ("incidents");
 	$mygraph->setTitle("{$incidents_capt} by Type","");
 	
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+	while($row = stripslashes_deep($result->fetch_assoc())) {			//
 		$row ['type']  = ( @strlen ( $row ['type'] ) > 0 ) ? $row ['type'] : " ? " ;						// possible null/empty
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE, $row ['nr'] , $row ['type'] );
 		}
