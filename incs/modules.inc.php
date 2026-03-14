@@ -11,16 +11,16 @@ require_once('mysql.inc.php');
 
 
 function get_modules($calling_file) {
-	global $handle;	
-	$query 		= "SELECT COUNT(*) FROM `$GLOBALS[mysql_prefix]modules`";
-    $result 	= mysql_query($query);
-	$num_rows 	= @mysql_num_rows($result);	
+	global $handle;
+	$query 		= "SELECT COUNT(*) FROM `{$GLOBALS['mysql_prefix']}modules`";
+    $result 	= db_query($query);
+	$num_rows 	= @$result->num_rows;
 	if($num_rows) {
 		// AND `affecting_files` LIKE '%{$calling_file}%'" - this is a check in the below statement, but has been disabled for now
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_status`=1";
-		$result2 = mysql_query($query2) or do_error('mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$numb_rows = @mysql_num_rows($result2);
-		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))){
+		$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_status`=1";
+		$result2 = db_query($query2);
+		$numb_rows = @$result2->num_rows;
+		while ($row2 = stripslashes_deep($result2->fetch_assoc())){
 			$name = $row2['mod_name']; $status=$row2['mod_status'] ;
 			$inc_path="./modules/" . $name . "/helper.php";
 			$display="get_display_" . $name;
@@ -31,12 +31,12 @@ function get_modules($calling_file) {
 	}
 	
 function module_active($module) {
-	global $handle;	
-	$query 		= "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_name`='{$module}' ";
-    $result 	= mysql_query($query);
-	$num_rows 	= @mysql_num_rows($result);	
+	global $handle;
+	$query 		= "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`= ?";
+    $result 	= db_query($query, [$module]);
+	$num_rows 	= @$result->num_rows;
 	if($num_rows > 0) {
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		$name = $row['mod_name']; 
 		$status = $row['mod_status'] ;
 		return $status;

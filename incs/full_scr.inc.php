@@ -78,15 +78,15 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		$heading = $captions[$func];
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 		$group = isset($_SESSION['group']) ? $_SESSION['group'] : 0;	//	4/11/11
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_CLOSED']} ";		// 10/26/09
-	
-			$result_ct = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$num_closed = mysql_num_rows($result_ct); 
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ?";		// 10/26/09
+
+			$result_ct = db_query($query, [$GLOBALS['STATUS_CLOSED']]);
+			$num_closed = $result_ct->num_rows;
 			unset($result_ct);
-	
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_SCHEDULED']} ";		// 10/26/09
-			$result_scheduled = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$num_scheduled = mysql_num_rows($result_scheduled); 
+
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ?";		// 10/26/09
+			$result_scheduled = db_query($query, [$GLOBALS['STATUS_SCHEDULED']]);
+			$num_scheduled = $result_scheduled->num_rows;
 			unset($result_scheduled);
 			
 		$al_groups = $_SESSION['user_groups'];		
@@ -340,8 +340,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		var points = new Array();
 <?php
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND `use_with_bm` = 1";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())){
 			$empty = FALSE;
 			extract ($row);
 			$name = $row['line_name'];
@@ -1407,8 +1407,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			 GROUP BY ticket_id ORDER BY `status` DESC, `severity` DESC, `$GLOBALS[mysql_prefix]ticket`.`id` ASC";		// 2/2/09, 10/28/09
 
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$curr_incs =  mysql_num_rows($result);		
+		$result = db_query($query);
+		$curr_incs =  $result->num_rows;
 		$sb_indx = 0;				// note zero base!			
 								// major while ... starts here
 ?>
@@ -1428,7 +1428,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 
 		if($curr_incs > 0) {
 		$z=0;		
-		while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+		while ($row = stripslashes_deep($result->fetch_array())) {
 			$by_severity[$row['severity']] ++;
 			$z==0 ? $background_col = "even" : $background_col = "odd";
 
@@ -1546,13 +1546,13 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		//		$tab_2 .= "<TR>					<TD>&nbsp;</TD></TR>";
 				$tab_2 .= "<TR>					<TD COLSPAN=2>" . show_assigns(0, $the_id) . "</TD></TR>";
 				$tab_2 .= 	"</TABLE>";		// 11/6/08
-				$query = "SELECT * FROM $GLOBALS[mysql_prefix]action WHERE `ticket_id` = " . $the_id;
-				$resultav = mysql_query($query) or do_error($query,'mysql_query',mysql_error(), basename( __FILE__), __LINE__);
-				$A = mysql_affected_rows();
-		
-				$query= "SELECT * FROM $GLOBALS[mysql_prefix]patient WHERE `ticket_id` = " . $the_id;
-				$resultav = mysql_query($query) or do_error($query,'mysql_query',mysql_error(), basename( __FILE__), __LINE__);
-				$P = mysql_affected_rows ();
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = ?";
+				$resultav = db_query($query, [intval($the_id)]);
+				$A = $resultav->num_rows;
+
+				$query= "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = ?";
+				$resultav = db_query($query, [intval($the_id)]);
+				$P = $resultav->num_rows;
 ?>
 /*				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['scope'], 12));?>", "<?php print $tab_1;?>"),
@@ -1654,15 +1654,15 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') {$where2}   
 		GROUP BY `unit_id` ORDER BY `severity` DESC, `tick_pstart` ASC";		
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$curr_calls =  mysql_num_rows($result);
+		$result = db_query($query);
+		$curr_calls =  $result->num_rows;
 
 		$guest = is_guest();
 		$user = is_user();
 		$doUnit = (($guest)||($user))? "viewU" : "editU";		// 5/11/10
 		$doTick = ($guest)? "viewT" : "editT";				// 06/26/08
 		$now = time() - (get_variable('delta_mins')*60);
-		$items = mysql_affected_rows();
+		$items = $result->num_rows;
 		$tags_arr = explode("/", get_variable('disp_stat'));		// 8/29/10 
 
 		$TBL_INC_PERC = 50;		// incident group - four columns  -  50 percent as default
@@ -1698,13 +1698,13 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			$i = 1;	
 			$evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 			
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//	While for Assignments
-			
+			while ($row = stripslashes_deep($result->fetch_assoc())) {		//	While for Assignments
+
 //	============================= Regions stuff
-				$query_un = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `resource_id` = '$row[unit_id]' ORDER BY `id` ASC;";	// 5/4/11
-				$result_un = mysql_query($query_un);	// 5/4/11
+				$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = ? ORDER BY `id` ASC";	// 5/4/11
+				$result_un = db_query($query_un, [intval($row['unit_id'])]);	// 5/4/11
 				$un_groups = array();
-				while ($row_un = stripslashes_deep(mysql_fetch_assoc($result_un))) 	{	// 5/4/11
+				while ($row_un = stripslashes_deep($result_un->fetch_assoc())) 	{	// 5/4/11
 					$un_groups[] = $row_un['group'];
 					}
 
@@ -1758,9 +1758,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 							$strike = $strikend = "";
 							}			 
 						if (!($row['unit_id'] == 0)) {																	// 5/11/09
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`	WHERE `id`= '{$row['unit_type']}' LIMIT 1";
-							$result_type = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-							$row_type = (mysql_affected_rows() > 0) ? stripslashes_deep(mysql_fetch_assoc($result_type)) : "";
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`	WHERE `id`= ? LIMIT 1";
+							$result_type = db_query($query, [intval($row['unit_type'])]);
+							$row_type = ($result_type->num_rows > 0) ? stripslashes_deep($result_type->fetch_assoc()) : "";
 							$the_bg_color = empty($row_type)?	"transparent" : $GLOBALS['UNIT_TYPES_BG'][$row_type['icon']];		// 3/15/10
 							$the_text_color = empty($row_type)? "black" :		$GLOBALS['UNIT_TYPES_TEXT'][$row_type['icon']];		// 
 							unset ($row_type);
@@ -1785,8 +1785,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 									LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 
 									WHERE `r`.`id` = '{$row['unit_id']}' LIMIT 1";
 
-								$result_unit = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-								$row_unit = stripslashes_deep(mysql_fetch_assoc($result_unit));
+								$result_unit = db_query($query);
+								$row_unit = stripslashes_deep($result_unit->fetch_assoc());
 ?>
 								sidebar_line += "<DIV CLASS='unit_s' <?php print $bg_color_class;?>'><DIV class='incs' onmouseover=\"Tip('<?php print substr($row_unit['stat_descr'], 0, 12);?>')\" onmouseout=\"UnTip()\">&nbsp;<?php print substr($row_unit['stat_descr'], 0, 12);?></DIV></DIV>";
 								sidebar_line += "</DIV><BR />";	
@@ -1811,9 +1811,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			var j=0;
 <?php
 		$u_types = array();												// 1/1/09
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 			}
 
@@ -1827,8 +1827,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 		$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, `$GLOBALS[mysql_prefix]assigns`.`responder_id`, `$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` FROM `$GLOBALS[mysql_prefix]assigns` LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
 	
-		$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
+		$result_as = db_query($query);
+		while ($row_as = stripslashes_deep($result_as->fetch_array())) {
 			$assigns[$row_as['responder_id']] = $row_as['ticket'];
 			$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 			}
@@ -1841,9 +1841,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		$status_vals[''] = $status_vals['0']="TBD";
 	
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-		$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	
-		while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+		$result_st = db_query($query);
+
+		while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 			$temp = $row_st['id'];
 			$status_vals[$temp] = $row_st['status_val'];
 			$status_hide[$temp] = $row_st['hide'];
@@ -1890,8 +1890,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`ring_fence`)
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )	
 				{$where2} AND `use_with_u_rf`=1 GROUP BY `l`.`id`";
-	$result_bn = mysql_query($query_bn)or do_error($query_bn, mysql_error(), basename(__FILE__), __LINE__);
-	while($row_bn = stripslashes_deep(mysql_fetch_assoc($result_bn))) {
+	$result_bn = db_query($query_bn);
+	while($row_bn = stripslashes_deep($result_bn->fetch_assoc())) {
 		extract ($row_bn);
 		$bn_name = $row_bn['line_name'];
 		$all_boundaries[] = $row_bn['ring_fence'];		
@@ -1941,8 +1941,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`excl_zone`)
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )	
 				{$where2} AND `use_with_u_ex`=1 GROUP BY `l`.`id`";
-	$result_bn = mysql_query($query_bn)or do_error($query_bn, mysql_error(), basename(__FILE__), __LINE__);
-	while($row_bn = stripslashes_deep(mysql_fetch_assoc($result_bn))) {
+	$result_bn = db_query($query_bn);
+	while($row_bn = stripslashes_deep($result_bn->fetch_assoc())) {
 		extract ($row_bn);
 		$bn_name = $row_bn['line_name'];
 		$all_boundaries[] = $row_bn['ring_fence'];		
@@ -1993,8 +1993,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		{$where2} 
 		GROUP BY unit_id ";	//	4/11/11, 5/4/11
 		
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		
-		$units_ct = mysql_affected_rows();			// 1/4/10	
+		$result = db_query($query);
+		$units_ct = $result->num_rows;			// 1/4/10
 //		snap(__LINE__, $units_ct);
 		$aprs = FALSE;
 		$instam = FALSE;
@@ -2006,7 +2006,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black");
 		$utc = gmdate ("U");				// 3/25/09
 	
-		while ($row = stripslashes_deep(mysql_fetch_array($result))) {		// ==========  major while() for RESPONDER ==========
+		while ($row = stripslashes_deep($result->fetch_array())) {		// ==========  major while() for RESPONDER ==========
 			$got_point = FALSE;
 			$latitude = $row['lat'];		// 7/18/10		
 			$longitude = $row['lng'];		// 7/18/10	
@@ -2033,10 +2033,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
 	
 			if ($row['aprs']==1) {				// get most recent aprs position data
-				$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
-					WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-				$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row_aprs = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+				$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks`
+					WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";		// newest
+				$result_tr = db_query($query, [$row['callsign']]);
+				$row_aprs = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 				$aprs_updated = $row_aprs['updated'];
 				$aprs_speed = $row_aprs['speed'];
 	//			if (($row_aprs) && (settype($row_aprs['latitude'], "float"))) {
@@ -2051,12 +2051,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 			if ($row['instam']==1) {			// get most recent instamapper data
 				$temp = explode ("/", $row['callsign']);			// callsign/account no. 3/22/09
-	
-				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks_hh`
-					WHERE `source` LIKE '$temp[0]%' ORDER BY `updated` DESC LIMIT 1";		// newest
-	
-				$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row_instam = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+
+				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks_hh`
+					WHERE `source` LIKE ? ORDER BY `updated` DESC LIMIT 1";		// newest
+
+				$result_tr = db_query($query, [$temp[0] . '%']);
+				$row_instam = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 				$instam_updated = $row_instam['updated'];
 				$instam_speed = $row_instam['speed'];
 				if (($row_instam) && (my_is_float($row_instam['latitude']))) {											// 4/29/09
@@ -2069,12 +2069,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 			if ($row['locatea']==1) {			// get most recent locatea data		// 7/23/09
 				$temp = explode ("/", $row['callsign']);			// callsign/account no.
-	
-				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks_hh`
-					WHERE `source` LIKE '$temp[0]%' ORDER BY `updated` DESC LIMIT 1";		// newest
-	
-				$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row_locatea = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+
+				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks_hh`
+					WHERE `source` LIKE ? ORDER BY `updated` DESC LIMIT 1";		// newest
+
+				$result_tr = db_query($query, [$temp[0] . '%']);
+				$row_locatea = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 				$locatea_updated = $row_locatea['updated'];
 				$locatea_speed = $row_locatea['speed'];
 				if (($row_locatea) && (my_is_float($row_locatea['latitude']))) {
@@ -2087,12 +2087,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 			if ($row['gtrack']==1) {			// get most recent gtrack data		// 7/23/09
 				$temp = explode ("/", $row['callsign']);			// callsign/account no.
-	
-				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks_hh`
-					WHERE `source` LIKE '$temp[0]%' ORDER BY `updated` DESC LIMIT 1";		// newest
-	
-				$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row_gtrack = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+
+				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks_hh`
+					WHERE `source` LIKE ? ORDER BY `updated` DESC LIMIT 1";		// newest
+
+				$result_tr = db_query($query, [$temp[0] . '%']);
+				$row_gtrack = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 				$gtrack_updated = $row_gtrack['updated'];
 				$gtrack_speed = $row_gtrack['speed'];
 				if (($row_gtrack) && (my_is_float($row_gtrack['latitude']))) {
@@ -2105,12 +2105,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 			if ($row['glat']==1) {			// get most recent latitude data		// 7/23/09
 				$temp = explode ("/", $row['callsign']);			// callsign/account no.
-	
-				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks_hh`
-					WHERE `source` LIKE '$temp[0]%' ORDER BY `updated` DESC LIMIT 1";		// newest
-	
-				$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row_glat = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+
+				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks_hh`
+					WHERE `source` LIKE ? ORDER BY `updated` DESC LIMIT 1";		// newest
+
+				$result_tr = db_query($query, [$temp[0] . '%']);
+				$row_glat = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 				$glat_updated = $row_glat['updated'];
 				if (($row_glat) && (my_is_float($row_glat['latitude']))) {
 					echo "\t\tvar point = new google.maps.LatLng(" . $row_glat['latitude'] . ", " . $row_glat['longitude'] ."); // 687\n";
@@ -2177,18 +2177,19 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
 				WHERE `responder_id` = '{$row['id']}' AND `clear` IS NULL ";
 	
-			$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$row_assign = (mysql_affected_rows()==0)?  FALSE : stripslashes_deep(mysql_fetch_assoc($result_as)) ;
+			$result_as = db_query($query);
+			$num_assigns_as = $result_as->num_rows;
+			$row_assign = ($num_assigns_as==0)?  FALSE : stripslashes_deep($result_as->fetch_assoc()) ;
 			unset($result_as);
-	
+
 			switch($row_assign['severity'])		{		//color tickets by severity
 			 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
 				default: 				$severityclass='severity_normal'; break;
 				}
-	
-			$tick_ct = (mysql_affected_rows()>1)? "(" .mysql_affected_rows() . ") ": "";
-			$ass_td =  (mysql_affected_rows()>0)? "<TD COLSPAN=2 CLASS='$severityclass' TITLE = '" .$row_assign['scope'] . "' >" .$tick_ct . shorten($row_assign['scope'], 24) . "</TD>": "<TD>na</TD>";
+
+			$tick_ct = ($num_assigns_as>1)? "(" . $num_assigns_as . ") ": "";
+			$ass_td =  ($num_assigns_as>0)? "<TD COLSPAN=2 CLASS='$severityclass' TITLE = '" .$row_assign['scope'] . "' >" .$tick_ct . shorten($row_assign['scope'], 24) . "</TD>": "<TD>na</TD>";
 	
 	// status, mobility
 	// as of
@@ -2519,9 +2520,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` ON `$GLOBALS[mysql_prefix]facilities`.status_id = `$GLOBALS[mysql_prefix]fac_status`.id 
 		{$where2} 
 		GROUP BY fac_id ORDER BY `$GLOBALS[mysql_prefix]facilities`.type ASC";
-		$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		
-		while($row_fac = mysql_fetch_array($result_fac)){
+		$result_fac = db_query($query_fac);
+
+		while($row_fac = $result_fac->fetch_array()){
 		$fac_id=($row_fac['fac_id']);
 		$fac_type=($row_fac['icon']);
 		$fac_type_name = ($row_fac['fac_type_name']);		
@@ -2646,9 +2647,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		var points = new Array();
 <?php
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND (`use_with_bm` = 1 OR `use_with_r` = 1)";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query);
 
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+		while ($row = stripslashes_deep($result->fetch_assoc())){
 			$empty = FALSE;
 			extract ($row);
 			$name = $row['line_name'];
@@ -2744,10 +2745,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		function get_fac_icon($fac_cat){			// returns legend string
 			$icons = $GLOBALS['fac_icons'];
 			$sm_fac_icons = $GLOBALS['sm_fac_icons'];
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `name` = \"$fac_cat\"";		// types in use
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `name` = ?";		// types in use
+			$result = db_query($query, [$fac_cat]);
 			$print = "";
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$fac_icon = $row['icon'];
 				$print .= "<IMG SRC = './our_icons/" . $sm_fac_icons[$fac_icon] . "' STYLE = 'vertical-align: middle'>";
 				}

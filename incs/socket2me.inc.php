@@ -26,15 +26,15 @@ if($ishttps) {
 	$port = ($temp2 == "") ? "1337" : $temp2;
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users = db_query($query);
+while ($row_users = stripslashes_deep($result_users->fetch_assoc())) 	{
 	$users_arr[$row_users['id']] = $row_users['responder_id'];
 	}
-	
-$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users2 = stripslashes_deep(mysql_fetch_assoc($result_users2))) 	{
+
+$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users2 = db_query($query2);
+while ($row_users2 = stripslashes_deep($result_users2->fetch_assoc())) 	{
 	$user_names[$row_users2['id']] = $row_users2['user'];
 	}
 

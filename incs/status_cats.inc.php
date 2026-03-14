@@ -10,16 +10,16 @@ $hide_status_groups = get_variable('group_or_dispatch');
 function get_category_butts() {
 	global $hide_status_groups, $hide_dispatched;
 	$category_butts = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$num_disp = mysql_num_rows($result);	//
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
+	$result = db_query($query);
+	$num_disp = $result->num_rows;	//
 	if(($num_disp > 0) && ($hide_dispatched == 1)) { $category_butts[0] = "Dispatched"; $i=1; } else { $i=0; }
 
 	if($hide_status_groups == 1) {
-		$query = "SELECT DISTINCT `group` FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query = "SELECT DISTINCT `group` FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC";
+		$result = db_query($query);
 
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			if(($row['group']=="") || ($row['group']==NULL) || ($row['group']=="NULL")) {
 				$category_name = "?";
 				} else {
@@ -43,17 +43,17 @@ function get_category($unit) {
 	$status_category="";
 	require_once('mysql.inc.php');
 	if($hide_status_groups == 0) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = $unit AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//2/12/11
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$deployed = mysql_num_rows($result);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = $unit AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//2/12/11
+		$result = db_query($query);
+		$deployed = $result->num_rows;
 		unset($result);
 		if($deployed == 0) {
-			$query = "SELECT `$GLOBALS[mysql_prefix]responder`.`un_status_id`, `$GLOBALS[mysql_prefix]un_status`.`status_val`, `$GLOBALS[mysql_prefix]un_status`.`hide`
-				FROM `$GLOBALS[mysql_prefix]responder`
-				LEFT JOIN `$GLOBALS[mysql_prefix]un_status` ON `$GLOBALS[mysql_prefix]responder`.`un_status_id`=`$GLOBALS[mysql_prefix]un_status`.`id`
-				WHERE `$GLOBALS[mysql_prefix]responder`.`id` = $unit";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+			$query = "SELECT `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`, `{$GLOBALS['mysql_prefix']}un_status`.`status_val`, `{$GLOBALS['mysql_prefix']}un_status`.`hide`
+				FROM `{$GLOBALS['mysql_prefix']}responder`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` ON `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`=`{$GLOBALS['mysql_prefix']}un_status`.`id`
+				WHERE `{$GLOBALS['mysql_prefix']}responder`.`id` = $unit";
+			$result = db_query($query);
+			while ($row = stripslashes_deep($result->fetch_array())) {
 				$status_id = $row['un_status_id'];
 				$status_hide = $row['hide'];
 				}
@@ -71,17 +71,17 @@ function get_category($unit) {
 			$status_category = "Dispatched";
 			}
 		} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = $unit AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$deployed = mysql_num_rows($result);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = $unit AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
+		$result = db_query($query);
+		$deployed = $result->num_rows;
 		unset($result);
 		if($deployed == 0) {
-			$query = "SELECT `$GLOBALS[mysql_prefix]responder`.`un_status_id`, `$GLOBALS[mysql_prefix]un_status`.`status_val`, `$GLOBALS[mysql_prefix]un_status`.`group`
-					FROM `$GLOBALS[mysql_prefix]responder`
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status` ON `$GLOBALS[mysql_prefix]responder`.`un_status_id`=`$GLOBALS[mysql_prefix]un_status`.`id`
-					WHERE `$GLOBALS[mysql_prefix]responder`.`id` = $unit";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+			$query = "SELECT `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`, `{$GLOBALS['mysql_prefix']}un_status`.`status_val`, `{$GLOBALS['mysql_prefix']}un_status`.`group`
+					FROM `{$GLOBALS['mysql_prefix']}responder`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` ON `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`=`{$GLOBALS['mysql_prefix']}un_status`.`id`
+					WHERE `{$GLOBALS['mysql_prefix']}responder`.`id` = $unit";
+				$result = db_query($query);
+				while ($row = stripslashes_deep($result->fetch_array())) {
 					if($row['un_status_id'] != 0) {
 						if(($row['group']=="") || ($row['group']==NULL) || ($row['group']=="NULL")) {
 							$category_name = "?";
@@ -105,19 +105,19 @@ function get_all_categories() {
 	$status_category=array();
 	require_once('mysql.inc.php');
 	if($hide_status_groups == 0) {
-		$query = "SELECT `$GLOBALS[mysql_prefix]responder`.`un_status_id`,
-			`$GLOBALS[mysql_prefix]responder`.`id`,
-			`$GLOBALS[mysql_prefix]un_status`.`status_val`,
-			`$GLOBALS[mysql_prefix]un_status`.`group`,
-			`$GLOBALS[mysql_prefix]un_status`.`hide`
-			FROM `$GLOBALS[mysql_prefix]responder`
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` ON `$GLOBALS[mysql_prefix]responder`.`un_status_id`=`$GLOBALS[mysql_prefix]un_status`.`id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`,
+			`{$GLOBALS['mysql_prefix']}responder`.`id`,
+			`{$GLOBALS['mysql_prefix']}un_status`.`status_val`,
+			`{$GLOBALS['mysql_prefix']}un_status`.`group`,
+			`{$GLOBALS['mysql_prefix']}un_status`.`hide`
+			FROM `{$GLOBALS['mysql_prefix']}responder`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` ON `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`=`{$GLOBALS['mysql_prefix']}un_status`.`id`";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$unit = $row['id'];
-			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = '{$unit}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
-			$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$deployed = mysql_num_rows($result2);
+			$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = '{$unit}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
+			$result2 = db_query($query2);
+			$deployed = $result2->num_rows;
 			if(($deployed == 0) && ($row['un_status_id'] != 0)) {
 				$status_id = $row['un_status_id'];
 				$status_hide = $row['hide'];
@@ -134,19 +134,19 @@ function get_all_categories() {
 			}
 		} else {
 
-		$query = "SELECT `$GLOBALS[mysql_prefix]responder`.`un_status_id`,
-			`$GLOBALS[mysql_prefix]responder`.`id`,
-			`$GLOBALS[mysql_prefix]un_status`.`status_val`,
-			`$GLOBALS[mysql_prefix]un_status`.`group`,
-			`$GLOBALS[mysql_prefix]un_status`.`hide`
-			FROM `$GLOBALS[mysql_prefix]responder`
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` ON `$GLOBALS[mysql_prefix]responder`.`un_status_id`=`$GLOBALS[mysql_prefix]un_status`.`id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`,
+			`{$GLOBALS['mysql_prefix']}responder`.`id`,
+			`{$GLOBALS['mysql_prefix']}un_status`.`status_val`,
+			`{$GLOBALS['mysql_prefix']}un_status`.`group`,
+			`{$GLOBALS['mysql_prefix']}un_status`.`hide`
+			FROM `{$GLOBALS['mysql_prefix']}responder`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` ON `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`=`{$GLOBALS['mysql_prefix']}un_status`.`id`";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$unit = $row['id'];
-			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = '{$unit}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
-			$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$deployed = mysql_num_rows($result2);
+			$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = '{$unit}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%Y') = '0000' )";	//2/12/11
+			$result2 = db_query($query2);
+			$deployed = $result2->num_rows;
 			if(($deployed == 0) && ($row['un_status_id'] != 0)) {
 				if(($row['group']=="") || ($row['group']==NULL) || ($row['group']=="NULL")) {
 					$status_category[$unit] = "?";
@@ -164,9 +164,9 @@ function get_all_categories() {
 	}	// end function get_category($unit);
 
 function get_no_units() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$num_units = mysql_num_rows($result);	//	11/29/10
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+	$result = db_query($query);
+	$num_units = $result->num_rows;	//	11/29/10
 	return $num_units;
 	}
 
@@ -203,21 +203,21 @@ function find_showing($curr_cats) {
 	}
 
 function count_units() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$units_no = mysql_affected_rows();
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+	$result = db_query($query);
+	$units_no = $result->num_rows;
 	return $units_no;
 	}
 
 function get_fac_category_butts() {
 	$fac_category_butts = array();
 	$i=0;
-	$query = "SELECT DISTINCT `$GLOBALS[mysql_prefix]facilities`.`type`, `$GLOBALS[mysql_prefix]fac_types`.`name`
-				FROM `$GLOBALS[mysql_prefix]facilities`
-				LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]facilities`.`type`=`$GLOBALS[mysql_prefix]fac_types`.`id`
-				ORDER BY `$GLOBALS[mysql_prefix]fac_types`.`name` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT DISTINCT `{$GLOBALS['mysql_prefix']}facilities`.`type`, `{$GLOBALS['mysql_prefix']}fac_types`.`name`
+				FROM `{$GLOBALS['mysql_prefix']}facilities`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` ON `{$GLOBALS['mysql_prefix']}facilities`.`type`=`{$GLOBALS['mysql_prefix']}fac_types`.`id`
+				ORDER BY `{$GLOBALS['mysql_prefix']}fac_types`.`name` ASC";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$fac_category_name = $row['name'];
 		$fac_category_butts[$i] = $fac_category_name;
 		$i++;
@@ -228,10 +228,10 @@ function get_fac_category_butts() {
 function get_bnd_butts() {
 	$bnd_butts = array();
 	$i=0;
-	$query = "SELECT *, `$GLOBALS[mysql_prefix]mmarkup`.`type`, `$GLOBALS[mysql_prefix]mmarkup`.`line_name`
-				FROM `$GLOBALS[mysql_prefix]mmarkup`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT *, `{$GLOBALS['mysql_prefix']}mmarkup`.`type`, `{$GLOBALS['mysql_prefix']}mmarkup`.`line_name`
+				FROM `{$GLOBALS['mysql_prefix']}mmarkup`";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$bnd_name = $row['line_name'];
 		$bnd_butts[$i] = $bnd_name;
 		$i++;
@@ -240,17 +240,17 @@ function get_bnd_butts() {
 	} 	// end function get_bnd_butts()
 
 function get_bound_name($value) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id` = '{$value}'";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = '{$value}'";
+	$result = db_query($query);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$bnd_name = $row['line_name'];
 	return $bnd_name;
 	}
 
 function test_boundary($id) {
 	$ret_val = true;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`= " . $id;
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= " . $id;
+	$result = db_query($query);
 	if(!$result) {
 		$ret_val = false;
 		}
@@ -258,8 +258,8 @@ function test_boundary($id) {
 	}
 
 function get_sess_boundaries() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	//	6/10/11
-	$result = mysql_query($query);	//	6/10/11
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	//	6/10/11
+	$result = db_query($query);	//	6/10/11
 	$a_all_boundaries = array();
 	$all_boundaries = array();
 	$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
@@ -267,10 +267,10 @@ function get_sess_boundaries() {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	6/10/11
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	//	6/10/11
-		$result2 = mysql_query($query2);	// 4/18/11
-		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	//	//	6/10/11
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{	//	6/10/11
+		$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= '$row[group]';";	//	6/10/11
+		$result2 = db_query($query2);	// 4/18/11
+		while ($row2 = stripslashes_deep($result2->fetch_assoc())) 	{	//	//	6/10/11
 			if($row2['boundary'] != 0) {
 				if(test_boundary($row2['boundary'])) {
 					$a_all_boundaries[] = $row2['boundary'];
@@ -281,9 +281,9 @@ function get_sess_boundaries() {
 
 	if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		foreach(explode(",",$_SESSION['viewed_groups']) as $val_vg) {
-			$query3 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$val_vg';";
-			$result3 = mysql_query($query3);	//	6/10/11
-			while ($row3 = stripslashes_deep(mysql_fetch_assoc($result3))) 	{
+			$query3 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= '$val_vg';";
+			$result3 = db_query($query3);	//	6/10/11
+			while ($row3 = stripslashes_deep($result3->fetch_assoc())) 	{
 				if($row3['boundary'] != 0) {
 					if(test_boundary($row3['boundary'])) {
 						$all_boundaries[] = $row3['boundary'];
@@ -325,45 +325,45 @@ function get_sess_boundaries() {
 			}
 		}
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
-				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`ring_fence`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `l`.`id` = `r`.`ring_fence`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
 				{$where2} AND `use_with_u_rf`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		$all_boundaries[] = $row['ring_fence'];
 		}	//	End while
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
-				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`excl_zone`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `l`.`id` = `r`.`excl_zone`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
 				{$where2} AND `use_with_u_ex`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		$all_boundaries[] = $row['excl_zone'];
 		}	//	End while
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
-				LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON ( `l`.`id` = `f`.`boundary`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `f`.`id` = `a`.`resource_id` )
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f` ON ( `l`.`id` = `f`.`boundary`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = `a`.`resource_id` )
 				{$where2} AND `use_with_f`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		$all_boundaries[] = $row['boundary'];
 		}	//	End while
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`
-				LEFT JOIN `$GLOBALS[mysql_prefix]region` `r` ON ( `l`.`id` = `r`.`boundary`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}region` `r` ON ( `l`.`id` = `r`.`boundary`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
 				{$where2} AND `use_with_r` = 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		$all_boundaries[] = $row['boundary'];
 		}	//	End while
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l`	WHERE `use_with_bm` = 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l`	WHERE `use_with_bm` = 1 AND `line_status` = 0 GROUP BY `l`.`id`";
+	$result = db_query($query);
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		$all_boundaries[] = $row['id'];
 		}	//	End while
 	return array_unique($all_boundaries);
@@ -375,10 +375,10 @@ function get_bnd_session() {
 	$bnds_sess = array();
 	if(!empty($boundaries)) {
 		foreach($boundaries as $key => $value) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `line_status` = 0 AND `id` = " . $value;
-			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-			if(mysql_num_rows($result) != 0) {
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND `id` = " . $value;
+			$result = db_query($query);
+			if($result->num_rows != 0) {
+				$row = stripslashes_deep($result->fetch_assoc());
 				$boundary_names[$row['id']] = $row['line_name'];
 				}
 			}
@@ -402,10 +402,10 @@ function get_bnd_session_names() {
 	$tmp = get_sess_boundaries();
 	if(!empty($tmp)) {
 		foreach($tmp as $key => $value) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `line_status` = 0 AND `id`='{$value}'";
-			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-			if(mysql_num_rows($result) != 0) {
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND `id`='{$value}'";
+			$result = db_query($query);
+			if($result->num_rows != 0) {
+				$row = stripslashes_deep($result->fetch_assoc());
 				$boundary_names[$row['id']] = $row['line_name'];
 				}
 			}
@@ -442,12 +442,12 @@ function find_bnd_showing() {
 function get_fac_category($facility) {
 	$fac_category="";
 	require_once('mysql.inc.php');
-	$query = "SELECT `$GLOBALS[mysql_prefix]facilities`.`type`, `$GLOBALS[mysql_prefix]fac_types`.`name`
-			FROM `$GLOBALS[mysql_prefix]facilities`
-			LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]facilities`.`type`=`$GLOBALS[mysql_prefix]fac_types`.`id`
-			WHERE `$GLOBALS[mysql_prefix]facilities`.`id` = $facility";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+	$query = "SELECT `{$GLOBALS['mysql_prefix']}facilities`.`type`, `{$GLOBALS['mysql_prefix']}fac_types`.`name`
+			FROM `{$GLOBALS['mysql_prefix']}facilities`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` ON `{$GLOBALS['mysql_prefix']}facilities`.`type`=`{$GLOBALS['mysql_prefix']}fac_types`.`id`
+			WHERE `{$GLOBALS['mysql_prefix']}facilities`.`id` = $facility";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_array())) {
 			$facility_type = $row['name'];
 			}
 	return $facility_type;
@@ -486,9 +486,9 @@ function find_fac_showing() {
 	}
 
 function count_facilities() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$facilities_no = mysql_affected_rows();
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities`";
+	$result = db_query($query);
+	$facilities_no = $result->num_rows;
 	return $facilities_no;
 	}
 

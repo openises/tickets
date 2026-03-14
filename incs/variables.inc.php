@@ -49,8 +49,8 @@ foreach($mapdir as $val) {
 	}
 if(count($mapzooms) > 0 && get_variable('local_maps') == "1") {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 20;}
 $setZoom = (get_variable('local_maps') == "1") ? $localZoomMin : get_variable('def_zoom');
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
-$result	= mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
+$result	= db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$states[$row['name']] = $row['code'];
 	}

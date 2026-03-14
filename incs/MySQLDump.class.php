@@ -11,12 +11,11 @@ class MySQLDump {
 	var $droptableifexists = false;
 	var $mysql_error;
 	
-	function connect($host,$user,$pass,$db) {	
+	function connect($host,$user,$pass,$db) {
 		$return = true;
-		$conn = @mysql_connect($host,$user,$pass);
-		if (!$conn) { $this->mysql_error = mysql_error(); $return = false; 	}
-		$seldb = @mysql_select_db($db);
-		if (!$conn) { $this->mysql_error = mysql_error();  $return = false; 	}
+		$conn = @mysqli_connect($host,$user,$pass,$db);
+		if (!$conn) { $this->mysql_error = mysqli_connect_error(); $return = false; 	}
+		$this->conn = $conn;
 		$this->connected = $return;
 		return $return;
 		}
@@ -25,17 +24,17 @@ class MySQLDump {
 		$return = true;
 		if (!$this->connected) { $return = false; 	}
 		$this->tables = array();
-		$sql = mysql_query("SHOW TABLES");
-		while ($row = mysql_fetch_array($sql)) {
+		$sql = $this->conn->query("SHOW TABLES");
+		while ($row = $sql->fetch_array()) {
 			array_push($this->tables,$row[0]);
 			}
 		return $return;
 		}
 
 	function list_values($tablename) {
-		$sql = mysql_query("SELECT * FROM $tablename");
+		$sql = $this->conn->query("SELECT * FROM `$tablename`");
 		$this->output .= "\n\n-- Dumping data for table: $tablename\n\n";
-		while ($row = mysql_fetch_array($sql)) {
+		while ($row = $sql->fetch_array()) {
 			$broj_polja = count($row) / 2;
 			$this->output .= "INSERT INTO `$tablename` VALUES(";
 			$buffer = '';
@@ -62,9 +61,9 @@ class MySQLDump {
 		$this->output .= "\n\n-- Dumping structure for table: $tablename\n\n";
 		if ($this->droptableifexists) { $this->output .= "DROP TABLE IF EXISTS `$tablename`;\nCREATE TABLE `$tablename` (\n"; 	}
 			else { $this->output .= "CREATE TABLE `$tablename` (\n"; 	}
-		$sql = mysql_query("DESCRIBE $tablename");		// returns resource(22) of type (mysql result)
+		$sql = $this->conn->query("DESCRIBE `$tablename`");		// returns mysqli_result object
 		$this->fields = array();
-		while ($row = mysql_fetch_array($sql)) {	
+		while ($row = $sql->fetch_array()) {
 			$name = $row[0]; //name
 			$type = $row[1]; //type
 			$null = $arr[strtoupper(trim($row[2]))]; //null?

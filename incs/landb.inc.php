@@ -46,9 +46,9 @@
 //		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND (`use_with_f` = 1 OR `use_with_r` = 1)";
 		$query = $query_arg;
 		$query .= " LIMIT 1";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query);
 //		snap(basename(__FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+		while ($row = stripslashes_deep($result->fetch_assoc())){
 //			snap(basename(__FILE__), __LINE__);
 //			snap( __LINE__, $row['line_type']);
 			$empty = FALSE;

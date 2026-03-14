@@ -64,10 +64,10 @@ $alts = array();				// and the max altitude within that hour
 $labels = array();				// graph label for nth hour
 $start_hr = '';
 
-$p1 = $_GET['p1'];;				// 
-$query = "SELECT MIN(packet_date) AS 'min', MAX(packet_date) AS 'max' FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '$p1'";
-$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row_tr = mysql_fetch_assoc($result_tr);
+$p1 = sanitize_string($_GET['p1']);;				//
+$query = "SELECT MIN(packet_date) AS 'min', MAX(packet_date) AS 'max' FROM `{$GLOBALS['mysql_prefix']}tracks` WHERE `source` = ?";
+$result_tr = db_query($query, [$p1]);
+$row_tr = $result_tr->fetch_assoc();
 //snap (basename( __FILE__), __LINE__);
 
 $modulus = 60*60;
@@ -81,11 +81,10 @@ for ($i = 0;$i<$nr_hrs; $i++) {								// an entry each hour
 	}
 
 //$query = "SELECT DISTINCT `source`, `latitude`, `longitude` ,`course` ,`speed` ,`altitude` ,`closest_city` ,`status` , `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '" .$p1 . "' ORDER BY `packet_date`";	//	6/16/08 
-$query = "SELECT  `source`, `altitude` , `packet_date`  FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '" .$p1 . "' ORDER BY `packet_date`";	//	10/5/08 
-$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//snap (basename( __FILE__) . __LINE__, mysql_affected_rows());
+$query = "SELECT  `source`, `altitude` , `packet_date`  FROM `{$GLOBALS['mysql_prefix']}tracks` WHERE `source` = ? ORDER BY `packet_date`";	//	10/5/08
+$result_tr = db_query($query, [$p1]);
 
-while ($row_tr = stripslashes_deep(mysql_fetch_assoc($result_tr))) {
+while ($row_tr = stripslashes_deep($result_tr->fetch_assoc())) {
 	$the_hr = intval(floor(strtotime($row_tr['packet_date'])/$modulus) - $low);
 	$mins[$the_hr]= is_my_null($mins[$the_hr]) ?  $row_tr['altitude'] : min($mins[$the_hr],$row_tr['altitude']);
 	$maxs[$the_hr]= is_my_null($maxs[$the_hr]) ?  $row_tr['altitude'] : max($maxs[$the_hr],$row_tr['altitude']);

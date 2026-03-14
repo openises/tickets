@@ -19,9 +19,9 @@ function tz_list() {
 	
 $theTimezones = tz_list();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
-$result	= mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
+$result	= db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$states[$row['name']] = $row['code'];
 	}
 $mapzooms = array();
@@ -44,19 +44,19 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 		<BODY onLoad = "ck_frames();" >  		<!-- <?php echo __LINE__;?> -->
 <?php
 		if (array_key_exists ( 'update', $_GET )) {
-			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_lat]' WHERE `name`='def_lat';";
-			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_lng]' WHERE `name`='def_lng';";
-			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_zoom]' WHERE `name`='def_zoom';";
-			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_map_caption]' WHERE `name`='map_caption';";
-			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
-			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_dfz]' WHERE `name`='def_zoom_fixed';";
-			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_lat'";
+			$result = db_query($query, [sanitize_string($_POST['frm_lat'])]);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_lng'";
+			$result = db_query($query, [sanitize_string($_POST['frm_lng'])]);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_zoom'";
+			$result = db_query($query, [sanitize_string($_POST['frm_zoom'])]);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='map_caption'";
+			$result = db_query($query, [sanitize_string($_POST['frm_map_caption'])]);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_zoom_fixed'";
+			$result = db_query($query, [sanitize_string($_POST['frm_dfz'])]);
 			if($_POST['frm_timezone'] == "") {$_POST['frm_timezone'] = "America/New_York";}
-			$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_timezone]' WHERE `name`='timezone';";
-			$result = mysql_query($query) or do_error($query, 'query failed', mysql_error(), __FILE__, __LINE__);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='timezone'";
+			$result = db_query($query, [sanitize_string($_POST['frm_timezone'])]);
 			$top_notice = "Settings saved to database.";
 			}
 		else {

@@ -23,10 +23,10 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
 	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "V"));}		// empty get all - force non-zero hit
 	snap(basename(__FILE__), __LINE__);
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`=$ticket_id LIMIT 1";
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=? LIMIT 1";
 	snap(__LINE__, $query );
-	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
+	$ticket_result = db_query($query, [intval($ticket_id)]);
+	$t_row = stripslashes_deep($ticket_result->fetch_array());
 	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
 	$eol = PHP_EOL;
 	$locale = get_variable('locale');	
@@ -110,11 +110,11 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 				    break;
 				case "P":															
 					$gt = get_text("Patient");
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE ticket_id='$ticket_id'";
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					if (mysql_affected_rows()>0) {
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id`=?";
+					$result = db_query($query, [intval($ticket_id)]);
+					if ($result->num_rows>0) {
 						$message .= "\n";
-						while($pat_row = stripslashes_deep(mysql_fetch_array($result))){
+						while($pat_row = stripslashes_deep($result->fetch_array())){
 							$message .= $pat_row['name'] . ", " . $pat_row['updated']  . "- ". wordwrap($pat_row['description'], 70)."\n";
 							}
 						}
@@ -122,12 +122,11 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 				    break;
 				case "O":
 					$gt = get_text("Actions");
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
-					if (mysql_affected_rows()>0) {
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id`=?";		// 10/16/08
+					$result = db_query($query, [intval($ticket_id)]);	// 3/22/09
+					if ($result->num_rows>0) {
 						$message .= "\n";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-						while($act_row = stripslashes_deep(mysql_fetch_array($result))) {
+						while($act_row = stripslashes_deep($result->fetch_array())) {
 							$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
 							}
 						}	
@@ -154,26 +153,26 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 				case "T":							// 6/20/12
 					$gt = get_text("Facility");
 					if ((intval($t_row['rec_facility'])>0) || (intval($t_row['facility'])>0)) {
-						$the_facility = (intval($t_row['rec_facility'])>0)? intval($t_row['rec_facility']) : intval($t_row['facility']);					
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`={$the_facility} LIMIT 1";	
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
-						if (mysql_num_rows ($result)>0) {
-							$f_row = stripslashes_deep(mysql_fetch_array($result));
+						$the_facility = (intval($t_row['rec_facility'])>0)? intval($t_row['rec_facility']) : intval($t_row['facility']);
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`=? LIMIT 1";
+						$result = db_query($query, [intval($the_facility)]);	// 3/22/09
+						if ($result->num_rows>0) {
+							$f_row = stripslashes_deep($result->fetch_array());
 							$message .= "{$f_row['handle']}\n";
 							$message .= "{$f_row['beds_info']}\n";
 							}
 						}
 				    break;
 				case "U":		// 11/13/2012
-					$query_u = "SELECT  `handle` FROM `$GLOBALS[mysql_prefix]assigns` `a`
-						LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`a`.`responder_id` = `r`.`id`)
-						WHERE `a`.`ticket_id` = $ticket_id AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
+					$query_u = "SELECT  `handle` FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON (`a`.`responder_id` = `r`.`id`)
+						WHERE `a`.`ticket_id` = ? AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
 						ORDER BY `handle` ASC ";																// 5/25/09, 1/16/08
-					$result_u = mysql_query($query_u) or do_error($query_u, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
-					if (mysql_num_rows($result_u)>0) {
+					$result_u = db_query($query_u, [intval($ticket_id)]);	// 3/22/09
+					if ($result_u->num_rows>0) {
 						$gt = get_text("Units");
-						$message .= "\n(" . mysql_num_rows($result_u) . "):\n";
-						while($u_row = stripslashes_deep(mysql_fetch_assoc($result_u))) {
+						$message .= "\n(" . $result_u->num_rows . "):\n";
+						while($u_row = stripslashes_deep($result_u->fetch_assoc())) {
 							$message .= "{$u_row['handle']},";
 							}
 						$message .= $eol;		// 4/1/2013

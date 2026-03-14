@@ -18,14 +18,15 @@ require_once('functions.inc.php');
 // 			alert(map.getZoom());
 
 function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/15/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`  
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
 		WHERE `responder_id` = '{$unit_id}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	5/4/11
 	
-	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if ( mysql_num_rows($result_as) == 0) {unset($result_as); return "<TD></TD>";}
-	else {		
-		$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as)) ;
+	$result_as = db_query($query);
+	$num_assigns = $result_as->num_rows;
+	if ( $num_assigns == 0) {unset($result_as); return "<TD></TD>";}
+	else {
+		$row_assign = stripslashes_deep($result_as->fetch_assoc()) ;
 		unset($result_as);
 		$tip = str_replace ( "'", "`",    ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}   "));
 	
@@ -35,15 +36,15 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			default: 							$severityclass='severity_normal'; break;
 			}
 	
-		switch (mysql_affected_rows()) {		// 8/30/10
+		switch ($num_assigns) {		// 8/30/10
 			case 0:
 				$the_disp_stat="";
-				break;			
+				break;
 			case 1:
 				$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 				break;
 			default:							// multiples
-			    $the_disp_stat = "<SPAN CLASS='disp_stat'>&nbsp;" . mysql_affected_rows() . "&nbsp;</SPAN>&nbsp;";
+			    $the_disp_stat = "<SPAN CLASS='disp_stat'>&nbsp;" . $num_assigns . "&nbsp;</SPAN>&nbsp;";
 			    break;
 			}						// end switch()
 		$ass_td = "<TD ALIGN='left' onMouseover=\\\"Tip('{$tip}')\\\" onmouseout=\\\"UnTip()\\\" onClick = '{$on_click}' CLASS='$severityclass'  STYLE = 'white-space:nowrap;'>{$the_disp_stat}" . shorten($row_assign['scope'], 24) . "</TD>";
@@ -64,14 +65,14 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 	
 		$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,
 			UNIX_TIMESTAMP(booked_date) AS booked_date,
-			UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`updated`) AS updated,
-			`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` 
-			FROM `$GLOBALS[mysql_prefix]ticket`  
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
-			WHERE `$GLOBALS[mysql_prefix]ticket`.`id`=" . get_ticket_id () . " LIMIT 1";			// 7/24/09 10/16/08 Incident location 09/25/09 Pre Booking
+			UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(`{$GLOBALS['mysql_prefix']}ticket`.`updated`) AS updated,
+			`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr` 
+			FROM `{$GLOBALS['mysql_prefix']}ticket`  
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)		
+			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id`=" . get_ticket_id () . " LIMIT 1";			// 7/24/09 10/16/08 Incident location 09/25/09 Pre Booking
 	
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_ticket = stripslashes_deep(mysql_fetch_array($result));
+		$result = db_query($query);
+		$row_ticket = stripslashes_deep($result->fetch_array());
 		$facility = $row_ticket['facility'];
 		$rec_fac = $row_ticket['rec_facility'];
 			if(($row_ticket['lat']==$GLOBALS['NM_LAT_VAL']) && ($row_ticket['lng']==$GLOBALS['NM_LAT_VAL'])) {	// check for tickets created in no-maps mode 8/4/10
@@ -85,9 +86,9 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		unset ($result);
 	
 		if ($rec_fac > 0) {
-			$query_rfc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`= $rec_fac ";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
-			$result_rfc = mysql_query($query_rfc) or do_error($query_rfc, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$row_rec_fac = stripslashes_deep(mysql_fetch_array($result_rfc));
+			$query_rfc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= $rec_fac ";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
+			$result_rfc = db_query($query_rfc);
+			$row_rec_fac = stripslashes_deep($result_rfc->fetch_array());
 			$rf_lat = $row_rec_fac['lat'];
 			$rf_lng = $row_rec_fac['lng'];
 			$rf_name = $row_rec_fac['name'];		
@@ -262,11 +263,11 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			
 		var icons=[];						// note globals
 <?php
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+		$result = db_query($query);
 		$icons = $GLOBALS['icons'];
 		
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// map type to blank icon id
+		while ($row = stripslashes_deep($result->fetch_assoc())) {		// map type to blank icon id
 			$blank = $icons[$row['icon']];
 			print "\ticons[" . $row['id'] . "] = " . $row['icon'] . ";\n";	// 
 			}
@@ -310,22 +311,22 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			function get_cd_str($in_row) {			// unit row in, 
 				global $unit_id;
 //																			// first, already on this run?		
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE  `ticket_id` = " . get_ticket_id () . "
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE  `ticket_id` = " . get_ticket_id () . "
 					 AND (`responder_id`={$in_row['unit_id']}) 
 					 AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";	// 6/25/10
 //				snap(__LINE__, $query);
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				if(mysql_affected_rows()==1) 			{return " CHECKED DISABLED ";}	
-	
-				if (($unit_id != "") && ((mysql_affected_rows()!=1) || ((mysql_affected_rows()==1) && (intval($in_row['multi'])==1))))		{print "checked";return " CHECKED ";}				// 12/18/10 - Checkbox checked here individual unit seleted.
+				$result = db_query($query);
+				if($result->num_rows==1) 			{return " CHECKED DISABLED ";}
+
+				if (($unit_id != "") && (($result->num_rows!=1) || (($result->num_rows==1) && (intval($in_row['multi'])==1))))		{print "checked";return " CHECKED ";}				// 12/18/10 - Checkbox checked here individual unit seleted.
 				if (intval($in_row['dispatch'])==2) 	{return " DISABLED ";}				// 2nd, disallowed  - 5/30/10
 				if (intval($in_row['multi'])==1) 		{return "";}						// 3rd, allowed
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-					WHERE `responder_id`={$in_row['unit_id']} 
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+					WHERE `responder_id`={$in_row['unit_id']}
 					AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 					LIMIT 1;";		// 6/25/10
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				if(mysql_affected_rows()==1) 			{return " DISABLED ";}		// 3/30/10
+				$result = db_query($query);
+				if($result->num_rows==1) 			{return " DISABLED ";}		// 3/30/10
 				else							 		{return "";}
 				}			// function get cd_str($in_row)
 				
@@ -333,21 +334,21 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 													// build js array of responders to this ticket - possibly none
 			$query = "SELECT `ticket_id`, `responder_id` 
-				FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . get_ticket_id ();
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+				FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . get_ticket_id ();
+			$result = db_query($query);	
 			
-			while ($assigns_row = stripslashes_deep(mysql_fetch_array($result))) {
+			while ($assigns_row = stripslashes_deep($result->fetch_array())) {
 				print "\t\tunit_assigns[' '+ " . $assigns_row['responder_id']. "]= true;\n";	// note string forced
 				}
 			print "\n";
 // ===================================================================================
 
 			$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart, UNIX_TIMESTAMP(problemend) AS problemend 
-				FROM `$GLOBALS[mysql_prefix]ticket` 
+				FROM `{$GLOBALS['mysql_prefix']}ticket` 
 				WHERE `id`= " . get_ticket_id () . " LIMIT 1;";	// 4/5/10
-			$result_pos = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			if(mysql_affected_rows()==1) {
-				$row_position = stripslashes_deep(mysql_fetch_array($result_pos));
+			$result_pos = db_query($query);
+			if($result_pos->num_rows==1) {
+				$row_position = stripslashes_deep($result_pos->fetch_array());
 				$latitude = $row_position['lat'];
 				$longitude = $row_position['lng'];
 				$problemstart = $row_position['problemstart'];
@@ -422,15 +423,15 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				`s`.`bg_color` AS `status_bg`, `s`.`text_color` AS `status_text`,
 				`s`.`status_val` AS `unitstatus`, `contact_via`, 
 				(((acos(sin(({$latitude}*pi()/180)) * sin((`r`.`lat`*pi()/180))+cos(({$latitude}*pi()/180)) * cos((`r`.`lat`*pi()/180)) * cos((({$longitude} - `r`.`lng`)*pi()/180))))*180/pi())*60*{$nm_to_what}) AS `distance`,
-				(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-					WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`  
+				(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns` 
+					WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`  
 					AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
 					AS `calls_assigned`			
 				
-				FROM `$GLOBALS[mysql_prefix]responder` `r`
-				LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`r`.`un_status_id` = `s`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON (`r`.`type` = `t`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON (`r`.`id` = `a`.`resource_id`)					
+				FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON (`r`.`un_status_id` = `s`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON (`r`.`type` = `t`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON (`r`.`id` = `a`.`resource_id`)					
 				 WHERE  `dispatch` = 0 $where $where2 $where3 GROUP BY unit_id )
 			UNION DISTINCT
 				(SELECT *, UNIX_TIMESTAMP(`updated`) AS `updated`, `r`.`handle` AS `unit_handle`,
@@ -440,21 +441,21 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				`s`.`status_val` AS `unitstatus`, `contact_via`, 
 				`s`.`status_val` AS `unitstatus`, `contact_via`, 
 				9999 AS `distance`,
-				(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-					WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`  
+				(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns` 
+					WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`  
 					AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
 					AS `calls_assigned`			
 				
-				FROM `$GLOBALS[mysql_prefix]responder` `r`
-				LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`r`.`un_status_id` = `s`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON (`r`.`type` = `t`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON (`r`.`id` = `a`.`resource_id`)					
+				FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON (`r`.`un_status_id` = `s`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON (`r`.`type` = `t`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON (`r`.`id` = `a`.`resource_id`)					
 				 WHERE  `dispatch` > 0 $where $where2 $where3 GROUP BY unit_id )
 				{$order}";		//	6/17/13				 
 				 
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$result = db_query($query);
 	
-			if(mysql_affected_rows()>0) {
+			if($result->num_rows>0) {
 			$end_date = (intval($problemend)> 1)? $problemend:  (time() - (get_variable('delta_mins')*60));
 			$elapsed = my_date_diff(date("Y-m-d H:i:s",$problemstart), date("Y-m-d H:i:s",$end_date));		// 5/13/10
 
@@ -471,7 +472,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 <?php
 // major while ... for RESPONDER data starts here
 				$i = $k = 1;				// sidebar/icon index
-				while ($unit_row = stripslashes_deep(mysql_fetch_assoc($result))) {				// 7/13/09
+				while ($unit_row = stripslashes_deep($result->fetch_assoc())) {				// 7/13/09
 					$theName = implode(" | ", get_mdb_names($unit_row['unit_id']));
 					$has_coords = ((my_is_float($unit_row['lat'])) && (my_is_float($unit_row['lng'])));				// 2/25/09, 7/7/09
 					$has_rem_source = ((intval ($unit_row['aprs'])==1)||(intval ($unit_row['instam'])==1)||(intval ($unit_row['locatea'])==1)||(intval ($unit_row['gtrack'])==1)||(intval ($unit_row['glat'])==1));		// 11/15/09
@@ -536,13 +537,13 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 	
 					if (($has_coords) && ($has_rem_source) && (!(empty($unit_row['callsign'])))) {				// 11/15/09
 						$thespeed = "";
-						$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
+						$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM {$GLOBALS['mysql_prefix']}tracks
 							WHERE `source`= '$unit_row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";
 	
-						$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-						if (mysql_affected_rows()>0) {		// got a track?
+						$result_tr = db_query($query);
+						if ($result_tr->num_rows>0) {		// got a track?
 						
-							$track_row = stripslashes_deep(mysql_fetch_array($result_tr));			// most recent track report
+							$track_row = stripslashes_deep($result_tr->fetch_array());			// most recent track report
 				
 							$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 							$tab_2 .= "<TR><TH CLASS='even' COLSPAN=2>" . $track_row['source'] . "</TH></TR>";
@@ -562,7 +563,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 							try{bounds.extend(point);}															// point into BB
 							catch(err)	{}
 <?php
-							}			// end if (mysql_affected_rows()>0;) for track data
+							}			// end if ($result_tr->num_rows>0) for track data
 						else {				// no track data
 						
 							$k--;			// not a clickable unit for dispatch
@@ -610,12 +611,12 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 							case 0:
 							    break;
 							case 1:
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` 
 									WHERE (`responder_id` = {$unit_row['unit_id']}
 									AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
 									limit 1";		
-								$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-								$row_as = stripslashes_deep(mysql_fetch_assoc($result_as));
+								$result_as = db_query($query);
+								$row_as = stripslashes_deep($result_as->fetch_assoc());
 								$the_disp_str = "<SPAN CLASS='disp_stat'>&nbsp;" . get_disp_status ($row_as) . "&nbsp;</SPAN>&nbsp;";
 							    break;
 						
@@ -687,7 +688,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					$k++;
 					}				// end major while ($unit_row = ...)  for each responder
 //				print "\t\t var start = 1;\n";	// already sorted - 3/24/10		
-				}				// end if(mysql_affected_rows()>0)
+				}				// end if($result->num_rows>0)
 			else {
 				print "\t\t var start = 0;\n";	// already sorted - 3/24/10
 				}			

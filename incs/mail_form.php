@@ -47,9 +47,10 @@ $responder_id = (array_key_exists('responder_id', $_GET)) ? $_GET['responder_id'
 $smsg_provider = return_provider_name(get_msg_variable('smsg_provider'));
 $smsg_providers = array('SMS Responder','SMS Broadcast','MOTOTRBO Text Message','Txt Local');
 $using_smsg = ((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) ? true : false;
-$t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`	FROM `$GLOBALS[mysql_prefix]ticket` `t`	WHERE `id` = {$tik_id} LIMIT 1";
-$t_result = mysql_query($t_query) or do_error($t_query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-$t_row = stripslashes_deep(mysql_fetch_assoc($t_result), MYSQL_ASSOC);			
+$tik_id = sanitize_int($tik_id);
+$t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`	WHERE `id` = ? LIMIT 1";
+$t_result = db_query($t_query, [intval($tik_id)]);
+$t_row = stripslashes_deep($t_result->fetch_assoc());			
 $assigned_resp = array();
 $theTickets = array();
 $func = (array_key_exists('func', $_GET)) ? $_GET['func'] : 0;
@@ -62,8 +63,8 @@ switch($func) {
 			WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']}	
 			ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;				// 4/28/10
 	
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$no_tickets = mysql_affected_rows();
+		$result = db_query($query);
+		$no_tickets = $result->num_rows;
 		$return .= "<CENTER>";
 		$return .= "<H3>Mail to " . get_text("Units") . "</H3>";
 		$return .= "<P>";
@@ -74,7 +75,7 @@ switch($func) {
 		$return .= "<LABEL for='frm_sel_inc' onmouseout='UnTip()' onmouseover=\"Tip('Select units assigned to specific Incident');\"><EM>". get_text("Units"). " assigned to ". get_text("Incident") . "</EM></LABEL>: 
 				<SELECT ID='frm_sel_inc' NAME='frm_sel_inc' STYLE='display: inline-block;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; window.sel_inc=this.value;'>\n\t
 				<OPTION VALUE=0 SELECTED>All incidents </OPTION>\n";
-			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+			while($row = stripslashes_deep($result->fetch_assoc())){
 				$bg_color = $bg_colors_arr[$row['severity']];
 				if(!(empty($row['scope']))) {				// 6/28/09
 					$return .= "\t<OPTION VALUE='{$row['incident']}' STYLE='background-color:{$bg_color}; color:black;' >{$row['scope']} </OPTION>\n";
@@ -106,8 +107,8 @@ switch($func) {
 				LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
 				WHERE (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> '')) AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 				ORDER BY `r`.`id` ASC ";
-			$result_ass = mysql_query($query_ass) or do_error($query_ass, 'mysql query failed', mysql_error(), __FILE__, __LINE__);				
-			while($row_ass = stripslashes_deep(mysql_fetch_assoc($result_ass), MYSQL_ASSOC)){
+			$result_ass = db_query($query_ass);
+			while($row_ass = stripslashes_deep($result_ass->fetch_assoc())){
 				$assigned_resp[] = $row_ass['responder_id'];
 				}
 			$query = "SELECT *,	`r`.`id` AS `responder_id`,
@@ -118,9 +119,9 @@ switch($func) {
 				WHERE LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> '')
 				ORDER BY  `name` ASC ";
 			}
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$lines = mysql_affected_rows() +8;
-		$no_rows = mysql_num_rows($result);
+		$result = db_query($query);
+		$lines = $result->num_rows +8;
+		$no_rows = $result->num_rows;
 		$return = "<FORM ID='contact_form' NAME='contact_form' METHOD='post' ACTION='./ajax/form_post.php?q=". $sess_id . "&function=contact'>";
 		$return .= "<INPUT TYPE='hidden' NAME='frm_step' VALUE='3' />\n";
 		$return .= "<INPUT TYPE='hidden' NAME='frm_add_str' VALUE='' />\n";
@@ -140,7 +141,7 @@ switch($func) {
 			$return .= "</TR>";
 			$the_arr = array();
 			$n=1;
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = $result->fetch_assoc()) {
 				$smsg_arr = array();
 				$temp_arr = array();
 				$temp_smsg = get_smsgid($row['responder_id']);
@@ -267,8 +268,8 @@ switch($func) {
 		$return .= "<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>";
 		$return .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-		$result = mysql_query($query);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query);
+		while ($row = $result->fetch_assoc()) {
 			$return .= "\t<OPTION VALUE='" . $row['code'] . "'>" . $row['code'] . "|" . $row['text'] . "</OPTION>\n";
 			}
 		$return .= "</SELECT>";
@@ -326,9 +327,9 @@ switch($func) {
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
 			WHERE (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> '')) AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 			ORDER BY `r`.`id` ASC ";
-		$result = mysql_query($query);				
-		$lines = mysql_num_rows($result) +8;
-		$no_rows = mysql_num_rows($result);
+		$result = db_query($query);				
+		$lines = $result->num_rows +8;
+		$no_rows = $result->num_rows;
 		$return = "<FORM ID='contact_form' NAME='contact_form' METHOD='post' ACTION='./ajax/form_post.php?q=". $sess_id . "&function=contact'>";
 		$return .= "<INPUT TYPE='hidden' NAME='frm_step' VALUE='3' />\n";
 		$return .= "<INPUT TYPE='hidden' NAME='frm_add_str' VALUE='' />\n";
@@ -348,7 +349,7 @@ switch($func) {
 			$return .= "</TR>";
 			$the_arr = array();
 			$n=1;
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = $result->fetch_assoc()) {
 				$assigned_resp[] = $row['responder_id'];
 				$theTickets[$row['tick_id']] = $row['ticket_scope'];
 				$smsg_arr = array();
@@ -477,8 +478,8 @@ switch($func) {
 		$return .= "<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>";
 		$return .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-		$result = mysql_query($query);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query);
+		while ($row = $result->fetch_assoc()) {
 			$return .= "\t<OPTION VALUE='" . $row['code'] . "'>" . $row['code'] . "|" . $row['text'] . "</OPTION>\n";
 			}
 		$return .= "</SELECT>";
@@ -537,9 +538,9 @@ switch($func) {
 			ORDER BY `name` ASC ";
 		$tik_id = $_GET['ticket_id'];
 		$default_msg = "Ticket ID *" . $tik_id . "*";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$lines = mysql_affected_rows() +8;
-		$no_rows = mysql_num_rows($result);
+		$result = db_query($query);
+		$lines = $result->num_rows +8;
+		$no_rows = $result->num_rows;
 		$return = "<FORM ID='contact_form' NAME='contact_form' METHOD='post' ACTION='./ajax/form_post.php?q=". $sess_id . "&function=contact'>";
 		$return .= "<INPUT TYPE='hidden' NAME='frm_step' VALUE='3' />\n";
 		$return .= "<INPUT TYPE='hidden' NAME='frm_add_str' VALUE='' />\n";
@@ -559,7 +560,7 @@ switch($func) {
 			$return .= "</TR>";
 			$the_arr = array();
 			$n=1;
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = $result->fetch_assoc()) {
 				$smsg_arr = array();
 				$temp_arr = array();
 				$temp_smsg = get_smsgid($row['responder_id']);
@@ -686,8 +687,8 @@ switch($func) {
 		$return .= "<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>";
 		$return .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-		$result = mysql_query($query);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query);
+		while ($row = $result->fetch_assoc()) {
 			$return .= "\t<OPTION VALUE='" . $row['code'] . "'>" . $row['code'] . "|" . $row['text'] . "</OPTION>\n";
 			}
 		$return .= "</SELECT>";

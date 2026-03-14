@@ -60,9 +60,9 @@ $quick = ((is_super() || is_administrator()) && (intval(get_variable('quick'))==
 $show_ampm = (get_variable('military_time')==1) ? 0 : 1;
 $broadcast = intval(get_variable('broadcast'));
 $protocols = array();
-$query_in = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
-$result_in = mysql_query($query_in);
-while ($row_in = stripslashes_deep(mysql_fetch_assoc($result_in))) {
+$query_in = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
+$result_in = db_query($query_in);
+while ($row_in = stripslashes_deep($result_in->fetch_assoc())) {
 	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = addslashes($row_in['protocol']);}
 	}
 $mapzooms = array();
@@ -78,9 +78,9 @@ foreach($mapdir as $val) {
 if(count($mapzooms) > 0 && get_variable('local_maps') == "1") {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 20;}
 // print $localZoomMin . ", " . $localZoomMax . ", " . $localZoomMin . "<BR />";
 $setZoom = (get_variable('local_maps') == "1") ? $localZoomMin : get_variable('def_zoom');
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
-$result	= mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
+$result	= db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$states[$row['name']] = $row['code'];
 	}
 $def_srt_arr_respsit = array('icon','handle','mail','incidents','status','m','asof');
@@ -113,16 +113,16 @@ $resp_assigns = array();
 $tickets_arr = array();
 $responders_arr = array();
 $respondersHandles_arr = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$tmp_arr[$row['group']] = $row['group'];
 	}
 $tmp_arr = array_unique($tmp_arr);
 foreach($tmp_arr as $key => $val) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `group` = '" . $val . "' ORDER BY `sort`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `group` = ? ORDER BY `sort`";
+	$result = db_query($query, [$val]);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$responder_statuses[$key][$row['id']]['name'] = $row['status_val'];
 		$responder_statuses[$key][$row['id']]['hide'] = $row['hide'];
 		$responder_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
@@ -130,16 +130,16 @@ foreach($tmp_arr as $key => $val) {
 		}
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `group`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `group`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$tmp_arr[$row['group']] = $row['group'];
 	}
 $tmp_arr = array_unique($tmp_arr);
 foreach($tmp_arr as $key => $val) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `group` = '" . $val . "' ORDER BY `sort`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `group` = ? ORDER BY `sort`";
+	$result = db_query($query, [$val]);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$facility_statuses[$key][$row['id']]['name'] = $row['status_val'];
 		$facility_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
 		$facility_statuses[$key][$row['id']]['text_color'] = $row['text_color'];	
@@ -152,39 +152,39 @@ $query = "SELECT `a`.`ticket_id`,
 	FROM `$GLOBALS[mysql_prefix]assigns` `a`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `a`.`ticket_id`=`t`.`id`
 	WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}') AND (`a`.`clear` IS NULL OR DATE_FORMAT(`a`.`clear`,'%y') = '00' )";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_assigns = mysql_num_rows($result);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+$num_assigns = $result->num_rows;
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$assigns[$row['responder_id']][] = $row['ticket_id'];
 	}
 unset($result);
 foreach($assigns as $key => $resp_arr) {
 	$resp_assigns[$key] = $resp_arr;
 	}
-	
-$query = "SELECT `t`.`id`, 
-	`t`.`scope` AS `scope` 
-	FROM `$GLOBALS[mysql_prefix]ticket` `t`
+
+$query = "SELECT `t`.`id`,
+	`t`.`scope` AS `scope`
+	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
 	WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}')";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_assigns = mysql_num_rows($result);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+$num_assigns = $result->num_rows;
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$tickets_arr[$row['id']][] = $type = shorten($row['scope'], 18);
 	}
 unset($result);
 
-$query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `$GLOBALS[mysql_prefix]responder` `r`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_responders = mysql_num_rows($result);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `{$GLOBALS['mysql_prefix']}responder` `r`";
+$result = db_query($query);
+$num_responders = $result->num_rows;
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$responders_arr[$row['handle']] = $row['id'];
 	}
 unset($result);
 
-$query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `$GLOBALS[mysql_prefix]responder` `r`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_responders = mysql_num_rows($result);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `{$GLOBALS['mysql_prefix']}responder` `r`";
+$result = db_query($query);
+$num_responders = $result->num_rows;
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$id = $row['id'];
 	$handle = ($row['handle'] != "") ? $row['handle'] : "UNK";
 	$respondersHandles_arr[$id] = $handle;
