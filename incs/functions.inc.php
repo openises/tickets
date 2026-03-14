@@ -4639,7 +4639,7 @@ function is_dir_empty($dir) {
 	}
 
 function get_tile_bounds ($repository) {
-	if(is_dir_empty($repository)) {return false;}
+	if(!is_dir($repository) || is_dir_empty($repository)) {return false;}
 	if (!function_exists('tile2long')) {
 		function tile2long( $x, $z) {
 			$n = pow(2, $z);
