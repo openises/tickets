@@ -113,7 +113,7 @@ function do_is_closed() {
 	}				// end function do_is_closed()
 	
 function do_is_start($in_row) {				// 3/22/10
-	global $disposition, $mode;
+	global $disposition, $mode, $ticket_id;
 ?>
 <SCRIPT>
 	String.prototype.trim = function () {

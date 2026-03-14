@@ -1571,7 +1571,7 @@ case "u":	// =======================================  Update 	==================
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename" 	VALUE="<?php print $tablename ?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $_POST['id'] ?>"/>
+	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $id ?>"/>
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby ;?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>
@@ -1647,12 +1647,12 @@ case "u":	// =======================================  Update 	==================
 		$disallow = is_in_use($row['id']);				// 10/20/09	- 2/25/10 - 11/9/10
 		if ((!($disallow) && ($can_edit))) {			// 3/19/11
 ?>
-			<SPAN ID='del_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc ('d', '<?php print $_POST["id"] ?>');"><SPAN STYLE='float: left;'><?php print get_text("Delete entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
+			<SPAN ID='del_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc ('d', '<?php print $id ?>');"><SPAN STYLE='float: left;'><?php print get_text("Delete entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
 <?php
 			}
 		if ($can_edit) {							// 3/19/11
 ?>
-			<SPAN ID='edit_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc('u', '<?php print $_POST["id"] ?>');"><SPAN STYLE='float: left;'><?php print get_text("Edit entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
+			<SPAN ID='edit_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="JSfnToFunc('u', '<?php print $id ?>');"><SPAN STYLE='float: left;'><?php print get_text("Edit entry");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
 <?php
 			}
 ?>

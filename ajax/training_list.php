@@ -60,8 +60,8 @@ $query = "SELECT *,	`a`.`id` AS `id`,
 	ORDER BY `$sidx` $sord LIMIT ?, ?";
 
 $result = db_query($query, [
-	['type' => 'i', 'value' => $start],
-	['type' => 'i', 'value' => $limit]
+	$start,
+	$limit
 ]);
 
 // we should set the appropriate header information. Do not forget this.

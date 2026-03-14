@@ -4771,7 +4771,7 @@ function recalculate_tile_bounds ($repository) {
 	$result = db_query($query);
 	if ($result && $result->num_rows > 0) {
 		$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= ? WHERE `name` = 'bounds'";
-		db_query($query2, [['type' => 's', 'value' => $boundsString]]);
+		db_query($query2, [$boundsString]);
 	}
 	return $bounds;
 	}		// end function recalculate_tile_bounds

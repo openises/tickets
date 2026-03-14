@@ -110,7 +110,7 @@ if(($msg_row['msg_type'] == 4) || ($msg_row['msg_type'] == 5) || ($msg_row['msg_
 	$theOthers = array();
 	foreach($theFrom AS $val) {
 		$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
-		$result1 = db_query($query1, [['type' => 's', 'value' => $val]]);
+		$result1 = db_query($query1, [$val]);
 		while ($row1 = $result1->fetch_assoc()) {
 			$theOthers[] = $row1['contact_via'];
 			}
@@ -129,7 +129,7 @@ if($msg_row['msg_type'] == 3) {
 	$theOthers = array();
 	foreach($theRecipients AS $val) {
 		$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
-		$result1 = db_query($query1, [['type' => 's', 'value' => $val]]);
+		$result1 = db_query($query1, [$val]);
 		while ($row1 = $result1->fetch_assoc()) {
 			$theOthers[] = $row1['contact_via'];
 			}

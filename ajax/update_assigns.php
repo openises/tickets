@@ -20,41 +20,41 @@ $frm_unit = sanitize_int($_POST['frm_unit']);
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $set_parts = [];
-$params = [['type' => 's', 'value' => $now]]; // for as_of
+$params = [$now]; // for as_of
 
 if (in_array("frm_dispatched",$vals_ary))	{
 	$set_parts[] = "`dispatched` = ?";
-	$params[] = ['type' => 's', 'value' => $now];
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_DISP'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 1;
 	}
 if (in_array("frm_responding",$vals_ary))	{
 	$set_parts[] = "`responding` = ?";
-	$params[] = ['type' => 's', 'value' => $now];
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_RESP'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 2;
 	}
 if (in_array("frm_on_scene",$vals_ary))		{
 	$set_parts[] = "`on_scene` = ?";
-	$params[] = ['type' => 's', 'value' => $now];
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_ONSCN'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 3;
 	}
 if (in_array("frm_u2fenr",$vals_ary))		{
 	$set_parts[] = "`u2fenr` = ?";
-	$params[] = ['type' => 's', 'value' => $now];
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_U2FENR'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 4;
 	}
 if (in_array("frm_u2farr",$vals_ary))		{
 	$set_parts[] = "`u2farr` = ?";
-	$params[] = ['type' => 's', 'value' => $now];
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_U2FARR'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 5;
 	}
 if (in_array("frm_clear",$vals_ary))		{
 	$set_parts[] = "`clear` = ?";
-	$params[] = ['type' => 's', 'value' => $now];
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_CLR'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 6;
 	}
@@ -63,7 +63,7 @@ $date_part = implode(", ", $set_parts);
 
 $query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET `as_of`= ?" . ($date_part ? ", " . $date_part : "");
 $query .=  " WHERE `id` = ? LIMIT 1";
-$params[] = ['type' => 'i', 'value' => $frm_id];
+$params[] = $frm_id;
 
 $result	= db_query($query, $params);
 

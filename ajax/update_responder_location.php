@@ -15,12 +15,12 @@ $fac_id = sanitize_int($_GET['fac_id']);
 $resp_id = sanitize_int($_GET['resp_id']);
 $new_status = sanitize_int($_GET['status']);
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
-$result = db_query($query, [['type' => 'i', 'value' => $resp_id]]);
+$result = db_query($query, [$resp_id]);
 $row = $result->fetch_assoc();
 $existing_status = $row['un_status_id'];
 $response = array();
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
-$result = db_query($query, [['type' => 'i', 'value' => $fac_id]]);
+$result = db_query($query, [$fac_id]);
 if($result->num_rows >= 1) {
 	while ($row = $result->fetch_assoc()) {
 		$lat = $row['lat'];
@@ -38,12 +38,12 @@ if($new_status == $existing_status) {
 		`updated`= ?
 		WHERE `id`= ?";
 	$params = [
-		['type' => 'd', 'value' => $lat],
-		['type' => 'd', 'value' => $lng],
-		['type' => 'i', 'value' => $fac_id],
-		['type' => 'i', 'value' => $_SESSION['user_id']],
-		['type' => 's', 'value' => $now],
-		['type' => 'i', 'value' => $resp_id]
+		$lat,
+		$lng,
+		$fac_id,
+		$_SESSION['user_id'],
+		$now,
+		$resp_id
 	];
 	} else {
 	$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
@@ -56,14 +56,14 @@ if($new_status == $existing_status) {
 		`status_updated`= ?
 		WHERE `id`= ?";
 	$params = [
-		['type' => 'd', 'value' => $lat],
-		['type' => 'd', 'value' => $lng],
-		['type' => 'i', 'value' => $new_status],
-		['type' => 'i', 'value' => $fac_id],
-		['type' => 'i', 'value' => $_SESSION['user_id']],
-		['type' => 's', 'value' => $now],
-		['type' => 's', 'value' => $now],
-		['type' => 'i', 'value' => $resp_id]
+		$lat,
+		$lng,
+		$new_status,
+		$fac_id,
+		$_SESSION['user_id'],
+		$now,
+		$now,
+		$resp_id
 	];
 	}
 $result = db_query($query, $params);

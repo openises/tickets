@@ -15,7 +15,7 @@ if(!(secure_page($the_session))) {
 		FROM `{$GLOBALS['mysql_prefix']}training_packages` `tp`
 		WHERE `tp`.`id` = ?";
 
-		$result = db_query($query, [['type' => 'i', 'value' => $tp_id]]);
+		$result = db_query($query, [$tp_id]);
 
 		while ($row = $result->fetch_assoc()) {
 			$ret_arr[] = $row['id'];

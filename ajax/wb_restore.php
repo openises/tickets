@@ -15,7 +15,7 @@ $who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;
 $from = $_SERVER['REMOTE_ADDR'];
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}waste_basket_m` WHERE `id` = ?";
-$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+$result = db_query($query, [sanitize_int($_GET['id'])]);
 $row = $result->fetch_assoc();
 $old_filename = (isset($row['field5'])) ? $row['field5'] : "";
 $old_id = $row['old_id'];
@@ -87,11 +87,11 @@ $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}member`
 
 $params = [];
 for ($i = 1; $i <= 55; $i++) {
-	$params[] = ['type' => 's', 'value' => trim($row['field' . $i])];
+	$params[] = trim($row['field' . $i]);
 }
-$params[] = ['type' => 'i', 'value' => intval($who)];
-$params[] = ['type' => 's', 'value' => trim($now)];
-$params[] = ['type' => 's', 'value' => trim($from)];
+$params[] = intval($who);
+$params[] = trim($now);
+$params[] = trim($from);
 
 $result = db_query($query, $params);
 $new_id = db_insert_id();
@@ -106,8 +106,8 @@ $query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
 	`field5`= ?
 	WHERE `id`= ?";
 $result = db_query($query, [
-	['type' => 's', 'value' => trim($filename)],
-	['type' => 'i', 'value' => $new_id]
+	trim($filename),
+	$new_id
 ]);
 
 if(count($training != 0)) {
@@ -117,12 +117,12 @@ if(count($training != 0)) {
 				`member_id`, `skill_type`, `skill_id`, `completed`, `refresh_due`, `_on` )
 				VALUES (?, ?, ?, ?, ?, ?)";
 			$result = db_query($query, [
-				['type' => 'i', 'value' => $new_id],
-				['type' => 'i', 'value' => 1],
-				['type' => 'i', 'value' => intval(trim($val))],
-				['type' => 's', 'value' => trim($now)],
-				['type' => 's', 'value' => trim($now)],
-				['type' => 's', 'value' => trim($now)]
+				$new_id,
+				1,
+				intval(trim($val)),
+				trim($now),
+				trim($now),
+				trim($now)
 			]);
 			}
 		}
@@ -134,10 +134,10 @@ if(count($capabilities != 0)) {
 				`member_id`, `skill_type`, `skill_id`, `_on` )
 				VALUES (?, ?, ?, ?)";
 			$result = db_query($query, [
-				['type' => 'i', 'value' => $new_id],
-				['type' => 'i', 'value' => 2],
-				['type' => 'i', 'value' => intval(trim($val))],
-				['type' => 's', 'value' => trim($now)]
+				$new_id,
+				2,
+				intval(trim($val)),
+				trim($now)
 			]);
 			}
 		}
@@ -149,10 +149,10 @@ if(count($equipment != 0)) {
 				`member_id`, `skill_type`, `skill_id`, `_on` )
 				VALUES (?, ?, ?, ?)";
 			$result = db_query($query, [
-				['type' => 'i', 'value' => $new_id],
-				['type' => 'i', 'value' => 3],
-				['type' => 'i', 'value' => intval(trim($val))],
-				['type' => 's', 'value' => trim($now)]
+				$new_id,
+				3,
+				intval(trim($val)),
+				trim($now)
 			]);
 			}
 		}
@@ -164,10 +164,10 @@ if(count($vehicles != 0)) {
 				`member_id`, `skill_type`, `skill_id`, `_on` )
 				VALUES (?, ?, ?, ?)";
 			$result = db_query($query, [
-				['type' => 'i', 'value' => $new_id],
-				['type' => 'i', 'value' => 4],
-				['type' => 'i', 'value' => intval(trim($val))],
-				['type' => 's', 'value' => trim($now)]
+				$new_id,
+				4,
+				intval(trim($val)),
+				trim($now)
 			]);
 			}
 		}
@@ -179,20 +179,20 @@ if(count($clothing != 0)) {
 				`member_id`, `skill_type`, `skill_id`, `_on` )
 				VALUES (?, ?, ?, ?)";
 			$result = db_query($query, [
-				['type' => 'i', 'value' => $new_id],
-				['type' => 'i', 'value' => 5],
-				['type' => 'i', 'value' => intval(trim($val))],
-				['type' => 's', 'value' => trim($now)]
+				$new_id,
+				5,
+				intval(trim($val)),
+				trim($now)
 			]);
 			}
 		}
 	}
 
 $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}waste_basket_m` WHERE `id` = ?";
-$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+$result = db_query($query, [sanitize_int($_GET['id'])]);
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}waste_basket_f` WHERE `member_id` = ?";
-$result = db_query($query, [['type' => 'i', 'value' => intval($old_id)]]);
+$result = db_query($query, [intval($old_id)]);
 while ($row = $result->fetch_assoc()) {
 	$oldname = explode("/",$row['name']);
 	$filename = "./files/" . $new_id . "/" . $oldname[3];
@@ -204,16 +204,16 @@ while ($row = $result->fetch_assoc()) {
 			`_on`)
 		VALUES (?, ?, ?, ?, ?)";
 	$result2 = db_query($query2, [
-		['type' => 'i', 'value' => $new_id],
-		['type' => 's', 'value' => trim($filename)],
-		['type' => 's', 'value' => trim($row['shortname'])],
-		['type' => 's', 'value' => trim($row['description'])],
-		['type' => 's', 'value' => trim($now)]
+		$new_id,
+		trim($filename),
+		trim($row['shortname']),
+		trim($row['description']),
+		trim($now)
 	]);
 	}
 
 $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}waste_basket_f` WHERE `member_id` = ?";
-$result = db_query($query, [['type' => 'i', 'value' => intval($old_id)]]);
+$result = db_query($query, [intval($old_id)]);
 
 $files_directory = "../files/" . $new_id;
 $files_wastebasket = "../file_waste/" . $old_id;

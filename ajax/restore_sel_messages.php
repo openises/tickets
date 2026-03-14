@@ -16,7 +16,7 @@ $ret_arr = array();
 foreach($msgs_arr as $id) {
 	$id = sanitize_int($id);
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
-	$result = db_query($query, [['type' => 'i', 'value' => $id]]);
+	$result = db_query($query, [$id]);
 	$row = $result->fetch_assoc();
 	$msg_type = $row['msg_type'];
 	$message_id = $row['message_id'];
@@ -41,29 +41,29 @@ foreach($msgs_arr as $id) {
 			`msg_type`, `message_id`, `ticket_id`, `resp_id`, `recipients`, `from_address`, `fromname`, `subject`, `message`, `status`, `date`, `read_status`, `readby`, `delivered`, `delivery_status`, `_by`, `_from`, `_on`
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	$params = [
-		['type' => 's', 'value' => trim($msg_type)],
-		['type' => 's', 'value' => trim($message_id)],
-		['type' => 'i', 'value' => trim($ticket_id)],
-		['type' => 'i', 'value' => trim($resp_id)],
-		['type' => 's', 'value' => trim($recipients)],
-		['type' => 's', 'value' => trim($from_address)],
-		['type' => 's', 'value' => trim($fromname)],
-		['type' => 's', 'value' => trim($subject)],
-		['type' => 's', 'value' => trim($message)],
-		['type' => 's', 'value' => trim($status)],
-		['type' => 's', 'value' => trim($date)],
-		['type' => 's', 'value' => trim($read_status)],
-		['type' => 's', 'value' => trim($readby)],
-		['type' => 's', 'value' => trim($delivered)],
-		['type' => 's', 'value' => trim($delivery_status)],
-		['type' => 'i', 'value' => trim($by)],
-		['type' => 'i', 'value' => trim($from)],
-		['type' => 's', 'value' => trim($on)]
+		trim($msg_type),
+		trim($message_id),
+		trim($ticket_id),
+		trim($resp_id),
+		trim($recipients),
+		trim($from_address),
+		trim($fromname),
+		trim($subject),
+		trim($message),
+		trim($status),
+		trim($date),
+		trim($read_status),
+		trim($readby),
+		trim($delivered),
+		trim($delivery_status),
+		trim($by),
+		trim($from),
+		trim($on)
 	];
 	$result = db_query($query, $params);
 
 	$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
-	$result = db_query($query, [['type' => 'i', 'value' => $id]]);
+	$result = db_query($query, [$id]);
 	if($result) {
 		$ret_arr[$i][0] = 100;
 		$ret_arr[$i][1] = $id;

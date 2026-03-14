@@ -92,7 +92,7 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
 	WHERE `r`.`id` = ?";
 
-$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+$result = db_query($query, [sanitize_int($_GET['id'])]);
 $units_ct = db_affected_rows();
 
 $aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = FALSE;

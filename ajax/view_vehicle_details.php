@@ -32,7 +32,7 @@ if(!(secure_page($the_session))) {
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}member` `m` ON ( `v`.`owner` = `m`.`id` )
 		WHERE `v`.`id` = ?";
 
-		$result = db_query($query, [['type' => 'i', 'value' => $veh_id]]);
+		$result = db_query($query, [$veh_id]);
 
 		while ($row = $result->fetch_assoc()) {
 			$ret_arr[] = $row['vehicle_owner'];

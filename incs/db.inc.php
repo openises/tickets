@@ -46,7 +46,11 @@ function db(): mysqli
 {
     static $conn = null;
 
-    if ($conn !== null && $conn->ping()) {
+    // Check if connection exists and is alive.
+    // IMPORTANT: Do NOT use $conn->ping() here — ping() sends COM_PING to MySQL
+    // which returns an OK packet that resets $conn->insert_id and $conn->affected_rows
+    // to 0, breaking db_insert_id() and db_affected_rows() for callers.
+    if ($conn !== null && $conn->errno === 0) {
         return $conn;
     }
 
@@ -133,7 +137,10 @@ function db_query(string $sql, array $params = [], ?string $types = null)
         return $result;
     }
 
-    // For INSERT/UPDATE/DELETE, return true and close
+    // For INSERT/UPDATE/DELETE, capture insert_id before closing
+    // Store it so db_insert_id() can retrieve it reliably
+    $GLOBALS['_db_last_insert_id'] = (int) $stmt->insert_id;
+    $GLOBALS['_db_last_affected_rows'] = (int) $stmt->affected_rows;
     $stmt->close();
     return true;
 }
@@ -192,7 +199,9 @@ function db_fetch_one(string $sql, array $params = [], ?string $types = null): ?
  */
 function db_insert_id(): int
 {
-    return (int) db()->insert_id;
+    // Use the value captured by db_query() before $stmt->close(),
+    // falling back to the connection's value for non-prepared queries
+    return (int) ($GLOBALS['_db_last_insert_id'] ?? db()->insert_id);
 }
 
 /**
@@ -202,7 +211,9 @@ function db_insert_id(): int
  */
 function db_affected_rows(): int
 {
-    return (int) db()->affected_rows;
+    // Use the value captured by db_query() before $stmt->close(),
+    // falling back to the connection's value for non-prepared queries
+    return (int) ($GLOBALS['_db_last_affected_rows'] ?? db()->affected_rows);
 }
 
 /**

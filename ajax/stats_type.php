@@ -12,7 +12,7 @@ $type = (isset($type)) ? sanitize_int($type) : "";
 function get_stat_type_type($value) {
 	$stat_type = "Not Used";
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
-	$result = db_query($query, [['type' => 'i', 'value' => intval($value)]]);
+	$result = db_query($query, [intval($value)]);
 	if($result->num_rows != 0) {
 	$row = stripslashes_deep($result->fetch_assoc());
 		$stat_type = $row['stat_type'];

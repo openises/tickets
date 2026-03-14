@@ -32,7 +32,7 @@ $query = "SELECT *,
 	LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f` ON (`f`.`id` = `t`.`facility`)
 	LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `t`.`rec_facility`)
 	WHERE `t`.`id`= ? LIMIT 1";
-$result = db_query($query, [['type' => 'i', 'value' => $id]]);
+$result = db_query($query, [$id]);
 $row_ticket = stripslashes_deep($result->fetch_array());
 $ret_arr = array();
 $ret_arr[0] = do_ticket_wm($row_ticket, "100%", FALSE, FALSE);

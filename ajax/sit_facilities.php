@@ -106,11 +106,7 @@ function setStatus($statval, $id) {
 		`status_id`= ?,
 		`updated`= ?
 		WHERE `id`= ?";
-	$result = db_query($query, [
-		['type' => 'i', 'value' => intval(trim($statval))],
-		['type' => 's', 'value' => trim($now)],
-		['type' => 'i', 'value' => intval(trim($id))]
-	]);
+	$result = db_query($query, [intval(trim($statval)), trim($now), intval(trim($id))]);
 	}
 
 if (array_key_exists ('forder' , $_POST))	{$_SESSION['fac_flag_2'] =  $_POST['forder'];}

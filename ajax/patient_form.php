@@ -61,7 +61,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	
 if ($get_action == 'edit') {		//get and show action to update
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
-	$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+	$result = db_query($query, [sanitize_int($_GET['id'])]);
 	if($result->num_rows > 0) {
 		$row = stripslashes_deep($result->fetch_assoc());
 		$assigned_to = $row['assign_id'];
@@ -108,7 +108,7 @@ if ($get_action == 'edit') {		//get and show action to update
 			}
 		}	
 	$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";	// 8/11/08
-	$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+	$result = db_query($query, [sanitize_int($_GET['id'])]);
 	$row = stripslashes_deep($result->fetch_assoc());
 	if ( can_edit()) {										// 8/27/10
 		$hdr_str = "Edit";

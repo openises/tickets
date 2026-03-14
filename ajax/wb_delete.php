@@ -7,7 +7,7 @@ require_once('../incs/functions.inc.php');
 @session_start();
 if(isset($_GET['id'])) {
 	$addon = " WHERE `id` = ?";
-	$addon_params = [['type' => 'i', 'value' => sanitize_int($_GET['id'])]];
+	$addon_params = [sanitize_int($_GET['id'])];
 	} else {
 	$addon = "";
 	$addon_params = [];
@@ -40,7 +40,7 @@ $result = db_query($query, $addon_params);
 while($row = $result->fetch_assoc()) {
 	$member_id = $row['old_id'];
 	$query2 = "DELETE FROM `{$GLOBALS['mysql_prefix']}waste_basket_f` WHERE `member_id` = ?";
-	$result2 = db_query($query2, [['type' => 'i', 'value' => intval($member_id)]]);
+	$result2 = db_query($query2, [intval($member_id)]);
 	$wastebasket = "../file_waste/" . $member_id;
 	$pic_waste = "../pictures_waste/" . $member_id;
 	delete_directory($wastebasket);

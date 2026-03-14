@@ -342,11 +342,11 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		} else {
 		$query_upd = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= ?, `updated` = ?, `status_updated` = ?, `user_id` = ? WHERE `id` = ? LIMIT 1";
 		$result_upd = db_query($query_upd, [
-			['type' => 'i', 'value' => $responderUnavail],
-			['type' => 's', 'value' => mysql_format_date($now)],
-			['type' => 's', 'value' => mysql_format_date($now)],
-			['type' => 'i', 'value' => $_SESSION['user_id']],
-			['type' => 'i', 'value' => $row['unit_id']]
+			$responderUnavail,
+			mysql_format_date($now),
+			mysql_format_date($now),
+			$_SESSION['user_id'],
+			$row['unit_id']
 		]);
 		$status = (array_key_exists($row['un_status_id'], $validStatuses)) ? get_status_sel($row['unit_id'], $responderUnavail, "u") : "Status Error";
 		$status_name = (array_key_exists($row['un_status_id'], $validStatuses)) ? $status_vals[$row['un_status_id']] : "Status Error" ;
