@@ -42,7 +42,8 @@ class MySQLDump {
 			$buffer = '';
 			for ($i=0;$i < $broj_polja;$i++) {
 				$vrednost = $row[$i];
-				if (!is_integer($vrednost)) { $vrednost = "'".addslashes($vrednost)."'"; 	} 
+				if ($vrednost === null) { $vrednost = 'NULL'; }
+				elseif (!is_integer($vrednost)) { $vrednost = "'".addslashes((string)$vrednost)."'"; 	}
 				$buffer .= $vrednost.', ';
 				}
 			$buffer = substr($buffer,0,strlen($buffer)-2);
