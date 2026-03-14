@@ -67,7 +67,7 @@ while ($row_in = stripslashes_deep($result_in->fetch_assoc())) {
 	}
 $mapzooms = array();
 $dir = (is_dir('./_osm/tiles')) ? './_osm/tiles' : '../_osm/tiles';
-$mapdir = scandir($dir);
+$mapdir = is_dir($dir) ? scandir($dir) : [];
 foreach($mapdir as $val) {
 	if($val <> "." && $val <> "..") {
 		if(is_dir('../_osm/tiles/' . $val)) {
