@@ -30,10 +30,10 @@ if ($istest) {
 		}
 	}
 
-$id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
+$id =	(array_key_exists('id', ($_GET)))?	sanitize_int($_GET['id'])  :	NULL;
 
-$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]warnings` WHERE id='$id'");
-$row = mysql_fetch_assoc($result);
+$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}warnings` WHERE id=?", [$id]);
+$row = $result->fetch_assoc();
 $lat = $row['lat'];
 $lng = $row['lng'];
 ?>
@@ -183,16 +183,16 @@ $lng = $row['lng'];
 		<TD style='width: 300px;'>
 			<TABLE style='width: 300px; border: 1px solid #000000;'>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>Title</TD><TD class='wrap_data'><?php print $row['title'];?></TD>
+					<TD class='wrap_label'>Title</TD><TD class='wrap_data'><?php print e($row['title']);?></TD>
 				</TR>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>Street</TD><TD class='wrap_data'><?php print $row['street'];?></TD>
+					<TD class='wrap_label'>Street</TD><TD class='wrap_data'><?php print e($row['street']);?></TD>
 				</TR>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>City</TD><TD class='wrap_data'><?php print $row['city'];?></TD>
+					<TD class='wrap_label'>City</TD><TD class='wrap_data'><?php print e($row['city']);?></TD>
 				</TR>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>State</TD><TD class='wrap_data'><?php print $row['state'];?></TD>
+					<TD class='wrap_label'>State</TD><TD class='wrap_data'><?php print e($row['state']);?></TD>
 				</TR>
 				<TR class='tab_row'>
 					<TD class='wrap_label'>Latitude</TD><TD class='wrap_data'><?php print $lat;?></TD>
@@ -201,7 +201,7 @@ $lng = $row['lng'];
 					<TD class='wrap_label'>Longitude</TD><TD class='wrap_data'><?php print $lng;?></TD>
 				</TR>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>Description</TD><TD class='wrap_data'><?php print $row['description'];?></TD>
+					<TD class='wrap_label'>Description</TD><TD class='wrap_data'><?php print e($row['description']);?></TD>
 				</TR>
 				<TR class='tab_row'>
 					<TD class='wrap_label'>Reported By</TD><TD class='wrap_data'><?php print get_owner($row['_by']);?></TD>

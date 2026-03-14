@@ -41,27 +41,27 @@ $st_size = (get_variable("locale") ==0)?  2: 4;
 
 //$tolerance = 5 * 60;		// nr. seconds report time may differ from UTC
 
-$RespID = (isset($_GET['id'])) ? $_GET['id'] : 0;	
+$RespID = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : 0;	
 
 extract($_GET);
 extract($_POST);
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 $u_types = array();												// 1/1/09
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 
 unset($result);
 
 function get_roster($current=null) {	//	9/6/13
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` ORDER BY `person_identifier`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` ORDER BY `person_identifier`";
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	$the_ret = "<SELECT NAME='frm_roster_id' onChange = 'get_roster_details(this.form, this.options[this.selectedIndex].value);' >";
 	$the_ret .= "<OPTION VALUE='0' SELECTED>Select a Person</OPTION>";	
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$sel = (($current) && ($current == $row['id'])) ? "SELECTED " : "";
 		$the_ret .= "<OPTION VALUE=" .  $row['id'] . " " . $sel . ">" . $row['person_identifier'] . "</OPTION>";
 		}
@@ -70,10 +70,10 @@ function get_roster($current=null) {	//	9/6/13
 	}
 
 function get_user_details($rosterID) {	//	9/6/13
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` WHERE `id` = '" . $rosterID . "' LIMIT 1"; 
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_affected_rows() != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = '" . $rosterID . "' LIMIT 1"; 
+	$result = db_query($query) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if(db()->affected_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
 		$the_ret .= "Street: " . $row['address'] . "<BR />";
 		$the_ret .= "State: " . $row['state'] . "<BR />";
@@ -509,14 +509,14 @@ function list_responders($addon = '', $start) {
 
 	$assigns = array();					// 08/8/3
 	$tickets = array();					// ticket id's
-	$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, `$GLOBALS[mysql_prefix]assigns`.`responder_id`,
-		`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` 
-		FROM `$GLOBALS[mysql_prefix]assigns` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`
+	$query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`, `{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`scope` AS `ticket` 
+		FROM `{$GLOBALS['mysql_prefix']}assigns` 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`
 		WHERE ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
-	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
+	$result_as = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	while ($row_as = stripslashes_deep($result_as->fetch_array())) {
 		$assigns[$row_as['responder_id']] = $row_as['ticket'];
 		$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 		}
@@ -659,9 +659,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 	function can_do_dispatch($the_row) {
 		if (intval($the_row['multi'])==1) return TRUE;
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
-		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
+		$result_temp = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {		// check any open runs this unit
 			if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
 				unset ($result_temp, $row_temp); 
 				return FALSE;
@@ -677,10 +677,10 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	$status_vals = array();											// build array of $status_vals
 	$status_vals[''] = $status_vals['0']="TBD";
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
+	$result_st = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+	while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 		$temp = $row_st['id'];
 		$status_vals[$temp] = $row_st['status_val'];
 		}
@@ -729,15 +729,15 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		`r`.`name` AS `name`,
 		`s`.`description` AS `stat_descr`,
 		`r`.`description` AS `unit_descr`, 
-		(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-		WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) AS `nr_assigned` 
-		FROM `$GLOBALS[mysql_prefix]responder` `r` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
-		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
-		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
+		(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns` 
+		WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) AS `nr_assigned` 
+		FROM `{$GLOBALS['mysql_prefix']}responder` `r` 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = a.resource_id )			
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON ( `r`.`type` = t.id )	
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
 		{$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";											// 2/1/10, 3/15/10, 6/10/11
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$num_units = mysql_affected_rows();	
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$num_units = db()->affected_rows;	
 	$aprs = FALSE;
 	$instam = FALSE;
 	$locatea = FALSE;				// 7/23/09
@@ -749,7 +749,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 	$utc = gmdate ("U");
 //									 ==========  major while() for RESPONDER ==========
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		
+	while ($row = stripslashes_deep($result->fetch_assoc())) {		
 
 		$resp_gps = get_allocates(2, $row['unit_id']);	//	6/10/11
 		$grp_names = "Groups Assigned: ";	//	6/10/11
@@ -795,18 +795,18 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 // assignments 3/16/09, 3/15/10
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` 
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
 			WHERE `responder_id` = '{$row['unit_id']}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
-		$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_assign = (mysql_affected_rows()==0)?  FALSE : stripslashes_deep(mysql_fetch_assoc($result_as)) ;
+		$result_as = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$row_assign = (db()->affected_rows==0)?  FALSE : stripslashes_deep($result_as->fetch_assoc()) ;
 		switch($row_assign['severity'])		{		//color tickets by severity
 		 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 			case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
 			default: 				$severityclass='severity_normal'; break;
 			}
 
-		switch (mysql_num_rows($result_as)) {		// 10/4/10
+		switch ($result_as->num_rows) {		// 10/4/10
 			case 0:
 				$the_disp_stat="";
 				break;			
@@ -814,12 +814,12 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 				break;
 			default:							// multiples
-			    $the_disp_stat = "<SPAN CLASS='disp_stat'>&nbsp;" . mysql_affected_rows() . "&nbsp;</SPAN>&nbsp;";
+			    $the_disp_stat = "<SPAN CLASS='disp_stat'>&nbsp;" . db()->affected_rows . "&nbsp;</SPAN>&nbsp;";
 			    break;
 			}						// end switch()
 
-		$tick_ct = (mysql_affected_rows()>1)? "(" . mysql_num_rows($result_as) . ") ": "";
-		$ass_td =  (mysql_affected_rows()>0)? 
+		$tick_ct = (db()->affected_rows>1)? "(" . $result_as->num_rows . ") ": "";
+		$ass_td =  (db()->affected_rows>0)? 
 			"<TD CLASS='$severityclass' TITLE = '{$row_assign['scope']}' STYLE = 'white-space:nowrap;' >{$the_disp_stat}" . shorten($row_assign['scope'], 24) . "</TD>":
 			"<TD>na</TD>";
 		$sidebar_line .= ($row_assign)? $ass_td : "<TD>na</TD>";
@@ -881,9 +881,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	function do_calls($id = 0) {				// generates js callsigns array
 		$print = "\n<SCRIPT >\n";
 		$print .="\t\tvar calls = new Array();\n";
-		$query	= "SELECT `id`, `callsign` FROM `$GLOBALS[mysql_prefix]responder` where `id` != $id";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		while($row = stripslashes_deep(mysql_fetch_array($result))) {
+		$query	= "SELECT `id`, `callsign` FROM `{$GLOBALS['mysql_prefix']}responder` where `id` != $id";
+		$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		while($row = stripslashes_deep($result->fetch_array())) {
 			if (!empty($row['callsign'])) {
 				$print .="\t\tcalls.push('" .$row['callsign'] . "');\n";
 				}
@@ -905,8 +905,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]responder WHERE `id`=" . $_POST['frm_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}responder WHERE `id`=" . $_POST['frm_id'];
+		$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 		$caption = "<B>" . get_text("Units") . "<I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		print $caption;
 		sleep(10);
@@ -924,7 +924,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$by = $_SESSION['user_id'];
 //			if (($_POST['frm_clr_pos'])=='on') {$the_lat = $the_lng = "NULL";}				// 11/15/09
 			if ($_postmap_clear=='on') {$the_lat = $the_lng = "NULL";}				// 11/19/09
-			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
 				`roster_user`= " . 	quote_smart(trim($_POST['frm_roster_id'])) . ",
 				`name`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
 				`street`= " . 		quote_smart(trim($_POST['frm_street'])) . ",
@@ -961,7 +961,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				`status_updated`= " . quote_smart(trim($status_updated)) . " 	
 				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	9/6/13
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
 			$ex_grps = explode(',', $list); 	//	4/14/11 
@@ -969,15 +969,15 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			if($curr_groups != $groups) { 	//	4/14/11
 				foreach($_POST['frm_group'] as $posted_grp) { 	//	4/14/11
 					if(!in_array($posted_grp, $ex_grps)) {
-						$query  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 								($posted_grp, 2, '$now', $resp_stat, $resp_id, 'Allocated to Group' , $by)";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+						$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 						}
 					}
 				foreach($ex_grps as $existing_grps) { 	//	4/14/11
 					if(!in_array($existing_grps, $_POST['frm_group'])) {
-						$query  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 2 AND `group` = $existing_grps AND `resource_id` = {$resp_id}";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+						$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 2 AND `group` = $existing_grps AND `resource_id` = {$resp_id}";
+						$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 						}
 					}
 				}			
@@ -994,7 +994,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$frm_lat = (empty($_POST['frm_lat']))? '0.999999': quote_smart(trim($_POST['frm_lat']));						// 9/3/08
 		$frm_lng = (empty($_POST['frm_lng']))? '0.999999': quote_smart(trim($_POST['frm_lng']));						// 9/3/08
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`,  `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `updated`, `status_updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_roster_id'])) . "," .
@@ -1032,8 +1032,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				quote_smart(trim($now)) . "," .				
 				quote_smart(trim($now)) . ");";								// 8/23/08, 9/6/13
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();
+		$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$new_id=db()->insert_id;
 		
 //	9/10/13 File Upload support
 		$print = "";
@@ -1059,9 +1059,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
-				if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
+				$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);	
+				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
 							$print .= "";
@@ -1072,20 +1072,20 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 						$print .= "Error uploading file";
 						}
 					} else {
-					$row = stripslashes_deep(mysql_fetch_assoc($result));			
+					$row = stripslashes_deep($result->fetch_assoc());			
 					$exists = true;
 					$existing_file = $row['filename'];	//	get existing file name
 					}
 					
 				$from = $_SERVER['REMOTE_ADDR'];	
 				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
-				$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
 					) VALUES (
 						'" . $_POST['frm_file_title'] . "', '" . $filename . "', '" . $realfilename . "', " . $id . ", 0,
 						0, 0, '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
 					)";
-				$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert) or do_error($query_insert,'mysql_query() failed', db()->error, basename( __FILE__), __LINE__);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1100,11 +1100,11 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 		$status_id = $_POST['frm_un_status_id'];
 		foreach ($_POST['frm_group'] as $grp_val) {	// 4/13/11
-			$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+			$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 					($grp_val, 2, '$now', $status_id, $new_id, 'Allocated to Group' , $by)";
-			$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);				
+			$result_a = db_query($query_a) or do_error($query_a, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);				
 		}
-		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, mysql_insert_id(), $_POST['frm_un_status_id']);	// 6/2/08
+		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, db()->insert_id, $_POST['frm_un_status_id']);	// 6/2/08
 
 		$mobstr = ($frm_mobile)? "Mobile " . get_text("Units"): "Station ";
 		$caption = "<B>" . get_text("Units") . "<i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been updated.</B><BR /><BR />";
@@ -1245,11 +1245,11 @@ if(get_num_groups()) {
 				<OPTION VALUE=0 SELECTED>Select one</OPTION>
 <?php			
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
+	$result_st = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	$the_grp = strval(rand());			//  force initial optgroup value
 	$i = 0;
-	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+	while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 		if ($the_grp != $row_st['group']) {
 			print ($i == 0)? "": "\t</OPTGROUP>\n";
 			$the_grp = $row_st['group'];
@@ -1275,9 +1275,9 @@ if(get_num_groups()) {
 			<SELECT NAME="frm_ringfence" onChange = "this.value=JSfnTrim(this.value)">
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";
+				$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
+				while ($row_bound = stripslashes_deep($result->fetch_assoc())) {
 					print "\t<OPTION VALUE='{$row_bound['id']}'>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 					}
 ?>
@@ -1286,9 +1286,9 @@ if(get_num_groups()) {
 			<SELECT NAME="frm_excl_zone" onChange = "this.value=JSfnTrim(this.value)">
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";
+				$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
+				while ($row_bound = stripslashes_deep($result->fetch_assoc())) {
 					print "\t<OPTION VALUE='{$row_bound['id']}'>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 					}
 ?>
@@ -1382,9 +1382,9 @@ if(get_num_groups()) {
 
 	if ($_getedit == 'true') {
 		$id = $_GET['id'];
-		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`={$id}";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$row	= mysql_fetch_array($result);
+		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`={$id}";
+		$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$row	= $result->fetch_array();
 		$is_mobile = (($row['mobile']==1) && (!(empty($row['callsign']))));		// 1/27/09, 3/15/10
 
 		$lat = $row['lat'];
@@ -1526,12 +1526,12 @@ if(get_num_groups()) {
 		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="<?php print get_text("Units");?> Status - Select from pulldown menu">Status</A>:&nbsp;</TD>
 			<TD ALIGN='left'><SELECT NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; document.res_edit_Form.frm_log_it.value='1'; document.res_edit_Form.frm_status_update.value='1';">
 <?php
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
-			$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
+			$result_st = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
 			$the_grp = strval(rand());			//  force initial optgroup value
 			$i = 0;
-			while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+			while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 				if ($the_grp != $row_st['group']) {
 					print ($i == 0)? "": "</OPTGROUP>\n";
 					$the_grp = $row_st['group'];
@@ -1555,9 +1555,9 @@ if(get_num_groups()) {
 			<TD><SELECT NAME="frm_ringfence" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 				<OPTION VALUE=0>Select</OPTION>
 <?php
-				$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";		// 12/18/10
-				$result_bound = mysql_query($query_bound) or do_error($query_bound, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result_bound))) {
+				$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";		// 12/18/10
+				$result_bound = db_query($query_bound) or do_error($query_bound, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
+				while ($row_bound = stripslashes_deep($result_bound->fetch_assoc())) {
 					$sel = ($row['ring_fence'] == $row_bound['id']) ? "SELECTED" : "";
 					print "\t<OPTION VALUE='{$row_bound['id']}' {$sel}>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 					}
@@ -1568,9 +1568,9 @@ if(get_num_groups()) {
 			<TD><SELECT NAME="frm_excl_zone" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 				<OPTION VALUE=0>Select</OPTION>
 <?php
-				$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";		// 12/18/10
-				$result_bound = mysql_query($query_bound) or do_error($query_bound, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result_bound))) {
+				$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";		// 12/18/10
+				$result_bound = db_query($query_bound) or do_error($query_bound, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
+				while ($row_bound = stripslashes_deep($result_bound->fetch_assoc())) {
 					$sel = ($row['excl_zone'] == $row_bound['id']) ? "SELECTED" : "";
 					print "\t<OPTION VALUE='{$row_bound['id']}' {$sel}>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 					}
@@ -1579,10 +1579,10 @@ if(get_num_groups()) {
 <?php
 		}
 																						// check any assign records this unit - added 5/23/08
-		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`=$id AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";		// 6/27/08
-		$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id`=$id AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";		// 6/27/08
+		$result_as = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-		$cbcount = mysql_affected_rows();				// count of incomplete assigns
+		$cbcount = db()->affected_rows;				// count of incomplete assigns
 		$dis_rmv = ($cbcount==0)? "": " DISABLED";		// allow/disallow removal
 		$cbtext = ($cbcount==0)? "": "&nbsp;&nbsp;<FONT size=-2>(NA - calls in progress: " .$cbcount . " )</FONT>";
 ?>
@@ -1659,15 +1659,15 @@ if(get_num_groups()) {
 
 		if ($_getview == 'true') {
 
-			$query_un = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";	// 6/10/11
-			$result_un = mysql_query($query_un);	// 6/10/11
+			$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";	// 6/10/11
+			$result_un = db_query($query_un);	// 6/10/11
 			$un_groups = array();
 			$un_names = "";	
-			while ($row_un = stripslashes_deep(mysql_fetch_assoc($result_un))) 	{	// 6/10/11
+			while ($row_un = stripslashes_deep($result_un->fetch_assoc())) 	{	// 6/10/11
 				$un_groups[] = $row_un['group'];
-				$query_un2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row_un[group]';";	// 6/10/11
-				$result_un2 = mysql_query($query_un2);	// 6/10/11
-				while ($row_un2 = stripslashes_deep(mysql_fetch_assoc($result_un2))) 	{	// 6/10/11		
+				$query_un2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= '$row_un[group]';";	// 6/10/11
+				$result_un2 = db_query($query_un2);	// 6/10/11
+				while ($row_un2 = stripslashes_deep($result_un2->fetch_assoc())) 	{	// 6/10/11		
 					$un_names .= $row_un2['group_name'] . " ";
 					}
 				}		
@@ -1675,18 +1675,18 @@ if(get_num_groups()) {
 			$id = $_GET['id'];
 			$query	= "SELECT *, 
 				`updated` AS `updated` 
-				FROM `$GLOBALS[mysql_prefix]responder` `r` 
+				FROM `{$GLOBALS['mysql_prefix']}responder` `r` 
 				WHERE `r`.`id`={$id} LIMIT 1";
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row	= stripslashes_deep(mysql_fetch_assoc($result));
+			$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+			$row	= stripslashes_deep($result->fetch_assoc());
 //			$is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));				// 1/27/09
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 
 			if (isset($row['un_status_id'])) {
-				$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id`=" . $row['un_status_id'];	// status value
-				$result_st	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				$row_st	= mysql_fetch_assoc($result_st);
+				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`=" . $row['un_status_id'];	// status value
+				$result_st	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+				$row_st	= $result_st->fetch_assoc();
 				unset($result_st);
 				}
 			$un_st_val = (isset($row['un_status_id']))? $row_st['status_val'] : "?";
@@ -1806,20 +1806,20 @@ if(get_num_groups()) {
 
 <?php
 											// 11/15/09 - identify candidate incidents - i. e., open and not already assigned to this unit
-		$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$row['id']}";
-		$result_temp = mysql_query($query_t) or do_error($query_t, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = {$row['id']}";
+		$result_temp = db_query($query_t) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		$ctr = 0;		// count hits
-		if (mysql_affected_rows()>0) {
+		if (db()->affected_rows>0) {
 			$work = $sep = "";
 			$ctr = 0;		// count hits
-			while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {
+			while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {
 				if (!(is_date($row_temp['clear']))) {
 					$ctr++;										// if open
 					$work .= $sep . $row_temp['ticket_id'];
 					$sep = ", ";								// set comma separator for next
 					}					// end if (is_date())
 				}					// end while ($row_temp)
-			}					// end if (mysql_affected_rows()>0)
+			}					// end if (db()->affected_rows>0)
 
 		$instr = ($ctr == 0)? "" : " AND `id` NOT IN ({$work})";
 		$al_groups = $_SESSION['user_groups'];
@@ -1830,41 +1830,41 @@ if(get_num_groups()) {
 
 		if(!isset($curr_viewed)) {	//	7/2/13	revised WHERE to AND - Where clause was repeated
 			if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+				$where2 = "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
 				} else {			
 				$x=0;	//	6/10/11
 				$where2 = "AND (";	//	6/10/11
 				foreach($al_groups as $grp) {	//	6/10/11
 					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 					$where2 .= $where3;
 					$x++;
 					}
-				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	//	6/10/11
+				$where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";	//	6/10/11
 				}
 			} else {
 			if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+				$where2 = "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
 				} else {					
 				$x=0;	//	6/10/11
 				$where2 = "AND (";	//	6/10/11
 				foreach($curr_viewed as $grp) {	//	6/10/11
 					$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 					$where2 .= $where3;
 					$x++;
 					}
-				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	//	6/10/11
+				$where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";	//	6/10/11
 				}
 			}
 		
-		$query_t = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id` FROM `$GLOBALS[mysql_prefix]ticket` 
-					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`	
+		$query_t = "SELECT *, `{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id` FROM `{$GLOBALS['mysql_prefix']}ticket` 
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.id=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`	
 			WHERE `status` IN ({$GLOBALS['STATUS_OPEN']}, {$GLOBALS['STATUS_SCHEDULED']}) {$instr} {$where2}
-			GROUP BY `$GLOBALS[mysql_prefix]ticket`.`id`";	//	6/10/11
-		$result_t = mysql_query($query_t) or do_error($query_t, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			GROUP BY `{$GLOBALS['mysql_prefix']}ticket`.`id`";	//	6/10/11
+		$result_t = db_query($query_t) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		$i=0;			
-		while ($row_t = stripslashes_deep(mysql_fetch_array($result_t))) 	{
+		while ($row_t = stripslashes_deep($result_t->fetch_array())) 	{
 			switch($row_t['severity'])		{								//color tickets by severity
 			 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
 				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
@@ -1893,11 +1893,11 @@ if(get_num_groups()) {
 			<TR><TD></TD></TR>
 
 <?php																								// 6/1/08 - added
-		$query_fa = "SELECT * FROM $GLOBALS[mysql_prefix]facilities ORDER BY `type`";
-		$result_fa = mysql_query($query_fa) or do_error($query_fa, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query_fa = "SELECT * FROM {$GLOBALS['mysql_prefix']}facilities ORDER BY `type`";
+		$result_fa = db_query($query_fa) or do_error($query_fa, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 							// major while ... starts here
 		$ff=0;
-		while ($row_fa = stripslashes_deep(mysql_fetch_array($result_fa))) 	{
+		while ($row_fa = stripslashes_deep($result_fa->fetch_array())) 	{
 			print "\t<TR CLASS ='" .  $evenodd[($ff+1)%2] . "' onClick = 'to_fac_routes(\"" . $row_fa['id'] . "\")'>\n";
 			print "\t\t<TD>" . $row_fa['id'] . "</TD>\n";
 			print "\t\t<TD TITLE ='{$row_fa['name']}'>" . shorten($row_fa['name'], 24) . "</TD>\n";
@@ -1961,10 +1961,10 @@ if(get_num_groups()) {
 		
 <?php
 		require_once('./incs/links.inc.php');
-		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder`";		// 12/17/08
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$query = "SELECT `id` FROM `{$GLOBALS['mysql_prefix']}responder`";		// 12/17/08
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		unset($result);		
-		$required = 40 + (mysql_affected_rows()*22);
+		$required = 40 + (db()->affected_rows*22);
 		$the_height = (integer)  min (round($units_side_bar_height * $_SESSION['scr_height']), $required );		// set the max		
 		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
 		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11

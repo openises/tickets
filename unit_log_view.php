@@ -74,8 +74,9 @@ if (is_guest()) {
 ?>
 	<TABLE WIDTH="100%">
 <?php
+	$id = sanitize_int($id);
 	$query = "
-		SELECT *, 
+		SELECT *,
 		`when` AS `when`,
 		`l`.`id` AS `log_id`,
 		`l`.`when` AS `logwhen`,
@@ -83,16 +84,16 @@ if (is_guest()) {
 		`r`.`handle` AS `unitname`,
 		`l`.`info` AS `comment`,
 		`s`.`status_val` AS `theinfo`,
-		`u`.`user` AS `thename` 
-		FROM `$GLOBALS[mysql_prefix]log` l
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t 		ON (l.ticket_id = t.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r 	ON (l.responder_id = r.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s 	ON (l.info = s.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]user` u 		ON (l.who = u.id)
-		WHERE `l`.`id` = {$id} 
+		`u`.`user` AS `thename`
+		FROM `{$GLOBALS['mysql_prefix']}log` l
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t 		ON (l.ticket_id = t.id)
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` r 	ON (l.responder_id = r.id)
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` s 	ON (l.info = s.id)
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}user` u 		ON (l.who = u.id)
+		WHERE `l`.`id` = ?
 		ORDER BY `when` ASC";
-	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$theComment = (!is_numeric($row['comment'])) ? $row['comment'] : "";
 ?>
 	<TR CLASS = 'even' ><TH COLSPAN=2 CLASS='text'>Log View</TH></TR>

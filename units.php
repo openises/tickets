@@ -9,7 +9,7 @@ $groupname = isset($_SESSION['group_name']) ? $_SESSION['group_name'] : "";	//	4
 $in_win = array_key_exists ("mode", $_GET);             // in
 $from_mi = array_key_exists ("mi", $_GET);
 $gmaps = $_SESSION['internet'];
-$the_resp_id = (isset($_GET['id']))? $_GET['id']: 0;	//	11/18/13
+$the_resp_id = (isset($_GET['id']))? sanitize_int($_GET['id']): 0;	//	11/18/13
 /*
 5/23/08	added check for associated assign records before allowing deletions line 843 area
 5/29/08	addded do_kml callsu
@@ -176,7 +176,7 @@ $gt_status = get_text("Status");
 
 //$tolerance = 5 * 60;		// nr. seconds report time may differ from UTC
 
-$RespID = (isset($_GET['id'])) ? $_GET['id'] : 0;	
+$RespID = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : 0;	
 
 extract($_GET);
 extract($_POST);
@@ -192,9 +192,9 @@ if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restr
 	}
 
 $u_types = array();												// 1/1/09
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 
@@ -205,10 +205,10 @@ $sm_icons = $GLOBALS['sm_icons'];
 
 function get_icon_legend (){			// returns legend string - 1/1/09
 	global $u_types, $sm_icons;
-	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `type`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT DISTINCT `type` FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `type`";
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	$print = "";											// output string
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		if($row['type'] != 0) {
 			$temp = $u_types[$row['type']];
 			$print .= "\t\t<SPAN class='legend' style='height: 3em; text-align: center; vertical-align: middle; float: none;'> ". $temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$temp[1]] . "' STYLE = 'vertical-align: middle' BORDER=0 PADDING='10'>&nbsp;&nbsp;&nbsp;</SPAN>";
@@ -412,9 +412,9 @@ if(file_exists("./incs/modules.inc.php")) {
 	function do_calls($id = 0) {				// generates js callsigns array
 		$print = "\n<SCRIPT >\n";
 		$print .="\t\tvar calls = new Array();\n";
-		$query	= "SELECT `id`, `callsign` FROM `$GLOBALS[mysql_prefix]responder` where `id` != $id";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		while($row = stripslashes_deep(mysql_fetch_array($result))) {
+		$query	= "SELECT `id`, `callsign` FROM `{$GLOBALS['mysql_prefix']}responder` where `id` != $id";
+		$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		while($row = stripslashes_deep($result->fetch_array())) {
 			if (!empty($row['callsign'])) {
 				$print .="\t\tcalls.push('" .$row['callsign'] . "');\n";
 				}
@@ -436,8 +436,9 @@ if(file_exists("./incs/modules.inc.php")) {
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]responder WHERE `id`=" . $_POST['frm_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$frm_id = sanitize_int($_POST['frm_id']);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}responder WHERE `id`=?";
+		$result = db_query($query, [$frm_id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		print $caption;
 		sleep(10);
@@ -462,17 +463,17 @@ if(file_exists("./incs/modules.inc.php")) {
 				} else {
 				if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
 					$theFac = $_POST['frm_facility_sel'];
-					$query_fac = "SELECT `lat`, `lng`, `id` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
-					$result_fac = mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
-					if (mysql_num_rows($result_fac) ==1) {
-						$row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac));
+					$query_fac = "SELECT `lat`, `lng`, `id` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
+					$result_fac = db_query($query_fac) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+					if ($result_fac->num_rows ==1) {
+						$row_fac = stripslashes_deep($result_fac->fetch_assoc());
 						$the_lat = doubleval($row_fac['lat']);							// apply to unit location
 						$the_lng = doubleval($row_fac['lng']);
 						}	
 					}
 				}				// end else {}
 			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
 				`roster_user`= " . 	quote_smart(trim($_POST['frm_roster_id'])) . ",
 				`name`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
 				`street`= " . 		quote_smart(trim($_POST['frm_street'])) . ",
@@ -515,7 +516,7 @@ if(file_exists("./incs/modules.inc.php")) {
 				`updated`= " . 		quote_smart(trim($now)) . ",
 				`status_updated`= '" . $status_updated . "'
 				WHERE `id`= " . quote_smart(trim($resp_id)) . ";";
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+				$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
@@ -524,27 +525,27 @@ if(file_exists("./incs/modules.inc.php")) {
 			if($curr_groups != $groups) { 	//	4/14/11
 				foreach($_POST['frm_group'] as $posted_grp) { 	//	4/14/11
 					if(!in_array($posted_grp, $ex_grps)) {
-						$query  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 								($posted_grp, 2, '$now', $resp_stat, $resp_id, 'Allocated to Group' , $by)";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+						$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 						}
 					}
 				foreach($ex_grps as $existing_grps) { 	//	4/14/11
 					if(!in_array($existing_grps, $_POST['frm_group'])) {
 						if($existing_grps != "") {	//	6/19/14
-							$query  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 2 AND `group` = $existing_grps AND `resource_id` = {$resp_id}";
-							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+							$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 2 AND `group` = $existing_grps AND `resource_id` = {$resp_id}";
+							$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
 							}
 						}
 					}
 				}	
 
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 2 AND `resource_id` = {$resp_id}";	//	unallocated resource_id catcher, 6/19/14
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-			if(!mysql_num_rows($result) > 0) {
-				$query  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 2 AND `resource_id` = {$resp_id}";	//	unallocated resource_id catcher, 6/19/14
+			$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
+			if(!$result->num_rows > 0) {
+				$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 						(1, 2, '$now', $resp_stat, $resp_id, 'Allocated to Group' , $by)";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+				$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 				}
 				
 			$existing_members = explode(",", $_POST['frm_exist_members']);
@@ -552,32 +553,32 @@ if(file_exists("./incs/modules.inc.php")) {
 			if(array_key_exists('frm_memname', $_POST)) {
 				foreach($_POST['frm_memname'] AS $key => $val) {
 					if(!in_array($key, $existing_members)) {
-						$query_rxm = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id'])) . " LIMIT 1";
-						$result_rxm = mysql_query($query_rxm);
-						if(mysql_num_rows($result_rxm) == 0) {
+						$query_rxm = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id'])) . " LIMIT 1";
+						$result_rxm = db_query($query_rxm);
+						if($result_rxm->num_rows == 0) {
 							$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
 							$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
 							$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
 							$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
 							$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
-							$query_ins_rxm  = "INSERT INTO `$GLOBALS[mysql_prefix]responder_x_member` (
+							$query_ins_rxm  = "INSERT INTO `{$GLOBALS['mysql_prefix']}responder_x_member` (
 								`responder_id` , `member_id`, `use_email` , `use_cellphone` , `use_homephone` , `use_workphone` , `use_smsg_id`) 
 								VALUES (" .	quote_smart(trim($resp_id)) . ", " . $key . ", " . $use_email . ", " . $use_cellphone . ", " . $use_homephone . ", " . $use_workphone . "," . $use_smsgid . ");";							
-							$result_ins_rxm = mysql_query($query_ins_rxm);		
+							$result_ins_rxm = db_query($query_ins_rxm);		
 							} else {
 							$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
 							$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
 							$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
 							$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
 							$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
-							$query_ins_rxm  = "UPDATE `$GLOBALS[mysql_prefix]responder_x_member` 
+							$query_ins_rxm  = "UPDATE `{$GLOBALS['mysql_prefix']}responder_x_member` 
 									SET `use_email` = " . $use_email . ", 
 									`use_cellphone` " . $use_cellphone . ",
 									`use_homephone` " . $use_homephone . ", 
 									`use_workphone` " . $use_workphone . ", 
 									`use_smsg_id` = " . $use_smsgid . " 
 									WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($resp_id));
-							$result_ins_rxm = mysql_query($query_ins_rxm);								
+							$result_ins_rxm = db_query($query_ins_rxm);								
 							}
 						} else {
 						$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
@@ -585,14 +586,14 @@ if(file_exists("./incs/modules.inc.php")) {
 						$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
 						$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
 						$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
-						$query_ins_rxm  = "UPDATE `$GLOBALS[mysql_prefix]responder_x_member` 
+						$query_ins_rxm  = "UPDATE `{$GLOBALS['mysql_prefix']}responder_x_member` 
 								SET `use_email` = " . $use_email . ", 
 								`use_cellphone` " . $use_cellphone . ",
 								`use_homephone` " . $use_homephone . ", 
 								`use_workphone` " . $use_workphone . ", 
 								`use_smsg_id` = " . $use_smsgid . " 
 								WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($resp_id));
-						$result_ins_rxm = mysql_query($query_ins_rxm);
+						$result_ins_rxm = db_query($query_ins_rxm);
 						}
 					}
 				}
@@ -600,12 +601,12 @@ if(file_exists("./incs/modules.inc.php")) {
 			foreach($existing_members AS $key => $val) {
 				if(in_array('frm_memname', $_POST)) {
 					if(!in_array($val, $_POST['frm_memname'])) {
-						$query_dxm = "DELETE FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $val . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id']));
-						$result_dxm = mysql_query($query_dxm);
+						$query_dxm = "DELETE FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `member_id` = " . $val . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id']));
+						$result_dxm = db_query($query_dxm);
 						}
 					} else {
-					$query_dxm = "DELETE FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $val . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id']));
-					$result_dxm = mysql_query($query_dxm);
+					$query_dxm = "DELETE FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `member_id` = " . $val . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id']));
+					$result_dxm = db_query($query_dxm);
 					}
 				}			
 			
@@ -640,16 +641,16 @@ if(file_exists("./incs/modules.inc.php")) {
 		$theFac = 0;
 		if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
 			$theFac = $_POST['frm_facility_sel'];
-			$query_fac = "SELECT `lat`, `lng`, `id` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
-			$result_fac = mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
-			if (mysql_num_rows($result_fac) ==1) {
-				$row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac));
+			$query_fac = "SELECT `lat`, `lng`, `id` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = {$_POST['frm_facility_sel']} LIMIT 1";
+			$result_fac = db_query($query_fac) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			if ($result_fac->num_rows ==1) {
+				$row_fac = stripslashes_deep($result_fac->fetch_assoc());
 				$the_lat = doubleval($row_fac['lat']);							// apply to unit location
 				$the_lng = doubleval($row_fac['lng']);
 				}	
 			}
 
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`, `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, 
 			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `followmee_tracker`, `traccar`, `javaprssrvr`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `cellphone`, `lat`, `lng`, `type`, `user_id`, `at_facility`, `updated`, `status_updated` )
 			VALUES (" .
@@ -694,8 +695,8 @@ if(file_exists("./incs/modules.inc.php")) {
 				$theFac . "," .
 				quote_smart(trim($now)) . "," .
 				quote_smart(trim($now)) . ");";								// 8/23/08, 5/11/11, 6/21/13, 9/6/13, 11/18/13
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();
+		$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$new_id=db()->insert_id;
 		
 //	9/10/13 File Upload support
 		$print = "";
@@ -721,9 +722,9 @@ if(file_exists("./incs/modules.inc.php")) {
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
-				if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
+				$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);	
+				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
 							$print .= "";
@@ -734,20 +735,20 @@ if(file_exists("./incs/modules.inc.php")) {
 						$print .= "Error uploading file";
 						}
 					} else {
-					$row = stripslashes_deep(mysql_fetch_assoc($result));			
+					$row = stripslashes_deep($result->fetch_assoc());			
 					$exists = true;
 					$existing_file = $row['filename'];	//	get existing file name
 					}
 					
 				$from = $_SERVER['REMOTE_ADDR'];	
 				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
-				$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
 					) VALUES (
 						'" . $_POST['frm_file_title'] . "', '" . $filename . "', '" . $realfilename . "', 0, " . $id . ",
 						0, 0, '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
 					)";
-				$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert) or do_error($query_insert,'mysql_query() failed', db()->error, basename( __FILE__), __LINE__);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -764,36 +765,36 @@ if(file_exists("./incs/modules.inc.php")) {
 		if(!empty($_POST['frm_group'])) {
 			foreach ($_POST['frm_group'] as $grp_val) {	// 6/10/11
 				if(test_allocates($new_id, $grp_val, 2))	{		
-					$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+					$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 							($grp_val, 2, '$now', $status_id, $new_id, 'Allocated to Group' , $by)";
-					$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+					$result_a = db_query($query_a) or do_error($query_a, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);
 					}
 				}
 			} else {
-				$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+				$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 						(1, 2, '$now', $status_id, $new_id, 'Allocated to Group' , $by)";
-				$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+				$result_a = db_query($query_a) or do_error($query_a, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 			}	//	end if(!empty($_POST['frm_group']
 			
 			if(array_key_exists('frm_memname', $_POST)) {
 				foreach($_POST['frm_memname'] AS $key => $val) {
-					$query_rxm = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id'])) . " LIMIT 1";
-					$result_rxm = mysql_query($query_rxm);
-					if(mysql_num_rows($result_rxm) == 0) {
+					$query_rxm = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `member_id` = " . $key . " AND `responder_id` = " . quote_smart(trim($_POST['frm_id'])) . " LIMIT 1";
+					$result_rxm = db_query($query_rxm);
+					if($result_rxm->num_rows == 0) {
 						$use_email = (array_key_exists('frm_use_email', $_POST) && array_key_exists($key, $_POST['frm_use_email'])) ? 1 : 0;
 						$use_cellphone = (array_key_exists('frm_use_cell', $_POST) && array_key_exists($key, $_POST['frm_use_cell'])) ? 1 : 0;
 						$use_homephone = (array_key_exists('frm_use_homephone', $_POST) && array_key_exists($key, $_POST['frm_use_homephone'])) ? 1 : 0;
 						$use_workphone = (array_key_exists('frm_use_workphone', $_POST) && array_key_exists($key, $_POST['frm_use_workphone'])) ? 1 : 0;
 						$use_smsgid = (array_key_exists('frm_use_smsg', $_POST) && array_key_exists($key, $_POST['frm_use_smsg'])) ? 1 : 0;
-						$query_ins_rxm  = "INSERT INTO `$GLOBALS[mysql_prefix]responder_x_member` (
+						$query_ins_rxm  = "INSERT INTO `{$GLOBALS['mysql_prefix']}responder_x_member` (
 							`responder_id` , `member_id`, `use_email` , `use_cellphone` , `use_homephone` , `use_workphone` , `use_smsg_id`) 
 							VALUES (" .	quote_smart(trim($resp_id)) . ", " . $key . ", " . $use_email . ", " . $use_cellphone . ", " . $use_homephone . ", " . $use_workphone . "," . $use_smsgid . ");";							
-						$result_ins_rxm = mysql_query($query_ins_rxm);
+						$result_ins_rxm = db_query($query_ins_rxm);
 						}
 					}
 				}
 
-		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, mysql_insert_id(), $_POST['frm_un_status_id']);	// 6/2/08
+		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, db()->insert_id, $_POST['frm_un_status_id']);	// 6/2/08
 
 		$caption = "<B>Unit  <i>" . stripslashes_deep($_POST['frm_name']) . "</i> has been added </B><BR /><BR />";
 		$_getgoadd = "";

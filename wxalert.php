@@ -26,9 +26,9 @@ if ( ! isset($_REQUEST['warnlocal']) )
 //Where the zone is your zone and the county is your county and location is your location
 //using pluses in place of spaces
 
-$warnzone = $_REQUEST['warnzone'];
-$warncounty = $_REQUEST['warncounty'];
-$warnlocal = $_REQUEST['warnlocal'];
+$warnzone = sanitize_string($_REQUEST['warnzone']);
+$warncounty = sanitize_string($_REQUEST['warncounty']);
+$warnlocal = sanitize_string($_REQUEST['warnlocal']);
 //$fp = fopen("m:/temp/alert.txt", "w"); //Open file to write alert text to. We always overwrite.
 $fp = fopen("./alert.txt", "w"); //Open file to write alert text to. We always overwrite.
 

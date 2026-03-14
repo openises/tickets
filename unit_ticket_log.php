@@ -13,7 +13,7 @@ if(!isset($_POST)) {
 		} elseif(!isset($_GET)) {
 		$responder = 0;
 		} else {
-		$responder = $_GET['responder'];
+		$responder = sanitize_int($_GET['responder']);
 		}
 
 	if((isset($_GET)) && (($_GET['ticket'] == 0) || ($_GET['ticket'] == ""))) {
@@ -21,7 +21,7 @@ if(!isset($_POST)) {
 		} elseif(!isset($_GET)) {
 		$ticket = 0;
 		} else {
-		$ticket = $_GET['ticket'];
+		$ticket = sanitize_int($_GET['ticket']);
 		}	
 	}
 
@@ -124,7 +124,7 @@ if (empty($_POST)) {
 						$where2 = "AND (";
 						foreach($al_groups as $grp) {
 							$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-							$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+							$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 							$where2 .= $where3;
 							$x++;
 							}
@@ -133,29 +133,29 @@ if (empty($_POST)) {
 						$where2 = "AND (";
 						foreach($curr_viewed as $grp) {
 							$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-							$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+							$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 							$where2 .= $where3;
 							$x++;
 							}
 						}
 					}		
 
-				$query = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
-						FROM `$GLOBALS[mysql_prefix]ticket`
-						LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
+				$query = "SELECT *, `{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`
+						FROM `{$GLOBALS['mysql_prefix']}ticket`
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.`id`=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
 						WHERE (`status` = {$GLOBALS['STATUS_OPEN']} OR `status` = {$GLOBALS['STATUS_SCHEDULED']}) {$where2}
 						GROUP BY `tick_id` ORDER BY `severity` DESC, `problemstart` ASC "; // highest severity, oldest open
-				$result = mysql_query($query);
-				if (mysql_num_rows($result) >= 1) {			// if a single, do it
-					$row = mysql_fetch_assoc($result);
-					$inc_ctr = mysql_num_rows($result);
+				$result = db_query($query);
+				if ($result->num_rows >= 1) {			// if a single, do it
+					$row = $result->fetch_assoc();
+					$inc_ctr = $result->num_rows;
 					print "<TR CLASS='even'><TD CLASS='td_label text'>Select Ticket</TD><TD class='td_label text'>";	
 					print "<SELECT CLASS='text' NAME='frm_ticket_sel' onChange='document.log_form.ticket.value=this.value;'>";
 					print "<OPTION CLASS='text' VALUE='0' SELECTED>Ignore</OPTION>";
-					while ($row = mysql_fetch_array($result))  {
+					while ($row = $result->fetch_array())  {
 						$addr = substr($row['street'] . " " . $row['city'] . " " . $row['state'], 0, 24);
 						$descr = substr($row['scope'] , 0, 24) . " - " . $addr ;
-						print "<OPTION CLASS='text' value='{$row['tick_id']}'> {$descr}</OPTION>";
+						print "<OPTION CLASS='text' value='" . e($row['tick_id']) . "'> " . e($descr) . "</OPTION>";
 						}
 					print "</SELECT></TD></TR><TR CLASS='even'><TD COLSPAN=2>&nbsp;</TD></TR>";
 					}
@@ -164,8 +164,8 @@ if (empty($_POST)) {
 			<TR CLASS = 'even'><TD CLASS='td_label text'>Log entry:</TD><TD CLASS='td_data text'><TEXTAREA NAME="frm_comment" COLS="50" ROWS="20" WRAP="virtual"></TEXTAREA></TD></TR>
 		</TABLE>
 		<INPUT TYPE='hidden' NAME='func' VALUE='add'>
-		<INPUT TYPE='hidden' NAME='responder' VALUE=<?php print $responder;?>>
-		<INPUT TYPE='hidden' NAME='ticket' VALUE=<?php print $ticket;?>>
+		<INPUT TYPE='hidden' NAME='responder' VALUE='<?php print e($responder);?>'>
+		<INPUT TYPE='hidden' NAME='ticket' VALUE='<?php print e($ticket);?>'>
 		</FORM>
 	</DIV>
 <?php 

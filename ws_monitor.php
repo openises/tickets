@@ -18,23 +18,23 @@ $user_names = array();
 session_write_close();
 $user_id = (array_key_exists('user_id', $_SESSION)) ? $_SESSION['user_id'] : 0;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row_users = stripslashes_deep($result_users->fetch_assoc())) 	{
 	$users_arr[$row_users['id']] = $row_users['responder_id'];
 	}
 	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `login` >= (NOW() - INTERVAL 6 HOUR)";
-$result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `login` >= (NOW() - INTERVAL 6 HOUR)";
+$result_users = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row_users = stripslashes_deep($result_users->fetch_assoc())) 	{
 	$from_arr1[$row_users['_from']] = $row_users['user'];
 	}
 	
 $from_arr = array_unique($from_arr1);
 
-$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users2 = stripslashes_deep(mysql_fetch_assoc($result_users2))) 	{
+$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users2 = db_query($query2) or do_error($query2, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row_users2 = stripslashes_deep($result_users2->fetch_assoc())) 	{
 	$user_names[$row_users2['id']] = $row_users2['user'];
 	}
 

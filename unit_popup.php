@@ -26,14 +26,14 @@ $text6 = "";
 $text7 = "";
 $text8 = "";
 
-$id = $_GET['id'];
+$id = sanitize_int($_GET['id']);
 $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	$status_hide[$temp] = $row_st['hide'];
@@ -41,19 +41,19 @@ while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 
 unset($result_st);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
-	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-	WHERE `responder_id` = '{$id}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
+	WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
-$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$units_assigned = mysql_num_rows($result_as);
+$result_as = db_query($query, [$id]);
+$units_assigned = $result_as->num_rows;
 
 switch ($units_assigned) {		
 	case 0:
 		$ass_td = "";
 		break;			
 	case 1:
-		$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as));
+		$row_assign = stripslashes_deep($result_as->fetch_assoc());
 		$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 		$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
 		switch($row_assign['severity'])		{		//color tickets by severity
@@ -78,9 +78,9 @@ $label7 = get_text('Contact Via');
 $label8 = get_text('Updated');
 $the_day = "";
 $outputstring = "";
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id=" . $id;
-$result = mysql_query($query);
-$row = mysql_fetch_assoc($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?";
+$result = db_query($query, [$id]);
+$row = $result->fetch_assoc();
 $lat = $row['lat'];
 $lng = $row['lng'];
 $name = $text1 = $row['name'];

@@ -178,80 +178,70 @@ function get_icon_legend (){			// returns legend string
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Location - checkbox
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]warnings WHERE `id`=" . $_POST['frm_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$caption = "<B>Location <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
+		$frm_id = sanitize_int($_POST['frm_id']);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}warnings WHERE `id`=?";
+		$result = db_query($query, [$frm_id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$caption = "<B>Location <I>" . e(stripslashes_deep($_POST['frm_name'])) . "</I> has been deleted from database.</B><BR /><BR />";
 		}
 	else {
 		if ($_getgoedit == 'true') {
 			$station = TRUE;			//
-			$the_lat = empty($_POST['frm_lat'])? "NULL" : quote_smart(trim($_POST['frm_lat'])) ;
-			$the_lng = empty($_POST['frm_lng'])? "NULL" : quote_smart(trim($_POST['frm_lng'])) ;
+			$the_lat = empty($_POST['frm_lat'])? NULL : trim($_POST['frm_lat']);
+			$the_lng = empty($_POST['frm_lng'])? NULL : trim($_POST['frm_lng']);
 			$the_type = intval($_POST['frm_loc_type']);
-			
-			$loc_id = $_POST['frm_id'];
-			$by = $_SESSION['user_id'];					// 6/4/2013
-			$from = $_SERVER['REMOTE_ADDR'];			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]warnings` SET
-				`title`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
-				`street`= " . 		quote_smart(trim($_POST['frm_street'])) . ",
-				`city`= " . 		quote_smart(trim($_POST['frm_city'])) . ",
-				`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
-				`loc_type`= " . 	$the_type . ",
-				`description`= " . 	quote_smart(trim($_POST['frm_descr'])) . ",				
-				`lat`= " . 			$the_lat . ",
-				`lng`= " . 			$the_lng . ",
-				`_by`= " . 			quote_smart(trim($by)) . ",
-				`_on`= " . 			quote_smart(trim($now)) . ",
-				`_from`= " . 		quote_smart(trim($from)) . "
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$loc_id = sanitize_int($_POST['frm_id']);
+			$by = $_SESSION['user_id'];					// 6/4/2013
+			$from = $_SERVER['REMOTE_ADDR'];
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}warnings` SET
+				`title`= ?,
+				`street`= ?,
+				`city`= ?,
+				`state`= ?,
+				`loc_type`= ?,
+				`description`= ?,
+				`lat`= ?,
+				`lng`= ?,
+				`_by`= ?,
+				`_on`= ?,
+				`_from`= ?
+				WHERE `id`= ?";
+
+			$result = db_query($query, [trim($_POST['frm_name']), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_state']), $the_type, trim($_POST['frm_descr']), $the_lat, $the_lng, trim($by), trim($now), trim($from), $loc_id]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
 
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_WARNLOCATION_CHANGE'], 0, $_POST['frm_id'], $_POST['frm_status_id']);}	//2/17/11
-			$caption = "<i>" . stripslashes_deep($_POST['frm_name']) . "</i><B>' data has been updated.</B><BR /><BR />";
+			$caption = "<i>" . e(stripslashes_deep($_POST['frm_name'])) . "</i><B>' data has been updated.</B><BR /><BR />";
 			}
 		}				// end else {}
 
 	if ($_getgoadd == 'true') {
 		$by = $_SESSION['user_id'];		//	4/14/11
-		$frm_lat = (empty($_POST['frm_lat']))? 'NULL': quote_smart(trim($_POST['frm_lat']));
-		$frm_lng = (empty($_POST['frm_lng']))? 'NULL': quote_smart(trim($_POST['frm_lng']));
-		$the_type = $_POST['frm_loc_type'];
-		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));	
+		$frm_lat = (empty($_POST['frm_lat']))? NULL : trim($_POST['frm_lat']);
+		$frm_lng = (empty($_POST['frm_lng']))? NULL : trim($_POST['frm_lng']);
+		$the_type = intval($_POST['frm_loc_type']);
+		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$by = $_SESSION['user_id'];					// 6/4/2013
-		$from = $_SERVER['REMOTE_ADDR'];			
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]warnings` (
-			`title`, 
-			`street`, 
-			`city`, 
-			`state`, 
-			`lat`, 
-			`lng`, 
+		$from = $_SERVER['REMOTE_ADDR'];
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}warnings` (
+			`title`,
+			`street`,
+			`city`,
+			`state`,
+			`lat`,
+			`lng`,
 			`loc_type`,
-			`description`, 
-			`_by`, 
-			`_on`, 
+			`description`,
+			`_by`,
+			`_on`,
 			`_from` )
-			VALUES (" .
-			quote_smart(trim($_POST['frm_name'])) . "," .
-			quote_smart(trim($_POST['frm_street'])) . "," .
-			quote_smart(trim($_POST['frm_city'])) . "," .
-			quote_smart(trim($_POST['frm_state'])) . "," .
-			$frm_lat . "," .
-			$frm_lng . "," .			
-			$the_type . "," .					
-			quote_smart(trim($_POST['frm_descr'])) . "," .
-			quote_smart(trim($by)) . "," .
-			quote_smart(trim($now)) . "," .
-			quote_smart(trim($from)) . ");";
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();
+		$result = db_query($query, [trim($_POST['frm_name']), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_state']), $frm_lat, $frm_lng, $the_type, trim($_POST['frm_descr']), trim($by), trim($now), trim($from)]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$new_id=db()->insert_id;
 
-		do_log($GLOBALS['LOG_WARNLOCATION_ADD'], 0, mysql_insert_id(), 0);	//	2/17/11
+		do_log($GLOBALS['LOG_WARNLOCATION_ADD'], 0, db()->insert_id, 0);	//	2/17/11
 
-		$caption = "<B>Location  <i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been updated.</B><BR /><BR />";
+		$caption = "<B>Location  <i>" . e(stripslashes_deep($_POST['frm_name'])) . "</i> data has been updated.</B><BR /><BR />";
 		}							// end if ($_getgoadd == 'true')
 
 // add ===========================================================================================================================

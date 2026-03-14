@@ -16,7 +16,7 @@
 session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 
-$phone = (empty($_POST))? "4108498721": $_POST['phone'];
+$phone = (empty($_POST))? "4108498721": sanitize_string($_POST['phone']);
 
 	function do_the_row($inRow) {		// for ticket or constituents data
 		global $apartment, $misc, $aptStr;
@@ -36,24 +36,24 @@ $phone = (empty($_POST))? "4108498721": $_POST['phone'];
 
 															// collect constituent data this phone no.
 $aptStr = " Apt:";															
-$query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]constituents` WHERE `phone`= '{$phone}'
-	OR `phone_2`= '{$phone}' OR `phone_3`= '{$phone}' OR `phone_4`= '{$phone}'	LIMIT 1";
+$query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= ?
+	OR `phone_2`= ? OR `phone_3`= ? OR `phone_4`= ? LIMIT 1";
 
-$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query, [$phone, $phone, $phone, $phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-if (mysql_num_rows($result)==1) {
-	$cons_row = stripslashes_deep(mysql_fetch_array($result))
+if ($result->num_rows==1) {
+	$cons_row = stripslashes_deep($result->fetch_array());
 	$apartment = 	$aptStr . $cons_row['apartment']; 						// note brackets
 	$misc = 		$cons_row['miscellaneous'];
 	}
 
 
-$query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `phone`= '{$phone}' ORDER BY `updated` DESC";			// 9/29/09
-$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$ret = mysql_affected_rows() . ";";						// common to each  return
-//dump(mysql_affected_rows());
-if (mysql_affected_rows()> 0) {							// build return string from newest incident data
-	$row = stripslashes_deep(mysql_fetch_array($result));
+$query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `phone`= ? ORDER BY `updated` DESC";			// 9/29/09
+$result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$ret = db()->affected_rows . ";";						// common to each  return
+//dump(db()->affected_rows);
+if (db()->affected_rows> 0) {							// build return string from newest incident data
+	$row = stripslashes_deep($result->fetch_array());
 	$ret .= do_the_row($row);
 	}
 

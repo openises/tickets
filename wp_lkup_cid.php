@@ -16,7 +16,7 @@
 session_write_close();
 require_once('incs/functions.inc.php');		//7/28/10
 
-$phone = (empty($_POST))? "4108498721": $_POST['phone'];
+$phone = (empty($_POST))? "4108498721": sanitize_string($_POST['phone']);
 
 	function cid_lookup($phone )  {
 		$aptStr = " Apt:";															
@@ -38,20 +38,20 @@ $phone = (empty($_POST))? "4108498721": $_POST['phone'];
 	
 																// collect constituent data this phone no.
 	
-	$query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]constituents` WHERE `phone`= '{$phone}'
-		OR `phone_2`= '{$phone}' OR `phone_3`= '{$phone}' OR `phone_4`= '{$phone}'	LIMIT 1";
-	
-	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$cons_row = (mysql_num_rows($result)==1)	? stripslashes_deep(mysql_fetch_array($result)): NULL;
+	$query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= ?
+		OR `phone_2`= ? OR `phone_3`= ? OR `phone_4`= ? LIMIT 1";
+
+	$result = db_query($query, [$phone, $phone, $phone, $phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$cons_row = ($result->num_rows==1) ? stripslashes_deep($result->fetch_array()): NULL;
 	$apartment = 	(is_null($cons_row))		? "" : $aptStr . $cons_row['apartment']; 						// note brackets
 	$misc = 		(is_null($cons_row))		? "" : $cons_row['miscellaneous'];
 	
-	$query  = "SELECT  * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `phone`= '{$phone}' ORDER BY `updated` DESC";			// 9/29/09
-	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$ret = mysql_num_rows($result) . ";";						// hits - common to each return
-	
-	if (mysql_num_rows($result)> 0) {							// build return string from newest incident data
-		$row = stripslashes_deep(mysql_fetch_array($result));
+	$query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `phone`= ? ORDER BY `updated` DESC";			// 9/29/09
+	$result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$ret = $result->num_rows . ";";						// hits - common to each return
+
+	if ($result->num_rows> 0) {							// build return string from newest incident data
+		$row = stripslashes_deep($result->fetch_array());
 		$ret .= do_the_row($row);
 		}
 	
@@ -136,7 +136,7 @@ $phone = (empty($_POST))? "4108498721": $_POST['phone'];
 
 
 $lookup_str =  cid_lookup($phone);
-$query = "INSERT INTO `$GLOBALS[mysql_prefix]caller_id` (`call_str`, `lookup_vals`, `status`)  VALUES ( " . quote_smart(trim($phone)) . ", " .  quote_smart(trim($lookup_str)) . ", 0);";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}caller_id` (`call_str`, `lookup_vals`, `status`)  VALUES (?, ?, 0)";
+$result = db_query($query, [trim($phone), trim($lookup_str)]) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 dump  (explode(";", $lookup_str)) ;
 ?>
