@@ -4,9 +4,9 @@ if(empty($_GET)) {
 	}
 require_once('../incs/functions.inc.php');
 
-$filename = "../files/" . $_GET['filename'];
-$properFilename = $_GET['origname'];
-$filetype = $_GET['type'];
+$filename = "../files/" . sanitize_string($_GET['filename']);
+$properFilename = sanitize_string($_GET['origname']);
+$filetype = sanitize_string($_GET['type']);
 
 header('Content-Type: {$filetype}');
 header("Content-Disposition: attachment; filename=\"$properFilename\";" );

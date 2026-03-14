@@ -20,12 +20,12 @@ $query = "SELECT *,
 		`c`.`title` AS `type_title`,
 		`c`.`icon`AS `icon_url`,
 		`r`.`_on` AS `updated`
-		FROM `$GLOBALS[mysql_prefix]roadinfo` `r`
-		LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON `r`.`conditions`=`c`.`id`
+		FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON `r`.`conditions`=`c`.`id`
 		WHERE `r`.`_on` >= (NOW() - INTERVAL 2 DAY) ORDER BY `cond_id`";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query);
 $z=0;
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+while ($row = stripslashes_deep($result->fetch_assoc())){
 
 // tab 1
 		if (my_is_float($row['lat'])) {										// position data? 4/29/09
@@ -37,16 +37,16 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 			$theTabs .= '<div class="contentwrapper">';
 
 			$tab_1 = "<TABLE width='{$iw_width}' style='height: 280px;'><TR><TD><TABLE>";
-			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $row['r_title'] . "</B></TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD class='td_label'>Description:</TD><TD>" . $row['type_title'] . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>Status:</TD><TD>" . stripslashes_deep($row['address']) . " </TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD class='td_label'>Contact:</TD><TD>" . stripslashes_deep($row['r_description']) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>As of:</TD><TD>" . format_date_2(strtotime($row['updated'])) . "</TD></TR>";		// 4/11/10
+			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . e($row['r_title']) . "</B></TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD class='td_label'>Description:</TD><TD>" . e($row['type_title']) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>Status:</TD><TD>" . e(stripslashes_deep($row['address'])) . " </TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD class='td_label'>Contact:</TD><TD>" . e(stripslashes_deep($row['r_description'])) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>As of:</TD><TD>" . e(format_date_2(strtotime($row['updated']))) . "</TD></TR>";		// 4/11/10
 			$tab_1 .= "<TR CLASS='spacer'><TD COLSPAN='2' class='spacer'></TD></TR>";
 			if(($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']) || ($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR'])) {
 				if ($use_twitter) {							//7/23/15
 					$theInformation = stripslashes_deep($row['r_title']) . " at " . stripslashes_deep($row['address']) . " <small>as of " . format_date_2(strtotime($row['updated'])) . ". Latitude: " . $row['lat'] . ", Longitude: " . $row['lng'] . "</small>";
-					$tab_1 .= 	"<TR style='height: 25px;'><TD COLSPAN=99 style='text-align: center;'><SPAN id='twit_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick=\"tweetInfo('" . $theInformation . "')\">Tweet</A>";	// 7/23/15
+					$tab_1 .= 	"<TR style='height: 25px;'><TD COLSPAN=99 style='text-align: center;'><SPAN id='twit_" . e($the_id) . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick=\"tweetInfo('" . e($theInformation) . "')\">Tweet</A>";	// 7/23/15
 					}
 				}
 			$tab_1 .= "</TABLE></TD></TR></TABLE>";

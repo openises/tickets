@@ -6,7 +6,7 @@ if(empty($_GET)) {
 require_once('../incs/functions.inc.php');
 
 do_login(basename(__FILE__));
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 set_time_limit(0);
 if(empty($_GET)) {
 	exit;
@@ -19,29 +19,29 @@ function directory_empty($path) {
 		return TRUE;
 		}
 	}
-	
-function rmdir_recurse($path) {  
-	$path = rtrim($path, '/').'/';  
-	$handle = opendir($path);  
-	while(false !== ($file = readdir($handle))) {  
-		if($file != '.' and $file != '..' ) {  
-			$fullpath = $path.$file; 
+
+function rmdir_recurse($path) {
+	$path = rtrim($path, '/').'/';
+	$handle = opendir($path);
+	while(false !== ($file = readdir($handle))) {
+		if($file != '.' and $file != '..' ) {
+			$fullpath = $path.$file;
 			if(is_dir($fullpath)) {
-				rmdir_recurse($fullpath); 
+				rmdir_recurse($fullpath);
 				} else {
-				unlink($fullpath);  
+				unlink($fullpath);
 				}
-		}  
-	}  
-	closedir($handle);  
+		}
+	}
+	closedir($handle);
 	rmdir($path);
-	return TRUE;	
-	} 
+	return TRUE;
+	}
 
 $filestore = substr(getcwd(), 0, -5) . "/_osm/tiles/";
-$zoom = $_GET['zoom'];
-$col = $_GET['col'];
-$tile = $_GET['tile'];
+$zoom = sanitize_string($_GET['zoom']);
+$col = sanitize_string($_GET['col']);
+$tile = sanitize_string($_GET['tile']);
 $thecolDir =  $filestore . $zoom . "/" . $col;
 $thezoomDir =  $filestore . $zoom;
 $theFile = $zoom . "/" . $col . "/" . $tile;
@@ -58,16 +58,16 @@ if(@unlink($file)) {
 
 if(directory_empty($thecolDir)) {
 	@rmdir($thecolDir);
-	$addition .= "Directory /_osm/tiles/" . $col . " deleted";
+	$addition .= "Directory /_osm/tiles/" . e($col) . " deleted";
 	}
-	
+
 if(directory_empty($thezoomDir)) {
 	@rmdir($thezoomDir);
-	$addition .= "Directory /_osm/tiles/" . $zoom . " deleted";
+	$addition .= "Directory /_osm/tiles/" . e($zoom) . " deleted";
 	}
-	
-$ret_arr[1] = $theFile . " deleted";
-	
+
+$ret_arr[1] = e($theFile) . " deleted";
+
 if(directory_empty($filestore)) {
 	$ret_arr[2] = "alldone";
 	} else {

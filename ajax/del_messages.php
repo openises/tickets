@@ -6,8 +6,8 @@ del_messages.php - puts all current messages into the wastebasket - the del_all 
 require_once('../incs/functions.inc.php');
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$msg_type = $row['msg_type'];
 	$message_id = $row['message_id'];
 	$ticket_id = $row['ticket_id'];
@@ -27,31 +27,32 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$from = $row['_from'];
 	$on = $row['_on'];
 
-	$query = "INSERT INTO `$GLOBALS[mysql_prefix]messages_bin` (
+	$query_ins = "INSERT INTO `$GLOBALS[mysql_prefix]messages_bin` (
 			`msg_type`, `message_id`, `ticket_id`, `resp_id`, `recipients`, `from_address`, `fromname`, `subject`, `message`, `status`, `date`, `read_status`, `readby`, `delivered`, `delivery_status`, `_by`, `_from`, `_on`
-			) VALUES (" . 
-			quote_smart(trim($msg_type)) . "," . 
-			quote_smart(trim($message_id)) . "," . 
-			quote_smart(trim($ticket_id)) . "," . 
-			quote_smart(trim($resp_id)) . "," . 
-			quote_smart(trim($recipients)) . "," . 
-			quote_smart(trim($from_address)) . "," . 
-			quote_smart(trim($fromname)) . "," . 
-			quote_smart(trim($subject)) . "," . 
-			quote_smart(trim($message)) . "," .
-			quote_smart(trim($status)) . "," . 
-			quote_smart(trim($date)) . "," . 
-			quote_smart(trim($read_status)) . "," . 
-			quote_smart(trim($readby)) . "," . 
-			quote_smart(trim($delivered)) . "," . 
-			quote_smart(trim($delivery_status)) . "," . 
-			quote_smart(trim($by)) . "," . 
-			quote_smart(trim($from)) . "," . 
-			quote_smart(trim($on)) . ");";			
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	$result_ins = db_query($query_ins, [
+			trim($msg_type),
+			trim($message_id),
+			trim($ticket_id),
+			trim($resp_id),
+			trim($recipients),
+			trim($from_address),
+			trim($fromname),
+			trim($subject),
+			trim($message),
+			trim($status),
+			trim($date),
+			trim($read_status),
+			trim($readby),
+			trim($delivered),
+			trim($delivery_status),
+			trim($by),
+			trim($from),
+			trim($on)
+	]) or do_error($query_ins, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 	}
 $query = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]messages`";
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

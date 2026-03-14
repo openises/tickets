@@ -101,7 +101,7 @@ function getNiceFileSize($bytes, $binaryPrefix=true) {
 		}
 	}
 
-	
+
 function _getServerLoadLinuxData() {
 	if (is_readable("/proc/stat")) {
 		$stats = @file_get_contents("/proc/stat");
@@ -167,7 +167,7 @@ function getServerLoad() {
     //----------------------------
 
 $cpuLoad = getServerLoad();
-	
+
 // Memory usage: 4.55 GiB / 23.91 GiB (19.013557664178%)
 $memUsage = getServerMemoryUsage(false);
 $mem_usage = memory_get_peak_usage(true);
@@ -183,4 +183,3 @@ $ret_arr[5] = "P: " . getNiceFileSize($mem_usage);
 
 
 print json_encode($ret_arr);
-

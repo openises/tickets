@@ -5,7 +5,7 @@ set_time_limit(0);
 @session_start();
 
 if ((array_key_exists("chg_hide", $_POST)) && ($_POST['chg_hide']==1)) {			// change persistence value - 2/18/09
-	$temp = $_POST['hide_cl'];
+	$temp = sanitize_string($_POST['hide_cl']);
 	$_SESSION['show_hide_cleared'] = $temp;		// show/hide closed assigns
 	}
 session_write_close();
@@ -41,24 +41,25 @@ $COLS_COMMENTS = 8;		// run comments -  8 characters as default
 function cb_shorten($instring, $limit) {
 	return (strlen($instring) > $limit)? substr($instring, 0, $limit): $instring;	// &#133
 	}
-	
+
 function get_un_stat_sel($s_id, $b_id) {					// returns select list as string
 	global $guest;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`, `$GLOBALS[mysql_prefix]un_status`
-		WHERE `$GLOBALS[mysql_prefix]un_status`.`id` = $s_id
-		AND `$GLOBALS[mysql_prefix]un_status`.`id` = `$GLOBALS[mysql_prefix]responder`.`un_status_id` LIMIT 1" ;
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = (mysql_num_rows($result_st)>0)? stripslashes_deep(mysql_fetch_assoc($result_st)) : FALSE;
+	$s_id = sanitize_int($s_id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`, `{$GLOBALS['mysql_prefix']}un_status`
+		WHERE `{$GLOBALS['mysql_prefix']}un_status`.`id` = ?
+		AND `{$GLOBALS['mysql_prefix']}un_status`.`id` = `{$GLOBALS['mysql_prefix']}responder`.`un_status_id` LIMIT 1" ;
+	$result_st = db_query($query, [$s_id]);
+	$row = ($result_st->num_rows > 0)? stripslashes_deep($result_st->fetch_assoc()) : FALSE;
 	$init_bg_color = ($row)? $row['bg_color'] : "transparent";
 	$init_txt_color = ($row)? $row['text_color']: "black";
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
+	$result_st = db_query($query);
 	$dis = ($guest)? " DISABLED": "";								// 9/17/08
 	$the_grp = strval(rand());			//  force initial OPTGROUP value
 	$i = 0;
 	$outstr = "\n\t\t<SELECT name='frm_status_id'  onFocus = 'show_but($b_id)' $dis STYLE='background-color:{$init_bg_color}; color:{$init_txt_color};' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;'>\n";
-	while ($row = stripslashes_deep(mysql_fetch_array($result_st))) {
+	while ($row = stripslashes_deep($result_st->fetch_array())) {
 		if ($the_grp != $row['group']) {
 			$outstr .= ($i == 0)? "": "\t</OPTGROUP>\n";
 			$the_grp = $row['group'];
@@ -72,7 +73,7 @@ function get_un_stat_sel($s_id, $b_id) {					// returns select list as string
 	return $outstr;
 	unset($result_st);
 	}
-	
+
 function my_to_date($in_date) {			// date_time format to user's spec
 	$temp = mysql2timestamp($in_date);		// 9/29/10
 	return (good_date_time($in_date)) ?  date(get_variable("date_format"), $temp): "";		//
@@ -107,16 +108,16 @@ function get_disp_cell($row_element, $form_element, $theClass ) {		// returns td
 
 $priorities = array("","severity_medium","severity_high" );
 $status_vals_ar = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE 1";
-$result_s = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_array($result_s))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE 1";
+$result_s = db_query($query);
+while ($row = stripslashes_deep($result_s->fetch_array())) {
 	$sep = (empty($row['description']))? "": ":";
 	$status_vals_ar[$row['id']] = $row['status_val'] . $sep . $row['description'] ;
 	}
-			
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'";		// 2/12/09
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-$lines = mysql_num_rows($result);
+
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'";		// 2/12/09
+$result = db_query($query);
+$lines = $result->num_rows;
 
 if ( ((empty ($_POST)) && (!array_key_exists( "show_hide_cleared", $_SESSION)) ) || ( array_key_exists ( "hide_cl", $_POST) && ( $_POST["hide_cl"] == "h") ) || (array_key_exists ( "show_hide_cleared", $_SESSION) && ( $_SESSION["show_hide_cleared"] == "h")) ) {
 	$butn_txt = "Show ";
@@ -145,6 +146,7 @@ if(array_key_exists('viewed_groups', $_SESSION)) {	//	5/4/11
 	$curr_viewed = $al_groups;
 	}
 
+$where_params = [];
 if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 	if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where = "WHERE `a`.`type` = 1";
@@ -153,7 +155,8 @@ if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		$where = "WHERE ((";
 		foreach($al_groups as $grp) {
 			$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-			$where .= "`a`.`group` = {$grp}";
+			$where .= "`a`.`group` = ?";
+			$where_params[] = $grp;
 			$where .= $where2;
 			$x++;
 			}
@@ -167,19 +170,20 @@ if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		$where = "WHERE ((";		//	6/10/11
 		foreach($curr_viewed as $grp) {
 			$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-			$where .= "`a`.`group` = {$grp}";
+			$where .= "`a`.`group` = ?";
+			$where_params[] = $grp;
 			$where .= $where2;
 			$x++;
 			}
 		$where .= " AND `a`.`type` = 1) ";
 		}	//	end if count($curr_viewed ==0)
 	}	//	End if !isset $_SESSION['viewed_groups']
-	
+
 // ================================ end of regions stuff
 
 $query = "SELECT *, `as_of` AS `as_of`,
-	`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
-	`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+	`{$GLOBALS['mysql_prefix']}assigns`.`id` AS `assign_id` ,
+	`{$GLOBALS['mysql_prefix']}assigns`.`comments` AS `assign_comments`,
 	`u`.`user` AS `theuser`, `t`.`scope` AS `tick_scope`,
 	`t`.`description` AS `tick_descr`,
 	`t`.`status` AS `tick_status`,
@@ -189,21 +193,21 @@ $query = "SELECT *, `as_of` AS `as_of`,
 	`r`.`id` AS `unit_id`,
 	`r`.`name` AS `unit_name` ,
 	`r`.`type` AS `unit_type` ,
-	`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
-	FROM `$GLOBALS[mysql_prefix]assigns`
-	LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `a`.`resource_id`)
-	LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
-	LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+	`{$GLOBALS['mysql_prefix']}assigns`.`as_of` AS `assign_as_of`
+	FROM `{$GLOBALS['mysql_prefix']}assigns`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket`	 `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `a`.`resource_id`)
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}user`		 `u` ON (`{$GLOBALS['mysql_prefix']}assigns`.`user_id` = `u`.`id`)
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	 `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
 	{$where} AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') $hide_sql
-	GROUP BY `$GLOBALS[mysql_prefix]assigns`.`id`
+	GROUP BY `{$GLOBALS['mysql_prefix']}assigns`.`id`
 	ORDER BY {$order_by }";
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-$lines = mysql_num_rows($result);
+$result = db_query($query, $where_params);
+$lines = $result->num_rows;
 
 $now = time() - (get_variable('delta_mins')*60);
-$items = mysql_num_rows($result);
+$items = $result->num_rows;
 $tags_arr = explode("/", get_variable('disp_stat'));
 $unit_ids = array();
 $ret_arr = array();
@@ -211,13 +215,13 @@ if($lines == 0) {
 	$ret_arr[0][0] = 0;
 	} else {
 	$ret_arr[0][0] = $lines;
-	$i=1; 
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$i=1;
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 	//	============================= Regions stuff
-		$query_un = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `resource_id` = '$row[unit_id]' ORDER BY `id` ASC;";
-		$result_un = mysql_query($query_un);	// 6/10/11
+		$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = ? ORDER BY `id` ASC";
+		$result_un = db_query($query_un, [$row['unit_id']]);	// 6/10/11
 		$un_groups = array();
-		while ($row_un = stripslashes_deep(mysql_fetch_assoc($result_un))) 	{
+		while ($row_un = stripslashes_deep($result_un->fetch_assoc())) 	{
 			$un_groups[] = $row_un['group'];
 			}
 
@@ -234,20 +238,20 @@ if($lines == 0) {
 		$theClass = ($row['severity']=='')? "":$priorities[$row['severity']];
 
 		if ($inviewed > 0) {
-			$the_name = addslashes ($row['tick_scope']);															// 9/12/09
+			$the_name = $row['tick_scope'];															// 9/12/09
 			$short_name = cb_shorten($row['tick_scope'], $COLS_INCID);
-			$the_descr = addslashes ($row['tick_descr']);
+			$the_descr = $row['tick_descr'];
 			$short_desc = cb_shorten($row['tick_descr'], $COLS_DESCR);
 			$address = (empty($row['tick_street']))? "" : $row['tick_street'] . ", ";		// 8/10/10
-			$address = addslashes($address . $row['tick_city']. " ". $row['tick_state']);
+			$address = $address . $row['tick_city']. " ". $row['tick_state'];
 			$short_addr = cb_shorten($address, $COLS_ADDR);
 			$disp_string = "";
 			$unit_name = "";
 			$short_name = "";
 			if (!($row['unit_id'] == 0)) {																	// 5/11/09
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`	WHERE `id`= '{$row['unit_type']}' LIMIT 1";
-				$result_type = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-				$row_type = (mysql_num_rows($result_type) > 0) ? stripslashes_deep(mysql_fetch_assoc($result_type)) : "";
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`	WHERE `id`= ? LIMIT 1";
+				$result_type = db_query($query, [$row['unit_type']]);
+				$row_type = ($result_type->num_rows > 0) ? stripslashes_deep($result_type->fetch_assoc()) : "";
 				$the_bg_color = empty($row_type)?	"transparent" : $GLOBALS['UNIT_TYPES_BG'][$row_type['icon']];		// 3/15/10
 				$the_text_color = empty($row_type)? "black" :		$GLOBALS['UNIT_TYPES_TEXT'][$row_type['icon']];		//
 				unset ($row_type);
@@ -270,11 +274,11 @@ if($lines == 0) {
 					} else {
 					$unit_status_val = "";
 					$status_sel = "";
-					}			
+					}
 				}
 			$d1 = $row['assign_as_of'];
 			$d2 = mysql2timestamp($d1);		// 9/29/10
-			$comment = addslashes (remove_nls($row['assign_comments']));
+			$comment = remove_nls($row['assign_comments']);
 			$ret_arr[$i][0] = $the_name;
 			$ret_arr[$i][1] = $short_name;
 			$ret_arr[$i][2] = $the_descr;
@@ -288,7 +292,7 @@ if($lines == 0) {
 			$ret_arr[$i][10] = $status_sel;
 			$ret_arr[$i][11] = "[#{$row['assign_id']}] " . date(get_variable("date_format"), $d2);
 			$ret_arr[$i][12] = $comment;
-			$ret_arr[$i][12] = $row['assign_id'];			
+			$ret_arr[$i][12] = $row['assign_id'];
 			$i++;
 			}
 		}

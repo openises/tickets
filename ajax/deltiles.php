@@ -5,29 +5,30 @@
 	// exit();
 	// }
 require_once('../incs/functions.inc.php');
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 set_time_limit(0);
 $local = substr(getcwd(), 0, -5) . "/_osm/tiles/";
 
-function rmdir_recurse($path) {  
-	$path = rtrim($path, '/').'/';  
-	$handle = opendir($path);  
-	while(false !== ($file = readdir($handle))) {  
-		if($file != '.' and $file != '..' ) {  
-			$fullpath = $path.$file; 
+function rmdir_recurse($path) {
+	$path = rtrim($path, '/').'/';
+	$handle = opendir($path);
+	while(false !== ($file = readdir($handle))) {
+		if($file != '.' and $file != '..' ) {
+			$fullpath = $path.$file;
 			if(is_dir($fullpath)) {
-				rmdir_recurse($fullpath); 
+				rmdir_recurse($fullpath);
 				} else {
-				unlink($fullpath);  
+				unlink($fullpath);
 				}
-		}  
-	}  
-	closedir($handle);  
+		}
+	}
+	closedir($handle);
 	rmdir($path);
-	return TRUE;	
-	} 
+	return TRUE;
+	}
 
-if((isset($_GET['deltiles'])) && ($_GET['deltiles'] == "yes")) {
+$deltiles = isset($_GET['deltiles']) ? sanitize_string($_GET['deltiles']) : "";
+if($deltiles == "yes") {
 	rmdir_recurse($local);
 	mkdir($local);
 	$completed = "Completed";
