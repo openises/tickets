@@ -27,34 +27,34 @@ $query = "SELECT *,problemstart AS problemstart,
 	`problemend` AS `problemend`,
 	`booked_date` AS `booked_date`,	
 	`date` AS `date`, 
-	`$GLOBALS[mysql_prefix]ticket`.`street` AS ticket_street, 
-	`$GLOBALS[mysql_prefix]ticket`.`state` AS ticket_city, 
-	`$GLOBALS[mysql_prefix]ticket`.`city` AS ticket_state,
-	`$GLOBALS[mysql_prefix]ticket`.`updated` AS `updated`,
-	`$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
-	`$GLOBALS[mysql_prefix]in_types`.`type` AS `type`, 
-	`$GLOBALS[mysql_prefix]in_types`.`id` AS `t_id`,
-	`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`, 
-	`$GLOBALS[mysql_prefix]ticket`.lat AS `lat`,
-	`$GLOBALS[mysql_prefix]ticket`.lng AS `lng`, 
-	`$GLOBALS[mysql_prefix]facilities`.lat AS `fac_lat`,
-	`$GLOBALS[mysql_prefix]facilities`.lng AS `fac_lng`, 
-	`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
-	(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-		WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`  
-		AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
-		AS `units_assigned`			
-	FROM `$GLOBALS[mysql_prefix]ticket` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
-		ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
-	LEFT JOIN `$GLOBALS[mysql_prefix]in_types` 
-		ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 
-		ON `$GLOBALS[mysql_prefix]ticket`.rec_facility=`$GLOBALS[mysql_prefix]facilities`.`id`
+	`{$GLOBALS['mysql_prefix']}ticket`.`street` AS ticket_street,
+	`{$GLOBALS['mysql_prefix']}ticket`.`state` AS ticket_city,
+	`{$GLOBALS['mysql_prefix']}ticket`.`city` AS ticket_state,
+	`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,
+	`{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`,
+	`{$GLOBALS['mysql_prefix']}in_types`.`type` AS `type`,
+	`{$GLOBALS['mysql_prefix']}in_types`.`id` AS `t_id`,
+	`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`,
+	`{$GLOBALS['mysql_prefix']}ticket`.lat AS `lat`,
+	`{$GLOBALS['mysql_prefix']}ticket`.lng AS `lng`,
+	`{$GLOBALS['mysql_prefix']}facilities`.lat AS `fac_lat`,
+	`{$GLOBALS['mysql_prefix']}facilities`.lng AS `fac_lng`,
+	`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,
+	(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns`
+		WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `{$GLOBALS['mysql_prefix']}ticket`.`id`
+		AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
+		AS `units_assigned`
+	FROM `{$GLOBALS['mysql_prefix']}ticket`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates`
+		ON `{$GLOBALS['mysql_prefix']}ticket`.id=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types`
+		ON `{$GLOBALS['mysql_prefix']}ticket`.in_types_id=`{$GLOBALS['mysql_prefix']}in_types`.`id`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities`
+		ON `{$GLOBALS['mysql_prefix']}ticket`.rec_facility=`{$GLOBALS['mysql_prefix']}facilities`.`id`
 	WHERE `status` = 1
-	GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity} `$GLOBALS[mysql_prefix]ticket`.`id` ASC
+	GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity} `{$GLOBALS['mysql_prefix']}ticket`.`id` ASC
 	LIMIT 1000";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
 
 $i = 1;
@@ -76,7 +76,7 @@ $XML .= "\t\t\t<title><![CDATA[" . get_variable('host') . "]]></title>";
 $XML .= "\t\t\t<link>" . $thisdir . "/</link>";
 $XML .= "\t\t</image>";
 
-while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+while($row = $result->fetch_array(MYSQLI_ASSOC)) {
 	$XML .= "\t\t<item>\n";
 	$XML .= "\t\t\t<title>" . $row['scope'] . "</title>\n";
 	$XML .= "\t\t\t<description><![CDATA[Description: " . $row['tick_descr'] . "<BR />\n";

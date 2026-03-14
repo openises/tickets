@@ -45,10 +45,10 @@ $query = "SELECT
 	`c`.`icon` AS `type_icon`,
 	`r`.`description` AS `notes`, 
 	`c`.`description` AS `the_description` 
-	FROM `$GLOBALS[mysql_prefix]roadinfo` `r` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON ( `r`.`conditions` = c.id )		
+	FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON ( `r`.`conditions` = c.id )
 	ORDER BY `r`.`id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $i = 1;
 header("Content-type: text/xml");
 $XML = "<?xml version=\"1.0\"?>\n";
@@ -68,7 +68,7 @@ $XML .= "\t\t\t<width>40</width>\n";
 $XML .= "\t\t\t<title><![CDATA[Road Conditions provided by " . get_variable('host') . "]]></title>\n";
 $XML .= "\t\t</image>\n";
 $XML .= "\t\t<title>Road Conditions</title>\n";
-while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+while($row = $result->fetch_array(MYSQLI_ASSOC)) {
 	$XML .= "\t\t<item>\n";
 	$XML .= "\t\t\t<title>" . $row['the_title'] . "</title>\n";
 	$XML .= "\t\t\t<latitude>" . $row['lat'] . "</latitude>\n";

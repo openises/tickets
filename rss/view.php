@@ -6,7 +6,7 @@ require_once('../incs/functions.inc.php');
 if(!array_key_exists('id', $_GET)) {
 	exit();
 	}
-$theID = mysql_real_escape_string($_GET['id']);
+$theID = sanitize_int($_GET['id']);
 if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) { 
 	define("PROTOCOL", "https://");
 	} else { 
@@ -41,11 +41,11 @@ $query = "SELECT
 	`c`.`icon` AS `type_icon`,
 	`r`.`description` AS `notes`, 
 	`c`.`description` AS `the_description` 
-	FROM `$GLOBALS[mysql_prefix]roadinfo` `r` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON ( `r`.`conditions` = c.id )		
-	WHERE `r`.`id` = " . $theID;
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = mysql_fetch_array($result,MYSQL_ASSOC);
+	FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON ( `r`.`conditions` = c.id )
+	WHERE `r`.`id` = ?";
+$result = db_query($query, array($theID)) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$row = $result->fetch_array(MYSQLI_ASSOC);
 extract($row);
 $submitted = strtotime($as_of);
 $iconurl = $icons_dir . $type_icon;
@@ -140,19 +140,19 @@ function set_size() {
 		<TABLE id='leftTable' style='border: 4px solid #707070;'>
 			<TR class='even'>
 				<TD CLASS="td_label" style='vertical-align: top; padding: 10px; border-right: 1px solid #000000;'><?php print get_text('Address');?></TD>
-				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><?php print $address;?></TD>
+				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><?php print e($address);?></TD>
 			</TR>
 			<TR class='odd'>
 				<TD CLASS="td_label" style='vertical-align: top; padding: 10px; border-right: 1px solid #000000;'><?php print get_text('Title');?></TD>
-				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><?php print $the_title;?></TD>
+				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><?php print e($the_title);?></TD>
 			</TR>
 			<TR class='even'>
 				<TD CLASS="td_label" style='vertical-align: top; padding: 10px; border-right: 1px solid #000000;'><?php print get_text('Type');?></TD>
-				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><?php print $type;?></TD>
+				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><?php print e($type);?></TD>
 			</TR>
 			<TR class='odd'>
 				<TD CLASS="td_label" style='vertical-align: top; padding: 10px; border-right: 1px solid #000000;'><?php print get_text('Description');?></TD>
-				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><B><?php print $the_description;?></B><BR /><?php print $notes;?></TD>
+				<TD CLASS='td_data_wrap' style='vertical-align: top; padding: 10px;'><B><?php print e($the_description);?></B><BR /><?php print e($notes);?></TD>
 			</TR>
 			<TR class='even'>
 				<TD CLASS="td_label" style='vertical-align: top; padding: 10px; border-right: 1px solid #000000;'><?php print get_text('Submitted');?></TD>

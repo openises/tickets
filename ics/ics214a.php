@@ -33,10 +33,11 @@ $payload_arr = array () ;											// payload as a global PHP associative array
 $tabindex = 1;
 
 function get_name ( $the_id ) {
-	$query = "SELECT `name` FROM `$GLOBALS[mysql_prefix]ics` WHERE `id` = {$the_id} LIMIT 1";
-	$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
-	$row = mysql_fetch_assoc ( $result ) ;
-	return FORM . " '" . $row ['name'] . "'";
+	$the_id = sanitize_int ( $the_id ) ;
+	$query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `id` = ? LIMIT 1";
+	$result = db_query ( $query, array ( $the_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
+	$row = $result->fetch_assoc () ;
+	return FORM . " '" . e ( $row ['name'] ) . "'";
 	}				// end function get_name ()
 
 function in_area ( $name, $cols, $rows, $ph = NULL, $margin=0 ) {			// <textarea ...
@@ -305,10 +306,10 @@ switch ( $func ) {
 <?php
 
 	echo merge_template () ;		// fills form with default $inputs_arr entries
-	$user_id = $_SESSION['user_id'];		// 3/24/2015
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$user_id} LIMIT 1";
-	$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
-	$row = stripslashes_deep ( mysql_fetch_assoc ( $result ) ) ;
+	$user_id = sanitize_int ( $_SESSION['user_id'] ) ;		// 3/24/2015
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
+	$result = db_query ( $query, array ( $user_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
+	$row = stripslashes_deep ( $result->fetch_assoc () ) ;
 	$the_by = "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
 
 	$the_date_str = format_date ( strval ( time () - ( intval ( get_variable ( 'delta_mins' ) *60 ) ) ) ) ;
@@ -343,17 +344,18 @@ switch ( $func ) {
 
 	case "c2" :				// insert new data
 		$now_ts = now_ts();
-		$name = mysql_real_escape_string ( $_POST['f_3'] ) ;
+		$name = sanitize_string ( $_POST['f_3'] ) ;
 		$payload = base64_encode ( json_encode ( $_POST ) ) ;				// whew!!
 		$script = basename ( __FILE__ );
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]ics` ( `name`, `type`, `script`, `payload`, count, `_by`, `_from`, `_as-of`, `_sent` ) VALUES
-														 ( '{$name}', '" . FORM ."', '{$script}', '{$payload}', 0, {$_SESSION['user_id']}, '{$_SERVER['REMOTE_ADDR']}', '{$now_ts}', NULL ) ; ";
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
-		$temp = mysql_insert_id () ;				// append id # in order to enforce uniqueness
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
-			`name` = CONCAT_WS ( '/', `name`, '{$temp}' )
-			WHERE `id` = '{$temp}' LIMIT 1";
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+		$user_id = sanitize_int ( $_SESSION['user_id'] ) ;
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}ics` ( `name`, `type`, `script`, `payload`, count, `_by`, `_from`, `_as-of`, `_sent` ) VALUES
+														 ( ?, ?, ?, ?, 0, ?, ?, ?, NULL ) ; ";
+		$result = db_query ( $query, array ( $name, FORM, $script, $payload, $user_id, $_SERVER['REMOTE_ADDR'], $now_ts ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
+		$temp = db()->insert_id ;				// append id # in order to enforce uniqueness
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
+			`name` = CONCAT_WS ( '/', `name`, ? )
+			WHERE `id` = ? LIMIT 1";
+		$result = db_query ( $query, array ( $temp, $temp ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 
 ?>
 <body onload = 'setTimeout ( function () { document.dummy.submit () }, 4000 ) ;' >		<!-- <?php echo __LINE__ ;?> -->
@@ -366,11 +368,12 @@ switch ( $func ) {
 			break;		// end case "c2"
 
 	case "u" :
-		$query = "SELECT `payload`, `archived` FROM`$GLOBALS[mysql_prefix]ics` WHERE `id` = {$_POST ['id']} LIMIT 1";
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
-		if ( mysql_num_rows ( $result ) <> 1 ) { dump ( query ) ;}
+		$post_id = sanitize_int ( $_POST ['id'] ) ;
+		$query = "SELECT `payload`, `archived` FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `id` = ? LIMIT 1";
+		$result = db_query ( $query, array ( $post_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
+		if ( $result->num_rows <> 1 ) { dump ( $query ) ;}
 
-		$row = mysql_fetch_assoc ( $result ) ;
+		$row = $result->fetch_assoc () ;
 		$temp = base64_decode ( $row['payload'] ) ;
 		$payload_arr = json_decode ( $temp, true ) ;		// 	get payload as a PHP associative array
 
@@ -407,7 +410,7 @@ switch ( $func ) {
 
 	echo merge_template () ;		// merge form with default $inputs_arr entries - case "u"
 
-	if ( mysql_num_rows ( $result ) <> 1 ) { dump ( query ) ;}
+	if ( $result->num_rows <> 1 ) { dump ( $query ) ;}
 	$payload = $row['payload'];
 	$temp = base64_decode ( $payload ) ;
 	$in_array = json_decode ( $temp, true ) ;		// 	f1 	 10/12/17
@@ -415,7 +418,7 @@ switch ( $func ) {
 
 <input type = 'hidden' name = 'func' value = "u2" />		<!-- do UPDATE sql -->
 <input type = 'hidden' name = 'dirty' value = 0 />
-<input type = 'hidden' name = 'ics_id' value = <?php echo $_POST['id']; ?> />
+<input type = 'hidden' name = 'ics_id' value = <?php echo e ( $post_id ); ?> />
 </form>		<!-- main_form	-->
 <?php
 
@@ -424,18 +427,21 @@ switch ( $func ) {
 	case "u2" :				// update
 		$now_ts = now_ts();
 
-		$name = mysql_real_escape_string ( $_POST['f_3'] ) . "/" . strval ( $_POST['ics_id'] ) ;
+		$name = sanitize_string ( $_POST['f_3'] ) . "/" . strval ( $_POST['ics_id'] ) ;
 		$payload = base64_encode ( json_encode ( $_POST ) ) ;
 
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
-			 `name` = 		'{$name}',
-			 `payload` = 	'{$payload}',
-			 `_by` = 		{$_SESSION['user_id']},
-			 `_from` = 		'{$_SERVER['REMOTE_ADDR']}',
-			 `_as-of` = 	'{$now_ts}'
-			WHERE `id` = {$_POST['ics_id']} LIMIT 1 ";
+		$ics_id = sanitize_int ( $_POST['ics_id'] ) ;
+		$user_id = sanitize_int ( $_SESSION['user_id'] ) ;
 
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
+			 `name` = 		?,
+			 `payload` = 	?,
+			 `_by` = 		?,
+			 `_from` = 		?,
+			 `_as-of` = 	?
+			WHERE `id` = ? LIMIT 1 ";
+
+		$result = db_query ( $query, array ( $name, $payload, $user_id, $_SERVER['REMOTE_ADDR'], $now_ts, $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 ?>
 <body onload = 'setTimeout ( function () { document.dummy.submit () }, 4000 ) ;' >		<!-- <?php echo __LINE__ ;?> -->
 
@@ -450,35 +456,38 @@ switch ( $func ) {
 	case "m" :			// first check data/db status
 
 	if ( intval ( $_POST['dirty'] == 1 ) ) {				// either update or insert
+		$ics_id = sanitize_int ( $_POST['ics_id'] ) ;
+		$user_id = sanitize_int ( $_SESSION['user_id'] ) ;
 		if ( intval ( $_POST['ics_id'] ) > 0 ) {				// do UPDATE
 //			dump ( __LINE__ ) ;
 
-			$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
-				 `name` = 		'{$name}',
-				 `payload` = 	'{$payload}',
-				 `_by` = 		{$_SESSION['user_id']},
-				 `_from` = 		'{$_SERVER['REMOTE_ADDR']}',
-				 `_as-of` = 	'{$now_ts}',
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
+				 `name` = 		?,
+				 `payload` = 	?,
+				 `_by` = 		?,
+				 `_from` = 		?,
+				 `_as-of` = 	?,
 				 `_sent` = 		NULL
-				WHERE `id` = {$_POST['ics_id'] } LIMIT 1 ";
+				WHERE `id` = ? LIMIT 1 ";
 
-			$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+			$result = db_query ( $query, array ( $name, $payload, $user_id, $_SERVER['REMOTE_ADDR'], $now_ts, $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 			}			// end if ()
 
 		else {								// do INSERT
 
-			$name = mysql_real_escape_string ( $_POST['f_3'] ) ;
+			$name = sanitize_string ( $_POST['f_3'] ) ;
 			$payload = base64_encode ( json_encode ( $_POST ) ) ;				// whew!!
 			$script = basename ( __FILE__ ) ;
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]ics` ( `name`, `type`, `script`, `payload`, count, `_by`, `_from`, `_as-of`, `_sent` ) VALUES
-														 ( '{$name}', '" . FORM ."', '{$script}', '{$payload}', 0, {$_SESSION['user_id']}, '{$_SERVER['REMOTE_ADDR']}', '{$now_ts}', NULL ) ; ";
-			$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
-			$temp = mysql_insert_id () ;				// append id # in order to enforce uniqueness
+			$user_id = sanitize_int ( $_SESSION['user_id'] ) ;
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}ics` ( `name`, `type`, `script`, `payload`, count, `_by`, `_from`, `_as-of`, `_sent` ) VALUES
+														 ( ?, ?, ?, ?, 0, ?, ?, ?, NULL ) ; ";
+			$result = db_query ( $query, array ( $name, FORM, $script, $payload, $user_id, $_SERVER['REMOTE_ADDR'], $now_ts ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
+			$temp = db()->insert_id ;				// append id # in order to enforce uniqueness
 			$_POST['ics_id'] = $temp;				// update default 0 value
-			$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
-				`name` = CONCAT_WS ( '/', `name`, '{$temp}' )
-				WHERE `id` = '{$temp}' LIMIT 1";
-			$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
+				`name` = CONCAT_WS ( '/', `name`, ? )
+				WHERE `id` = ? LIMIT 1";
+			$result = db_query ( $query, array ( $temp, $temp ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 			}		// end else
 		 }		// end if ( dirty )
 ?>
@@ -534,11 +543,11 @@ switch ( $func ) {
 	<center><br /><br />
 <?php
 	$i=0;		// 3/6/2014
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts`
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts`
 		ORDER BY `organization` ASC,`name` ASC" ;
-	$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+	$result = db_query ( $query ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 
-	if ( mysql_affected_rows () >0 ) {
+	if ( db()->affected_rows >0 ) {
 
 	function do_row ( $i, $addr, $name, $org ) {
 		global $evenodd;
@@ -560,7 +569,7 @@ switch ( $func ) {
 			</TD>
 		</TR>
 <?php
-		while ( $row = stripslashes_deep ( mysql_fetch_assoc ( $result ) , MYSQL_ASSOC ) ) {
+		while ( $row = stripslashes_deep ( $result->fetch_assoc () ) ) {
 																					// count valid addresses
 			if ( is_email ( $row['email'] ) ) 	{ echo do_row ( $i, $row['email'], $row['name'], $row['organization'] ) ;$i++;}
 			if ( is_email ( $row['mobile'] ) ) 	{ echo do_row ( $i, $row['mobile'], $row['name'], $row['organization'] ) ;$i++;}
@@ -569,12 +578,12 @@ switch ( $func ) {
 ?>
 	</TABLE>
 <input type = 'hidden' name = 'func' VALUE='m2' />
-<input type = 'hidden' name = 'ics_id' value = <?php echo $_POST['ics_id']; ?> />
+<input type = 'hidden' name = 'ics_id' value = <?php echo e ( sanitize_int ( $_POST['ics_id'] ) ); ?> />
 <input type = 'hidden' name = 'frm_add_str' VALUE='' />						<!-- for pipe-delimited addr string -->
 </form>
 <?php
-			}		// end if ( mysql_affected_rows () >0 )
-		if ( ( $i==0 ) || ( mysql_affected_rows () ==0 ) ) {
+			}		// end if ( db()->affected_rows >0 )
+		if ( ( $i==0 ) || ( db()->affected_rows ==0 ) ) {
 ?>
 			<H3>No Contact e-mail addresses!</H3><BR /><BR />
 			<INPUT TYPE='button' VALUE='Cancel' onClick = 'window.close () ;'><BR /><BR />
@@ -599,11 +608,12 @@ switch ( $func ) {
 			$temp = @mail ( $to, $subject, $html_message, $headers ) ; // boolean
 			}			// end function html mail ()
 
-		$query = "SELECT `name`, `type`, `payload` FROM `$GLOBALS[mysql_prefix]ics` WHERE `id` = {$_POST ['ics_id']} LIMIT 1";
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
-		if ( mysql_num_rows ( $result ) <> 1 ) { dump ( $query ) ;}
+		$ics_id = sanitize_int ( $_POST ['ics_id'] ) ;
+		$query = "SELECT `name`, `type`, `payload` FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `id` = ? LIMIT 1";
+		$result = db_query ( $query, array ( $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
+		if ( $result->num_rows <> 1 ) { dump ( $query ) ;}
 
-		$row = mysql_fetch_assoc ( $result ) ;
+		$row = $result->fetch_assoc () ;
 		$temp = base64_decode ( $row['payload'] ) ;
 		$payload_arr = json_decode ( $temp, true ) ;			// get payload as a PHP associative array
 		$html_message = merge_template () ;					// case "m2"
@@ -627,12 +637,12 @@ switch ( $func ) {
 //				 ( $code, 							$ticket_id=0, 		$responder_id=0, 	$info="", 	$facility_id=0, $rec_facility_id=0, $mileage=0 )
 		do_log	 ( $GLOBALS['LOG_ICS_MESSAGE_SEND'], 	$_POST ['ics_id'], 	0, 					$subject, 	0, 				0, 					0 ) ;			// incident name as subject
 
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
 					`count` = ( `count` + 1 ) ,
-					`_sent` = '{$now_ts}'
-					WHERE `id` = '{$_POST ['ics_id']}' LIMIT 1";
+					`_sent` = ?
+					WHERE `id` = ? LIMIT 1";
 
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+		$result = db_query ( $query, array ( $now_ts, $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 ?>
 <body onload = 'setTimeout ( function () { document.can_form.submit () }, 4000 ) ;' >		<!-- <?php echo __LINE__ ;?> -->
 <center>
@@ -643,12 +653,14 @@ switch ( $func ) {
 	break;						// end case m2
 
 case "a" :						// archive
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
-			 `_by` = 		{$_SESSION['user_id']},
-			 `archived` = 	'{$now_ts}'
-			WHERE `id` = {$_POST['ics_id']} LIMIT 1 ";
+		$ics_id = sanitize_int ( $_POST['ics_id'] ) ;
+		$user_id = sanitize_int ( $_SESSION['user_id'] ) ;
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
+			 `_by` = 		?,
+			 `archived` = 	?
+			WHERE `id` = ? LIMIT 1 ";
 
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+		$result = db_query ( $query, array ( $user_id, $now_ts, $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 
 ?>
 <body onload = 'setTimeout ( function () { document.can_form.submit () }, 4000 ) ;' >		<!-- <?php echo __LINE__ ;?> -->
@@ -660,12 +672,14 @@ case "a" :						// archive
 		break;		// end case "a"
 
 case "e" :						// de-archive
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ics` SET
-			 `_by` = 		{$_SESSION['user_id']},
+		$ics_id = sanitize_int ( $_POST['ics_id'] ) ;
+		$user_id = sanitize_int ( $_SESSION['user_id'] ) ;
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ics` SET
+			 `_by` = 		?,
 			 `archived` = 	NULL
-			WHERE `id` = {$_POST['ics_id']} LIMIT 1 ";
+			WHERE `id` = ? LIMIT 1 ";
 
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+		$result = db_query ( $query, array ( $user_id, $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 
 ?>
 <body onload = 'setTimeout ( function () { document.can_form.submit () }, 4000 ) ;' >		<!-- <?php echo __LINE__ ;?> -->
@@ -677,9 +691,10 @@ case "e" :						// de-archive
 		break;		// end case "e"
 
 case "d" :						// delete
-		$msg = get_name ( $_POST ['ics_id'] ) ;
-		$query = "DELETE FROM `$GLOBALS[mysql_prefix]ics` WHERE `id` = {$_POST['ics_id']} LIMIT 1 ";
-		$result = mysql_query ( $query ) or do_error ( $query, 'mysql query failed', mysql_error () , basename ( __FILE__ ) , __LINE__ ) ;
+		$ics_id = sanitize_int ( $_POST ['ics_id'] ) ;
+		$msg = get_name ( $ics_id ) ;
+		$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `id` = ? LIMIT 1 ";
+		$result = db_query ( $query, array ( $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 ?>
 <body onload = 'setTimeout ( function () { document.can_form.submit () }, 4000 ) ;' >		<!-- <?php echo __LINE__ ;?> -->
 <center>
