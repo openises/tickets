@@ -62,7 +62,7 @@ function get_mod_to_install() {
 			
 	$entry = array();
 	$path = "./modules";
-	if ($handle = opendir($path)) {
+	if (is_dir($path) && $handle = opendir($path)) {
 		while (false !== ($dirname = readdir($handle))) {
 			if ($dirname != "." && $dirname != "..") {
 				$entry[] = $dirname;
