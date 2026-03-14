@@ -1,10 +1,9 @@
 <?php
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `$GLOBALS[mysql_prefix]member` `m` 
-	WHERE `m`.`id`={$id} LIMIT 1";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
-?>	
+$id = sanitize_int($_GET['id']);
+$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
+	WHERE `m`.`id`=? LIMIT 1";
+$result = db_query($query, [$id]);$row	= stripslashes_deep($result->fetch_assoc());
+?>
 <script src="./js/misc_function.js" type="text/javascript"></script>
 <SCRIPT>
 window.onresize=function(){set_size()};
@@ -31,10 +30,10 @@ function set_size() {
 	if($('leftcol')) {$('leftcol').style.width = leftcolwidth + "px";}
 	if($('rightcol')) {$('rightcol').style.width = rightcolwidth + "px";}
 	set_fontsizes(viewportwidth, "fullscreen");
-	}		
-			
+	}	
+		
 function pop_veh(veh_id) {
-	sendRequest ('./ajax/view_vehicle_details.php?session=<?php print MD5(session_id());?>&veh_id=' + veh_id ,pop_cb, "");			
+	sendRequest ('./ajax/view_vehicle_details.php?session=<?php print MD5(session_id());?>&veh_id=' + veh_id ,pop_cb, "");		
 		function pop_cb(req) {
 			var the_det_arr=JSON.decode(req.responseText);
 				$('f1').innerHTML = the_det_arr[0];
@@ -50,7 +49,7 @@ function pop_veh(veh_id) {
 				$('f11').innerHTML = the_det_arr[10];
 				$('f12').innerHTML = the_det_arr[11];
 				$('f13').innerHTML = the_det_arr[12];
-				$('f14').innerHTML = the_det_arr[13];					
+				$('f14').innerHTML = the_det_arr[13];				
 		}				// end function pop_cb()
 	}				// end function pop_veh()
 
@@ -62,24 +61,24 @@ function set_freq_disp(val) {
 	if(val=="Daily") {
 		$('daily').style.display = 'block';
 		$('weekly').style.display = 'none';
-		}	
+		}
 	if(val=="Weekly") {
 		$('daily').style.display = 'none';
 		$('weekly').style.display = 'block';
 		}
 	}
-	
+
 function validate_vehicle_form(theForm) {
 	var errmsg="";
 	if (theForm.frm_skill.value.trim()==0) { errmsg+="You need to select a vehicle.\n";}
 	if ((theForm.frm_selector.value.trim()=="Daily")
 		&& (theForm.frm_hour_frm_daily_start.value.trim() == "00") 
-		&& (theForm.frm_minute_frm_daily_start.value.trim() == "00") 				
+		&& (theForm.frm_minute_frm_daily_start.value.trim() == "00") 			
 		&& (theForm.frm_hour_frm_daily_end.value.trim() == "00")
-		&& (theForm.frm_minute_frm_daily_end.value.trim() == "00")				
+		&& (theForm.frm_minute_frm_daily_end.value.trim() == "00")			
 		) {
 		errmsg+="For the Daily setting you need to input a star and end time.\n";
-		}			
+		}		
 	if ((theForm.frm_selector.value.trim()=="Weekly")
 		&& (theForm.frm_weekly_days_monday == 0)
 		&& (theForm.frm_weekly_days_tuesday == 0)
@@ -87,7 +86,7 @@ function validate_vehicle_form(theForm) {
 		&& (theForm.frm_weekly_days_thursday == 0)
 		&& (theForm.frm_weekly_days_friday == 0)
 		&& (theForm.frm_weekly_days_saturday == 0)
-		&& (theForm.frm_weekly_days_sunday == 0)				
+		&& (theForm.frm_weekly_days_sunday == 0)			
 		) {
 		errmsg+="For the Weekly setting you need to chose some days.\n";
 		}
@@ -95,9 +94,9 @@ function validate_vehicle_form(theForm) {
 		}
 	if ((theForm.frm_selector.value.trim()=="Daily")
 		&& (theForm.frm_hour_frm_daily_start.value.trim() != "00") 
-		&& (theForm.frm_minute_frm_daily_start.value.trim() != "00") 				
+		&& (theForm.frm_minute_frm_daily_start.value.trim() != "00") 			
 		&& (theForm.frm_hour_frm_daily_end.value.trim() != "00")
-		&& (theForm.frm_minute_frm_daily_end.value.trim() != "00")				
+		&& (theForm.frm_minute_frm_daily_end.value.trim() != "00")			
 		) {
 		theForm.frm_start.value = theForm.frm_hour_frm_daily_start.value.trim() + ":" + theForm.frm_minute_frm_daily_start.value.trim();
 		theForm.frm_end.value = theForm.frm_hour_frm_daily_end.value.trim() + ":" + theForm.frm_minute_frm_daily_end.value.trim();
@@ -111,7 +110,7 @@ function validate_vehicle_form(theForm) {
 		theForm.frm_weekly_days_thursday.disabled=true;
 		theForm.frm_weekly_days_friday.disabled=true;
 		theForm.frm_weekly_days_saturday.disabled=true;
-		theForm.frm_weekly_days_sunday.disabled=true;			
+		theForm.frm_weekly_days_sunday.disabled=true;		
 		}
 	if (theForm.frm_selector.value.trim()=="Weekly") {
 		var theDays = ""
@@ -121,7 +120,7 @@ function validate_vehicle_form(theForm) {
 		if(theForm.frm_weekly_days_thursday.checked) { theDays += "Thursday,"; } else { theDays += ","; }
 		if(theForm.frm_weekly_days_friday.checked) { theDays += "Friday,"; } else { theDays += ","; }
 		if(theForm.frm_weekly_days_saturday.checked) { theDays += "Saturday,"; } else { theDays += ","; }
-		if(theForm.frm_weekly_days_sunday.checked) { theDays += "Sunday,"; } else { theDays += ","; }				
+		if(theForm.frm_weekly_days_sunday.checked) { theDays += "Sunday,"; } else { theDays += ","; }			
 		theForm.frm_days.value = theDays;
 		theForm.frm_weekly_days_monday.disabled=true;
 		theForm.frm_weekly_days_tuesday.disabled=true;
@@ -129,7 +128,7 @@ function validate_vehicle_form(theForm) {
 		theForm.frm_weekly_days_thursday.disabled=true;
 		theForm.frm_weekly_days_friday.disabled=true;
 		theForm.frm_weekly_days_saturday.disabled=true;
-		theForm.frm_weekly_days_sunday.disabled=true;				
+		theForm.frm_weekly_days_sunday.disabled=true;			
 		theForm.frm_hour_frm_daily_start.disabled = true;
 		theForm.frm_minute_frm_daily_start.disabled = true;
 		theForm.frm_hour_frm_daily_end.disabled = true;
@@ -143,13 +142,13 @@ function validate_vehicle_form(theForm) {
 	else {
 		theForm.submit();
 		}
-	}				// end function validate_vehicle_form()					
-</SCRIPT>		
+	}				// end function validate_vehicle_form()				
+</SCRIPT>	
 </HEAD>
-<BODY>	
+<BODY>
 	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 		<DIV CLASS='header text_large' style = "height:32px; width: 100%; float: none; text-align: center;">
-			<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'><b>Add <?php print get_text('Vehicle');?> For "<?php print $row['field2'];?> <?php print $row['field1'];?>"</b></SPAN>
+			<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'><b>Add <?php print get_text('Vehicle');?> For "<?php print e($row['field2']);?> <?php print e($row['field1']);?>"</b></SPAN>
 		</DIV>
 		<DIV id = "leftcol" style='position: relative; left: 30px; float: left;'>
 			<FORM METHOD="POST" NAME= "veh_add_Form" ACTION="member.php?func=member&goaddveh=true&extra=edit">
@@ -160,9 +159,8 @@ function validate_vehicle_form(theForm) {
 					<SELECT NAME="frm_skill" onChange="pop_veh(this.options[this.selectedIndex].value);">
 						<OPTION class='normalSelect' VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]vehicles` ORDER BY `regno` ASC";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}vehicles` ORDER BY `regno` ASC";
+						$result = db_query($query);						while ($row = stripslashes_deep($result->fetch_assoc())) {
 							$text = $row['make'] . " " . $row['model'] . " " . $row['regno'];
 							print "\t<OPTION class='normalSelect' VALUE='{$row['id']}'>{$text}</OPTION>\n";
 							}
@@ -173,19 +171,19 @@ function validate_vehicle_form(theForm) {
 					<BR />
 						<DIV ID='selector'>
 						<BR />
-						<LABEL for="frm_selector"><?php print get_text('Frequency');?>:</LABEL>	
+						<LABEL for="frm_selector"><?php print get_text('Frequency');?>:</LABEL>
 						<SELECT NAME="frm_selector" onChange="set_freq_disp(this.options[this.selectedIndex].value);">
 							<OPTION class='normalSelect' VALUE="Permanent" SELECTED>Permanent</OPTION>
 							<OPTION class='normalSelect' VALUE="Daily">Daily</OPTION>
-							<OPTION class='normalSelect' VALUE="Weekly">Weekly</OPTION>		
+							<OPTION class='normalSelect' VALUE="Weekly">Weekly</OPTION>	
 						</SELECT>
 						</DIV>
 						<DIV ID='daily' style='display: none;'>
-						<LABEL for="frm_daily_start"><?php print get_text('Start');?>:</LABEL>	
+						<LABEL for="frm_daily_start"><?php print get_text('Start');?>:</LABEL>
 						<?php print generate_time_dropdown("frm_daily_start","",0, $disallow);?>
 						<BR />
 						<LABEL for="frm_daily_end"><?php print get_text('End');?>:</LABEL>
-						<?php print generate_time_dropdown("frm_daily_end","",0, $disallow);?>		
+						<?php print generate_time_dropdown("frm_daily_end","",0, $disallow);?>	
 						<BR />
 						</DIV>
 						<DIV ID='weekly' style='display: none;'>
@@ -198,8 +196,8 @@ function validate_vehicle_form(theForm) {
 							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Wednesday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Wednesday" NAME="frm_weekly_days_wednesday"></DIV><BR />
 							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Thursday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Thursday" NAME="frm_weekly_days_thursday"></DIV><BR />
 							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Friday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Friday" NAME="frm_weekly_days_friday"></DIV><BR />
-							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Saturday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Saturday" NAME="frm_weekly_days_saturday"></DIV><BR />	
-							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Sunday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Sunday" NAME="frm_weekly_days_sunday"></DIV><BR />									
+							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Saturday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Saturday" NAME="frm_weekly_days_saturday"></DIV><BR />
+							<DIV style='font-weight: bold; width: 50%; display: inline-block;'><?php print get_text('Sunday');?></DIV><DIV style='font-weight: bold; width: 50%; display: inline-block;'><INPUT TYPE="checkbox" VALUE="Sunday" NAME="frm_weekly_days_sunday"></DIV><BR />								
 						</DIV>
 						<BR />
 						</DIV>
@@ -207,12 +205,12 @@ function validate_vehicle_form(theForm) {
 				</FIELDSET>
 				<INPUT TYPE='hidden' NAME = 'frm_start' VALUE=""/>
 				<INPUT TYPE='hidden' NAME = 'frm_end' VALUE=""/>
-				<INPUT TYPE='hidden' NAME = 'frm_days' VALUE=""/>							
-				<INPUT TYPE="hidden" NAME = "frm_id" VALUE="<?php print $id;?>" />
-				<INPUT TYPE="hidden" NAME = "id" VALUE="<?php print $id;?>" />	
-				<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>	
-				<INPUT TYPE="hidden" NAME = "frm_remove" VALUE=""/>						
-			</FORM>	
+				<INPUT TYPE='hidden' NAME = 'frm_days' VALUE=""/>						
+				<INPUT TYPE="hidden" NAME = "frm_id" VALUE="<?php print e($id);?>" />
+				<INPUT TYPE="hidden" NAME = "id" VALUE="<?php print e($id);?>" />
+				<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>
+				<INPUT TYPE="hidden" NAME = "frm_remove" VALUE=""/>					
+			</FORM>
 			<DIV id='veh_details' style='width: 90%; border: 2px outset #CECECE; padding: 20px; text-align: left;'>
 				<DIV style='width: 100%; text-align: center;' CLASS='tablehead'>SELECTED <?php print get_text('VEHICLE');?> DETAILS</DIV><BR /><BR />
 				<DIV class='td_label' style='width: 40%; display: inline-block;'><?php print get_text('Owner');?>:</DIV><DIV style='width: 60%; display: inline-block;' ID='f1'>TBA</DIV>
@@ -234,20 +232,20 @@ function validate_vehicle_form(theForm) {
 		<DIV ID="middle_col" style='position: relative; left: 40px; width: 110px; float: left;'>&nbsp;
 			<DIV style='position: fixed; top: 50px; z-index: 1;'>
 				<SPAN ID = 'can_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="document.forms['can_Form'].submit();"><?php print get_text('Cancel');?> <IMG style='vertical-align: middle;' src="./images/back_small.png"/></SPAN>
-				<SPAN ID = 'sub_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="validate_skills(document.veh_add_Form);"><?php print get_text('Save');?> <IMG style='vertical-align: middle;' src="./images/save.png"/></SPAN>			
+				<SPAN ID = 'sub_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="validate_skills(document.veh_add_Form);"><?php print get_text('Save');?> <IMG style='vertical-align: middle;' src="./images/save.png"/></SPAN>		
 			</DIV>
 		</DIV>
 		<DIV id='rightcol' style='position: relative; left: 40px; float: left;'>
-			<DIV class='tablehead text_large text_bold text_center'><?php print get_text('Vehicle');?> Allocation</DIV><BR /><BR />		
+			<DIV class='tablehead text_large text_bold text_center'><?php print get_text('Vehicle');?> Allocation</DIV><BR /><BR />	
 			<DIV style='padding: 10px; float: left;'>This is to register the <?php print get_text('vehicle');?> that is allocated to the member.
 			<BR />
-			<BR />					
+			<BR />				
 			<SPAN style='display: inline-block; float: left;'>Available <?php print get_text('Vehicles');?> need to be added first to the system either from "Config" or by clicking</SPAN>
 			<SPAN ID='to_vehicle' class = 'plain' style='display: inline; float: left;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);" onClick = "do_Post('vehicles');">Here</SPAN><BR />
 			</DIV>
 		</DIV>
-	</DIV>	
-	<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&edit=true&id=<?php print $id;?>"></FORM>		
+	</DIV>
+	<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&edit=true&id=<?php print e($id);?>"></FORM>	
 </BODY>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
@@ -271,4 +269,4 @@ if($('leftcol')) {$('leftcol').style.width = leftcolwidth + "px";}
 if($('rightcol')) {$('rightcol').style.width = rightcolwidth + "px";}
 set_fontsizes(viewportwidth, "fullscreen");
 </SCRIPT>
-</HTML>						
+</HTML>					

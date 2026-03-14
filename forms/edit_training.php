@@ -1,15 +1,13 @@
 <?php
-$all_id = mysql_real_escape_string($_GET['all_id']);
-$query_all = "SELECT `id`, `member_id`, `skill_type`, `skill_id`, `frequency`, `_on`, UNIX_TIMESTAMP(completed) AS `completed`, UNIX_TIMESTAMP(refresh_due) AS `refresh_due` FROM `$GLOBALS[mysql_prefix]allocations` WHERE `id` = {$all_id}";
-$result_all = mysql_query($query_all) or do_error($query_all, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-$row_all	= mysql_fetch_array($result_all);
+$all_id = sanitize_int($_GET['all_id']);
+$query_all = "SELECT `id`, `member_id`, `skill_type`, `skill_id`, `frequency`, `_on`, UNIX_TIMESTAMP(completed) AS `completed`, UNIX_TIMESTAMP(refresh_due) AS `refresh_due` FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
+$result_all = db_query($query_all, [$all_id]);$row_all	= $result_all->fetch_array();
 
 $id = $row_all['member_id'];
 
-$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `$GLOBALS[mysql_prefix]member` `m` 
-	WHERE `m`.`id`={$id} LIMIT 1";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
+$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m` 
+	WHERE `m`.`id`=? LIMIT 1";
+$result = db_query($query, [$id]);$row	= stripslashes_deep($result->fetch_assoc());
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};
@@ -51,10 +49,10 @@ function set_expires(val) {
 		return false;
 		}
 	}
-	
+
 function pop_tra(tp_id) {								// get initial values from server -  4/7/10
 	var url = "./ajax/view_training_package.php?session=<?php print MD5($sess_id);?>&tp_id=" + tp_id;
-	sendRequest (url ,pop_cb, "");			
+	sendRequest (url ,pop_cb, "");		
 		function pop_cb(req) {
 			var the_det_arr=JSON.decode(req.responseText);
 				$('f1').innerHTML = the_det_arr[2];
@@ -63,10 +61,10 @@ function pop_tra(tp_id) {								// get initial values from server -  4/7/10
 				$('f4').innerHTML = the_det_arr[5];
 				$('f5').innerHTML = the_det_arr[6];
 				$('f6').innerHTML = '<a href="mailto:' + the_det_arr[7] + '">' + the_det_arr[7] + '</a>';
-				$('f7').innerHTML = the_det_arr[8];						
-				$('f8').innerHTML = the_det_arr[9];						
+				$('f7').innerHTML = the_det_arr[8];					
+				$('f8').innerHTML = the_det_arr[9];					
 		}				// end function pop_cb()
-	}	
+	}
 function rem_record() {
 	if (confirm("Are you sure you want to delete the training record")) { 
 		document.tpack_edit_Form.frm_all_remove.value="yes";
@@ -75,10 +73,10 @@ function rem_record() {
 	}
 </SCRIPT>
 </HEAD>
-<BODY onload='pop_tra(<?php print $row_all['skill_id'];?>)'>
+<BODY onload='pop_tra(<?php print e($row_all['skill_id']);?>)'>
 	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 		<DIV CLASS='header text_large' style = "height:32px; width: 100%; float: none; text-align: center;">
-			<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'><b>Edit <?php print get_text('Training');?> Attendance for "<?php print $row['field2'];?> <?php print $row['field1'];?>"</b></SPAN>
+			<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'><b>Edit <?php print get_text('Training');?> Attendance for "<?php print e($row['field2']);?> <?php print e($row['field1']);?>"</b></SPAN>
 		</DIV>
 		<DIV id = "leftcol" style='position: relative; left: 30px; float: left;'>
 			<FORM METHOD="POST" NAME= "tpack_edit_Form" ACTION="member.php?func=member&goedittpack=true&extra=edit">
@@ -89,10 +87,9 @@ function rem_record() {
 						<SELECT NAME="frm_skill" style='height: 20px; font-size=12px;' onChange='pop_tra(this.options[this.selectedIndex].value);'>
 							<OPTION class='normalSelect' VALUE=0 SELECTED>Select</OPTION>
 <?php
-							$query_tra = "SELECT * FROM `$GLOBALS[mysql_prefix]training_packages` WHERE `available` = 'Yes' ORDER BY `package_name` ASC";
-							$result_tra = mysql_query($query_tra) or do_error($query_tra, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-							while ($row_tra = stripslashes_deep(mysql_fetch_assoc($result_tra))) {
-								$sel = ($row_tra['id'] == $row_all['skill_id']) ? "SELECTED" : "";									
+							$query_tra = "SELECT * FROM `{$GLOBALS['mysql_prefix']}training_packages` WHERE `available` = 'Yes' ORDER BY `package_name` ASC";
+							$result_tra = db_query($query_tra);							while ($row_tra = stripslashes_deep($result_tra->fetch_assoc())) {
+								$sel = ($row_tra['id'] == $row_all['skill_id']) ? "SELECTED" : "";								
 								print "\t<OPTION class='normalSelect' VALUE='{$row_tra['id']}' {$sel}>{$row_tra['package_name']}</OPTION>\n";
 								}
 ?>
@@ -113,7 +110,7 @@ function rem_record() {
 						} elseif(($row_all['refresh_due'])) {
 						generate_date_dropdown_middates('refresh', 0, 0,FALSE);
 						} else {
-						generate_date_dropdown_middates("refresh",$row_all['refresh_due'],0, $disallow);							
+						generate_date_dropdown_middates("refresh",$row_all['refresh_due'],0, $disallow);						
 						}
 ?>
 					<BR />
@@ -127,42 +124,42 @@ function rem_record() {
 						<OPTION class='normalSelect' VALUE="Permanent" <?php print $sel_never;?>>Never</OPTION>
 					</SELECT>
 				</FIELDSET>
-				<INPUT TYPE='hidden' NAME='frm_id' VALUE='<?php print $id;?>'>
-				<INPUT TYPE='hidden' NAME='id' VALUE='<?php print $id;?>'>
-				<INPUT TYPE='hidden' NAME='frm_all_id' VALUE='<?php print $all_id;?>'>	
+				<INPUT TYPE='hidden' NAME='frm_id' VALUE='<?php print e($id);?>'>
+				<INPUT TYPE='hidden' NAME='id' VALUE='<?php print e($id);?>'>
+				<INPUT TYPE='hidden' NAME='frm_all_id' VALUE='<?php print e($all_id);?>'>
 				<INPUT TYPE="hidden" NAME = "frm_all_remove" VALUE=""/>
-				<INPUT TYPE="hidden" NAME = "frm_fullname" VALUE="<?php print $row['field6'];?>"/>						
-			</FORM>	
+				<INPUT TYPE="hidden" NAME = "frm_fullname" VALUE="<?php print e($row['field6']);?>"/>					
+			</FORM>
 			<DIV id='tra_details' style='width: 90%; border: 2px outset #CECECE; padding: 20px; text-align: left;'>
 				<DIV style='width: 100%; text-align: center;' CLASS='tablehead'>SELECTED <?php print get_text('TRAINING');?> PACKAGE DETAILS</DIV><BR /><BR />
 				<DIV class='td_label' style='width: 30%; display: inline-block;'>Description:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f1'>TBA</DIV><BR />
-				<DIV class='td_label' style='width: 30%; display: inline-block;'>Availablilty:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f2'>TBA</DIV><BR />						
-				<DIV class='td_label' style='width: 30%; display: inline-block;'>Provider:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f3'>TBA</DIV><BR />						
-				<DIV class='td_label' style='width: 30%; display: inline-block;'>Address:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f4'>TBA</DIV><BR />						
+				<DIV class='td_label' style='width: 30%; display: inline-block;'>Availablilty:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f2'>TBA</DIV><BR />					
+				<DIV class='td_label' style='width: 30%; display: inline-block;'>Provider:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f3'>TBA</DIV><BR />					
+				<DIV class='td_label' style='width: 30%; display: inline-block;'>Address:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f4'>TBA</DIV><BR />					
 				<DIV class='td_label' style='width: 30%; display: inline-block;'>Contact Name:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f5'>TBA</DIV><BR />
-				<DIV class='td_label' style='width: 30%; display: inline-block;'>Email:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f6'>TBA</DIV><BR />	
-				<DIV class='td_label' style='width: 30%; display: inline-block;'>Phone:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f7'>TBA</DIV><BR />							
+				<DIV class='td_label' style='width: 30%; display: inline-block;'>Email:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f6'>TBA</DIV><BR />
+				<DIV class='td_label' style='width: 30%; display: inline-block;'>Phone:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f7'>TBA</DIV><BR />						
 				<DIV class='td_label' style='width: 30%; display: inline-block;'>Cost <?php print get_text('$');?>:</DIV><DIV style='width: 30%; display: inline-block; vertical-align: text-top;' ID='f8'>TBA</DIV><BR />
-			</DIV>					
+			</DIV>				
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 40px; width: 110px; float: left;'>&nbsp;
 			<DIV style='position: fixed; top: 50px; z-index: 1;'>
 				<SPAN ID = 'rem_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="rem_record();">Remove <?php print get_text('Training');?> Record <IMG style='vertical-align: middle; float: right;' src="./images/delete.png"/></SPAN>
 				<SPAN ID = 'can_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="document.forms['can_Form'].submit();"><?php print get_text('Cancel');?> <IMG style='vertical-align: middle; float: right;' src="./images/back_small.png"/></SPAN>
-				<SPAN ID = 'sub_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="validate_skills(document.tpack_edit_Form);"><?php print get_text('Save');?> <IMG style='vertical-align: middle; float: right;' src="./images/save.png"/></SPAN>			
+				<SPAN ID = 'sub_but' class = 'plain_centerbuttons text' style='width: 80px; display: block; float: none;' onMouseOver="do_hover_centerbuttons(this.id);" onMouseOut="do_plain_centerbuttons(this.id);" onClick="validate_skills(document.tpack_edit_Form);"><?php print get_text('Save');?> <IMG style='vertical-align: middle; float: right;' src="./images/save.png"/></SPAN>		
 			</DIV>
 		</DIV>
 		<DIV id='rightcol' style='position: relative; left: 40px; float: left;'>
-			<DIV class='tablehead' style='width: 100%; float: left; z-index: 999'><b><?php print get_text('Training');?> Completed</b></DIV><BR /><BR />					
+			<DIV class='tablehead' style='width: 100%; float: left; z-index: 999'><b><?php print get_text('Training');?> Completed</b></DIV><BR /><BR />				
 			<DIV style='padding: 10px; float: left;'><?php print get_text('Training');?> is for registration of the <?php print get_text('training');?> that members have completed, provided by the Organisation.
 			<BR />
 			Examples could be First Aid, Health and Safety or other job specific training.
 			<BR />
-			<BR />					
+			<BR />				
 			</DIV>
 		</DIV>
-	</DIV>	
-<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&edit=true&id=<?php print $id;?>"></FORM>			
+	</DIV>
+<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&edit=true&id=<?php print e($id);?>"></FORM>		
 </BODY>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
@@ -186,4 +183,4 @@ if($('leftcol')) {$('leftcol').style.width = leftcolwidth + "px";}
 if($('rightcol')) {$('rightcol').style.width = rightcolwidth + "px";}
 set_fontsizes(viewportwidth, "fullscreen");
 </SCRIPT>
-</HTML>						
+</HTML>					

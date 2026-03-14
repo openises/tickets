@@ -1,9 +1,9 @@
 <?php
-		$id = mysql_real_escape_string($_GET['id']);
-		$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `$GLOBALS[mysql_prefix]member` `m` 
-			WHERE `m`.`id`={$id} LIMIT 1";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$row	= stripslashes_deep(mysql_fetch_assoc($result));
+		$id = sanitize_int($_GET['id']);
+		$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
+			WHERE `m`.`id`=? LIMIT 1";
+		$result	= db_query($query, [$id]);
+		$row	= stripslashes_deep($result->fetch_assoc());
 ?>
 		</HEAD>
 		<SCRIPT>
@@ -36,7 +36,7 @@
 		<BODY>	
 			<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 				<DIV CLASS='header text_large' style = "height:32px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'><b>Add <?php print get_text('Capability');?> for "<?php print $row['field2'];?> <?php print $row['field1'];?>"</b></SPAN>
+					<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'><b>Add <?php print get_text('Capability');?> for "<?php print e($row['field2']);?> <?php print e($row['field1']);?>"</b></SPAN>
 				</DIV>
 				<DIV id = "leftcol" style='position: relative; left: 30px; float: left;'>
 					<FORM METHOD="POST" NAME= "capab_add_Form" ACTION="member.php?goaddcapab=true&extra=edit">
@@ -47,17 +47,17 @@
 							<SELECT NAME="frm_skill">
 								<OPTION class='normalSelect' VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]capability_types` ORDER BY `name` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-									print "\t<OPTION class='normalSelect' VALUE='{$row['id']}'>{$row['name']}</OPTION>\n";
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}capability_types` ORDER BY `name` ASC";
+								$result = db_query($query);
+								while ($row = stripslashes_deep($result->fetch_assoc())) {
+									print "\t<OPTION class='normalSelect' VALUE='" . e($row['id']) . "'>" . e($row['name']) . "</OPTION>\n";
 									}
 ?>
 							</SELECT>
 							<BR />
 						</FIELDSET>
-						<INPUT TYPE="hidden" NAME = "frm_id" VALUE="<?php print $id;?>" />
-						<INPUT TYPE="hidden" NAME = "id" VALUE="<?php print $id;?>" />	
+						<INPUT TYPE="hidden" NAME = "frm_id" VALUE="<?php print e($id);?>" />
+						<INPUT TYPE="hidden" NAME = "id" VALUE="<?php print e($id);?>" />	
 						<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>	
 						<INPUT TYPE="hidden" NAME = "frm_remove" VALUE=""/>						
 					</FORM>						
@@ -80,7 +80,7 @@
 					</DIV>
 				</DIV>
 			</DIV>	
-			<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&edit=true&id=<?php print $id;?>"></FORM>			
+			<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&edit=true&id=<?php print e($id);?>"></FORM>			
 		</BODY>
 <SCRIPT>
 		if (typeof window.innerWidth != 'undefined') {

@@ -53,7 +53,7 @@ function set_size() {
 		dump($_POST);
 		}
 
-	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
+	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id={$id}")) {	/* sanity check */
 		print "Invalid Ticket ID: '$id'<BR />";
 		return;
 		}
@@ -66,35 +66,34 @@ function set_size() {
 		`problemend` AS `problemend`,
 		`date` AS `date`,
 		`booked_date` AS `booked_date`,		
-		`$GLOBALS[mysql_prefix]ticket`.`updated` AS `updated`,		
-		`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`,
-		`$GLOBALS[mysql_prefix]ticket`.`street` AS `tick_street`,
-		`$GLOBALS[mysql_prefix]ticket`.`city` AS `tick_city`,
-		`$GLOBALS[mysql_prefix]ticket`.`state` AS `tick_state`,		
-		`$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,		
-		`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
-		`$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
-		`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,		
 		`rf`.`name` AS `rec_fac_name`,
 		`rf`.`street` AS `rec_fac_street`,
 		`rf`.`city` AS `rec_fac_city`,
 		`rf`.`state` AS `rec_fac_state`,
-		`$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,		
-		`$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng`,		 
-		`$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
-		FROM `$GLOBALS[mysql_prefix]ticket` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
+		`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,		
+		`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`,		 
+		`{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`
+		FROM `{$GLOBALS['mysql_prefix']}ticket` 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` 	ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)	
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` 		ON (`{$GLOBALS['mysql_prefix']}facilities`.id = `{$GLOBALS['mysql_prefix']}ticket`.`facility`) 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` rf 	ON (`rf`.id = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`) 
+		WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= ? $restrict_ticket";			// 7/16/09, 8/12/09
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (!mysql_num_rows($result)){	//no tickets? print "error" or "restricted user rights"
+	$result = db_query($query, [$id]);	if (!$result->num_rows){	//no tickets? print "error" or "restricted user rights"
 		print "<FONT CLASS=\"warn\">Internal error " . basename(__FILE__) ."/" .  __LINE__  .".  Notify developers of this message.</FONT>";	// 8/18/09
 		exit();
 		}
 
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$row = stripslashes_deep($result->fetch_array());
 	$type = get_type($row['in_types_id']);
 	$severity = $row['severity'];
 	$scope = $row['scope'];
@@ -166,17 +165,16 @@ do_kml();
 
 // ====================================Add Facilities to Map 8/1/09================================================
 	$query_fac = "SELECT *,`updated` AS `updated`, 
-		`$GLOBALS[mysql_prefix]facilities`.id AS fac_id, 
-		`$GLOBALS[mysql_prefix]facilities`.description AS facility_description, 
-		`$GLOBALS[mysql_prefix]fac_types`.name AS fac_type_name, 
-		`$GLOBALS[mysql_prefix]fac_types`.icon AS type_icon, 
-		`$GLOBALS[mysql_prefix]facilities`.name AS facility_name 
-		FROM `$GLOBALS[mysql_prefix]facilities` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]facilities`.type = `$GLOBALS[mysql_prefix]fac_types`.id LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` ON `$GLOBALS[mysql_prefix]facilities`.status_id = `$GLOBALS[mysql_prefix]fac_status`.id ORDER BY `$GLOBALS[mysql_prefix]facilities`.type ASC";
-	$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);	
-	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+		`{$GLOBALS['mysql_prefix']}facilities`.id AS fac_id, 
+		`{$GLOBALS['mysql_prefix']}facilities`.description AS facility_description, 
+		`{$GLOBALS['mysql_prefix']}fac_types`.name AS fac_type_name, 
+		`{$GLOBALS['mysql_prefix']}fac_types`.icon AS type_icon, 
+		`{$GLOBALS['mysql_prefix']}facilities`.name AS facility_name 
+		FROM `{$GLOBALS['mysql_prefix']}facilities` 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` ON `{$GLOBALS['mysql_prefix']}facilities`.type = `{$GLOBALS['mysql_prefix']}fac_types`.id LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` ON `{$GLOBALS['mysql_prefix']}facilities`.status_id = `{$GLOBALS['mysql_prefix']}fac_status`.id ORDER BY `{$GLOBALS['mysql_prefix']}facilities`.type ASC";
+	$result_fac = db_query($query_fac);	$eols = array ("{['mysql_prefix']}\n", "\n", "{['mysql_prefix']}");		// all flavors of eol
 
-	while($row_fac = mysql_fetch_array($result_fac)){
+	while($row_fac = $result_fac->fetch_array()){
 
 		$fac_name = $row_fac['facility_name'];			//	10/8/09
 		$fac_temp = explode("/", $fac_name );
@@ -200,15 +198,13 @@ do_kml();
 // ================================End of Facilities========================================
 // ====================================Add Responding Units to Map================================================
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	while($row = mysql_fetch_array($result)){
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?";
+	$result = db_query($query, [$id]);	while($row = $result->fetch_array()){
 		$responder_id=($row['responder_id']);
 		if ($row['clear'] == NULL) {
 
-			$query_unit = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$responder_id'";
-			$result_unit = mysql_query($query_unit) or do_error($query_unit, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-			while($row_unit = mysql_fetch_array($result_unit)){
+			$query_unit = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?";
+			$result_unit = db_query($query_unit, [$responder_id]);			while($row_unit = $result_unit->fetch_array()){
 				$unit_id = $row_unit['id'];
 				$mobile = $row_unit['mobile'];
 				$handle = $row_unit['handle'];

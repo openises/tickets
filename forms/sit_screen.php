@@ -476,9 +476,9 @@ if ( get_variable('call_board') == 2) {
 	$cb_min = 96;
 	$cb_max = 300;
 	
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
-	$result = @mysql_query($query);
-	$lines = mysql_affected_rows();
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
+	$result = db_query($query);
+	$lines = db()->affected_rows;
 	unset($result);
 	$height = (($lines*$cb_per_line ) + $cb_fixed_part);
 	$height = ($height<$cb_min)? $cb_min: $height;

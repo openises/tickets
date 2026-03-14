@@ -3,18 +3,16 @@ require_once('../incs/functions.inc.php');
 @session_start();
 
 do_login(basename(__FILE__));
-$all_id = mysql_real_escape_string($_GET['all_id']);
+$all_id = sanitize_int($_GET['all_id']);
 
-$query_all = "SELECT * FROM `$GLOBALS[mysql_prefix]allocations` WHERE `id` = {$all_id}";
-$result_all = mysql_query($query_all) or do_error($query_all, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-$row_all	= mysql_fetch_array($result_all);
+$query_all = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
+$result_all = db_query($query_all, [$all_id]);$row_all	= $result_all->fetch_array();
 $id = $row_all['member_id'];
 $skill_id = $row_all['skill_id'];
 
-$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `$GLOBALS[mysql_prefix]member` `m` 
-	WHERE `m`.`id`={$id} LIMIT 1";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
+$query	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m` 
+	WHERE `m`.`id`=? LIMIT 1";
+$result = db_query($query, [$id]);$row	= stripslashes_deep($result->fetch_assoc());
 ?>
 <LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <script src="../js/jquery-1.5.2.min.js" type="text/javascript"></script>
@@ -68,17 +66,16 @@ function pop_veh(veh_id) {								// get initial values from server -  4/7/10
 	}				// end function pop_veh()
 </SCRIPT>
 </HEAD>
-<BODY onload='pop_veh(<?php print $row_all['skill_id'];?>)'>	
+<BODY onload='pop_veh(<?php print e($row_all['skill_id']);?>)'>	
 <?php
-	$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]vehicles` WHERE `id` = '" . $skill_id . "' LIMIT 1";
-	$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+	$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}vehicles` WHERE `id` = ? LIMIT 1";
+	$result2 = db_query($query2, [$skill_id]);	$row2 = stripslashes_deep($result2->fetch_assoc());
 	$text = $row2['make'] . " " . $row2['model'] . " " . $row2['regno'];
 ?>
 	<DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>
 		<DIV id = "leftcol" style='position: relative; left: 30px; top: 70px; float: left;'>
 			<DIV id='button_bar' class='but_container'>
-				<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>View <?php print get_text('Vehicle Allocation');?> for "<?php print $row['field2'];?> <?php print $row['field1'];?>"</SPAN>
+				<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>View <?php print get_text('Vehicle Allocation');?> for "<?php print e($row['field2']);?> <?php print e($row['field1']);?>"</SPAN>
 				<SPAN id='can_but' CLASS='plain text' style='width: 80px; display: inline-block; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='../images/close.png' BORDER=0></SPAN>
 			</DIV>
 			<FORM METHOD="POST" NAME= "veh_edit_Form" ACTION="member.php?func=member&goeditveh=true">
@@ -109,7 +106,7 @@ function pop_veh(veh_id) {								// get initial values from server -  4/7/10
 			</DIV>
 		</DIV>
 	</DIV>	
-	<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&view=true&id=<?php print $id;?>"></FORM>			
+	<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&view=true&id=<?php print e($id);?>"></FORM>			
 </BODY>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
@@ -130,4 +127,4 @@ if($('outer')) {$('outer').style.width = outerwidth + "px";}
 if($('outer')) {$('outer').style.height = outerheight + "px";}
 if($('leftcol')) {$('leftcol').style.width = colwidth + "px";}
 </SCRIPT>
-</HTML>						
+</HTML>					

@@ -9,10 +9,10 @@ require_once($the_inc);
 
 function get_markup($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = " . $id;
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = ?";
+
+	$result = db_query($query, [$id]);	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr['id'] = $row['id'];
 		$ret_arr['name'] = $row['line_name'];
 		$ret_arr['type'] = $row['line_type'];
@@ -32,11 +32,11 @@ function get_markup($id) {
 		}
 	return $ret_arr;
 	}
-	
+
 function get_categoryName($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $id . " LIMIT 1";
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return $row['category'];
 	}
 ?>
@@ -79,7 +79,7 @@ var baseHxIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 4
 var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
 	}
 	});
-			
+		
 var colors = new Array ('odd', 'even');
 
 function set_size() {
@@ -102,9 +102,9 @@ function set_size() {
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
+	$('leftcol').style.height = colheight + "px";
 	$('rightcol').style.width = colwidth + "px";
-	$('rightcol').style.height = colheight + "px";	
+	$('rightcol').style.height = colheight + "px";
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	$('viewform').style.width = colwidth + "px";
@@ -113,7 +113,7 @@ function set_size() {
 	set_fontsizes(viewportwidth, "fullscreen");
 	map.invalidateSize();
 	}
-	
+
 function contains(array, item) {
 	for (var i = 0, I = array.length; i < I; ++i) {
 		if (array[i] == item) return true;
@@ -151,21 +151,19 @@ function validate(theForm) {						// Responder form contents validation	8/11/09
 </HEAD>
 <?php
 
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id`= " . $id;
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$id = sanitize_int($_GET['id']);
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `id`= ?";
+$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
 $lat = get_variable('def_lat');
 $lng = get_variable('def_lng');
 $existing_incs = array();
-$query_x = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = " . $id . " ORDER BY `id`;";
-$result_x = mysql_query($query_x) or do_error($query_x, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-if($result) {
-	while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
+$query_x = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = ? ORDER BY `id`;";
+$result_x = db_query($query_x, [$id]);if($result) {
+	while ($row_x = stripslashes_deep($result_x->fetch_assoc())) {
 		$existing_incs[] = $row_x['ticket_id'];
 		}
 	}
-	
+
 $gold_command = ($row['gold_loc'] != 0) ? get_building_details($row['gold_loc']) : null;
 $silver_command = ($row['silver_loc'] != 0) ? get_building_details($row['silver_loc']) : null;
 $bronze_command = ($row['bronze_loc'] != 0) ? get_building_details($row['bronze_loc']) : null;
@@ -182,7 +180,7 @@ if(!$gold_command) {
 	$gold_lat = floatval($row['gold_lat']);
 	$gold_lng = floatval($row['gold_lng']);
 	}
-	
+
 if(!$silver_command) {
 	$silver_name = $row['silver_street'] . " " . $row['silver_city'] . " " . $row['silver_state'];
 	$silver_address = $row['silver_street'];
@@ -213,7 +211,7 @@ if(!$bronze_command) {
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-						<SPAN CLASS='text_green text_biggest'>&nbsp;View Major Incident '<?php print $row['name'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></SPAN>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;View Major Incident '<?php print e($row['name']);?>' data</FONT>&nbsp;&nbsp;(#<?php print e($id); ?>)</FONT></SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 						<BR />
@@ -221,12 +219,12 @@ if(!$bronze_command) {
 				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
-				</TR>	
+				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Name">Major Incident Name</A>:
-					</TD>			
-					<TD CLASS='td_data text'><?php print $row['name'] ;?></TD>
+					</TD>		
+					<TD CLASS='td_data text'><?php print e($row['name']) ;?></TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
@@ -251,7 +249,7 @@ if(!$bronze_command) {
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Major Incident End Time / Date">End Date/Time</A>:&nbsp;</TD>
 					<TD CLASS="td_data text">
-						<?php print $row['mi_status'];?>
+						<?php print e($row['mi_status']);?>
 					</TD>
 				</TR>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
@@ -270,14 +268,14 @@ if(!$bronze_command) {
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="MI Description - additional details about Major Incident">Description</A>:
-					</TD>	
-					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print $row['description'];?></TD>
+					</TD>
+					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print e($row['description']);?></TD>
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Incident / Closure Notes - actions and other information noted during Incident and when closing">Incident Notes</A>:
-					</TD>	
-					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print $row['incident_notes'];?></TD>
+					</TD>
+					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print e($row['incident_notes']);?></TD>
 				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
@@ -331,7 +329,7 @@ if(!$bronze_command) {
 							</TR>
 							<TR>
 								<TD class='td_label text_blue'>Location</TD>
-<?php 							
+<?php 						
 								if($row['gold_loc'] != 0) {
 ?>
 									<TD class='td_data text'><?php print get_loc_name($row['gold_loc']);?></TD>
@@ -397,7 +395,7 @@ if(!$bronze_command) {
 							</TR>
 							<TR>
 								<TD class='td_label text text_blue'>Location</TD>
-<?php 							
+<?php 						
 								if($row['silver_loc'] != 0) {
 ?>
 									<TD class='td_data text'><?php print get_loc_name($row['silver_loc']);?></TD>
@@ -463,7 +461,7 @@ if(!$bronze_command) {
 							</TR>
 							<TR>
 								<TD class='td_label text text_blue'>Location</TD>
-<?php 							
+<?php 						
 								if($row['bronze_loc'] != 0) {
 ?>
 									<TD class='td_data text'><?php print get_loc_name($row['bronze_loc']);?></TD>
@@ -476,7 +474,7 @@ if(!$bronze_command) {
 									}
 ?>
 							</TR>
-						</TABLE>				
+						</TABLE>			
 					</TD>
 				</TR>
 <?php
@@ -529,7 +527,7 @@ if(!$bronze_command) {
 							</TR>
 							<TR>
 								<TD class='td_label text text_blue'>Location</TD>
-<?php 							
+<?php 						
 								if($row['level4_loc'] != 0) {
 ?>
 									<TD class='td_data text'><?php print get_loc_name($row['level4_loc']);?></TD>
@@ -542,7 +540,7 @@ if(!$bronze_command) {
 									}
 ?>
 							</TR>
-						</TABLE>				
+						</TABLE>			
 					</TD>
 				</TR>
 <?php
@@ -595,7 +593,7 @@ if(!$bronze_command) {
 							</TR>
 							<TR>
 								<TD class='td_label text text_blue'>Location</TD>
-<?php 							
+<?php 						
 								if($row['level5_loc'] != 0) {
 ?>
 									<TD class='td_data text'><?php print get_loc_name($row['level5_loc']);?></TD>
@@ -608,7 +606,7 @@ if(!$bronze_command) {
 									}
 ?>
 							</TR>
-						</TABLE>				
+						</TABLE>			
 					</TD>
 				</TR>
 <?php
@@ -661,7 +659,7 @@ if(!$bronze_command) {
 							</TR>
 							<TR>
 								<TD class='td_label text text_blue'>Location</TD>
-<?php 							
+<?php 						
 								if($row['level6_loc'] != 0) {
 ?>
 									<TD class='td_data text'><?php print get_loc_name($row['level6_loc']);?></TD>
@@ -674,19 +672,19 @@ if(!$bronze_command) {
 									}
 ?>
 							</TR>
-						</TABLE>				
+						</TABLE>			
 					</TD>
 				</TR>
 <?php
 				}
-?>				
-				<TR class='spacer'>
-					<TD class='spacer' COLSPAN=99></TD>
-				</TR>		
-
+?>			
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
 				</TR>	
+
+				<TR class='spacer'>
+					<TD class='spacer' COLSPAN=99></TD>
+				</TR>
 			</TABLE>
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
@@ -712,25 +710,24 @@ if(!$bronze_command) {
 							$class = "even";
 							foreach($existing_incs AS $val) {
 								$query_inc = "SELECT *, 
-									(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-									WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`) AS `units_assigned` 	
-									FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = " . $val;
-								$result_inc = mysql_query($query_inc) or do_error($query_inc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								$class = "even";
-								$row_inc = stripslashes_deep(mysql_fetch_assoc($result_inc));
+									(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns` 
+									WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `{$GLOBALS['mysql_prefix']}ticket`.`id`) AS `units_assigned` 
+									FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?";
+								$result_inc = db_query($query_inc, [$val]);								$class = "even";
+								$row_inc = stripslashes_deep($result_inc->fetch_assoc());
 								$the_id = $row_inc['id'];
 								$elapsed = get_elapsed_time($row_inc);
 								print "<TR class='" . $class . "'  style='width: 100%;' onClick='do_popup(" . $the_id . ");'>";
 								print "<TD class='plain_list'>" . $row_inc['scope'] . "</TD>";
 								print "<TD class='plain_list'>" . format_date_2($row_inc['problemstart']) . "</TD>";
 								print "<TD class='plain_list' style='text-align: left;'>" . $row_inc['units_assigned'] . "</TD>";
-								print "<TD class='plain_list'>" . $elapsed . "</TD>";										
+								print "<TD class='plain_list'>" . $elapsed . "</TD>";									
 								print "</TR>";
 								$class = ($class == "even") ? "odd" : "even";
 								}
 							} else {
 							print "<TR class='plain_list' style='width: 100%;'><TD COLSPAN = 99 style='text-align: center;'>No Incidents set</TD></TR>";
-							}										
+							}									
 ?>
 				</TABLE>
 			</DIV>
@@ -742,7 +739,7 @@ print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, $r
 
 ?>
 <FORM NAME='can_Form' METHOD="post" ACTION = "maj_inc.php"></FORM>
-<FORM NAME="to_edit_Form" METHOD="post" ACTION = "maj_inc.php?edit=true&id=<?php print $id; ?>"></FORM>
+<FORM NAME="to_edit_Form" METHOD="post" ACTION = "maj_inc.php?edit=true&id=<?php print e($id); ?>"></FORM>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 <SCRIPT>
@@ -765,9 +762,9 @@ colheight = outerheight * .95;
 $('outer').style.width = outerwidth + "px";
 $('outer').style.height = outerheight + "px";
 $('leftcol').style.width = colwidth + "px";
-$('leftcol').style.height = colheight + "px";	
+$('leftcol').style.height = colheight + "px";
 $('rightcol').style.width = colwidth + "px";
-$('rightcol').style.height = colheight + "px";	
+$('rightcol').style.height = colheight + "px";
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 $('viewform').style.width = colwidth + "px";
@@ -786,7 +783,7 @@ var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
 map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
-var bounds = map.getBounds();	
+var bounds = map.getBounds();
 var zoom = map.getZoom();
 
 <?php
@@ -802,7 +799,7 @@ if((is_float($gold_lat) && $gold_lat != "" && $gold_lat != NULL) && ($gold_lng !
 </SCRIPT>
 <?php
 	}
-	
+
 if((is_float($silver_lat) && $silver_lat != "" && $silver_lat != NULL) && (is_float($silver_lng) && $silver_lng != "" && $silver_lng != NULL)) {
 ?>
 <SCRIPT>
@@ -820,18 +817,17 @@ if((is_float($bronze_lat) && $bronze_lat != "" && $bronze_lat != NULL) && (is_fl
 </SCRIPT>
 <?php
 	}
-	
+
 if(count($existing_incs) != 0) {
 	foreach($existing_incs AS $val) {
-		$query_tick = "SELECT *	FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $val . " ORDER BY `id` ASC";
-		$result_tick = mysql_query($query_tick) or do_error($query_tick, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$mi_num_tick = mysql_num_rows($result_tick);
-		while ($row_tick = stripslashes_deep(mysql_fetch_assoc($result_tick))) {
+		$query_tick = "SELECT *	FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? ORDER BY `id` ASC";
+		$result_tick = db_query($query_tick, [$val]);		$mi_num_tick = $result_tick->num_rows;
+		while ($row_tick = stripslashes_deep($result_tick->fetch_assoc())) {
 			$tickLat = floatval($row_tick['lat']);
 			$tickLng = floatval($row_tick['lng']);
 ?>
 <SCRIPT>
-			var marker = createTicMarker(<?php print $tickLat;?>, <?php print $tickLng;?>, "Ticket: <?php print $row_tick['scope'];?><BR />Major Incident: <?php print $row['name'];?>", <?php print $row_tick['severity'];?>, <?php print $row_tick['id'];?>, <?php print $row['id'];?>, "<?php print $row_tick['scope'];?>");
+			var marker = createTicMarker(<?php print $tickLat;?>, <?php print $tickLng;?>, "Ticket: <?php print e($row_tick['scope']);?><BR />Major Incident: <?php print e($row['name']);?>", <?php print $row_tick['severity'];?>, <?php print $row_tick['id'];?>, <?php print $row['id'];?>, "<?php print e($row_tick['scope']);?>");
 			marker.addTo(map);
 </SCRIPT>
 <?php
@@ -840,17 +836,16 @@ if(count($existing_incs) != 0) {
 				`r`.`lat` AS `resp_lat`,
 				`r`.`lng` AS `resp_lng`,
 				`r`.`handle` AS `resp_handle`
-				FROM `$GLOBALS[mysql_prefix]assigns` `a` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `a`.`responder_id` = `r`.`id` )
-				WHERE `a`.`ticket_id` = " . $val . " ORDER BY `resp_id` ASC";
-			$result_resp = mysql_query($query_resp) or do_error($query_resp, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$mi_num_resp = mysql_num_rows($result_resp);
-			while ($row_resp = stripslashes_deep(mysql_fetch_assoc($result_resp))) {
+				FROM `{$GLOBALS['mysql_prefix']}assigns` `a` 
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `a`.`responder_id` = `r`.`id` )
+				WHERE `a`.`ticket_id` = ? ORDER BY `resp_id` ASC";
+			$result_resp = db_query($query_resp, [$val]);			$mi_num_resp = $result_resp->num_rows;
+			while ($row_resp = stripslashes_deep($result_resp->fetch_assoc())) {
 				$respLat = floatval($row_resp['resp_lat']);
 				$respLng = floatval($row_resp['resp_lng']);
 ?>
 <SCRIPT>
-				var rmarker = createRespMarker(<?php print $respLat;?>, <?php print $respLng;?>, <?php print $row_resp['resp_id'];?>, <?php print $row['id'];?>, "<?php print $row_resp['resp_handle'];?>")
+				var rmarker = createRespMarker(<?php print $respLat;?>, <?php print $respLng;?>, <?php print $row_resp['resp_id'];?>, <?php print $row['id'];?>, "<?php print e($row_resp['resp_handle']);?>")
 				rmarker.addTo(map);
 </SCRIPT>
 <?php

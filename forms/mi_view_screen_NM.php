@@ -9,10 +9,11 @@ require_once($the_inc);
 
 function get_markup($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = " . $id;
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = ?";
+
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr['id'] = $row['id'];
 		$ret_arr['name'] = $row['line_name'];
 		$ret_arr['type'] = $row['line_type'];
@@ -34,9 +35,9 @@ function get_markup($id) {
 	}
 	
 function get_categoryName($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $id . " LIMIT 1";
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return $row['category'];
 	}
 ?>
@@ -132,16 +133,16 @@ function validate(theForm) {						// Responder form contents validation	8/11/09
 </HEAD>
 <?php
 
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id`= " . $id;
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$id = sanitize_int($_GET['id']);
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `id`= ?";
+$result = db_query($query, [$id]);
+$row = stripslashes_deep($result->fetch_assoc());
 $lat = get_variable('def_lat');
 $lng = get_variable('def_lng');
 $existing_incs = array();
-$query_x = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = " . $id . " ORDER BY `id`;";
-$result_x = mysql_query($query_x) or do_error($query_x, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
+$query_x = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = ? ORDER BY `id`;";
+$result_x = db_query($query_x, [$id]);
+while ($row_x = stripslashes_deep($result_x->fetch_assoc())) {
 	$existing_incs[] = $row_x['ticket_id'];
 	}
 $gold_command = ($row['gold_loc'] != 0) ? get_building_details($row['gold_loc']) : null;
@@ -191,7 +192,7 @@ if(!$bronze_command) {
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-						<SPAN CLASS='text_green text_biggest'>&nbsp;View Major Incident '<?php print $row['name'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></SPAN>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;View Major Incident '<?php print e($row['name']);?>' data</FONT>&nbsp;&nbsp;(#<?php print e($id); ?>)</FONT></SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 						<BR />
@@ -204,7 +205,7 @@ if(!$bronze_command) {
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Name">Major Incident Name</A>:
 					</TD>			
-					<TD CLASS='td_data text'><?php print $row['name'] ;?></TD>
+					<TD CLASS='td_data text'><?php print e($row['name']) ;?></TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
@@ -229,7 +230,7 @@ if(!$bronze_command) {
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Major Incident End Time / Date">End Date/Time</A>:&nbsp;</TD>
 					<TD CLASS="td_data text">
-						<?php print $row['mi_status'];?>
+						<?php print e($row['mi_status']);?>
 					</TD>
 				</TR>
 				<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
@@ -249,13 +250,13 @@ if(!$bronze_command) {
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="MI Description - additional details about Major Incident">Description</A>:
 					</TD>	
-					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print $row['description'];?></TD>
+					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print e($row['description']);?></TD>
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Incident / Closure Notes - actions and other information noted during Incident and when closing">Incident Notes</A>:
 					</TD>	
-					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print $row['incident_notes'];?></TD>
+					<TD CLASS="td_data_wrap text"COLSPAN=3><?php print e($row['incident_notes']);?></TD>
 				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
@@ -688,12 +689,12 @@ if(!$bronze_command) {
 							$class = "even";
 							foreach($existing_incs AS $val) {
 								$query_inc = "SELECT *, 
-									(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-									WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`) AS `units_assigned` 	
-									FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = " . $val;
-								$result_inc = mysql_query($query_inc) or do_error($query_inc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+									(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns` 
+									WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `{$GLOBALS['mysql_prefix']}ticket`.`id`) AS `units_assigned` 	
+									FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?";
+								$result_inc = db_query($query_inc, [$val]);
 								$class = "even";
-								$row_inc = stripslashes_deep(mysql_fetch_assoc($result_inc));
+								$row_inc = stripslashes_deep($result_inc->fetch_assoc());
 								$the_id = $row_inc['id'];
 								$elapsed = get_elapsed_time($row_inc);
 								print "<TR class='" . $class . "'  style='width: 100%;' onClick='do_popup(" . $the_id . ");'>";
@@ -717,7 +718,7 @@ $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
 print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, $row['id']);
 ?>
 <FORM NAME='can_Form' METHOD="post" ACTION = "maj_inc.php"></FORM>
-<FORM NAME="to_edit_Form" METHOD="post" ACTION = "maj_inc.php?edit=true&id=<?php print $id; ?>"></FORM>
+<FORM NAME="to_edit_Form" METHOD="post" ACTION = "maj_inc.php?edit=true&id=<?php print e($id); ?>"></FORM>
 <A NAME="bottom" />
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 <SCRIPT>

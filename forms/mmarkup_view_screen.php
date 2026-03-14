@@ -8,11 +8,10 @@ require_once('./incs/functions.inc.php');
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 require_once($the_inc);
-$id = mysql_real_escape_string($_GET['id']);
+$id = sanitize_int($_GET['id']);
 $gunload = "";
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`= " . $id;
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ?";
+$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
 extract($row);
 $filled = ($row['filled'] == 1) ? 1: 0;
 $fill_color = ($row['fill_color'] == null) ? "": $row['fill_color'];
@@ -46,9 +45,8 @@ if($row['use_with_bm'] == 1) {
 
 $isVisible = ($row['line_status'] == 0) ? "Yes" : "No";
 
-$query_cat	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $row['line_cat_id'];
-$result_cat	= mysql_query($query_cat) or do_error($query_cat, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row_cat = stripslashes_deep(mysql_fetch_assoc($result_cat));
+$query_cat	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ?";
+$result_cat = db_query($query_cat, [$row['line_cat_id']]);$row_cat = stripslashes_deep($result_cat->fetch_assoc());
 $cat_name = $row_cat['category'];
 
 $temp = preg_split("/;/", $row['line_data']);
@@ -69,7 +67,7 @@ var polygon;
 var polyline;
 var circle;
 var banner;
-var theType = "<?php print $row['line_type'];?>";
+var theType = "<?php print e($row['line_type']);?>";
 var mapWidth;
 var mapHeight;
 var listHeight;
@@ -201,7 +199,7 @@ function set_size() {
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-						<SPAN CLASS='text_green text_biggest'>View <SPAN id='type_flag'></SPAN> "<?php print $row['line_name'];?>" Map Markup</SPAN>
+						<SPAN CLASS='text_green text_biggest'>View <SPAN id='type_flag'></SPAN> "<?php print e($row['line_name']);?>" Map Markup</SPAN>
 						<BR />
 					</TD>
 				</TR>
@@ -210,15 +208,15 @@ function set_size() {
 				</TR>
 				<TR VALIGN="baseline" CLASS="odd">
 					<TD CLASS="td_label text text_left">Description:</TD>
-					<TD CLASS='td_data text text_left'><?php print $row['line_name'];?>
+					<TD CLASS='td_data text text_left'><?php print e($row['line_name']);?>
 						<SPAN STYLE = 'margin-left:20px' CLASS="td_label text text_left" >Visible&nbsp;&raquo;&nbsp;</SPAN>
-						<SPAN STYLE = 'margin-left:20px' CLASS="td_data text text_left" ><?php print $isVisible;?></SPAN>
+						<SPAN STYLE = 'margin-left:20px' CLASS="td_data text text_left" ><?php print e($isVisible);?></SPAN>
 					</TD>
 				</TR>
 				<TR VALIGN="baseline" CLASS="even">
 					<TD CLASS="td_label text text_left">Ident:</TD>
-					<TD CLASS='td_data text text_left'><?php print $row['line_ident'];?>
-						<SPAN STYLE = 'margin-left:20px'  CLASS="td_label text text_left">Category:&nbsp;&raquo;&nbsp;</SPAN><SPAN STYLE = 'margin-left:20px' CLASS="td_data text text_left" ><?php print $cat_name;?></SPAN>
+					<TD CLASS='td_data text text_left'><?php print e($row['line_ident']);?>
+						<SPAN STYLE = 'margin-left:20px'  CLASS="td_label text text_left">Category:&nbsp;&raquo;&nbsp;</SPAN><SPAN STYLE = 'margin-left:20px' CLASS="td_data text text_left" ><?php print e($cat_name);?></SPAN>
 						<SPAN ID='radius' CLASS="td_label text text_left" STYLE = 'margin-left:20px; display: none;'>Radius&nbsp;&raquo;&nbsp;<?php print $theRadius;?>&nbsp;&nbsp; <i>(mi)</i></SPAN>
 						<SPAN ID='ban_text' CLASS="td_label text text_left" STYLE = 'margin-left:20px; display: none;'>Banner text:&nbsp;&raquo;&nbsp;<?php print $banner_text;?></SPAN>
 
@@ -232,13 +230,13 @@ function set_size() {
 					<TD CLASS="td_label text text_left"><SPAN id='type_flag2'></SPAN>:</TD>
 					<TD CLASS='td_data text text_left'>
 						<SPAN CLASS="td_label text text_left">Color &raquo;&nbsp;</SPAN>
-						<SPAN style='background-color: #<?php print $row['line_color'];?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+						<SPAN style='background-color: #<?php print e($row['line_color']);?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
 						<SPAN CLASS="td_label text text_left" id='line_opacity'>&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
-						<SPAN CLASS='td_data text text_left' id='line_opacity2'><?php print $row['line_opacity'];?>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+						<SPAN CLASS='td_data text text_left' id='line_opacity2'><?php print e($row['line_opacity']);?>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
 						<SPAN id='line_width' CLASS="td_label text text_left" style='display: none;'>Width &raquo;&nbsp;</SPAN>
-						<SPAN id='line_width2' CLASS='td_data text text_left'><?php print $row['line_width'];?>(px)</SPAN>
+						<SPAN id='line_width2' CLASS='td_data text text_left'><?php print e($row['line_width']);?>(px)</SPAN>
 						<SPAN CLASS='td_label text text_left' id='font_size' style='display: none;'>Font Size &raquo;&nbsp;</SPAN>
-						<SPAN CLASS='td_data text text_left' id='font_size2' style='display: none;'><?php print $row['line_width'];?>(px)</SPAN>
+						<SPAN CLASS='td_data text text_left' id='font_size2' style='display: none;'><?php print e($row['line_width']);?>(px)</SPAN>
 					</TD>
 				</TR>
 				<TR VALIGN="baseline" CLASS="odd" ID='fill_cb_tr' style='display: none; width: 100%;'>
@@ -246,9 +244,9 @@ function set_size() {
 					<TD CLASS='td_data text text_left'>
 						<SPAN ID='fill_details'>
 							<SPAN CLASS="td_label text text_left">Color &raquo;&nbsp;</SPAN>
-							<SPAN style='background-color: #<?php print $row['fill_color'];?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+							<SPAN style='background-color: #<?php print e($row['fill_color']);?>; border: 1px inset #707070;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
 							<SPAN CLASS="td_label text text_left" >&nbsp;&nbsp;&nbsp;&nbsp;Opacity &raquo;&nbsp;</SPAN>
-							<SPAN CLASS="td_data text text_left" ><?php print $row['fill_opacity'];?></SPAN>
+							<SPAN CLASS="td_data text text_left" ><?php print e($row['fill_opacity']);?></SPAN>
 						</SPAN>
 					</TD>
 				</TR>
@@ -277,7 +275,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		<FORM NAME='edit_Form' METHOD="get" ACTION = "mmarkup.php">
 		<INPUT TYPE='hidden' NAME='func' VALUE='edit'>
 		<INPUT TYPE='hidden' NAME='edit' VALUE='true'>
-		<INPUT TYPE='hidden' NAME='id' VALUE='<?php print $id;?>'>		
+		<INPUT TYPE='hidden' NAME='id' VALUE='<?php print e($id);?>'>		
 		</FORM>
 		<FORM NAME='reset_Form' METHOD='get' ACTION='mmarkup.php'>
 		<INPUT TYPE='hidden' NAME='func' VALUE='responder'>
@@ -340,37 +338,37 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		var zoom = map.getZoom();
 		var got_points = false;	// map is empty of points
 		if(theType =="p") {
-			draw_polygon("<?php print $row['line_name'];?>", 
-					"#<?php print $row['line_color'];?>", 
+			draw_polygon("<?php print e($row['line_name']);?>", 
+					"#<?php print e($row['line_color']);?>", 
 					<?php print $line_opacity;?>, 
-					<?php print $row['line_width'];?>, 
+					<?php print e($row['line_width']);?>, 
 					<?php print $filled;?>, 
 					"#<?php print $fill_color;?>",
 					<?php print $fill_opacity;?>,
-					"<?php print $row['line_data'];?>",
-					<?php print $row['id'];?>);
+					"<?php print e($row['line_data']);?>",
+					<?php print e($row['id']);?>);
 			} else if(theType == "c") {
-			draw_circle("<?php print $row['line_name'];?>", 
-					"<?php print $row['line_data'];?>",
-					"#<?php print $row['line_color'];?>", 
-					<?php print $row['line_width'];?>, 
+			draw_circle("<?php print e($row['line_name']);?>", 
+					"<?php print e($row['line_data']);?>",
+					"#<?php print e($row['line_color']);?>", 
+					<?php print e($row['line_width']);?>, 
 					<?php print $line_opacity;?>, 
 					"#<?php print $fill_color;?>",
 					<?php print $fill_opacity;?>,
-					<?php print $row['id'];?>);
+					<?php print e($row['id']);?>);
 			} else if(theType == "l") {
-			draw_polyline("<?php print $row['line_name'];?>", 
-					"#<?php print $row['line_color'];?>", 
+			draw_polyline("<?php print e($row['line_name']);?>", 
+					"#<?php print e($row['line_color']);?>", 
 					<?php print $line_opacity;?>, 
-					<?php print $row['line_width'];?>, 
-					"<?php print $row['line_data'];?>",
-					<?php print $row['id'];?>);	
+					<?php print e($row['line_width']);?>, 
+					"<?php print e($row['line_data']);?>",
+					<?php print e($row['id']);?>);	
 			} else if(theType == 'b') {
-			draw_banner("<?php print $row['line_name'];?>", 
-					"<?php print $row['line_data'];?>", 
-					<?php print $row['line_width'];?>,
-					"#<?php print $row['line_color'];?>", 
-					<?php print $row['id'];?>);
+			draw_banner("<?php print e($row['line_name']);?>", 
+					"<?php print e($row['line_data']);?>", 
+					<?php print e($row['line_width']);?>,
+					"#<?php print e($row['line_color']);?>", 
+					<?php print e($row['id']);?>);
 			}
 					
 					

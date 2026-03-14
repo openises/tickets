@@ -8,11 +8,10 @@ require_once('./incs/functions.inc.php');
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 require_once($the_inc);
-$id = mysql_real_escape_string($_GET['id']);
+$id = sanitize_int($_GET['id']);
 $gunload = "";
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`= " . $id;
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ?";
+$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
 extract($row);
 $filled = ($row['filled'] == 1) ? 1: 0;
 $fill_color = ($row['fill_color'] == null) ? "": $row['fill_color'];
@@ -30,11 +29,10 @@ $checked_unfilled = ($row['filled'] == 0) ? "CHECKED": "";
 $temp = preg_split("/;/", $row['line_data']);
 $banner_text = (($row['line_type'] == "b") && (($temp[1]) && ($temp[1] !=""))) ? $temp[1] : "";
 $theRadius = (($row['line_type'] == "c") && (($temp[1]) && ($temp[1] != 0))) ? $temp[1] : 0;
-$query_cats = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
-$result_cats = mysql_query($query_cats) or do_error($query_cats, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-$cats_sel = "<SELECT ID='cat_list' NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
+$query_cats = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` ORDER BY `category` ASC";		
+$result_cats = db_query($query_cats);$cats_sel = "<SELECT ID='cat_list' NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
 $cats_sel .= "<OPTION VALUE=0 >Select</OPTION>\n";
-while ($row_cats = mysql_fetch_assoc($result_cats)) {
+while ($row_cats = $result_cats->fetch_assoc()) {
 	$sel = ($row_cats['id'] == $line_cat_id) ? " SELECTED" : "";
 	$cats_sel .= "<OPTION VALUE=\"{$row_cats['id']}\"" . $sel . ">" . shorten($row_cats['category'], 30) . "</OPTION>\n";
 	}
@@ -67,9 +65,8 @@ if($row['use_with_bm'] == 1) {
 
 $isVisible = ($row['line_status'] == 0) ? "Yes" : "No";
 
-$query_cat	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $row['line_cat_id'];
-$result_cat	= mysql_query($query_cat) or do_error($query_cat, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row_cat = stripslashes_deep(mysql_fetch_assoc($result_cat));
+$query_cat	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ?";
+$result_cat = db_query($query_cat, [$row['line_cat_id']]);$row_cat = stripslashes_deep($result_cat->fetch_assoc());
 $cat_name = $row_cat['category'];
 
 	
@@ -97,7 +94,7 @@ var circleLinename;
 var banner;
 var theMarker;
 var myMarker;
-var theType = "<?php print $row['line_type'];?>";
+var theType = "<?php print e($row['line_type']);?>";
 switch(theType) {
 	case "p":
 		var typeInt = 1;
@@ -410,7 +407,7 @@ function do_reset() {
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-						<SPAN CLASS='text_green text_biggest'>Edit <SPAN id='type_flag'></SPAN> "<?php print $row['line_name'];?>" Map Markup</SPAN>
+						<SPAN CLASS='text_green text_biggest'>Edit <SPAN id='type_flag'></SPAN> "<?php print e($row['line_name']);?>" Map Markup</SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>click map to add points - drag icons to move points</SPAN>
 						<BR />
@@ -436,7 +433,7 @@ function do_reset() {
 							<TR VALIGN="baseline" CLASS="odd">
 								<TD CLASS="td_label text text_left" ALIGN="left">Description:</TD>
 								<TD CLASS='td_data text text_left'>
-									<INPUT ID='name' MAXLENGTH="32" SIZE="32" type="text" NAME="frm_name" VALUE="<?php print $row['line_name'];?>" onChange = "this.value.trim();" />
+									<INPUT ID='name' MAXLENGTH="32" SIZE="32" type="text" NAME="frm_name" VALUE="<?php print e($row['line_name']);?>" onChange = "this.value.trim();" />
 									<SPAN STYLE = 'margin-left:20px' CLASS="td_label text text_left" >Visible&nbsp;&raquo;&nbsp;</SPAN>
 									<SPAN STYLE = 'margin-left:10px'>Yes&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_is_vis' onClick = "document.mkup_Edit_form.rb_line_not_vis.checked = false;document.c.frm_line_status.value=0" <?php print $checked_visible;?> /></SPAN>
 									<SPAN STYLE = 'margin-left:20px'>No&nbsp;&raquo;&nbsp;<INPUT TYPE='radio' NAME = 'rb_line_not_vis' onClick = "document.mkup_Edit_form.rb_line_is_vis.checked = false;document.c.frm_line_status.value=1" <?php print $checked_hidden;?> /></SPAN>
@@ -446,7 +443,7 @@ function do_reset() {
 							<TR VALIGN="baseline" CLASS="even">
 								<TD CLASS="td_label text text_left" ALIGN="left">Ident:</TD>
 								<TD CLASS='td_label text text_left'>
-									<INPUT ID='ident' MAXLENGTH="10" SIZE="10" type="text" NAME="frm_ident" VALUE="<?php print $row['line_name'];?>" onChange = "this.value.trim();" />
+									<INPUT ID='ident' MAXLENGTH="10" SIZE="10" type="text" NAME="frm_ident" VALUE="<?php print e($row['line_name']);?>" onChange = "this.value.trim();" />
 									<SPAN STYLE = 'margin-left:20px'  CLASS="td_label text text_left">Category:&nbsp;&raquo;&nbsp;</SPAN><?php echo $cats_sel;?>
 									<SPAN ID='radius' CLASS="td_label text text_left" STYLE = 'margin-left:20px; display: none;'>Radius&nbsp;&raquo;&nbsp;<INPUT ID='circRadius' NAME = 'circ_radius' VALUE= '<?php print $theRadius;?>' TYPE = 'text' SIZE = 6 MAXLENGTH = 6 />&nbsp;&nbsp; <i>(mi)</i></SPAN>
 									<SPAN ID='ban_text' CLASS="td_label text text_left" STYLE = 'margin-left:20px; display: none;'>Banner text:&nbsp;&raquo;&nbsp;<INPUT ID='bannerText' NAME = 'banner_text' VALUE= '<?php print $banner_text;?>' TYPE = 'text' SIZE = 24 MAXLENGTH = 64 onChange='draw_banner();'/></SPAN>
@@ -465,10 +462,10 @@ function do_reset() {
 							<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label text text_left" ALIGN="left"><SPAN id='type_flag2'></SPAN>:</TD>
 								<TD CLASS="td_label text text_left">
 									<SPAN CLASS="td_data text text_left" STYLE= "margin-left:20px" >
-										Color &raquo;&nbsp;<INPUT ID='lineColor' MAXLENGTH="8" SIZE="8" type="text" NAME="frm_line_color" VALUE="<?php print $row['line_color'];?>"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
-										<SPAN id='line_opacity'>Opacity &raquo;&nbsp;<INPUT ID='lineOpacity' MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_line_opacity" VALUE="<?php print $row['line_opacity'];?>" />&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
-										<SPAN id='line_width' style='display: none;'>Width &raquo;&nbsp;<INPUT ID='lineWidth' MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_line_width" VALUE="<?php print $row['line_width'];?>" /> (px)</SPAN>
-										<SPAN id='font_size' style='display: none;'>Font Size &raquo;&nbsp;<INPUT ID='fontSize' MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_font_size" VALUE="<?php print $row['line_width'];?>" /> (px)</SPAN>
+										Color &raquo;&nbsp;<INPUT ID='lineColor' MAXLENGTH="8" SIZE="8" type="text" NAME="frm_line_color" VALUE="<?php print e($row['line_color']);?>"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
+										<SPAN id='line_opacity'>Opacity &raquo;&nbsp;<INPUT ID='lineOpacity' MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_line_opacity" VALUE="<?php print e($row['line_opacity']);?>" />&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>
+										<SPAN id='line_width' style='display: none;'>Width &raquo;&nbsp;<INPUT ID='lineWidth' MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_line_width" VALUE="<?php print e($row['line_width']);?>" /> (px)</SPAN>
+										<SPAN id='font_size' style='display: none;'>Font Size &raquo;&nbsp;<INPUT ID='fontSize' MAXLENGTH=2 SIZE=2 TYPE= "text" NAME="frm_font_size" VALUE="<?php print e($row['line_width']);?>" /> (px)</SPAN>
 									</SPAN>
 								</TD>
 							</TR>
@@ -485,8 +482,8 @@ function do_reset() {
 								<TD CLASS="td_label text text_left" ALIGN="left">Fill:</TD>
 								<TD CLASS="td_label text text_left">
 									<SPAN CLASS="td_data text text_left" STYLE= "margin-left:20px" >
-										Color &raquo;&nbsp;<INPUT ID='fillColor' MAXLENGTH="8" SIZE="8" type="text" NAME="frm_fill_color" VALUE="<?php print $row['fill_color'];?>"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
-										Opacity &raquo;&nbsp;<INPUT ID='fillOpacity' MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_fill_opacity" VALUE="<?php print $row['fill_opacity'];?>" />&nbsp;&nbsp;&nbsp;&nbsp;
+										Color &raquo;&nbsp;<INPUT ID='fillColor' MAXLENGTH="8" SIZE="8" type="text" NAME="frm_fill_color" VALUE="<?php print e($row['fill_color']);?>"  class="color" />&nbsp;&nbsp;&nbsp;&nbsp;
+										Opacity &raquo;&nbsp;<INPUT ID='fillOpacity' MAXLENGTH=3 SIZE=3 TYPE= "text" NAME="frm_fill_opacity" VALUE="<?php print e($row['fill_opacity']);?>" />&nbsp;&nbsp;&nbsp;&nbsp;
 									</SPAN>
 								</TD>
 							</TR>
@@ -504,17 +501,17 @@ function do_reset() {
 				</TR>
 				<TR  VALIGN="baseline"CLASS="odd">
 					<TD COLSPAN="2" ALIGN="center" STYLE = 'white-space:nowrap;'>
-						<INPUT TYPE='hidden' NAME = 'frm_id' VALUE='<?php print $row['id'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_line_status' VALUE='<?php print $row['line_status'];?>' />	
-						<INPUT TYPE='hidden' NAME = 'frm_line_cat_id' VALUE='<?php print $row['line_cat_id'];?>' />	
-						<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='<?php print $row['line_type'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='<?php print $row['line_data'];?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_id' VALUE='<?php print e($row['id']);?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_line_status' VALUE='<?php print e($row['line_status']);?>' />	
+						<INPUT TYPE='hidden' NAME = 'frm_line_cat_id' VALUE='<?php print e($row['line_cat_id']);?>' />	
+						<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='<?php print e($row['line_type']);?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='<?php print e($row['line_data']);?>' />
 						<INPUT TYPE='hidden' NAME = 'frm_filled' VALUE='<?php print $filled;?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_use_with_bm' VALUE='<?php print $row['use_with_bm'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_use_with_r' VALUE='<?php print $row['use_with_r'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_use_with_f' VALUE='<?php print $row['use_with_f'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_use_with_u_ex' VALUE='<?php print $row['use_with_u_ex'];?>' />
-						<INPUT TYPE='hidden' NAME = 'frm_use_with_u_rf' VALUE='<?php print $row['use_with_u_rf'];?>' />	
+						<INPUT TYPE='hidden' NAME = 'frm_use_with_bm' VALUE='<?php print e($row['use_with_bm']);?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_use_with_r' VALUE='<?php print e($row['use_with_r']);?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_use_with_f' VALUE='<?php print e($row['use_with_f']);?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_use_with_u_ex' VALUE='<?php print e($row['use_with_u_ex']);?>' />
+						<INPUT TYPE='hidden' NAME = 'frm_use_with_u_rf' VALUE='<?php print e($row['use_with_u_rf']);?>' />	
 					</TD>
 				</TR>
 			</TABLE>			
@@ -540,7 +537,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		<FORM NAME='edit_Form' METHOD="get" ACTION = "mmarkup.php">
 		<INPUT TYPE='hidden' NAME='func' VALUE='edit'>
 		<INPUT TYPE='hidden' NAME='edit' VALUE='true'>
-		<INPUT TYPE='hidden' NAME='id' VALUE='<?php print $id;?>'>		
+		<INPUT TYPE='hidden' NAME='id' VALUE='<?php print e($id);?>'>		
 		</FORM>
 		<FORM NAME='reset_Form' METHOD='get' ACTION='mmarkup.php'>
 		<INPUT TYPE='hidden' NAME='func' VALUE='responder'>
@@ -614,38 +611,38 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		var got_points = false;	// map is empty of points
 
 		if(theType =="p") {
-			draw_polygon("<?php print $row['line_name'];?>", 
-					"#<?php print $row['line_color'];?>", 
+			draw_polygon("<?php print e($row['line_name']);?>", 
+					"#<?php print e($row['line_color']);?>", 
 					<?php print $line_opacity;?>, 
-					<?php print $row['line_width'];?>, 
+					<?php print e($row['line_width']);?>, 
 					<?php print $filled;?>, 
 					"#<?php print $fill_color;?>",
 					<?php print $fill_opacity;?>,
-					"<?php print $row['line_data'];?>",
-					<?php print $row['id'];?>);
+					"<?php print e($row['line_data']);?>",
+					<?php print e($row['id']);?>);
 			} else if(theType == "c") {
-			draw_circle("<?php print $row['line_name'];?>", 
-					"<?php print $row['line_data'];?>",
-					"#<?php print $row['line_color'];?>", 
-					<?php print $row['line_width'];?>, 
+			draw_circle("<?php print e($row['line_name']);?>", 
+					"<?php print e($row['line_data']);?>",
+					"#<?php print e($row['line_color']);?>", 
+					<?php print e($row['line_width']);?>, 
 					<?php print $line_opacity;?>, 
 					"#<?php print $fill_color;?>",
 					<?php print $fill_opacity;?>,
 					<?php print $filled;?>,
-					<?php print $row['id'];?>);
+					<?php print e($row['id']);?>);
 			} else if(theType == "l") {
-			draw_polyline("<?php print $row['line_name'];?>", 
-					"#<?php print $row['line_color'];?>", 
+			draw_polyline("<?php print e($row['line_name']);?>", 
+					"#<?php print e($row['line_color']);?>", 
 					<?php print $line_opacity;?>, 
-					<?php print $row['line_width'];?>, 
-					"<?php print $row['line_data'];?>",
-					<?php print $row['id'];?>);	
+					<?php print e($row['line_width']);?>, 
+					"<?php print e($row['line_data']);?>",
+					<?php print e($row['id']);?>);	
 			} else if(theType == 'b') {
-			draw_banner("<?php print $row['line_name'];?>", 
-					"<?php print $row['line_data'];?>", 
-					<?php print $row['line_width'];?>,
-					"#<?php print $row['line_color'];?>", 
-					<?php print $row['id'];?>);
+			draw_banner("<?php print e($row['line_name']);?>", 
+					"<?php print e($row['line_data']);?>", 
+					<?php print e($row['line_width']);?>,
+					"#<?php print e($row['line_color']);?>", 
+					<?php print e($row['id']);?>);
 			}
 					
 					
@@ -850,7 +847,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 									"#" + document.mkup_edit.frm_fill_color.value,
 									document.mkup_edit.frm_fill_opacity.value,
 									document.mkup_edit.frm_filled.value,
-									<?php print $row['id'];?>);
+									<?php print e($row['id']);?>);
 							}
 						}
 					if(type == "b") {
@@ -867,7 +864,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 								theLineData,
 								document.mkup_edit.frm_line_width.value,
 								theColor, 
-								<?php print $row['id'];?>);
+								<?php print e($row['id']);?>);
 						}
 					} else {
 					if(type == "c") {
@@ -886,7 +883,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 									"#" + document.mkup_edit.frm_fill_color.value,
 									document.mkup_edit.frm_fill_opacity.value,
 									document.mkup_edit.frm_filled.value,
-									<?php print $row['id'];?>);
+									<?php print e($row['id']);?>);
 							}
 						}
 					if(type == "b") {
@@ -901,7 +898,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 									theLineData,
 									document.mkup_edit.frm_line_width.value,
 									theColor, 
-									<?php print $row['id'];?>);
+									<?php print e($row['id']);?>);
 							}
 						}
 					}
@@ -931,7 +928,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 						"#" + document.mkup_edit.frm_fill_color.value,
 						document.mkup_edit.frm_fill_opacity.value,
 						document.mkup_edit.frm_filled.value,
-						<?php print $row['id'];?>);
+						<?php print e($row['id']);?>);
 				}
 			}
 
@@ -952,7 +949,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 						theLineData,
 						document.mkup_edit.frm_line_width.value,
 						theColor, 
-						<?php print $row['id'];?>);
+						<?php print e($row['id']);?>);
 				}
 			}			
 
@@ -991,8 +988,8 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 					}
 				markers.splice(n, 1);
 				points.splice(n, 1);
-				var color = "#<?php print $row['line_color'];?>";
-				var width = <?php print $row['line_width'];?>;
+				var color = "#<?php print e($row['line_color']);?>";
+				var width = <?php print e($row['line_width']);?>;
 				var opacity = <?php print $line_opacity;?>;
 				var fillcolor = "#<?php print $fill_color;?>";
 				var filled = <?php print $filled;?>;

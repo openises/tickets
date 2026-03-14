@@ -129,25 +129,24 @@ function to_fac_routes(id) {
 	}
 </SCRIPT>
 <?php
-$query_un = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";
-$result_un = mysql_query($query_un);	// 6/10/11
+$id = sanitize_int($_GET['id']);
+$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = ? ORDER BY `id` ASC;";
+$result_un = db_query($query_un, [$id]);	// 6/10/11
 $un_groups = array();
 $un_names = "";	
-while ($row_un = stripslashes_deep(mysql_fetch_assoc($result_un))) 	{	// 6/10/11
+while ($row_un = stripslashes_deep($result_un->fetch_assoc())) 	{	// 6/10/11
 	$un_groups[] = $row_un['group'];
-	$query_un2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row_un[group]';";	// 6/10/11
-	$result_un2 = mysql_query($query_un2);	// 6/10/11
-	while ($row_un2 = stripslashes_deep(mysql_fetch_assoc($result_un2))) 	{	// 6/10/11		
+	$query_un2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ?;";	// 6/10/11
+	$result_un2 = db_query($query_un2, [$row_un['group']]);	// 6/10/11
+	while ($row_un2 = stripslashes_deep($result_un2->fetch_assoc())) 	{	// 6/10/11		
 		$un_names .= $row_un2['group_name'] . " ";
 		}
 	}
 	
 
 	
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT *, r.updated AS `r_updated` FROM `$GLOBALS[mysql_prefix]responder` `r` WHERE `r`.`id` = {$id} LIMIT 1";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query	= "SELECT *, r.updated AS `r_updated` FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `r`.`id` = ? LIMIT 1";
+$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
 $track_type = get_remote_type ($row) ;
 $is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));
 $lat = $row['lat'];
@@ -156,23 +155,20 @@ $ringfence = $row['ring_fence'];
 $exclzone = $row['excl_zone'];
 
 $rf_name = "";
-$query_rf	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l` WHERE `l`.`id`={$ringfence}";	//	6/10/11
-$result_rf	= mysql_query($query_rf) or do_error($query_rf, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-while($row_rf	= stripslashes_deep(mysql_fetch_assoc($result_rf))) {
+$query_rf	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l` WHERE `l`.`id`=?";	//	6/10/11
+$result_rf = db_query($query_rf, [$ringfence]);while($row_rf	= stripslashes_deep($result_rf->fetch_assoc())) {
 	$rf_name = $row_rf['line_name'];
 	}
 	
 $ex_name = "";
-$query_ex	= "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` `l` WHERE `l`.`id`={$exclzone}";	//	6/10/11
-$result_ex	= mysql_query($query_ex) or do_error($query_ex, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-while($row_ex	= stripslashes_deep(mysql_fetch_assoc($result_ex))) {
+$query_ex	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` `l` WHERE `l`.`id`=?";	//	6/10/11
+$result_ex = db_query($query_ex, [$exclzone]);while($row_ex	= stripslashes_deep($result_ex->fetch_assoc())) {
 	$ex_name = $row_ex['line_name'];
 	}
 	
 if (isset($row['un_status_id'])) {
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id`=" . $row['un_status_id'];	// status value
-	$result_st	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$row_st	= mysql_fetch_assoc($result_st);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?" ;	// status value
+	$result_st = db_query($query, [$row['un_status_id']]);	$row_st	= $result_st->fetch_assoc();
 	unset($result_st);
 	}
 $un_st_val = (isset($row['un_status_id']))? $row_st['status_val'] : "?";
@@ -184,11 +180,10 @@ $checked = (!empty($row['mobile']))? " checked" : "" ;
 
 $coords =  $row['lat'] . "," . $row['lng'];		// for UTM
 
-$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
-	WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if (mysql_affected_rows()>0) {						// got track stuff?
-	$rowtr = stripslashes_deep(mysql_fetch_array($result_tr));
+$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks`
+	WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";		// newest
+$result_tr = db_query($query, [$row['callsign']]);if (db()->affected_rows>0) {						// got track stuff?
+	$rowtr = stripslashes_deep($result_tr->fetch_array());
 	$lat = $rowtr['latitude'];
 	$lng = $rowtr['longitude'];
 	}
@@ -229,7 +224,7 @@ $the_type = $temp[0];			// name of type
 			</TR>
 			<TR CLASS='even'>
 				<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-					<SPAN CLASS='text_green text_biggest'>View Unit&nbsp;<?php print $row['name'] ;?></FONT> (#<?php print $row['id'];?>)</SPAN>
+					<SPAN CLASS='text_green text_biggest'>View Unit&nbsp;<?php print e($row['name']) ;?></FONT> (#<?php print e($row['id']);?>)</SPAN>
 					<BR />
 					<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 					<BR />
@@ -244,20 +239,20 @@ $the_type = $temp[0];			// name of type
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Name: </TD>		
-				<TD CLASS='td_data text'><?php print $row['name'];?></TD>
+				<TD CLASS='td_data text'><?php print e($row['name']);?></TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text">Handle: </TD>	
-				<TD CLASS='td_data text'><?php print $row['handle'];?>
-				<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<?php print $row['icon_str'];?></TD>
+				<TD CLASS='td_data text'><?php print e($row['handle']);?>
+				<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<?php print e($row['icon_str']);?></TD>
 			</TR>
 			<TR CLASS = 'even'>
 				<TD CLASS="td_label text">Location: </TD>
-				<TD CLASS='td_data text'><?php print $row['street'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['name']) ;?></TD>
 			</TR>
 			<TR CLASS = 'odd'>
 				<TD CLASS="td_label text">City: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
-				<TD CLASS='td_data text'><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['handle']) ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print e($row['handle']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Regions: </TD>			
@@ -279,7 +274,7 @@ $the_type = $temp[0];			// name of type
 			</TR>
 			<TR CLASS = "odd" VALIGN='top'>
 				<TD CLASS="td_label text">Callsign/License/Key: </TD>	
-				<TD CLASS='td_data text'><?php print $row['callsign'];?></TD>
+				<TD CLASS='td_data text'><?php print e($row['callsign']);?></TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Ringfence: </TD>			
@@ -301,15 +296,15 @@ $the_type = $temp[0];			// name of type
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text">About Status</TD> 
-				<TD CLASS='td_data text'><?php print $row['status_about'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['status_about']) ;?></TD>
 			</TR>	<!-- 9/6/13 -->
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Description: </TD>	
-				<TD CLASS='td_data_wrap' style='word-wrap: break-word;'><?php print $row['description'];?></TD>
+				<TD CLASS='td_data_wrap' style='word-wrap: break-word;'><?php print e($row['description']);?></TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text">Capability: </TD>	
-				<TD CLASS='td_data text'><?php print $row['capab'];?></TD>
+				<TD CLASS='td_data text'><?php print e($row['capab']);?></TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Located at Facility: </TD>	
@@ -338,23 +333,23 @@ $the_type = $temp[0];			// name of type
 			</TR>
 			<TR ID = 'contact_name_row' CLASS = "even">
 				<TD CLASS="td_label text">Contact name:</TD>	
-				<TD CLASS='td_data text'><?php print $row['contact_name'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['contact_name']) ;?></TD>
 			</TR>
 			<TR ID = 'contact_via_row' CLASS = "odd">
 				<TD CLASS="td_label text">Contact via:</TD>	
-				<TD CLASS='td_data text'><?php print $row['contact_via'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['contact_name']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">Phone: &nbsp;</TD>
-				<TD CLASS='td_data text' COLSPAN=3><?php print $row['phone'] ;?></TD>
+				<TD CLASS='td_data text' COLSPAN=3><?php print e($row['contact_name']) ;?></TD>
 			</TR>
 			<TR ID = 'cellphone_row' CLASS = "odd">
 				<TD CLASS="td_label text">Cellphone:</TD>	
-				<TD CLASS='td_data text'><?php print $row['cellphone'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['contact_via']) ;?></TD>
 			</TR>
 			<TR ID = 'smsg_provider_row' CLASS = "even">
 				<TD CLASS="td_label text"><?php get_provider_name(get_msg_variable('smsg_provider'));?> ID:</TD>	
-				<TD CLASS='td_data text'><?php print $row['smsg_id'] ;?></TD>
+				<TD CLASS='td_data text'><?php print e($row['phone']) ;?></TD>
 			</TR>
 			<TR CLASS = 'odd'>
 				<TD CLASS="td_label text">As of:</TD>	
@@ -433,11 +428,11 @@ if (isset($rowtr)) {																	// got tracks?
 
 		<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>" />
 		<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>" />
-		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
+		<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print e($row['id']) ;?>" />
 		</FORM>
 		<TABLE BORDER=0 ID = 'incidents' STYLE = 'display:none' >
 			<TR CLASS='even'>
-				<TH COLSPAN=99 CLASS='header'> Click incident to dispatch '<?php print $row['handle'] ;?>'</TH>
+				<TH COLSPAN=99 CLASS='header'> Click incident to dispatch '<?php print e($row['handle']) ;?>'</TH>
 			</TR>
 			<TR>
 				<TD></TD>
@@ -445,62 +440,60 @@ if (isset($rowtr)) {																	// got tracks?
 
 <?php
 										// 11/15/09 - identify candidate incidents - i. e., open and not already assigned to this unit
-			$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$row['id']}  AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))";
-			$result_temp = mysql_query($query_t) or do_error($query_t, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$ctr = 0;		// count hits
-			if (mysql_affected_rows()>0) {
+			$query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ?  AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))";
+			$result_temp = db_query($query_t, [$id]);			$ctr = 0;		// count hits
+			if (db()->affected_rows>0) {
 			$work = $sep = "";
 			$ctr = 0;		// count hits
-			while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {
+			while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {
 				if (!(is_date($row_temp['clear']))) {
 					$ctr++;										// if open
 					$work .= $sep . $row_temp['ticket_id'];
 					$sep = ", ";								// set comma separator for next
 					}					// end if (is_date())
 				}					// end while ($row_temp)
-			}					// end if (mysql_affected_rows()>0)
+			}					// end if (db()->affected_rows>0)
 
-			$instr = ($ctr == 0)? "" : " AND `$GLOBALS[mysql_prefix]ticket`.`id` NOT IN ({$work})";
+			$instr = ($ctr == 0)? "" : " AND `{$GLOBALS['mysql_prefix']}ticket`.`id` NOT IN ({$work})";
 
 			$al_groups = $_SESSION['user_groups'];
 
 			if(!isset($curr_viewed)) {		//	7/2/13	revised WHERE to AND - Where clause was repeated
 			if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+				$where2 = "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
 				} else {			
 				$x=0;	//	6/10/11
 				$where2 = "AND (";	//	6/10/11
 				foreach($al_groups as $grp) {	//	6/10/11
 					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 					$where2 .= $where3;
 					$x++;
 					}
-				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 AND (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2)";	//	6/10/11
+				$where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1 AND (`{$GLOBALS['mysql_prefix']}allocates`.`al_status` = 1 OR `{$GLOBALS['mysql_prefix']}allocates`.`al_status` = 2)";	//	6/10/11
 				}
 			} else {
 			if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+				$where2 = "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
 				} else {					
 				$x=0;	//	6/10/11
 				$where2 = "AND (";	//	6/10/11
 				foreach($curr_viewed as $grp) {	//	6/10/11
 					$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+					$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 					$where2 .= $where3;
 					$x++;
 					}
-				$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 AND (`$GLOBALS[mysql_prefix]allocates`.`al_status` = 1 OR `$GLOBALS[mysql_prefix]allocates`.`al_status` = 2)";	//	6/10/11
+				$where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1 AND (`{$GLOBALS['mysql_prefix']}allocates`.`al_status` = 1 OR `{$GLOBALS['mysql_prefix']}allocates`.`al_status` = 2)";	//	6/10/11
 				}
 			}
 
-			$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` 
-					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`	
+			$query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` 
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.id=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`	
 			WHERE `status` IN ({$GLOBALS['STATUS_OPEN']}, {$GLOBALS['STATUS_SCHEDULED']}) {$instr} {$where2}
-			GROUP BY `$GLOBALS[mysql_prefix]ticket`.`id`";	//	6/10/11
-			$result_t = mysql_query($query_t) or do_error($query_t, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$i=0;			
-			while ($row_t = stripslashes_deep(mysql_fetch_array($result_t))) 	{
+			GROUP BY `{$GLOBALS['mysql_prefix']}ticket`.`id`";	//	6/10/11
+			$result_t = db_query($query_t);			$i=0;			
+			while ($row_t = stripslashes_deep($result_t->fetch_array())) 	{
 //			dump($row_t);
 				switch($row_t['severity'])		{								//color tickets by severity
 					case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
@@ -537,12 +530,12 @@ if (isset($rowtr)) {																	// got tracks?
 				if(!is_guest() && $disp_allowed) {
 ?>
 					<SPAN id='disp_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="$('incidents').style.display='block'; $('view_unit').style.display='none';"><?php print get_text("To Dispatch");?><BR /><IMG id='disp_img' SRC='./images/dispatch.png' /></SPAN>
-					<SPAN id='dispfac_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="to_fac_routes(<?php print $id;?>);"><?php print get_text("To Facility");?><BR /><IMG id='dispfac_img' SRC='./images/dispatch.png' /></SPAN>
+					<SPAN id='dispfac_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="to_fac_routes(<?php print e($id);?>);"><?php print get_text("To Facility");?><BR /><IMG id='dispfac_img' SRC='./images/dispatch.png' /></SPAN>
 <?php
 					}
 				if(!is_guest()) {
 ?>					
-					<SPAN id='log_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='unit_log(<?php print $id;?>);'><?php print get_text("Log");?><BR /><IMG id='log_img' SRC='./images/edit.png' /></SPAN>
+					<SPAN id='log_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='unit_log(<?php print e($id);?>);'><?php print get_text("Log");?><BR /><IMG id='log_img' SRC='./images/edit.png' /></SPAN>
 <?php
 					}
 				}
@@ -570,10 +563,10 @@ $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
 print add_sidebar(FALSE, TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, $id, 0, 0)
 ?>
 <FORM NAME='can_Form' METHOD="post" ACTION = "units.php"></FORM>
-<FORM NAME="to_edit_Form" METHOD="post" ACTION = "units.php?func=responder&edit=true&id=<?php print $id; ?>"></FORM>
+<FORM NAME="to_edit_Form" METHOD="post" ACTION = "units.php?func=responder&edit=true&id=<?php print e($id); ?>"></FORM>
 <FORM NAME="routes_Form" METHOD="get" ACTION = "<?php print $_SESSION['routesfile'];?>"> <!-- 8/31/10 -->
 <INPUT TYPE="hidden" NAME="ticket_id" 	VALUE="">						<!-- 10/16/08 -->
-<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
+<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print e($id); ?>">
 </FORM>
 <FORM NAME="fac_routes_Form" METHOD="get" ACTION = "fac_routes.php">
 <INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">

@@ -8,7 +8,7 @@ $col_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] 
 $exp_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "h")) ? "" : "none";		//	3/15/11
 $show_resp = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "s")) ? "" : "none" ;	//	3/15/11
 $resp_col_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "s")) ? "" : "none";	//	3/15/11
-$resp_exp_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "h")) ? "" : "none";	//	3/15/11	
+$resp_exp_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "h")) ? "" : "none";	//	3/15/11
 $show_facs = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none" ;	//	3/15/11
 $facs_col_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none";	//	3/15/11
 $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "h")) ? "" : "none";	//	3/15/11
@@ -61,7 +61,7 @@ var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 2
 var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
 	}
 	});
-			
+		
 var colors = new Array ('odd', 'even');
 var fields = ["name",
 			"about",
@@ -117,15 +117,15 @@ function set_size() {
 	res_celwidth = listwidth * .15;
 	fac_celwidth = listwidth * .15;
 	fieldwidth = colwidth * .6;
-	medfieldwidth = colwidth * .3;		
+	medfieldwidth = colwidth * .3;	
 	smallfieldwidth = colwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
 	$('editform').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
+	$('leftcol').style.height = colheight + "px";
 	$('rightcol').style.width = colwidth + "px";
-	$('rightcol').style.height = colheight + "px";	
+	$('rightcol').style.height = colheight + "px";
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	$('map_legend').style.width = mapWidth + "px";
@@ -188,10 +188,10 @@ function validate(theForm) {
 
 
 	if (theForm.frm_un_status_id.options[theForm.frm_un_status_id.selectedIndex].value==0)	{errmsg+="Unit STATUS selection is required.\n";}
-	
+
 	if (theForm.frm_descr.value.trim()=="")													{errmsg+="Unit DESCRIPTION is required with Tracking.\n";}
 	if ((!(theForm.frm_mob_disp.checked)) && (theForm.frm_lat.value.trim().length == 0)) 	{errmsg+="Map location is required for non-mobile units.\n";}
-	
+
 	if (errmsg!="") {
 		alert ("Please correct the following and re-submit:\n\n" + errmsg);
 		return false;
@@ -204,7 +204,7 @@ function validate(theForm) {
 
 function any_track(theForm) {
 	return (theForm.frm_track_disp.selectedIndex > 0);
-	}		
+	}	
 
 function check_days(id) {
 	if((id == "monday") && ($('monday').checked)) {
@@ -278,7 +278,7 @@ function check_days(id) {
 		document.forms['res_edit_Form'].elements['frm_opening_hours[5][1]'].readOnly  = true;
 		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].readOnly  = true;
 		document.forms['res_edit_Form'].elements['frm_opening_hours[5][1]'].style.backgroundColor = "#CECECE";
-		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].style.backgroundColor = "#CECECE";		
+		document.forms['res_edit_Form'].elements['frm_opening_hours[5][2]'].style.backgroundColor = "#CECECE";	
 		} else if((id == "sunday") && ($('sunday').checked)) {
 		document.forms['res_edit_Form'].elements['frm_opening_hours[6][0]'].checked = true;
 		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].readOnly  = false;
@@ -290,16 +290,15 @@ function check_days(id) {
 		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].readOnly  = true;
 		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].readOnly  = true;
 		document.forms['res_edit_Form'].elements['frm_opening_hours[6][1]'].style.backgroundColor = "#CECECE";
-		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].style.backgroundColor = "#CECECE";		
+		document.forms['res_edit_Form'].elements['frm_opening_hours[6][2]'].style.backgroundColor = "#CECECE";	
 		} else {
 		}
 	}
 </SCRIPT>
 <?php
-		$id = mysql_real_escape_string($_GET['id']);
-		$query	= "SELECT * FROM $GLOBALS[mysql_prefix]facilities WHERE id=$id";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$row	= mysql_fetch_assoc($result);
+		$id = sanitize_int($_GET['id']);
+		$query	= "SELECT * FROM {$GLOBALS['mysql_prefix']}facilities WHERE id=?";
+		$result = db_query($query, [$id]);		$row	= $result->fetch_assoc();
 		$is_mobile = FALSE;
 
 		$lat = $row['lat'];
@@ -323,7 +322,7 @@ function check_days(id) {
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-						<SPAN CLASS='text_green text_biggest'>&nbsp;Edit Facility '<?php print $row['name'];?>' data&nbsp;&nbsp;(#<?php print $id; ?>)</SPAN>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;Edit Facility '<?php print e($row['name']);?>' data&nbsp;&nbsp;(#<?php print e($id); ?>)</SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 						<BR />
@@ -335,27 +334,27 @@ function check_days(id) {
 					<TR CLASS = "even">
 					<TD CLASS="td_label text">
 						<LABEL for="name" style='width: 100%;' title="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
-					</TD>			
+					</TD>		
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" />
+						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['name']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
 						<LABEL for="handle" style='width: 100%;' title="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
-					</TD>			
+					</TD>		
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print $row['handle'] ;?>" />
+						<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print e($row['handle']) ;?>" />
 						<SPAN STYLE = "margin-left:40px;" CLASS="td_label text"  TITLE="A 3-letter value to be used in the map icon">Icon:</SPAN>&nbsp;<font color='red' size='-1'>*</font>
-						<INPUT TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="<?php print $row['icon_str'];?>" />			
+						<INPUT TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="<?php print e($row['icon_str']);?>" />		
 					</TD>
 				</TR>
 <?php
 				if(get_num_groups()) {
 					if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {		//	6/10/11
-?>			
+?>		
 						<TR CLASS='even' VALIGN='top'>
 							<TD CLASS='td_label text'>
 								<LABEL style='width: 100%;' title="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?>:</LABEL>
@@ -365,7 +364,7 @@ function check_days(id) {
 								<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
 							</TD>
 							<TD COLSPAN=2 CLASS='td_data text'>
-<?php			
+<?php		
 								$alloc_groups = implode(',', get_allocates(3, $id));
 								print get_sub_group_butts(($_SESSION['user_id']), 3, $id) ;
 ?>
@@ -407,14 +406,14 @@ function check_days(id) {
 ?>
 							</TD>
 						</TR>
-<?php						
+<?php					
 						}
 					} else {
 ?>
 					<INPUT TYPE="hidden" NAME="frm_group[]" VALUE="1">
 <?php
 					}
-		
+	
 				if(is_administrator()) {
 ?>
 					<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
@@ -426,9 +425,8 @@ function check_days(id) {
 							<SELECT id='boundary' NAME="frm_boundary" onChange = "this.value=JSfnTrim(this.value)">
 								<OPTION VALUE=0>Select</OPTION>
 <?php
-								$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_f` = 1 ORDER BY `line_name` ASC";		// 12/18/10
-								$result_bound = mysql_query($query_bound) or do_error($query_bound, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result_bound))) {
+								$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_f` = 1 ORDER BY `line_name` ASC";		// 12/18/10
+								$result_bound = db_query($query_bound);								while ($row_bound = stripslashes_deep($result_bound->fetch_assoc())) {
 									$sel = ($row['boundary'] == $row_bound['id']) ? "SELECTED" : "";
 									print "\t<OPTION VALUE='{$row_bound['id']}' {$sel}>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 									}
@@ -438,7 +436,7 @@ function check_days(id) {
 					</TR>
 <?php
 					}
-?>					
+?>				
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN='2'>&nbsp;</TD>
 				</TR>
@@ -469,12 +467,11 @@ function check_days(id) {
 					<TD COLSPAN=2 CLASS='td_data text'>
 						<SELECT id='status' NAME="frm_status_id" onChange = "document.res_edit_Form.frm_log_it.value='1'">
 <?php
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
-							$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
+							$result_st = db_query($query);
 							$the_grp = strval(rand());			//  force initial optgroup value
 							$i = 0;
-							while ($row_st = stripslashes_deep(mysql_fetch_assoc($result_st))) {
+							while ($row_st = stripslashes_deep($result_st->fetch_assoc())) {
 								if ($the_grp != $row_st['group']) {
 									print ($i == 0)? "": "</OPTGROUP>\n";
 									$the_grp = $row_st['group'];
@@ -499,7 +496,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='about' SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="<?php print $row['status_about'] ;?>" MAXLENGTH="512">
+						<INPUT id='about' SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="<?php print e($row['status_about']) ;?>" MAXLENGTH="512">
 					</TD>
 				</TR>
 				<TR class='spacer'>
@@ -511,7 +508,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='location' SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print $row['street'] ;?>"  MAXLENGTH="61">
+						<INPUT id='location' SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print e($row['street']) ;?>"  MAXLENGTH="61">
 					</TD>
 				</TR>
 				<TR CLASS='odd'>
@@ -520,19 +517,19 @@ function check_days(id) {
 					</TD>
 					<TD><button type="button" onClick="Javascript:loc_lkup(document.res_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button></TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print $row['city'] ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
+						<INPUT id='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print e($row['city']) ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
 						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 						<A CLASS="td_label text" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;
-						<INPUT SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print $row['state'] ;?>" MAXLENGTH="<?php print $st_size;?>">
+						<INPUT SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print e($row['state']) ;?>" MAXLENGTH="<?php print $st_size;?>">
 					</TD>
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
 						<LABEL for="description" style='width: 100%;' title="Facility Description - additional details about Facility"><?php print get_text("Description");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
-					</TD>	
+					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2><?php print $row['description'];?></TEXTAREA>
+						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2><?php print e($row['description']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -542,9 +539,9 @@ function check_days(id) {
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
 						<LABEL for="beds_a" style='width: auto;' title="Facility beds "><?php print get_text("Available");?>:</LABEL>
-						<INPUT id='beds_a' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_a" VALUE="<?php print $row['beds_a'];?>" />			
+						<INPUT id='beds_a' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_a" VALUE="<?php print e($row['beds_a']);?>" />		
 						<LABEL for="beds_o" style='width: auto;' title="Facility beds "><?php print get_text("Occupied");?>:</LABEL>
-						<INPUT id='beds_o' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_o" VALUE="<?php print $row['beds_o'];?>" />			
+						<INPUT id='beds_o' SIZE="16" MAXLENGTH="16" TYPE="text" NAME="frm_beds_o" VALUE="<?php print e($row['beds_o']);?>" />		
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -553,7 +550,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA id='beds_info' NAME="frm_beds_info" COLS=60 ROWS=2><?php print $row['beds_info'];?></TEXTAREA>			
+						<TEXTAREA id='beds_info' NAME="frm_beds_info" COLS=60 ROWS=2><?php print e($row['beds_info']);?></TEXTAREA>		
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -562,7 +559,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA id='capability' NAME="frm_capab" COLS=60 ROWS=2><?php print $row['capab'];?></TEXTAREA>
+						<TEXTAREA id='capability' NAME="frm_capab" COLS=60 ROWS=2><?php print e($row['capab']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -571,7 +568,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['contact_name'] ;?>" />
+						<INPUT id='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print e($row['contact_name']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -580,7 +577,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='contact_email' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_email" VALUE="<?php print $row['contact_email'] ;?>" />
+						<INPUT id='contact_email' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_email" VALUE="<?php print e($row['contact_email']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -589,7 +586,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='contact_phone' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_phone" VALUE="<?php print $row['contact_phone'] ;?>" />
+						<INPUT id='contact_phone' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_phone" VALUE="<?php print e($row['contact_phone']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -598,7 +595,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='sec_contact' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_contact" VALUE="<?php print $row['security_contact'] ;?>" />
+						<INPUT id='sec_contact' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_contact" VALUE="<?php print e($row['security_contact']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -607,7 +604,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='sec_email' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_email" VALUE="<?php print $row['security_email'] ;?>" />
+						<INPUT id='sec_email' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_email" VALUE="<?php print e($row['security_email']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -616,7 +613,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='sec_phone' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_phone" VALUE="<?php print $row['security_phone'] ;?>" />
+						<INPUT id='sec_phone' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_security_phone" VALUE="<?php print e($row['security_phone']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -685,7 +682,7 @@ function check_days(id) {
 								<TD style='text-align: left;'><INPUT SIZE="5" MAXLENGTH="5" TYPE="text" NAME="frm_opening_hours[6][2]" VALUE="<?php print $theend[6];?>" /></TD>
 							</TR>
 						</TABLE>
-					</TD>			
+					</TD>		
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
@@ -693,7 +690,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA id='access_rules' NAME="frm_access_rules" COLS=60 ROWS=5><?php print $row['access_rules'];?></TEXTAREA>
+						<TEXTAREA id='access_rules' NAME="frm_access_rules" COLS=60 ROWS=5><?php print e($row['access_rules']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -702,7 +699,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA id='sec_reqs' NAME="frm_security_reqs" COLS=60 ROWS=5><?php print $row['security_reqs'];?></TEXTAREA>
+						<TEXTAREA id='sec_reqs' NAME="frm_security_reqs" COLS=60 ROWS=5><?php print e($row['security_reqs']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -711,7 +708,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='pager_prim' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_p" VALUE="<?php print $row['pager_p'] ;?>" />
+						<INPUT id='pager_prim' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_p" VALUE="<?php print e($row['pager_p']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -720,7 +717,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='pager_sec' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_s" VALUE="<?php print $row['pager_s'] ;?>" />
+						<INPUT id='pager_sec' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_pager_s" VALUE="<?php print e($row['pager_s']) ;?>" />
 					</TD>
 				</TR>
 
@@ -728,7 +725,7 @@ function check_days(id) {
 				$map_capt = "<BR /><BR /><CENTER><B><FONT CLASS = 'normal_text'>Click Map to revise facility location</FONT></B>";
 				$lock_butt = (!$is_mobile)? "<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_edit_Form);'>" : "" ;
 				$usng_link = (!$is_mobile)? "<LABEL for='grid' style='width: 100%;' title='Show USNG Grid' onClick = 'do_usng_conv(res_edit_Form)'>" . get_text('USNG') . ":</LABEL>": "{$usng}:";
-				$osgb_link = (!$is_mobile)? "<LABEL for='grid' style='width: 100%;'>" . get_text('OSGB') . ":</LABEL>": "{$osgb}:";		
+				$osgb_link = (!$is_mobile)? "<LABEL for='grid' style='width: 100%;'>" . get_text('OSGB') . ":</LABEL>": "{$osgb}:";	
 ?>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
@@ -749,7 +746,7 @@ function check_days(id) {
 							$label = $usng_link;
 							$input = "<INPUT id='grid' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoUSNG($row['lat'], $row['lng']) . "' SIZE=19 disabled />";
 							break;
-						
+					
 						case "1":
 							$label = $osgb_link;
 							$input = "<INPUT id='grid' TYPE='text' NAME='frm_ngs' VALUE='" . LLtoOSGB($row['lat'], $row['lng']) . "' SIZE=19 disabled />";
@@ -759,7 +756,7 @@ function check_days(id) {
 							$label = $utm_link;
 							$input = "<INPUT id='grid' TYPE='text' NAME='frm_ngs' VALUE='" . toUTM($utmcoords) . "' SIZE=19 disabled />";
 							break;
-						
+					
 						default:
 						print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 						}
@@ -776,9 +773,9 @@ function check_days(id) {
 <?php
 				$mg_select = "<SELECT id='mailgroup' NAME='frm_notify_mailgroup'>";	//	8/28/13
 				$mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";	//	8/28/13
-				$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";	//	8/28/13
-				$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	//	8/28/13
-				while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {	//	8/28/13
+				$query_mg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` ORDER BY `id` ASC";	//	8/28/13
+				$result_mg = db_query($query_mg);	//	8/28/13
+				while ($row_mg = stripslashes_deep($result_mg->fetch_assoc())) {	//	8/28/13
 					$sel = ($row['notify_mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
 					$mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
 					}
@@ -799,7 +796,7 @@ function check_days(id) {
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='notify_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="<?php print $row['notify_email'] ;?>" />
+						<INPUT id='notify_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="<?php print e($row['notify_email']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -812,12 +809,12 @@ function check_days(id) {
 						$sel1 = ($row['notify_when'] == 1) ? "SELECTED" : "";
 						$sel2 = ($row['notify_when'] == 2) ? "SELECTED" : "";
 						$sel3 = ($row['notify_when'] == 3) ? "SELECTED" : "";
-?>							
+?>						
 						<SELECT id='notify_when' NAME='frm_notify_when'>
 							<OPTION VALUE=1 <?php print $sel1;?>>All</OPTION>
 							<OPTION VALUE=2 <?php print $sel2;?>>Incident Open</OPTION>
 							<OPTION VALUE=3 <?php print $sel3;?>>Incident Close</OPTION>
-						</SELECT>					
+						</SELECT>				
 					</TD>
 				</TR>
 				<TR>
@@ -865,7 +862,7 @@ function check_days(id) {
 				<INPUT TYPE="hidden" NAME = "frm_lat" VALUE="<?php print $row['lat'] ;?>"/>
 				<INPUT TYPE="hidden" NAME = "frm_lng" VALUE="<?php print $row['lng'] ;?>"/>
 				<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>
-				<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">			
+				<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">		
 			</TABLE>
 			</FORM>
 		</DIV>
@@ -895,7 +892,7 @@ print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, $id, 
 ?>
 		<FORM NAME='can_Form' METHOD="post" ACTION = "facilities.php"></FORM>
 		<A NAME="bottom" /> 
-		<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>	
+		<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = window.innerWidth,
@@ -920,15 +917,15 @@ celwidth = listwidth * .20;
 res_celwidth = listwidth * .15;
 fac_celwidth = listwidth * .15;
 fieldwidth = colwidth * .6;
-medfieldwidth = colwidth * .3;		
+medfieldwidth = colwidth * .3;	
 smallfieldwidth = colwidth * .15;
 $('outer').style.width = outerwidth + "px";
 $('outer').style.height = outerheight + "px";
 $('leftcol').style.width = colwidth + "px";
 $('editform').style.width = colwidth + "px";
-$('leftcol').style.height = colheight + "px";	
+$('leftcol').style.height = colheight + "px";
 $('rightcol').style.width = colwidth + "px";
-$('rightcol').style.height = colheight + "px";	
+$('rightcol').style.height = colheight + "px";
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 $('map_legend').style.width = mapWidth + "px";
@@ -954,14 +951,14 @@ var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 var initZoom = <?php print get_variable('def_zoom');?>;
 init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
-var bounds = map.getBounds();	
+var bounds = map.getBounds();
 var zoom = map.getZoom();
 var doReverse = <?php print intval(get_variable('reverse_geo'));?>;
 function onMapClick(e) {
 	if(doReverse == 0) {return;}
 	if(marker) {map.removeLayer(marker); }
 	var iconurl = "./our_icons/yellow.png";
-	icon = new baseIcon({iconUrl: iconurl});	
+	icon = new baseIcon({iconUrl: iconurl});
     marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
     marker.addTo(map);
 	newGetAddress(e.latlng, "e");
@@ -971,7 +968,7 @@ map.on('click', onMapClick);
 <?php
 do_kml();
 ?>
-</SCRIPT>		
+</SCRIPT>	
 		</BODY>
 		</HTML>
 <?php

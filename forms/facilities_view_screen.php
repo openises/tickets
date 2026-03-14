@@ -8,7 +8,7 @@ $col_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] 
 $exp_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "h")) ? "" : "none";		//	3/15/11
 $show_resp = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "s")) ? "" : "none" ;	//	3/15/11
 $resp_col_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "s")) ? "" : "none";	//	3/15/11
-$resp_exp_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "h")) ? "" : "none";	//	3/15/11	
+$resp_exp_butt = ((isset($_SESSION['resp_list'])) && ($_SESSION['resp_list'] == "h")) ? "" : "none";	//	3/15/11
 $show_facs = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none" ;	//	3/15/11
 $facs_col_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "s")) ? "" : "none";	//	3/15/11
 $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == "h")) ? "" : "none";	//	3/15/11
@@ -56,7 +56,7 @@ var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 2
 var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
 	}
 	});
-	
+
 var colors = new Array ('odd', 'even');
 
 function set_size() {
@@ -80,9 +80,9 @@ function set_size() {
 	$('outer').style.height = outerheight + "px";
 	$('leftcol').style.width = colwidth + "px";
 	$('viewForm').style.width = colwidth + "px";
-	$('leftcol').style.height = colheight + "px";	
+	$('leftcol').style.height = colheight + "px";
 	$('rightcol').style.width = colwidth + "px";
-	$('rightcol').style.height = colheight + "px";	
+	$('rightcol').style.height = colheight + "px";
 	$('map_canvas').style.width = mapWidth + "px";
 	$('map_canvas').style.height = mapHeight + "px";
 	$('map_caption').style.width = mapWidth + "px";
@@ -94,7 +94,7 @@ function set_size() {
 	map.invalidateSize();
 	set_fontsizes(viewportwidth);
 	}
-	
+
 function do_disp(){												// show incidents for dispatch - added 6/7/08
 	$('incidents').style.display='block';
 	$('viewForm').style.display='none';
@@ -104,7 +104,7 @@ function do_dispfac(){												// show incidents for dispatch - added 6/7/08
 	$('facilities').style.display='block';
 	$('viewForm').style.display='none';
 	}
-	
+
 function to_routes(id) {
 	document.routes_Form.ticket_id.value=id;			// 10/16/08, 10/25/08
 	document.routes_Form.submit();
@@ -116,30 +116,28 @@ function to_fac_routes(id) {
 	}
 </SCRIPT>
 <?php
-$query_fa = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 3 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";	// 6/10/11
-$result_fa = mysql_query($query_fa);	// 6/10/11
+$id = sanitize_int($_GET['id']);
+$query_fa = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 3 AND `resource_id` = ? ORDER BY `id` ASC;";	// 6/10/11
+$result_fa = db_query($query_fa, [$id]);	// 6/10/11
 $fa_groups = array();
-$fa_names = "";	
-while ($row_fa = stripslashes_deep(mysql_fetch_assoc($result_fa))) 	{	// 6/10/11
+$fa_names = "";
+while ($row_fa = stripslashes_deep($result_fa->fetch_assoc())) 	{	// 6/10/11
 	$fa_groups[] = $row_fa['group'];
-	$query_fa2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row_fa[group]';";	// 6/10/11
-	$result_fa2 = mysql_query($query_fa2);	// 6/10/11
-	while ($row_fa2 = stripslashes_deep(mysql_fetch_assoc($result_fa2))) 	{	// 6/10/11		
+	$query_fa2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ?;";	// 6/10/11
+	$result_fa2 = db_query($query_fa2, [$row_fa['group']]);	// 6/10/11
+	while ($row_fa2 = stripslashes_deep($result_fa2->fetch_assoc())) 	{	// 6/10/11	
 		$fa_names .= $row_fa2['group_name'] . " ";
 		}
 	}
-	
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`= " . $id . " LIMIT 1";	// 1/19/2013
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
+
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ? LIMIT 1";	// 1/19/2013
+$result = db_query($query, [$id]);$row	= stripslashes_deep($result->fetch_assoc());
 $lat = $row['lat'];
 $lng = $row['lng'];
 
 if (isset($row['status_id'])) {
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id`=" . $row['status_id'];	// status value
-	$result_st	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$row_st	= mysql_fetch_assoc($result_st);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id` = ?" ;	// status value
+	$result_st = db_query($query, [$row['status_id']]);	$row_st	= $result_st->fetch_assoc();
 	unset($result_st);
 	}
 $un_st_val = (isset($row['status_id']))? $row_st['status_val'] : "?";
@@ -163,7 +161,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 			</TR>
 			<TR CLASS='even'>
 				<TD CLASS='odd' ALIGN='center' COLSPAN='2'>
-					<SPAN CLASS='text_green text_biggest'>&nbsp;View Facility '<?php print $row['name'];?>' data&nbsp;&nbsp;(#<?php print $id; ?>)</SPAN>
+					<SPAN CLASS='text_green text_biggest'>&nbsp;View Facility '<?php print e($row['name']);?>' data&nbsp;&nbsp;(#<?php print e($id); ?>)</SPAN>
 					<BR />
 					<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 					<BR />
@@ -173,30 +171,30 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Name"); ?>: </TD>			
-				<TD CLASS="td_data text"><?php print $row['name'];?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Name"); ?>: </TD>		
+				<TD CLASS="td_data text"><?php print e($row['name']);?></TD>
 			</TR>
 			<TR CLASS = 'odd'>
 				<TD CLASS="td_label text"><?php print get_text("Location"); ?>: </TD>
-				<TD CLASS="td_data text"><?php print $row['street'] ;?></TD>
+				<TD CLASS="td_data text"><?php print e($row['name']) ;?></TD>
 			</TR>
 			<TR CLASS = 'even'>
 				<TD CLASS="td_label text"><?php print get_text("City"); ?>: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
-				<TD CLASS="td_data text"><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
+				<TD CLASS="td_data text"><?php print e($row['street']) ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print e($row['street']) ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text"><?php print get_text("Handle"); ?>: </TD>
-				<TD CLASS="td_data text"><?php print $row['handle'];?>
-					<SPAN STYLE = "margin-left:40px;" CLASS="td_label text">Icon:</SPAN>&nbsp;<?php print $row['icon_str'];?>
+				<TD CLASS="td_data text"><?php print e($row['handle']);?>
+					<SPAN STYLE = "margin-left:40px;" CLASS="td_label text">Icon:</SPAN>&nbsp;<?php print e($row['icon_str']);?>
 				</TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text">Regions: </TD>			
+				<TD CLASS="td_label text">Regions: </TD>		
 				<TD CLASS="td_data text"><?php print $fa_names;?></TD>
 			</TR>
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=99></TD>
-			</TR>			
+			</TR>		
 			<TR CLASS = "even">
 				<TD CLASS="td_label text"><?php print get_text("Type"); ?>: </TD>
 				<TD CLASS="td_data text"><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -208,54 +206,54 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text">About Status</TD>  
-				<TD CLASS="td_data text"><?php print $row['status_about'] ;?></TD>
+				<TD CLASS="td_data text"><?php print e($row['status_about']) ;?></TD>
 			</TR>
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Description"); ?>: </TD>	
-				<TD class='td_data_wrap text'><?php print $row['description'];?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Description"); ?>: </TD>
+				<TD class='td_data_wrap text'><?php print e($row['description']);?></TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text">
 					<A CLASS="td_label text" HREF="#" TITLE="Facility beds "><?php print get_text("Beds"); ?> Available/Occupied:</A>&nbsp;
 				</TD>
-				<TD CLASS="td_data text"><?php print $row['beds_a'];?>/<?php print $row['beds_o'];?>	</TD>
+				<TD CLASS="td_data text"><?php print e($row['beds_a']);?>/<?php print e($row['beds_o']);?>	</TD>
 			</TR><!-- 	6/4/2013 -->
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">
 					<A CLASS="td_label text" HREF="#" TITLE="Beds information"><?php print get_text("Beds"); ?> information</A>:&nbsp;
 				</TD>
-				<TD CLASS="td_data text"><?php print $row['beds_info'];?></TD>
+				<TD CLASS="td_data text"><?php print e($row['beds_info']);?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Capability"); ?>: </TD>	
-				<TD CLASS="td_data text"><?php print $row['capab'];?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Capability"); ?>: </TD>
+				<TD CLASS="td_data text"><?php print e($row['capab']);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Contact name"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['contact_name'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Contact name"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['capab']) ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Contact email"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['contact_email'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Contact email"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['contact_name']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Contact phone"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['contact_phone'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Contact phone"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['contact_email']) ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Security contact"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['security_contact'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Security contact"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['contact_phone']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Security email"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['security_email'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Security email"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['security_contact']) ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Security phone"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['security_phone'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Security phone"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['security_email']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">
@@ -310,37 +308,37 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 									<TD style='text-align: left;'><SPAN CLASS='td_data'><?php print $dayname;?></SPAN></TD>
 									<TD CLASS="td_data text" COLSPAN=2 style='text-align: left;'><SPAN CLASS='td_data' style='width: 100%; display: block; text-align: center; background-color: red; color: white;'>------ Closed ------</SPAN></TD>
 								</TR>
-<?php								
+<?php							
 								}
 					$z++;
 					}
 ?>
 					</TABLE>
-				</TD>			
+				</TD>		
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Access rules"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['access_rules'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Access rules"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['access_rules']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Security reqs"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['security_reqs'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Security reqs"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['access_rules']) ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Primary pager"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['pager_p'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Primary pager"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['security_reqs']) ;?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Secondary pager"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['pager_s'] ;?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Secondary pager"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['pager_p']) ;?></TD>
 			</TR>
 			<TR CLASS = "odd">
-				<TD CLASS="td_label text"><?php print get_text("Notify Mail List"); ?>:</TD>	
+				<TD CLASS="td_label text"><?php print get_text("Notify Mail List"); ?>:</TD>
 				<TD CLASS="td_data text"><?php print get_mailgroup_name($row['notify_mailgroup']);?></TD>
 			</TR>
 			<TR CLASS = "even">
-				<TD CLASS="td_label text"><?php print get_text("Notify Email Address"); ?>:</TD>	
-				<TD CLASS="td_data text"><?php print $row['notify_email'];?></TD>
+				<TD CLASS="td_label text"><?php print get_text("Notify Email Address"); ?>:</TD>
+				<TD CLASS="td_data text"><?php print e($row['notify_email']);?></TD>
 			</TR>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text"><?php print get_text("Notify when"); ?>:</TD>
@@ -351,17 +349,17 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 					case 3: 	$nw = 'Incident Closed';	break;
 					default: 	$nw = 'Error';
 					}
-		
-?>		
+	
+?>	
 				<TD CLASS="td_data text"><?php print $nw;?></TD>
 			</TR>
 			<TR CLASS = 'even'>
-				<TD CLASS="td_label text">As of:</TD>	
+				<TD CLASS="td_label text">As of:</TD>
 				<TD CLASS="td_data text"><?php print fac_format_date(strtotime($row['updated'])); ?></TD>
 			</TR>
 <?php
 			if (my_is_float($lat)) {
-?>		
+?>	
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text"  onClick = 'javascript: do_coords(<?php print "$lat,$lng";?>)'><U>Lat/Lng</U>:</TD>
 				<TD CLASS="td_data text">
@@ -379,7 +377,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 							case "0":
 ?>
 								&nbsp;USNG:<INPUT TYPE="text" NAME="frm_ngs" VALUE='<?php print $usng_val;?>}' SIZE=19 disabled />
-<?php 		
+<?php 	
 								break;
 
 							case "1":
@@ -387,7 +385,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 								&nbsp;OSGB:<INPUT TYPE="text" NAME="frm_ngs" VALUE='<?php print $osgb_val;?>}' SIZE=19 disabled />
 <?php
 							break;
-							
+						
 							default:
 ?>
 								&nbsp;UTM:<INPUT TYPE="text" NAME="frm_ngs" VALUE='<?php print $utm_val;?>' SIZE=19 disabled />
@@ -413,7 +411,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 				}		// end if (is_administrator() || is_super())
 ?>
 				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
-		</DIV>	
+		</DIV>
 	</DIV>
 	<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>
 		<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
@@ -425,11 +423,11 @@ $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
 print add_sidebar(FALSE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, $id, 0)
 ?>
 <FORM NAME='can_Form' METHOD="post" ACTION = "facilities.php"></FORM>
-<FORM NAME="to_edit_Form" METHOD="post" ACTION = "facilities.php?func=responder&edit=true&id=<?php print $id; ?>"></FORM>
+<FORM NAME="to_edit_Form" METHOD="post" ACTION = "facilities.php?func=responder&edit=true&id=<?php print e($id); ?>"></FORM>
 <INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">						<!-- 10/16/08 -->
-<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print $id; ?>">
+<INPUT TYPE="hidden" NAME="unit_id" 	VALUE="<?php print e($id); ?>">
 <A NAME="bottom" /> 
-<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>	
+<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 <SCRIPT>
 var latLng;
 var in_local_bool = "0";
@@ -453,9 +451,9 @@ $('outer').style.width = outerwidth + "px";
 $('outer').style.height = outerheight + "px";
 $('leftcol').style.width = colwidth + "px";
 $('viewForm').style.width = colwidth + "px";
-$('leftcol').style.height = colheight + "px";	
+$('leftcol').style.height = colheight + "px";
 $('rightcol').style.width = colwidth + "px";
-$('rightcol').style.height = colheight + "px";	
+$('rightcol').style.height = colheight + "px";
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 $('map_caption').style.width = mapWidth + "px";
@@ -468,12 +466,12 @@ var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
 map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
-var bounds = map.getBounds();	
+var bounds = map.getBounds();
 var zoom = map.getZoom();
 <?php
 do_kml();
 ?>
-</SCRIPT>			
+</SCRIPT>		
 </BODY>
 </HTML>
 <?php

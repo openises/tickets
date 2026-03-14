@@ -29,9 +29,8 @@ print do_calls();		// call signs to JS array for validation
 
 function can_do_dispatch($the_row) {
 	if (intval($the_row['multi'])==1) return TRUE;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ?";	// all dispatches this unit
+	$result_temp = db_query($query, [$the_row['id']]);	while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {		// check any open runs this unit
 		if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
 			unset ($result_temp, $row_temp); 
 			return FALSE;
@@ -223,19 +222,17 @@ function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific
 </SCRIPT>
 <?php
 
-$id = mysql_real_escape_string($_GET['id']);
+$id = sanitize_int($_GET['id']);
 $members = array();
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id`= " . $id;
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-while($row	= mysql_fetch_array($result)) {
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `responder_id`= ?";
+$result = db_query($query, [$id]);while($row	= $result->fetch_array()) {
 	$members[] = $row['member_id'];
 	}
-	
+
 $assigned_members = (count($members > 0)) ? implode(",", $members) : "";
 
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`= " . $id;
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= mysql_fetch_array($result);
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
+$result = db_query($query, [$id]);$row	= $result->fetch_array();
 $track_type = get_remote_type ($row) ;			// 7/6/11
 $is_mobile = (($row['mobile']==1) && (!(empty($row['callsign']))));		// 1/27/09, 3/15/10
 
@@ -280,7 +277,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
-						<SPAN CLASS='text_green text_biggest'>&nbsp;Edit '<?php print $row['name'];?>' data&nbsp;&nbsp;(#<?php print $id; ?>)</SPAN>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;Edit '<?php print e($row['name']);?>' data&nbsp;&nbsp;(#<?php print e($id); ?>)</SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 						<BR />
@@ -321,7 +318,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						<TD COLSPAN=2 CLASS='td_data_wrap text'>
 							<?php print get_responder_members($id);?>
 						</TD>
-						<INPUT TYPE="hidden" NAME = "frm_name" VALUE="<?php print $row['name'] ;?>" />
+						<INPUT TYPE="hidden" NAME = "frm_name" VALUE="<?php print e($row['name']) ;?>" />
 					</TR>
 					<TR class='spacer'>
 						<TD class='spacer' COLSPAN=99></TD>
@@ -335,7 +332,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>					
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="<?php print $row['name'] ;?>" />
+						<INPUT ID='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['name']) ;?>" />
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -344,8 +341,8 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print $row['handle'] ;?>" />
-						<SPAN STYLE = 'margin-left:30px' CLASS="td_label text"> Icon: </SPAN>&nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;<INPUT TYPE = 'text' NAME = 'frm_icon_str' SIZE = 3 MAXLENGTH=3 VALUE='<?php print $row['icon_str'] ;?>'>
+						<INPUT ID='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print e($row['handle']) ;?>" />
+						<SPAN STYLE = 'margin-left:30px' CLASS="td_label text"> Icon: </SPAN>&nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;<INPUT TYPE = 'text' NAME = 'frm_icon_str' SIZE = 3 MAXLENGTH=3 VALUE='<?php print e($row['icon_str']) ;?>'>
 					</TD>
 				</TR>
 <?php
@@ -450,7 +447,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 </SCRIPT>
 						<INPUT TYPE = 'button' onClick = alert(track_info) value="?">&nbsp;&raquo;&nbsp;
 				
-						<INPUT ID='callsign' SIZE="<?php print $key_field_size;?>" MAXLENGTH="<?php print $key_field_size;?>" TYPE="text" NAME="frm_callsign" VALUE="<?php print $row['callsign'];?>" />
+						<INPUT ID='callsign' SIZE="<?php print $key_field_size;?>" MAXLENGTH="<?php print $key_field_size;?>" TYPE="text" NAME="frm_callsign" VALUE="<?php print e($row['callsign']);?>" />
 					</TD>
 				</TR>
 <?php			
@@ -465,9 +462,8 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 							<SELECT ID='ringfence' NAME="frm_ringfence" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 								<OPTION VALUE=0>Select</OPTION>
 <?php
-								$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";		// 12/18/10
-								$result_bound = mysql_query($query_bound) or do_error($query_bound, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result_bound))) {
+								$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";		// 12/18/10
+								$result_bound = db_query($query_bound);								while ($row_bound = stripslashes_deep($result_bound->fetch_assoc())) {
 									$sel = ($row['ring_fence'] == $row_bound['id']) ? "SELECTED" : "";
 									print "\t<OPTION VALUE='{$row_bound['id']}' {$sel}>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 									}
@@ -484,9 +480,8 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 							<SELECT ID='exclusion' NAME="frm_excl_zone" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 								<OPTION VALUE=0>Select</OPTION>
 <?php
-								$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";		// 12/18/10
-								$result_bound = mysql_query($query_bound) or do_error($query_bound, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result_bound))) {
+								$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";		// 12/18/10
+								$result_bound = db_query($query_bound);								while ($row_bound = stripslashes_deep($result_bound->fetch_assoc())) {
 									$sel = ($row['excl_zone'] == $row_bound['id']) ? "SELECTED" : "";
 									print "\t<OPTION VALUE='{$row_bound['id']}' {$sel}>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
 									}
@@ -508,12 +503,11 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					<TD CLASS='td_data text' COLSPAN=2 ALIGN='left'>
 						<SELECT ID='unitstatus' NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; document.res_edit_Form.frm_log_it.value='1'; document.res_edit_Form.frm_status_update.value='1';">
 <?php
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
-							$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
+							$result_st = db_query($query);
 							$the_grp = strval(rand());			//  force initial optgroup value
 							$i = 0;
-							while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+							while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 							if ($the_grp != $row_st['group']) {
 								print ($i == 0)? "": "</OPTGROUP>\n";
 								$the_grp = $row_st['group'];
@@ -527,10 +521,9 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 						</SELECT>
 <?php
 						unset($result_st);
-						$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`=$id AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";
-						$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
-						$cbcount = mysql_affected_rows();				// count of incomplete assigns
+						$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id`=? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";
+						$result_as = db_query($query, [$id]);
+						$cbcount = db()->affected_rows;				// count of incomplete assigns
 						$dis_rmv = ($cbcount==0)? "": " DISABLED";		// allow/disallow removal
 						$cbtext = ($cbcount==0)? "": "&nbsp;&nbsp;<FONT size=-2>(NA - calls in progress: " .$cbcount . " )</FONT>";
 ?>
@@ -542,7 +535,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='about' SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="<?php print $row['status_about'] ;?>"  MAXLENGTH="512">
+						<INPUT ID='about' SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="<?php print e($row['status_about']) ;?>"  MAXLENGTH="512">
 					</TD>
 				</TR>
 				<TR class='spacer'>
@@ -554,7 +547,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='location' SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print $row['street'] ;?>"  MAXLENGTH="61">
+						<INPUT ID='location' SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print e($row['street']) ;?>"  MAXLENGTH="61">
 					</TD>
 				</TR> <!-- 7/5/10 -->
 				<TR CLASS='even'>
@@ -570,19 +563,18 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT ID='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print $row['city'] ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
+						<INPUT ID='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print e($row['city']) ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
 						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 						<A CLASS="td_label text" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;
-						<INPUT ID='state' SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print $row['state'] ;?>" MAXLENGTH="<?php print $st_size;?>">
+						<INPUT ID='state' SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print e($row['state']) ;?>" MAXLENGTH="<?php print $st_size;?>">
 					</TD>
 				</TR>
 
 <?php
-				$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `f`.`name` AS `fac_name`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` `f`
-					LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` `t` ON `f`.type = `t`.id 
+				$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `f`.`name` AS `fac_name`, `handle` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` `t` ON `f`.type = `t`.id 
 					ORDER BY `handle`";
-				$result_fac	= mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				if (mysql_num_rows($result_fac) > 0) {
+				$result_fac = db_query($query_fac);				if ($result_fac->num_rows > 0) {
 ?>
 					<TR CLASS = "odd" VALIGN='middle'>
 						<TD CLASS="td_label text">
@@ -601,7 +593,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 								}
-								while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac))) {
+								while ($row_fac = stripslashes_deep($result_fac->fetch_assoc())) {
 									$temp = explode("/", $row_fac['fac_name']);
 									$sel = ($row['at_facility'] == $row_fac['fac_id']) ? "SELECTED" : "";
 									echo "\t\t<OPTION VALUE = {$row_fac['fac_id']} CLASS = '' {$sel}>{$temp[0]}</OPTION>\n";
@@ -622,7 +614,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text' COLSPAN=2>
-						<INPUT id='phone' SIZE="12" MAXLENGTH="48" TYPE="text" NAME="frm_phone" VALUE="<?php print $row['phone'];?>" />
+						<INPUT id='phone' SIZE="12" MAXLENGTH="48" TYPE="text" NAME="frm_phone" VALUE="<?php print e($row['phone']);?>" />
 					</TD>
 				</TR>
 				<TR class='spacer'>
@@ -634,7 +626,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data_wrap text' COLSPAN=2>
-						<TEXTAREA ID='description' NAME="frm_descr" COLS=56 ROWS=2><?php print $row['description'];?></TEXTAREA>
+						<TEXTAREA ID='description' NAME="frm_descr" COLS=56 ROWS=2><?php print e($row['description']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -643,7 +635,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>					
 					<TD CLASS='td_data_wrap text' COLSPAN=2>
-						<TEXTAREA ID='capability' NAME="frm_capab" COLS=56 ROWS=2><?php print $row['capab'];?></TEXTAREA>
+						<TEXTAREA ID='capability' NAME="frm_capab" COLS=56 ROWS=2><?php print e($row['capab']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR ID = 'members_info_row' CLASS = "even" style='display: none;'>
@@ -674,7 +666,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print $row['name'];?>" />
+						<INPUT id='contact_name' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_contact_name" VALUE="<?php print e($row['name']);?>" />
 					</TD>
 				</TR>
 				<TR ID = 'contact_via_row' CLASS = "even">
@@ -683,7 +675,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='contact_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="<?php print $row['contact_via'];?>" />
+						<INPUT id='contact_email' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_contact_via" VALUE="<?php print e($row['contact_via']);?>" />
 					</TD>
 				</TR>
 				<TR ID = 'cellphone_row' CLASS = "odd">
@@ -692,7 +684,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='cellphone' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_cell" VALUE="<?php print $row['cellphone'];?>" />
+						<INPUT id='cellphone' SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_cell" VALUE="<?php print e($row['cellphone']);?>" />
 					</TD>
 				</TR>
 				<TR ID = 'smsg_provider_row' CLASS = "even">
@@ -701,7 +693,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='smsgid' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_smsg_id" VALUE="<?php print $row['smsg_id'] ;?>" />
+						<INPUT id='smsgid' SIZE="48" MAXLENGTH="48" TYPE="text" NAME="frm_smsg_id" VALUE="<?php print e($row['smsg_id']) ;?>" />
 					</TD>
 				</TR>
 <?php
@@ -797,7 +789,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 				</TR>
 			</TABLE>
 			<INPUT TYPE='hidden' NAME='frm_clr_pos' VALUE='' />
-			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" />
+			<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print e($row['id']) ;?>" />
 			<INPUT TYPE="hidden" NAME = "frm_lat" VALUE="<?php print $row['lat'] ;?>"/>
 			<INPUT TYPE="hidden" NAME = "frm_lng" VALUE="<?php print $row['lng'] ;?>"/>
 			<INPUT TYPE="hidden" NAME = "frm_log_it" VALUE=""/>

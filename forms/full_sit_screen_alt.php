@@ -43,9 +43,9 @@ $un_stat_cats = get_all_categories();
 $api_key = get_variable('gmaps_api_key');
 $statsRedThresholds = explode(',', get_variable('inc_statistics_red_thresholds'));
 $statsOrangeThresholds = explode(',', get_variable('inc_statistics_orange_thresholds'));
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
-$result	= mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){	
 	$states[$row['name']] = $row['code'];
 	}
 $pageBG = get_css("row_dark", $day_night);

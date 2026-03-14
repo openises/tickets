@@ -441,9 +441,9 @@ if ($board == 2) {
 	$cb_min = 96;
 	$cb_max = 300;
 	
-	$queryna = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
-	$resultna = @mysql_query($queryna);
-	$lines = mysql_num_rows($resultna);
+	$queryna = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
+	$resultna = db_query($queryna);
+	$lines = $resultna->num_rows;
 	unset($resultna);
 	$height = (($lines*$cb_per_line ) + $cb_fixed_part);
 	$height = ($height<$cb_min)? $cb_min: $height;

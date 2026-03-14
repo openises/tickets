@@ -7,9 +7,9 @@ $wiz_settings = array();
 $showfields = array();
 $wizfields = array();
 $addformlabels = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]wizard_settings` ORDER BY `screen` ASC, `display_order` ASC";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}wizard_settings` ORDER BY `screen` ASC, `display_order` ASC";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$wiz_settings[$row['screen']][$row['display_order']] = $row['fieldname'];
 	$wizard[] = $row;
 	$wizfields[] = $row['fieldname'];
@@ -170,7 +170,7 @@ function get_wizard_field_control($theField, $field_name) {
 			$table = $fieldtable[$thefield];
 			$values = array();
 			$values[$GLOBALS['STATUS_OPEN']] = "OPEN";
-			$values[$GLOBALS['STATUS_SCHEDULED']] = "SCHEDULED";			
+			$values[$GLOBALS['STATUS_SCHEDULED']] = "SCHEDULED";		
 			$theControl = get_select_fromvalues($values, $addformfields[$field_name], $label);
 			break;
 		default:
@@ -178,7 +178,7 @@ function get_wizard_field_control($theField, $field_name) {
 		}
 	return $theControl;
 	}
-	
+
 function generate_date_select($date_suffix, $default_date=0, $theLabel, $disabled=FALSE) {
 	global $tabindex;
 	$label = "dateselect_" . $date_suffix;
@@ -236,7 +236,7 @@ function generate_date_select($date_suffix, $default_date=0, $theLabel, $disable
 				$output .= "<OPTION VALUE='$i'";
 				$output .= ($month == $i) ? " SELECTED>" . $i . "</OPTION>" : ">" . $i . "</OPTION>\n";
 				}
-			
+		
 			$output .= "</SELECT>&nbsp;";
 			$tabindex++;
 			$output .= "<SELECT id='wiz_frm_day_" . $date_suffix . "' tabindex=" . $tabindex . " name='wiz_frm_day_" . $date_suffix . "' " . $dis_str . " onChange='set_datselectvalue(\"frm_day_" . $date_suffix . "\", this.selectedIndex);'>\n";
@@ -254,7 +254,7 @@ function generate_date_select($date_suffix, $default_date=0, $theLabel, $disable
 				$output .= "<OPTION VALUE='" . $i . "'";
 				$output .= ($day == $i) ? " SELECTED>" . $i . "</OPTION>" : ">" . $i . "</OPTION>\n";
 				}
-	
+
 			$output .= "</SELECT>";
 			$tabindex++;
 			$output .= "&nbsp;<SELECT id='wiz_frm_month_" . $date_suffix . "' tabindex=" . $tabindex . " name='wiz_frm_month_" . $date_suffix . "' " . $dis_str . " onChange='set_datselectvalue(\"frm_month_" . $date_suffix . "\", this.selectedIndex);'>\n";
@@ -280,7 +280,7 @@ function generate_date_select($date_suffix, $default_date=0, $theLabel, $disable
 				$output .= "<OPTION VALUE=\"$i\"";
 				$output .= ($day == $i) ? " SELECTED>" . $i . "</OPTION>" : ">" . $i . "</OPTION>\n";
 				}
-	
+
 			$output .= "</SELECT>";
 			$tabindex++;
 			$output .= "&nbsp;<SELECT id='wiz_frm_month_" . $date_suffix . "' tabindex=" . $tabindex . " name='wiz_frm_month_" . $date_suffix . "' " . $dis_str . " onChange='set_datselectvalue(\"frm_month_" . $date_suffix . "\", this.selectedIndex);'>\n";
@@ -304,7 +304,7 @@ function generate_date_select($date_suffix, $default_date=0, $theLabel, $disable
 		    $output .= "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 		}
 
-	
+
 	$output .= "<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' tabindex=" . $tabindex . " NAME='wiz_frm_hour_" . $date_suffix . "' VALUE='" . $hour . "' " . $dis_str . " onChange='set_controlvalue(\"frm_hour_" . $date_suffix . "\", this.selectedIndex);'>:";
 	$tabindex++;
 	$output .= "<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' tabindex=" . $tabindex . " NAME='wiz_frm_minute_" . $date_suffix . "' VALUE='" . $minute . "' " . $dis_str . " onChange='set_controlvalue(\"frm_minute_" . $date_suffix . "\", this.selectedIndex);'>";
@@ -327,17 +327,16 @@ function generate_date_select($date_suffix, $default_date=0, $theLabel, $disable
 		}
 	return $output;
 	}		// end function generate_date_select(
-	
+
 function get_intypes_control() {
 	global $titles, $nature, $tabindex;
 	$theControl = "<LABEL for='wiz_in_types_id' onmouseout='UnTip()' onmouseover='Tip(\"" . $titles['_nature'] . "\");'>" . $nature . ":<font color='red' size='-1'>*</font></LABEL>";
 	$theControl .= "<SELECT id='wiz_in_types_id' NAME='sel_in_types_id' tabindex=" . $tabindex . " onChange='do_set_severity (this.selectedIndex); do_inc_protocol(this.options[selectedIndex].value.trim());'>\n";
 	$theControl .= "<OPTION VALUE=0 SELECTED>TBD</OPTION>\n";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
-	$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$the_grp = strval(rand());
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
+	$temp_result = db_query($query);	$the_grp = strval(rand());
 	$i = 0;
-	while ($temp_row = stripslashes_deep(mysql_fetch_array($temp_result))) {
+	while ($temp_row = stripslashes_deep($temp_result->fetch_array())) {
 		if ($the_grp != $temp_row['group']) {
 			$theControl .= ($i == 0)? "": "</OPTGROUP>\n";
 			$the_grp = $temp_row['group'];
@@ -365,7 +364,7 @@ function get_intypes_control() {
 	$tabindex ++;
 	return $theControl;
 	}
-	
+
 function get_select_fromtable($table, $selectname, $selectid, $label, $valname, $extra, $mand=NULL) {
 	if($extra == "portal") {$where = "WHERE `level` = 7";} else {$where = "";}
 	global $titles, $nature, $tabindex;
@@ -373,9 +372,9 @@ function get_select_fromtable($table, $selectname, $selectid, $label, $valname, 
 	$theControl = "<LABEL for='" . $selectid . "' onmouseout='UnTip()' onmouseover='Tip(\"" . get_text($label) . "\");'>" . get_text($label) . ": " . $mandtext . "</LABEL>\n";
 	$theControl .= "<SELECT id='" . $selectid . "' NAME='" . $selectname . "' tabindex=" . $tabindex . " onChange='do_set_severity (this.selectedIndex); do_inc_protocol(this.options[selectedIndex].value.trim());'>\n";
 	$theControl .= "<OPTION VALUE=0 SELECTED>Select One</OPTION>\n";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]" . $table . "` " . $where . " ORDER BY `id`";
-	$result = mysql_query($query);
-	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $table . "` " . $where . " ORDER BY `id`";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_array())) {
 		$theControl .= "<OPTION VALUE='" . $row['id'] . "' >" . addslashes($row[$valname]) . "</OPTION>\n";
 		}		// end while()
 	$theControl .= "</SELECT>\n";
@@ -394,7 +393,7 @@ function get_select_fromvalues($values, $selectname, $selectid) {
 	$theControl .= "</SELECT>\n";
 	$tabindex++;
 	return $theControl;
-	}	
+	}
 
 function get_input($inputname, $inputid, $fieldid, $size, $maxlength, $other) {
 	global $tabindex;
@@ -431,7 +430,7 @@ function get_address_control() {
 	if ($gmaps || $doloc|| $good_internet) {
 		$theControl .= "<LABEL for='wiz_lock_p' onmouseout='UnTip()' onmouseover=\"Tip('" . $titles["_coords"] . "');\">" . $incident . " Lat/Lng: <font color='red' size='-1'>*</font>";
 		$theControl .= "<img id='wiz_lock_p' border=0 src='./markers/unlock2.png' STYLE='vertical-align: middle; margin-left: 20px;' onClick = 'do_unlock_pos(document.add);'>";
-		$theControl .= "</LABEL>";			
+		$theControl .= "</LABEL>";		
 		$theControl .= "<INPUT ID='wiz_show_lat' SIZE='8' tabindex=" . $tabindex . " TYPE='text' NAME='wiz_show_lat' VALUE='' style='width: 50px;' />";
 		$tabindex++;
 		$theControl .= "<INPUT ID='wiz_show_lng' SIZE='8' tabindex=" . $tabindex . " TYPE='text' NAME='wiz_show_lng' VALUE='' style='width: 50px;' />";
@@ -449,7 +448,7 @@ function get_address_control() {
 		}		// end else
 	return $theControl;
 	}
-	
+
 function get_textarea($inputname, $inputid, $fieldid, $defaultText) {
 	global $tabindex;
 	$thiscontrol = "wiz_" . $inputid;
@@ -458,7 +457,7 @@ function get_textarea($inputname, $inputid, $fieldid, $defaultText) {
 	$tabindex++;
 	return $theControl;
 	}
-	
+
 function aasort ($array, $key) {
     $sorter=array();
     $ret=array();
@@ -476,14 +475,14 @@ function aasort ($array, $key) {
 
 function get_wizard_table() {
 	$ret_arr = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]wizard_settings`";
-	$result = mysql_query($query);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}wizard_settings`";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$ret_arr[] = $row;;
 		}
 	return $ret_arr;
 	}
-	
+
 function get_screen($screen, $inputArray, $heading) {
 	global $showfields, $screencount, $wizard, $wizfields;
 	$thisScreen = intval($screen);
@@ -518,7 +517,7 @@ function get_screen($screen, $inputArray, $heading) {
 	$output .= "</DIV>\n";
 	return $output;
 	}
-	
+
 ?>
 <SCRIPT>
 var stageval1;
@@ -533,25 +532,25 @@ function modalStart() {
 	var thestage = $("stage1");
 	modal.style.display = "block";
 	modal.zIndex = 5000;
-	thestage.style.display = "block"		
+	thestage.style.display = "block"	
 	}
-	
+
 function doModal(current, next) {
 	var currentstage = "stage" + current;
 	var nextstage = "stage" + next;
 	$(currentstage).style.display = "none";
 	$(nextstage).style.display = "block";
 	}
-	
+
 function closeModal(stage) {
 	}
-	
+
 function modalEnd() {
 	modal = $('myModal');
 	modal.style.display = "none";
 	validate(document.add);
 	}
-	
+
 function modalCancel() {
 	var in_win = <?php print $in_win;?>;
 	if(in_win == 1) {
@@ -561,14 +560,14 @@ function modalCancel() {
 		modal.style.display = "none";
 		}
 	}
-	
+
 // When the user clicks anywhere outside of the modal, close it
 /* window.onclick = function(event) {
 	if (event.target == modal) {
 		modal.style.display = "none";
 		}
 	} */
-	
+
 function get_bldg(in_val) {									// called with zero-based array index - 3/29/2014
 	if(myMarker) {map.removeLayer(marker); }
 	var obj_bldg = bldg_arr[in_val];						// nth object
@@ -578,7 +577,7 @@ function get_bldg(in_val) {									// called with zero-based array index - 3/29
 	var theLat = parseFloat(obj_bldg.bldg_lat).toFixed(6);
 	var theLng = parseFloat(obj_bldg.bldg_lon).toFixed(6);
 	}		// end function do_bldg()
-	
+
 
 </SCRIPT>
 <DIV id="myModal" class="modal">	<!-- Modal Box Outside wrapper -->
@@ -588,7 +587,7 @@ function get_bldg(in_val) {									// called with zero-based array index - 3/29
 	for($i = 1; $i <= $numScreens; $i++) {
 		print get_screen($i, $wiz_settings[$i], "Screen " . $i . " of " . $numScreens . " ");
 		}
-		
+	
 ?>
 	</FORM>
 </DIV>

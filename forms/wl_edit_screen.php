@@ -116,10 +116,9 @@ function validate(theForm) {
 </SCRIPT>
 <?php
 
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT * FROM $GLOBALS[mysql_prefix]warnings WHERE id=$id";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= mysql_fetch_assoc($result);
+$id = sanitize_int($_GET['id']);
+$query	= "SELECT * FROM {$GLOBALS['mysql_prefix']}warnings WHERE id=?";
+$result = db_query($query, [$id]);$row	= $result->fetch_assoc();
 
 $lat = $row['lat'];
 $lng = $row['lng'];
@@ -137,7 +136,7 @@ $lng = $row['lng'];
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='3'>
-						<SPAN CLASS='text_green text_biggest'>Edit <?php print get_text("Warn Location"); ?> '<?php print $row['title'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></SPAN>
+						<SPAN CLASS='text_green text_biggest'>Edit <?php print get_text("Warn Location"); ?> '<?php print e($row['title']);?>' data</FONT>&nbsp;&nbsp;(#<?php print e($id); ?>)</FONT></SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 						<BR />
@@ -145,7 +144,7 @@ $lng = $row['lng'];
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Location Name - fill in with Name of location">Name</A>:&nbsp;<font color='red' size='-1'>*</font></TD>
-					<TD COLSPAN=3><INPUT ID='name' CLASS='text' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print $row['title'] ;?>" /></TD>
+					<TD COLSPAN=3><INPUT ID='name' CLASS='text' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['title']) ;?>" /></TD>
 				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN='2'></TD>
@@ -156,7 +155,7 @@ $lng = $row['lng'];
 ?>
 				<TR CLASS='even'>
 					<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Street Address - type in street address in fields or click location on map ">Location</A>:</TD>
-					<TD><INPUT ID='street' CLASS='text' SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print $row['street'] ;?>"  MAXLENGTH="61"></TD>
+					<TD><INPUT ID='street' CLASS='text' SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print e($row['street']) ;?>"  MAXLENGTH="61"></TD>
 				</TR>
 				<TR CLASS='odd'>
 					<TD CLASS="td_label text">
@@ -164,10 +163,10 @@ $lng = $row['lng'];
 						&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.loc_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button>
 					</TD>
 					<TD CLASS='td_data text'>
-						<INPUT ID='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print $row['city'] ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
+						<INPUT ID='city' SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print e($row['city']) ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)">
 						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 						<A CLASS="td_label text" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:
-						&nbsp;&nbsp;<INPUT CLASS='text' ID='state' SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print $row['state'] ;?>" MAXLENGTH="<?php print $st_size;?>">
+						&nbsp;&nbsp;<INPUT CLASS='text' ID='state' SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print e($row['state']) ;?>" MAXLENGTH="<?php print $st_size;?>">
 					</TD>
 				</TR>
 				<TR class='even'>
@@ -195,7 +194,7 @@ $lng = $row['lng'];
 						<A CLASS="td_label text" HREF="#" TITLE="Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
 					</TD>	
 					<TD COLSPAN=3>
-						<TEXTAREA CLASS='text' ID='description' NAME="frm_descr" COLS=60 ROWS=2><?php print $row['description'];?></TEXTAREA>
+						<TEXTAREA CLASS='text' ID='description' NAME="frm_descr" COLS=60 ROWS=2><?php print e($row['description']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "even">

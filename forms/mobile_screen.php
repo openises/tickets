@@ -36,31 +36,29 @@ if (array_key_exists('frm_mode', $_GET)) {
 		$mode = UNIT;
 		$initScreen = (get_variable('restrict_units') == "1") ? "hide_topframe(); hide_barselect();" : "";
 		} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
+		$result = db_query($query, [$_SESSION['user_id']]);		$user_row = stripslashes_deep($result->fetch_assoc());
 		$mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;		// $mode => 'all' if no unit associated this user - 10/3/10
 		}
 	}		// end if/else initialize $mode
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
+$result = db_query($query, [$_SESSION['user_id']]);$user_row = stripslashes_deep($result->fetch_assoc());
 $unit_id =  intval($user_row['responder_id']);
 
 $users_arr = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users = db_query($query);while ($row_users = stripslashes_deep($result_users->fetch_assoc())) 	{
 	$users_arr[$row_users['id']] = $row_users['responder_id'];
 	}
 
 function get_unitname($id) {
-	$query = "SELECT * FROM  `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM  `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+
+	$result = db_query($query, [$id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$return = $row['handle'];
 		} else {
 		$return = "Unk";

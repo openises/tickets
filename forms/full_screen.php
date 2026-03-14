@@ -41,9 +41,9 @@ $api_key = get_variable('gmaps_api_key');
 $key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps_ok = ($key_str) ? 1 : 0;
 $showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
-$result	= mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){	
 	$states[$row['name']] = $row['code'];
 	}
 

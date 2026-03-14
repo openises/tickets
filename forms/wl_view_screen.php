@@ -78,13 +78,12 @@ function set_size() {
 
 </SCRIPT>
 <?php
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]warnings` WHERE `id`= " . $id . " LIMIT 1";	// 1/19/2013
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
+$id = sanitize_int($_GET['id']);
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}warnings` WHERE `id`= ? LIMIT 1";	// 1/19/2013
+$result = db_query($query, [$id]);$row	= stripslashes_deep($result->fetch_assoc());
 $lat = $row['lat'];
 $lng = $row['lng'];
-$coords =  $row['lat'] . "," . $row['lng'];		// for UTM			
+$coords =  $row['lat'] . "," . $row['lng'];		// for UTM
 ?>
 </HEAD>
 <BODY>
@@ -98,7 +97,7 @@ $coords =  $row['lat'] . "," . $row['lng'];		// for UTM
 				</TR>
 				<TR CLASS='even'>
 					<TD CLASS='odd' ALIGN='center' COLSPAN='2'>
-						<SPAN CLASS='text_green text_biggest'>&nbsp;View Warn Location '<?php print $row['title'] ;?>' Data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></SPAN>
+						<SPAN CLASS='text_green text_biggest'>&nbsp;View Warn Location '<?php print e($row['title']) ;?>' Data</FONT>&nbsp;&nbsp;(#<?php print e($id); ?>)</FONT></SPAN>
 						<BR />
 						<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
 						<BR />
@@ -109,19 +108,19 @@ $coords =  $row['lat'] . "," . $row['lng'];		// for UTM
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text"><?php print get_text("Name"); ?>: </TD>
-					<TD CLASS='td_data text'><?php print $row['title'];?></TD>
+					<TD CLASS='td_data text'><?php print e($row['title']);?></TD>
 				</TR>
 				<TR CLASS = 'odd'>
 					<TD CLASS="td_label text"><?php print get_text("Location"); ?>: </TD>
-					<TD CLASS='td_data text'><?php print $row['street'] ;?></TD>
+					<TD CLASS='td_data text'><?php print e($row['title']) ;?></TD>
 				</TR>
 				<TR CLASS = 'even'>
 					<TD CLASS="td_label text"><?php print get_text("City"); ?>: &nbsp;&nbsp;&nbsp;&nbsp;</TD>
-					<TD CLASS='td_data text'><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD>
+					<TD CLASS='td_data text'><?php print e($row['street']) ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print e($row['street']) ;?></TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text"><?php print get_text("Description"); ?>: </TD>
-					<TD CLASS='td_data_wrap text' style='height: 50px;'><?php print $row['description'];?></TD>
+					<TD CLASS='td_data_wrap text' style='height: 50px;'><?php print e($row['description']);?></TD>
 				</TR>
 				<TR CLASS = 'even'>
 					<TD CLASS="td_label text">As of:</TD>	
@@ -187,7 +186,7 @@ $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
 print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 ?>
 <FORM NAME='can_Form' METHOD="post" ACTION = "warn_locations.php"></FORM>
-<FORM NAME="to_edit_Form" METHOD="post" ACTION = "warn_locations.php?edit=true&id=<?php print $id; ?>"></FORM>
+<FORM NAME="to_edit_Form" METHOD="post" ACTION = "warn_locations.php?edit=true&id=<?php print e($id); ?>"></FORM>
 <A NAME="bottom" /> 
 <DIV ID='to_top' style="position:fixed; bottom:50px; left:10px; height: 12px; width: 10px; z-index: 9999;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>			
 <SCRIPT>

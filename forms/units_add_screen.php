@@ -52,9 +52,9 @@ var outerheight;
 var fac_lat = [];
 var fac_lng = [];
 <?php
-$query = "SELECT `id`, `lat`, `lng` FROM `$GLOBALS[mysql_prefix]facilities`";
-$result = mysql_query($query);
-while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+$query = "SELECT `id`, `lat`, `lng` FROM `{$GLOBALS['mysql_prefix']}facilities`";
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	print "\tfac_lat[" . $row['id'] . "] = " . $row['lat'] . " ;\n";
 	print "\tfac_lng[" . $row['id'] . "] = " . $row['lng'] . " ;\n";
 	}
@@ -502,9 +502,8 @@ function do_fac_to_loc(index){			// 9/22/09
 								<SELECT id='ringfence' NAME="frm_ringfence" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_rf` = 1 ORDER BY `line_name` ASC";
+									$result = db_query($query);									while ($row_bound = stripslashes_deep($result->fetch_assoc())) {
 										print "\t<OPTION VALUE='{$row_bound['id']}'>{$row_bound['line_name']}</OPTION>\n";
 										}
 ?>
@@ -519,9 +518,8 @@ function do_fac_to_loc(index){			// 9/22/09
 								<SELECT id='exclusion' NAME="frm_excl_zone" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_u_ex` = 1 ORDER BY `line_name` ASC";
+									$result = db_query($query);									while ($row_bound = stripslashes_deep($result->fetch_assoc())) {
 										print "\t<OPTION VALUE='{$row_bound['id']}'>{$row_bound['line_name']}</OPTION>\n";
 										}
 ?>
@@ -597,11 +595,10 @@ function do_fac_to_loc(index){			// 9/22/09
 					<SELECT id='unitstatus' NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
 						<OPTION VALUE='0' SELECTED>Select one</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
-						$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-						$the_grp = strval(rand());			//  force initial optgroup value
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
+						$result_st = db_query($query);						$the_grp = strval(rand());			//  force initial optgroup value
 						$i = 0;
-						while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+						while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 							if ($the_grp != $row_st['group']) {
 								print ($i == 0)? "": "\t</OPTGROUP>\n";
 								$the_grp = $row_st['group'];
@@ -650,11 +647,10 @@ function do_fac_to_loc(index){			// 9/22/09
 				</TD>
 			</TR>
 <?php
-			$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` `f`
-				LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` `t` ON `f`.type = `t`.id 
+			$query_fac	= "SELECT `f`.`id` AS `fac_id`, `lat`, `lng`, `type`, `handle` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` `t` ON `f`.type = `t`.id 
 				ORDER BY `handle`";
-			$result_fac	= mysql_query($query_fac) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			if (mysql_num_rows($result_fac) > 0) {
+			$result_fac = db_query($query_fac);			if ($result_fac->num_rows > 0) {
 ?>
 				<TR CLASS = "odd" VALIGN='middle'>
 					<TD CLASS="td_label text">
@@ -666,7 +662,7 @@ function do_fac_to_loc(index){			// 9/22/09
 						<SELECT id='atfacility' NAME='frm_facility_sel' onChange="do_fac_to_loc(this.options[selectedIndex].value.trim());">
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-							while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result_fac))) {
+							while ($row_fac = stripslashes_deep($result_fac->fetch_assoc())) {
 								echo "\t\t<OPTION VALUE = {$row_fac['fac_id']} CLASS = ''>{$row_fac['handle']}</OPTION>\n";
 								}
 ?>

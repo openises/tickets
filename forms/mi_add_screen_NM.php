@@ -71,7 +71,7 @@ function set_size() {
 	listHeight = viewportheight * .7;
 	listwidth = leftcolwidth;
 	fieldwidth = colwidth * .6;
-	medfieldwidth = colwidth * .3;		
+	medfieldwidth = colwidth * .3;	
 	smallfieldwidth = colwidth * .2;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
@@ -129,7 +129,7 @@ function contains(array, item) {
 		}
 	return false;
 	}
-	
+
 function collect(){				// constructs a string of id's for deletion
 	var str = sep = "";
 	for (i=0; i< document.del_Form.elements.length; i++) {
@@ -149,14 +149,14 @@ function do_end(theForm) {
 		theForm.frm_month_inc_endtime.disabled = true;
 		theForm.frm_day_inc_endtime.disabled = true;
 		theForm.frm_hour_inc_endtime.disabled = true;
-		theForm.frm_minute_inc_endtime.disabled = true;		
+		theForm.frm_minute_inc_endtime.disabled = true;	
 		} else {
 		elem.style.visibility = "visible";
 		theForm.frm_year_inc_endtime.disabled = false;
 		theForm.frm_month_inc_endtime.disabled = false;
 		theForm.frm_day_inc_endtime.disabled = false;
 		theForm.frm_hour_inc_endtime.disabled = false;
-		theForm.frm_minute_inc_endtime.disabled = false;		
+		theForm.frm_minute_inc_endtime.disabled = false;	
 		}
 	}
 </SCRIPT>
@@ -182,7 +182,7 @@ function do_end(theForm) {
 			</TR>
 			<TR class='spacer'>
 				<TD class='spacer' COLSPAN=99></TD>
-			</TR>	
+			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Major Incident Name">Name</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
 				<TD COLSPAN=3 >
@@ -211,9 +211,8 @@ function do_end(theForm) {
 					<SELECT ID='type' NAME="frm_type">	<!--  11/17/10 -->
 						<OPTION VALUE=0>Select</OPTION>
 <?php
-						$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_types` ORDER BY `id` ASC";		// 12/18/10
-						$result_bound = mysql_query($query_bound) or do_error($query_bound, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row_types = stripslashes_deep(mysql_fetch_assoc($result_bound))) {
+						$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_types` ORDER BY `id` ASC";		// 12/18/10
+						$result_bound = db_query($query_bound);						while ($row_types = stripslashes_deep($result_bound->fetch_assoc())) {
 							print "\t<OPTION VALUE='{$row_types['id']}'>{$row_types['name']}</OPTION>\n";		// pipe separator
 							}
 ?>
@@ -239,15 +238,14 @@ function do_end(theForm) {
 					<SELECT ID='boundary' NAME="frm_boundary" onChange = "this.value=JSfnTrim(this.value)">
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` ORDER BY `line_name` ASC";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result))) {
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` ORDER BY `line_name` ASC";
+						$result = db_query($query);						while ($row_bound = stripslashes_deep($result->fetch_assoc())) {
 							print "\t<OPTION VALUE='{$row_bound['id']}'>{$row_bound['line_name']}</OPTION>\n";
 							}
 ?>
 					</SELECT>&nbsp;
 				</TD>
-			</TR>			
+			</TR>		
 				<TR CLASS='even' VALIGN="top">
 					<TD CLASS='td_label text top'>
 						<A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Gold Command");?>"><?php print get_text("Gold Command");?></A>:
@@ -257,9 +255,8 @@ function do_end(theForm) {
 							<SELECT id='gold' NAME="frm_gold" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'gold_command_data'); showtheDiv('gold_location_data');">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_gold = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row_gold = stripslashes_deep($result->fetch_assoc())) {
 									print "\t<OPTION VALUE='" . $row_gold['id'] . "'>" . $row_gold['user'] . " - " . $row_gold['name_f'] . " " . $row_gold['name_l'] . "</OPTION>\n";
 									}
 ?>
@@ -276,7 +273,7 @@ function do_end(theForm) {
 							</TABLE>
 						</DIV>
 					</TD>
-				</TR>	
+				</TR>
 				<TR CLASS='odd' VALIGN="top">
 					<TD CLASS='td_label text top'>
 						<A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Silver Command");?>"><?php print get_text("Silver Command");?></A>:
@@ -286,9 +283,8 @@ function do_end(theForm) {
 							<SELECT id='silver' NAME="frm_silver" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'silver_command_data'); showtheDiv('silver_location_data');">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_silver = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row_silver = stripslashes_deep($result->fetch_assoc())) {
 									print "\t<OPTION VALUE='" . $row_silver['id'] . "'>" . $row_silver['user'] . " - " . $row_silver['name_f'] . " " . $row_silver['name_l'] . "</OPTION>\n";
 									}
 ?>
@@ -305,7 +301,7 @@ function do_end(theForm) {
 							</TABLE>
 						</DIV>
 					</TD>
-				</TR>	
+				</TR>
 				<TR CLASS='even' VALIGN="top">
 					<TD CLASS='td_label text top'>
 						<A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Bronze Command");?>"><?php print get_text("Bronze Command");?></A>:
@@ -315,9 +311,8 @@ function do_end(theForm) {
 							<SELECT id='bronze' NAME="frm_bronze" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'bronze_command_data'); showtheDiv('bronze_location_data');">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_bronze = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row_bronze = stripslashes_deep($result->fetch_assoc())) {
 									print "\t<OPTION VALUE='" . $row_bronze['id'] . "'>" . $row_bronze['user'] . " - " . $row_bronze['name_f'] . " " . $row_bronze['name_l'] . "</OPTION>\n";
 									}
 ?>
@@ -334,7 +329,7 @@ function do_end(theForm) {
 							</TABLE>
 						</DIV>
 					</TD>
-				</TR>	
+				</TR>
 				<TR CLASS='odd' VALIGN="top">
 					<TD CLASS='td_label text top'>
 						<A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Level 4 Command");?>"><?php print get_text("Level 4 Command");?></A>:
@@ -344,9 +339,8 @@ function do_end(theForm) {
 							<SELECT id='level4' NAME="frm_level4" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level4_command_data'); showtheDiv('level4_location_data');">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_level4 = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row_level4 = stripslashes_deep($result->fetch_assoc())) {
 									print "\t<OPTION VALUE='" . $row_level4['id'] . "'>" . $row_level4['user'] . " - " . $row_level4['name_f'] . " " . $row_level4['name_l'] . "</OPTION>\n";
 									}
 ?>
@@ -363,7 +357,7 @@ function do_end(theForm) {
 							</TABLE>
 						</DIV>
 					</TD>
-				</TR>	
+				</TR>
 				<TR CLASS='even' VALIGN="top">
 					<TD CLASS='td_label text top'>
 						<A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Level 5 Command");?>"><?php print get_text("Level 5 Command");?></A>:
@@ -373,9 +367,8 @@ function do_end(theForm) {
 							<SELECT id='level5' NAME="frm_level5" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level5_command_data'); showtheDiv('level5_location_data');">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_level5 = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row_level5 = stripslashes_deep($result->fetch_assoc())) {
 									print "\t<OPTION VALUE='" . $row_level5['id'] . "'>" . $row_level5['user'] . " - " . $row_level5['name_f'] . " " . $row_level5['name_l'] . "</OPTION>\n";
 									}
 ?>
@@ -392,7 +385,7 @@ function do_end(theForm) {
 							</TABLE>
 						</DIV>
 					</TD>
-				</TR>	
+				</TR>
 				<TR CLASS='odd' VALIGN="top">
 					<TD CLASS='td_label text top'>
 						<A CLASS="td_label text" HREF="#"  TITLE="<?php print get_text("Level 6 Command");?>"><?php print get_text("Level 6 Command");?></A>:
@@ -402,9 +395,8 @@ function do_end(theForm) {
 							<SELECT id='level6' NAME="frm_level6" onChange = "this.value=JSfnTrim(this.value); set_command_info(this.value, 'level6_command_data'); showtheDiv('level6_location_data');">
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row_level6 = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row_level6 = stripslashes_deep($result->fetch_assoc())) {
 									print "\t<OPTION VALUE='" . $row_level6['id'] . "'>" . $row_level6['user'] . " - " . $row_level6['name_f'] . " " . $row_level6['name_l'] . "</OPTION>\n";
 									}
 ?>
@@ -421,14 +413,14 @@ function do_end(theForm) {
 							</TABLE>
 						</DIV>
 					</TD>
-				</TR>	
+				</TR>
 				<TR class='spacer'>
 					<TD class='spacer' COLSPAN=99></TD>
-				</TR>			
+				</TR>		
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Description - details about Major Incidents"><?php print get_text("Description");?></A>:&nbsp;<font color='red' size='-1'>*</font>
-					</TD>	
+					</TD>
 					<TD COLSPAN=3 >
 						<TEXTAREA id='description' NAME="frm_descr" COLS=56 ROWS=5></TEXTAREA>
 					</TD>
@@ -436,7 +428,7 @@ function do_end(theForm) {
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Actions and Notes"><?php print get_text("Disposition");?></A>:&nbsp;
-					</TD>	
+					</TD>
 					<TD COLSPAN=3 >
 						<TEXTAREA id='notes' NAME="frm_notes" COLS=56 ROWS=5></TEXTAREA>
 					</TD>
@@ -485,13 +477,12 @@ function do_end(theForm) {
 						<TD CLASS='td_data text'>
 							<DIV>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' ORDER BY `id` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row	= stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `{$GLOBALS['mysql_prefix']}ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' ORDER BY `id` ASC";
+								$result = db_query($query);								while ($row	= stripslashes_deep($result->fetch_assoc())) {
 									$the_id = $row['id'];
 									print "<input type='checkbox' name='frm_inc[]' value='" . $row['id'] . "'><SPAN class='link' onClick='do_popup(" . $the_id . ");'>" . $row['scope'] . "</SPAN><BR />";
 									}
-?>					
+?>				
 							</DIV>
 						</TD>
 					</TR>
@@ -530,7 +521,7 @@ rightcolwidth = viewportwidth * .42;
 listHeight = viewportheight * .7;
 listwidth = leftcolwidth;
 fieldwidth = colwidth * .6;
-medfieldwidth = colwidth * .3;		
+medfieldwidth = colwidth * .3;	
 smallfieldwidth = colwidth * .2;
 $('outer').style.width = outerwidth + "px";
 $('outer').style.height = outerheight + "px";
@@ -562,7 +553,7 @@ if($good_internet) {
 	var useOSMAP = <?php print get_variable('use_osmap');?>;
 	var initZoom = <?php print get_variable('def_zoom');?>;
 	init_map(1, <?php print $def_lat;?>, <?php print $def_lng;?>, "", parseInt(initZoom), theLocale, useOSMAP, "tr");
-	var bounds = map.getBounds();	
+	var bounds = map.getBounds();
 	var zoom = map.getZoom();
 <?php
 	}

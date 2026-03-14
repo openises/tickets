@@ -9,11 +9,10 @@ print (array_key_exists("caption", $_POST))? "<H3>{$_POST['caption']}</H3>" : ""
 $type_ary = array( "p" =>"Polygon",					"c" => "Circle", "t" => "Banner", "k" => "kml");
 $capt_ary = array( "p" =>"click map - drag icons",	"c" => "Click map and enter form values", "t" => "Click map and enter form values",  "k" => "kml");
 $line_ary = array( "p" =>"Line", 					"c" =>"Circle", "t" =>"Banner", "k" => "kml");
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-$cats_sel = "<SELECT ID='cat_list' NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` ORDER BY `category` ASC";		
+$result = db_query($query);$cats_sel = "<SELECT ID='cat_list' NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
 $cats_sel .= "<OPTION VALUE=0 SELECTED >Select</OPTION>\n";
-while ($row = mysql_fetch_assoc($result)) {
+while ($row = $result->fetch_assoc()) {
 	$cats_sel .= "<OPTION VALUE=\"{$row['id']}\">" . shorten($row['category'], 30) . "</OPTION>\n";
 	}
 $cats_sel .= "</SELECT>\n";
