@@ -44,10 +44,10 @@
 <?php
 		$mg_select = "<SELECT ID='ID10' NAME='frm_notify_mailgroup'>";
 		$mg_select .= "<OPTION VALUE=0 SELECTED>Select Mail List</OPTION>";
-		$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup`";		// 12/18/10
-		$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
-			$mg_select .= "<OPTION VALUE=" . $row_mg['id'] . ">" . $row_mg['name'] . "</OPTION>";
+		$query_mg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup`";		// 12/18/10
+		$result_mg = db_query($query_mg);
+		while ($row_mg = stripslashes_deep($result_mg->fetch_assoc())) {
+			$mg_select .= "<OPTION VALUE=" . e($row_mg['id']) . ">" . e($row_mg['name']) . "</OPTION>";
 			}
 		$mg_select .= "</SELECT>";
 ?>

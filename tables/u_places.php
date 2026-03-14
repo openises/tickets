@@ -104,12 +104,12 @@
 		<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>" />
 		<INPUT TYPE="hidden" NAME="tablename" 	 VALUE="<?php print $tablename;?>"/>
 		<INPUT TYPE="hidden" NAME="indexname" 	 VALUE="id"/>
-		<INPUT TYPE="hidden" NAME="id" 			 VALUE="<?php print $row['id'];?>" />
+		<INPUT TYPE="hidden" NAME="id" 			 VALUE="<?php print e($row['id']);?>" />
 		<INPUT TYPE="hidden" NAME="sortby" 		 VALUE="id"/>
 		<INPUT TYPE="hidden" NAME="sortdir"		 VALUE=0 />
 		<INPUT TYPE="hidden" NAME="func" 		 VALUE="pu"/>
 		<INPUT TYPE="hidden" NAME="srch_str"  	 VALUE=""/> <!-- 9/12/10 -->
-		<INPUT TYPE="hidden" NAME="frm_apply_to" VALUE="<?php print $row['apply_to'];?>" /> <!-- db update value; initially the default; revised onclick -->
+		<INPUT TYPE="hidden" NAME="frm_apply_to" VALUE="<?php print e($row['apply_to']);?>" /> <!-- db update value; initially the default; revised onclick -->
 
 <?php
 $label = ($row['apply_to'] == "bldg") ? "Building" : "Place" ;
@@ -123,38 +123,38 @@ $lng = $row['lon'];
 			<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER" CLASS="td_label" ><FONT SIZE="+1">Update '<?php echo $label;?>' Data</FONT></TD></TR>
 			<TR><TD><P />&nbsp;</TD></TR>
 			<TR CLASS = "even"><TD></TD>
-				<TD COLSPAN=3>&nbsp;&nbsp;<?php print get_text("City");?>:&nbsp;<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="the_city" VALUE="<?php echo $row['city'];?>" />
-				&nbsp;&nbsp;&nbsp;&nbsp;<?php print get_text("St");?>:&nbsp;<INPUT MAXLENGTH="4" SIZE="2" TYPE="text" NAME="the_st" VALUE="<?php echo $row['state'];?>" /><button type="button" style = "margin-left:40px;" onClick="addrlkup(this.form)">
+				<TD COLSPAN=3>&nbsp;&nbsp;<?php print get_text("City");?>:&nbsp;<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="the_city" VALUE="<?php echo e($row['city']);?>" />
+				&nbsp;&nbsp;&nbsp;&nbsp;<?php print get_text("St");?>:&nbsp;<INPUT MAXLENGTH="4" SIZE="2" TYPE="text" NAME="the_st" VALUE="<?php echo e($row['state']);?>" /><button type="button" style = "margin-left:40px;" onClick="addrlkup(this.form)">
 				<img src="./markers/glasses.png" alt="Lookup location."  />&nbsp;&nbsp;Lookup</TD></TR>
 			<TR><TD>&nbsp;</TD></TR>
 
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right"><?php echo $label;?> name:</TD>
-			<TD><INPUT ID="ID1" CLASS="dirty" MAXLENGTH="64" SIZE="64" type="text" NAME="frm_name" VALUE="<?php echo $row['name'];?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
+			<TD><INPUT ID="ID1" CLASS="dirty" MAXLENGTH="64" SIZE="64" type="text" NAME="frm_name" VALUE="<?php echo e($row['name']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
 
 			<TR><TD>&nbsp;</TD></TR>
 <!-- new -->
 			<TR VALIGN="baseline" CLASS="even" ID = 'brow1' >
 				<TD CLASS="td_label" ALIGN="right">Street:</TD>
-				<TD><INPUT ID="ID3" CLASS="dirty" MAXLENGTH="96" SIZE="64" type="text" NAME="frm_street" VALUE="<?php echo $row['street']; ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> </TD>
+				<TD><INPUT ID="ID3" CLASS="dirty" MAXLENGTH="96" SIZE="64" type="text" NAME="frm_street" VALUE="<?php echo e($row['street']); ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> </TD>
 				</TR>
 			<TR VALIGN="baseline" CLASS="odd" ID = 'brow2' >
 				<TD CLASS="td_label" ALIGN="right">City:</TD>
-				<TD><INPUT ID="ID4" CLASS="dirty" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_city" VALUE="<?php echo $row['city']; ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> 
-				<span CLASS="td_label" style = "margin-left:20px;"> St: <INPUT ID="ID5" CLASS="dirty" MAXLENGTH="4" SIZE="4" type="text" NAME="frm_state" VALUE="<?php echo $row['state']; ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)" ></span>
+				<TD><INPUT ID="ID4" CLASS="dirty" MAXLENGTH="32" SIZE="32" type="text" NAME="frm_city" VALUE="<?php echo e($row['city']); ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)">
+				<span CLASS="td_label" style = "margin-left:20px;"> St: <INPUT ID="ID5" CLASS="dirty" MAXLENGTH="4" SIZE="4" type="text" NAME="frm_state" VALUE="<?php echo e($row['state']); ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)" ></span>
 				</TD>
 				</TR>
 
 			<TR VALIGN="baseline" CLASS="even" ID = 'brow4' >
 				<TD CLASS="td_label" ALIGN="right"><?php echo $label;?> information:</TD>
-				<TD><TEXTAREA ID='ID6' CLASS='dirty' NAME='frm_information' COLS='64' ROWS = '1' onFocus="JSfnChangeClass(this.id, 'dirty');" STYLE='vertical-align:text-top;'><?php echo $row['information']; ?></TEXTAREA> </TD>
+				<TD><TEXTAREA ID='ID6' CLASS='dirty' NAME='frm_information' COLS='64' ROWS = '1' onFocus="JSfnChangeClass(this.id, 'dirty');" STYLE='vertical-align:text-top;'><?php echo e($row['information']); ?></TEXTAREA> </TD>
 				</TR>
 <!-- /new -->
 		<TR><TD>&nbsp;</TD></TR>
 
 		<TR VALIGN="baseline" CLASS="even" STYLE = "opacity:.2;"><TD CLASS="td_label" ALIGN="right">Lat:</TD>
-			<TD><INPUT ID="ID2" MAXLENGTH=12 SIZE=12 TYPE=text NAME="frm_lat" VALUE="<?php echo $row['lat']; ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/>
+			<TD><INPUT ID="ID2" MAXLENGTH=12 SIZE=12 TYPE=text NAME="frm_lat" VALUE="<?php echo e($row['lat']); ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/>
 			<SPAN CLASS="td_label" STYLE ="margin-left:20px;">Lon:&nbsp;&nbsp;&nbsp;
-			<INPUT ID="ID3" MAXLENGTH=12 SIZE=12 TYPE=text NAME="frm_lon" VALUE="<?php echo $row['lon']; ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/></SPAN>
+			<INPUT ID="ID3" MAXLENGTH=12 SIZE=12 TYPE=text NAME="frm_lon" VALUE="<?php echo e($row['lon']); ?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/></SPAN>
 			 </TD>
 		</TR>
 		<TR>

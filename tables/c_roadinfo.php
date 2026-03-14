@@ -1,11 +1,11 @@
 <?php
 function get_types() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` ORDER BY `id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` ORDER BY `id`";
+	$result = db_query($query);
 	$the_ret = "<SELECT NAME='frm_conditions'>";
-	$the_ret .= "<OPTION VALUE='0' SELECTED>Select Condition Type</OPTION>";	
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$the_ret .= "<OPTION VALUE=" .  $row['id'] . ">" . $row['title'] . "</OPTION>";
+	$the_ret .= "<OPTION VALUE='0' SELECTED>Select Condition Type</OPTION>";
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
+		$the_ret .= "<OPTION VALUE=" .  e($row['id']) . ">" . e($row['title']) . "</OPTION>";
 		}
 	$the_ret .= "</SELECT>";
 	return $the_ret;

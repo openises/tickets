@@ -16,10 +16,10 @@
 				<TD CLASS="td_data"><SELECT NAME="frm_category" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]region_type` ORDER BY `id` ASC";		// 12/18/10
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_cat = stripslashes_deep(mysql_fetch_assoc($result))) {
-					print "\t<OPTION VALUE='{$row_cat['id']}'>{$row_cat['name']}</OPTION>\n";		// pipe separator
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region_type` ORDER BY `id` ASC";		// 12/18/10
+				$result = db_query($query);
+				while ($row_cat = stripslashes_deep($result->fetch_assoc())) {
+					print "\t<OPTION VALUE='" . e($row_cat['id']) . "'>" . e($row_cat['name']) . "</OPTION>\n";		// pipe separator
 					}
 ?>
 			</SELECT>
@@ -42,10 +42,10 @@
 				<TD CLASS="td_data"><SELECT NAME="frm_boundary" onChange = "this.value=JSfnTrim(this.value)">	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `use_with_r` = 1 ORDER BY `line_name` ASC";		// 12/18/10
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_bound = stripslashes_deep(mysql_fetch_assoc($result))) {
-					print "\t<OPTION VALUE='{$row_bound['id']}'>{$row_bound['line_name']}</OPTION>\n";		// pipe separator
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `use_with_r` = 1 ORDER BY `line_name` ASC";		// 12/18/10
+				$result = db_query($query);
+				while ($row_bound = stripslashes_deep($result->fetch_assoc())) {
+					print "\t<OPTION VALUE='" . e($row_bound['id']) . "'>" . e($row_bound['line_name']) . "</OPTION>\n";		// pipe separator
 					}
 ?>
 			</SELECT>

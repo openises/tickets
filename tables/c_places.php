@@ -3,12 +3,12 @@
 3/25/2014 - expanded to handle buildings
 -->
 <?php
-	$query = "ALTER TABLE `$GLOBALS[mysql_prefix]places` ADD `apply_to` ENUM( 'city', 'bldg' ) NOT NULL DEFAULT 'city' AFTER `name` ,
+	$query = "ALTER TABLE `{$GLOBALS['mysql_prefix']}places` ADD `apply_to` ENUM( 'city', 'bldg' ) NOT NULL DEFAULT 'city' AFTER `name` ,
 	ADD `street` VARCHAR( 96 ) NULL DEFAULT NULL AFTER `apply_to` ,
 	ADD `city` VARCHAR( 32 ) NULL DEFAULT NULL AFTER `street` ,
 	ADD `state` VARCHAR( 4 ) NULL DEFAULT NULL AFTER `city` ,
 	ADD `information` VARCHAR( 1024 ) NULL DEFAULT NULL AFTER `state` ";
-	$result = @mysql_query($query) ;		// note STFU
+	$result = @db_query($query) ;		// note STFU
 	
 ?>
 	<SCRIPT type="text/javascript">

@@ -26,21 +26,21 @@
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename;?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="id"/>
-	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $row['id'] ;?>"/>
+	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print e($row['id']) ;?>"/>
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="id"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>  <!-- process update -->
 
-	<INPUT TYPE="hidden" NAME="frm_bg_color"  	VALUE="<?php print $row['bg_color'] ;?>" />
-	<INPUT TYPE="hidden" NAME="frm_text_color"	VALUE="<?php print $row['text_color'] ;?>" />
+	<INPUT TYPE="hidden" NAME="frm_bg_color"  	VALUE="<?php print e($row['bg_color']) ;?>" />
+	<INPUT TYPE="hidden" NAME="frm_text_color"	VALUE="<?php print e($row['text_color']) ;?>" />
 
 	<TABLE BORDER="0" ALIGN="center">
 	<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table 'Unit Status' - Update/Delete Entry</FONT></TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
 	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">ID:</TD>
-		<TD><INPUT MAXLENGTH=bigint(4) SIZE=bigint(4) TYPE= "text" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" onChange = "this.value=JSfnTrim(this.value)" disabled/> <SPAN class='warn' >numeric</SPAN></TD></TR>
+		<TD><INPUT MAXLENGTH=bigint(4) SIZE=bigint(4) TYPE= "text" NAME="frm_id" VALUE="<?php print e($row['id']) ;?>" onChange = "this.value=JSfnTrim(this.value)" disabled/> <SPAN class='warn' >numeric</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Status val:</TD>
-		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_status_val" VALUE="<?php print $row['status_val'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_status_val" VALUE="<?php print e($row['status_val']) ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
 <?php
 
 	$check_0 = $check_1 = $check_2 = "";
@@ -57,7 +57,7 @@
 			<SPAN STYLE = 'margin-left:20px'>No - enforced &raquo;<INPUT TYPE='radio' NAME="frm_dispatch" VALUE= "2" <?php print $check_2;?>/></SPAN>
 			</TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Description:</TD>
-		<TD><INPUT MAXLENGTH="60" SIZE="60" type="text" NAME="frm_description" VALUE="<?php print $row['description'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+		<TD><INPUT MAXLENGTH="60" SIZE="60" type="text" NAME="frm_description" VALUE="<?php print e($row['description']) ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
 
 <?php
 	switch($row['hide']) {
@@ -100,11 +100,11 @@
 			</TD></TR>
 
 	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Group:</TD>
-		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="<?php print $row['group'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
-	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT MAXLENGTH=int(11) SIZE=int(11) TYPE= "text" NAME="frm_sort" VALUE="<?php print $row['sort'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
+		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="<?php print e($row['group']) ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT MAXLENGTH=int(11) SIZE=int(11) TYPE= "text" NAME="frm_sort" VALUE="<?php print e($row['sort']) ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Background color:</TD>
 			<TD>
-				<SELECT name='dmy_status_id' STYLE='background-color:<?php print $row['bg_color']; ?>; color:<?php print $row['text_color']; ?>;' ONCHANGE =  "set_bg_vals (this.form);this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
+				<SELECT name='dmy_status_id' STYLE='background-color:<?php print e($row['bg_color']); ?>; color:<?php print e($row['text_color']); ?>;' ONCHANGE =  "set_bg_vals (this.form);this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
 <?php $sel = (strtolower($row['bg_color']) == strtolower("transparent"))? "SELECTED" : ""; ?>
 				<OPTION VALUE=0 STYLE='background-color:transparent; 	color:black;'  <?php print $sel; ?> >None</OPTION>
 <?php $sel = (strtolower($row['bg_color']) == strtolower("maroon"))? "SELECTED" : ""; ?>
@@ -155,8 +155,8 @@
 				<SPAN id='del_but' CLASS='plain text' style='float: none; width: 80px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="if (confirm('Please confirm DELETE action')) {this.form.func.value='d'; this.form.submit();}"><SPAN STYLE='float: left;'><?php print get_text("Delete");?></SPAN><IMG STYLE='float: right;' SRC='./images/delete.png' BORDER=0></SPAN>
 			</TD>
 		</TR>
-	<INPUT TYPE="hidden" NAME="def_bg_color"  	VALUE="<?php print $row['bg_color'];?>" /> <!-- default values see reset button -->
-	<INPUT TYPE="hidden" NAME="def_text_color"	VALUE="<?php print $row['text_color'];?>" />
+	<INPUT TYPE="hidden" NAME="def_bg_color"  	VALUE="<?php print e($row['bg_color']);?>" /> <!-- default values see reset button -->
+	<INPUT TYPE="hidden" NAME="def_text_color"	VALUE="<?php print e($row['text_color']);?>" />
 
 	</FORM>
 	</TD></TR></TABLE>

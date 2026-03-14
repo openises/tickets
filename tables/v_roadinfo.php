@@ -1,8 +1,9 @@
 <?php
 function get_types($curr_val) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` WHERE `id` = " . $curr_val;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$curr_val = intval($curr_val);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` WHERE `id` = ?";
+	$result = db_query($query, [$curr_val]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$the_ret = $row['title'];	
 	return $the_ret;
 	}
@@ -19,22 +20,22 @@ function get_types($curr_val) {
 		<TR><TD>&nbsp;</TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Title:</TD>
-			<TD><?php print $row['title'];?></TD></TR>
+			<TD><?php print e($row['title']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Description:</TD>
-			<TD><?php print $row['description'];?></TD></TR>
+			<TD><?php print e($row['description']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Address:</TD>
-			<TD><?php print $row['address'];?></TD></TR>
+			<TD><?php print e($row['address']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Type:</TD>
 			<TD><?php print get_types($row['conditions']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Latitude:</TD>
-			<TD><?php print $row['lat'];?></TD></TR>
+			<TD><?php print e($row['lat']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Longitude:</TD>
-			<TD><?php print $row['lng'];?></TD></TR>
+			<TD><?php print e($row['lng']);?></TD></TR>
 		<TR>
 			<TD COLSPAN="99">
 				<DIV id = "map_canvas" style = "width: 500px; height: 500px; text-align: center;"></DIV>
@@ -60,8 +61,8 @@ var in_local_bool = "<?php print get_variable('local_maps');?>";
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 var initZoom = <?php print get_variable('def_zoom');?>;
-init_map(3, <?php print $row['lat'];?>, <?php print $row['lng'];?>, "", parseInt(initZoom), theLocale, useOSMAP, "");
-map.setView([<?php print $row['lat'];?>, <?php print $row['lng'];?>], parseInt(initZoom));
+init_map(3, <?php print e($row['lat']);?>, <?php print e($row['lng']);?>, "", parseInt(initZoom), theLocale, useOSMAP, "");
+map.setView([<?php print e($row['lat']);?>, <?php print e($row['lng']);?>], parseInt(initZoom));
 var bounds = map.getBounds();	
 var zoom = map.getZoom();
 </SCRIPT>

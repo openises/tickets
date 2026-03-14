@@ -18,19 +18,19 @@
 	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Course:</TD>		<TD><SELECT NAME='frm_courses_id'>
 		<OPTION VALUE='0' selected>Select one</OPTION>
 <?php
-	$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]courses` ORDER BY `group_name` ASC, `course` ASC";    			
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}courses` ORDER BY `group_name` ASC, `course` ASC";
+	$result	= db_query($query);
 
 	$the_grp = strval(rand());			//  force initial OPTGROUP value
 	$i = 0;
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		if ($the_grp != $row['group_name']) {
 			echo (intval($i) == 0)? "": "\t</OPTGROUP>\n";
-			$the_grp = $row['group_name'];
-			echo "\t\t<OPTGROUP LABEL='$the_grp'>\n";
-			}	
-		echo "\t\t<OPTION VALUE='{$row['id']}'>{$row['course']}</OPTION>\n";
+			$the_grp = e($row['group_name']);
+			echo "\t\t<OPTGROUP LABEL='{$the_grp}'>\n";
+			}
+		echo "\t\t<OPTION VALUE='" . e($row['id']) . "'>" . e($row['course']) . "</OPTION>\n";
 		$i++;		
 		}				// end while()
 ?>
@@ -38,10 +38,10 @@
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">User:</TD>		<TD><SELECT NAME='frm_user_id'>
 		<OPTION VALUE='0' selected>Select one</OPTION>
 <?php
-	$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		echo "\t\t<OPTION VALUE='{$row['id']}'>{$row['name_l']}, {$row['name_f']} {$row['name_mi']} ({$row['user']})</OPTION>\n";
+	$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";
+	$result	= db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
+		echo "\t\t<OPTION VALUE='" . e($row['id']) . "'>" . e($row['name_l']) . ", " . e($row['name_f']) . " " . e($row['name_mi']) . " (" . e($row['user']) . ")</OPTION>\n";
 		}				// end while()
 	
 	$date_now = date ("Y-m-d", now());		// today as default
