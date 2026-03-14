@@ -35,8 +35,8 @@ function can_do_dispatch($the_row) {
 	}		// end function can do_dispatch()
 	
 function unit_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;	// all dispatches this unit
-	$result = db_query($query);	
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = ?";	// all dispatches this unit
+	$result = db_query($query, [intval($id)]);
 	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
@@ -106,8 +106,8 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
 	LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
 	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
-	WHERE `r`.`id` = " . $id;
-$result = db_query($query);
+	WHERE `r`.`id` = ?";
+$result = db_query($query, [intval($id)]);
 $units_ct = db_affected_rows();			// 1/4/10
 
 $aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = FALSE;		//7/23/09
@@ -133,8 +133,8 @@ $row_track = FALSE;
 if ($track_type > 0 ) {				// get most recent mobile track data
 	$do_legend = TRUE;
 	$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
-		WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-	$result_tr = db_query($query);
+		WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";		// newest
+	$result_tr = db_query($query, [$row['callsign']]);
 	$row_track = (db_affected_rows()>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 	$aprs_updated = $row_track['updated'];
 	$aprs_speed = $row_track['speed'];
@@ -165,10 +165,10 @@ if ((!is_guest()) && is_email($row['contact_via'])) {		// 2/1/10
 
 $units_assigned = 0;
 if(array_key_exists ($row['unit_id'] , $assigns_ary)) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-		WHERE `responder_id` = '{$row['unit_id']}' AND `t`.`status`='{$GLOBALS['STATUS_OPEN']}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	03/26/15
-	$result_as = db_query($query);
+		WHERE `responder_id` = ? AND `t`.`status`='{$GLOBALS['STATUS_OPEN']}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	03/26/15
+	$result_as = db_query($query, [intval($row['unit_id'])]);
 	$units_assigned = $result_as->num_rows;
 	}		// end if(array_key_exists ()
 

@@ -328,28 +328,28 @@ function do_is_start($in_row) {				// 3/22/10
 			}		// end if (!get_variable('military_time'))
 			
 		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ? "{$_POST['frm_year_problemend']}-{$_POST['frm_month_problemend']}-{$_POST['frm_day_problemend']} {$_POST['frm_hour_problemend']}:{$_POST['frm_minute_problemend']}:00" : "NULL";
-		$the_problemend  = quote_smart(trim($frm_problemend));
-		$comments = 	quote_smart(trim($_POST['frm_disp']));
-		$description = 	quote_smart(trim($_POST['frm_synopsis']));
-		$the_id = quote_smart($_POST['frm_ticket_id']);
+		$the_problemend  = trim($frm_problemend);
+		$comments = 	trim($_POST['frm_disp']);
+		$description = 	trim($_POST['frm_synopsis']);
+		$the_id = sanitize_int($_POST['frm_ticket_id']);
 		$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 		$by = $_SESSION['user_id'];
 		$counter = 0;
-		
-		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET
-			`problemend`= {$the_problemend},
-			`comments`= 	concat(`comments`, {$comments}),
-			`description`=	concat(`description`, {$description}),
-			`updated`='$now',
-			`_by` = $by,
-			`status` = {$GLOBALS['STATUS_CLOSED']}
-			WHERE `id` = {$the_id} LIMIT 1";
 
-		$result = db_query($query);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET
+			`problemend`= ?,
+			`comments`= 	concat(`comments`, ?),
+			`description`=	concat(`description`, ?),
+			`updated`= ?,
+			`_by` = ?,
+			`status` = {$GLOBALS['STATUS_CLOSED']}
+			WHERE `id` = ? LIMIT 1";
+
+		$result = db_query($query, [$the_problemend, $comments, $description, $now, $by, $the_id]);
 		if($result) { $counter++;}
-		
-		$query  = "UPDATE `{$GLOBALS['mysql_prefix']}allocates` SET `al_status` = 0, `al_as_of` = '{$now}' WHERE `type` = 1 AND `resource_id` = {$the_id}";
-		$result = db_query($query);
+
+		$query  = "UPDATE `{$GLOBALS['mysql_prefix']}allocates` SET `al_status` = 0, `al_as_of` = ? WHERE `type` = 1 AND `resource_id` = ?";
+		$result = db_query($query, [$now, $the_id]);
 		if($result) { $counter++;}
 		
 		foreach ($_POST as $VarName=>$VarValue) {			// set clear time each assign record - 8/10/10

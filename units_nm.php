@@ -70,8 +70,8 @@ function get_roster($current=null) {	//	9/6/13
 	}
 
 function get_user_details($rosterID) {	//	9/6/13
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = '" . $rosterID . "' LIMIT 1"; 
-	$result = db_query($query) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$rosterID]) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	if(db()->affected_rows != 0) {
 		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
@@ -659,8 +659,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 	function can_do_dispatch($the_row) {
 		if (intval($the_row['multi'])==1) return TRUE;
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = {$the_row['id']}";	// all dispatches this unit
-		$result_temp = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ?";	// all dispatches this unit
+		$result_temp = db_query($query, [$the_row['id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {		// check any open runs this unit
 			if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
 				unset ($result_temp, $row_temp); 
@@ -795,10 +795,10 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 // assignments 3/16/09, 3/15/10
 
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` 
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
 			LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
-			WHERE `responder_id` = '{$row['unit_id']}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
-		$result_as = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+			WHERE `responder_id` = ? AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+		$result_as = db_query($query, [$row['unit_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		$row_assign = (db()->affected_rows==0)?  FALSE : stripslashes_deep($result_as->fetch_assoc()) ;
 		switch($row_assign['severity'])		{		//color tickets by severity
 		 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
@@ -881,8 +881,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	function do_calls($id = 0) {				// generates js callsigns array
 		$print = "\n<SCRIPT >\n";
 		$print .="\t\tvar calls = new Array();\n";
-		$query	= "SELECT `id`, `callsign` FROM `{$GLOBALS['mysql_prefix']}responder` where `id` != $id";
-		$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$query	= "SELECT `id`, `callsign` FROM `{$GLOBALS['mysql_prefix']}responder` where `id` != ?";
+		$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 		while($row = stripslashes_deep($result->fetch_array())) {
 			if (!empty($row['callsign'])) {
 				$print .="\t\tcalls.push('" .$row['callsign'] . "');\n";
@@ -905,8 +905,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
-		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}responder WHERE `id`=" . $_POST['frm_id'];
-		$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}responder WHERE `id`= ?";
+		$result = db_query($query, [$_POST['frm_id']]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 		$caption = "<B>" . get_text("Units") . "<I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		print $caption;
 		sleep(10);
@@ -914,8 +914,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		} else {
 		if ($_getgoedit == 'true') {
 			$station = TRUE;			//
-			$the_lat = empty($_POST['frm_lat'])? "0.999999" : quote_smart(trim($_POST['frm_lat'])) ; // 2/24/09
-			$the_lng = empty($_POST['frm_lng'])? "0.999999" : quote_smart(trim($_POST['frm_lng'])) ;
+			$the_lat = empty($_POST['frm_lat'])? "0.999999" : trim($_POST['frm_lat']) ; // 2/24/09
+			$the_lng = empty($_POST['frm_lng'])? "0.999999" : trim($_POST['frm_lng']) ;
 			$status_updated = ($_POST['frm_status_update'] == 1) ? $now : $_POST['frm_status_updated'];	//	6/21/13	
 			$curr_groups = $_POST['frm_exist_groups']; 	//	4/14/11
 			$groups = isset($_POST['frm_group']) ? ", " . implode(',', $_POST['frm_group']) . "," : $_POST['frm_exist_groups'];	//	3/28/12 - fixes error when accessed from view ticket screen..	
@@ -925,43 +925,79 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 //			if (($_POST['frm_clr_pos'])=='on') {$the_lat = $the_lng = "NULL";}				// 11/15/09
 			if ($_postmap_clear=='on') {$the_lat = $the_lng = "NULL";}				// 11/19/09
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
-				`roster_user`= " . 	quote_smart(trim($_POST['frm_roster_id'])) . ",
-				`name`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
-				`street`= " . 		quote_smart(trim($_POST['frm_street'])) . ",
-				`city`= " . 		quote_smart(trim($_POST['frm_city'])) . ",
-				`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
-				`phone`= " . 		quote_smart(trim($_POST['frm_phone'])) . ",
-				`handle`= " . 		quote_smart(trim($_POST['frm_handle'])) . ",
-				`icon_str`= " . 	quote_smart(trim($_POST['frm_icon_str'])) . ",
-				`description`= " . 	quote_smart(trim($_POST['frm_descr'])) . ",
-				`capab`= " . 		quote_smart(trim($_POST['frm_capab'])) . ",
-				`un_status_id`= " . quote_smart(trim($_POST['frm_un_status_id'])) . ",
-				`status_about`= " . quote_smart(trim($_POST['frm_status_about'])) . ",
-				`callsign`= " . 	quote_smart(trim($_POST['frm_callsign'])) . ",
-				`mobile`= " . 		quote_smart(trim($_POST['frm_mobile'])) . ",
-				`multi`= " . 		quote_smart(trim($_POST['frm_multi'])) . ",
-				`aprs`= " . 		quote_smart(trim($_POST['frm_aprs'])) . ",
-				`instam`= " . 		quote_smart(trim($_POST['frm_instam'])) . ",
-				`locatea`= " . 		quote_smart(trim($_POST['frm_locatea'])) . ",
-				`gtrack`= " . 		quote_smart(trim($_POST['frm_gtrack'])) . ",
-				`glat`= " . 		quote_smart(trim($_POST['frm_glat'])) . ",
-				`t_tracker`= " . 		quote_smart(trim($_POST['frm_t_tracker'])) . ",				
-				`ogts`= " . 		quote_smart(trim($_POST['frm_ogts'])) . ",
-				`mob_tracker`= " . 	quote_smart(trim($_POST['frm_mob_tracker'])) . ",
-				`xastir_tracker`= " . 	quote_smart(trim($_POST['frm_xastir_tracker'])) . ",
-				`direcs`= " . 		quote_smart(trim($_POST['frm_direcs'])) . ",
-				`lat`= " . 			$the_lat . ",
-				`lng`= " . 			$the_lng . ",
-				`contact_name`= " . quote_smart(trim($_POST['frm_contact_name'])) . ",
-				`contact_via`= " . 	quote_smart(trim($_POST['frm_contact_via'])) . ",
-				`smsg_id`= " . 		quote_smart(trim($_POST['frm_smsg_id'])) . ",				
-				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
-				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
-				`updated`= " . 		quote_smart(trim($now)) . ",
-				`status_updated`= " . quote_smart(trim($status_updated)) . " 	
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	9/6/13
+				`roster_user`= ?,
+				`name`= ?,
+				`street`= ?,
+				`city`= ?,
+				`state`= ?,
+				`phone`= ?,
+				`handle`= ?,
+				`icon_str`= ?,
+				`description`= ?,
+				`capab`= ?,
+				`un_status_id`= ?,
+				`status_about`= ?,
+				`callsign`= ?,
+				`mobile`= ?,
+				`multi`= ?,
+				`aprs`= ?,
+				`instam`= ?,
+				`locatea`= ?,
+				`gtrack`= ?,
+				`glat`= ?,
+				`t_tracker`= ?,
+				`ogts`= ?,
+				`mob_tracker`= ?,
+				`xastir_tracker`= ?,
+				`direcs`= ?,
+				`lat`= ?,
+				`lng`= ?,
+				`contact_name`= ?,
+				`contact_via`= ?,
+				`smsg_id`= ?,
+				`type`= ?,
+				`user_id`= ?,
+				`updated`= ?,
+				`status_updated`= ?
+				WHERE `id`= ?";	//	9/6/13
 
-			$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			$result = db_query($query, [
+				trim($_POST['frm_roster_id']),
+				trim($_POST['frm_name']),
+				trim($_POST['frm_street']),
+				trim($_POST['frm_city']),
+				trim($_POST['frm_state']),
+				trim($_POST['frm_phone']),
+				trim($_POST['frm_handle']),
+				trim($_POST['frm_icon_str']),
+				trim($_POST['frm_descr']),
+				trim($_POST['frm_capab']),
+				trim($_POST['frm_un_status_id']),
+				trim($_POST['frm_status_about']),
+				trim($_POST['frm_callsign']),
+				trim($_POST['frm_mobile']),
+				trim($_POST['frm_multi']),
+				trim($_POST['frm_aprs']),
+				trim($_POST['frm_instam']),
+				trim($_POST['frm_locatea']),
+				trim($_POST['frm_gtrack']),
+				trim($_POST['frm_glat']),
+				trim($_POST['frm_t_tracker']),
+				trim($_POST['frm_ogts']),
+				trim($_POST['frm_mob_tracker']),
+				trim($_POST['frm_xastir_tracker']),
+				trim($_POST['frm_direcs']),
+				$the_lat,
+				$the_lng,
+				trim($_POST['frm_contact_name']),
+				trim($_POST['frm_contact_via']),
+				trim($_POST['frm_smsg_id']),
+				trim($_POST['frm_type']),
+				trim($_SESSION['user_id']),
+				trim($now),
+				trim($status_updated),
+				trim($_POST['frm_id'])
+			]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
 			$ex_grps = explode(',', $list); 	//	4/14/11 
@@ -969,15 +1005,15 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			if($curr_groups != $groups) { 	//	4/14/11
 				foreach($_POST['frm_group'] as $posted_grp) { 	//	4/14/11
 					if(!in_array($posted_grp, $ex_grps)) {
-						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-								($posted_grp, 2, '$now', $resp_stat, $resp_id, 'Allocated to Group' , $by)";
-						$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
+						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+								(?, 2, ?, ?, ?, 'Allocated to Group' , ?)";
+						$result = db_query($query, [$posted_grp, $now, $resp_stat, $resp_id, $by]) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 						}
 					}
 				foreach($ex_grps as $existing_grps) { 	//	4/14/11
 					if(!in_array($existing_grps, $_POST['frm_group'])) {
-						$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 2 AND `group` = $existing_grps AND `resource_id` = {$resp_id}";
-						$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
+						$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 2 AND `group` = ? AND `resource_id` = ?";
+						$result = db_query($query, [$existing_grps, $resp_id]) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 						}
 					}
 				}			
@@ -991,49 +1027,50 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 	if ($_getgoadd == 'true') {
 		$by = $_SESSION['user_id'];
-		$frm_lat = (empty($_POST['frm_lat']))? '0.999999': quote_smart(trim($_POST['frm_lat']));						// 9/3/08
-		$frm_lng = (empty($_POST['frm_lng']))? '0.999999': quote_smart(trim($_POST['frm_lng']));						// 9/3/08
+		$frm_lat = (empty($_POST['frm_lat']))? '0.999999': trim($_POST['frm_lat']);						// 9/3/08
+		$frm_lng = (empty($_POST['frm_lng']))? '0.999999': trim($_POST['frm_lng']);						// 9/3/08
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
 		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`,  `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `updated`, `status_updated` )
-			VALUES (" .
-				quote_smart(trim($_POST['frm_roster_id'])) . "," .
-				quote_smart(trim($_POST['frm_name'])) . "," .
-				quote_smart(trim($_POST['frm_street'])) . "," .
-				quote_smart(trim($_POST['frm_city'])) . "," .
-				quote_smart(trim($_POST['frm_state'])) . "," .
-				quote_smart(trim($_POST['frm_phone'])) . "," .
-				quote_smart(trim($_POST['frm_handle'])) . "," .
-				quote_smart(trim($_POST['frm_icon_str'])) . "," .
-				quote_smart(trim($_POST['frm_descr'])) . "," .
-				quote_smart(trim($_POST['frm_capab'])) . "," .
-				quote_smart(trim($_POST['frm_un_status_id'])) . "," .
-				quote_smart(trim($_POST['frm_status_about'])) . "," .
-				quote_smart(trim($_POST['frm_callsign'])) . "," .
-				quote_smart(trim($_POST['frm_mobile'])) . "," .
-				quote_smart(trim($_POST['frm_multi'])) . "," .
-				quote_smart(trim($_POST['frm_aprs'])) . "," .
-				quote_smart(trim($_POST['frm_instam'])) . "," .
-				quote_smart(trim($_POST['frm_locatea'])) . "," .
-				quote_smart(trim($_POST['frm_gtrack'])) . "," .
-				quote_smart(trim($_POST['frm_glat'])) . "," .
-				quote_smart(trim($_POST['frm_t_tracker'])) . "," .
-				quote_smart(trim($_POST['frm_ogts'])) . "," .
-				quote_smart(trim($_POST['frm_mob_tracker'])) . "," .
-				quote_smart(trim($_POST['frm_xastir_tracker'])) . "," .
-				quote_smart(trim($_POST['frm_direcs'])) . "," .
-				quote_smart(trim($_POST['frm_contact_name'])) . "," .
-				quote_smart(trim($_POST['frm_contact_via'])) . "," .
-				quote_smart(trim($_POST['frm_smsg_id'])) . "," .
-				$frm_lat . "," .
-				$frm_lng . "," .
-				quote_smart(trim($_POST['frm_type'])) . "," .
-				quote_smart(trim($_SESSION['user_id'])) . "," .
-				quote_smart(trim($now)) . "," .				
-				quote_smart(trim($now)) . ");";								// 8/23/08, 9/6/13
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";								// 8/23/08, 9/6/13
 
-		$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
-		$new_id=db()->insert_id;
+		$result = db_query($query, [
+			trim($_POST['frm_roster_id']),
+			trim($_POST['frm_name']),
+			trim($_POST['frm_street']),
+			trim($_POST['frm_city']),
+			trim($_POST['frm_state']),
+			trim($_POST['frm_phone']),
+			trim($_POST['frm_handle']),
+			trim($_POST['frm_icon_str']),
+			trim($_POST['frm_descr']),
+			trim($_POST['frm_capab']),
+			trim($_POST['frm_un_status_id']),
+			trim($_POST['frm_status_about']),
+			trim($_POST['frm_callsign']),
+			trim($_POST['frm_mobile']),
+			trim($_POST['frm_multi']),
+			trim($_POST['frm_aprs']),
+			trim($_POST['frm_instam']),
+			trim($_POST['frm_locatea']),
+			trim($_POST['frm_gtrack']),
+			trim($_POST['frm_glat']),
+			trim($_POST['frm_t_tracker']),
+			trim($_POST['frm_ogts']),
+			trim($_POST['frm_mob_tracker']),
+			trim($_POST['frm_xastir_tracker']),
+			trim($_POST['frm_direcs']),
+			trim($_POST['frm_contact_name']),
+			trim($_POST['frm_contact_via']),
+			trim($_POST['frm_smsg_id']),
+			$frm_lat,
+			$frm_lng,
+			trim($_POST['frm_type']),
+			trim($_SESSION['user_id']),
+			trim($now),
+			trim($now)
+		]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$new_id=db_insert_id();
 		
 //	9/10/13 File Upload support
 		$print = "";
@@ -1059,8 +1096,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);	
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
+				$result = db_query($query, [$realfilename]) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);	
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
@@ -1082,10 +1119,10 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
 					) VALUES (
-						'" . $_POST['frm_file_title'] . "', '" . $filename . "', '" . $realfilename . "', " . $id . ", 0,
-						0, 0, '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
+						?, ?, ?, ?, 0,
+						0, 0, ?, ?, ?, ?
 					)";
-				$result_insert	= db_query($query_insert) or do_error($query_insert,'mysql_query() failed', db()->error, basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert, [$_POST['frm_file_title'], $filename, $realfilename, $id, $_FILES['frm_file']['type'], $by, $now, $from]) or do_error($query_insert,'mysql_query() failed', db()->error, basename( __FILE__), __LINE__);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1100,11 +1137,11 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 		$status_id = $_POST['frm_un_status_id'];
 		foreach ($_POST['frm_group'] as $grp_val) {	// 4/13/11
-			$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-					($grp_val, 2, '$now', $status_id, $new_id, 'Allocated to Group' , $by)";
-			$result_a = db_query($query_a) or do_error($query_a, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);				
+			$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+					(?, 2, ?, ?, ?, 'Allocated to Group' , ?)";
+			$result_a = db_query($query_a, [$grp_val, $now, $status_id, $new_id, $by]) or do_error($query_a, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);				
 		}
-		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, db()->insert_id, $_POST['frm_un_status_id']);	// 6/2/08
+		do_log($GLOBALS['LOG_UNIT_STATUS'], 0, db_insert_id(), $_POST['frm_un_status_id']);	// 6/2/08
 
 		$mobstr = ($frm_mobile)? "Mobile " . get_text("Units"): "Station ";
 		$caption = "<B>" . get_text("Units") . "<i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been updated.</B><BR /><BR />";
@@ -1382,8 +1419,8 @@ if(get_num_groups()) {
 
 	if ($_getedit == 'true') {
 		$id = $_GET['id'];
-		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`={$id}";
-		$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
+		$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 		$row	= $result->fetch_array();
 		$is_mobile = (($row['mobile']==1) && (!(empty($row['callsign']))));		// 1/27/09, 3/15/10
 
@@ -1579,8 +1616,8 @@ if(get_num_groups()) {
 <?php
 		}
 																						// check any assign records this unit - added 5/23/08
-		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id`=$id AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";		// 6/27/08
-		$result_as = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id`= ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";		// 6/27/08
+		$result_as = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
 		$cbcount = db()->affected_rows;				// count of incomplete assigns
 		$dis_rmv = ($cbcount==0)? "": " DISABLED";		// allow/disallow removal
@@ -1659,33 +1696,33 @@ if(get_num_groups()) {
 
 		if ($_getview == 'true') {
 
-			$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = '$_GET[id]' ORDER BY `id` ASC;";	// 6/10/11
-			$result_un = db_query($query_un);	// 6/10/11
+			$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = ? ORDER BY `id` ASC";	// 6/10/11
+			$result_un = db_query($query_un, [$_GET['id']]);	// 6/10/11
 			$un_groups = array();
 			$un_names = "";	
 			while ($row_un = stripslashes_deep($result_un->fetch_assoc())) 	{	// 6/10/11
 				$un_groups[] = $row_un['group'];
-				$query_un2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= '$row_un[group]';";	// 6/10/11
-				$result_un2 = db_query($query_un2);	// 6/10/11
+				$query_un2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ?";	// 6/10/11
+				$result_un2 = db_query($query_un2, [$row_un['group']]);	// 6/10/11
 				while ($row_un2 = stripslashes_deep($result_un2->fetch_assoc())) 	{	// 6/10/11		
 					$un_names .= $row_un2['group_name'] . " ";
 					}
 				}		
 		
 			$id = $_GET['id'];
-			$query	= "SELECT *, 
-				`updated` AS `updated` 
-				FROM `{$GLOBALS['mysql_prefix']}responder` `r` 
-				WHERE `r`.`id`={$id} LIMIT 1";
-			$result	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+			$query	= "SELECT *,
+				`updated` AS `updated`
+				FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+				WHERE `r`.`id`= ? LIMIT 1";
+			$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 			$row	= stripslashes_deep($result->fetch_assoc());
 //			$is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));				// 1/27/09
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 
 			if (isset($row['un_status_id'])) {
-				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`=" . $row['un_status_id'];	// status value
-				$result_st	= db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`= ?";	// status value
+				$result_st	= db_query($query, [$row['un_status_id']]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
 				$row_st	= $result_st->fetch_assoc();
 				unset($result_st);
 				}
@@ -1806,8 +1843,8 @@ if(get_num_groups()) {
 
 <?php
 											// 11/15/09 - identify candidate incidents - i. e., open and not already assigned to this unit
-		$query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = {$row['id']}";
-		$result_temp = db_query($query_t) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ?";
+		$result_temp = db_query($query_t, [$row['id']]) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		$ctr = 0;		// count hits
 		if (db()->affected_rows>0) {
 			$work = $sep = "";

@@ -204,15 +204,17 @@ switch($mode) {
 							}
 						}
 					$query .= ") VALUES (";
+					$insert_params = [];
 					for($j = 0; $j < $fieldCount; $j++) {
+						$insert_params[] = trim($tabledata[$m][$table_fields[$j]]);
 						if($j < ($fieldCount-1)) {
-							$query .= quote_smart(trim($tabledata[$m][$table_fields[$j]])) . ",";
+							$query .= "?,";
 							} else {
-							$query .= quote_smart(trim($tabledata[$m][$table_fields[$j]]));
+							$query .= "?";
 							}
 						}
 					$query .= ");";
-					$result = db_query($query);
+					$result = db_query($query, $insert_params);
 					if($result) {$tabledatacount++;}
 					} else {
 					$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
@@ -226,18 +228,20 @@ switch($mode) {
 							}
 						}
 					$query .= ") VALUES (";
+					$insert_params = [];
 					for($j = 0; $j < $fieldCount; $j++) {
 						if($table_fields[$j] != 'id') {
+							$insert_params[] = trim($tabledata[$m][$table_fields[$j]]);
 							if($j < ($fieldCount-1)) {
-								$query .= quote_smart(trim($tabledata[$m][$table_fields[$j]])) . ",";
+								$query .= "?,";
 								} else {
-								$query .= quote_smart(trim($tabledata[$m][$table_fields[$j]]));
+								$query .= "?";
 								}
 							}
 						}
 					$query .= ");";
-					$result = db_query($query);
-					if($result) {$tabledatacount++;}					
+					$result = db_query($query, $insert_params);
+					if($result) {$tabledatacount++;}
 					}
 				}
 				

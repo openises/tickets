@@ -235,8 +235,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					OR  `a`.`u2farr` BETWEEN '{$from_to[0]}' AND '{$from_to[1] }'
 					OR  `a`.`clear` BETWEEN '{$from_to[0]}' AND '{$from_to[1] }'";
 
-		$which_inc = ($_GET['tick_sel']==0)? 	"" : " AND `ticket_id` = " . 	quote_smart($_GET['tick_sel']);				// 2/7/09
-		$which_unit = ($_GET['resp_sel']==0)? 	"" : " AND `responder_id` = " . quote_smart($_GET['resp_sel']);
+		$which_inc = ($_GET['tick_sel']==0)? 	"" : " AND `ticket_id` = " . intval($_GET['tick_sel']);				// 2/7/09
+		$which_unit = ($_GET['resp_sel']==0)? 	"" : " AND `responder_id` = " . intval($_GET['resp_sel']);
 
 		$query = "SELECT *,
 			`dispatched` AS dispatched_i,

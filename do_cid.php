@@ -20,24 +20,19 @@ while ($row = stripslashes_deep($result->fetch_array())) {			// use most recent 
 if (empty($city)) 	{$city = get_variable('def_city');}	
 if (empty($st)) 	{$st = get_variable('def_st');}		
 
-$street = quote_smart($street);
-$apartment = quote_smart($apartment);
-$city = quote_smart($city);
-$st = quote_smart($st);
-
 $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = {$GLOBALS['STATUS_RESERVED']} AND `_by` = {tbd};";	//8/10/10
 $result = db_query($query);
 
 $query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}ticket` (
 		`id` , `in_types_id` , `contact` , `street` , `city` , `state` , `phone` , `lat` , `lng` , `date` ,
-		`problemstart` , `problemend` , `scope` , `affected` , `description` , `comments` , `status` , `owner` , 
-		`severity` , `updated`, `booked_date`, `_by` 
+		`problemstart` , `problemend` , `scope` , `affected` , `description` , `comments` , `status` , `owner` ,
+		`severity` , `updated`, `booked_date`, `_by`
 	) VALUES (
-		NULL , 0, 0, NULL , '{$street} {$apartment}', {$st} , {$the_number} , NULL , NULL , NULL , 
-		NULL , NULL , '', NULL , '', NULL , '{$GLOBALS['STATUS_RESERVED']}', '0', '0', NULL, NULL, $by
+		NULL , 0, 0, NULL , ?, ? , ? , NULL , NULL , NULL ,
+		NULL , NULL , '', NULL , '', NULL , ?, '0', '0', NULL, NULL, ?
 	)";
-	
-$result_insert	= db_query($query_insert);
+
+$result_insert	= db_query($query_insert, [trim($street) . ' ' . trim($apartment), trim($city), $the_number, $GLOBALS['STATUS_RESERVED'], $by]);
 @session_start();
 session_write_close();
 if (!(empty($_SESSION)) [

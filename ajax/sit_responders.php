@@ -89,8 +89,8 @@ function can_do_dispatch($the_row) {
 	}
 
 function unit_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;
-	$result = db_query($query);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = ?";
+	$result = db_query($query, [intval($id)]);
 	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
@@ -262,8 +262,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	if ($track_type > 0 ) {
 		$do_legend = TRUE;
 		$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
-			WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-		$result_tr = db_query($query);
+			WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";		// newest
+		$result_tr = db_query($query, [$row['callsign']]);
 		$row_track = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 		$aprs_updated = $row_track['updated'];
 		$aprs_speed = $row_track['speed'];
@@ -292,9 +292,9 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
 // STATUS
 	if($useMdb == "1" && $useMdbStatus == "1" && get_member_count($row['unit_id']) == 1) {
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $row['unit_id'];
+		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = ?";
 
-		$result2 = db_query($query2);
+		$result2 = db_query($query2, [intval($row['unit_id'])]);
 		if($result && $result2->num_rows == 1) {
 			$row2 = stripslashes_deep($result2->fetch_assoc());
 			$memberID = $row2['member_id'];
@@ -306,9 +306,9 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		}
 
 	if($memberID != 0) {
-		$query_updated = "SELECT `id`, `_on` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberID;
+		$query_updated = "SELECT `id`, `_on` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = ?";
 
-		$result_updated = db_query($query_updated);
+		$result_updated = db_query($query_updated, [intval($memberID)]);
 		$row_updated = stripslashes_deep($result_updated->fetch_assoc());
 		$memUpdated = strtotime($row_updated['_on']);
 		$responderStatusUpdated = strtotime($row['status_updated']);

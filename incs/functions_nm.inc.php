@@ -550,9 +550,9 @@ function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` r ON ({$GLOBALS['mysql_prefix']}log.responder_id = r.id)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` s ON ({$GLOBALS['mysql_prefix']}log.info = s.id)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}user` u ON ({$GLOBALS['mysql_prefix']}log.who = u.id)
-		WHERE `{$GLOBALS['mysql_prefix']}log`.`ticket_id` = $theid
+		WHERE `{$GLOBALS['mysql_prefix']}log`.`ticket_id` = ?
 		";
-	$result = db_query($query);
+	$result = db_query($query, [$theid]);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
 
@@ -600,9 +600,9 @@ function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` r 	ON (l.responder_id = r.id)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` s 	ON (l.info = s.id)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}user` u 		ON (l.who = u.id)
-		WHERE `l`.`responder_id` = {$theid}
+		WHERE `l`.`responder_id` = ?
 		ORDER BY `when` ASC";								// 10/2/12
-	$result = db_query($query);
+	$result = db_query($query, [$theid]);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
 
@@ -633,8 +633,8 @@ function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
 //	} -- dummy
 
 function set_ticket_status($status,$id){				/* alter ticket status */
-	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET status='$status' WHERE ID='$id'LIMIT 1";
-	$result = db_query($query);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET status=? WHERE ID=? LIMIT 1";
+	$result = db_query($query, [$status, $id]);
 	}
 
 function format_date($date){							/* format date to defined type 8/27/10 */
@@ -678,8 +678,8 @@ function get_status($status){							/* return status text from code */
 	}
 
 function get_owner($id){								/* get owner name from id */
-	$query = "SELECT user FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`='$id' LIMIT 1";
-	$result	= db_query($query);
+	$query = "SELECT user FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=? LIMIT 1";
+	$result	= db_query($query, [$id]);
 	$row	= stripslashes_deep($result->fetch_assoc());
 	return ($result->num_rows==0 )? "unk?" : $row['user'];
 //	return $row['user'];
@@ -695,8 +695,8 @@ function get_severity($severity){			/* return severity string from value */
 	}
 
 function get_responder($id){			/* return responder-type string from value */
-	$query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id='$id' LIMIT 1";
-	$result	= db_query($query);
+	$query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=? LIMIT 1";
+	$result	= db_query($query, [$id]);
 	$temprow	= stripslashes_deep($result->fetch_assoc());
 	return $temprow['name'];
 	}
@@ -780,7 +780,7 @@ function add_header($ticket_id, $no_edit = FALSE) {		// 11/27/09, 3/30/10, 8/27/
 	}				// function add_header()
 
 function is_closed($id){/* is ticket closed? */
-	return check_for_rows("SELECT id,status FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='$id' AND status='$GLOBALS[STATUS_CLOSED]'");
+	return check_for_rows("SELECT id,status FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=? AND status=?", [$id, $GLOBALS['STATUS_CLOSED']]);
 	}
 
 function is_super(){				// added 6/9/08
@@ -914,8 +914,8 @@ function report_action($action_type,$ticket_id,$value1='',$value2=''){/* insert 
 		default: 						$description = "[unknown report value: $action_type]";
 		}
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-	$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}action` (date,ticket_id,action_type,description,user) VALUES('{$now}','{$ticket_id}','{$action_type}','{$description}','{$_SESSION['user_id']}')";
-	$result = db_query($query);
+	$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}action` (date,ticket_id,action_type,description,user) VALUES(?,?,?,?,?)";
+	$result = db_query($query, [$now, $ticket_id, $action_type, $description, $_SESSION['user_id']]);
 	}
 
 function dumpp($variable) {
@@ -1012,8 +1012,8 @@ function toUTM($coordsIn, $from = "") {							// UTM converter - assume comma se
 
 function get_type($id) {				// returns incident type given its id
 	if ($id == 0) {return "TBD";}		// 1/11/09
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` WHERE `id`= $id LIMIT 1";
-	$result_type = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` WHERE `id`= ? LIMIT 1";
+	$result_type = db_query($query, [$id]);
 	$row_type = stripslashes_deep($result_type->fetch_assoc());
 //	unset ($result_type);
 	return (isset($row_type['type']))? $row_type['type']: "?";		// 8/12/09
@@ -1057,20 +1057,10 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
 	$who = (!empty($_SESSION))? $_SESSION['user_id']: 0;
 	$from = $_SERVER['REMOTE_ADDR'];
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-	$query = sprintf("INSERT INTO `{$GLOBALS['mysql_prefix']}log` (`who`,`from`,`when`,`code`,`ticket_id`,`responder_id`,`info`, `facility`, `rec_facility`, `mileage`)
-		VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-				quote_smart(trim($who)),
-				quote_smart(trim($from)),
-				quote_smart(trim($now)),
-				quote_smart(trim($code)),
-				quote_smart(trim($ticket_id)),
-				quote_smart(trim($responder_id)),
-				quote_smart(trim($info)),
-				quote_smart(trim($facility_id)),
-				quote_smart(trim($rec_facility_id)),
-				quote_smart(trim($mileage)));
+	$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}log` (`who`,`from`,`when`,`code`,`ticket_id`,`responder_id`,`info`, `facility`, `rec_facility`, `mileage`)
+		VALUES(?,?,?,?,?,?,?,?,?,?)";
 
-	$result = db_query($query);
+	$result = db_query($query, [trim($who), trim($from), trim($now), trim($code), trim($ticket_id), trim($responder_id), trim($info), trim($facility_id), trim($rec_facility_id), trim($mileage)]);
 	unset($result);		// 3/12/09
 	}
 
@@ -1091,15 +1081,15 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
 		global $expiry;
 		$the_date = mysql_format_date($expiry) ;
 
-		$query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `expires` = '{$the_date}' WHERE `id`='{$_SESSION['user_id']}' LIMIT 1";		// note no 'delta'
-		$result = db_query($query);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `expires` = ? WHERE `id`=? LIMIT 1";		// note no 'delta'
+		$result = db_query($query, [$the_date, $_SESSION['user_id']]);
 		}
 
 	function expired() {			// returns TRUE/FALSE state of login time_out
 		if(empty($_SESSION)) {return TRUE;}		// $_SESSION = array(); ??
 
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` ='{$_SESSION['user_id']}' LIMIT 1";
-		$result = db_query($query);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` =? LIMIT 1";
+		$result = db_query($query, [$_SESSION['user_id']]);
 		if ($result->num_rows==1) {
 			$row = stripslashes_deep($result->fetch_array());
 			$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
@@ -1295,9 +1285,9 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
 	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "V"));}		// empty get all - force non-zero hit
 	snap(basename(__FILE__), __LINE__);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=$ticket_id LIMIT 1";
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=? LIMIT 1";
 	snap(__LINE__, $query );
-	$ticket_result = db_query($query);
+	$ticket_result = db_query($query, [$ticket_id]);
 	$t_row = stripslashes_deep($ticket_result->fetch_array());
 	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
 	$eol = PHP_EOL;
@@ -1391,8 +1381,8 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
 				case "P":
 					$gt = get_text("Patient");
-					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE ticket_id='$ticket_id'";
-					$result = db_query($query);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE ticket_id=?";
+					$result = db_query($query, [$ticket_id]);
 					if ($result->num_rows>0) {
 						$message .= "\n{$gt}:\n";
 						while($pat_row = stripslashes_deep($result->fetch_array())){
@@ -1404,11 +1394,11 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
 				case "O":
 					$gt = get_text("Actions");
-					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id`='$ticket_id'";		// 10/16/08
-					$result = db_query($query);	// 3/22/09
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id`=?";		// 10/16/08
+					$result = db_query($query, [$ticket_id]);	// 3/22/09
 					if ($result->num_rows>0) {
 						$message .= "\n{$gt}:\n";
-						$result = db_query($query);
+						$result = db_query($query, [$ticket_id]);
 						while($act_row = stripslashes_deep($result->fetch_array())) {
 							$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
 							}
@@ -1439,8 +1429,8 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					$gt = get_text("Facility");
 					if ((intval($t_row['rec_facility'])>0) || (intval($t_row['facility'])>0)) {
 						$the_facility = (intval($t_row['rec_facility'])>0)? intval($t_row['rec_facility']) : intval($t_row['facility']);
-						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`={$the_facility} LIMIT 1";
-						$result = db_query($query);	// 3/22/09
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`=? LIMIT 1";
+						$result = db_query($query, [$the_facility]);	// 3/22/09
 						if ($result->num_rows>0) {
 							$f_row = stripslashes_deep($result->fetch_array());
 							$message .= "{$gt}: {$f_row['handle']}\n";
@@ -1452,9 +1442,9 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 				case "U":		// 11/13/2012
 					$query_u = "SELECT  `handle` FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
 						LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON (`a`.`responder_id` = `r`.`id`)
-						WHERE `a`.`ticket_id` = $ticket_id AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
+						WHERE `a`.`ticket_id` = ? AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
 						ORDER BY `handle` ASC ";																// 5/25/09, 1/16/08
-					$result_u = db_query($query_u);	// 3/22/09
+					$result_u = db_query($query_u, [$ticket_id]);	// 3/22/09
 					if ($result_u->num_rows>0) {
 						$gt = get_text("Units");
 						$message .= "\n{$gt} (" . $result_u->num_rows . "):\n";
@@ -1618,8 +1608,8 @@ function notify_user($ticket_id,$action_id) {								// 10/20/08
 
 	$addrs = array();															//
 
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}notify` WHERE (`ticket_id`='$ticket_id' OR `ticket_id`=0)  AND `" .$fields[$action_id] ."` = '1'";	// all notifies for given ticket - or any ticket 10/22/08
-	$result	= db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}notify` WHERE (`ticket_id`=? OR `ticket_id`=0)  AND `" .$fields[$action_id] ."` = '1'";	// all notifies for given ticket - or any ticket 10/22/08
+	$result	= db_query($query, [$ticket_id]);
 	while($row = stripslashes_deep($result->fetch_assoc())) {		//is it the right action?
 		if (is_email($row['email_address'])) {
 			array_push($addrs, $row['email_address']); // save for emailing
@@ -1635,12 +1625,10 @@ function snap($source, $stuff = "") {									// 10/18/08 , 3/5/09 - debug tool
 		$query	= "DELETE FROM `$snap_table` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
 		$result = db_query($query);
 
-		$query = sprintf("INSERT INTO `$snap_table` (`source`,`stuff`)
-			VALUES(%s,%s)",
-				quote_smart_deep(trim($source)),
-				quote_smart_deep(trim($stuff)));
+		$query = "INSERT INTO `$snap_table` (`source`,`stuff`)
+			VALUES(?,?)";
 
-		$result = db_query($query);
+		$result = db_query($query, [trim($source), trim($stuff)]);
 		unset($result);
 		}
 	else {
@@ -1791,10 +1779,10 @@ function get_status_sel($unit_in, $status_val_in, $tbl_in) {					// returns sele
 			print "ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ";
 			}
 
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$tablename}`, `{$GLOBALS['mysql_prefix']}{$status_table}` WHERE `{$GLOBALS['mysql_prefix']}{$tablename}`.`id` = $unit_in
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$tablename}`, `{$GLOBALS['mysql_prefix']}{$status_table}` WHERE `{$GLOBALS['mysql_prefix']}{$tablename}`.`id` = ?
 		AND `{$GLOBALS['mysql_prefix']}{$status_table}`.`id` = `{$GLOBALS['mysql_prefix']}{$tablename}`.`{$link_field}` LIMIT 1" ;
 
-	$result = db_query($query);
+	$result = db_query($query, [$unit_in]);
 	if ($result->num_rows==0) {				// 2/7/10
 		$init_bg_color = "transparent";
 		$init_txt_color = "black";
@@ -2089,21 +2077,22 @@ function get_disp_status ($row_in) {			// 8/29/10
 	}
 
 function set_u_updated ($in_assign) {			// given a disaptch record id, updates unit data - 9/1/10
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` =  {$in_assign} LIMIT 1";
-	$result = db_query($query);
+	$in_assign = intval($in_assign);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$in_assign]);
 
 	$row_temp = $result->fetch_assoc();					//
-	$now = quote_smart(mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)));														// 9/1/10
-	$user = quote_smart(trim($_SESSION['user_id']));
+	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));														// 9/1/10
+	$user = trim($_SESSION['user_id']);
 	$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
-		`updated`= 			{$now},
-		`_on`= 				{$now},
-		`user_id`=  		{$user},
-		`_by`=   			{$user},
-		`_from`= " . 		quote_smart(trim($_SERVER['REMOTE_ADDR'])) . "
-		WHERE `id`=			{$row_temp['responder_id']}";
+		`updated`= 			?,
+		`_on`= 				?,
+		`user_id`=  		?,
+		`_by`=   			?,
+		`_from`= 			?
+		WHERE `id`=			?";
 
-	$result = db_query($query);
+	$result = db_query($query, [$now, $now, $user, $user, trim($_SERVER['REMOTE_ADDR']), $row_temp['responder_id']]);
 	unset($result);
 	return TRUE;
 	}		// end function set_u_updated (

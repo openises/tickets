@@ -23,45 +23,53 @@ $frm_unit = sanitize_int($_POST['frm_unit']);
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $date_part="";
+$params = [];
 if (in_array("frm_dispatched",$vals_ary))	{				// accommodate multiples
-	$date_part .= "`dispatched` = " . quote_smart($now) . ", ";
+	$date_part .= "`dispatched` = ?, ";
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_DISP'], 	$frm_tick, $frm_unit, $frm_id);	// 1/21/09
 	$disp_status = 1;
 	}
 if (in_array("frm_responding",$vals_ary))	{
-	$date_part .= "`responding` = " . quote_smart($now) . ", ";
+	$date_part .= "`responding` = ?, ";
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_RESP'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 2;
 	}
 if (in_array("frm_on_scene",$vals_ary))		{
-	$date_part .= "`on_scene` = ". quote_smart($now) . ", ";				// 2/1/09
+	$date_part .= "`on_scene` = ?, ";				// 2/1/09
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_ONSCN'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 3;
 	}
 
 if (in_array("frm_u2fenr",$vals_ary))		{		// 8/28/10
-	$date_part .= "`u2fenr` = " . quote_smart($now) . ", ";
+	$date_part .= "`u2fenr` = ?, ";
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_U2FENR'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 4;
 	}
 
 if (in_array("frm_u2farr",$vals_ary))		{
-	$date_part .= "`u2farr` = " . quote_smart($now) . ", ";
+	$date_part .= "`u2farr` = ?, ";
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_U2FARR'], 	$frm_tick, $frm_unit, $frm_id);
-	$disp_status = 5;	
+	$disp_status = 5;
 	}
 
 if (in_array("frm_clear",$vals_ary))		{
-	$date_part .= "`clear` = " . quote_smart($now) . ", ";
+	$date_part .= "`clear` = ?, ";
+	$params[] = $now;
 	do_log($GLOBALS['LOG_CALL_CLR'], 	$frm_tick, $frm_unit, $frm_id);
 	$disp_status = 6;
 	}
 
-$date_part .= substr($date_part, 0, -2);							//drop terminal separator pair
+$date_part = substr($date_part, 0, -2);							//drop terminal separator pair
 
-$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET `as_of`= " . quote_smart($now) .", " . $date_part ;
+$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET `as_of`= ?, " . $date_part ;
 $query .=  " WHERE `id` = ? LIMIT 1";
-$result	= db_query($query, [$frm_id]);
+$params = array_merge([$now], $params, [$frm_id]);
+$result	= db_query($query, $params);
 
 set_u_updated ($_POST['frm_id']); 								// set unit 'updated' time - 9/1/10
 $use_status_update = get_variable("use_disp_autostat");

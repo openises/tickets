@@ -86,14 +86,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 																				//fix limits according to setting "ticket_per_page"
 	$limit = "";
 	if ($_SESSION['ticket_per_page'] && (check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]ticket`") > $_SESSION['ticket_per_page']))	{
-		if ($_GET['offset']) {
-			$limit = "LIMIT $_GET[offset],$_SESSION[ticket_per_page]";
+		$safe_offset = isset($_GET['offset']) ? sanitize_int($_GET['offset'], 0) : 0;
+		$safe_per_page = intval($_SESSION['ticket_per_page']);
+		if ($safe_offset) {
+			$limit = "LIMIT {$safe_offset},{$safe_per_page}";
 			}
 		else {
-			$limit = "LIMIT 0,$_SESSION[ticket_per_page]";
+			$limit = "LIMIT 0,{$safe_per_page}";
 			}
 		}
-	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
+	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=" . intval($_SESSION['user_id']) : "";
 	$time_back = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60) - ($cwi*3600));
 	$sort_by_severity = ($func == 0)? "`severity` DESC ": "";
 
@@ -158,12 +160,15 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 		}				// end switch($func)
 	
 	if ($sort_by_field && $sort_value) {					//sort by field?
+		$allowed_fields = array('scope','street','city','state','contact','phone','description');
+		$safe_sort_field = in_array($sort_by_field, $allowed_fields) ? $sort_by_field : 'scope';
 		$query = "SELECT *,problemstart AS problemstart,problemend AS problemend,
-			`date` AS `date`,updated AS updated, in_types.type AS `type`, in_types.id AS `t_id` 
+			`date` AS `date`,updated AS updated, in_types.type AS `type`, in_types.id AS `t_id`
 			FROM `$GLOBALS[mysql_prefix]allocates`
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]allocates`.`resource_id`=`$GLOBALS[mysql_prefix]ticket`.`id` 			
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.`in_types_id`=`$GLOBALS[mysql_prefix]in_types`.`id` 
-			WHERE `ticket`.`{$sort_by_field}` LIKE '%{$sort_value}%' $restrict_ticket AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 ORDER BY $order_by";
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]allocates`.`resource_id`=`$GLOBALS[mysql_prefix]ticket`.`id`
+			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.`in_types_id`=`$GLOBALS[mysql_prefix]in_types`.`id`
+			WHERE `ticket`.`{$safe_sort_field}` LIKE ? $restrict_ticket AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 ORDER BY $order_by";
+		$result = db_query($query, ['%' . $sort_value . '%']) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		}
 	else {					// 2/2/09, 8/12/09, updated 4/18/11 to support regional operation
 		$query = "SELECT *,problemstart AS problemstart,

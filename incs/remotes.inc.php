@@ -128,20 +128,20 @@ function get_instam_device($key) {				// 2/14/2014
 			if ( $GLOBALS['db_handle']->affected_rows > 0 ) {						// if movement
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `updated` = '" . now_ts() . "'{$where_clause}";
 				$result = db_query($query); //11/15/11
-				$query	= "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE `source`= '" . quote_smart($key) . "' AND `updated` < (NOW() - INTERVAL 7 DAY)"; 	// remove prior track this device  3/20/09
-				$result = db_query($query);
-				$query  = sprintf("INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh`(`source`,`utc_stamp`,`latitude`,`longitude`,`course`,`speed`,`altitude`,`updated`,`from`)
-									VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-										quote_smart($device_id),
+				$query	= "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE `source`= ? AND `updated` < (NOW() - INTERVAL 7 DAY)"; 	// remove prior track this device  3/20/09
+				$result = db_query($query, [trim($key)]);
+				$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh`(`source`,`utc_stamp`,`latitude`,`longitude`,`course`,`speed`,`altitude`,`updated`,`from`)
+									VALUES (?,?,?,?,?,?,?,?,?)";
+				$result = db_query($query, [
+										trim($device_id),
 										0,
-										quote_smart($lat),
-										quote_smart($lng),
-										quote_smart($heading),
+										trim($lat),
+										trim($lng),
+										trim($heading),
 										round($speed),
-										quote_smart($altitude),
-										quote_smart(now_ts()),
-										$GLOBALS['TRACK_INSTAM']) ;
-				$result = db_query($query);
+										trim($altitude),
+										trim(now_ts()),
+										$GLOBALS['TRACK_INSTAM']]);
 				unset($result);
 				} 			// end if movement
 			}			// end if isset (lat, lng)

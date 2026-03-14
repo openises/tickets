@@ -410,8 +410,8 @@ function linkFromSumm(table, index) {
 		$old_clothing = array();
 		$old_files = array();
 		
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = " . intval($_POST['frm_id']);
-		$result = db_query($query);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			if($row['skill_type'] ==1) {
 				$old_training[] = $row['skill_id'];
@@ -552,7 +552,7 @@ function linkFromSumm(table, index) {
 				`_on`,
 				`_from`,
 				`old_id` )
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 		$result = db_query($query, [
 				trim($_POST['frm_field1']),
@@ -631,11 +631,11 @@ function linkFromSumm(table, index) {
 				trim($_POST['frm_id'])
 			]);	
 		
-		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}member WHERE `id`=" . intval($_POST['frm_id']);
-		$result = db_query($query);
-		
-		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `member_id`=" . intval($_POST['frm_id']);
-		$result = db_query($query);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}member WHERE `id`=?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
+
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `member_id`=?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
 		
 		$files_directory = "./mdb_files/" . $_POST['frm_id'];
 		$files_wastebasket = "./mdb_file_waste/" . $_POST['frm_id'];
@@ -650,8 +650,8 @@ function linkFromSumm(table, index) {
 			rename ($pictures_directory, $pictures_wastebasket);
 			}
 
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mdb_files` WHERE `member_id` = " . intval($_POST['frm_id']);
-		$result = db_query($query);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mdb_files` WHERE `member_id` = ?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$oldname = explode("/",$row['name']);
 			$filename = "./file_waste/" . $_POST['frm_id'] . "/" . $oldname[3];
@@ -671,8 +671,8 @@ function linkFromSumm(table, index) {
 				]);		
 			}
 			
-		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `member_id`=" . intval($_POST['frm_id']);
-		$result = db_query($query);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `member_id`=?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
 		
 		$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been Deleted by user " . get_owner($who) . " on " . $now;
 		$addrs = mdb_notify_user();
@@ -685,7 +685,7 @@ function linkFromSumm(table, index) {
 		parent.frames["upper"].check_bin();	
 </SCRIPT>
 <?php		
-		$caption = "<B>Member <I>" . stripslashes_deep($_POST['frm_field2']) . " " . stripslashes_deep($_POST['frm_field1']) . "</I> has been deleted from database.</B>";
+		$caption = "<B>Member <I>" . htmlspecialchars($_POST['frm_field2']) . " " . htmlspecialchars($_POST['frm_field1']) . "</I> has been deleted from database.</B>";
 		} else {
 		if ($_getgoedit == 'true') {
 			$errmsg = "";
@@ -830,7 +830,7 @@ function linkFromSumm(table, index) {
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $email_text);
 				}
-			$caption = "<B><FONT SIZE = '4px' COLOR = 'blue'>&nbsp;&nbsp;&nbsp;" . stripslashes_deep($_POST['frm_field2']) . " " . stripslashes_deep($_POST['frm_field1']) . " data has been updated.</FONT></B>&nbsp;&nbsp;" . $errmsg;
+			$caption = "<B><FONT SIZE = '4px' COLOR = 'blue'>&nbsp;&nbsp;&nbsp;" . htmlspecialchars($_POST['frm_field2']) . " " . htmlspecialchars($_POST['frm_field1']) . " data has been updated.</FONT></B>&nbsp;&nbsp;" . $errmsg;
 			}
 		}				// end else {}
 
@@ -997,7 +997,7 @@ function linkFromSumm(table, index) {
 				WHERE `id`=?";
 			$result = db_query($query, [trim($filename), $new_id]);
 
-			$caption = "<B>Member  <i>" . stripslashes_deep($_POST['frm_field2']) . " " . stripslashes_deep($_POST['frm_field1']) . "</i> data has been added.</B>";
+			$caption = "<B>Member  <i>" . htmlspecialchars($_POST['frm_field2']) . " " . htmlspecialchars($_POST['frm_field1']) . "</i> data has been added.</B>";
 
 			$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been added by user " . get_owner($who) . " on " . $now . "\n\n";
 
@@ -1260,8 +1260,8 @@ function linkFromSumm(table, index) {
 		
 		if ($_get_edittpack  == 'true') {
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
-				$result = db_query($query);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=?";
+				$result = db_query($query, [intval($_POST['frm_all_id'])]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been removed.";					
@@ -1304,8 +1304,8 @@ function linkFromSumm(table, index) {
 			
 		if ($_get_editevent  == 'true') {
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
-				$result = db_query($query);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=?";
+				$result = db_query($query, [intval($_POST['frm_all_id'])]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been removed.";					
@@ -1345,8 +1345,8 @@ function linkFromSumm(table, index) {
 		
 		if ($_get_editcloth  == 'true') {	
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
-				$result = db_query($query);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=?";
+				$result = db_query($query, [intval($_POST['frm_all_id'])]);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been removed.";					
@@ -1356,12 +1356,15 @@ function linkFromSumm(table, index) {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
-					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
-					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
-					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
+					`member_id`=?, `skill_id`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_id']),
+					trim($_POST['frm_skill']),
+					trim($now),
+					intval($_POST['frm_all_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been changed.";	
@@ -1380,8 +1383,8 @@ function linkFromSumm(table, index) {
 
 		if ($_get_editcapab  == 'true') {	
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
-				$result = db_query($query);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=?";
+				$result = db_query($query, [intval($_POST['frm_all_id'])]);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been removed.";					
@@ -1391,12 +1394,15 @@ function linkFromSumm(table, index) {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
-					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
-					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
-					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
+					`member_id`=?, `skill_id`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_id']),
+					trim($_POST['frm_skill']),
+					trim($now),
+					intval($_POST['frm_all_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been changed.";	
@@ -1415,8 +1421,8 @@ function linkFromSumm(table, index) {
 
 		if ($_get_editequip  == 'true') {
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
-				$result = db_query($query);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=?";
+				$result = db_query($query, [intval($_POST['frm_all_id'])]);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been removed.";					
@@ -1426,12 +1432,15 @@ function linkFromSumm(table, index) {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
-					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
-					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
-					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
+					`member_id`=?, `skill_id`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_id']),
+					trim($_POST['frm_skill']),
+					trim($now),
+					intval($_POST['frm_all_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been changed.";		
@@ -1450,8 +1459,8 @@ function linkFromSumm(table, index) {
 
 		if ($_get_editveh  == 'true') {	
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
-				$result = db_query($query);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=?";
+				$result = db_query($query, [intval($_POST['frm_all_id'])]);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been removed.";					
@@ -1465,16 +1474,19 @@ function linkFromSumm(table, index) {
 				$end = (isset($_POST['frm_end'])) ? $_POST['frm_end'] : "";		
 				$days = (isset($_POST['frm_days'])) ? $_POST['frm_days'] : "";				
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
-					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
-					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
-					`frequency`= " . 		quote_smart(trim($frequency)) . ",
-					`start`= " . 		quote_smart(trim($start)) . ",
-					`end`= " . 		quote_smart(trim($end)) . ",
-					`days`= " . 		quote_smart(trim($days)) . ",					
-					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
+					`member_id`=?, `skill_id`=?, `frequency`=?, `start`=?, `end`=?, `days`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_id']),
+					trim($_POST['frm_skill']),
+					trim($frequency),
+					trim($start),
+					trim($end),
+					trim($days),
+					trim($now),
+					intval($_POST['frm_all_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been changed.";
@@ -1496,8 +1508,8 @@ function linkFromSumm(table, index) {
 				$base_dir = getcwd();
 				$file = $base_dir . "/" . substr($_POST['frm_file_name'], 2);
 				if(unlink($file)) {
-					$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `id`=" . intval($_POST['frm_file_id']);
-					$result = db_query($query);
+					$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `id`=?";
+					$result = db_query($query, [intval($_POST['frm_file_id'])]);
 					
 					$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 					$text_str .= ". \n\nFile - " . $_POST['frm_file'] . " " . $_POST['frm_file_name'] . ") has been removed.";						
@@ -1510,11 +1522,14 @@ function linkFromSumm(table, index) {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_files` SET
-					`description`= " . 		quote_smart(trim($_POST['frm_description'])) . ",
-					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_id']))) . ";";
+					`description`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_description']),
+					trim($now),
+					intval($_POST['frm_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nFile - " . get_its_name($_POST['frm_skill'], 'shortname', 'files') . " has been changed.";		
@@ -1533,7 +1548,7 @@ function linkFromSumm(table, index) {
 // add Capabilities ===========================================================================================================================
 
 	if ($_get_training == 'true') {
-		$id=stripslashes_deep($_GET['id']);
+		$id=sanitize_int($_GET['id']);
 		$disallow = is_user() ;		
 		include('./forms/add_training.php');
 ?>
@@ -1542,7 +1557,7 @@ function linkFromSumm(table, index) {
 		}
 		
 	if ($_get_event == 'true') {
-		$id=stripslashes_deep($_GET['id']);
+		$id=sanitize_int($_GET['id']);
 		$disallow = is_user() ;	
 		include('./forms/add_event.php');
 ?>
@@ -1551,7 +1566,7 @@ function linkFromSumm(table, index) {
 		}
 		
 	if ($_get_capability == 'true') {
-		$id=stripslashes_deep($_GET['id']);
+		$id=sanitize_int($_GET['id']);
 		$disallow = is_user() ;			
 		include('./forms/add_capability.php');
 ?>		
@@ -1560,7 +1575,7 @@ function linkFromSumm(table, index) {
 		}
 		
 	if ($_get_clothing == 'true') {
-		$id=stripslashes_deep($_GET['id']);
+		$id=sanitize_int($_GET['id']);
 		$disallow = is_user() ;		
 		include('./forms/add_clothing.php');
 ?>
@@ -1568,7 +1583,7 @@ function linkFromSumm(table, index) {
 		exit();
 		}
 	if ($_get_equipment == 'true') {
-		$id=stripslashes_deep($_GET['id']);	
+		$id=sanitize_int($_GET['id']);	
 		$disallow = is_user() ;		
 		include('./forms/add_equipment.php');
 ?>		
@@ -1576,7 +1591,7 @@ function linkFromSumm(table, index) {
 		exit();
 		}
 	if ($_get_vehicle == 'true') {
-		$id=stripslashes_deep($_GET['id']);
+		$id=sanitize_int($_GET['id']);
 		$disallow = is_user() ;			
 		include('./forms/add_vehicle.php');
 ?>		
@@ -1584,7 +1599,7 @@ function linkFromSumm(table, index) {
 		exit();
 		}
 	if ($_get_files == 'true') {
-		$id=stripslashes_deep($_GET['id']);
+		$id=sanitize_int($_GET['id']);
 		$disallow = is_user() ;		
 		include('./forms/add_file.php');
 ?>		
@@ -1595,7 +1610,7 @@ function linkFromSumm(table, index) {
 // edit Capabilities etc. ===========================================================================================================================
 
 	if ($_get_e_training == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);
+		$id=sanitize_int($_GET['mem_id']);
 		$disallow = is_user() ;		
 		include('./forms/edit_training.php');
 ?>
@@ -1604,7 +1619,7 @@ function linkFromSumm(table, index) {
 		}
 		
 	if ($_get_e_event == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);
+		$id=sanitize_int($_GET['mem_id']);
 		$disallow = is_user() ;		
 		include('./forms/edit_event.php');
 ?>
@@ -1613,7 +1628,7 @@ function linkFromSumm(table, index) {
 		}
 		
 	if ($_get_e_capability == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);
+		$id=sanitize_int($_GET['mem_id']);
 		$disallow = is_user() ;		
 		include('./forms/edit_capability.php');
 ?>		
@@ -1622,7 +1637,7 @@ function linkFromSumm(table, index) {
 		}
 		
 	if ($_get_e_clothing == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);
+		$id=sanitize_int($_GET['mem_id']);
 		$disallow = is_user() ;	
 		include('./forms/edit_clothing.php');
 ?>
@@ -1630,7 +1645,7 @@ function linkFromSumm(table, index) {
 		exit();
 		}
 	if ($_get_e_equipment == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);	
+		$id=sanitize_int($_GET['mem_id']);	
 		$disallow = is_user() ;	
 		include('./forms/edit_equipment.php');
 ?>		
@@ -1638,7 +1653,7 @@ function linkFromSumm(table, index) {
 		exit();
 		}
 	if ($_get_e_vehicle == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);	
+		$id=sanitize_int($_GET['mem_id']);	
 		$disallow = is_user() ;	
 		include('./forms/edit_vehicle.php');
 ?>		
@@ -1646,7 +1661,7 @@ function linkFromSumm(table, index) {
 		exit();
 		}		
 	if ($_get_e_files == 'true') {
-		$id=stripslashes_deep($_GET['mem_id']);	
+		$id=sanitize_int($_GET['mem_id']);	
 		$disallow = is_user() ;	
 		include('./forms/edit_file.php');
 ?>		
@@ -1683,11 +1698,11 @@ function linkFromSumm(table, index) {
 			$query	= "SELECT *, `field17` AS `joindate`,
 				`field18` AS `dob`,
 				`field16` AS `duedate`,
-				`field12` AS `lat`, 
-				`field13` AS `lng`, 
+				`field12` AS `lat`,
+				`field13` AS `lng`,
 				`_on` AS `updated`
-				FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id`={$id}";
-			$result	= db_query($query);
+				FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id`=?";
+			$result	= db_query($query, [$id]);
 			$row	= $result->fetch_array();
 			$row['duedate'] = strtotime($row['duedate']);
 			$row['joindate'] = strtotime($row['joindate']);
@@ -1725,14 +1740,14 @@ function linkFromSumm(table, index) {
 		if((can_view()) || (is_team_manager($id)) || (is_curr_member($id))) {		
 
 			$query	= "SELECT *, `_on` AS `updated`,
-				`field12` AS `lat`, 
-				`field13` AS `lng`, 
+				`field12` AS `lat`,
+				`field13` AS `lng`,
 				`field18` AS `dob`,
-				`field17` AS `joindate`, 
-				`field16` AS `duedate` 
-				FROM `{$GLOBALS['mysql_prefix']}member` `m` 
-				WHERE `m`.`id`={$id} LIMIT 1";
-			$result	= db_query($query);
+				`field17` AS `joindate`,
+				`field16` AS `duedate`
+				FROM `{$GLOBALS['mysql_prefix']}member` `m`
+				WHERE `m`.`id`=? LIMIT 1";
+			$result	= db_query($query, [$id]);
 			$row	= stripslashes_deep($result->fetch_assoc());
 			$row['duedate'] = strtotime($row['duedate']);
 			$row['joindate'] = strtotime($row['joindate']);
@@ -1741,8 +1756,8 @@ function linkFromSumm(table, index) {
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 			if (isset($row['field21'])) {
-				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id`=" . $row['field21'];	// status value
-				$result_st	= db_query($query);
+				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id`=?";	// status value
+				$result_st	= db_query($query, [$row['field21']]);
 				$row_st	= $result_st->fetch_assoc();
 				unset($result_st);
 				}

@@ -34,8 +34,8 @@ function search_capabilities($member_id, $searchstring) {
 		`a`.`refresh_due` AS `refresh_due`		
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = `tp`.`id` ) 	
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 1 AND `refresh_due` > NOW() ORDER BY `a`.`member_id`";
-	$result = db_query($query);
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 1 AND `refresh_due` > NOW() ORDER BY `a`.`member_id`";
+	$result = db_query($query, [intval($member_id)]);
 	if($result->num_rows != 0) {
 		while ($row = $result->fetch_assoc()) {
 			$value = $row['training_package_name'] . " | " . $row['refresh_due'];
@@ -48,8 +48,8 @@ function search_capabilities($member_id, $searchstring) {
 		`ct`.`name` AS `capability_name`
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]capability_types` `ct` ON ( `a`.`skill_id` = `ct`.`id` ) 
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
-	$result = db_query($query);
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [intval($member_id)]);
 	if($result->num_rows != 0) {
 		while ($row = $result->fetch_assoc()) {
 			$value = $row['capability_name'];
@@ -63,8 +63,8 @@ function search_capabilities($member_id, $searchstring) {
 		`et`.`serial` AS `equipment_serial`	
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]equipment_types` `et` ON ( `a`.`skill_id` = `et`.`id` ) 		
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
-	$result = db_query($query);
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [intval($member_id)]);
 	if($result->num_rows != 0) {
 		while ($row = $result->fetch_assoc()) {
 			$value = $row['equipment_name']. " - " . $row['equipment_serial'];
@@ -78,8 +78,8 @@ function search_capabilities($member_id, $searchstring) {
 		`cl`.`size` AS `size`		
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` ) 
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
-	$result = db_query($query);
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [intval($member_id)]);
 	if($result->num_rows != 0) {
 		while ($row = $result->fetch_assoc()) {
 			$value = $row['clothing_item']. " - " . $row['size'];
@@ -102,8 +102,8 @@ function search_resp_capabilities($responder_id, $searchstring) {
 	$theArray =  array();
 	$key = 1;
 	
-	$query = "SELECT `capab` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $responder_id;
-	$result = db_query($query);
+	$query = "SELECT `capab` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = ?";
+	$result = db_query($query, [intval($responder_id)]);
 	if($result->num_rows != 0) {
 		while ($row = $result->fetch_assoc()) {
 			$value = $row['capab'];
@@ -219,16 +219,16 @@ function get_ticket($id) {
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` ON (`$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]ticket`.`facility`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`={$id} LIMIT 1";
+		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`= ? LIMIT 1";
 
-	$result = db_query($query);
+	$result = db_query($query, [intval($id)]);
 	$row = stripslashes_deep($result->fetch_assoc());
 	return $row;
 	}
 	
 function get_unit_icon_id($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = " . $id;
-	$result = db_query($query);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = ?";
+	$result = db_query($query, [intval($id)]);
 	if($result) {
 		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['icon'];
@@ -238,8 +238,8 @@ function get_unit_icon_id($id) {
 	}
 	
 function get_unit_icon_name($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = " . $id;
-	$result = db_query($query);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = ?";
+	$result = db_query($query, [intval($id)]);
 	if($result) {
 		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['name'];
@@ -249,11 +249,11 @@ function get_unit_icon_name($id) {
 	}
 
 function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/15/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-		WHERE `responder_id` = '{$unit_id}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	5/4/11
-	
-	$result_as = db_query($query);
+		WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	5/4/11
+
+	$result_as = db_query($query, [intval($unit_id)]);
 	if ( $result_as->num_rows == 0) {
 		unset($result_as); return "<SPAN>---------</SPAN>";
 		} else {		
@@ -286,8 +286,8 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 function get_cd_str($in_row, $ticket_id) {
 	global $unit_id;
 	$return = "";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE  `ticket_id` = " . $ticket_id . " AND (`responder_id`= " . $in_row['unit_id'] . ") AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";
-	$result = db_query($query);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE  `ticket_id` = ? AND (`responder_id`= ?) AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";
+	$result = db_query($query, [intval($ticket_id), intval($in_row['unit_id'])]);
 	if($result->num_rows==1) {
 		$return = " CHECKED DISABLED ";
 		}
@@ -300,8 +300,8 @@ function get_cd_str($in_row, $ticket_id) {
 	if (intval($in_row['multi'])==1) {
 		$return = "";
 		}
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`= " . $in_row['unit_id'] . " AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";
-	$result = db_query($query);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`= ? AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";
+	$result = db_query($query, [intval($in_row['unit_id'])]);
 	if($result->num_rows==1) {
 		$return = " DISABLED ";
 		} else {
@@ -311,8 +311,8 @@ function get_cd_str($in_row, $ticket_id) {
 	}
 	
 function is_assigned_to($tick_id, $resp_id) {
-	$query = "SELECT `ticket_id`, `responder_id` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $tick_id . " AND `responder_id` = " . $resp_id . " LIMIT 1";
-	$result = db_query($query);
+	$query = "SELECT `ticket_id`, `responder_id` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = ? AND `responder_id` = ? LIMIT 1";
+	$result = db_query($query, [intval($tick_id), intval($resp_id)]);
 	if($result) {
 		return TRUE;
 		} else {
@@ -349,10 +349,10 @@ switch (intval(trim(get_variable('locale')))) {
 		break;
 		}
 
-$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart, UNIX_TIMESTAMP(problemend) AS problemend, `scope` AS `scope` 
-	FROM `$GLOBALS[mysql_prefix]ticket` 
-	WHERE `id`= " . $ticket_id . " LIMIT 1;";
-$result = db_query($query);
+$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart, UNIX_TIMESTAMP(problemend) AS problemend, `scope` AS `scope`
+	FROM `$GLOBALS[mysql_prefix]ticket`
+	WHERE `id`= ? LIMIT 1;";
+$result = db_query($query, [intval($ticket_id)]);
 if(db_affected_rows()==1) {
 	$row = stripslashes_deep($result->fetch_array());
 	$latitude = $row['lat'];
@@ -363,7 +363,7 @@ if(db_affected_rows()==1) {
 	unset($result);
 	}
 
-$where = (empty($unit_id))? "" : " AND `r`.`id` = " . $unit_id;
+$where = (empty($unit_id))? "" : " AND `r`.`id` = " . intval($unit_id);
 $al_groups = $_SESSION['user_groups'];
 
 $x=0;	
@@ -425,8 +425,8 @@ $i=0;
 
 while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$unit_id = $row['unit_id'];
-	$query2 = "SELECT `member_id` FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $unit_id;
-	$result2 = db_query($query2);
+	$query2 = "SELECT `member_id` FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = ?";
+	$result2 = db_query($query2, [intval($unit_id)]);
 	$assigned_members = array();
 	while ($row2 = stripslashes_deep($result2->fetch_assoc())) {
 		$assigned_members[] = $row2['member_id'];

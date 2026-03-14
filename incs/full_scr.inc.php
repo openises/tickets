@@ -1320,12 +1320,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		$order_by =  (!empty ($get_sortby))? $get_sortby: $_SESSION['sortorder']; // use default sort order?
 																					//fix limits according to setting "ticket_per_page"
 		$limit = "";
-		if ($_SESSION['ticket_per_page'] && (check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]ticket`") > $_SESSION['ticket_per_page']))	{
+		if ($_SESSION['ticket_per_page'] && (check_for_rows("SELECT id FROM `{$GLOBALS['mysql_prefix']}ticket`") > $_SESSION['ticket_per_page']))	{
 			if ($_GET['offset']) {
-				$limit = "LIMIT $_GET[offset],$_SESSION[ticket_per_page]";
+				$limit = "LIMIT " . intval($_GET['offset']) . "," . intval($_SESSION['ticket_per_page']);
 				}
 			else {
-				$limit = "LIMIT 0,$_SESSION[ticket_per_page]";
+				$limit = "LIMIT 0," . intval($_SESSION['ticket_per_page']);
 				}
 			}
 		$restrict_ticket = "";
@@ -1870,7 +1870,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`ring_fence`)
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )	
 				{$where2} AND `use_with_u_rf`=1 GROUP BY `l`.`id`";
-	$result_bn = db_query($query_bn);
+	$result_bn = db_query($query_bn, !empty($where2_params) ? $where2_params : null);
 	while($row_bn = stripslashes_deep($result_bn->fetch_assoc())) {
 		extract ($row_bn);
 		$bn_name = $row_bn['line_name'];
@@ -1921,7 +1921,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `l`.`id` = `r`.`excl_zone`)
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )	
 				{$where2} AND `use_with_u_ex`=1 GROUP BY `l`.`id`";
-	$result_bn = db_query($query_bn);
+	$result_bn = db_query($query_bn, !empty($where2_params) ? $where2_params : null);
 	while($row_bn = stripslashes_deep($result_bn->fetch_assoc())) {
 		extract ($row_bn);
 		$bn_name = $row_bn['line_name'];
@@ -1970,10 +1970,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
 		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
 		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 
-		{$where2} 
+		{$where2}
 		GROUP BY unit_id ";	//	4/11/11, 5/4/11
-		
-		$result = db_query($query);
+
+		$result = db_query($query, !empty($where2_params) ? $where2_params : null);
 		$units_ct = $result->num_rows;			// 1/4/10
 //		snap(__LINE__, $units_ct);
 		$aprs = FALSE;
@@ -2465,31 +2465,21 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 		$al_groups = $_SESSION['user_groups'];
 		
+		$where2_params = [];
 		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-			$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+			$where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";
 			} else {
 			if(!isset($_POST['frm_group'])) {	//	5/4/11
-				$x=0;	//	5/4/11
-				$where2 = "WHERE (";	//	5/4/11
-				foreach($al_groups as $grp) {	//	5/4/11
-					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
-					$where2 .= $where3;
-					$x++;
-					}
+				$grp_list = $al_groups;
 				} else {
-				$x=0;	//	5/4/11
-				$where2 = "WHERE (";	//	5/4/11
-				foreach($_POST['frm_group'] as $grp) {	//	5/4/11
-					$where3 = (count($_POST['frm_group']) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
-					$where2 .= $where3;
-					$x++;
-					}
+				$grp_list = $_POST['frm_group'];
 				}
-			$where2 .= " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	5/4/11
+			$placeholders = implode(',', array_fill(0, count($grp_list), '?'));
+			$where2 = "WHERE (`{$GLOBALS['mysql_prefix']}allocates`.`group` IN ({$placeholders}))";
+			$where2_params = array_values($grp_list);
+			$where2 .= " AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";	//	5/4/11
 			}
-		
+
 		$query_fac = "SELECT *,UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]facilities`.id AS fac_id,
 		`$GLOBALS[mysql_prefix]facilities`.description AS facility_description, 
 		`$GLOBALS[mysql_prefix]fac_types`.name AS fac_type_name, 
@@ -2500,7 +2490,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` ON `$GLOBALS[mysql_prefix]facilities`.status_id = `$GLOBALS[mysql_prefix]fac_status`.id 
 		{$where2} 
 		GROUP BY fac_id ORDER BY `$GLOBALS[mysql_prefix]facilities`.type ASC";
-		$result_fac = db_query($query_fac);
+		$result_fac = db_query($query_fac, !empty($where2_params) ? $where2_params : null);
 
 		while($row_fac = $result_fac->fetch_array()){
 		$fac_id=($row_fac['fac_id']);

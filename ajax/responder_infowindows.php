@@ -36,8 +36,8 @@ function can_do_dispatch($the_row) {
 	}		// end function can do_dispatch()
 	
 function unit_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;	// all dispatches this unit
-	$result = db_query($query);	
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = ?";	// all dispatches this unit
+	$result = db_query($query, [intval($id)]);
 	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
@@ -118,8 +118,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	if ($track_type > 0 ) {
 		$do_legend = TRUE;
 		$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
-			WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-		$result_tr = db_query($query);
+			WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";		// newest
+		$result_tr = db_query($query, [$row['callsign']]);
 		$row_track = (db_affected_rows()>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 		$aprs_updated = $row_track['updated'];
 		$aprs_speed = $row_track['speed'];
@@ -140,11 +140,11 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
 	$units_assigned = 0;
 	if(array_key_exists ($row['unit_id'] , $assigns_ary)) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-			WHERE `responder_id` = '{$row['unit_id']}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+			WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
-		$result_as = db_query($query);
+		$result_as = db_query($query, [intval($row['unit_id'])]);
 		$units_assigned = $result_as->num_rows;
 		}		// end if(array_key_exists ()
 

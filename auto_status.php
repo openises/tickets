@@ -60,25 +60,25 @@ if(!empty($_POST)) {
 		$i++;
 		}
 	foreach($the_data as $val) {
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `status_val` = '" . $val[2] . "'";	
-		$result = db_query($query);	
-		if($result->num_rows > 0) {	//	Entry exists for the status value			
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `status_val` = '" . $val[2] . "' AND `text` = '" . $val[1] . "'";	
-			$result = db_query($query);			
-			if($result->num_rows > 0) {	//	Entry exists for the status value and the submitted text - don't insert but check if that entry has the same ID	
-				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `id` = '" . $val[0] . "' AND `status_val` = '" . $val[2] . "' AND `text` = '" . $val[1] . "'";	
-				$result = db_query($query);	
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `status_val` = ?";
+		$result = db_query($query, [$val[2]]);
+		if($result->num_rows > 0) {	//	Entry exists for the status value
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `status_val` = ? AND `text` = ?";
+			$result = db_query($query, [$val[2], $val[1]]);
+			if($result->num_rows > 0) {	//	Entry exists for the status value and the submitted text - don't insert but check if that entry has the same ID
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `id` = ? AND `status_val` = ? AND `text` = ?";
+				$result = db_query($query, [$val[0], $val[2], $val[1]]);
 				if($result->num_rows == 0) { // entry exists for status and text but different ID - do nothing
 					} else { // entry exists for status and text and same id - do nothing
 					}
 				} else {	// current entry for the status value has different text - update
-					$query = "UPDATE `{$GLOBALS['mysql_prefix']}auto_status` SET `text`= " . 		quote_smart(trim($val[1])) . ", `status_val`= " . quote_smart(trim($val[2])) . " WHERE `status_val`=" . $val[2];			
-					$result = db_query($query);	
+					$query = "UPDATE `{$GLOBALS['mysql_prefix']}auto_status` SET `text`= ?, `status_val`= ? WHERE `status_val`= ?";
+					$result = db_query($query, [trim($val[1]), trim($val[2]), $val[2]]);
 				}
-			} else {	//	entry doesn't exist for the status value - insert a new one	
+			} else {	//	entry doesn't exist for the status value - insert a new one
 				if($val[1] != "Not Set") {	//	Ignore empty settings
-					$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}auto_status` (`text` , `status_val`) VALUES ('" . $val[1] . "', '" . $val[2] . "')"; 
-					$result = db_query($query);	
+					$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}auto_status` (`text` , `status_val`) VALUES (?, ?)";
+					$result = db_query($query, [$val[1], $val[2]]);
 					}
 			}
 		}

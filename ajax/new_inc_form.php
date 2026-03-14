@@ -27,8 +27,7 @@ if(empty($_GET)) {
 		$result = db_query($query);
 		if ($result->num_rows> 0) {							// build return string from newest incident data
 			$row = stripslashes_deep($result->fetch_array());
-			$query = "UPDATE `$GLOBALS[mysql_prefix]caller_id` SET `status` = 1 WHERE `id` = " . quote_smart($row['id']);
-			$result = db_query($query);
+			$result = db_query("UPDATE `$GLOBALS[mysql_prefix]caller_id` SET `status` = 1 WHERE `id` = ?", [intval($row['id'])]);
 			$lookup_vals = explode (";", $row['lookup_vals']);
 			$cid_calls = $lookup_vals[0];
 			$cid_name = $lookup_vals[1];
