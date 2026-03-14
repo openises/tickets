@@ -536,10 +536,10 @@ $requester = get_owner($_SESSION['user_id']);
 
 function get_contact_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row2 = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row2 = stripslashes_deep($result->fetch_assoc());
 		$the_ret[] = (($row2['name_f'] != "") && ($row2['name_l'] != "")) ? $row2['name_f'] . " " . $row2['name_l'] : $row2['user'];
 		$the_ret[] = ($row2['email'] != "") ? $row2['email'] : "Not Set";
 		}
@@ -548,10 +548,10 @@ function get_contact_details($the_id) {
 	
 function get_requester_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row3 = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row3 = stripslashes_deep($result->fetch_assoc());
 		if($row3['email'] == "") {
 			if($row3['email_s'] == "") {
 				$the_ret[0] = "";
@@ -568,20 +568,20 @@ function get_requester_details($the_id) {
 	}
 
 function get_user_name($the_id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row4 = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row4 = stripslashes_deep($result->fetch_assoc());
 		$the_ret = (($row4['name_f'] != "") && ($row4['name_l'] != "")) ? $the_ret[] = $row4['name_f'] . " " . $row4['name_l'] : $the_ret[] = $row4['user'];
 		}
 	return $the_ret;
 	}
 
 function get_thefacilityname($value) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $value . " LIMIT 1";		 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row5 = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$value]);
+	if($result->num_rows != 0) {
+		$row5 = stripslashes_deep($result->fetch_assoc());
 		return $row5['name'];
 		} else {
 		return "";
@@ -589,10 +589,10 @@ function get_thefacilityname($value) {
 	}
 	
 function get_facilitydetails($value) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $value . " LIMIT 1";		 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row6 = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$value]);
+	if($result->num_rows != 0) {
+		$row6 = stripslashes_deep($result->fetch_assoc());
 		$return = array();
 		$return['street'] = $row6['street'];
 		$return['city'] = $row6['city'];
@@ -613,50 +613,51 @@ if((!empty($_POST)) && (empty($_GET))) {
 	$the_email = (($appEmail != NULL) && (is_email($appEmail))) ? $appEmail : $theDetails[0];
 	$meridiem_request_date = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_request_date'])))) ) ? "" : $_POST['frm_meridiem_request_date'] ;
 	$request_date = "$_POST[frm_year_request_date]-$_POST[frm_month_request_date]-$_POST[frm_day_request_date] 00:00:00$meridiem_request_date";	
-	$query = "UPDATE `$GLOBALS[mysql_prefix]requests` SET 
-		`email` = " . quote_smart(trim($appEmail)) . ",
-		`street` = " . quote_smart(trim($_POST['frm_street'])) . ",
-		`city` = " . quote_smart(trim($_POST['frm_city'])) . ",
-		`postcode` = " . quote_smart(trim($_POST['frm_postcode'])) . ",
-		`state` = " . quote_smart(trim($_POST['frm_state'])) . ",
-		`the_name` = " . quote_smart(trim($_POST['frm_patient'])) . ",
-		`phone` = " . quote_smart(trim($_POST['frm_phone'])) . ",
-		`to_address` = " . quote_smart(trim($_POST['frm_toaddress'])) . ",
-		`pickup` = " . quote_smart(trim($_POST['frm_pickup'])) . ",
-		`arrival` = " . quote_smart(trim($_POST['frm_arrival'])) . ",
-		`orig_facility` = " . quote_smart(trim($_POST['frm_orig_fac'])) . ",		
-		`rec_facility` = " . quote_smart(trim($_POST['frm_rec_fac'])) . ",
-		`scope` = " . quote_smart(trim($_POST['frm_scope'])) . ",
-		`description` = " . quote_smart(trim($_POST['frm_description'])) . ",		
-		`request_date` = " . quote_smart(trim($request_date)) . ",	
-		`status` = " . quote_smart(trim($_POST['frm_status'])) . "
-		WHERE `id` = " . $_POST['id'];
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+	$post_id = sanitize_int($_POST['id']);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET
+		`email` = ?,
+		`street` = ?,
+		`city` = ?,
+		`postcode` = ?,
+		`state` = ?,
+		`the_name` = ?,
+		`phone` = ?,
+		`to_address` = ?,
+		`pickup` = ?,
+		`arrival` = ?,
+		`orig_facility` = ?,
+		`rec_facility` = ?,
+		`scope` = ?,
+		`description` = ?,
+		`request_date` = ?,
+		`status` = ?
+		WHERE `id` = ?";
+	$result = db_query($query, [trim($appEmail), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_postcode']), trim($_POST['frm_state']), trim($_POST['frm_patient']), trim($_POST['frm_phone']), trim($_POST['frm_toaddress']), trim($_POST['frm_pickup']), trim($_POST['frm_arrival']), trim($_POST['frm_orig_fac']), trim($_POST['frm_rec_fac']), trim($_POST['frm_scope']), trim($_POST['frm_description']), trim($request_date), trim($_POST['frm_status']), $post_id]);	
 	$the_ticket = (($_POST['frm_ticket_id'] != NULL) AND ($_POST['frm_ticket_id'] != "0") AND ($_POST['frm_ticket_id'] != "")) ? strip_tags($_POST['frm_ticket_id']) : "0";
 	if($the_ticket != "0") {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . intval($the_ticket) . " LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [intval($the_ticket)]);
 		if($result) {
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$row = stripslashes_deep($result->fetch_assoc());
 			$the_scope = $_POST['frm_scope'];
 			$new_scope = "EDITED " . $the_scope;
-			$output1 = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET ";
-			$output2 = "";
-			$output2 .= "`scope` = " . quote_smart(trim($new_scope)) . ",";
-			$output2 .= ($_POST['frm_street'] == $row['street']) ? "": "`street` = " . quote_smart(trim($_POST['frm_street'])) . ",";
-			$output2 .= ($_POST['frm_city'] == $row['city']) ? "": "`city` = " . quote_smart(trim($_POST['frm_city'])) . ",";
-			$output2 .= ($_POST['frm_state'] == $row['state']) ? "": "`state` = " . quote_smart(trim($_POST['frm_state'])) . ",";
-			$output2 .= ($_POST['frm_patient'] == $row['contact']) ? "": "`contact` = " . quote_smart(trim($_POST['frm_patient'])) . ",";
-			$output2 .= ($_POST['frm_phone'] == $row['phone']) ? "": "`phone` = " . quote_smart(trim($_POST['frm_phone'])) . ",";
-			$output2 .= ($_POST['frm_toaddress'] == $row['to_address']) ? "": "`to_address` = " . quote_smart(trim($_POST['frm_toaddress'])) . ",";
-			$output2 .= ($_POST['frm_orig_fac'] == $row['facility']) ? "": "`facility` = " . quote_smart(trim($_POST['frm_orig_fac'])) . ",";	
-			$output2 .= ($_POST['frm_rec_fac'] == $row['rec_facility']) ? "": "`rec_facility` = " . quote_smart(trim($_POST['frm_rec_fac'])) . ",";	
-			$output2 .= ($_POST['frm_description'] == $row['description']) ? "": "`description` = " . quote_smart(trim($_POST['frm_description'])) . ",";	
-			$output3 = " WHERE `id` = " . $the_ticket;
-			if($output2 != "") {
-				$output2 = substr($output2, 0, -1);
-				$output = $output1 . $output2 . $output3;
-				$result = mysql_query($output) or do_error($output, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			$set_parts = [];
+			$params = [];
+			$set_parts[] = "`scope` = ?";
+			$params[] = trim($new_scope);
+			if ($_POST['frm_street'] != $row['street']) { $set_parts[] = "`street` = ?"; $params[] = trim($_POST['frm_street']); }
+			if ($_POST['frm_city'] != $row['city']) { $set_parts[] = "`city` = ?"; $params[] = trim($_POST['frm_city']); }
+			if ($_POST['frm_state'] != $row['state']) { $set_parts[] = "`state` = ?"; $params[] = trim($_POST['frm_state']); }
+			if ($_POST['frm_patient'] != $row['contact']) { $set_parts[] = "`contact` = ?"; $params[] = trim($_POST['frm_patient']); }
+			if ($_POST['frm_phone'] != $row['phone']) { $set_parts[] = "`phone` = ?"; $params[] = trim($_POST['frm_phone']); }
+			if ($_POST['frm_toaddress'] != $row['to_address']) { $set_parts[] = "`to_address` = ?"; $params[] = trim($_POST['frm_toaddress']); }
+			if ($_POST['frm_orig_fac'] != $row['facility']) { $set_parts[] = "`facility` = ?"; $params[] = trim($_POST['frm_orig_fac']); }
+			if ($_POST['frm_rec_fac'] != $row['rec_facility']) { $set_parts[] = "`rec_facility` = ?"; $params[] = trim($_POST['frm_rec_fac']); }
+			if ($_POST['frm_description'] != $row['description']) { $set_parts[] = "`description` = ?"; $params[] = trim($_POST['frm_description']); }
+			if(count($set_parts) > 0) {
+				$output = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET " . implode(", ", $set_parts) . " WHERE `id` = ?";
+				$params[] = $the_ticket;
+				$result = db_query($output, $params);
 				}
 			}
 		}
@@ -737,7 +738,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 		</CENTER>
 <?php
 	} elseif((!empty($_GET)) && (empty($_POST))) {
-	$id = (isset($_REQUEST['id'])) ? $_REQUEST['id'] : 0;
+	$id = (isset($_REQUEST['id'])) ? sanitize_int($_REQUEST['id']) : 0;
 	$only_view = ((isset($_GET['func'])) && ($_GET['func'] == "view")) ? TRUE : FALSE;
 	$can_edit = ((is_service_user()) && (!$only_view)) ? TRUE : FALSE;
 	$query = "SELECT *, 
@@ -763,23 +764,23 @@ if((!empty($_POST)) && (empty($_GET))) {
 			`_on` AS `_on`,
 			`a`.`dispatched` AS `dispatched`,
 			`a`.`clear` AS `clear`		
-			FROM `$GLOBALS[mysql_prefix]requests` `r`
-			LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id` 			
-			WHERE `r`.`id` = " . $id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+			FROM `{$GLOBALS['mysql_prefix']}requests` `r`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id` 			
+			WHERE `r`.`id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$tentative_date = $row['tentative_date'];			
 	$accepted_date = $row['accepted_date'];	
 	$declined_date = $row['declined_date'];	
 	$resourced_date = (($row['dispatched'] != "") || ($row['dispatched'] != NULL)) ? $row['dispatched'] : $row['resourced_date'];
 	if(($row['dispatched'] != "") && ($row['dispatched'] != NULL) && ($row['resourced_date'] == NULL)) {
-		$query2 = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `resourced_date` = '" . mysql_format_date($row['dispatched']) . " WHERE `id` = " . $id;
-		$result2 = mysql_query($query2) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+		$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `resourced_date` = ? WHERE `id` = ?";
+		$result2 = db_query($query2, [mysql_format_date($row['dispatched']), $id]);	
 		}
 	$completed_date = (($row['clear'] != "") || ($row['clear'] != NULL)) ? $row['clear'] : $row['completed_date'];
 	if(($row['clear'] != "") && ($row['clear'] != NULL) && ($row['completed_date'] == NULL)) {
-		$query3 = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `completed_date` = '" . mysql_format_date($row['clear']) . " WHERE `id` = " . $id;
-		$result3 = mysql_query($query3) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		
+		$query3 = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `completed_date` = ? WHERE `id` = ?";
+		$result3 = db_query($query3, [mysql_format_date($row['clear']), $id]);		
 		}		
 	$closed_date = $row['closed'];			
 	$updated_by = get_owner($row['_by']);
@@ -802,11 +803,11 @@ if((!empty($_POST)) && (empty($_GET))) {
 ?>
 <SCRIPT>
 <?php	
-	$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";
-	$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query_fc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";
+	$result_fc = db_query($query_fc);
 	$rec_fac_menu = "<SELECT NAME='frm_rec_fac' onChange='do_rec_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim())'>";
 	$rec_fac_menu .= "<OPTION VALUE=0 selected>Receiving Facility</OPTION>";
-	while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+	while ($row_fc = $result_fc->fetch_assoc()) {
 			$sel = ($row_fc['id'] == $row['rec_facility']) ? "SELECTED" : "";
 			$rec_fac_menu .= "<OPTION VALUE=" . $row_fc['id'] . " " . $sel . ">" . shorten($row_fc['name'], 30) . "</OPTION>";
 			$rf_street = ($row_fc['street'] != "") ? $row_fc['street'] : "Empty";
@@ -820,11 +821,11 @@ if((!empty($_POST)) && (empty($_GET))) {
 			}
 	$rec_fac_menu .= "<SELECT>";
 
-	$query_fc2 = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";
-	$result_fc2 = mysql_query($query_fc2) or do_error($query_fc2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query_fc2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";
+	$result_fc2 = db_query($query_fc2);
 	$orig_fac_menu = "<SELECT NAME='frm_orig_fac' onChange='do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim())'>";
 	$orig_fac_menu .= "<OPTION VALUE=0 selected>Originating Facility</OPTION>";
-	while ($row_fc2 = mysql_fetch_array($result_fc2, MYSQL_ASSOC)) {
+	while ($row_fc2 = $result_fc2->fetch_assoc()) {
 			$sel = ($row_fc2['id'] == $row['orig_facility']) ? "SELECTED" : "";
 			$orig_fac_menu .= "<OPTION VALUE=" . $row_fc2['id'] . " " . $sel . ">" . shorten($row_fc2['name'], 30) . "</OPTION>";
 			$street = ($row_fc2['street'] != "") ? $row_fc2['street'] : "Empty";

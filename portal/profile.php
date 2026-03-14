@@ -11,15 +11,15 @@ if (empty($_SESSION)) {
 require_once '../incs/functions.inc.php';
 do_login(basename(__FILE__));
 
-$query = "SELECT id FROM `$GLOBALS[mysql_prefix]user` WHERE id='" . $_SESSION['user_id'] . "'";
-if ($_SESSION['user_id'] < 0 OR check_for_rows($query) == 0) {
-	print __LINE__ . " Invalid user id '$_SESSION[user_id]'.";
+$query = "SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id=?";
+if ($_SESSION['user_id'] < 0 OR check_for_rows($query, [$_SESSION['user_id']]) == 0) {
+	print __LINE__ . " Invalid user id.";
 	exit();
 	}
 
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`='$_SESSION[user_id]'";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= mysql_fetch_array($result);
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=?";
+$result	= db_query($query, [$_SESSION['user_id']]);
+$row	= $result->fetch_array();
 $api_key = trim(get_variable('gmaps_api_key'));
 $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>
@@ -108,8 +108,9 @@ $get_go = (array_key_exists('go', ($_GET)))? $_GET['go']  : "" ;
 if((!empty($_POST)) && ($get_go == 'true')) {
 	$frm_sort_desc = array_key_exists('frm_sort_desc', ($_POST))? 1: 0 ;	// checkbox handling
 	extract($_POST);
-	$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `passwd`='" . $frm_hash . "' WHERE `id`=" . $_SESSION['user_id'];
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	$frm_hash = sanitize_string($frm_hash);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd`=? WHERE `id`=?";
+	$result = db_query($query, [$frm_hash, $_SESSION['user_id']]);
 ?>
 	<BODY>
 		<CENTER>
@@ -123,15 +124,15 @@ if((!empty($_POST)) && ($get_go == 'true')) {
 	</BODY>
 <?php
 	} else {
-	$query = "SELECT id FROM `$GLOBALS[mysql_prefix]user` WHERE id='" . $_SESSION['user_id'] . "'";
-	if ($_SESSION['user_id'] < 0 OR check_for_rows($query) == 0) {
+	$query = "SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id=?";
+	if ($_SESSION['user_id'] < 0 OR check_for_rows($query, [$_SESSION['user_id']]) == 0) {
 		print "Invalid user ID<BR />";
 		exit();
 		}
 
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`=" . $_SESSION['user_id'];
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$row	= mysql_fetch_array($result);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=?";
+	$result	= db_query($query, [$_SESSION['user_id']]);
+	$row	= $result->fetch_array();
 ?>
 	<TABLE BORDER="0" STYLE = 'margin-left:40px'>	<!-- 8/27/10 -->
 		<TR CLASS='odd'>

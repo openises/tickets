@@ -6,15 +6,16 @@ if(!isset($_GET['id'])) {
 	}
 @session_start();
 $ret_arr = array();
+$id = sanitize_int($_GET['id']);
 $by = $_SESSION['user_id'];
 $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
 $from = $_SERVER['REMOTE_ADDR'];
 function get_requester_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		if($row['email'] == "") {
 			if($row['email_s'] == "") {
 				$the_ret[0] = "";
@@ -31,12 +32,12 @@ function get_requester_details($the_id) {
 	return $the_ret;
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `id` = " . strip_tags($_GET['id']) . " LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) == 0) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [$id]);
+if($result->num_rows == 0) {
 	exit();
 	} else {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = stripslashes_deep($result->fetch_assoc());
 	$the_user = $row['requester'];
 	$the_scope = $row['scope'];
 	$the_ticket = (($row['ticket_id'] != NULL) AND ($row['ticket_id'] != 0) AND ($row['ticket_id'] != "")) ? $row['ticket_id'] : 0;
@@ -47,9 +48,9 @@ $theDetails = get_requester_details($by);
 $the_email = $theDetails[0];
 $the_requester = strip_tags($theDetails[1]);
 
-$query = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Closed', `closed` = '" . $now . "', `cancelled` = '" . $now . "', `_by` = " . $by . ", `_from` = '" . $from . "', `_on` = '" . $now . "' WHERE `id` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-if(mysql_affected_rows() > 0) {
+$query = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Closed', `closed` = ?, `cancelled` = ?, `_by` = ?, `_from` = ?, `_on` = ? WHERE `id` = ?";
+$result = db_query($query, [$now, $now, $by, $from, $now, $id]);
+if(db()->affected_rows > 0) {
 	$ret_arr[0] = 100;
 	$to_str1 = "";
 	$smsg_to_str1 = "";
@@ -85,8 +86,8 @@ if(mysql_affected_rows() > 0) {
 	if($the_ticket != 0) {
 		$new_scope = "CANCELLED " . $the_scope;
 		$new_description = "CANCELLED \r\n" . $the_description . "\r\n";
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `scope` = '" . $new_scope . "', `description` = '" . $new_description . "' WHERE `id` = " . $the_ticket;
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `scope` = ?, `description` = ? WHERE `id` = ?";
+		$result = db_query($query, [$new_scope, $new_description, $the_ticket]);
 		}
 	$ret_arr[1] = $to_str1;
 	$ret_arr[2] = $smsg_to_str1;

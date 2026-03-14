@@ -8,10 +8,10 @@ $nowTimestamp = time() - (intval(get_variable('delta_mins')*60));
 
 function get_requester_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		if($row['email'] == "") {
 			if($row['email_s'] == "") {
 				$the_ret[0] = "";
@@ -30,10 +30,10 @@ function get_requester_details($the_id) {
 
 function get_facname($id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret[0] = ($row['name'] != "") ? $row['name'] : "NA";
 		$street = ($row['street'] != "") ? $row['street'] : "";
 		$the_ret[1] = ($street != "") ? $street . ", " . $row['city'] . ", " . $row['state']: "";
@@ -45,14 +45,15 @@ function get_facname($id) {
 		}
 	return $the_ret;
 	}
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]'";
-$result	= mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+$id = sanitize_int($_GET['id']);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 4 AND `resource_id` = ?";
+$result	= db_query($query, [$_SESSION['user_id']]);
+while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 	$regions[] = $row['group'];
 	}
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `id` = " . strip_tags($_GET['id']) . " LIMIT 1";
-$result	= mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ? LIMIT 1";
+$result	= db_query($query, [$id]);
+$row = stripslashes_deep($result->fetch_assoc());
 $thePickup = ($row['pickup'] != "") ? $row['pickup'] : "";
 $theArrival = ($row['arrival'] != "") ? $row['arrival'] : "";
 
@@ -83,14 +84,14 @@ $the_email = $theDetails[0];
 $the_requester = strip_tags($theDetails[1]);	
 $description = (($row['description'] == "") && ($row['comments'] == "")) ? "New Ticket from Portal - Accepted " . $now : $row['description'] . $row['comments'];
 $ret_arr = array();
-$query = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (
+$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}ticket` (
 				`in_types_id`,
 				`org`,
 				`contact`,
-				`street`, 
-				`city`, 
-				`state`, 
-				`phone`, 
+				`street`,
+				`city`,
+				`state`,
+				`phone`,
 				`to_address`,
 				`facility`,
 				`rec_facility`,
@@ -98,45 +99,24 @@ $query = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (
 				`lng`,
 				`booked_date`,
 				`date`,
-				`problemstart`, 
-				`scope`, 
-				`description`, 
-				`status`, 
-				`owner`, 
-				`severity`, 
-				`updated`, 
-				`_by` 
+				`problemstart`,
+				`scope`,
+				`description`,
+				`status`,
+				`owner`,
+				`severity`,
+				`updated`,
+				`_by`
 			) VALUES (
-				0, 
-				0,
-				'" . $row['the_name'] . "', 
-				'" . $row['street'] . "', 
-				'" . $row['city'] . "', 
-				'" . $row['state'] . "', 
-				'" . $row['phone'] . "', 
-				'" . $row['to_address'] . "', 
-				" . $row['orig_facility'] . ", 				
-				" . $row['rec_facility'] . ", 
-				" . $theLat . ", 
-				" . $theLng . ", 
-				'" . $insertDate . "', 
- 				" . quote_smart(trim($now)) . ",
- 				" . quote_smart(trim($now)) . ", 
-				'" . $row['scope'] . "', 
-				'" . $description . "', 
-				" . $theStatus . ", 
-				" . $by . ",  
-				0, 
- 				" . quote_smart(trim($now)) . ", 
-				" . $by . ")";
+				0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)";
 
-$result	= mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+$result	= db_query($query, [$row['the_name'], $row['street'], $row['city'], $row['state'], $row['phone'], $row['to_address'], $row['orig_facility'], $row['rec_facility'], $theLat, $theLng, $insertDate, $now, $now, $row['scope'], $description, $theStatus, $by, $now, $by]);
 if($result) {
-	$last_id = mysql_insert_id();
+	$last_id = db()->insert_id;
 	$theScope = $last_id . "/" . $row['scope'];
 	
-	$query = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Accepted', `accepted_date` = '" .$now . "', `ticket_id` = " . $last_id . " WHERE `id` = " . strip_tags($_GET['id']);
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Accepted', `accepted_date` = ?, `ticket_id` = ? WHERE `id` = ?";
+	$result = db_query($query, [$now, $last_id, $id]);
 
 	$temp = get_variable('_inc_num');										// 3/2/11
 	$inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
@@ -158,13 +138,13 @@ if($result) {
 			}				// end switch
 		}		// end if()
 	
-	$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `scope` = '" . $theScope . "' WHERE `id` = " .$last_id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
-		
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `scope` = ? WHERE `id` = ?";
+	$result = db_query($query, [$theScope, $last_id]);
+
 	foreach ($regions as $grp_val) {
-		$query  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-				($grp_val, 1, '$now', 2, $last_id, 'Allocated to Group' , $by)";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+		$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+				(?, 1, ?, 2, ?, 'Allocated to Group' , ?)";
+		$result = db_query($query, [$grp_val, $now, $last_id, $by]);
 		}
 	
 	do_log($GLOBALS['LOG_INCIDENT_OPEN'], $last_id);

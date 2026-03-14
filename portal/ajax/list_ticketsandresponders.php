@@ -8,7 +8,8 @@ require_once('../../incs/functions.inc.php');
 	
 $ticket_ids = array();
 $request_ids = array();
-$where = (isset($_GET['id'])) ? "WHERE `requester` = " . strip_tags($_GET['id']) : "";
+$req_id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : null;
+$where = ($req_id !== null) ? "WHERE `requester` = " . intval($req_id) : "";
 $showall = ((isset($_GET['showall'])) && ($_GET['showall'] == 'yes')) ? true : false;
 if($where == "") {
 	$where .= ($showall == false) ? " WHERE `status` <> 'Closed' " : "";
@@ -18,10 +19,10 @@ if($where == "") {
 $the_ret = array();	
 
 function get_request_details($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `ticket_id` = '" . $id . "' LIMIT 1";
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `ticket_id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$theReturn[0] = $row['id'];
 		if ($row['status'] == 'Open') {
 			$status = 1;
@@ -51,10 +52,10 @@ function get_request_details($id) {
 	}
 	
 function get_request_details2($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `id` = '" . $id . "' LIMIT 1";
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$theReturn[0] = $row['id'];
 		if ($row['status'] == 'Open') {
 			$status = 1;
@@ -83,12 +84,12 @@ function get_request_details2($id) {
 	return $theReturn;
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` " . $where;
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) == 0) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` " . $where;
+$result = db_query($query);
+if($result->num_rows == 0) {
 	$the_ret[0] = -1;
 	} else {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		if($row['ticket_id'] != 0) {
 			$ticket_ids[] = $row['ticket_id'];
 			} else {
@@ -98,12 +99,12 @@ if(mysql_num_rows($result) == 0) {
 	}
 $x = 0;
 foreach($ticket_ids as $val) {
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket`	WHERE `id` = " . $val;
-	$result1 = mysql_query($query1);
-	if(mysql_num_rows($result1) == 0) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`	WHERE `id` = ?";
+	$result1 = db_query($query1, [$val]);
+	if($result1->num_rows == 0) {
 		$the_ret[1][0]['id'] = 0;
 		} else {
-		while($row1 = stripslashes_deep(mysql_fetch_assoc($result1))){
+		while($row1 = stripslashes_deep($result1->fetch_assoc())){
 			$details = get_request_details($val);
 			$the_ret[1][$x]['id'] = $val;		
 			$the_ret[1][$x]['lat'] = $row1['lat'];		
@@ -112,13 +113,13 @@ foreach($ticket_ids as $val) {
 			$the_ret[1][$x]['description'] = nl2br($row1['description']);
 			$the_ret[1][$x]['request'] = $details[0];
 			$the_ret[1][$x]['status'] = $details[1];
-			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` `a` WHERE `a`.`ticket_id` = " . $row1['id'];	
-			$result2 = mysql_query($query2) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while($row2 = stripslashes_deep(mysql_fetch_assoc($result2))){
+			$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` `a` WHERE `a`.`ticket_id` = ?";
+			$result2 = db_query($query2, [$row1['id']]);
+			while($row2 = stripslashes_deep($result2->fetch_assoc())){
 				$resp_id = $row2['responder_id'];
-				$query3 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` `r` WHERE `r`.`id` = " . $resp_id;	
-				$result3 = mysql_query($query3) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				while($row3 = stripslashes_deep(mysql_fetch_assoc($result3))){	
+				$query3 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `r`.`id` = ?";
+				$result3 = db_query($query3, [$resp_id]);
+				while($row3 = stripslashes_deep($result3->fetch_assoc())){
 					$the_id = $row3['id'];
 					$the_ret[1][$x]['responders'][$the_id]['id'] = $row3['id'];	
 					$the_ret[1][$x]['responders'][$the_id]['lat'] = $row3['lat'];	
@@ -134,12 +135,12 @@ foreach($ticket_ids as $val) {
 
 $y = 0;	
 foreach($request_ids as $val2) {
-	$query4 = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `id` = " . $val2;
-	$result4 = mysql_query($query4);
-	if(mysql_num_rows($result4) == 0) {
+	$query4 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ?";
+	$result4 = db_query($query4, [$val2]);
+	if($result4->num_rows == 0) {
 		$the_ret[0][0]['id'] = 0;
 		} else {
-		while($row4 = stripslashes_deep(mysql_fetch_assoc($result4))){
+		while($row4 = stripslashes_deep($result4->fetch_assoc())){
 			$details = get_request_details2($val2);
 			$the_ret[0][$y]['id'] = $val2;		
 			$the_ret[0][$y]['lat'] = $row4['lat'];		

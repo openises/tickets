@@ -4,8 +4,8 @@ if(empty($_GET)) {
 	}
 require_once('../../../incs/functions.inc.php');
 
-$filename = "../../files/" . $_GET['filename'];
-$properFilename = $_GET['origname'];
+$filename = "../../files/" . sanitize_string($_GET['filename']);
+$properFilename = sanitize_string($_GET['origname']);
 header("Content-Disposition: attachment; filename=\"$properFilename\";" );
 header("Content-Transfer-Encoding: binary");
 header("Pragma: public");

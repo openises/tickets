@@ -6,10 +6,10 @@ require_once('../../incs/functions.inc.php');
 $ret_arr = array();
 function get_requester_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		if($row['email'] == "") {
 			if($row['email_s'] == "") {
 				$the_ret[0] = "";
@@ -27,10 +27,10 @@ function get_requester_details($the_id) {
 
 function get_facname($id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret[0] = ($row['name'] != "") ? $row['name'] : "NA";
 		$street = ($row['street'] != "") ? $row['street'] : "";
 		$the_ret[1] = ($street != "") ? $street . ", " . $row['city'] . ", " . $row['state']: "";
@@ -49,92 +49,67 @@ if($_GET['frm_patient'] == "") {
 	$theDetails = get_requester_details($_SESSION['user_id']);
 	$userEmail = $theDetails[0];
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
-	$appEmail = ($_GET['frm_app_email'] != "") ? $_GET['frm_app_email'] : NULL;
+	$appEmail = ($_GET['frm_app_email'] != "") ? sanitize_string($_GET['frm_app_email']) : NULL;
 	$the_email = (($appEmail != NULL) && (is_email($appEmail))) ? $appEmail : $theDetails[0];
 	$where = $_SERVER['REMOTE_ADDR'];
-	$scope = $_GET['frm_scope'];
-	$comments = $_GET['frm_comments'];
-	$street = $_GET['frm_street'];
-	$city = $_GET['frm_city'];
-	$postcode = $_GET['frm_postcode'];
-	$state = $_GET['frm_state'];	
-	$lat = ($_GET['frm_lat'] != "") ? $_GET['frm_lat'] : '0';
-	$lng = ($_GET['frm_lng'] != "") ? $_GET['frm_lng'] : '0';	
-	$description = $_GET['frm_description'];
-	$request_date = $_GET['frm_request_date'];
+	$scope = sanitize_string($_GET['frm_scope']);
+	$comments = sanitize_string($_GET['frm_comments']);
+	$street = sanitize_string($_GET['frm_street']);
+	$city = sanitize_string($_GET['frm_city']);
+	$postcode = sanitize_string($_GET['frm_postcode']);
+	$state = sanitize_string($_GET['frm_state']);
+	$lat = ($_GET['frm_lat'] != "") ? sanitize_string($_GET['frm_lat']) : '0';
+	$lng = ($_GET['frm_lng'] != "") ? sanitize_string($_GET['frm_lng']) : '0';
+	$description = sanitize_string($_GET['frm_description']);
+	$request_date = sanitize_string($_GET['frm_request_date']);
 	$request_date = mysql_format_date(strtotime($request_date));
-	$userName = $_GET['frm_username'];
-	$comments = $_GET['frm_comments'];
-	$phone = $_GET['frm_phone'];
-	$toAddress = urldecode($_GET['frm_toaddress']);
-	$pickup = $_GET['frm_pickup'];
-	$arrival = $_GET['frm_arrival'];
-	$patient = $_GET['frm_patient'];
-	$origFac = ($_GET['frm_orig_fac'] != "") ? $_GET['frm_orig_fac'] : '0';
-	$recFac = ($_GET['frm_rec_fac'] != "") ? $_GET['frm_rec_fac'] : '0';	
-	$query = "INSERT INTO `$GLOBALS[mysql_prefix]requests` (
+	$userName = sanitize_string($_GET['frm_username']);
+	$comments = sanitize_string($_GET['frm_comments']);
+	$phone = sanitize_string($_GET['frm_phone']);
+	$toAddress = urldecode(sanitize_string($_GET['frm_toaddress']));
+	$pickup = sanitize_string($_GET['frm_pickup']);
+	$arrival = sanitize_string($_GET['frm_arrival']);
+	$patient = sanitize_string($_GET['frm_patient']);
+	$origFac = ($_GET['frm_orig_fac'] != "") ? sanitize_int($_GET['frm_orig_fac']) : 0;
+	$recFac = ($_GET['frm_rec_fac'] != "") ? sanitize_int($_GET['frm_rec_fac']) : 0;
+	$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}requests` (
 				`org`,
-				`contact`, 
+				`contact`,
 				`email`,
-				`street`, 
-				`city`, 
+				`street`,
+				`city`,
 				`postcode`,
-				`state`, 
-				`the_name`, 
-				`phone`, 
+				`state`,
+				`the_name`,
+				`phone`,
 				`to_address`,
 				`pickup`,
 				`arrival`,
 				`orig_facility`,
-				`rec_facility`, 
-				`scope`, 
-				`description`, 
-				`comments`, 
+				`rec_facility`,
+				`scope`,
+				`description`,
+				`comments`,
 				`lat`,
 				`lng`,
-				`request_date`, 
-				`status`, 
+				`request_date`,
+				`status`,
 				`accepted_date`,
-				`declined_date`, 
-				`resourced_date`, 
-				`completed_date`, 
-				`closed`, 
-				`requester`, 
-				`_by`, 
-				`_on`, 
-				`_from` 
+				`declined_date`,
+				`resourced_date`,
+				`completed_date`,
+				`closed`,
+				`requester`,
+				`_by`,
+				`_on`,
+				`_from`
 				) VALUES (
-				" . 0 . ",
-				'" . addslashes($userName) . "',
-				'" . addslashes($appEmail) . "',
-				'" . addslashes($street) . "',	
-				'" . addslashes($city) . "',	
-				'" . addslashes($postcode) . "',	
-				'" . addslashes($state) . "',	
-				'" . addslashes($patient) . "',
-				'" . addslashes($phone) . "',
-				'" . addslashes($toAddress) . "',
-				'" . addslashes($pickup) . "',
-				'" . addslashes($arrival) . "',				
-				" . $origFac . ",					
-				" . $recFac . ",	
-				'" . addslashes($scope) . "',
-				'" . addslashes($description) . "',					
-				'" . addslashes($comments) . "',		
-				'" . $lat . "',		
-				'" . $lng . "',				
-				'" . $request_date . "',
+				0,
+				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
 				'Open',
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				" . $_SESSION['user_id'] . ",
-				" . $_SESSION['user_id'] . ",				
-				'" . $now . "',
-				'" . $where . "')";
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+				NULL, NULL, NULL, NULL, NULL,
+				?, ?, ?, ?)";
+	$result	= db_query($query, [$userName, $appEmail, $street, $city, $postcode, $state, $patient, $phone, $toAddress, $pickup, $arrival, $origFac, $recFac, $scope, $description, $comments, $lat, $lng, $request_date, $_SESSION['user_id'], $_SESSION['user_id'], $now, $where]);
 	if($result) {
 		do_log($GLOBALS['LOG_NEW_REQUEST'], $_SESSION['user_id']);
 		$to_str1 = "";

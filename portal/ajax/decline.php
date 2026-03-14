@@ -4,14 +4,15 @@ require_once('../../incs/functions.inc.php');
 $by = $_SESSION['user_id'];
 $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
 $regions = array();
-$declined_reason = (isset($_GET['reason'])) ? $_GET['reason'] : "No reason given";
+$id = sanitize_int($_GET['id']);
+$declined_reason = (isset($_GET['reason'])) ? sanitize_string($_GET['reason']) : "No reason given";
 $description = "";
 function get_requester_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		if($row['email'] == "") {
 			if($row['email_s'] == "") {
 				$the_ret[0] = "";
@@ -28,19 +29,19 @@ function get_requester_details($the_id) {
 	return $the_ret;
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `id` = " . strip_tags($_GET['id']) . " LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) == 0) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [$id]);
+if($result->num_rows == 0) {
 	exit();
 	} else {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = stripslashes_deep($result->fetch_assoc());
 	$the_user = $row['requester'];
 	$the_scope = $row['scope'];
 	$description .= $row['description'];
 	}
 
 $description .= "\r\n";
-$description .= "Declined reason: " . addslashes($declined_reason);
+$description .= "Declined reason: " . $declined_reason;
 $description .= "\r\n";
 $theDetails = get_requester_details($the_user);
 $the_email = $theDetails[0];
@@ -48,8 +49,8 @@ $the_requester = strip_tags($theDetails[1]);
 
 $theFrom = trim(get_variable('email_reply_to'));
 
-$query = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Declined', `_by` = " . $by . ", `declined_date` = '" .$now . "', `description` = '" . $description . "' WHERE `id` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+$query = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Declined', `_by` = ?, `declined_date` = ?, `description` = ? WHERE `id` = ?";
+$result = db_query($query, [$by, $now, $description, $id]);
 
 if($result) {
 	$ret_arr[0] = 100;

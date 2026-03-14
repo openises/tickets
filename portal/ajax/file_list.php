@@ -11,25 +11,25 @@ $return = "";
 if(empty($_GET)) {
 	exit;
 	} else {
-	$user_id = $_GET['id'];
+	$user_id = sanitize_int($_GET['id']);
 	}
-	
-$where = "WHERE (`user_id` = " . $user_id . " OR `user_id` = 0) AND `type` = 2";
+
+$where = "WHERE (`user_id` = ? OR `user_id` = 0) AND `type` = 2";
 
 $query = "SELECT *,
 		`fx`.`id` AS `x_id`,
 		`f`.`id` AS `f_id`
-		FROM `$GLOBALS[mysql_prefix]files_x` `fx`
-		LEFT JOIN `$GLOBALS[mysql_prefix]files` `f` ON `f`.`id` = `fx`.`file_id` 
-		{$where} ORDER BY `f`.`id` ASC"; 
+		FROM `{$GLOBALS['mysql_prefix']}files_x` `fx`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}files` `f` ON `f`.`id` = `fx`.`file_id`
+		WHERE (`user_id` = ? OR `user_id` = 0) AND `type` = 2 ORDER BY `f`.`id` ASC";
 $bgcolor = '#EEEEEE';
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if (mysql_affected_rows() == 0) { 
+$result = db_query($query, [$user_id]);
+if (db()->affected_rows == 0) {
 	$return .= "<TABLE style='width: 100%;'><TR style='width: 100%; font-size: 1em; cursor: default;'><TD style='width: 100%; font-size: 1em; text-align: center; cursor: default;'>No Files</TD></TR></TABLE>";
 	} else {
 	$return .= "<TABLE style='width: 100%;'>";	
 	$return .= "<TR class='heading' style='width: 100%; color: #FFFFFF; font-size: 1.1em; cursor: default;'><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>File Name</TD><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>Uploaded By</TD><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>Date</TD></TR>";		
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$return .= "<TR style='background-color: " . $bgcolor . "; font-size: 1em;' onClick=\"location.href='./ajax/download.php?filename=" . $filename . "&origname=" . $row['orig_filename'] . "';\">";
 		$filename = $row['filename'];
 		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . $row['title'] . "</TD>";

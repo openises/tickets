@@ -6,70 +6,72 @@ require_once('../incs/portal.inc.php');
 if(empty($_GET)) {
 	exit();
 	}
-	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `request_date` >= (NOW() - INTERVAL 1 WEEK) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$requests_week = mysql_num_rows($result);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `request_date` >= (NOW() - INTERVAL 1 MONTH) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$requests_month = mysql_num_rows($result);
+$id = sanitize_int($_GET['id']);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `request_date` >= (NOW() - INTERVAL 1 YEAR) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$requests_year = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `request_date` >= (NOW() - INTERVAL 1 WEEK) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$requests_week = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE (`request_date` IS NOT NULL OR `request_date` <> '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$requests = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `request_date` >= (NOW() - INTERVAL 1 MONTH) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$requests_month = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `accepted_date` >= (NOW() - INTERVAL 1 WEEK) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$accepted_week = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `request_date` >= (NOW() - INTERVAL 1 YEAR) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$requests_year = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `accepted_date` >= (NOW() - INTERVAL 1 MONTH) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$accepted_month = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`request_date` IS NOT NULL OR `request_date` <> '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$requests = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `accepted_date` >= (NOW() - INTERVAL 1 YEAR) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$accepted_year = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `accepted_date` >= (NOW() - INTERVAL 1 WEEK) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$accepted_week = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE (`accepted_date` IS NOT NULL OR `accepted_date` <> '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$accepted = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `accepted_date` >= (NOW() - INTERVAL 1 MONTH) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$accepted_month = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE (`declined_date` >= (NOW() - INTERVAL 1 WEEK) AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$declined_week = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `accepted_date` >= (NOW() - INTERVAL 1 YEAR) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$accepted_year = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE (`declined_date` >= (NOW() - INTERVAL 1 MONTH) AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$declined_month = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`accepted_date` IS NOT NULL OR `accepted_date` <> '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$accepted = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE (`declined_date` >= (NOW() - INTERVAL 1 YEAR) AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$declined_year = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`declined_date` >= (NOW() - INTERVAL 1 WEEK) AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$declined_week = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE ((`declined_date` IS NOT NULL OR `declined_date` <> '') AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$declined = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`declined_date` >= (NOW() - INTERVAL 1 MONTH) AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$declined_month = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `closed` >= (NOW() - INTERVAL 1 WEEK) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$closed_week = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`declined_date` >= (NOW() - INTERVAL 1 YEAR) AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$declined_year = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `closed` >= (NOW() - INTERVAL 1 MONTH) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$closed_month = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE ((`declined_date` IS NOT NULL OR `declined_date` <> '') AND `accepted_date` != '' AND `tentative_date` != '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$declined = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE `closed` >= (NOW() - INTERVAL 1 YEAR) AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$closed_year = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `closed` >= (NOW() - INTERVAL 1 WEEK) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$closed_week = $result->num_rows;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]requests` WHERE (`closed` IS NOT NULL OR `closed` <> '') AND `requester` = " . strip_tags($_GET['id']);
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$closed = mysql_num_rows($result);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `closed` >= (NOW() - INTERVAL 1 MONTH) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$closed_month = $result->num_rows;
+
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `closed` >= (NOW() - INTERVAL 1 YEAR) AND `requester` = ?";
+$result = db_query($query, [$id]);
+$closed_year = $result->num_rows;
+
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`closed` IS NOT NULL OR `closed` <> '') AND `requester` = ?";
+$result = db_query($query, [$id]);
+$closed = $result->num_rows;
 
 $ret_arr = array();
 

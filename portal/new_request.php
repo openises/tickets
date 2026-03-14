@@ -68,20 +68,20 @@ function isMandatory($id) {
 	}
 
 function get_user_name($the_id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
 		}
 	return $the_ret;
 	}
 	
 function get_city($the_id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = $row['addr_city'];
 		} else {
 		$the_ret = get_variable('def_city');
@@ -933,11 +933,11 @@ function do_logout() {
 	document.gout_form.submit();
 	}		
 <?php
-$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";
-$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+$query_fc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";
+$result_fc = db_query($query_fc);
 $rec_fac_menu = "<SELECT NAME='frm_rec_fac' onChange='do_rec_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim())'>";
 $rec_fac_menu .= "<OPTION VALUE=0 selected>Receiving Facility</OPTION>";
-while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+while ($row_fc = $result_fc->fetch_assoc()) {
 		$rec_fac_menu .= "<OPTION VALUE=" . $row_fc['id'] . ">" . shorten($row_fc['name'], 30) . "</OPTION>";
 		$rf_street = ($row_fc['street'] != "") ? $row_fc['street'] : "Empty";
 		$rf_city = ($row_fc['city'] != "") ? $row_fc['city'] : "Empty";
@@ -950,11 +950,11 @@ while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
 		}
 $rec_fac_menu .= "<SELECT>";
 
-$query_fc2 = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";
-$result_fc2 = mysql_query($query_fc2) or do_error($query_fc2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+$query_fc2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";
+$result_fc2 = db_query($query_fc2);
 $orig_fac_menu = "<SELECT NAME='frm_orig_fac' onChange='do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim())'>";
 $orig_fac_menu .= "<OPTION VALUE=0 selected>Originating Facility</OPTION>";
-while ($row_fc2 = mysql_fetch_array($result_fc2, MYSQL_ASSOC)) {
+while ($row_fc2 = $result_fc2->fetch_assoc()) {
 		$orig_fac_menu .= "<OPTION VALUE=" . $row_fc2['id'] . ">" . shorten($row_fc2['name'], 30) . "</OPTION>";
 		$street = ($row_fc2['street'] != "") ? $row_fc2['street'] : "Empty";
 		$city = ($row_fc2['city'] != "") ? $row_fc2['city'] : "Empty";

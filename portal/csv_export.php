@@ -7,20 +7,20 @@ $user = ($_SESSION['level'] == "7") ? $_SESSION['user_id']: 0;
 session_write_close();
 
 function get_thefacilityname($value) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $value . " LIMIT 1";		 
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$value]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = ($row['name'] != "") ? $row['name']: "Unknown";
 		}
 	return $the_ret;	
 	}
 	
 function get_user_name($the_id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $row['name_f'] . " " . $row['name_l'] : $row['user'];
 		}
 	return $the_ret;
@@ -32,7 +32,7 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
     $csv_enclosed = '"';
     $csv_escaped = "\\";
 	
-	$where = ((isset($user)) && ($user != 0)) ? "WHERE `requester` = " . $user: "";
+	$where = ((isset($user)) && ($user != 0)) ? "WHERE `requester` = " . intval($user) : "";
 
 	$order = "ORDER BY `request_date`";
 	$order2 = "ASC";
@@ -66,15 +66,15 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
 			`r`.`_on` AS `_on`,
 			`a`.`dispatched` AS `dispatched`,
 			`a`.`clear` AS `clear`		
-			FROM `$GLOBALS[mysql_prefix]requests` `r`
-			LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id` 			
+			FROM `{$GLOBALS['mysql_prefix']}requests` `r`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id`
 			{$where} GROUP BY `r`.`id` {$order} {$order2}";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-    $fields_cnt = mysql_num_fields($result);
-	
+	$result = db_query($query);
+    $fields_cnt = $result->field_count;
+
 	$output = array();
 	$z=0;
-    while ($row = mysql_fetch_array($result)){
+    while ($row = $result->fetch_array()){
 		$miles = (($row['miles'] != NULL) && ($row['miles'] != 0) && (($row['start_miles'] == NULL) || ($row['start_miles'] == 0)) && (($row['end_miles'] == NULL) || ($row['end_miles'] == 0))) ? $row['miles'] : 0;
 		$miles = ((($row['miles'] == NULL) || ($row['miles'] == 0)) && (($row['start_miles'] != NULL) && ($row['start_miles'] != 0)) && (($row['end_miles'] != NULL) && ($row['end_miles'] != 0))) ? $row['end_miles'] - $row['start_miles'] : $miles;
 		$output[$z][] = get_user_name($row['requester']);

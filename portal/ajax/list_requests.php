@@ -27,10 +27,10 @@ function subval_sort($a,$subkey, $dd) {
 
 function get_contact_details($the_id) {
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if($result && mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result && $result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret[] = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
 		$the_ret[] = ($row['email'] != "") ? $row['email'] : "Unknown";
 		$the_ret[] = ($row['email_s'] != "") ? $row['email_s'] : "Unknown";		
@@ -46,7 +46,8 @@ function get_contact_details($the_id) {
 	return $the_ret;
 	}
 	
-$where = ((!empty($_GET)) && (isset($_GET['id']))) ? "WHERE `requester` = " . strip_tags($_GET['id']): "";
+$req_id = ((!empty($_GET)) && (isset($_GET['id']))) ? sanitize_int($_GET['id']) : null;
+$where = ($req_id !== null) ? "WHERE `requester` = " . intval($req_id) : "";
 $order = "ORDER BY `" . $sortby . "`";
 $order2 = $sortdir;
 $showall = ((isset($_GET['showall'])) && ($_GET['showall'] == 'yes')) ? true : false;
@@ -102,17 +103,17 @@ $query = "SELECT *,
 		`t`.`_by` AS `t_by`,
 		`a`.`dispatched` AS `dispatched`,
 		`a`.`clear` AS `clear` 
-		FROM `$GLOBALS[mysql_prefix]requests` `r`
-		LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id` 	
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `r`.`ticket_id`=`t`.`id` 			
+		FROM `{$GLOBALS['mysql_prefix']}requests` `r`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id` 	
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON `r`.`ticket_id`=`t`.`id` 			
 		{$where} GROUP BY `r`.`id` ORDER BY `request_date` ASC";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
+$result = db_query($query);
+$num=$result->num_rows;
 $i=0;
-if ($result && mysql_num_rows($result) == 0) { 				// 8/6/08
+if ($result && $result->num_rows == 0) { 				// 8/6/08
 	$ret_arr[$i][0] = "No Current Requests";
 	} else {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$end_miles = ($row['end_miles'] != "") ? $row['end_miles'] : 0;
 		$start_miles = ($row['start_miles'] != "") ? $row['start_miles'] : 0;
 		$miles = $end_miles - $start_miles;
@@ -146,33 +147,33 @@ if ($result && mysql_num_rows($result) == 0) { 				// 8/6/08
 		$tentative_date = $row['tentative_date'];
 	
 		if(($tentative_date != "") && ($row['accepted_date'] == "") && ($row['resourced_date'] == "") && ($row['completed_date'] == "") && ($row['closed'] == "") && ($row['req_status'] != "Tentative")) {
-			$update = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Tentative' WHERE `id` = " . $request_id;
-			$result = mysql_query($update) or do_error($update, "", mysql_error(), basename( __FILE__), __LINE__);
-			}			
-		$accepted_date = $row['accepted_date'];	
+			$update = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Tentative' WHERE `id` = ?";
+			$result = db_query($update, [$request_id]);
+			}
+		$accepted_date = $row['accepted_date'];
 		if(($accepted_date != "") && ($row['resourced_date'] == "") && ($row['completed_date'] == "") && ($row['closed'] == "") && ($row['req_status'] != "Accepted")) {
-			$update = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Accepted' WHERE `id` = " . $request_id;
-			$result = mysql_query($update) or do_error($update, "", mysql_error(), basename( __FILE__), __LINE__);
-			}		
-		$declined_date = $row['declined_date'];	
+			$update = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Accepted' WHERE `id` = ?";
+			$result = db_query($update, [$request_id]);
+			}
+		$declined_date = $row['declined_date'];
 		if(($declined_date != "") && ($row['tentative_date'] == "") && ($row['accepted_date'] == "") && ($row['resourced_date'] == "") && ($row['completed_date'] == "") && ($row['closed'] == "") && ($row['req_status'] != "Declined")) {
-			$update = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Declined' WHERE `id` = " . $request_id;
-			$result = mysql_query($update) or do_error($update, "", mysql_error(), basename( __FILE__), __LINE__);
-			}	
+			$update = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Declined' WHERE `id` = ?";
+			$result = db_query($update, [$request_id]);
+			}
 		$resourced_date = (($row['dispatched'] != "") || ($row['dispatched'] != NULL)) ? $row['dispatched'] : $row['resourced_date'];
 		if(($row['dispatched'] != "") && ($row['dispatched'] != NULL) && ($row['resourced_date'] == NULL)) {
-			$update = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Resourced', `resourced_date` = '" . $row['dispatched'] . "' WHERE `id` = " . $request_id;
-			$result = mysql_query($update) or do_error($update, "", mysql_error(), basename( __FILE__), __LINE__);
+			$update = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Resourced', `resourced_date` = ? WHERE `id` = ?";
+			$result = db_query($update, [$row['dispatched'], $request_id]);
 			}
 		$completed_date = (($row['clear'] != "") || ($row['clear'] != NULL)) ? $row['clear'] : $row['completed_date'];
 		if(($row['clear'] != "") && ($row['clear'] != NULL) && ($row['completed_date'] == NULL)) {
-			$update = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Complete', `completed_date` = '" . $row['clear'] . "' WHERE `id` = " . $request_id;
-			$result = mysql_query($update) or do_error($update, "", mysql_error(), basename( __FILE__), __LINE__);
-			}		
+			$update = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Complete', `completed_date` = ? WHERE `id` = ?";
+			$result = db_query($update, [$row['clear'], $request_id]);
+			}
 		$closed = $row['closed'];
 		if(($row['tick_status'] == 1) && ($row['closed'] == NULL) && ($row['problemend'] != NULL)) {
-			$update = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Closed', `closed` = '" . $row['problemend'] . "' WHERE `id` = " . $request_id;
-			$result = mysql_query($update) or do_error($update, "", mysql_error(), basename( __FILE__), __LINE__);
+			$update = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Closed', `closed` = ? WHERE `id` = ?";
+			$result = db_query($update, [$row['problemend'], $request_id]);
 			}				
 		$updated_by = get_owner($row['r_by']);
 		$updated = format_date_2(strtotime($row['_on']));		
