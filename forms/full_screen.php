@@ -49,7 +49,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())){
 
 $mapzooms = array();
 $dir = '_osm/tiles';
-$mapdir = scandir($dir);
+$mapdir = is_dir($dir) ? scandir($dir) : [];
 foreach($mapdir as $val) {
 	if($val <> "." && $val <> "..") {
 		if(is_dir('_osm/tiles/' . $val)) {

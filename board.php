@@ -128,7 +128,7 @@ Sequence numbering: SELECT a.id, @num := @num + 1 seqno from ticket a, (SELECT @
 @session_start();
 session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
-$query = "SET @@global.sql_mode= '';";			//10/19/12
+$query = "SET @@session.sql_mode= '';";			//10/19/12
 $result = db_query($query) ;
 $from_top = 0;		// position of floating div, pixels from  top of frame
 

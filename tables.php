@@ -49,7 +49,7 @@ if (empty($_SESSION)) {				// 1/6/2013
 	}
 
 require_once('./incs/functions.inc.php');
-$query = "SET @@global.sql_mode= '';";		// 6/25/10
+$query = "SET @@session.sql_mode= '';";		// 6/25/10
 $result = db_query($query);
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09
