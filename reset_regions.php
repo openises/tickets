@@ -71,10 +71,10 @@ function do_plain (the_id) {
 <FORM NAME='can_Form' ACTION='config.php'></FORM>
 <?php
 if((isset($_GET['func'])) && ($_GET['func']=='reset')) {
-	$query = "DROP TABLE IF EXISTS `$GLOBALS[mysql_prefix]allocates`";
-	$result = mysql_query($query);		
+	$query = "DROP TABLE IF EXISTS `{$GLOBALS['mysql_prefix']}allocates`";
+	$result = db_query($query);
 
-	$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]allocates` (
+	$query = "CREATE TABLE IF NOT EXISTS `{$GLOBALS['mysql_prefix']}allocates` (
 		`id` bigint(8) NOT NULL auto_increment,
 		`group` int(4) NOT NULL default '1',
 		`type` tinyint(1) NOT NULL default '1',  
@@ -85,46 +85,46 @@ if((isset($_GET['func'])) && ($_GET['func']=='reset')) {
 		`user_id` int(4) NOT NULL default  '0',
 		PRIMARY KEY  (`id`)
 	) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
-	$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
-	$query_insert = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket`;";
-	$result_insert = mysql_query($query_insert);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_insert))) 	{
+	$query_insert = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`";
+	$result_insert = db_query($query_insert);
+	while ($row = stripslashes_deep($result_insert->fetch_assoc())) 	{
 		$id = $row['id'];
 		$tick_stat = $row['status'];
-		$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-				(1 , 1, '$now', $tick_stat, $id, 'Updated to Regional capability by upgrade routine' , 0)";
-		$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+				(1 , 1, ?, ?, ?, 'Updated to Regional capability by upgrade routine' , 0)";
+		$result_a = db_query($query_a, [$now, $tick_stat, $id]);
 		}
 
-	$query_insert = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`;";
-	$result_insert = mysql_query($query_insert);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_insert))) 	{
+	$query_insert = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+	$result_insert = db_query($query_insert);
+	while ($row = stripslashes_deep($result_insert->fetch_assoc())) 	{
 		$id = $row['id'];	// 4/13/11
 		$resp_stat = $row['un_status_id'];
-		$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-				(1 , 2, '$now', $resp_stat, $id, 'Updated to Regional capability by upgrade routine' , 0)";
-		$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		}			
+		$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+				(1 , 2, ?, ?, ?, 'Updated to Regional capability by upgrade routine' , 0)";
+		$result_a = db_query($query_a, [$now, $resp_stat, $id]);
+		}
 
-	$query_insert = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`;";
-	$result_insert = mysql_query($query_insert);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_insert))) 	{
+	$query_insert = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities`";
+	$result_insert = db_query($query_insert);
+	while ($row = stripslashes_deep($result_insert->fetch_assoc())) 	{
 		$id = $row['id'];	// 4/13/11
 		$fac_stat = $row['status_id'];
-		$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-				(1 , 3, '$now',  $fac_stat, $id, 'Updated to Regional capability by upgrade routine' , 0)";	// 4/13/11
-		$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+				(1 , 3, ?, ?, ?, 'Updated to Regional capability by upgrade routine' , 0)";	// 4/13/11
+		$result_a = db_query($query_a, [$now, $fac_stat, $id]);
 		}
-				
-	$query_insert = "SELECT * FROM `$GLOBALS[mysql_prefix]user`;";
-	$result_insert = mysql_query($query_insert);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_insert))) 	{
+
+	$query_insert = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+	$result_insert = db_query($query_insert);
+	while ($row = stripslashes_deep($result_insert->fetch_assoc())) 	{
 		$id = $row['id'];
-		$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-				(1 , 4, '$now', 0, $id, 'Updated to Regional capability by upgrade routine' , 0)";
-		$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+				(1 , 4, ?, 0, ?, 'Updated to Regional capability by upgrade routine' , 0)";
+		$result_a = db_query($query_a, [$now, $id]);
 		}		
 ?>
 	<DIV style='font-size: 14px; position: absolute; top: 20px; left: 30%;'>

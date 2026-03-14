@@ -16,10 +16,10 @@ require_once('./incs/functions.inc.php');
  * @return string
  */
 function get_broken_status_name($val) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $val;
-	$result = mysql_query($query);	
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?";
+	$result = db_query($query, [$val]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_name = $row['group'] . " - " . $row['status_val'];
 		} else {
 		$the_name = "";
@@ -29,10 +29,10 @@ function get_broken_status_name($val) {
 
 function get_noreset_status($val) {
 	$theRet = "n";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $val;
-	$result = mysql_query($query);	
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?";
+	$result = db_query($query, [$val]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		if($row['excl_from_reset'] == "y") {
 			$theRet = "y";
 			} else {
@@ -47,9 +47,9 @@ function get_noreset_status($val) {
 // get status control
 $the_status_sel = "";
 $the_status_sel .= "<SELECT name='frm_status'>";
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group`, `status_val` ASC";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group`, `status_val` ASC";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 	$i = $row['id'];
 	$the_status_sel .= "<OPTION VALUE=" . $i . " STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};'>" . $row['group'] . " - " . $row['status_val'] . "</OPTION>";
 	}
@@ -59,14 +59,14 @@ $the_status_sel .= "</SELECT>";
 
 if(!empty($_POST)) {
 	$counter = 0;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id`";	
-	$result = mysql_query($query);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `id`";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$exclFromReset = get_noreset_status(intval($row['un_status_id']));
 		if($exclFromReset == "n") {
 			// $debug .= $row['un_status_id'];
-			$query2 = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($_POST['frm_status']) . " WHERE `id`= " . $row['id'];
-			$result2 = mysql_query($query2);	
+			$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= ? WHERE `id`= ?";
+			$result2 = db_query($query2, [$_POST['frm_status'], $row['id']]);	
 			if($result2) {
 				$counter++;
 				}

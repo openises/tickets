@@ -172,8 +172,8 @@ case("form") :
 	break;
 case("save") :
 	$setting_val = "{$frm_url}/{$frm_account}/{$frm_pw}";
-	$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`= '$setting_val' WHERE `name` = 'ogts_info'";
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= ? WHERE `name` = 'ogts_info'";
+	$result	= db_query($query, [$setting_val]);
 ?>
 <CENTER><BR /><BR />
 	<H2>OpenGTS test values saved as settings</H2><BR><BR>

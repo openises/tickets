@@ -8,17 +8,20 @@ require_once('./incs/functions.inc.php');
 if (trim(get_variable("locale"))==0)	{$radius = 3959; $caption = "Mi."; }
 else 									{$radius = 6371; $caption = "Km"; }
 
+$tick_lat = floatval($_GET['tick_lat']);
+$tick_lng = floatval($_GET['tick_lng']);
+
 $query = "SELECT *, ( {$radius} * acos(
-	cos(radians({$_GET['tick_lat']})) *
+	cos(radians(?)) *
 	cos(radians(`lat`)) *
-	cos(radians(`lng`) - radians({$_GET['tick_lng']})) +
-	sin(radians({$_GET['tick_lat']})) *
-	sin(radians(`lat`))	) ) 
-	AS `miles` 
-	FROM `$GLOBALS[mysql_prefix]ticket` 
+	cos(radians(`lng`) - radians(?)) +
+	sin(radians(?)) *
+	sin(radians(`lat`))	) )
+	AS `miles`
+	FROM `{$GLOBALS['mysql_prefix']}ticket`
 	WHERE ((`status` = {$GLOBALS['STATUS_CLOSED']}) AND (`lat` <> 0.999999))
 	ORDER BY `miles` ASC LIMIT 50";
-$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+$result	= db_query($query, [$tick_lat, $tick_lng, $tick_lat]);
 $i=0;
 $evenodd = array ("even", "odd");
 ?>
@@ -62,11 +65,11 @@ $evenodd = array ("even", "odd");
 <BODY>
 <CENTER>
 <?php
-	if (mysql_num_rows($result)==0) {	
+	if ($result->num_rows==0) {
 ?>
 <BR/><BR/><BR/><BR/><H2>No closed incidents!</H2>
 <?php
-		}		// end if (mysql_num_rows($result)==0)
+		}		// end if ($result->num_rows==0)
 	else {
 ?>
 <FORM NAME='popup' METHOD = 'get' ACTION = 'incident_popup.php'>
@@ -77,11 +80,11 @@ $evenodd = array ("even", "odd");
 <?php
 	echo "<TR CLASS = 'even'><TH CLASS='text text_left'>{$caption}</TH><TH CLASS='text text_left'>" . get_text("Addr") . "</TH><TH CLASS='text text_left'>" . get_text("Incident") . "</TH><TH CLASS='text text_left'>Opened</TH></TR>";
  	echo "<TR CLASS = 'odd'><TD CLASS='text text_center' COLSPAN=4 ALIGN='center'><I>Click line for " . get_text("Incident") . " detail</I></TD></TR>";
-	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {	
+	while ($in_row = stripslashes_deep($result->fetch_assoc())) {
 		echo "<TR CLASS= '{$evenodd[($i)%2]}' onclick = 'do_popup({$in_row['id']});'>";
 		echo "<TD CLASS='text' ALIGN='right'>" . round($in_row["miles"], 1) . "</TD>";
-		echo "<TD CLASS='text'>" . shorten("{$in_row['street']}  {$in_row['city']}", 48) . "</TD>";
-		echo "<TD CLASS='text'>{$in_row["scope"]}</TD>";
+		echo "<TD CLASS='text'>" . shorten(e("{$in_row['street']}  {$in_row['city']}"), 48) . "</TD>";
+		echo "<TD CLASS='text'>" . e($in_row["scope"]) . "</TD>";
 		echo "<TD CLASS='text'>". substr($in_row["problemstart"], 5, 11) ."</TD>";
 		echo "</TR>\n";
 		$i++;

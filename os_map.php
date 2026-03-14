@@ -27,8 +27,8 @@ $text6 = "";
 $text7 = "";
 $text8 = "";
 
-$id = $_GET['id'];
-$popup_type = $_GET['type'];
+$id = sanitize_int($_GET['id']);
+$popup_type = sanitize_string($_GET['type']);
 if($popup_type == 'ticket') {
 	$label1 = get_text('Scope');
 	$label2 = get_text('Synopsis');
@@ -39,9 +39,9 @@ if($popup_type == 'ticket') {
 	$label7 = get_text('Type');
 	$label8 = get_text('Status');
 	$u_types = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 		}
 	unset($result);
@@ -52,33 +52,33 @@ if($popup_type == 'ticket') {
 	$tickets = array();					// ticket id's
 	$responders = array();				// responder details
 
-	$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, 
-		`$GLOBALS[mysql_prefix]assigns`.`responder_id`, 
-		`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` 
-		FROM `$GLOBALS[mysql_prefix]assigns` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
-	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
+	$query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
+		`{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`scope` AS `ticket`
+		FROM `{$GLOBALS['mysql_prefix']}assigns`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`";
+	$result_as = db_query($query);
+	while ($row_as = stripslashes_deep($result_as->fetch_array())) {
 		$assigns[$row_as['responder_id']] = $row_as['ticket'];
 		$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 		}
 	unset($result_as);
 
-	$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, 
-		`$GLOBALS[mysql_prefix]assigns`.`responder_id`, 
-		`$GLOBALS[mysql_prefix]responder`.`name` AS `r_name`,
-		`$GLOBALS[mysql_prefix]responder`.`handle` AS `r_handle`,
-		`$GLOBALS[mysql_prefix]responder`.`street` AS `r_street`,
-		`$GLOBALS[mysql_prefix]responder`.`city` AS `r_city`,
-		`$GLOBALS[mysql_prefix]responder`.`status_updated` AS `r_updated`,
-		`$GLOBALS[mysql_prefix]responder`.`lat` AS `r_lat`,
-		`$GLOBALS[mysql_prefix]responder`.`lng` AS `r_lng`
-		FROM `$GLOBALS[mysql_prefix]assigns`
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder` ON `$GLOBALS[mysql_prefix]assigns`.`responder_id`=`$GLOBALS[mysql_prefix]responder`.`id`
-		WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = " . $id;
-	$result_ras = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_ras = stripslashes_deep(mysql_fetch_array($result_ras))) {
+	$query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
+		`{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
+		`{$GLOBALS['mysql_prefix']}responder`.`name` AS `r_name`,
+		`{$GLOBALS['mysql_prefix']}responder`.`handle` AS `r_handle`,
+		`{$GLOBALS['mysql_prefix']}responder`.`street` AS `r_street`,
+		`{$GLOBALS['mysql_prefix']}responder`.`city` AS `r_city`,
+		`{$GLOBALS['mysql_prefix']}responder`.`status_updated` AS `r_updated`,
+		`{$GLOBALS['mysql_prefix']}responder`.`lat` AS `r_lat`,
+		`{$GLOBALS['mysql_prefix']}responder`.`lng` AS `r_lng`
+		FROM `{$GLOBALS['mysql_prefix']}assigns`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` ON `{$GLOBALS['mysql_prefix']}assigns`.`responder_id`=`{$GLOBALS['mysql_prefix']}responder`.`id`
+		WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = ?";
+	$result_ras = db_query($query, [$id]);
+	while ($row_ras = stripslashes_deep($result_ras->fetch_array())) {
 		$responders[$row_ras['responder_id']][0] = $row_ras['responder_id'];
 		$responders[$row_ras['responder_id']][1] = $row_ras['r_name'];
 		$responders[$row_ras['responder_id']][2] = $row_ras['r_lat'];
@@ -89,9 +89,9 @@ if($popup_type == 'ticket') {
 		$responders[$row_ras['responder_id']][7] = $row_ras['r_handle'];
 		}
 	unset($result_ras);	
-	$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = mysql_fetch_assoc($result);
+	$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	$theRow = $row;
 	$lat = $row['lat'];
 	$lng = $row['lng'];
@@ -118,9 +118,9 @@ if($popup_type == 'ticket') {
 	$status_vals = array();											// build array of $status_vals
 	$status_vals[''] = $status_vals['0']="TBD";
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
+	$result_st = db_query($query);
+	while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 		$temp = $row_st['id'];
 		$status_vals[$temp] = $row_st['status_val'];
 		$status_hide[$temp] = $row_st['hide'];
@@ -128,19 +128,19 @@ if($popup_type == 'ticket') {
 
 	unset($result_st);
 	
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-		WHERE `responder_id` = '{$id}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
+		WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
-	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$units_assigned = mysql_num_rows($result_as);
+	$result_as = db_query($query, [$id]);
+	$units_assigned = $result_as->num_rows;
 
 	switch ($units_assigned) {		
 		case 0:
 			$ass_td = "";
 			break;			
 		case 1:
-			$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as));
+			$row_assign = stripslashes_deep($result_as->fetch_assoc());
 			$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 			$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
 			switch($row_assign['severity'])		{		//color tickets by severity
@@ -165,8 +165,8 @@ if($popup_type == 'ticket') {
 	$label8 = get_text('Updated');
 	$the_day = "";
 	$outputstring = "";
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='$id'");
-	$row = mysql_fetch_assoc($result);
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$id]);
+	$row = $result->fetch_assoc();
 	$theRow = $row;
 	$lat = $row['lat'];
 	$lng = $row['lng'];
@@ -189,9 +189,9 @@ if($popup_type == 'ticket') {
 	$fac_status_vals = array();											// build array of $status_vals
 	$fac_status_vals[''] = $fac_status_vals['0']="TBD";
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `id`";
+	$result_st = db_query($query);
+	while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 		$facid = $row_st['id'];
 		$fac_status_vals[$facid][0] = $row_st['status_val'];
 		$fac_status_vals[$facid][1] = $row_st['description'];
@@ -208,8 +208,8 @@ if($popup_type == 'ticket') {
 	$label6 = get_text('Status');
 	$label7 = get_text('Contact Email');
 	$label8 = get_text('Updated');
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE id='$id'");
-	$row = mysql_fetch_assoc($result);
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE id=?", [$id]);
+	$row = $result->fetch_assoc();
 	$theRow = $row;
 	$opening_arr_serial = base64_decode($row['opening_hours']);
 	$opening_arr = unserialize($opening_arr_serial);
@@ -495,43 +495,43 @@ switch($popup_type) {
 <?php
 										/* Creates statistics header and details of responding and en-route units 7/29/09 */
 
-										$result_dispatched = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-											WHERE ticket_id='$id'
-											AND `dispatched` IS NOT NULL 
-											AND `responding` IS NULL 
-											AND `on_scene` IS NULL 
-											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
-										$num_rows_dispatched = mysql_num_rows($result_dispatched);
+										$result_dispatched = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+											WHERE ticket_id=?
+											AND `dispatched` IS NOT NULL
+											AND `responding` IS NULL
+											AND `on_scene` IS NULL
+											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))", [$id]);		// 6/25/10
+										$num_rows_dispatched = $result_dispatched->num_rows;
 
-										$result_responding = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-											WHERE ticket_id='$id'
-											AND `responding` IS NOT NULL 
-											AND `on_scene` IS NULL 
-											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))");		// 6/25/10
-										$num_rows_responding = mysql_num_rows($result_responding);
+										$result_responding = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+											WHERE ticket_id=?
+											AND `responding` IS NOT NULL
+											AND `on_scene` IS NULL
+											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))", [$id]);		// 6/25/10
+										$num_rows_responding = $result_responding->num_rows;
 
-										$result_on_scene = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns` 
-											WHERE ticket_id='$id' 
-											AND `on_scene` IS NOT NULL 
-											AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')	
-											");		// 6/25/10
-										$num_rows_on_scene = mysql_num_rows($result_on_scene);
+										$result_on_scene = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+											WHERE ticket_id=?
+											AND `on_scene` IS NOT NULL
+											AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
+											", [$id]);		// 6/25/10
+										$num_rows_on_scene = $result_on_scene->num_rows;
 											
-										$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart, 
-											`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
-											`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+										$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart,
+											`{$GLOBALS['mysql_prefix']}assigns`.`id` AS `assign_id` ,
+											`{$GLOBALS['mysql_prefix']}assigns`.`comments` AS `assign_comments`,
 											`r`.`id` AS `unit_id`,
 											`r`.`name` AS `unit_name` ,
 											`r`.`type` AS `unit_type` ,
-											`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
-											FROM `$GLOBALS[mysql_prefix]assigns` 
-											LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-											LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
+											`{$GLOBALS['mysql_prefix']}assigns`.`as_of` AS `assign_as_of`
+											FROM `{$GLOBALS['mysql_prefix']}assigns`
+											LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket`	 `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
+											LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	 `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
 												WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
-												AND ticket_id='$id' ";
+												AND ticket_id=? ";
 
-										$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-										$num_rows_cleared = mysql_affected_rows();
+										$result_cleared  = db_query($query, [$id]);
+										$num_rows_cleared = db()->affected_rows;
 										$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
 										$tick_end_str = format_date_2($ticket_end);
 										$elapsed = my_date_diff(mysql_format_date($ticket_start), mysql_format_date($ticket_end));		// 5/13/10
@@ -541,28 +541,28 @@ switch($popup_type) {
 										echo $stats;
 
 										echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
-										while ($row_base= mysql_fetch_array($result_dispatched, MYSQL_ASSOC)) {
-											$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-											$row = mysql_fetch_assoc($result);
+										while ($row_base= $result_dispatched->fetch_assoc()) {
+											$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+											$row = $result->fetch_assoc();
 											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
 											}
 
 										echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
-										while ($row_base= mysql_fetch_array($result_responding, MYSQL_ASSOC)) {
-											$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-											$row = mysql_fetch_assoc($result);
+										while ($row_base= $result_responding->fetch_assoc()) {
+											$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+											$row = $result->fetch_assoc();
 											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
 											}
 
 										echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
-										while ($row_base= mysql_fetch_array($result_on_scene, MYSQL_ASSOC)) {
-											$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE id='{$row_base['responder_id']}'");
-											$row = mysql_fetch_assoc($result);
+										while ($row_base= $result_on_scene->fetch_assoc()) {
+											$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+											$row = $result->fetch_assoc();
 											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
 											}
 
 										echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
-										while ($row_base= mysql_fetch_array($result_cleared, MYSQL_ASSOC)) {
+										while ($row_base= $result_cleared->fetch_assoc()) {
 											echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
 											}
 ?>

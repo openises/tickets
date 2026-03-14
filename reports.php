@@ -598,25 +598,25 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 <?php
 //			Unit Selector ------------------------------------------
 			$unit_types = array();											// 3/23/10, 4/11/09
-			$query = "SELECT *FROM `$GLOBALS[mysql_prefix]unit_types`";		// build array of type names
-			$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`";		// build array of type names
+			$result = db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 				$unit_types[$row['id']] = $row['name'];
 				}
 
 			print "Select " . get_text("Unit") . ": <SELECT NAME='frm_unit_id' onChange = \"respsel = this.value.trim();\">\n\t<OPTION VALUE=0 SELECTED>All</OPTION>\n";
-			$query = "SELECT * , COUNT( `responder_id` ) FROM `$GLOBALS[mysql_prefix]log`
-				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `$GLOBALS[mysql_prefix]log`.responder_id = r.id )
+			$query = "SELECT * , COUNT( `responder_id` ) FROM `{$GLOBALS['mysql_prefix']}log`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `{$GLOBALS['mysql_prefix']}log`.responder_id = r.id )
 				GROUP BY `responder_id` HAVING COUNT( `responder_id` ) >=1
 				ORDER BY `r`.`type`";
 
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$result = db_query($query);
 
 			$do_optgroup = $set_type = TRUE;
 			$curr_type = "";
 			$optgroup_close = "";
 
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$the_name = explode ("/", (string)$row['name']);
 				if (array_key_exists($row['type'], $unit_types)) {
 					if (!($curr_type == $row['type'])) {
@@ -639,27 +639,27 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		
 //			Incident Selector ------------------------------------------
 
-			$query = "SELECT *, COUNT(`scope`) FROM `$GLOBALS[mysql_prefix]ticket` GROUP BY `scope` HAVING COUNT(`scope`)>=1  AND status > 0";  // build assoc array of all tickets
+			$query = "SELECT *, COUNT(`scope`) FROM `{$GLOBALS['mysql_prefix']}ticket` GROUP BY `scope` HAVING COUNT(`scope`)>=1  AND status > 0";  // build assoc array of all tickets
 			$tickets = array();
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$result = db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$tickets[$row['id']] = shorten($row['scope'], 60);		// 1/2/2015
 				}
 
 			print "&nbsp;&nbsp;&nbsp;&nbsp;Select {$incident}:
 				<SELECT NAME='frm_ticket_id'  onChange = \" $('inc_log_btn').style.display = ''; ticksel = this.value.trim();\">\n\t" ;
 			print "<OPTION VALUE=0 SELECTED>All</OPTION>\n";
-			$query = "SELECT *, COUNT(`ticket_id`) FROM `$GLOBALS[mysql_prefix]log` `l`
-				LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`t`.`id` = `l`.`ticket_id`)
+			$query = "SELECT *, COUNT(`ticket_id`) FROM `{$GLOBALS['mysql_prefix']}log` `l`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`t`.`id` = `l`.`ticket_id`)
 				GROUP BY `ticket_id` HAVING COUNT(`ticket_id`)>=1
 				ORDER BY `t`.`status` DESC, `t`.`id` ASC";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			$result = db_query($query);
 
 			$do_optgroup = $set_status = TRUE;
 			$curr_status = "";
 			$status_vals = array ('err', 'closed', 'open', 'scheduled');	//	4/1/11
 			$optgroup_close = "";
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				if (array_key_exists($row['ticket_id'], $tickets)) {
 					if (!($curr_status == $row['status'])) {
 						$curr_status = $row['status'];
@@ -682,9 +682,9 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			print "&nbsp;&nbsp;&nbsp;&nbsp;Select Organisation";
 			print "<SELECT NAME='frm_org_cntl' onChange = 'organisation = this.value.trim();'>";
 			print "<OPTION VALUE=0 SELECTED>All</OPTION>\n";
-			$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]organisations`";		// 12/2/08
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}organisations`";		// 12/2/08
+			$result	= db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				print "<OPTION value=" . $row['id'] . ">" . $row['name'] . "</OPTION>";			
 				}	
 			print "</SELECT></SPAN>";
@@ -695,9 +695,9 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			print "&nbsp;&nbsp;&nbsp;&nbsp;Select Region";
 			print "<SELECT NAME='frm_reg_cntl' onChange = 'region = this.value.trim();'>";
 			print "<OPTION VALUE=0 SELECTED>All</OPTION>\n";
-			$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]region`";		// 12/2/08
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}region`";		// 12/2/08
+			$result	= db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				print "<OPTION value=" . $row['id'] . ">" . $row['group_name'] . "</OPTION>";			
 				}	
 			print "</SELECT></SPAN>";

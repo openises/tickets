@@ -164,8 +164,8 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]' LIMIT 1"))
-			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
+		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='" . intval($_GET['ticket_id']) . "' LIMIT 1"))
+			print "<FONT CLASS='warn'>Invalid Ticket ID: '" . e($_GET['ticket_id']) . "'</FONT>";
 		elseif ($_POST['frm_description'] == '')
 			print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
 		else {
@@ -174,26 +174,26 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			$post_frm_meridiem_asof = empty($_POST['frm_meridiem_asof'])? "" : $_POST['frm_meridiem_asof'] ;
 			$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$post_frm_meridiem_asof";
 															//  8/15/10	
-     		$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]patient` WHERE 
-     			`description` =	'{$_POST['frm_description']}' AND
-     			`ticket_id` =	'{$_GET['ticket_id']}' AND
-     			`user` =		'{$_SESSION['user_id']}' AND
-     			`action_type` =	'{$GLOBALS['ACTION_COMMENT']}' AND 
-     			`name` = 		'{$_POST['frm_name']}' AND 
-     			`updated` =		'{$frm_asof}' ";
-     			
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-			if (mysql_affected_rows()==0) {		// not a duplicate - 8/15/10	
+     		$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}patient` WHERE
+     			`description` =	? AND
+     			`ticket_id` =	? AND
+     			`user` =		? AND
+     			`action_type` =	? AND
+     			`name` = 		? AND
+     			`updated` =		?";
+
+			$result	= db_query($query, [$_POST['frm_description'], $_GET['ticket_id'], $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $_POST['frm_name'], $frm_asof]);
+			if (db()->affected_rows==0) {		// not a duplicate - 8/15/10
 	
-	     		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]patient` 
+	     		$query 	= "INSERT INTO `{$GLOBALS['mysql_prefix']}patient`
 	     			(`description`,`ticket_id`,`date`,`user`,`action_type`, `name`, `updated`) VALUES
-	     			('{$_POST['frm_description']}','{$_GET['ticket_id']}','{$now}',{$_SESSION['user_id']},$GLOBALS[ACTION_COMMENT], '{$_POST['frm_name']}', '{$frm_asof}') ";
-	     			
-				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-				do_log($GLOBALS['LOG_PATIENT_ADD'], $_GET['ticket_id'], 0, mysql_insert_id());		// 3/18/10
+	     			(?, ?, ?, ?, ?, ?, ?)";
+
+				$result	= db_query($query, [$_POST['frm_description'], $_GET['ticket_id'], $now, $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $_POST['frm_name'], $frm_asof]);
+				do_log($GLOBALS['LOG_PATIENT_ADD'], $_GET['ticket_id'], 0, db()->insert_id);		// 3/18/10
 //				($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
 	
-				$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'  LIMIT 1") or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
+				$result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=?  LIMIT 1", [$frm_asof, $_GET['ticket_id']]);
 				}
 			print '<br><br><FONT CLASS="header">" . get_text("Patient") ." record has been added</FONT><BR /><BR />';
 			add_header($_GET['ticket_id']);
@@ -286,16 +286,16 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		if (array_key_exists('confirm', ($_GET))) {
 			do_log($GLOBALS['LOG_PATIENT_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 3/18/10
 //			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
-			$query = "DELETE FROM `$GLOBALS[mysql_prefix]patient` WHERE `id`='$_GET[id]' LIMIT 1";
-			$result = mysql_query($query) or do_error('',$query,mysql_error(), basename( __FILE__), __LINE__);
+			$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$_GET['id']]);
 			print '<FONT CLASS="header">' . get_text("Patient") . ' record deleted</FONT><BR /><BR />';
 			add_header($_GET['ticket_id']);				// 8/16/08
 			show_ticket($_GET['ticket_id']);
 			}
 		else {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `id`='$_GET[id]' LIMIT 1";
-			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$_GET['id']]);
+			$row = stripslashes_deep($result->fetch_assoc());
 			print "<FONT CLASS='header'>Really delete " . get_text("Patient") . " record ' " .shorten($row['description'], 24) . "' ?</FONT><BR /><BR />";
 			print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=$_GET[id]&ticket_id=$_GET[ticket_id]&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'></FORM>";
@@ -306,21 +306,21 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
 
 		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
-		$query = "UPDATE `$GLOBALS[mysql_prefix]patient` SET `description`='$_POST[frm_description]' , `name`='$_POST[frm_name]', `updated` = '$frm_asof' WHERE id='$_GET[id]' LIMIT 1";
-		$result = mysql_query($query) or do_error($query,'mysql_query',mysql_error(), basename( __FILE__), __LINE__);
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'";
-		$result = mysql_query($query) or do_error($query,'mysql_query',mysql_error(), basename( __FILE__), __LINE__);
-		$result = mysql_query("SELECT ticket_id FROM `$GLOBALS[mysql_prefix]patient` WHERE id='$_GET[id]'") or do_error('patient.php::update patient record','mysql_query',mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}patient` SET `description`=? , `name`=?, `updated` = ? WHERE id=? LIMIT 1";
+		$result = db_query($query, [$_POST['frm_description'], $_POST['frm_name'], $frm_asof, $_GET['id']]);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=?";
+		$result = db_query($query, [$frm_asof, $_GET['ticket_id']]);
+		$result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=?", [$_GET['id']]);
+		$row = stripslashes_deep($result->fetch_assoc());
 		
 		print '<br><br><FONT CLASS="header">' . get_text("Patient") . ' record updated</FONT><BR /><BR />';
 		add_header($_GET['ticket_id']);				// 8/16/08
 		show_ticket($row['ticket_id']);
 		}
 	else if ($get_action == 'edit') {		//get and show action to update
-		$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]patient` WHERE id='$_GET[id]' LIMIT 1";	// 8/11/08
-		$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";	// 8/11/08
+		$result = db_query($query, [$_GET['id']]);
+		$row = stripslashes_deep($result->fetch_assoc());
 //		dump($row);
 //		dump(stripslashes($row['description']));
 ?>

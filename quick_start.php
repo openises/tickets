@@ -303,18 +303,18 @@ function do_icon_view(val, thediv) {
 </HEAD>
 <?php 
 function count_responders() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-	$result = mysql_query($query);	
-	$count_responders = mysql_num_rows($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+	$result = db_query($query);
+	$count_responders = $result->num_rows;
 	return $count_responders;
 	}
 	
 function do_setting ($which, $what) {				// 7/7/09
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '$which' LIMIT 1";		// 5/25/09
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_affected_rows()!=0) {
-		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='" . $what . "' WHERE `name`='" . $which . "'";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= ? LIMIT 1";		// 5/25/09
+	$result = db_query($query, [$which]);
+	if (db()->affected_rows!=0) {
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= ? WHERE `name`= ?";
+		$result = db_query($query, [$what, $which]);
 		}
 	unset ($result);
 	return TRUE;
@@ -385,8 +385,8 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 			$description = ($_POST['frm_desc'][$i] != "") ? substr($_POST['frm_desc'][$i], 0, 60) : "Not Completed";
 			$severity = ($_POST['frm_sev'][$i] != NULL) ? $_POST['frm_sev'][$i] : 0;
 			$grouping = ($_POST['frm_grp'][$i] != "") ? $_POST['frm_grp'][$i] : "Not Grouped";
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]in_types` (`type`,`description`,`set_severity`,`group`) VALUES('$inc_type','$description',$severity,'$grouping')";
-			$result = mysql_query($query) or die("Incident types insertion failed, execution halted");	
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}in_types` (`type`,`description`,`set_severity`,`group`) VALUES(?,?,?,?)";
+			$result = db_query($query, [$inc_type, $description, $severity, $grouping]);	
 			if($result) {
 				$output_text .= "Incident Type " . $inc_type . " inserted<BR />";	
 				}
@@ -400,8 +400,8 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 			$resp_type = substr($_POST['frm_rtype_name'][$i], 0, 16);
 			$description = ($_POST['frm_rtype_desc'][$i] != "") ? substr($_POST['frm_rtype_desc'][$i], 0, 48) : "Not Completed";
 			$icon = ($_POST['frm_rtype_icon'][$i] != 99) ? $_POST['frm_rtype_icon'][$i] : 0 ;			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]unit_types` (`name`,`description`,`icon`,`_on`,`_from`,`_by`) VALUES('$resp_type','$description','$icon','$now','$from',$user)";
-			$result = mysql_query($query) or die("Unit types insertion failed, execution halted");		
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}unit_types` (`name`,`description`,`icon`,`_on`,`_from`,`_by`) VALUES(?,?,?,?,?,?)";
+			$result = db_query($query, [$resp_type, $description, $icon, $now, $from, $user]);		
 			if($result) {
 				$output_text .= "Responder Type " . $resp_type . " inserted<BR />";	
 				}			
@@ -419,8 +419,8 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 			$grouping = ($_POST['frm_rstat_group'][$i] != "") ? $_POST['frm_rstat_group'][$i] : "Not Grouped";
 			$bgcolor = ($_POST['frm_rstat_bgcol'][$i] != "") ?  "#" . $_POST['frm_rstat_bgcol'][$i] : "#FFFFFF";
 			$textcol = ($_POST['frm_rstat_col'][$i] != "") ?  "#" . $_POST['frm_rstat_col'][$i] : "#000000";
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]un_status` (`status_val`,`description`,`dispatch`,`hide`,`group`,`bg_color`,`text_color`) VALUES('$resp_stat','$description','$can_dispatch','$can_hide','$grouping','$bgcolor','$textcol')";
-			$result = mysql_query($query) or die("Unit Status Types insertion failed, execution halted");		
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}un_status` (`status_val`,`description`,`dispatch`,`hide`,`group`,`bg_color`,`text_color`) VALUES(?,?,?,?,?,?,?)";
+			$result = db_query($query, [$resp_stat, $description, $can_dispatch, $can_hide, $grouping, $bgcolor, $textcol]);		
 			if($result) {
 				$output_text .= "Responder Status " . $resp_stat . " inserted<BR />";	
 				}	
@@ -438,46 +438,17 @@ elseif((!empty($_POST)) && (isset($_POST['country']))) {
 		for ( $i = 1; $i <= $counter; $i++) {
 			$name = $resp_prefix . $i;
 			$handle = substr($resp_prefix, 0, 3) . $i; 
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}responder` (
 				`name`, `icon_str`, `handle`, `description`, `un_status_id`, `mobile`, `multi`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `ring_fence`, `excl_zone`, `direcs`, `lat`, `lng`, `type`, `user_id`, `updated` )
-				VALUES (" .
-					quote_smart(trim($name)) . "," .
-					quote_smart(trim($i)) . "," .
-					quote_smart(trim($handle)) . "," .					
-					quote_smart(trim($description)) . "," .
-					quote_smart(trim($un_status)) . "," .
-					0 . "," .
-					0 . "," .
-					0 . "," .
-					0 . "," .
-					0 . "," .
-					0 . "," .
-					0 . "," .
-					0 . "," .	
-					0 . "," .
-					0 . "," .	
-					0 . "," .					
-					1 . "," .
-					$lat . "," .
-					$lng . "," .
-					1 . "," .
-					1 . "," .
-					quote_smart(trim($now)) . ");";								// 8/23/08, 5/11/11
+				VALUES (?, ?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ?, ?, 1, 1, ?)";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query, [trim($name), trim($i), trim($handle), trim($description), trim($un_status), $lat, $lng, trim($now)]);
 			if($result) {
-				$new_id=mysql_insert_id();					
-				$query_a  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` 
-						(`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) 
-						VALUES (
-						1, 
-						2,
-						'$now', 
-						1, 
-						$new_id, 
-						'Allocated to Group' , 
-						$by)";
-				$result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				$new_id=db()->insert_id;
+				$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates`
+						(`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`)
+						VALUES (1, 2, ?, 1, ?, 'Allocated to Group', ?)";
+				$result_a = db_query($query_a, [$now, $new_id, $by]);
 				$output_text .= "Responder " . $resp_prefix . $i . " inserted<BR />";	
 				}	
 			}

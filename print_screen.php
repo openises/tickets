@@ -6,7 +6,7 @@ session_write_close();
 require_once('./incs/functions.inc.php');
 require_once('./incs/functions_major.inc.php');
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
-$id = $_GET['ticket_id'];
+$id = sanitize_int($_GET['ticket_id']);
 /*
 
 */

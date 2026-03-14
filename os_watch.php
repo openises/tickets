@@ -132,12 +132,12 @@ switch ($mode) {
 				`u`.`expires`,
 				`a`.`as_of` AS `the_asof`,
 				`s`.`status_val` AS `unit_status`
-					FROM `$GLOBALS[mysql_prefix]assigns` `a`
-					LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	`t` 	ON (`a`.`ticket_id` 	= `t`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	`r` 	ON (`a`.`responder_id` 	= `r`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]user`		`u` 	ON (`u`.`responder_id` 	= `a`.`responder_id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	`s` 	ON (`r`.`un_status_id` 	= `s`.`id`)
+					FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket`	`t` 	ON (`a`.`ticket_id` 	= `t`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	`r` 	ON (`a`.`responder_id` 	= `r`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}user`		`u` 	ON (`u`.`responder_id` 	= `a`.`responder_id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status`	`s` 	ON (`r`.`un_status_id` 	= `s`.`id`)
 					WHERE ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 					AND ( GREATEST (  `on_scene`, IFNULL(`u2fenr` , '1970-01-01 00:00:00' ), IFNULL(`u2farr`, '1970-01-01 00:00:00' ) ) = `on_scene` )";
 					}		// end function
@@ -159,9 +159,9 @@ switch ($mode) {
 					`t`.`status` AS `tickstatus`,
 					`t`.`updated` AS `the_asof`,
 					`y`.`type`
-						FROM `$GLOBALS[mysql_prefix]ticket` `t`
-						LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `y` ON (`t`.`in_types_id` = `y`.`id`)
-						LEFT JOIN `$GLOBALS[mysql_prefix]assigns` `a` ON (`a`.`ticket_id` = `t`.`id`)
+						FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `y` ON (`t`.`in_types_id` = `y`.`id`)
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}assigns` `a` ON (`a`.`ticket_id` = `t`.`id`)
 					WHERE ( `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']} )
 					AND ( (`a`.`on_scene` IS NULL ) OR ( DATE_FORMAT(`a`.`on_scene`,'%y') = '00') )
 					AND `y`.`watch` = 1
@@ -175,9 +175,9 @@ switch ($mode) {
         		$watch_interval = $bits[1];
 
 			return "SELECT 'N/A' as tickstatus, '$watch_group' as tickaddr, 0 as severity, status_updated as on_scene, status_updated as the_asof,
-						'Overdue - $watch_group' as unit_status, '' as contact_via, unix_timestamp(now()) as expires, handle as handle, 'Overdue $watch_group' as scope FROM `$GLOBALS[mysql_prefix]responder` 
-						left join $GLOBALS[mysql_prefix]un_status on 
-		$GLOBALS[mysql_prefix]responder.un_status_id = $GLOBALS[mysql_prefix]un_status.id where $GLOBALS[mysql_prefix]un_status.group = '$watch_group' and status_updated < (now() - interval $watch_interval minute)";
+						'Overdue - $watch_group' as unit_status, '' as contact_via, unix_timestamp(now()) as expires, handle as handle, 'Overdue $watch_group' as scope FROM `{$GLOBALS['mysql_prefix']}responder`
+						left join `{$GLOBALS['mysql_prefix']}un_status` on
+		`{$GLOBALS['mysql_prefix']}responder`.un_status_id = `{$GLOBALS['mysql_prefix']}un_status`.id where `{$GLOBALS['mysql_prefix']}un_status`.`group` = '$watch_group' and status_updated < (now() - interval $watch_interval minute)";
 			} else {
 				return "select 1 from dual where false";
 			}
@@ -261,8 +261,8 @@ switch ($mode) {
 
 			for ($j=0; $j< 3; $j++) {
 				if ($now >= $_SESSION['osw_run_at'][$j]) {						// seconds
-					$result = mysql_query($q_arr[$j]) or do_error($q_arr[$j], 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					if (mysql_num_rows($result)> 0) {
+					$result = db_query($q_arr[$j]);
+					if ($result->num_rows> 0) {
 						$watch_val = $osw_arr[$j];								// time slice for display purposes
 						}
 					}						// end if ($now ... )
@@ -276,9 +276,9 @@ switch ($mode) {
 				if ($now >= $_SESSION['osw_run_at'][$j]) {					// seconds
 					$_SESSION['osw_run_at'][$j] +=  ( $osw_arr[$j] * 60 ) ;				// set next - nth entry to seconds - 9/25/2015
 
-					$result_x = mysql_query($q_arr[$j]) or do_error($q_arr[$j], 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					if (mysql_num_rows($result_x) > 0) {
-						while ( $row = mysql_fetch_array ( $result_x, MYSQL_ASSOC)) {
+					$result_x = db_query($q_arr[$j]);
+					if ($result_x->num_rows > 0) {
+						while ( $row = $result_x->fetch_assoc()) {
 							do_row ( $row );
 							}
 						}				// end if (mysql_num_rows ... )
@@ -292,9 +292,10 @@ switch ($mode) {
 			break;		// end case 1
     case 10:		// log entry
 
-    	$query = "SELECT `handle` FROM `$GLOBALS[mysql_prefix]responder` `r` WHERE `id` = {$_POST['ref']} LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+    	$ref = sanitize_int($_POST['ref']);
+		$query = "SELECT `handle` FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$ref]);
+		$row = stripslashes_deep($result->fetch_assoc());
 ?>
 <body onload = "document.osw_form.frm_comment.focus();">		<!-- log entry  <?php echo __LINE__;?> -->
 <form name="osw_form" method = "post" action="<?php echo basename(__FILE__);?>">
@@ -339,11 +340,12 @@ switch ($mode) {
         break;
 
     case 12:		// add note
-    	$query = "SELECT  `t`.`scope`, `y`.`type` FROM `$GLOBALS[mysql_prefix]ticket` `t`
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
-    		WHERE `t`.`id` = " . intval($_POST['ref']) . " LIMIT 1;";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		if (mysql_num_rows(	$result) !== 1) {
+    	$ref = sanitize_int($_POST['ref']);
+		$query = "SELECT  `t`.`scope`, `y`.`type` FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types`	`y` 	ON (`t`.`in_types_id` 	= `y`.`id`)
+    		WHERE `t`.`id` = ? LIMIT 1;";
+		$result = db_query($query, [$ref]);
+		if ($result->num_rows !== 1) {
 			$log_message = basename(__FILE__) . "/" . __LINE__;
 			if (!(array_key_exists ( $log_message, $_SESSION ))) {		// limit to once per session
 				$_SESSION[$log_message] = TRUE;
@@ -351,7 +353,7 @@ switch ($mode) {
 				}
 			}		// end error
 		else {
-			$row = mysql_fetch_assoc ($result);
+			$row = $result->fetch_assoc();
 			}
 //		dump($row);
 
@@ -390,10 +392,10 @@ Signal &raquo;
 <select name='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); '>
 <option value=0 selected>Select</option>
 <?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-		echo "\t<option value='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</option>\n";		// note pipe separator
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+	$result = db_query($query);
+	while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
+		echo "\t<option value='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</option>\n";		// note pipe separator
 		}
 	echo "\t</select>\n";
 ?>
@@ -419,14 +421,16 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 		$the_date = date(get_variable('date_format', now()));
 		$now_ts = now_ts();
 		$the_text = "[{$_SESSION['user']}:{$the_date}]" . strip_tags(trim($_POST['frm_text'])) . "\n";		// identify 'by'
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `{$field_name[$_POST['frm_add_to']]}`= CONCAT (`{$field_name[$_POST['frm_add_to']]}`, '{$the_text}'), `updated` = '{$now_ts}'  WHERE `id` = " . intval($_POST['ref']) ." LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$query = "SELECT `y`. `type` FROM `$GLOBALS[mysql_prefix]ticket` `t`
-					LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `y` ON (`t`.`in_types_id` = `y`.`id`)
-					WHERE  `t`.`id` = " . intval($_POST['ref']) . " LIMIT 1";
+		$frm_add_to = sanitize_int($_POST['frm_add_to']);
+		$ref = sanitize_int($_POST['ref']);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `{$field_name[$frm_add_to]}`= CONCAT (`{$field_name[$frm_add_to]}`, ?), `updated` = ?  WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$the_text, $now_ts, $ref]);
+		$query = "SELECT `y`. `type` FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `y` ON (`t`.`in_types_id` = `y`.`id`)
+					WHERE  `t`.`id` = ? LIMIT 1";
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$result = db_query($query, [$ref]);
+		$row = stripslashes_deep($result->fetch_assoc());
 ?>
 <BODY onload = "setTimeout(function(){ do_can(); }, 1500);">		<!-- 1/14/10 -->
 <form name = "osw_form" method = "post" 	action = "<?php echo basename(__FILE__); ?>">
@@ -448,9 +452,10 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 		$smsg_ids = ((array_key_exists( "use_smsg", $_POST)) && ($_POST['use_smsg'] == 1)) ? $_POST['frm_smsg_ids'] : "";
 //		$smsg_ids = ((isset($_POST['use_smsg'])) && ($_POST['use_smsg'] == 1)) ? $_POST['frm_smsg_ids'] : "";
 
-    	$query = "SELECT `handle`, `contact_via` FROM `$GLOBALS[mysql_prefix]responder` `r` WHERE `id` = {$_POST['ref']} LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+    	$ref = sanitize_int($_POST['ref']);
+		$query = "SELECT `handle`, `contact_via` FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$ref]);
+		$row = stripslashes_deep($result->fetch_assoc());
 
 		$tik_id = $_POST['ref'];
 ?>
@@ -558,10 +563,10 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-							print "\t<OPTION VALUE='{$row['code']}'>{$row['code']}|{$row['text']}</OPTION>\n";		// pipe separator
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+						$result = db_query($query);
+						while ($row = stripslashes_deep($result->fetch_assoc())) {
+							print "\t<OPTION VALUE='" . e($row['code']) . "'>" . e($row['code']) . "|" . e($row['text']) . "</OPTION>\n";		// pipe separator
 							}
 ?>
 					</SELECT>
