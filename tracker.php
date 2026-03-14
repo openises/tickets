@@ -174,11 +174,19 @@ if(isset($_GET['pw'])) {	// is the client GPSGate
 		}
 	}	//	end if client is GPSGate
 	
-$query = "DELETE FROM `$GLOBALS[mysql_prefix]remote_devices` WHERE `user` = '$myUser'";		// remove prior location for this device
-$result = mysql_query($query);
+$myUser = sanitize_string($myUser);
+$myLatitude = floatval($myLatitude);
+$myLongitude = floatval($myLongitude);
+$mySpeed = floatval($mySpeed);
+$myAltitude = floatval($myAltitude);
+$myDirection = floatval($myDirection);
+$myTime = sanitize_string($myTime);
 
-$query = "INSERT INTO `$GLOBALS[mysql_prefix]remote_devices` (`lat`, `lng`, `time`, `speed`, `altitude`, `direction`, `user`) VALUES ($myLatitude, $myLongitude, '$myTime', $mySpeed, $myAltitude, $myDirection, '$myUser')";
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}remote_devices` WHERE `user` = ?";		// remove prior location for this device
+$result = db_query($query, [$myUser]);
+
+$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}remote_devices` (`lat`, `lng`, `time`, `speed`, `altitude`, `direction`, `user`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+$result = db_query($query, [$myLatitude, $myLongitude, $myTime, $mySpeed, $myAltitude, $myDirection, $myUser]);
 $response_code = ($result) ? 100 : 99;
 
 $return_code="";	

@@ -3,9 +3,9 @@ error_reporting(E_ALL);
 require_once('incs/functions.inc.php');
 
 $the_key = "1567633552";
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`= 1 AND `aprs`= 1 AND `callsign` <> ''";  // work each call sign, 8/10/09
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `mobile`= 1 AND `aprs`= 1 AND `callsign` <> ''";  // work each call sign, 8/10/09
 // print $query . "<BR />";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$result	= db_query($query);
 if (1 > 0) {			//	
 	$call_arr = array();
 //	while ($row = @mysql_fetch_assoc($result)) {

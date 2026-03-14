@@ -167,16 +167,20 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 		<BR />
 <?php
 		$_POST['frm_query'] = str_replace(' ', '|', $_POST['frm_query']);
-		$query_str = quote_smart(trim(str_replace(' ', '|', $_POST['frm_query'])));
+		$query_str = sanitize_string(trim(str_replace(' ', '|', $_POST['frm_query'])));
+		$search_params = [];
 		if($_POST['frm_search_in'])	{								//what field are we searching?
-			$search_fields = "CAST({$_POST['frm_search_in']} AS CHAR) REGEXP '$_POST[frm_query]'";	//
+			$search_fields = "CAST(`" . sanitize_string($_POST['frm_search_in']) . "` AS CHAR) REGEXP ?";	//
+			$search_params[] = $query_str;
 			} else {							//list fields and form the query to search all of them
-			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`");
+			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` LIMIT 1");
 			$search_fields = "";
-			$ok_types = array("string", "blob", "VAR_STRING", "CHAR", "LONG", "LONGLONG", "BLOB");
-			for ($i = 0; $i < mysql_num_fields($result); $i++) {
-				if (in_array (mysql_field_type($result, $i), $ok_types )) {
-    				$search_fields .= "CAST(`" . mysql_field_name($result, $i) ."` AS CHAR) REGEXP {$query_str} OR ";
+			$ok_types = array(MYSQLI_TYPE_STRING, MYSQLI_TYPE_BLOB, MYSQLI_TYPE_VAR_STRING, MYSQLI_TYPE_CHAR, MYSQLI_TYPE_LONG, MYSQLI_TYPE_LONGLONG, MYSQLI_TYPE_LONG_BLOB, MYSQLI_TYPE_MEDIUM_BLOB, MYSQLI_TYPE_TINY_BLOB);
+			$fields = $result->fetch_fields();
+			for ($i = 0; $i < count($fields); $i++) {
+				if (in_array ($fields[$i]->type, $ok_types )) {
+    				$search_fields .= "CAST(`" . $fields[$i]->name ."` AS CHAR) REGEXP ? OR ";
+    				$search_params[] = $query_str;
     				}
     			}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);		// drop trailing OR
@@ -190,27 +194,28 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 
 		$id_stack= array();
 
-		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} AND `status` LIKE " . quote_smart($_POST['frm_querytype']) . " AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;		// 9/19/08
-		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "SELECT `id` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} AND `status` LIKE ? AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . sanitize_string($_POST['frm_ordertype']) . "` " . $desc;		// 9/19/08
+		$tick_params = array_merge([sanitize_string($_POST['frm_querytype'])], $search_params);
+		$result = db_query($query, $tick_params);
 
-		$tick_hits = mysql_affected_rows();
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$tick_hits = $result->num_rows;
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			array_push($id_stack, $row['id']);
 			}
-		$query = "SELECT `ticket_id` FROM `$GLOBALS[mysql_prefix]patient`
-			WHERE CAST(`description` AS CHAR) REGEXP " . quote_smart($_POST['frm_query']) . " OR CAST(`name` AS CHAR) REGEXP " . quote_smart($_POST['frm_query']) ;
-		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-		$per_hits = mysql_affected_rows();
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT `ticket_id` FROM `{$GLOBALS['mysql_prefix']}patient`
+			WHERE CAST(`description` AS CHAR) REGEXP ? OR CAST(`name` AS CHAR) REGEXP ?";
+		$result = db_query($query, [$query_str, $query_str]);
+		$per_hits = $result->num_rows;
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			array_push($id_stack, $row['ticket_id']);
 			}
 
-		$query = "SELECT `ticket_id` FROM `$GLOBALS[mysql_prefix]action`
-			WHERE CAST(`description` AS CHAR) REGEXP " . quote_smart($_POST['frm_query']);		// 9/19/08
-		$result = mysql_query($query) or do_error('','', mysql_error(),basename( __FILE__), __LINE__);
-		$act_hits = mysql_affected_rows();
+		$query = "SELECT `ticket_id` FROM `{$GLOBALS['mysql_prefix']}action`
+			WHERE CAST(`description` AS CHAR) REGEXP ?";		// 9/19/08
+		$result = db_query($query, [$query_str]);
+		$act_hits = $result->num_rows;
 
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			array_push($id_stack, $row['ticket_id']);
 			}
 
@@ -228,34 +233,41 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 
 		$acts_ary = $pats_ary = array();				// 4/12/2015
 		
-		$where = ($_POST['frm_year'] != 0) ? "WHERE year(`date`) = " . quote_smart($_POST["frm_year"]) : "";
+		$year_params = [];
+		$where = "";
+		if ($_POST['frm_year'] != 0) {
+			$where = "WHERE year(`date`) = ?";
+			$year_params[] = sanitize_int($_POST["frm_year"]);
+		}
 
-		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` {$where} GROUP BY `ticket_id`";
-		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `{$GLOBALS['mysql_prefix']}action` {$where} GROUP BY `ticket_id`";
+		$result_temp = db_query($query, $year_params);
+		while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 			$acts_ary[$row['ticket_id']] = $row['the_count'];
 			}
 
-		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` {$where} GROUP BY `ticket_id`";
-		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `{$GLOBALS['mysql_prefix']}patient` {$where} GROUP BY `ticket_id`";
+		$result_temp = db_query($query, $year_params);
+		while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 			$pats_ary[$row['ticket_id']] = $row['the_count'];
 			}
 		
 		$where2 = ($where == "") ? "WHERE `status` <> {$GLOBALS['STATUS_RESERVED']}" : "AND `status` <> {$GLOBALS['STATUS_RESERVED']}";
 
 //								1/1/2015
+			$in_placeholders = implode(',', array_fill(0, count($id_stack), '?'));
 			$query = "SELECT `id`, UNIX_TIMESTAMP(`problemstart`) AS `problemstart`, UNIX_TIMESTAMP(`updated`) AS `updated`, `scope`, `status`, `severity`,
 				CONCAT_WS(' ',`street`,`city`,`state`) AS `addr`
-				FROM `$GLOBALS[mysql_prefix]ticket`
+				FROM `{$GLOBALS['mysql_prefix']}ticket`
 				{$where} {$where2}
-				AND `id` IN ({$in_str})
-				AND `status` LIKE " . quote_smart($_POST['frm_querytype']) . "
+				AND `id` IN ({$in_placeholders})
+				AND `status` LIKE ?
 				ORDER BY `severity` DESC, `problemstart` ASC";
 
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-			if(mysql_num_rows($result) == 1) {	//	revised to redirect to main.php rather than show ticket in search.php	4/29/13
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$in_params = array_merge($year_params, array_values($id_stack), [sanitize_string($_POST['frm_querytype'])]);
+			$result = db_query($query, $in_params);
+			if($result->num_rows == 1) {	//	revised to redirect to main.php rather than show ticket in search.php	4/29/13
+				$row = stripslashes_deep($result->fetch_assoc());
 				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 				header('Cache-Control: no-store, no-cache, must-revalidate');
 				header('Cache-Control: post-check=0, pre-check=0', FALSE);
@@ -266,7 +278,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 				redir($url);
 				exit();
 
-				} elseif (mysql_num_rows($result) == 0) {
+				} elseif ($result->num_rows == 0) {
 				print "<SPAN CLASS='text' STYLE = 'margin-left:80px'><B>No matches found</B></SPAN><BR /><BR />";
 				} else {		//  more than one, list them
 				print "<SPAN CLASS='text' STYLE = 'margin-left: 80px'><B>Matches</B>: tickets {$tick_hits}, actions {$act_hits}, persons {$per_hits}</SPAN><BR /><BR />";
@@ -283,7 +295,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 				print "</TR></thead><tbody>";
 				$counter = 0;
 
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
+				while($row = stripslashes_deep($result->fetch_assoc())){				// 8/28/08
 					if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
 						$strike = "<strike>"; $strikend = "</strike>";
 						}
@@ -344,8 +356,8 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 		</TD>
 	</TR>
 <?php						// 1/1/2015
-	$query ="SELECT DISTINCT year(`problemstart`) AS `the_year` FROM `$GLOBALS[mysql_prefix]ticket` WHERE (year(`problemstart`) != 0) ORDER BY `the_year` DESC";
-	$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+	$query ="SELECT DISTINCT year(`problemstart`) AS `the_year` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE (year(`problemstart`) != 0) ORDER BY `the_year` DESC";
+	$result = db_query($query);
 	
 	$thisYear = date("Y");
 ?>
@@ -355,8 +367,8 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 			<SELECT NAME="frm_year">
 				<OPTION VALUE=0 SELECTED>All</OPTION>
 <?php
-				if(mysql_num_rows($result) > 0) {
-					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				if($result->num_rows > 0) {
+					while ($row = stripslashes_deep($result->fetch_assoc())) {
 						echo "\t<OPTION VALUE=\"{$row['the_year']}\">{$row['the_year']}</OPTION>\n";
 						}
 					} else {

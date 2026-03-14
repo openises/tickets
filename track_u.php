@@ -25,18 +25,18 @@ $interval = intval(get_variable('auto_poll'));
 $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";	//10/4/08
 
 if (array_key_exists('unit_id', $_GET)) {	// 8/19/10
-	$query = "SELECT  * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = {$_GET['unit_id']} LIMIT 1;";	//	8/19/10
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_array($result)) ;
+	$query = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1;";	//	8/19/10
+	$result = db_query($query, [sanitize_int($_GET['unit_id'])]);
+	$row = stripslashes_deep($result->fetch_array()) ;
 	$source = $row['callsign'];
 	}
 else {
 	extract($_GET);
 	}
 
-$query_callsign	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `callsign`='{$source}'";				// 7/29/09
-$result_callsign = mysql_query($query_callsign) or do_error($query_callsign, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		// 7/29/09
-$row_callsign	= mysql_fetch_assoc($result_callsign);				// 7/29/09
+$query_callsign	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `callsign`=?";				// 7/29/09
+$result_callsign = db_query($query_callsign, [sanitize_string($source)]);		// 7/29/09
+$row_callsign	= $result_callsign->fetch_assoc();				// 7/29/09
 $handle = ($row_callsign['handle']);
 $name = ($row_callsign['name']);
 
@@ -212,20 +212,20 @@ function list_tracks($addon = '', $start) {
 	$query = "SELECT DISTINCT `source`, `latitude`, `longitude` ,`course` ,`speed` ,`altitude` ,`closest_city` ,
 		`status` , `packet_date`,
 		UNIX_TIMESTAMP(updated) AS `updated`
-		FROM `$GLOBALS[mysql_prefix]tracks`
-		WHERE `source` LIKE '" . like_ify($source) . "'
-		ORDER BY `packet_date` ASC ";	//	6/16/08	
-	
-	$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result_tr)> 1 ) {
+		FROM `{$GLOBALS['mysql_prefix']}tracks`
+		WHERE `source` LIKE ?
+		ORDER BY `packet_date` ASC ";	//	6/16/08
+
+	$result_tr = db_query($query, [like_ify($source)]);
+	if ($result_tr->num_rows > 1 ) {
 ?>
 		var j=0;				// point counter this unit
-		var ender = <?php print mysql_num_rows($result_tr); ?> ;
+		var ender = <?php print $result_tr->num_rows; ?> ;
 <?php
 		$last = $day = "";
 		$i=1;
-		
-		while ($row_tr = stripslashes_deep(mysql_fetch_array($result_tr))) {
+
+		while ($row_tr = stripslashes_deep($result_tr->fetch_array())) {
 			if (substr($row_tr['packet_date'] ,  0,  10) != $day) {
 				$day = substr ($row_tr['packet_date'] ,  0,  10);
 				$sidebar_line = "<TR CLASS='" . $evenodd[$i%2] . "'><TD COLSPAN=99><U>" . $day . "</U></TD></TR>\n";
@@ -300,9 +300,9 @@ function list_tracks($addon = '', $start) {
 
 
 
-$query_callsign	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `callsign`='{$source}'";				// 7/29/09
-$result_callsign = mysql_query($query_callsign) or do_error($query_callsign, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		// 7/29/09
-$row_callsign	= mysql_fetch_assoc($result_callsign);				// 7/29/09
+$query_callsign	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `callsign`=?";				// 7/29/09
+$result_callsign = db_query($query_callsign, [sanitize_string($source)]);		// 7/29/09
+$row_callsign	= $result_callsign->fetch_assoc();				// 7/29/09
 $handle = ($row_callsign['handle']);				// 7/29/09
 $name = ($row_callsign['name']);				// 7/29/09
 ?>

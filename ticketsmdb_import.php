@@ -128,9 +128,9 @@ switch($mode) {
 	$db_selected = mysql_select_db($_POST['ticketsdb']);
 	for($y = 0; $y < $tableCount; $y++) {
 		if($tickets_mdbTables[$y] != "log") {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]" . $tickets_mdbTables[$y] . "`";
-			$result = mysql_query($query);
-			if(mysql_num_rows($result) > 0) {
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$y] . "`";
+			$result = db_query($query);
+			if($result->num_rows > 0) {
 				$existingDataCount++;
 				}
 			}
@@ -175,13 +175,13 @@ switch($mode) {
 			$connect = mysql_connect($_POST['mdbhost'], $_POST['mdbuser'], $_POST['mdbpassword']);
 			$db_selected = mysql_select_db($_POST['mdbdb']);
 
-			$query = "DESCRIBE `$GLOBALS[mysql_prefix]" . $mdbTables[$z] . "`";
+			$query = "DESCRIBE `{$GLOBALS['mysql_prefix']}" . $mdbTables[$z] . "`";
 			$result = mysql_query($query);
 			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 				$table_fields[] = $row['Field'];
 				}
 				
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]" . $mdbTables[$z] . "`";
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $mdbTables[$z] . "`";
 			$result = mysql_query($query);
 			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 				$tabledata[] = $row;
@@ -195,7 +195,7 @@ switch($mode) {
 			$fieldCount = count($table_fields);
 			for($m = 0; $m < $dataCount; $m++) {
 				if($tickets_mdbTables[$z] != "log") {
-					$query = "INSERT INTO `$GLOBALS[mysql_prefix]" . $tickets_mdbTables[$z] . "` (";
+					$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
 					for($i = 0; $i < $fieldCount; $i++) {
 						if($i < ($fieldCount-1)) {
 							$query .= "`" . $table_fields[$i] . "`, ";
@@ -212,10 +212,10 @@ switch($mode) {
 							}
 						}
 					$query .= ");";
-					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+					$result = db_query($query);
 					if($result) {$tabledatacount++;}
 					} else {
-					$query = "INSERT INTO `$GLOBALS[mysql_prefix]" . $tickets_mdbTables[$z] . "` (";
+					$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
 					for($i = 0; $i < $fieldCount; $i++) {
 						if($table_fields[$i] != 'id') {
 							if($i < ($fieldCount-1)) {
@@ -236,7 +236,7 @@ switch($mode) {
 							}
 						}
 					$query .= ");";
-					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+					$result = db_query($query);
 					if($result) {$tabledatacount++;}					
 					}
 				}
@@ -245,30 +245,30 @@ switch($mode) {
 			$output_text .= "Added " . $tabledatacount . " entries to Table " . $tickets_mdbTables[$z] . "<BR />";
 			}
 
-			$query = "SELECT `id`, `field5`, `field1`, `field2` from `$GLOBALS[mysql_prefix]member`";
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$query = "SELECT `id`, `field5`, `field1`, `field2` from `{$GLOBALS['mysql_prefix']}member`";
+			$result = db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				if($row['field5'] != "") {
-					$id = $row['id'];
+					$id = intval($row['id']);
 					$temp = $row['field5'];
 					$field1 = $row['field1'];
 					$field2 = $row['field2'];
 					$location = str_replace('pictures', 'mdb_pictures', $temp);
-					$query2 = "UPDATE `$GLOBALS[mysql_prefix]member` SET `field5` = '" . $location . "' WHERE `id` = " . $id;
-					$result2 = mysql_query($query2);
+					$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET `field5` = ? WHERE `id` = ?";
+					$result2 = db_query($query2, [$location, $id]);
 					if($result2) {$output_text .= "Updated picture location for member " . $field2 . " " . $field1 . "<BR />";}
 					}
 				}
 
-			$query = "SELECT `id`, `name`, `member_id` from `$GLOBALS[mysql_prefix]mdb_files`";
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-				$id = $row['id'];
+			$query = "SELECT `id`, `name`, `member_id` from `{$GLOBALS['mysql_prefix']}mdb_files`";
+			$result = db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
+				$id = intval($row['id']);
 				$temp = $row['name'];
 				$location = str_replace('files', 'mdb_files', $temp);
 				$membername = get_member_name($row['member_id']);
-				$query2 = "UPDATE `$GLOBALS[mysql_prefix]mdb_files` SET `name` = '" . $location . "' WHERE `id` = " . $id;
-				$result2 = mysql_query($query2);
+				$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_files` SET `name` = ? WHERE `id` = ?";
+				$result2 = db_query($query2, [$location, $id]);
 				if($result2) {$output_text .= "Updated file location for member " . $membername . "<BR />";}
 				}
 				
@@ -298,13 +298,13 @@ switch($mode) {
 	$output_text = "";
 	for($i = 0; $i < $ticketsTableCount; $i++) {
 		if($tickets_mdbTables[$i] != "log") {
-			$query = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]" . $tickets_mdbTables[$i] . "`";
-			$result = mysql_query($query);
+			$query = "TRUNCATE TABLE `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$i] . "`";
+			$result = db_query($query);
 			if($result) {$output_text .= "Emptied data from " . $tickets_mdbTables[$i] . " table<BR />";}
 			}
 		}
-	$query = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]responder_x_member`";
-	$result = mysql_query($query);
+	$query = "TRUNCATE TABLE `{$GLOBALS['mysql_prefix']}responder_x_member`";
+	$result = db_query($query);
 	if($result) {$output_text .= "Emptied data from responder_x_member table<BR />";}
 	
 ?>

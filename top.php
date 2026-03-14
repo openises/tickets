@@ -59,16 +59,16 @@ if(file_exists("./incs/modules.inc.php")) {
 	}
 $poll_cycle_time = 5000;	// 5 seconds to ms - 4/13/18
 $resps_arr = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-$result_resps = mysql_query($query);
-while ($row_resps = stripslashes_deep(mysql_fetch_assoc($result_resps))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+$result_resps = db_query($query);
+while ($row_resps = stripslashes_deep($result_resps->fetch_assoc())) 	{
 	$resps_arr[$row_resps['id']] = $row_resps['icon_str'];
 	}
 
 $sounds = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]sound_settings`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}sound_settings`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 	$sounds[$row['name']] = $row['ison'];
 	}
 
@@ -1497,9 +1497,9 @@ function get_daynight() {
 	$the_mp3_file = get_variable('sound_mp3');
 	$sounds_arr = array();
 	$mp3sounds_arr = array();
-	$query = "SELECT `name`, `filename`, `mp3_filename`, `ison` FROM `$GLOBALS[mysql_prefix]sound_settings` ORDER BY `id`";
-	$result = mysql_query($query);
-	while($row = stripslashes_deep(mysql_fetch_array($result))) {
+	$query = "SELECT `name`, `filename`, `mp3_filename`, `ison` FROM `{$GLOBALS['mysql_prefix']}sound_settings` ORDER BY `id`";
+	$result = db_query($query);
+	while($row = stripslashes_deep($result->fetch_array())) {
 		if($row['ison'] == 1){
 			$sounds_arr[$row['name']] = $row['filename'];
 			$mp3sounds_arr[$row['name']] = $row['mp3_filename'];

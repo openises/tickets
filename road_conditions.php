@@ -33,9 +33,9 @@ $usng = get_text('USNG');
 $osgb = get_text('OSGB');
 
 $c_types = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$c_types [$row['id']] = array ($row['title'], $row['icon']);
 	}
 unset($result);
@@ -596,10 +596,10 @@ function list_locations($addon = '', $start) {
 			`c`.`title` AS `type_title`,
 			`c`.`icon`AS `icon_url`,
 			`r`.`_on` AS `updated`
-			FROM `$GLOBALS[mysql_prefix]roadinfo` `r` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON `r`.`conditions`=`c`.`id` 
+			FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON `r`.`conditions`=`c`.`id`
 			ORDER BY `cond_id`";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 	unset($result);
 
 ?>
@@ -851,15 +851,15 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			`c`.`title` AS `type_title`,
 			`c`.`icon`AS `icon_url`,
 			`r`.`_on` AS `updated`
-			FROM `$GLOBALS[mysql_prefix]roadinfo` `r` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON `r`.`conditions`=`c`.`id` 
+			FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON `r`.`conditions`=`c`.`id`
 			ORDER BY `cond_id` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$num_locations = mysql_affected_rows();
+	$result = db_query($query);
+	$num_locations = db()->affected_rows;
 	$i=1;				// counter
 // =============================================================================
 	$utc = gmdate ("U");
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// ==========  major while() for Location ==========
+	while ($row = stripslashes_deep($result->fetch_assoc())) {		// ==========  major while() for Location ==========
 		$the_on_click = (my_is_float($row['lat']))? " onClick = myclick({$row['cond_id']}); " : " onClick = myclick_nm({$row['cond_id']}); ";
 		$got_point = FALSE;
 		print "\n\t\tvar i=$i;\n";
@@ -1003,32 +1003,32 @@ var buttons_html = "";
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Location - checkbox
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]roadinfo WHERE `id`=" . $_POST['frm_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `id`= ?";
+		$result = db_query($query, [sanitize_int($_POST['frm_id'])]);
 		$caption = "<B>Location <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		}
 	else {
 		if ($_getgoedit == 'true') {
 			$station = TRUE;			//
-			$the_lat = empty($_POST['frm_lat'])? "NULL" : quote_smart(trim($_POST['frm_lat'])) ;
-			$the_lng = empty($_POST['frm_lng'])? "NULL" : quote_smart(trim($_POST['frm_lng'])) ;
-			
-			$loc_id = $_POST['frm_id'];
-			$by = $_SESSION['user_id'];					// 6/4/2013
-			$from = $_SERVER['REMOTE_ADDR'];			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]roadinfo` SET
-				`title`= " . 		quote_smart(trim($_POST['frm_name'])) . ",
-				`description`= " . 	quote_smart(trim($_POST['frm_state'])) . ",		
-				`address`= " . 		quote_smart(trim($_POST['frm_street'])) . ",
-				`conditions`= " . 	$_POST['frm_type'] . ",		
-				`lat`= " . 			$the_lat . ",
-				`lng`= " . 			$the_lng . ",
-				`_by`= " . 			quote_smart(trim($by)) . ",
-				`_on`= " . 			quote_smart(trim($now)) . ",
-				`_from`= " . 		quote_smart(trim($from)) . "
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
+			$the_lat = empty($_POST['frm_lat'])? NULL : trim($_POST['frm_lat']) ;
+			$the_lng = empty($_POST['frm_lng'])? NULL : trim($_POST['frm_lng']) ;
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$loc_id = sanitize_int($_POST['frm_id']);
+			$by = $_SESSION['user_id'];					// 6/4/2013
+			$from = $_SERVER['REMOTE_ADDR'];
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}roadinfo` SET
+				`title`= ?,
+				`description`= ?,
+				`address`= ?,
+				`conditions`= ?,
+				`lat`= ?,
+				`lng`= ?,
+				`_by`= ?,
+				`_on`= ?,
+				`_from`= ?
+				WHERE `id`= ?;";
+
+			$result = db_query($query, [trim(sanitize_string($_POST['frm_name'])), trim(sanitize_string($_POST['frm_state'])), trim(sanitize_string($_POST['frm_street'])), sanitize_int($_POST['frm_type']), $the_lat, $the_lng, trim($by), trim($now), trim($from), $loc_id]);
 
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_WARNLOCATION_CHANGE'], 0, $_POST['frm_id'], $_POST['frm_status_id']);}	//2/17/11
 			$caption = "<i>" . stripslashes_deep($_POST['frm_name']) . "</i><B>' data has been updated.</B><BR /><BR />";
@@ -1037,36 +1037,37 @@ var buttons_html = "";
 
 	if ($_getgoadd == 'true') {
 		$by = $_SESSION['user_id'];		//	4/14/11
-		$frm_lat = (empty($_POST['frm_lat']))? 'NULL': quote_smart(trim($_POST['frm_lat']));
-		$frm_lng = (empty($_POST['frm_lng']))? 'NULL': quote_smart(trim($_POST['frm_lng']));
-		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));	
+		$frm_lat = (empty($_POST['frm_lat']))? NULL: sanitize_string(trim($_POST['frm_lat']));
+		$frm_lng = (empty($_POST['frm_lng']))? NULL: sanitize_string(trim($_POST['frm_lng']));
+		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$by = $_SESSION['user_id'];					// 6/4/2013
-		$from = $_SERVER['REMOTE_ADDR'];			
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]roadinfo` (
-			`title`, 
-			`description`, 
-			`address`, 
+		$from = $_SERVER['REMOTE_ADDR'];
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}roadinfo` (
+			`title`,
+			`description`,
+			`address`,
 			`conditions`,
-			`lat`, 
-			`lng`, 
-			`_by`, 
-			`_on`, 
+			`lat`,
+			`lng`,
+			`_by`,
+			`_on`,
 			`_from` )
-			VALUES (" .
-			quote_smart(trim($_POST['frm_name'])) . "," .
-			quote_smart(trim($_POST['frm_descr'])) . "," .
-			quote_smart(trim($_POST['frm_street'])) . "," .
-			$_POST['frm_type'] . "," .
-			$frm_lat . "," .
-			$frm_lng . "," .				
-			quote_smart(trim($by)) . "," .
-			quote_smart(trim($now)) . "," .
-			quote_smart(trim($from)) . ");";
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();
+		$result = db_query($query, [
+			sanitize_string(trim($_POST['frm_name'])),
+			sanitize_string(trim($_POST['frm_descr'])),
+			sanitize_string(trim($_POST['frm_street'])),
+			sanitize_int($_POST['frm_type']),
+			$frm_lat,
+			$frm_lng,
+			sanitize_int($by),
+			$now,
+			sanitize_string(trim($from))
+		]);
+		$new_id=db()->insert_id;
 
-		do_log($GLOBALS['LOG_WARNLOCATION_ADD'], 0, mysql_insert_id(), 0);	//	2/17/11
+		do_log($GLOBALS['LOG_WARNLOCATION_ADD'], 0, db()->insert_id, 0);	//	2/17/11
 
 		$caption = "<B>Location  <i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been updated.</B><BR /><BR />";
 
@@ -1203,7 +1204,7 @@ var buttons_html = "";
 // edit =================================================================================================================
 
 	if ($_getedit == 'true') {
-		$id = $_GET['id'];
+		$id = sanitize_int($_GET['id']);
 		$query = "SELECT *,
 				`r`.`id` AS `cond_id`,
 				`c`.`id` AS `type_id`,
@@ -1216,11 +1217,11 @@ var buttons_html = "";
 				`r`.`lng` AS `lng`,
 				`r`.`address` AS `address`,
 				`r`.`_on` AS `updated`
-				FROM `$GLOBALS[mysql_prefix]roadinfo` `r` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON `r`.`conditions`=`c`.`id` 
-				WHERE `r`.`id`=$id";
-		$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$row	= mysql_fetch_assoc($result);
+				FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON `r`.`conditions`=`c`.`id`
+				WHERE `r`.`id`=?";
+		$result	= db_query($query, [$id]);
+		$row	= $result->fetch_assoc();
 		$lat = $row['lat'];
 		$lng = $row['lng'];
 ?>
@@ -1361,10 +1362,10 @@ var buttons_html = "";
 		if ($_getview == 'true') {
 
 			
-			$id = $_GET['id'];
-			$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]roadinfo` WHERE `id`= " . $id . " LIMIT 1";	// 1/19/2013
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row	= stripslashes_deep(mysql_fetch_assoc($result));
+			$id = sanitize_int($_GET['id']);
+			$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `id`= ? LIMIT 1";	// 1/19/2013
+			$result	= db_query($query, [$id]);
+			$row	= stripslashes_deep($result->fetch_assoc());
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 			$coords =  $row['lat'] . "," . $row['lng'];		// for UTM			
@@ -1506,7 +1507,7 @@ var buttons_html = "";
 		<DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;z-index: 1;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></DIV>
 <?php
 		require_once('./incs/links.inc.php');
-		$required = 250 + (mysql_affected_rows()*40);
+		$required = 250 + (db()->affected_rows*40);
 		$facs_side_bar_height = .9;		// max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)		
 		$the_height = (integer)  min (round($facs_side_bar_height * $_SESSION['scr_height']), $required );		// set the max	
 		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 

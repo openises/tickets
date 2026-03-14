@@ -28,9 +28,9 @@ $api_key = get_variable('gmaps_api_key');
 extract($_GET);
 
 $u_types = array();												// 1/1/09
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 //dump($u_types);	
@@ -41,10 +41,10 @@ $sm_icons = $GLOBALS['sm_icons'];
 
 function get_icon_legend (){			// returns legend string - 1/1/09
 	global $u_types, $sm_icons;
-	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT DISTINCT `type` FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name`";
+	$result = db_query($query);
 	$print = "";											// output string
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$temp = $u_types[$row['type']];
 		$print .= "\t\t" .$temp[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$temp[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
 		}
@@ -259,11 +259,11 @@ global $u_types;
 	var icons=[];						// note globals
 
 <?php
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
 $icons = $GLOBALS['icons'];
 
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// map type to blank icon id
+while ($row = stripslashes_deep($result->fetch_assoc())) {		// map type to blank icon id
 	$blank = $icons[$row['icon']];
 	print "\ticons[" . $row['id'] . "] = " . $row['icon'] . ";\n";	// 
 	}
@@ -323,9 +323,9 @@ unset($result);
 	$calls_nr = array();
 	$calls_time = array();
 	
-	$query = "SELECT * , UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks_hh` ORDER BY `id` DESC LIMIT 20";		// 6/17/08
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	while ($row = mysql_fetch_assoc($result)) {
+	$query = "SELECT * , UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks_hh` ORDER BY `id` DESC LIMIT 20";		// 6/17/08
+	$result = db_query($query);
+	while ($row = $result->fetch_assoc()) {
 		if (isset($calls[$row['source']])) {		// array_key_exists ( mixed key, array search )
 			$calls_nr[$row['source']]++;
 			}
@@ -342,23 +342,22 @@ unset($result);
 //	dump($calls_time);
 	
 
-	$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]un_status`";		// build unit status values array
-	$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$query = "SELECT `id`, `status_val` FROM `{$GLOBALS['mysql_prefix']}un_status`";		// build unit status values array
+	$temp_result = db_query($query);
 	$status_vals[0]="TBD";
-	while ($temp_row = mysql_fetch_assoc($temp_result)) {					// build array of values
+	while ($temp_row = $temp_result->fetch_assoc()) {					// build array of values
 		$status_vals[$temp_row['id']]=$temp_row['status_val'];
 		}	
 
-	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `aprs` = 1 AND `callsign` <> '' ORDER BY `name`";	// 1/24/09 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//	dump(mysql_affected_rows());
+	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `mobile` = 1 AND `aprs` = 1 AND `callsign` <> '' ORDER BY `name`";	// 1/24/09
+	$result = db_query($query);
 
-	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black"); 
+	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black");
 
 		// major while ... for mobile RESPONDER data starts here
 
 	$aprs = FALSE;													// legend show/not boolean
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 		$totrack  = (empty($row['callsign']))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><U>Tracks</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 
@@ -373,15 +372,15 @@ unset($result);
 <?php
 			}
 		else {			// is mobile, do infowin, etc.
-			$query = "SELECT DISTINCT `source`, `latitude`, `longitude` ,`course` ,`speed` ,`altitude` ,`closest_city` ,`status` , UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` = '" .$row['callsign'] . "' ORDER BY `updated`";	//	6/16/08 
-			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			if (mysql_affected_rows()> 0 ) {
+			$query = "SELECT DISTINCT `source`, `latitude`, `longitude` ,`course` ,`speed` ,`altitude` ,`closest_city` ,`status` , UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE `source` = ? ORDER BY `updated`";	//	6/16/08
+			$result_tr = db_query($query, [$row['callsign']]);
+			if ($result_tr->num_rows > 0 ) {
 ?>
 				var j=1;				// point counter this unit
-				var ender = <?php print mysql_affected_rows(); ?> ;
+				var ender = <?php print $result_tr->num_rows; ?> ;
 <?php
 				$last = "";
-				while ($row_tr = stripslashes_deep(mysql_fetch_assoc($result_tr))) {
+				while ($row_tr = stripslashes_deep($result_tr->fetch_assoc())) {
 ?>
 					bounds.extend(new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>));	// all points to bounding box
 					var point = new GLatLng(<?php print $row_tr['latitude'];?>, <?php print $row_tr['longitude'];?>);
@@ -411,10 +410,10 @@ unset($result);
 ?>
 					var point = new GLatLng(<?php print $last['latitude'];?>, <?php print $last['longitude'];?>);	// mobile position
 <?php
-					}				// end (mysql_affected_rows()> 0 )
+					}				// end ($result_tr->num_rows > 0 )
 				else {				// no track data, do sidebar only
-					$mode = 4;			
-					}			// end if/else (mysql_affected_rows()>0;) - no track data
+					$mode = 4;
+					}			// end if/else ($result_tr->num_rows > 0) - no track data
 			}		// end mobile
 //										common to all modes
 		$the_bull = ($mode == 0)? "" : "<FONT COLOR=" . $bulls[$mode] ."><B>&bull;</B></FONT>";

@@ -21,9 +21,9 @@ else {
 	do_login(basename(__FILE__));
 	}	
 function found_user() {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$found_user = mysql_num_rows($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
+	$result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
+	$found_user = $result->num_rows;
 	if ($found_user > 0) {
 		$user_exists = TRUE;
 		} else {
@@ -36,21 +36,21 @@ function found_user() {
 	
 	function get_stat_type_name($value) {
 		$type_name = "Not Used";
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` WHERE `st_id` = {$value}";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
+		$result = db_query($query, [sanitize_int($value)]);
+		if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 			$type_name = $row['name'];
-			}		
+			}
 		return $type_name;
 		}
-		
+
 	function get_stat_type_type($value) {
 		$stat_type = "Not Used";
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` WHERE `st_id` = {$value}";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
+		$result = db_query($query, [sanitize_int($value)]);
+		if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 			$stat_type = $row['stat_type'];
 			}
 		return $stat_type;
@@ -273,9 +273,9 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 		return $seconds;
 		}
 	
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$num_rows = mysql_num_rows($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
+	$result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
+	$num_rows = $result->num_rows;
 	if($num_rows > 0) {
 		$th1 = ((get_stat_type_type($_POST['frm_box1']) == "avg") && ($_POST['frm_t1'] !="0")) ?  makeSeconds($_POST['frm_t1']) : $_POST['frm_t1'];
 		$th2 = ((get_stat_type_type($_POST['frm_box2']) == "avg") && ($_POST['frm_t2'] !="0")) ?  makeSeconds($_POST['frm_t2']) : $_POST['frm_t2'];
@@ -310,51 +310,44 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 		$ttype7 = ($_POST['frm_t_type7'] == "0") ? "Less" : $_POST['frm_t_type7'];
 		$ttype8 = ($_POST['frm_t_type8'] == "0") ? "Less" : $_POST['frm_t_type8'];	
 	
-		$query = "UPDATE `$GLOBALS[mysql_prefix]stats_settings` SET
-			`refresh_rate`= " . 		quote_smart(trim($_POST['frm_refresh'])) . ",
-			`f1`= " . 				quote_smart(trim($_POST['frm_box1'])) . ",
-			`f2`= " . 				quote_smart(trim($_POST['frm_box2'])) . ",
-			`f3`= " . 				quote_smart(trim($_POST['frm_box3'])) . ",
-			`f4`= " . 				quote_smart(trim($_POST['frm_box4'])) . ",
-			`f5`= " . 				quote_smart(trim($_POST['frm_box5'])) . ",
-			`f6`= " . 				quote_smart(trim($_POST['frm_box6'])) . ",
-			`f7`= " . 				quote_smart(trim($_POST['frm_box7'])) . ",
-			`f8`= " . 				quote_smart(trim($_POST['frm_box8'])) . ",
-			`threshold_1`= " . 		quote_smart(trim($th1)) . ",
-			`threshold_2`= " . 		quote_smart(trim($th2)) . ",
-			`threshold_3`= " . 		quote_smart(trim($th3)) . ",
-			`threshold_4`= " . 		quote_smart(trim($th4)) . ",
-			`threshold_5`= " . 		quote_smart(trim($th5)) . ",
-			`threshold_6`= " . 		quote_smart(trim($th6)) . ",
-			`threshold_7`= " . 		quote_smart(trim($th7)) . ",
-			`threshold_8`= " . 		quote_smart(trim($th8)) . ",
-			`thresholdw_1`= " . 	quote_smart(trim($thw1)) . ",
-			`thresholdw_2`= " . 	quote_smart(trim($thw2)) . ",
-			`thresholdw_3`= " . 	quote_smart(trim($thw3)) . ",
-			`thresholdw_4`= " . 	quote_smart(trim($thw4)) . ",
-			`thresholdw_5`= " . 	quote_smart(trim($thw5)) . ",
-			`thresholdw_6`= " . 	quote_smart(trim($thw6)) . ",
-			`thresholdw_7`= " . 	quote_smart(trim($thw7)) . ",
-			`thresholdw_8`= " . 	quote_smart(trim($thw8)) . ",
-			`thresholdf_1`= " . 	quote_smart(trim($thf1)) . ",
-			`thresholdf_2`= " . 	quote_smart(trim($thf2)) . ",
-			`thresholdf_3`= " . 	quote_smart(trim($thf3)) . ",
-			`thresholdf_4`= " . 	quote_smart(trim($thf4)) . ",
-			`thresholdf_5`= " . 	quote_smart(trim($thf5)) . ",
-			`thresholdf_6`= " . 	quote_smart(trim($thf6)) . ",
-			`thresholdf_7`= " . 	quote_smart(trim($thf7)) . ",
-			`thresholdf_8`= " . 	quote_smart(trim($thf8)) . ",
-			`t_type1`= " . 			quote_smart(trim($ttype1)) . ",
-			`t_type2`= " . 			quote_smart(trim($ttype2)) . ",
-			`t_type3`= " . 			quote_smart(trim($ttype3)) . ",
-			`t_type4`= " . 			quote_smart(trim($ttype4)) . ",
-			`t_type5`= " . 			quote_smart(trim($ttype5)) . ",
-			`t_type6`= " . 			quote_smart(trim($ttype6)) . ",
-			`t_type7`= " . 			quote_smart(trim($ttype7)) . ",
-			`t_type8`= " . 			quote_smart(trim($ttype8)) . "			
-			WHERE `user_id`= " . 	quote_smart(trim($_POST['frm_user'])) . ";";
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}stats_settings` SET
+			`refresh_rate`= ?,
+			`f1`= ?, `f2`= ?, `f3`= ?, `f4`= ?,
+			`f5`= ?, `f6`= ?, `f7`= ?, `f8`= ?,
+			`threshold_1`= ?, `threshold_2`= ?, `threshold_3`= ?, `threshold_4`= ?,
+			`threshold_5`= ?, `threshold_6`= ?, `threshold_7`= ?, `threshold_8`= ?,
+			`thresholdw_1`= ?, `thresholdw_2`= ?, `thresholdw_3`= ?, `thresholdw_4`= ?,
+			`thresholdw_5`= ?, `thresholdw_6`= ?, `thresholdw_7`= ?, `thresholdw_8`= ?,
+			`thresholdf_1`= ?, `thresholdf_2`= ?, `thresholdf_3`= ?, `thresholdf_4`= ?,
+			`thresholdf_5`= ?, `thresholdf_6`= ?, `thresholdf_7`= ?, `thresholdf_8`= ?,
+			`t_type1`= ?, `t_type2`= ?, `t_type3`= ?, `t_type4`= ?,
+			`t_type5`= ?, `t_type6`= ?, `t_type7`= ?, `t_type8`= ?
+			WHERE `user_id`= ?";
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);	
+		$result = db_query($query, [
+			sanitize_int(trim($_POST['frm_refresh'])),
+			sanitize_int(trim($_POST['frm_box1'])), sanitize_int(trim($_POST['frm_box2'])),
+			sanitize_int(trim($_POST['frm_box3'])), sanitize_int(trim($_POST['frm_box4'])),
+			sanitize_int(trim($_POST['frm_box5'])), sanitize_int(trim($_POST['frm_box6'])),
+			sanitize_int(trim($_POST['frm_box7'])), sanitize_int(trim($_POST['frm_box8'])),
+			sanitize_string(trim($th1)), sanitize_string(trim($th2)),
+			sanitize_string(trim($th3)), sanitize_string(trim($th4)),
+			sanitize_string(trim($th5)), sanitize_string(trim($th6)),
+			sanitize_string(trim($th7)), sanitize_string(trim($th8)),
+			sanitize_string(trim($thw1)), sanitize_string(trim($thw2)),
+			sanitize_string(trim($thw3)), sanitize_string(trim($thw4)),
+			sanitize_string(trim($thw5)), sanitize_string(trim($thw6)),
+			sanitize_string(trim($thw7)), sanitize_string(trim($thw8)),
+			sanitize_string(trim($thf1)), sanitize_string(trim($thf2)),
+			sanitize_string(trim($thf3)), sanitize_string(trim($thf4)),
+			sanitize_string(trim($thf5)), sanitize_string(trim($thf6)),
+			sanitize_string(trim($thf7)), sanitize_string(trim($thf8)),
+			sanitize_string(trim($ttype1)), sanitize_string(trim($ttype2)),
+			sanitize_string(trim($ttype3)), sanitize_string(trim($ttype4)),
+			sanitize_string(trim($ttype5)), sanitize_string(trim($ttype6)),
+			sanitize_string(trim($ttype7)), sanitize_string(trim($ttype8)),
+			sanitize_int(trim($_POST['frm_user']))
+		]);	
 		if($result) {
 			
 			print "<DIV class='header_wrapper'>";
@@ -413,51 +406,32 @@ if((isset($_GET['fm_sub'])) && ($_GET['fm_sub'])) {
 		$ttype7 = ($_POST['frm_t_type7'] == "0") ? "Less" : $_POST['frm_t_type7'];
 		$ttype8 = ($_POST['frm_t_type8'] == "0") ? "Less" : $_POST['frm_t_type8'];	
 
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]stats_settings` ( `user_id`, `refresh_rate`, `f1`, `f2`, `f3`, `f4`, `f5`, `f6`, `f7`, `f8`, `threshold_1`, `threshold_2`, `threshold_3`, `threshold_4`, `threshold_5`, `threshold_6`, `threshold_7`, `threshold_8`, `thresholdw_1`, `thresholdw_2`, `thresholdw_3`, `thresholdw_4`, `thresholdw_5`, `thresholdw_6`, `thresholdw_7`, `thresholdw_8`, `thresholdf_1`, `thresholdf_2`, `thresholdf_3`, `thresholdf_4`, `thresholdf_5`, `thresholdf_6`, `thresholdf_7`, `thresholdf_8`,`t_type1`, `t_type2`, `t_type3`, `t_type4`, `t_type5`, `t_type6`, `t_type7`, `t_type8` )
-			VALUES (" .
-			quote_smart(trim($_POST['frm_user'])) . "," .
-			quote_smart(trim($_POST['frm_refresh'])) . "," .
-			quote_smart(trim($_POST['frm_box1'])) . "," .
-			quote_smart(trim($_POST['frm_box2'])) . "," .
-			quote_smart(trim($_POST['frm_box3'])) . "," .
-			quote_smart(trim($_POST['frm_box4'])) . "," .
-			quote_smart(trim($_POST['frm_box5'])) . "," .
-			quote_smart(trim($_POST['frm_box6'])) . "," .
-			quote_smart(trim($_POST['frm_box7'])) . "," .
-			quote_smart(trim($_POST['frm_box8'])) . "," .
-			quote_smart(trim($th1)) . "," .
-			quote_smart(trim($th2)) . "," .
-			quote_smart(trim($th3)) . "," .
-			quote_smart(trim($th4)) . "," .
-			quote_smart(trim($th5)) . "," .
-			quote_smart(trim($th6)) . "," .
-			quote_smart(trim($th7)) . "," .
-			quote_smart(trim($th8)) . "," .
-			quote_smart(trim($thw1)) . "," .
-			quote_smart(trim($thw2)) . "," .
-			quote_smart(trim($thw3)) . "," .
-			quote_smart(trim($thw4)) . "," .
-			quote_smart(trim($thw5)) . "," .
-			quote_smart(trim($thw6)) . "," .
-			quote_smart(trim($thw7)) . "," .
-			quote_smart(trim($thw8)) . "," .
-			quote_smart(trim($thf1)) . "," .
-			quote_smart(trim($thf2)) . "," .
-			quote_smart(trim($thf3)) . "," .
-			quote_smart(trim($thf4)) . "," .
-			quote_smart(trim($thf5)) . "," .
-			quote_smart(trim($thf6)) . "," .
-			quote_smart(trim($thf7)) . "," .
-			quote_smart(trim($thf8)) . "," .
-			quote_smart(trim($ttype1)) . "," .
-			quote_smart(trim($ttype2)) . "," .
-			quote_smart(trim($ttype3)) . "," .
-			quote_smart(trim($ttype4)) . "," .
-			quote_smart(trim($ttype5)) . "," .
-			quote_smart(trim($ttype6)) . "," .
-			quote_smart(trim($ttype7)) . "," .
-			quote_smart(trim($ttype8)) . ");";			
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}stats_settings` ( `user_id`, `refresh_rate`, `f1`, `f2`, `f3`, `f4`, `f5`, `f6`, `f7`, `f8`, `threshold_1`, `threshold_2`, `threshold_3`, `threshold_4`, `threshold_5`, `threshold_6`, `threshold_7`, `threshold_8`, `thresholdw_1`, `thresholdw_2`, `thresholdw_3`, `thresholdw_4`, `thresholdw_5`, `thresholdw_6`, `thresholdw_7`, `thresholdw_8`, `thresholdf_1`, `thresholdf_2`, `thresholdf_3`, `thresholdf_4`, `thresholdf_5`, `thresholdf_6`, `thresholdf_7`, `thresholdf_8`,`t_type1`, `t_type2`, `t_type3`, `t_type4`, `t_type5`, `t_type6`, `t_type7`, `t_type8` )
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		$result = db_query($query, [
+			sanitize_int(trim($_POST['frm_user'])),
+			sanitize_int(trim($_POST['frm_refresh'])),
+			sanitize_int(trim($_POST['frm_box1'])), sanitize_int(trim($_POST['frm_box2'])),
+			sanitize_int(trim($_POST['frm_box3'])), sanitize_int(trim($_POST['frm_box4'])),
+			sanitize_int(trim($_POST['frm_box5'])), sanitize_int(trim($_POST['frm_box6'])),
+			sanitize_int(trim($_POST['frm_box7'])), sanitize_int(trim($_POST['frm_box8'])),
+			sanitize_string(trim($th1)), sanitize_string(trim($th2)),
+			sanitize_string(trim($th3)), sanitize_string(trim($th4)),
+			sanitize_string(trim($th5)), sanitize_string(trim($th6)),
+			sanitize_string(trim($th7)), sanitize_string(trim($th8)),
+			sanitize_string(trim($thw1)), sanitize_string(trim($thw2)),
+			sanitize_string(trim($thw3)), sanitize_string(trim($thw4)),
+			sanitize_string(trim($thw5)), sanitize_string(trim($thw6)),
+			sanitize_string(trim($thw7)), sanitize_string(trim($thw8)),
+			sanitize_string(trim($thf1)), sanitize_string(trim($thf2)),
+			sanitize_string(trim($thf3)), sanitize_string(trim($thf4)),
+			sanitize_string(trim($thf5)), sanitize_string(trim($thf6)),
+			sanitize_string(trim($thf7)), sanitize_string(trim($thf8)),
+			sanitize_string(trim($ttype1)), sanitize_string(trim($ttype2)),
+			sanitize_string(trim($ttype3)), sanitize_string(trim($ttype4)),
+			sanitize_string(trim($ttype5)), sanitize_string(trim($ttype6)),
+			sanitize_string(trim($ttype7)), sanitize_string(trim($ttype8))
+		]);
 		if($result) {
 			print "<DIV class='header_wrapper'>";
 				print "<DIV class='header_row'>";
@@ -500,9 +474,9 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 		print "This is the first time you have logged in as this statistics user. Please go to <a style='font-size: 14px;' href=\"stats_scr.php?config=config \">Statistics Configuration</a> To set up the required user configuration.";
 		print "</DIV></BODY></HTML>";
 	} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
+		$result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
+		$row = stripslashes_deep($result->fetch_assoc());
 		$refresh_time = ($row['refresh_rate'] * 1000);
 		$f1 = $row['f1'];
 		$f2 = $row['f2'];
@@ -871,9 +845,9 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 		<BODY onLoad = "out_frames(); location.href = '#top'; <?php print $do_mu_init;?>">
 		<A NAME="top" />	
 <?php
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
+		$result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
+		$row = stripslashes_deep($result->fetch_assoc());
 		$name1 = get_stat_type_name($row['f1']);
 		$name2 = get_stat_type_name($row['f2']);
 		$name3 = get_stat_type_name($row['f3']);
@@ -995,9 +969,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		return $seconds;
 		}
 		
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$_SESSION['user_id']}";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
+	$result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$refresh_time = (isset($row['refresh_rate'])) ? ($row['refresh_rate'] * 1000) : 1000;
 	$rr = found_user() ? $row['refresh_rate'] : 30;
 	$f1 = found_user() ? $row['f1'] : 1;
@@ -1158,9 +1132,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f1) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1192,9 +1166,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f2) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1225,9 +1199,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>	
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f3) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1258,9 +1232,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f4) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1291,9 +1265,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f5) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1324,9 +1298,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f6) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1357,9 +1331,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f7) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}
@@ -1390,9 +1364,9 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 		</DIV>
 <?php
 	$menu1 = "<OPTION VALUE=0 SELECTED>Select</OPTION>";
-	$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` ORDER BY `st_id` ASC";
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+	$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` ORDER BY `st_id` ASC";
+	$result1 = db_query($query1);
+	while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 		$sel = ($row1['st_id'] == $f8) ? "SELECTED" : "";
 		$menu1 .= "<OPTION VALUE='{$row1['st_id']}' {$sel}>{$row1['name']}</OPTION>";
 		}

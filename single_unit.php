@@ -14,8 +14,8 @@ error_reporting(E_ALL);
 session_write_close();
 require_once($_SESSION['fip']);		// 7/28/10
 require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
-$id = mysql_real_escape_string($_GET['id']);
-$query	= "SELECT *, 
+$id = sanitize_int($_GET['id']);
+$query	= "SELECT *,
 			`r`.`updated` AS `r_updated`,
 			`r`.`id` AS `unit_id`,
 			`r`.`name` AS `unit_name`,
@@ -23,12 +23,12 @@ $query	= "SELECT *,
 			`s`.`bg_color` AS `st_background`,
 			`s`.`text_color` AS `st_textcolor`,
 			`t`.`name` AS `typename`
-			FROM `$GLOBALS[mysql_prefix]responder` `r`
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON `s`.id=`r`.`un_status_id`
-			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON `t`.id=`r`.`type`	
-			WHERE `r`.`id`={$id} LIMIT 1";
-$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-$row	= stripslashes_deep(mysql_fetch_assoc($result));
+			FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON `s`.id=`r`.`un_status_id`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON `t`.id=`r`.`type`
+			WHERE `r`.`id`=? LIMIT 1";
+$result	= db_query($query, [$id]);
+$row	= stripslashes_deep($result->fetch_assoc());
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

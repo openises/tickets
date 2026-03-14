@@ -14,10 +14,11 @@ error_reporting(E_ALL);
 session_write_close();
 require_once($_SESSION['fip']);		// 7/28/10
 require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
+	$ticket_id = sanitize_int($_GET['ticket_id']);
 	$query = "SELECT *,
 		`problemstart` AS `problemstart`,
 		`problemend` AS `problemend`,
-		`booked_date` AS `booked_date`,		
+		`booked_date` AS `booked_date`,
 		`date` AS `date`,
 		`t`.`updated` AS updated,
 		`t`.`description` AS `tick_descr`,
@@ -26,7 +27,7 @@ require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 		`t`.`_by` AS `call_taker`,
 		`t`.`street` AS `tick_street`,
 		`t`.`city` AS `tick_city`,
-		`t`.`state` AS `tick_state`,				 
+		`t`.`state` AS `tick_state`,
 		`f`.`name` AS `fac_name`,
 		`rf`.`name` AS `rec_fac_name`,
 		`rf`.`street` AS `rec_fac_street`,
@@ -35,13 +36,13 @@ require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 		`rf`.`lat` AS `rf_lat`,
 		`rf`.`lng` AS `rf_lng`,
 		`f`.`lat` AS `fac_lat`,
-		`f`.`lng` AS `fac_lng` FROM `$GLOBALS[mysql_prefix]ticket` `t`  
-		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`t`.`in_types_id` = `ty`.`id`)		
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON (`f`.`id` = `t`.`facility`)
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `t`.`rec_facility`) 
-		WHERE `t`.`id`={$_GET['ticket_id']} LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
+		`f`.`lng` AS `fac_lng` FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` ON (`t`.`in_types_id` = `ty`.`id`)
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f` ON (`f`.`id` = `t`.`facility`)
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `t`.`rec_facility`)
+		WHERE `t`.`id`=? LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
+	$result = db_query($query, [$ticket_id]);
+	$row_ticket = stripslashes_deep($result->fetch_array());
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

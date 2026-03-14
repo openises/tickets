@@ -50,7 +50,7 @@ if (empty($_SESSION)) {				// 1/6/2013
 
 require_once('./incs/functions.inc.php');
 $query = "SET @@global.sql_mode= '';";		// 6/25/10
-$result = mysql_query($query) ;
+$result = db_query($query);
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
@@ -108,10 +108,10 @@ $sortdir = (!(isset($sortdir)) || empty($sortdir))?		 0 : $sortdir;
 //$sortby = (!(isset($index)) || empty($index))?			 "id" : $index;
 function get_comments($the_table) {  				// returns array key=> name, value=> comment - 10/31/10
 	$_array = array();								// 12/15/10
-	$query = "SHOW FULL COLUMNS FROM `$GLOBALS[mysql_prefix]{$the_table}`;";
-	$result = mysql_query($query) ;			// use $result for meta-information reference
+	$query = "SHOW FULL COLUMNS FROM `{$GLOBALS['mysql_prefix']}{$the_table}`;";
+	$result = db_query($query);			// use $result for meta-information reference
 	if (!($result)) {return $_array;}		// 12/15/10
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//
+	while($row = stripslashes_deep($result->fetch_assoc())) {		//
 		$_array[$row['Field']] = $row['Comment'];
 		}
 	return $_array;
@@ -119,42 +119,43 @@ function get_comments($the_table) {  				// returns array key=> name, value=> co
 
 function is_in_use($index_val) {	// 11/9/10 - return boolean based on whether the identified entry is in use
 	global $tablename, $mysql_prefix;
+	$index_val = intval($index_val);
 	switch ($tablename) {
 		case "unit_types":
 			$the_table = $mysql_prefix . "responder";
-			$query ="SELECT * FROM `$the_table` WHERE `type` = {$index_val} LIMIT 1";						// get in_row count only
-			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
-			$in_use = (mysql_num_rows($res_test)>0);
+			$query ="SELECT * FROM `$the_table` WHERE `type` = ? LIMIT 1";						// get in_row count only
+			$res_test = db_query($query, [$index_val]);
+			$in_use = ($res_test->num_rows>0);
 		    break;
 		case "un_status":
 			$the_table = $mysql_prefix . "responder";
-			$query ="SELECT * FROM `$the_table` WHERE `un_status_id` = {$index_val} LIMIT 1";						// get in_row count only
-			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
-			$in_use = ((mysql_num_rows($res_test)>0) || (intval ($index_val)==1));	// 11/2/09
+			$query ="SELECT * FROM `$the_table` WHERE `un_status_id` = ? LIMIT 1";						// get in_row count only
+			$res_test = db_query($query, [$index_val]);
+			$in_use = (($res_test->num_rows>0) || (intval ($index_val)==1));	// 11/2/09
 		    break;
 		case "fac_status":
 			$the_table = $mysql_prefix . "facilities";
-			$query ="SELECT * FROM `$the_table` WHERE `status_id` = {$index_val} LIMIT 1";						// get in_row count only
-			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
-			$in_use = (mysql_num_rows($res_test)>0);
+			$query ="SELECT * FROM `$the_table` WHERE `status_id` = ? LIMIT 1";						// get in_row count only
+			$res_test = db_query($query, [$index_val]);
+			$in_use = ($res_test->num_rows>0);
 		    break;
 		case "fac_types":
 			$the_table = $mysql_prefix . "facilities";
-			$query ="SELECT * FROM `$the_table` WHERE `type` = {$index_val} LIMIT 1";						// get in_row count only
-			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
-			$in_use = (mysql_num_rows($res_test)>0);
+			$query ="SELECT * FROM `$the_table` WHERE `type` = ? LIMIT 1";						// get in_row count only
+			$res_test = db_query($query, [$index_val]);
+			$in_use = ($res_test->num_rows>0);
 		    break;
 		case "in_types":						//
 			$the_table = $mysql_prefix . "ticket";
-			$query ="SELECT * FROM `$the_table` WHERE `in_types_id` = {$index_val} LIMIT 1";						// get in_row count only
-			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
-			$in_use = (mysql_num_rows($res_test)>0);
+			$query ="SELECT * FROM `$the_table` WHERE `in_types_id` = ? LIMIT 1";						// get in_row count only
+			$res_test = db_query($query, [$index_val]);
+			$in_use = ($res_test->num_rows>0);
 		    break;
 		case "region":						// 6/10/11
 			$the_table = $mysql_prefix . "allocates";
-			$query ="SELECT * FROM `$the_table` WHERE `group` = {$index_val} LIMIT 1";						// get in_row count only
-			$res_test = mysql_query($query) or myerror(get_file(__FILE__), __LINE__, 'mysql_error', $query);
-			$in_use = (mysql_num_rows($res_test)>0);
+			$query ="SELECT * FROM `$the_table` WHERE `group` = ? LIMIT 1";						// get in_row count only
+			$res_test = db_query($query, [$index_val]);
+			$in_use = ($res_test->num_rows>0);
 		    break;
 		default:
 			$in_use = FALSE;
@@ -171,7 +172,7 @@ $arDate_formats = array(array ("-",0, 1, 2), array ("/", 2, 0, 1));
 $disallow = FALSE;										// 2/25/10
 if ((isset($tablename)) && (!isset($indexname))) {
 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$result = db_query($query);
 	for($i = 0; $i < mysql_num_fields($result); $i++) {
 		if(strpos(mysql_field_flags($result, $i), 'primary_key') !== false) {
 			$indexname = mysql_field_name($result, $i);
@@ -187,7 +188,7 @@ function fnQuote_Smart($value) {    // Stripslashes
 //        $value = stripslashes($value);
 //    	}
     if (!is_numeric($value)) {    // Quote if not integer
-        $value = "'" . mysql_real_escape_string($value) . "'";
+        $value = "'" . db()->real_escape_string($value) . "'";
 	    }
     return $value;
 	}
@@ -214,7 +215,7 @@ function fnDatabaseExists($dbName) {					//Verifies existence of a MySQL databas
 	$bRetVal = FALSE;
 	if ($oConn = @mysql_connect($mysql_host, $mysql_user, $mysql_passwd )) {
 		$result = mysql_list_dbs($oConn);
-		while ($row=mysql_fetch_array($result, MYSQL_NUM)) {
+		while ($row=$result->fetch_array(MYSQLI_NUM)) {
 			if ($row[0] ==  $dbName)
 			$bRetVal = TRUE;
 			}
@@ -254,11 +255,11 @@ $calstuff="";						// JS calendar string gets built here
 
 $ctrp = $ctrs = 0;
 $sql = "SHOW TABLES ";													// populate array of table names
-$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
-while ($row = mysql_fetch_row($result)) {
+$result = db_query($sql);	// $mysql_db
+while ($row = $result->fetch_row()) {
 	$sql ="SELECT * FROM `$row[0]` LIMIT 1";
-	$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
-	$row2 = mysql_fetch_array($result2);
+	$result2 = db_query($sql);	// $mysql_db
+	$row2 = $result2->fetch_array();
 	$gotit = FALSE;
 	for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field
 		if (strtolower(substr(mysql_field_name($result2, $i), -$id_lg)) == $FK_id) {	// find any foreign key
@@ -433,9 +434,9 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 		print "\tsm_icons.push(\"{$sm_icons[$i]}\");\n";								// 11/20/10
 		}
 	if (($func =="c") || ($func =="r")) {										// build array of existing names
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row_un = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`";
+		$result = db_query($query);
+		while ($row_un = stripslashes_deep($result->fetch_assoc())) {
 			print "\n\ttype_names.push(\"{$row_un['name']}\");\n";		// onto JS array - 11/20/10
 			}				// end while ()
 		}				// end if()
@@ -505,9 +506,9 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 		print "\tsm_icons.push(\"{$sm_icons[$i]}\");\n";						// 11/20/10
 		}
 	if (($func =="c") || ($func =="r")) {										// build array of existing names
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row_fac = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types`";
+		$result = db_query($query);
+		while ($row_fac = stripslashes_deep($result->fetch_assoc())) {
 			print "\n\ttype_names.push(\"{$row_fac['name']}\");\n";		// onto JS array - 11/20/10
 			}				// end while ()
 		}				// end if()
@@ -720,8 +721,8 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 			print "\n\t\tmands = new Array();\t\t\t// array of mandatory fieldnames\n ";
 			print "\t\ttypes = new Array();\t\t\t// array of fieldname types\n ";
 			$query ="SHOW COLUMNS FROM `$mysql_prefix$tablename`";			// check value where possible - by mysql_field_type
-			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);		// check presence/absence
-			while ($row = mysql_fetch_assoc($result)) {
+			$result = db_query($query);		// check presence/absence
+			while ($row = $result->fetch_assoc()) {
 				$thename = $row['Field'];
 				$thetype = $row['Type'];
 				print "\t\ttypes['frm_' + '$thename'] = \"$thetype\";\n";
@@ -856,10 +857,10 @@ if(array_key_exists('srch_str', $_POST)) {		//	3/18/11
 <?php
 if (($func == "c")||($func == "u")) {			// not required for all functions
 	$query ="DESCRIBE `$mysql_prefix$tablename`";									// collect table field attributes
-	$resultattr = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$resultattr = db_query($query);
 	$arrayattr = array();
 	$i = 0;
-	while ($rowattr = mysql_fetch_array($resultattr))  {							// write each data row attr
+	while ($rowattr = $resultattr->fetch_array())  {							// write each data row attr
 		for($j = 0; $j < count($rowattr)-1; $j++){									// each column
 			if((isset($rowattr[$j])) && (!is_null($rowattr[$j]))) {
 				$arrayattr[$i][$j] = $rowattr[$j];
@@ -882,9 +883,9 @@ switch ($func) {		// ================================== case "c" ===============
 		if ($fill_from_last) {
 			$the_id = $indexname;													// for form pre-filling
 			$query = "SELECT * FROM `$mysql_prefix$tablename` WHERE `$the_id` = (SELECT MAX(`$the_id`) FROM `$mysql_prefix$tablename`)";
-			$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-			if (mysql_affected_rows()==0) 	{$row = NULL ;}
-			else							{$row = mysql_fetch_array($result);}
+			$result = db_query($query);
+			if ($result->num_rows == 0) 	{$row = NULL ;}
+			else							{$row = $result->fetch_array();}
 			unset ($result);
 			}
 		else {$row = NULL;}
@@ -905,7 +906,7 @@ switch ($func) {		// ================================== case "c" ===============
 	<?php
 
 		$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
-		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+		$result = db_query($query);
 		$lineno = 0;
 		$thetemp = get_defined_constants(true);
 //		dump($thetemp);
@@ -978,13 +979,13 @@ switch ($func) {		// ================================== case "c" ===============
 								$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
 								if (mysql_table_exists($thetable)) {											// does non-empty table exist?
 									$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
-									$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+									$temp_result = db_query($query);
 									$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name
 
 									$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";
-									$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+									$temp_result = db_query($query);
 									print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
-									while ($temp_row = mysql_fetch_array($temp_result))  {							// each row
+									while ($temp_row = $temp_result->fetch_array())  {							// each row
 										print "\t\t<OPTION VALUE='" . trim($temp_row[0]) . "'>" . trim($temp_row[1]) . "</OPTION>\n";
 										}
 									print "\t\t</SELECT>";
@@ -1124,8 +1125,8 @@ switch ($func) {		// ================================== case "c" ===============
 		}
 	if (!isset ($numrows))	{
 		$query ="SELECT * FROM `$mysql_prefix$tablename` ";						// get row count only
-		$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-		$numrows = mysql_affected_rows();
+		$result = db_query($query);
+		$numrows = $result->num_rows;
 		unset ($result);
 		$pageNum = 1;
 		} else {
@@ -1154,12 +1155,12 @@ switch ($func) {		// ================================== case "c" ===============
 
 	$query = $select . $where . $order_by . $limit ;
 
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	$row_count = mysql_affected_rows();
+	$result = db_query($query);
+	$row_count = $result->num_rows;
 
 	print "<TABLE ID='listView' ALIGN=\"center\" CELLPADDING=\"2\">\n";
 
-	if (mysql_affected_rows() == 0) {
+	if ($result->num_rows == 0) {
 		$page="";
 		$message = (empty($where))? "Table '" . str_replace( "_", " ", ucfirst($tablename))  . "' is empty!" :
 		"No matches in '{$tablename}' search for '{$ary_srch[0]}' ";
@@ -1178,8 +1179,8 @@ switch ($func) {		// ================================== case "c" ===============
 			if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
 						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
 				$query = "SELECT * FROM $mysql_prefix$temp";
-				$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-				while ($temp_row = mysql_fetch_array($temp_result))  {											// each row/value => $substitutions array
+				$temp_result = db_query($query);
+				while ($temp_row = $temp_result->fetch_array())  {											// each row/value => $substitutions array
 					if (($temp == 'user') && (array_key_exists('user', $temp_row))) {							// 12/12/11 - special case table user
 						$subst[fnSubTableExists(mysql_field_name($result, $i))][$temp_row[0]] = $temp_row['user'];		// assign value to column_name[index]  value
 						} else {
@@ -1198,7 +1199,7 @@ switch ($func) {		// ================================== case "c" ===============
 		$lineno = 0;
 		$srch_term = isset($ary_srch) ? array_shift ($ary_srch): "";
 
-		while ($row = mysql_fetch_array($result))  {			// write each data row - highlight($term, $string)
+		while ($row = $result->fetch_array())  {			// write each data row - highlight($term, $string)
 			$lineno++;
 			$on_click = " onClick=JSfnToFunc('v',{$row[$indexname]});";		// 9/15/10
 
@@ -1312,17 +1313,18 @@ case "u":	// =======================================  Update 	==================
 	$comments_ar = get_comments($tablename);					// array of name, comment
 
 	$query = "DESCRIBE `$mysql_prefix$tablename` ";		// 6/21/10
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
+	$result = db_query($query);			// use $result for meta-information reference
 	$types = array();
 	$i = 0;
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// major while () - 3/25/09
+	while($row = stripslashes_deep($result->fetch_assoc())) {		// major while () - 3/25/09
 		$types[$i] = $row['Type'];
 		$i++;
 		}
 
-	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `" . $indexname . "` = " . $_POST['id'] . " LIMIT 1";					// target row
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
-	$row = mysql_fetch_array($result);																		// $row has data
+	$post_id = sanitize_int($_POST['id']);
+	$query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `" . $indexname . "` = ? LIMIT 1";					// target row
+	$result = db_query($query, [$post_id]);			// use $result for meta-information reference
+	$row = $result->fetch_array();																		// $row has data
 	$lineno = 0;															// for alternating row colors
 	$thetemp = get_defined_constants(true);
 	$the_custom = "./tables/u_" . $tablename . ".php";				// 12/20/08
@@ -1408,14 +1410,14 @@ case "u":	// =======================================  Update 	==================
 						$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
 						if (mysql_table_exists($thetable)) {											// does table exist?
 							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
-							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$temp_result = db_query($query);
 							$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column
 
 							$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";	// get option values
-							$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+							$temp_result = db_query($query);
 							print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
 							if ($row[mysql_field_name($result, $i)]=='0') {print "\t\t<OPTION VALUE='0' selected>Select</OPTION>\n" ;}				// no selection made
-							while ($sel_row = mysql_fetch_array($temp_result))  {								// each row - assume 2nd column has values
+							while ($sel_row = $temp_result->fetch_array())  {								// each row - assume 2nd column has values
 								$selected = ($sel_row['id'] == $row[mysql_field_name($result, $i)])? " selected" : "";
 								print "\t\t<OPTION VALUE='" . $sel_row[0] . "'" . $selected  . " >" . $sel_row[1] . "</OPTION>\n";		// *************
 								}
@@ -1507,9 +1509,9 @@ case "u":	// =======================================  Update 	==================
 
 	case "pc":													// Process 'Create record' data =================
 	$query = "DESCRIBE `$mysql_prefix$tablename` ";				// 6/21/10
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
+	$result = db_query($query);			// use $result for meta-information reference
 	$types = array();
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// major while () - 3/25/09
+	while($row = stripslashes_deep($result->fetch_assoc())) {		// major while () - 3/25/09
 		$types[$row['Field']] = $row['Type'];
 		}
 //	dump($types);
@@ -1525,7 +1527,7 @@ case "u":	// =======================================  Update 	==================
 		}		// end foreach () ...
 																// now drop trailing comma
 	$query  = "INSERT INTO $mysql_prefix$tablename (" . substr($temp1, 0, (strlen($temp1) - 1)) . ") VALUES (" . substr($temp2, 0, (strlen($temp2) - 1)) . ")";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$result = db_query($query);
 	unset ($result);
 ?>
 	<CENTER><BR /><BR />
@@ -1540,17 +1542,17 @@ case "u":	// =======================================  Update 	==================
 	</FORM>
 <?php
 	$query = "SELECT MAX(id) AS id FROM `$mysql_prefix$tablename`" ;
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	$row = mysql_fetch_array($result);
+	$result = db_query($query);
+	$row = $result->fetch_array();
 	$id = $row['id'];
 	unset ($result);
 //	break;
 
 	case "v":		// View detail	========================
-	$id = (array_key_exists('id', $_POST)) ? $_POST['id'] : $id;
-	$query ="SELECT * FROM `$mysql_prefix" . $tablename . "` WHERE `" . $indexname . "` = " . $id . " LIMIT 1";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-	$row = mysql_fetch_array($result);
+	$id = (array_key_exists('id', $_POST)) ? sanitize_int($_POST['id']) : $id;
+	$query ="SELECT * FROM `$mysql_prefix" . $tablename . "` WHERE `" . $indexname . "` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_array();
 	if (!(isset($srch_str))) {$srch_str="";}	// 10/31/10
 	$ary_srch = explode ("|", $srch_str);		// 9/13/10
 	$srch_term = isset($ary_srch) ? array_shift ($ary_srch): "";
@@ -1587,10 +1589,10 @@ case "u":	// =======================================  Update 	==================
 				&& (intval ($row[$i]) > 0)) {							// prepare to replace with indexed values - 9/15/10
 
 
-			$query ="SELECT * FROM `$mysql_prefix" . $temp . "` WHERE `" . $indexname . "` = " . $row[$i] . " LIMIT 1";
-			$temp_result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
-			if (mysql_affected_rows()>0) 	{										// defined?
-				$temp_row = mysql_fetch_array($temp_result);						// yes
+			$query ="SELECT * FROM `$mysql_prefix" . $temp . "` WHERE `" . $indexname . "` = ? LIMIT 1";
+			$temp_result = db_query($query, [intval($row[$i])]);
+			if ($temp_result->num_rows > 0) 	{										// defined?
+				$temp_row = $temp_result->fetch_array();						// yes
 				dump($temp_row);
 				print (($temp == 'user')&&(array_key_exists('user', $temp_row)))? $temp_row['user']: $temp_row[1];		// 12/12/11 - special case
 				} else { 																	// no
@@ -1661,9 +1663,9 @@ case "u":	// =======================================  Update 	==================
 
 	case "pu":																	// Process Update 	================
 	$query = "DESCRIBE `$mysql_prefix$tablename` ";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
+	$result = db_query($query);			// use $result for meta-information reference
 	$types = array();
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// major while () - 3/25/09
+	while($row = stripslashes_deep($result->fetch_assoc())) {		// major while () - 3/25/09
 		$types[$row['Field']] = $row['Type'];
 		}
 
@@ -1678,8 +1680,9 @@ case "u":	// =======================================  Update 	==================
 
 			}		// field names - note tic's
 		}
-	$query = substr($query, 0, (strlen($query) - 1)) . " WHERE `" .$indexname . "` = " . $_POST['id'] . " LIMIT 1";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$pu_id = sanitize_int($_POST['id']);
+	$query = substr($query, 0, (strlen($query) - 1)) . " WHERE `" .$indexname . "` = " . $pu_id . " LIMIT 1";
+	$result = db_query($query);
 	unset ($result);
 //	dump ($query);
 ?>
@@ -1701,8 +1704,9 @@ case "u":	// =======================================  Update 	==================
 	break;		// end Process Update 	=================
 
 	case "d":																		// Delete ===========================
-	$query ="DELETE FROM $mysql_prefix$tablename WHERE `" . $indexname . "` = " . $_POST['id'] . " LIMIT 1";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$del_id = sanitize_int($_POST['id']);
+	$query ="DELETE FROM $mysql_prefix$tablename WHERE `" . $indexname . "` = ? LIMIT 1";
+	$result = db_query($query, [$del_id]);
 	unset ($result);
 ?>
 	<TABLE BORDER="0" ALIGN="center">
@@ -1735,7 +1739,7 @@ case "u":	// =======================================  Update 	==================
 	</TABLE><BR /><BR />
 <?php
 	$query ="SHOW FULL COLUMNS FROM `$mysql_prefix$tablename`";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);
+	$result = db_query($query);
 	print "<table align='CENTER'>";
 	print "<TR class='plain_listheader'>";
 	print "<TH class='plain_listheader text text_left'>Field</TH>";
@@ -1748,7 +1752,7 @@ case "u":	// =======================================  Update 	==================
 	print "<TH class='plain_listheader text text_left' COLSPAN=99>Permissions</TH>";
 	print "</TR>";
 	$lineno = 0;
-	while ($row = mysql_fetch_array($result))  {									// write each data row
+	while ($row = $result->fetch_array())  {									// write each data row
 		$lineno++;
 		print "<TR VALIGN='top' CLASS='" . $evenodd [$lineno % 2] . "'>";		// alternate line bg colors
 		for($i = 0; $i < count($row); $i++){										// each column
@@ -1820,12 +1824,12 @@ case "u":	// =======================================  Update 	==================
 	print "<BR /><BR />";
 
 	$query = "DESCRIBE `$mysql_prefix$tablename`";
-	$result = mysql_query($query) or myerror(get_file(__file__), __line__, 'mysql_error', $query);			// use $result for meta-information reference
+	$result = db_query($query);			// use $result for meta-information reference
 	$types = array();
 	$i=0;
 
 	$name = array();
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// major while () - 3/25/09
+	while($row = stripslashes_deep($result->fetch_assoc())) {		// major while () - 3/25/09
 		$temp = explode("(", $row['Type']);
 		if ((trim($temp[0] == "text"))|| (trim($temp[0] == "tinytext"))|| (trim($temp[0] == "varchar"))) {
 			$name[] = $row['Field'];
@@ -1923,11 +1927,11 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 	$pref_lgth = strlen($mysql_prefix);
 
 	$sql = "SHOW TABLES ";
-	$result = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
-	while ($row = mysql_fetch_row($result)) {
+	$result = db_query($sql);	// $mysql_db
+	while ($row = $result->fetch_row()) {
 		$sql ="SELECT * FROM `$row[0]` LIMIT 1";
-		$result2 = mysql_query($sql) or die ("DB Error: " . $mysql_db . " inaccessible\n");	// $mysql_db
-		$row2 = mysql_fetch_array($result2);
+		$result2 = db_query($sql);	// $mysql_db
+		$row2 = $result2->fetch_array();
 		$gotit = FALSE;
 		for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field - substr ( string, start, 999)
 

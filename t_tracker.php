@@ -75,10 +75,10 @@ $user = $_POST['dev_key'];
 
 function do_gt($user) {
 		$ret_array = array();
-		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]remote_devices` WHERE `user` = '$user'";	//	read location data from incoming table
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}remote_devices` WHERE `user` = ?";	//	read location data from incoming table
+		$result = db_query($query, [sanitize_string($user)]);
 		if($result) {
-		while ($row = @mysql_fetch_assoc($result)) {
+		while ($row = @$result->fetch_assoc()) {
 			$id = $row['user'];
 			$ret_array[0] = $id;
 			$lat = $row['lat'];

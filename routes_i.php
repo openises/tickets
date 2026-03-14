@@ -48,22 +48,23 @@ if (!empty($_POST)) {
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
 	$assigns = explode (",", $_POST['frm_id_str']);		// comma sep'd
 	for ($i=0;$i<count($assigns); $i++) {
-		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`)
-						VALUES (%s,%s,%s,%s,%s,%s,%s)",
-							quote_smart($now),
-							quote_smart($frm_status_id),
-							quote_smart($frm_ticket_id),
-							quote_smart($assigns[$i]),
-							quote_smart($frm_comments),
-							quote_smart($frm_by_id),
-							quote_smart($now));
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-//										remove placeholder inserted by 'add'		
-		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`)
+						VALUES (?, ?, ?, ?, ?, ?, ?)";
+		$result	= db_query($query, [
+			$now,
+			sanitize_int($frm_status_id),
+			sanitize_int($frm_ticket_id),
+			sanitize_int($assigns[$i]),
+			sanitize_string($frm_comments),
+			sanitize_int($frm_by_id),
+			$now
+		]);
+//										remove placeholder inserted by 'add'
+		$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ? AND `responder_id` = 0 LIMIT 1";
+		$result	= db_query($query, [sanitize_int($frm_ticket_id)]);
 							// apply status update to unit status
-		$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= " . quote_smart($frm_status_id) . " WHERE `id` = " .quote_smart($assigns[$i])  ." LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= ? WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [sanitize_int($frm_status_id), sanitize_int($assigns[$i])]);
 		do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $assigns[$i], $frm_status_id);
 		}
 ?>	
@@ -198,16 +199,17 @@ function doReset() {
 	
 </SCRIPT>
 <?php								// 1/7/10
+	$ticket_id = sanitize_int($_GET['ticket_id']);
 	$query = "SELECT *,
 		UNIX_TIMESTAMP(problemstart) AS problemstart,
 		UNIX_TIMESTAMP(problemend) AS problemend,
 		UNIX_TIMESTAMP(date) AS date,
 		UNIX_TIMESTAMP(updated) AS updated,
 		`_by` AS `call_taker`
-		FROM $GLOBALS[mysql_prefix]ticket 
-		WHERE ID=" . $_GET['ticket_id'] . " LIMIT 1";			// get Incident location
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row_unit = stripslashes_deep(mysql_fetch_array($result));
+		FROM `{$GLOBALS['mysql_prefix']}ticket`
+		WHERE ID=? LIMIT 1";			// get Incident location
+	$result = db_query($query, [$ticket_id]);
+	$row_unit = stripslashes_deep($result->fetch_array());
 	unset ($result);
 ?>
 <!--	<BODY onLoad = "ck_frames()" onUnload='GUnload()'> -->
@@ -475,26 +477,31 @@ function do_list($unit_id ="") {
 		$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 		
 //						build js array of responders to this ticket - possibly none
-		$query = "SELECT `ticket_id`, `responder_id` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $_GET['ticket_id'];
+		$query = "SELECT `ticket_id`, `responder_id` FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ?";
 //		dump($query);
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-		while ($assigns_row = stripslashes_deep(mysql_fetch_array($result))) {
+		$result = db_query($query, [sanitize_int($_GET['ticket_id'])]);
+		while ($assigns_row = stripslashes_deep($result->fetch_array())) {
 			print "\t\tunit_assigns[' '+ " . $assigns_row['responder_id']. "]= true;\n";	// note string forced
 			}
 		print "\n";
 
-		$where = (empty($unit_id))? "" : " WHERE `$GLOBALS[mysql_prefix]responder`.`id` = $unit_id ";		// revised 5/23/08 per AD7PE 
-		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `$GLOBALS[mysql_prefix]responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM $GLOBALS[mysql_prefix]responder
-			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON (`$GLOBALS[mysql_prefix]responder`.`un_status_id` = `s`.`id`)
+		$params = [];
+		$where = "";
+		if (!empty($unit_id)) {
+			$where = " WHERE `{$GLOBALS['mysql_prefix']}responder`.`id` = ?";
+			$params[] = sanitize_int($unit_id);
+		}
+		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated, `{$GLOBALS['mysql_prefix']}responder`.`id` AS `unit_id`, `s`.`status_val` AS `unitstatus` FROM `{$GLOBALS['mysql_prefix']}responder`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON (`{$GLOBALS['mysql_prefix']}responder`.`un_status_id` = `s`.`id`)
 			$where
-			ORDER BY `name` ASC, `unit_id` ASC";	
+			ORDER BY `name` ASC, `unit_id` ASC";
 
 //		dump($query);
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		if(mysql_affected_rows()>0) {
+		$result = db_query($query, $params);
+		if($result->num_rows > 0) {
 													// major while ... for RESPONDER data starts here
 			$i = 1;				// sidebar/icon index
-			while ($unit_row = stripslashes_deep(mysql_fetch_array($result))) {
+			while ($unit_row = stripslashes_deep($result->fetch_array())) {
 ?>
 				nr_units++;
 				var i = <?php print $i;?>;						// top of loop
@@ -521,12 +528,12 @@ function do_list($unit_id ="") {
 <?php
 				if (intval($unit_row['mobile'])==1) {
 					$thespeed = "na";
-					$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM $GLOBALS[mysql_prefix]tracks
-						WHERE `source`= '$unit_row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";
+					$query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS packet_date, UNIX_TIMESTAMP(updated) AS updated FROM `{$GLOBALS['mysql_prefix']}tracks`
+						WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";
 //					dump ($query);
-					$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					if (mysql_affected_rows()>0) {		// got a track?
-						$track_row = stripslashes_deep(mysql_fetch_array($result_tr));			// most recent track report
+					$result_tr = db_query($query, [$unit_row['callsign']]);
+					if ($result_tr->num_rows > 0) {		// got a track?
+						$track_row = stripslashes_deep($result_tr->fetch_array());			// most recent track report
 			
 						$tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
 						$tab_2 .= "<TR><TH CLASS='even' COLSPAN=2>" . $track_row['source'] . "</TH></TR>";

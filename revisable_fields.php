@@ -74,13 +74,17 @@ function setWidths() {
 <?php
 
 if(!(empty($_POST))) {
-	$query = "UPDATE `$GLOBALS[mysql_prefix]defined_fields` SET
-		`label`= " . 		quote_smart(trim($_POST['frm_label'])) . ",
-		`size`= " . 		quote_smart(trim($_POST['frm_size'])) . ",
-		`fieldset`= " . 		quote_smart(trim($_POST['frm_fieldset'])) . "				
-		WHERE `id`= " . 	quote_smart(trim($_POST['frm_fieldid'])) . ";";
+	$frm_label = sanitize_string($_POST['frm_label']);
+	$frm_size = sanitize_string($_POST['frm_size']);
+	$frm_fieldset = sanitize_string($_POST['frm_fieldset']);
+	$frm_fieldid = sanitize_int($_POST['frm_fieldid']);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}defined_fields` SET
+		`label`= ?,
+		`size`= ?,
+		`fieldset`= ?
+		WHERE `id`= ?;";
 
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);	
+	$result = db_query($query, [trim($frm_label), trim($frm_size), trim($frm_fieldset), $frm_fieldid]);	
 	if($result) {
 		print "CHANGES SUBMITTED";
 		} else {
@@ -88,7 +92,7 @@ if(!(empty($_POST))) {
 		}
 	}
 
-if((empty($_GET)) || ($_GET['edit'] == 'field_submit')) {	
+if((empty($_GET)) || (isset($_GET['edit']) && $_GET['edit'] == 'field_submit')) {	
 ?>
 	<DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
 		<DIV id='button_bar' class='but_container'>
@@ -190,7 +194,7 @@ if((empty($_GET)) || ($_GET['edit'] == 'field_submit')) {
 	
 <?php
 	} elseif ((isset($_GET['edit']) && ($_GET['edit'] == 'field'))) {
-	$fieldid = $_GET['id'];
+	$fieldid = sanitize_int($_GET['id']);
 	$type = get_field_type('member', $fieldid);
 	$name = get_field_name('member', $fieldid);
 	$size = get_display_field_size('defined_fields', $fieldid);	
@@ -257,7 +261,7 @@ if((empty($_GET)) || ($_GET['edit'] == 'field_submit')) {
 		
 <?php
 	} elseif ((isset($_GET['edit']) && ($_GET['edit'] == 'label'))) {
-	$fieldid = $_GET['id'];
+	$fieldid = sanitize_int($_GET['id']);
 	$type = get_field_type('member', $fieldid);
 	$name = get_field_name('member', $fieldid);
 	$size = get_display_field_size('defined_fields', $fieldid);	
