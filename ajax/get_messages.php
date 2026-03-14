@@ -35,7 +35,7 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 3))
 	$protocol = get_msg_variable('email_protocol');
 	$addon = get_msg_variable('email_addon');
 	$folder = get_msg_variable('email_folder');
-	$user = get_msg_variable('email_userid'); 
+	$user = get_msg_variable('email_userid');
 	$password = get_msg_variable('email_password');
 	$ssl = 'ssl';
 	$response2 = get_emails("$url", "$user", "$password", $port, "$ssl", 100);
@@ -45,4 +45,4 @@ $ret_arr[] = $response;
 $ret_arr[] = $response2;
 print json_encode($ret_arr);
 exit();
-?>	
+?>

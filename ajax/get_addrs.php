@@ -6,9 +6,10 @@ require_once('../incs/functions.inc.php');		// resides in ./ajax -- get_addrs.ph
 // snap(basename(__FILE__), __LINE__);
 
 $js_func = "do_selected_addr";						// client-side js span 'onclick' function
-$q = strtoupper ( trim($_POST["q"] ) );				// keyboard to $_POST['']
+$q = strtoupper ( trim(sanitize_string($_POST["q"])) );				// keyboard to $_POST['']
 $q_len = strlen($q);
 $limit = 10;
+$q_like = $q . '%';
 
 $which = get_variable("addr_source");
 switch (intval($which)) {
@@ -20,16 +21,16 @@ switch (intval($which)) {
 					CONCAT_WS( ' ', `old_num` , UPPER(`old_rd_name`) , UPPER(`community`) ) 				AS `address_old`
 				FROM `$GLOBALS[mysql_prefix]{$tablename}`
 				WHERE (
-					CONCAT_WS( ' ', `house_num` , UPPER(`rd_name`) , UPPER(`community`) ) LIKE UPPER( '{$q}%' )
-					OR CONCAT_WS( ' ', `old_num` , UPPER(`old_rd_name`) , UPPER(`community`) ) LIKE UPPER( '{$q}%' )
+					CONCAT_WS( ' ', `house_num` , UPPER(`rd_name`) , UPPER(`community`) ) LIKE UPPER( ? )
+					OR CONCAT_WS( ' ', `old_num` , UPPER(`old_rd_name`) , UPPER(`community`) ) LIKE UPPER( ? )
 					)
 				ORDER BY `address` ASC, `address_old` ASC LIMIT {$limit}";
 
 //		dump ($query);
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query, [$q_like, $q_like]) or do_error($query, $query, '', basename(__FILE__), __LINE__);
 
 		$outstr = "";
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			extract ($row);
 			if (substr ( $address, 0, $q_len ) == $q ) {	 		// match user input to $address?
 				$outstr.="<br><span><input type = radio name = 'addr_rb' onclick = '{$js_func}(\"{$payload}\")'>{$address}</span>\n";		// call client-side function
@@ -49,14 +50,14 @@ switch (intval($which)) {
 					UPPER(`street`) 							AS `address`,
 					CONCAT_WS( '/',`id`, ROUND(`lat`,6), ROUND(`lng`,6), `street`, `address_about` , `city` )	AS `payload`
 				FROM `$GLOBALS[mysql_prefix]{$tablename}`
-				WHERE ( UPPER(`street`) LIKE UPPER( '{$q}%' ) )
+				WHERE ( UPPER(`street`) LIKE UPPER( ? ) )
 				ORDER BY `address` ASC LIMIT {$limit}";
 
 //		dump ($query);
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query, [$q_like]) or do_error($query, $query, '', basename(__FILE__), __LINE__);
 
 		$outstr = "";
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			extract ($row);
 			if (substr ( $address, 0, $q_len ) == $q ) {	 		// match user input to $address?
 				$outstr.="<br><span><input type = radio name = 'addr_rb' onclick = '{$js_func}(\"{$payload}\")'>{$address}</span>\n";		// call client-side function
@@ -73,14 +74,14 @@ switch (intval($which)) {
 					CONCAT_WS( '/',`id`, lat, lng, `street`, `community`, `city`  ) AS `payload` ,
 					CONCAT_WS( ' ', UPPER(`street`), apartment )					AS `address`
 				FROM `$GLOBALS[mysql_prefix]{$tablename}`
-				WHERE ( UPPER(`street`) LIKE UPPER( '{$q}%' ) )
+				WHERE ( UPPER(`street`) LIKE UPPER( ? ) )
 				ORDER BY `address` ASC LIMIT {$limit}";
 
 //		dump ($query);
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query, [$q_like]) or do_error($query, $query, '', basename(__FILE__), __LINE__);
 
 		$outstr = "";
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			extract ($row);
 			if (substr ( $address, 0, $q_len ) == $q ) {	 		// match user input to $address?
 				$outstr.="<br><span><input type = radio name = 'addr_rb' onclick = '{$js_func}(\"{$payload}\")'>{$address}</span>\n";		// call client-side function

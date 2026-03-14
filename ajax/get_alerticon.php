@@ -5,10 +5,11 @@
 require_once('../incs/functions.inc.php');
 
 $ret_arr = array();
+$id = sanitize_int($_GET['id']);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` WHERE `id` = " . $_GET['id'];
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` WHERE `id` = ?";
+$result = db_query($query, [$id]) or do_error('', 'mysql query failed', '', basename( __FILE__), __LINE__);
+$row = stripslashes_deep($result->fetch_assoc());
 $ret_arr[0] = $row['icon'];
 
 print json_encode($ret_arr);

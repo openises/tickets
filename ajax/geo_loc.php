@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 require_once('../incs/functions.inc.php');
 
 $ret_arr = array();
-$addr = urlencode($_GET['addr']);
+$addr = urlencode(sanitize_string($_GET['addr']));
 $api_key = get_variable('gmaps_api_key');
 $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 if($https) {

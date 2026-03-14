@@ -9,8 +9,8 @@ session_write_close();
 $ret_arr = array();
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_array())) {
 	$ret_arr[$row['id']] = $row['text_color'];
 	}
 

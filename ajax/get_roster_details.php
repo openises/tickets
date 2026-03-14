@@ -2,18 +2,17 @@
 /*
 9/10/13 - New file, lists personnel for Roster user functionality
 */
-*/
 require_once('../incs/functions.inc.php');
 
 if(empty($_GET)) {
 	exit();
 	}
 
-$the_id = strip_tags($_GET['id']);
+$the_id = sanitize_int($_GET['id']);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` WHERE `id` = '" . $the_id . "' LIMIT 1"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [$the_id]) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$row = stripslashes_deep($result->fetch_assoc());
 
 $ret_arr[0] = $row['id'];
 $ret_arr[1] = $row['person_identifier'];

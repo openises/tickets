@@ -10,8 +10,8 @@ if(array_key_exists('q', $_GET) && ($_GET['q'] != $_SESSION['id'])) {
 
 $ret_arr = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-$result = mysql_query($query);
-$units_ct = mysql_num_rows($result);
+$result = db_query($query);
+$units_ct = $result->num_rows;
 
 $ret_arr = array();
 $curr_cats = get_category_butts();

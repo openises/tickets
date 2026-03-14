@@ -45,10 +45,10 @@ $query = "SELECT
 	LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `i` ON `t`.`in_types_id` = `i`.`id` 
 	WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
 	ORDER BY `tick_id`, `assigns_id` ASC";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_assigns = mysql_num_rows($result);
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num_assigns = $result->num_rows;
 $i = 0;
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$assigns[$i][] = $row['assigns_id'];	//	assignment ID
 	$assigns[$i][] = $row['resp_id'];		//	Responder / Unit ID
 	$assigns[$i][] = $row['tick_id'];		//	Ticket ID

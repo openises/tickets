@@ -14,7 +14,7 @@ if (empty($_SESSION)) {
 	header("Location: ../index.php");
 	}
 do_login(basename(__FILE__));
-$ticket = ((isset($_GET['tick'])) && ($_GET['tick'] != 0)) ? strip_tags($_GET['tick']) : 0;
+$ticket = sanitize_int(isset($_GET['tick']) ? $_GET['tick'] : 0);
 $text_to_replace = ((isset($_GET['text'])) && ($_GET['text'] != "")) ? urldecode($_GET['text']) : "";
 $user = $_SESSION['user_id'];
 $user_name = get_owner($user);
@@ -28,27 +28,27 @@ $proximity = 1000;
 $unit = get_variable('warn_proximity_units');
 
 $infotype = array();
-$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]replacetext_order`";
-$result = mysql_query($query);
-while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}replacetext_order`";
+$result = db_query($query);
+while($row = $result->fetch_assoc()) {
 	$key = intval($row['displayorder']);
 	$infotype[$key] = $row['info_name'];
 	}
 
 ksort($infotype);
 
-function distance($lat1, $lon1, $lat2, $lon2, $unit) { 
-	if(($lat1 == 0 ) || ($lon1 == 0)) { 
-		return 0; 
+function distance($lat1, $lon1, $lat2, $lon2, $unit) {
+	if(($lat1 == 0 ) || ($lon1 == 0)) {
+		return 0;
 		}
-	$theta = $lon1 - $lon2; 
-	$dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta)); 
-	$dist = acos($dist); 
-	$dist = rad2deg($dist); 
+	$theta = $lon1 - $lon2;
+	$dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+	$dist = acos($dist);
+	$dist = rad2deg($dist);
 	$miles = $dist * 60 * 1.1515;
 	$unit = strtoupper($unit);
 	if ($unit == "K") {
-		return ($miles * 1.609344); 
+		return ($miles * 1.609344);
 		} else if ($unit == "N") {
 		return ($miles * 0.8684);
 		} else {
@@ -70,17 +70,20 @@ function subval_sort($a,$subkey) {
 function get_warnlocs($id) {
 	if($id == 0) {return;}
 	global $proximity, $unit;
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$id = sanitize_int($id);
+	$row = db_fetch_one(
+		"SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+		[$id], 'i'
+	);
+	if (!$row) { return; }
 	$in_lat = $row['lat'];
 	$in_lng = $row['lng'];
 	$ret_arr = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]warnings` ORDER BY `id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}warnings` ORDER BY `id`";
+	$result = db_query($query);
+	if($result->num_rows > 0) {
 		$i=0;
-		while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+		while($row = $result->fetch_assoc()) {
 			$ret_arr[$i][0] = $row['id'];
 			$ret_arr[$i][1] = $row['title'];
 			$ret_arr[$i][2] = $row['street'];
@@ -98,7 +101,7 @@ function get_warnlocs($id) {
 		}
 
 	$out_arr = array();
-	$z = 0;	
+	$z = 0;
 	foreach($ret_arr as $val) {
 		if($val[8] < $proximity) {
 			$out_arr[$z][0] = $val[0];
@@ -118,28 +121,37 @@ function get_warnlocs($id) {
 		$warningsText .= $val[1] . " - " . $val[8] . "\n";
 		$warningsText .= $val[2] . ", " . $val[3] . " " . $val[4] . "\n";
 		$warningsText .= $val[7] . "\n";
-		}	
+		}
 	return $warningsText;
 	}
 
 function get_user_name($id){							//	get User Name from id , 1/8/14
-	$result	= mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`= '$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row	= stripslashes_deep(mysql_fetch_assoc($result));
-	return (mysql_affected_rows()==0 )? "unk?" : $row['name_f'] . " " . $row['name_l'];
+	$id = sanitize_int($id);
+	$row = db_fetch_one(
+		"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ? LIMIT 1",
+		[$id], 'i'
+	);
+	return ($row === null) ? "unk?" : $row['name_f'] . " " . $row['name_l'];
 	}
 
 function get_owner_unit($id){								/* get owner unit name from id */
-	$result	= mysql_query("SELECT responder_id FROM `$GLOBALS[mysql_prefix]user` WHERE `id`='$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row	= stripslashes_deep(mysql_fetch_assoc($result));
-	return (mysql_affected_rows()==0 )? 0 : $row['responder_id'];
+	$id = sanitize_int($id);
+	$row = db_fetch_one(
+		"SELECT `responder_id` FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ? LIMIT 1",
+		[$id], 'i'
+	);
+	return ($row === null) ? 0 : $row['responder_id'];
 	}
 
 function get_owner_unit_handle($id){								/* get owner unit name from id */
-	$result	= mysql_query("SELECT handle FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`='$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row	= stripslashes_deep(mysql_fetch_assoc($result));
-	return (mysql_affected_rows()==0 )? "" : $row['handle'];
-	}	
-	
+	$id = sanitize_int($id);
+	$row = db_fetch_one(
+		"SELECT `handle` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ? LIMIT 1",
+		[$id], 'i'
+	);
+	return ($row === null) ? "" : $row['handle'];
+	}
+
 function splitMessage($message, $delimiter) {
 	$ret_arr = array();
 	$ret_arr = explode($delimiter, $message);
@@ -148,29 +160,30 @@ function splitMessage($message, $delimiter) {
 
 function replace_content_inside_delimiters($start, $end, $new, $source) {
 	$thetxt = preg_replace('#('.preg_quote($start).')(.*)('.preg_quote($end).')#si', '$1'.$new.'$3', $source);
-	$tags = array($start,$end);	
+	$tags = array($start,$end);
 	$thetxt = str_replace($tags, "", $thetxt);
 	return $thetxt;
 	}
-	
+
 function get_coords($lat, $lng) {
 	$locale = get_variable('locale');
-	switch($locale) { 
+	switch($locale) {
 		case "0":
 			$ret = "USNG: " . LLtoUSNG($lat, $lng);
 			break;
 		case "1":
 			$ret = "OSGB: " . LLtoOSGB($lat, $lng) ;
-			break;			
+			break;
 		default:
 			$ret = "UTM: " . toUTM($lat, $lng);
 			break;
 		}
 	return $ret;
 	}
-	
+
 function tkt_summary($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
 		$query	= "SELECT `t`.`scope` AS `scope`,
 					`t`.`id` AS `t_id`,
@@ -185,33 +198,33 @@ function tkt_summary($id) {
 					`t`.`rec_facility` AS `rec_facility`,
 					`i`.`id` AS `type_id`,
 					`i`.`type` AS `in_type`,
-					`f`.`id` AS `f_id`, 
-					`f`.`name` AS `fac_name`, 
+					`f`.`id` AS `f_id`,
+					`f`.`name` AS `fac_name`,
 					`f`.`street` AS `fac_street`,
 					`f`.`city` AS `fac_city`,
 					`f`.`description` as `fac_desc`,
 					`f`.`lat` AS `fac_lat`,
 					`f`.`lng` AS `fac_lng`,
-					`f2`.`id` AS `f2_id`,					
-					`f2`.`name` AS `recfac_name`, 
+					`f2`.`id` AS `f2_id`,
+					`f2`.`name` AS `recfac_name`,
 					`f2`.`street` AS `recfac_street`,
 					`f2`.`city` AS `recfac_city`,
-					`f2`.`description` AS `recfac_desc`,	
-					`f2`.`lat` AS `recfac_lat`,	
-					`f2`.`lng` AS `recfac_lng`							
-					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
-					LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON ( `t`.`facility` = `f`.`id`)	
-					LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f2` ON ( `t`.`rec_facility` = `f2`.`id`)	
-					LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `i` ON ( `t`.`in_types_id` = `i`.`id`)					
-					WHERE `t`.`id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));	
+					`f2`.`description` AS `recfac_desc`,
+					`f2`.`lat` AS `recfac_lat`,
+					`f2`.`lng` AS `recfac_lng`
+					FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f` ON ( `t`.`facility` = `f`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f2` ON ( `t`.`rec_facility` = `f2`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `i` ON ( `t`.`in_types_id` = `i`.`id`)
+					WHERE `t`.`id`= ? LIMIT 1";
+		$row = db_fetch_one($query, [$id], 'i');
+		if (!$row) { return $the_text; }
 		$coords = get_coords($row['lat'], $row['lng']);
 		$fac_add = $row['fac_street'] . ", " . $row['fac_city'];
 		$fac_desc = $row['fac_desc'];
 		$fac_coords = get_coords($row['fac_lat'], $row['fac_lng']);
 		$recfac_add = $row['recfac_street'] . ", " . $row['recfac_city'];
-		$recfac_desc = $row['recfac_desc'];		
+		$recfac_desc = $row['recfac_desc'];
 		$recfac_coords = get_coords($row['recfac_lat'], $row['recfac_lng']);
 		$the_text = get_text('Controller') . ": " . get_user_name($_SESSION['user_id']) . "\r\n";
 		$the_text .= $row['scope'] . "\n";
@@ -227,13 +240,14 @@ function tkt_summary($id) {
 		$the_text .= ($row['rec_facility'] != 0) ? $row['recfac_name'] . "\n": "";
 		$the_text .= ($row['rec_facility'] != 0) ? $recfac_desc . "\n": "";
 		$the_text .= ($row['rec_facility'] != 0) ? $recfac_add . "\n": "";
-		$the_text .= ($row['rec_facility'] != 0) ? "LAT: " . $row['recfac_lat'] . " - LNG: " . $row['recfac_lng'] . " " . $recfac_coords . "\n": "";		
+		$the_text .= ($row['rec_facility'] != 0) ? "LAT: " . $row['recfac_lat'] . " - LNG: " . $row['recfac_lng'] . " " . $recfac_coords . "\n": "";
 		}
 	return $the_text;
 	}
 
 function tkt_shortSummary($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
 		$query	= "SELECT `t`.`scope` AS `scope`,
 					`t`.`id` AS `t_id`,
@@ -242,10 +256,10 @@ function tkt_shortSummary($id) {
 					`t`.`street` AS `street`,
 					`t`.`city` AS `city`,
 					`t`.`phone` AS `phone`
-					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
-					WHERE `t`.`id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+					FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+					WHERE `t`.`id`= ? LIMIT 1";
+		$row = db_fetch_one($query, [$id], 'i');
+		if (!$row) { return $the_text; }
 		$thestreet = ($row['street'] != "") ? $row['street'] . ", " : "";
 		$the_text .= get_text('Address') . ": " . $thestreet . $row['city'] . "\n";
 		$the_text .= $row['synopsis'] . "\n";
@@ -253,133 +267,151 @@ function tkt_shortSummary($id) {
 		}
 	return $the_text;
 	}
-	
+
 function tkt_description($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
 		$query	= "SELECT `t`.`scope` AS `scope`,
 					`t`.`id` AS `t_id`,
 					`t`.`description` AS `description`
-					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
-					WHERE `t`.`id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+					FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+					WHERE `t`.`id`= ? LIMIT 1";
+		$row = db_fetch_one($query, [$id], 'i');
+		if (!$row) { return $the_text; }
 		$the_text = get_text('Controller') . ": " . get_user_name($_SESSION['user_id']) . "\r\n";
 		$the_text .= get_text('Synopsis') . ": " . $row['description'] . "\n";
 		}
 	return $the_text;
 	}
-	
+
 function tkt_street($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT `street` AS `street` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_text .= $row['street'];
+		$row = db_fetch_one(
+			"SELECT `street` AS `street` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) { $the_text .= $row['street']; }
 		}
 	return $the_text;
 	}
-	
+
 function tkt_loc($id) {
 	$theRet = array();
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$theRet[0] = $row['lat'];
-		$theRet[1] = $row['lng'];		
+		$row = db_fetch_one(
+			"SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) {
+			$theRet[0] = $row['lat'];
+			$theRet[1] = $row['lng'];
+		}
 		}
 	return $theRet;
 	}
-	
+
 function tkt_city($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT `city` AS `city` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_text .= $row['city'];
+		$row = db_fetch_one(
+			"SELECT `city` AS `city` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) { $the_text .= $row['city']; }
 		}
 	return $the_text;
 	}
-	
+
 function tkt_phone($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT `phone` AS `phone` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_text .= $row['phone'];
+		$row = db_fetch_one(
+			"SELECT `phone` AS `phone` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) { $the_text .= $row['phone']; }
 		}
 	return $the_text;
 	}
-	
+
 function tkt_toaddress($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT `to_address` AS `to_address` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_text .= $row['to_address'];
+		$row = db_fetch_one(
+			"SELECT `to_address` AS `to_address` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) { $the_text .= $row['to_address']; }
 		}
 	return $the_text;
 	}
-	
+
 function tkt_dispnotes($id) {
 	$the_text = "";
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT `comments` AS `comments` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$the_text .= $row['comments'];
+		$row = db_fetch_one(
+			"SELECT `comments` AS `comments` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) { $the_text .= $row['comments']; }
 		}
 	return $the_text;
 	}
-	
+
 function tkt_nature($id) {
-	$the_text = "Incident Nature: \n";	
+	$the_text = "Incident Nature: \n";
+	$id = sanitize_int($id);
 	if($id != 0) {
 		$query	= "SELECT `t`.`in_types_id` AS `in_types_id`,
 					`t`.`id` AS `t_id`,
 					`i`.`id` AS `type_id`,
 					`i`.`type` AS `in_type`
-					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
-					LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `i` ON ( `t`.`in_types_id` = `i`.`id`)					
-					WHERE `t`.`id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));	
-		$the_text .= $row['in_type'];
+					FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `i` ON ( `t`.`in_types_id` = `i`.`id`)
+					WHERE `t`.`id`= ? LIMIT 1";
+		$row = db_fetch_one($query, [$id], 'i');
+		if ($row) { $the_text .= $row['in_type']; }
 		}
 	return $the_text;
 	}
-	
+
 function tkt_severity($id) {
 	$the_text = "Incident Severity: \n";
 	$severities = array();
 	$severities[] = "Normal";
 	$severities[] = "Medium";
 	$severities[] = "High";
+	$id = sanitize_int($id);
 	if($id != 0) {
-		$query	= "SELECT *	FROM `$GLOBALS[mysql_prefix]ticket` `t` WHERE `t`.`id`='$id' LIMIT 1";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));	
-		$the_text .= $severities[$row['severity']];
+		$row = db_fetch_one(
+			"SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` `t` WHERE `t`.`id`= ? LIMIT 1",
+			[$id], 'i'
+		);
+		if ($row) { $the_text .= $severities[$row['severity']]; }
 		}
 	return $the_text;
 	}
 
 function get_replacement_text($val) {
 	$return = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]replacetext` WHERE `in_text` = '" . $val . "'";
-	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = db_fetch_one(
+		"SELECT * FROM `{$GLOBALS['mysql_prefix']}replacetext` WHERE `in_text` = ?",
+		[$val], 's'
+	);
+	if($row !== null) {
 		$return[] = $row['out_text'];
 		$return[] = $row['add_ticket'];
 		$return[] = $row['add_user'];
 		$return[] = $row['add_user_unit'];
-		$return[] = $row['add_time'];	
+		$return[] = $row['add_time'];
 		$return[] = $row['add_date'];
 		$return[] = $row['app_summ'];
 		$return[] = $row['app_shortsumm'];
@@ -391,13 +423,13 @@ function get_replacement_text($val) {
 		$return[] = $row['app_dispnotes'];
 		$return[] = $row['app_nature'];
 		$return[] = $row['app_priority'];
-		$return[] = $row['app_warnloc'];		
+		$return[] = $row['app_warnloc'];
 		return $return;
 		} else {
 		return false;
 		}
 	}
-	
+
 function getfinalmessage($rep_val) {
 	global $start_tag, $end_tag, $ticket, $text_to_replace, $infotype;
 	$tags = array($start_tag,$end_tag);
@@ -440,7 +472,7 @@ function getfinalmessage($rep_val) {
 		}
 	return $theText;
 	}
-	
+
 $ret_arr = array();
 $msg_arr = splitMessage($text_to_replace, $start_tag);
 $msgtxt = "";
@@ -455,9 +487,8 @@ foreach($msg_arr as $val) {
 			}
 		}
 	}
-$ret_arr[0] = $msgtxt; 
-		
+$ret_arr[0] = $msgtxt;
+
 print json_encode($ret_arr);
 exit();
 ?>
-

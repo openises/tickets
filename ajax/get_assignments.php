@@ -20,10 +20,10 @@ $query = "SELECT *,
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `t`.id=`a`.`ticket_id`
 	WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
 	ORDER BY `assigns_id` ASC";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_assigns = mysql_num_rows($result);
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num_assigns = $result->num_rows;
 $i = 0;
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$assignsID = $row['assigns_id'];
 	$respID = $row['resp_id'];
 	$tickID = $row['tick_id'];

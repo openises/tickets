@@ -30,9 +30,9 @@ function get_incidents() {
 	$the_groups = get_usergroups();
 	if($the_groups) {
 		foreach($the_groups as $grp) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 1 AND `group` = " . $grp;
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 1 AND `group` = ?";
+			$result = db_query($query, [$grp]);
+			while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 				$ret_arr[] = $row['resource_id'];
 				}
 			}
@@ -47,9 +47,9 @@ function get_responders() {
 	$the_groups = get_usergroups();
 	if($the_groups) {
 		foreach($the_groups as $grp) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 2 AND `group` = " . $grp;
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/18/11
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `group` = ?";
+			$result = db_query($query, [$grp]);
+			while ($row = stripslashes_deep($result->fetch_assoc())) 	{	// 4/18/11
 				$ret_arr[] = $row['resource_id'];
 				}
 			}
@@ -64,9 +64,9 @@ function get_userfacilities() {
 	$the_groups = get_usergroups();
 	if($the_groups) {
 		foreach($the_groups as $grp) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 3 AND `group` = " . $grp;
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/18/11
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 3 AND `group` = ?";
+			$result = db_query($query, [$grp]);
+			while ($row = stripslashes_deep($result->fetch_assoc())) 	{	// 4/18/11
 				$ret_arr[] = $row['resource_id'];
 				}
 			}
@@ -80,9 +80,9 @@ function get_userfacilities() {
 function get_basemarkup() {
 	$ret_arr = array();
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND `use_with_bm` = 1";
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	$result = db_query($query)or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = stripslashes_deep($result->fetch_assoc())){
 			$ret_arr[$row['id']]['id'] = $row['id'];
 			$ret_arr[$row['id']]['name'] = $row['line_name'];
 			$ret_arr[$row['id']]['status'] = $row['line_status'];
@@ -110,15 +110,15 @@ function get_groupbounds() {
 	$gp_bounds = get_usergroups();
 	if(count($gp_bounds) != 0) {
 		foreach($gp_bounds as $value) {
-			$query_bound = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= " . $value . " AND `boundary` <> 0 LIMIT 1";
-			$result_bound = mysql_query($query_bound)or do_error($query_bound, mysql_error(), basename(__FILE__), __LINE__);
-			if(mysql_num_rows($result_bound) == 1) {
-				$row_bound = stripslashes_deep(mysql_fetch_assoc($result_bound));
+			$query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ? AND `boundary` <> 0 LIMIT 1";
+			$result_bound = db_query($query_bound, [$value])or do_error($query_bound, db()->error, basename(__FILE__), __LINE__);
+			if($result_bound->num_rows == 1) {
+				$row_bound = stripslashes_deep($result_bound->fetch_assoc());
 				$theBound = $row_bound['boundary'];
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`= " . $theBound;
-				$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-				if(mysql_num_rows($result) != 0) {
-					$row = stripslashes_deep(mysql_fetch_assoc($result));
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ?";
+				$result = db_query($query, [$theBound])or do_error($query, db()->error, basename(__FILE__), __LINE__);
+				if($result->num_rows != 0) {
+					$row = stripslashes_deep($result->fetch_assoc());
 					$ret_arr[$value]['id'] = $row['id'];
 					$ret_arr[$value]['name'] = $row['line_name'];
 					$ret_arr[$value]['status'] = $row['line_status'];
@@ -143,10 +143,10 @@ function get_groupbounds() {
 	
 function get_otherbounds($id) {
 	$ret_arr =array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`= " . $id . " LIMIT 1";
-	$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id])or do_error($query, db()->error, basename(__FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr['id'] = $row['id'];
 		$ret_arr['name'] = $row['line_name'];
 		$ret_arr['status'] = $row['line_status'];
@@ -173,10 +173,10 @@ function get_exclusion_zones() {
 		return false;
 		}
 	foreach($user_units as $val) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $val . " LIMIT 1";
-		$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-		if(mysql_num_rows($result) > 0) {		
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$val])or do_error($query, db()->error, basename(__FILE__), __LINE__);
+		if($result->num_rows > 0) {		
+			$row = stripslashes_deep($result->fetch_assoc());
 			if(intval($row['excl_zone']) > 0) {
 				$units[$row['id']] = intval($row['excl_zone']);
 				}
@@ -197,10 +197,10 @@ function get_ring_fences() {
 		return false;
 		}
 	foreach($user_units as $val) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $val . " LIMIT 1";
-		$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-		if(mysql_num_rows($result) > 0) {
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$val])or do_error($query, db()->error, basename(__FILE__), __LINE__);
+		if($result->num_rows > 0) {
+			$row = stripslashes_deep($result->fetch_assoc());
 			if(intval($row['ring_fence']) > 0) {
 				$units[$row['id']] = intval($row['ring_fence']);
 				}
@@ -221,10 +221,10 @@ function get_facility_catchments() {
 		return false;
 		}
 	foreach($user_facilities as $val) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $val . " LIMIT 1";
-		$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
-		if(mysql_num_rows($result) > 0) {		
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$val])or do_error($query, db()->error, basename(__FILE__), __LINE__);
+		if($result->num_rows > 0) {		
+			$row = stripslashes_deep($result->fetch_assoc());
 			if(intval($row['boundary']) > 0) {
 				$facilities[$row['id']] = intval($row['boundary']);
 				}

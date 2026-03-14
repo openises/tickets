@@ -9,13 +9,13 @@ if(empty($_GET)) {
 	exit();
 	}
 
-$the_id = strip_tags($_GET['id']);
+$the_id = sanitize_int($_GET['id']);
 
 $ret_arr = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `id` = " . $id;		// types in use
-$result = mysql_query($query);
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `id` = ?";		// types in use
+$result = db_query($query, [$the_id]);
 if($result) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = stripslashes_deep($result->fetch_assoc());
 	$ret_arr[0] = $row['name'];
 	$ret_arr[1] = $row['street'];
 	$ret_arr[2] = $row['city'];

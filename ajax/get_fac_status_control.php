@@ -7,15 +7,15 @@ if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
 	
-$id = $_GET['facility_id'];
+$id = sanitize_int($_GET['facility_id']);
 
 $ret_arr = array();
 $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$result_st = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp]['status'] = $row_st['status_val'];
 	$status_vals[$temp]['bg_color'] = $row_st['bg_color'];
@@ -24,9 +24,9 @@ while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 
 unset($result_st);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $id;											// 2/1/10, 3/15/10, 6/10/11
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = ?";											// 2/1/10, 3/15/10, 6/10/11
+$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 	$status = (valid_fac_status($row['status_id'])) ? get_status_sel($row['id'], $row['status_id'], "f") : "Status Error";		// status
 	if(get_variable('facility_auto_status') == "0") {
 		$ret_arr[] = $status;

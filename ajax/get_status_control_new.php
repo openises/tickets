@@ -6,28 +6,28 @@ session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	} */
-$id = $_GET['responder_id'];
+$id = sanitize_int($_GET['responder_id']);
 $grp_arr = array();
 $ret_arr = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;											// 2/1/10, 3/15/10, 6/10/11
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = ?";											// 2/1/10, 3/15/10, 6/10/11
+$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$row = stripslashes_deep($result->fetch_assoc());
 $status_id = $row['un_status_id'];
 $icon_str = $row['icon_str'];
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$tmp_arr[$row['group']] = $row['group'];
 	}
 	
 $tmp_arr = array_unique($tmp_arr);
 
 foreach($tmp_arr as $key => $val) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `group` = '" . $val . "' ORDER BY `sort`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `group` = ? ORDER BY `sort`";
+	$result = db_query($query, [$val]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$grp_arr[$key][$row['id']]['name'] = $row['status_val'];
 		$grp_arr[$key][$row['id']]['hide'] = $row['hide'];
 		$grp_arr[$key][$row['id']]['bg_color'] = $row['bg_color'];

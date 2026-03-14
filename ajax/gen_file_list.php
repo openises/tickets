@@ -11,16 +11,16 @@ $ret_arr=array();
 $where = "WHERE `type` = 1";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` " . $where . " ORDER BY `id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if (mysql_affected_rows() == 0) { 
+$result = db_query($query) or do_error('', 'mysql query failed', '', basename( __FILE__), __LINE__);
+if (db_affected_rows() == 0) {
 	$print = "";
 	} else {
-	$print = "<SELECT ID='f_sel' name='file_select' style='min-width: 150px;'>";	
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$filename = $row['filename'];
-		$orig_filename = $row['orig_filename'];
-		$title = $row['title'];
-		$type =  $row['type'];
+	$print = "<SELECT ID='f_sel' name='file_select' style='min-width: 150px;'>";
+	while ($row = stripslashes_deep($result->fetch_assoc())){
+		$filename = e($row['filename']);
+		$orig_filename = e($row['orig_filename']);
+		$title = e($row['title']);
+		$type =  e($row['type']);
 		$print .= "<OPTION VALUE='./ajax/download.php?filename=" . $filename . "&origname=" . $orig_filename . "&type=" . $type . "'>" . $title . "</OPTION>";
 		}
 		$print .= "</SELECT>";
