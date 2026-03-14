@@ -1,0 +1,23 @@
+{
+    "name": "openises/tickets-cad",
+    "description": "Tickets CAD - Open Source Computer Aided Dispatch",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "files": [
+            "incs/db.inc.php",
+            "incs/security.inc.php"
+        ]
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "find . -name '*.php' -not -path './vendor/*' -not -path './tests/*' | head -50 | xargs -I {} php -l {}",
+        "security-scan": "php tools/security_scan.php"
+    }
+}

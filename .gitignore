@@ -3,3 +3,6 @@ _osm/**
 incs/mysql.inc.php
 backups/**
 *.bak
+vendor/
+composer.phar
+composer.lock
