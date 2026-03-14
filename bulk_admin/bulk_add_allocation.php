@@ -4,28 +4,28 @@ require_once('../incs/functions.inc.php');
 $sess_id = session_id();
 
 function get_membername($id) {
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = '" . $id . "'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$row = mysql_fetch_array($result,MYSQL_ASSOC);
+	$id = sanitize_int($id);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
+	$result	= db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	$ret = $row['field2'] . " " . $row['field1'];
 	return $ret;
-	}	
+	}
 
 function add_allocation($id, $type, $skill_id, $completed, $refresh, $freq) {
+	$id = sanitize_int($id);
+	$type = sanitize_int($type);
+	$skill_id = sanitize_int($skill_id);
+	$completed = sanitize_string($completed);
+	$refresh = sanitize_string($refresh);
+	$freq = sanitize_string($freq);
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = '" . $id . "' AND `skill_type` = '" . $type . "' AND `skill_id` = '" . $skill_id . "'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	if(mysql_num_rows($result) == 0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (`member_id`, `skill_type`, `skill_id`, `completed`, `refresh_due`, `frequency`, `_on` )
-			VALUES (" .
-				quote_smart(trim($id)) . "," .
-				quote_smart(trim($type)) . "," .
-				quote_smart(trim($skill_id)) . "," .	
-				quote_smart(trim($completed)) . "," .				
-				quote_smart(trim($refresh)) . "," .
-				quote_smart(trim($freq)) . "," .
-				quote_smart(trim($now)) . ");";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = ? AND `skill_id` = ?";
+	$result	= db_query($query, [$id, $type, $skill_id]);
+	if($result->num_rows == 0) {
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (`member_id`, `skill_type`, `skill_id`, `completed`, `refresh_due`, `frequency`, `_on` )
+			VALUES (?, ?, ?, ?, ?, ?, ?)";
+		$result = db_query($query, [trim($id), trim($type), trim($skill_id), trim($completed), trim($refresh), trim($freq), trim($now)]);
 		if($result){
 			return true;
 			} else {
@@ -45,7 +45,7 @@ function add_allocation($id, $type, $skill_id, $completed, $refresh, $freq) {
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
+<meta http-equiv=ï¿½X-UA-Compatibleï¿½ content=ï¿½IE=EmulateIE7" />
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="../js/leaflet/leaflet.css" />
@@ -180,14 +180,14 @@ function pop_members(thepackage) {
 			$training = array();
 			$member_list = "";
 
-			$query_tra	= "SELECT * FROM `$GLOBALS[mysql_prefix]training_packages`";
-			$result_tra	= mysql_query($query_tra) or do_error($query_tra, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_tra,MYSQL_ASSOC)) {
+			$query_tra	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}training_packages`";
+			$result_tra	= db_query($query_tra);
+			while($row = $result_tra->fetch_assoc()) {
 				$training[$row['id']] = $row['package_name'];
 				}
 ?>
 			<DIV ID='left_col' style='position: relative; left: 5%; top: 60px; width: 90%; padding: 5px;'>	
-				<FORM METHOD="POST" NAME= "bulk_edit_Form" ACTION="<?php echo $_SERVER['PHP_SELF']; ?>">
+				<FORM METHOD="POST" NAME= "bulk_edit_Form" ACTION="<?php echo e($_SERVER['PHP_SELF']); ?>">
 					<FIELDSET>
 					<LEGEND>Member Skills, Equipment, Clothing & Training Allocation</LEGEND>
 					<TABLE style='width: 100%; padding: 10px;'>

@@ -16,7 +16,7 @@ require_once('../incs/mysql.inc.php');
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
+	<meta http-equiv=ï¿½X-UA-Compatibleï¿½ content=ï¿½IE=EmulateIE7" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="../default.css?version=<?php print time();?>" TYPE="text/css">	
 	<SCRIPT type="text/javascript">
@@ -139,27 +139,27 @@ if(empty($_POST)) {	//	Upload a file for import
 		$email = ($_POST['ic_col']['frm_email'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_email']] : NULL;
 		$phone = ($_POST['ic_col']['frm_phone'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_phone']] : NULL;
 		$cost = ($_POST['ic_col']['frm_cost'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_cost']] : NULL;
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]training_packages` 
+		$package_name = sanitize_string($package_name);
+		$description = sanitize_string($description);
+		$available = sanitize_string($available);
+		$provider = sanitize_string($provider);
+		$address = sanitize_string($address);
+		$name = sanitize_string($name);
+		$email = sanitize_string($email);
+		$phone = sanitize_string($phone);
+		$cost = sanitize_string($cost);
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}training_packages`
 				(`package_name`,
-				`description`, 
-				`available`, 
-				`provider`, 
-				`address`, 				
-				`name`, 
-				`email`, 
-				`phone`, 
+				`description`,
+				`available`,
+				`provider`,
+				`address`,
+				`name`,
+				`email`,
+				`phone`,
 				`cost`)
-			VALUES (" . 
-				quote_smart(trim($package_name)) . "," .
-				quote_smart(trim($description)) . "," .
-				quote_smart(trim($available)) . "," .	
-				quote_smart(trim($provider)) . "," .
-				quote_smart(trim($address)) . "," .					
-				quote_smart(trim($name)) . "," .	
-				quote_smart(trim($email)) . "," .				
-				quote_smart(trim($phone)) . "," .	
-				quote_smart(trim($cost)) . ");";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		$result = db_query($query, [trim($package_name), trim($description), trim($available), trim($provider), trim($address), trim($name), trim($email), trim($phone), trim($cost)]);	
 		}
 ?>
 	<BODY style='background-color: #EFEFEF;'>
@@ -197,12 +197,12 @@ if(empty($_POST)) {	//	Upload a file for import
 	}
 
 	$field_names = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]training_packages`"; 
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}training_packages`";
+	$result = db_query($query);
 	$i = 1;
-	$numfields = mysql_num_fields($result);
+	$numfields = $result->field_count;
 	while ($i < $numfields) {
-		$meta = mysql_fetch_field($result);
+		$meta = $result->fetch_field();
 		$label[$i][0] = $meta->name;
 		$label[$i][1] = "frm_" . $meta->name;
 		$label[$i][2] = $meta->type;
@@ -249,7 +249,7 @@ if(empty($_POST)) {	//	Upload a file for import
 			<DIV style='text-align: center; font-size: 0.9em; padding: 5px; max-height: 50px; overflow-y: scroll;'>
 <?php
 				foreach($col_names as $thename) {
-					print "<DIV style='width: auto; padding: 5px; background-color: #EFEFEF; color: #000000; border: 1px outset #FFFFFF; display: inline-block; font-weight: normal; margin-left: 5px;'>" . $thename . "</DIV>";
+					print "<DIV style='width: auto; padding: 5px; background-color: #EFEFEF; color: #000000; border: 1px outset #FFFFFF; display: inline-block; font-weight: normal; margin-left: 5px;'>" . e($thename) . "</DIV>";
 					}
 ?>
 			</DIV>

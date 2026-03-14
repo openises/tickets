@@ -16,7 +16,7 @@ require_once('../incs/mysql.inc.php');
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
+	<meta http-equiv=ï¿½X-UA-Compatibleï¿½ content=ï¿½IE=EmulateIE7" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="../default.css?version=<?php print time();?>" TYPE="text/css">		
 	<SCRIPT type="text/javascript">
@@ -133,15 +133,15 @@ if(empty($_POST)) {	//	Upload a file for import
 		$clothing_item = ($_POST['ic_col']['frm_clothing_item'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_clothing_item']] : NULL;
 		$description = ($_POST['ic_col']['frm_description'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_description']] : NULL;
 		$size = ($_POST['ic_col']['frm_size'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_size']] : NULL;
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]clothing_types` 
+		$clothing_item = sanitize_string($clothing_item);
+		$description = sanitize_string($description);
+		$size = sanitize_string($size);
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}clothing_types`
 				(`clothing_item`,
-				`description`, 
+				`description`,
 				`size`)
-			VALUES (" . 
-				quote_smart(trim($clothing_item)) . "," .
-				quote_smart(trim($description)) . "," .
-				quote_smart(trim($size)) . ");";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	
+			VALUES (?, ?, ?)";
+		$result = db_query($query, [trim($clothing_item), trim($description), trim($size)]);	
 		}
 ?>
 	<BODY style='background-color: #EFEFEF;'>
@@ -179,15 +179,15 @@ if(empty($_POST)) {	//	Upload a file for import
 	}
 
 	$field_names = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]clothing_types`"; 
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}clothing_types`";
+	$result = db_query($query);
 	$i = 1;
-	$numfields = mysql_num_fields($result);
+	$numfields = $result->field_count;
 	while ($i < $numfields) {
-		$meta = mysql_fetch_field($result);
+		$meta = $result->fetch_field();
 		$label[$i][0] = $meta->name;
 		$label[$i][1] = "frm_" . $meta->name;
-		$label[$i][2] = $meta->type;		
+		$label[$i][2] = $meta->type;
 		$i++;
 	}
 	$i = 1;
@@ -231,7 +231,7 @@ if(empty($_POST)) {	//	Upload a file for import
 			<DIV style='text-align: center; font-size: 0.9em; padding: 5px; max-height: 50px; overflow-y: scroll;'>
 <?php
 				foreach($col_names as $thename) {
-					print "<DIV style='width: auto; padding: 5px; background-color: #EFEFEF; color: #000000; border: 1px outset #FFFFFF; display: inline-block; font-weight: normal; margin-left: 5px;'>" . $thename . "</DIV>";
+					print "<DIV style='width: auto; padding: 5px; background-color: #EFEFEF; color: #000000; border: 1px outset #FFFFFF; display: inline-block; font-weight: normal; margin-left: 5px;'>" . e($thename) . "</DIV>";
 					}
 ?>
 			</DIV>

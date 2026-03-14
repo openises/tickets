@@ -2,28 +2,28 @@
 require_once('../incs/functions.inc.php');
 
 function get_membername($id) {
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = '" . $id . "'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$row = mysql_fetch_array($result,MYSQL_ASSOC);
+	$id = sanitize_int($id);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
+	$result	= db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	$ret = $row['field2'] . " " . $row['field1'];
 	return $ret;
-	}	
+	}
 
 function add_allocation($id, $type, $skill_id, $completed, $refresh, $freq) {
+	$id = sanitize_int($id);
+	$type = sanitize_int($type);
+	$skill_id = sanitize_int($skill_id);
+	$completed = sanitize_string($completed);
+	$refresh = sanitize_string($refresh);
+	$freq = sanitize_string($freq);
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = '" . $id . "' AND `skill_type` = '" . $type . "' AND `skill_id` = '" . $skill_id . "'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	if(mysql_num_rows($result) == 0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (`member_id`, `skill_type`, `skill_id`, `completed`, `refresh_due`, `frequency`, `_on` )
-			VALUES (" .
-				quote_smart(trim($id)) . "," .
-				quote_smart(trim($type)) . "," .
-				quote_smart(trim($skill_id)) . "," .	
-				quote_smart(trim($completed)) . "," .				
-				quote_smart(trim($refresh)) . "," .
-				quote_smart(trim($freq)) . "," .
-				quote_smart(trim($now)) . ");";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = ? AND `skill_id` = ?";
+	$result	= db_query($query, [$id, $type, $skill_id]);
+	if($result->num_rows == 0) {
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (`member_id`, `skill_type`, `skill_id`, `completed`, `refresh_due`, `frequency`, `_on` )
+			VALUES (?, ?, ?, ?, ?, ?, ?)";
+		$result = db_query($query, [trim($id), trim($type), trim($skill_id), trim($completed), trim($refresh), trim($freq), trim($now)]);
 		if($result){
 			return true;
 			} else {
@@ -33,24 +33,30 @@ function add_allocation($id, $type, $skill_id, $completed, $refresh, $freq) {
 		return false;
 		}
 	}
-	
+
 function check_allocation($id, $type, $skill_id) {
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = '" . $id . "' AND `skill_type` = '" . $type . "' AND `skill_id` = '" . $skill_id . "'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	if(mysql_num_rows($result) != 0) {
+	$id = sanitize_int($id);
+	$type = sanitize_int($type);
+	$skill_id = sanitize_int($skill_id);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = ? AND `skill_id` = ?";
+	$result	= db_query($query, [$id, $type, $skill_id]);
+	if($result->num_rows != 0) {
 		$ret = true;
 		} else {
 		$ret = false;
 		}
 	return $ret;
 	}
-	
+
 function check_training_allocation($id, $type, $skill_id) {
 	$ret = array();
-	$query	= "SELECT *, UNIX_TIMESTAMP(completed) AS `completed`, UNIX_TIMESTAMP(refresh_due) AS `refresh_due` FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = '" . $id . "' AND `skill_type` = '" . $type . "' AND `skill_id` = '" . $skill_id . "'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = mysql_fetch_array($result,MYSQL_ASSOC);	
+	$id = sanitize_int($id);
+	$type = sanitize_int($type);
+	$skill_id = sanitize_int($skill_id);
+	$query	= "SELECT *, UNIX_TIMESTAMP(completed) AS `completed`, UNIX_TIMESTAMP(refresh_due) AS `refresh_due` FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = ? AND `skill_id` = ?";
+	$result	= db_query($query, [$id, $type, $skill_id]);
+	if($result->num_rows != 0) {
+		$row = $result->fetch_assoc();
 		$ret[0] = $row['completed'];
 		$ret[1] = $row['refresh_due'];
 		} else {
@@ -67,7 +73,7 @@ function check_training_allocation($id, $type, $skill_id) {
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
+<meta http-equiv=ï¿½X-UA-Compatibleï¿½ content=ï¿½IE=EmulateIE7" />
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="../js/leaflet/leaflet.css" />
@@ -209,51 +215,51 @@ function validate_skills(theForm) {						// Responder form contents validation	8
 			$vehicles = array();
 			$member_list = "";
 
-			$query_mem	= "SELECT * FROM `$GLOBALS[mysql_prefix]member`";
-			$result_mem	= mysql_query($query_mem) or do_error($query_mem, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_mem,MYSQL_ASSOC)) {
+			$query_mem	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member`";
+			$result_mem	= db_query($query_mem);
+			while($row = $result_mem->fetch_assoc()) {
 				$members[$row['id']] = $row['field2'] . " " . $row['field1'];
 				}
 
-			$query_cap	= "SELECT * FROM `$GLOBALS[mysql_prefix]capability_types`";
-			$result_cap	= mysql_query($query_cap) or do_error($query_cap, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_cap,MYSQL_ASSOC)) {
+			$query_cap	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}capability_types`";
+			$result_cap	= db_query($query_cap);
+			while($row = $result_cap->fetch_assoc()) {
 				$capabilities[$row['id']] = $row['name'];
 				}
 
-			$query_tra	= "SELECT * FROM `$GLOBALS[mysql_prefix]training_packages`";
-			$result_tra	= mysql_query($query_tra) or do_error($query_tra, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_tra,MYSQL_ASSOC)) {
+			$query_tra	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}training_packages`";
+			$result_tra	= db_query($query_tra);
+			while($row = $result_tra->fetch_assoc()) {
 				$training[$row['id']] = $row['package_name'];
 				}
 				
-			$query_equ	= "SELECT * FROM `$GLOBALS[mysql_prefix]equipment_types`";
-			$result_equ	= mysql_query($query_equ) or do_error($query_equ, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_equ,MYSQL_ASSOC)) {
+			$query_equ	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}equipment_types`";
+			$result_equ	= db_query($query_equ);
+			while($row = $result_equ->fetch_assoc()) {
 				$equipment[$row['id']] = $row['equipment_name'];
 				}
 				
-			$query_clo	= "SELECT * FROM `$GLOBALS[mysql_prefix]clothing_types`";
-			$result_clo	= mysql_query($query_clo) or do_error($query_clo, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_clo,MYSQL_ASSOC)) {
+			$query_clo	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}clothing_types`";
+			$result_clo	= db_query($query_clo);
+			while($row = $result_clo->fetch_assoc()) {
 				$clothing[$row['id']] = $row['clothing_item'] . "," . $row['size'];;
 				}
 
-			$query_veh	= "SELECT * FROM `$GLOBALS[mysql_prefix]vehicles`";
-			$result_veh	= mysql_query($query_veh) or do_error($query_veh, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			while($row = mysql_fetch_array($result_veh,MYSQL_ASSOC)) {
+			$query_veh	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}vehicles`";
+			$result_veh	= db_query($query_veh);
+			while($row = $result_veh->fetch_assoc()) {
 				$vehicles[$row['id']] = $row['regno'];
 				}
 ?>
 			<DIV ID='left_col' style='position: relative; left: 5%; top: 60px; width: 90%; padding: 5px;'>	
-				<FORM METHOD="POST" NAME= "bulk_edit_Form" ACTION="<?php echo $_SERVER['PHP_SELF']; ?>">
+				<FORM METHOD="POST" NAME= "bulk_edit_Form" ACTION="<?php echo e($_SERVER['PHP_SELF']); ?>">
 					<FIELDSET>
 					<LEGEND><?php print get_text('Members');?></LEGEND>
 					<TABLE width='100%' border='1'>
 <?php						
 					foreach($members AS $key => $val) {
 						print "<TR style='vertical-align: text-top;'><TD style='width: 15%; vertical-align: text-top; background-color: blue; color: #FFFFFF;'>";
-						print "<B>" . $val . "</B>";
+						print "<B>" . e($val) . "</B>";
 						print "</TD><TD style='width: 35%; vertical-align: text-top;'><B>Training</B><BR />";
 						print "<TABLE><TR style='vertical-align: text-top;'>";
 						print "<TD ALIGN='left' style='vertical-align: text-top; font-weight: bold; font-style: italic;'>Training Pkg</TD><TD ALIGN='left' style='font-weight: bold; font-style: italic;'>Completed</TD><TD ALIGN='left' style='font-weight: bold; font-style: italic;'>Refresh Due</TD></TR>";

@@ -16,7 +16,7 @@ require_once('../incs/mysql.inc.php');
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-	<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
+	<meta http-equiv=ï¿½X-UA-Compatibleï¿½ content=ï¿½IE=EmulateIE7" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<LINK REL=StyleSheet HREF="../default.css?version=<?php print time();?>" TYPE="text/css">	
 	<SCRIPT type="text/javascript">
@@ -71,10 +71,11 @@ require_once('../incs/mysql.inc.php');
 	</HEAD>
 <?php
 function get_owner_id($the_owner) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `field4` = '" . $the_owner . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$the_owner = sanitize_string($the_owner);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `field4` = ? LIMIT 1";
+	$result = db_query($query, [$the_owner]);
+	if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$owner_id = $row['id'];
 		} else {
 		$owner_id = 1;
@@ -157,45 +158,39 @@ if(empty($_POST)) {	//	Upload a file for import
 		$excise = NULL;	
 		$test = NULL;	
 		$notes = ($_POST['ic_col']['frm_notes'] != '999999') ? $the_arr[$z][$_POST['ic_col']['frm_notes']] : NULL;
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]vehicles` 
+		$owner = sanitize_string($owner);
+		$make = sanitize_string($make);
+		$model = sanitize_string($model);
+		$regno = sanitize_string($regno);
+		$seats = sanitize_int($seats);
+		$fueltype = sanitize_string($fueltype);
+		$roofrack = sanitize_string($roofrack);
+		$towbar = sanitize_string($towbar);
+		$winch = sanitize_string($winch);
+		$trailer = sanitize_string($trailer);
+		$vin = sanitize_string($vin);
+		$notes = sanitize_string($notes);
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}vehicles`
 				(`owner`,
-				`make`, 
-				`model`, 
-				`regno`, 
-				`type`, 				
-				`seats`, 
-				`fueltype`, 
-				`roofrack`, 
-				`towbar`, 				
-				`winch`, 				
-				`trailer`, 				
+				`make`,
+				`model`,
+				`regno`,
+				`type`,
+				`seats`,
+				`fueltype`,
+				`roofrack`,
+				`towbar`,
+				`winch`,
+				`trailer`,
 				`vin`,
-				`excise`,  				
+				`excise`,
 				`test`,
-				`notes`,				
-				`_by`, 
-				`_on`, 						
-				`_from`)				
-			VALUES (" . 
-				quote_smart(trim($owner)) . "," .
-				quote_smart(trim($make)) . "," .
-				quote_smart(trim($model)) . "," .	
-				quote_smart(trim($regno)) . "," .
-				quote_smart(trim($type)) . "," .					
-				quote_smart(trim($seats)) . "," .	
-				quote_smart(trim($fueltype)) . "," .				
-				quote_smart(trim($roofrack)) . "," .	
-				quote_smart(trim($towbar)) . "," .	
-				quote_smart(trim($winch)) . "," .	
-				quote_smart(trim($trailer)) . "," .	
-				quote_smart(trim($vin)) . "," .		
-				quote_smart(trim($excise)) . "," .	
-				quote_smart(trim($test)) . "," .		
-				quote_smart(trim($notes)) . "," .				
-				$who . "," .	
-				quote_smart(trim($now)) . "," .					
-				quote_smart(trim($from)) . ");";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	
+				`notes`,
+				`_by`,
+				`_on`,
+				`_from`)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		$result = db_query($query, [trim($owner), trim($make), trim($model), trim($regno), trim($type), trim($seats), trim($fueltype), trim($roofrack), trim($towbar), trim($winch), trim($trailer), trim($vin), trim($excise), trim($test), trim($notes), $who, trim($now), trim($from)]);	
 		}
 ?>
 	<BODY style='background-color: #EFEFEF;'>
@@ -233,12 +228,12 @@ if(empty($_POST)) {	//	Upload a file for import
 	}
 
 	$field_names = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]vehicles`"; 
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}vehicles`";
+	$result = db_query($query);
 	$i = 1;
-	$numfields = mysql_num_fields($result);
+	$numfields = $result->field_count;
 	while ($i < $numfields) {
-		$meta = mysql_fetch_field($result);
+		$meta = $result->fetch_field();
 		$label[$i][0] = $meta->name;
 		$label[$i][1] = "frm_" . $meta->name;
 		$label[$i][2] = $meta->type;
@@ -285,7 +280,7 @@ if(empty($_POST)) {	//	Upload a file for import
 			<DIV style='text-align: center; font-size: 0.9em; padding: 5px; max-height: 50px; overflow-y: scroll;'>
 <?php
 				foreach($col_names as $thename) {
-					print "<DIV style='width: auto; padding: 5px; background-color: #EFEFEF; color: #000000; border: 1px outset #FFFFFF; display: inline-block; font-weight: normal; margin-left: 5px;'>" . $thename . "</DIV>";
+					print "<DIV style='width: auto; padding: 5px; background-color: #EFEFEF; color: #000000; border: 1px outset #FFFFFF; display: inline-block; font-weight: normal; margin-left: 5px;'>" . e($thename) . "</DIV>";
 					}
 ?>
 			</DIV>
