@@ -8,7 +8,7 @@ error_reporting(E_ALL);		// 10/1/08
 session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 
-$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]access_requests` (
+$query = "CREATE TABLE IF NOT EXISTS `{$GLOBALS['mysql_prefix']}access_requests` (
   `id` int(6) NOT NULL auto_increment,
   `name` varchar(64) NOT NULL,
   `email` varchar(128) NOT NULL,
@@ -18,7 +18,7 @@ $query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]access_requests` (
   `date` datetime NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";			
-$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query);
 
 function genRandomString() {
 	$length = 8;
@@ -212,8 +212,13 @@ if(!empty($_POST)) {
 	$textStr .= $url . "\r\n\r\n";
 	$textStr .= "Thank you\r\n";
 	$textStr .= "The Administrator\r\n";
-	$query = "INSERT INTO `$GLOBALS[mysql_prefix]access_requests` (name,email,phone,sec_code,reason,date) VALUES('{$_POST['frm_requester']}', '{$_POST['frm_email']}', '{$_POST['frm_phone']}', '{$_POST['frm_sec']}', '{$_POST['frm_reason']}', '{$now}')";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+	$frm_requester = sanitize_string($_POST['frm_requester']);
+	$frm_email = sanitize_string($_POST['frm_email']);
+	$frm_phone = sanitize_string($_POST['frm_phone']);
+	$frm_sec = sanitize_string($_POST['frm_sec']);
+	$frm_reason = sanitize_string($_POST['frm_reason']);
+	$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}access_requests` (name,email,phone,sec_code,reason,date) VALUES(?, ?, ?, ?, ?, ?)";
+	$result = db_query($query, [$frm_requester, $frm_email, $frm_phone, $frm_sec, $frm_reason, $now]);
 	// function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $responder_ids=0, $messageid=NULL, $server=NULL) {
 	do_send($_POST['frm_email'], "", "Tickets Access Request", $textStr, 0, 0, 0, NULL);
 	$output = "Your request has been submitted. You will now receive an email to verify your email address<BR /><BR />";

@@ -102,9 +102,9 @@ tr.heading { background-color: <?php print $hdgb;?>; color: <?php print $hdgt;?>
 <?php
 
 $u_types = array();												// 1/1/09
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 
@@ -115,10 +115,10 @@ $sm_icons = $GLOBALS['sm_icons'];
 
 function get_icon_legend (){			// returns legend string - 1/1/09
 	global $u_types, $sm_icons, $icons;
-	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT DISTINCT `type` FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name`";
+	$result = db_query($query);
 	$print = "";											// output string
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$temp = $u_types[$row['type']];
 		$print .= "\t\t<DIV style='text-align: center; vertical-align: middle; float: left;'>" .$temp[0] . " &raquo; <IMG SRC = './our_icons/" . $icons[$temp[1]] . "' STYLE = 'vertical-align: middle' BORDER=0>&nbsp;&nbsp;&nbsp;</DIV>\n";
 		}

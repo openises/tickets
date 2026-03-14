@@ -24,22 +24,24 @@ require_once('./incs/functions.inc.php');
 
 <?php
 //		dump($_POST);
-		$where = (intval($_POST['user_id']) > 0)? " WHERE `t`.`user_id` = {$_POST['user_id']}" : "";
-		
-		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]courses_taken` `t`
-			LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` ON `u`.`id`=`t`.`user_id` 			
-			LEFT JOIN `$GLOBALS[mysql_prefix]courses` `c` ON `t`.`courses_id`=`c`.`id` 
+		$user_id = sanitize_int($_POST['user_id']);
+		$where = ($user_id > 0)? " WHERE `t`.`user_id` = ?" : "";
+		$params = ($user_id > 0)? [$user_id] : [];
+
+
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}courses_taken` `t`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}user` `u` ON `u`.`id`=`t`.`user_id`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}courses` `c` ON `t`.`courses_id`=`c`.`id`
 			{$where}
 			ORDER BY `u`.`name_l` ASC, `u`.`name_f` ASC, `c`.`group_name` ASC, `c`.`course` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query, $params);
 
-		if (mysql_num_rows($result)==0) {		// no results - get selected userid 
-			$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE `id` = {$_POST['user_id']} LIMIT 1";    			
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		if ($result->num_rows==0) {		// no results - get selected userid
+			$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
+			$result	= db_query($query, [$user_id]);
 			$the_user_str = "";
-			if (mysql_num_rows($result)>0) {		// got a name?
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+			if ($result->num_rows>0) {		// got a name?
+				$row = stripslashes_deep($result->fetch_assoc());
 				$the_user_str = " for {$row['user']}";
 				}
 		
@@ -53,18 +55,18 @@ require_once('./incs/functions.inc.php');
 			echo "<BR /><BR /><TABLE BORDER = 1 ALIGN=CENTER CELLPADDING = 2>
 				<TR CLASS = 'even'><TH COLSPAN=99>Classes Taken - <i><small>as of " . date('M j, y', time()) . "</small></i></TH></TR>";
 			
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+			while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 				if ($row['user_id'] == $this_user ) {$cum_credits += $row['credits'];}
 				else								{$cum_credits = $row['credits']; $this_user = $row['user_id'];}
 				echo "<TR CLASS='{$evenodd[($i+1)%2]}' VALIGN='baseline'>\n\t\t
-					<TD>{$row['name_l']}, {$row['name_f']} {$row['name_mi']}</TD>
-					<TD>{$row['email']}</TD>
-					<TD>{$row['group_name']}</TD>
-					<TD>{$row['course']}</TD>
-					<TD>{$row['ident']}</TD>
-					<TD>{$row['credits']}</TD>
-					<TD>{$cum_credits}</TD>
-					<TD>{$row['date']}</TD>
+					<TD>" . e($row['name_l']) . ", " . e($row['name_f']) . " " . e($row['name_mi']) . "</TD>
+					<TD>" . e($row['email']) . "</TD>
+					<TD>" . e($row['group_name']) . "</TD>
+					<TD>" . e($row['course']) . "</TD>
+					<TD>" . e($row['ident']) . "</TD>
+					<TD>" . e($row['credits']) . "</TD>
+					<TD>" . e($cum_credits) . "</TD>
+					<TD>" . e($row['date']) . "</TD>
 					";
 				$i++;
 				}
@@ -84,9 +86,9 @@ require_once('./incs/functions.inc.php');
 			<OPTION VALUE='' selected>Select</OPTION>
 			<OPTION VALUE='0' >All users</OPTION>
 <?php
-			$query 	= "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";    			
-			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}user` WHERE ((`name_l` IS NOT NULL) AND (LENGTH(`name_l`) > 0)) ORDER BY `name_l` ASC, `name_f` ASC";
+			$result	= db_query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$the_opt = shorten("({$row['user']}) {$row['name_l']}, {$row['name_f']} {$row['name_mi']} ", 48);
 				echo "\t\t<OPTION VALUE='{$row['id']}'>{$the_opt}</OPTION>\n";
 				}				// end while()

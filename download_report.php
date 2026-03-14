@@ -4,6 +4,16 @@ include("./incs/html_to_doc.inc.php");
 $randomnumber = rand(0000000 , 9999999);
 $currDate = date('m,d,Y');
 extract($_GET);
+$report = isset($report) ? sanitize_string($report) : '';
+$func = isset($func) ? sanitize_string($func) : '';
+$date = isset($date) ? sanitize_string($date) : '';
+$ticksel = isset($ticksel) ? sanitize_string($ticksel) : '';
+$respsel = isset($respsel) ? sanitize_string($respsel) : '';
+$organisation = isset($organisation) ? sanitize_string($organisation) : '';
+$startdate = isset($startdate) ? sanitize_string($startdate) : '';
+$enddate = isset($enddate) ? sanitize_string($enddate) : '';
+$title = isset($title) ? sanitize_string($title) : '';
+$mode = isset($mode) ? sanitize_string($mode) : '';
 $httpuser = get_variable('httpuser');
 $httppwd = get_variable('httppwd');
 
@@ -21,7 +31,7 @@ function curPageURL() {
 	}
 	
 $serverpath = curPageURL();
-$url = $serverpath . "/ajax/reports.php?report=$report&func=$func&date=$date&tick_sel=$ticksel&resp_sel=$respsel&organisation=$organisation&startdate=$startdate&enddate=$enddate&dohtml=true&version=$randomnumber";
+$url = $serverpath . "/ajax/reports.php?report=" . urlencode($report) . "&func=" . urlencode($func) . "&date=" . urlencode($date) . "&tick_sel=" . urlencode($ticksel) . "&resp_sel=" . urlencode($respsel) . "&organisation=" . urlencode($organisation) . "&startdate=" . urlencode($startdate) . "&enddate=" . urlencode($enddate) . "&dohtml=true&version=$randomnumber";
 if (function_exists("curl_init")) {
 	$ch = curl_init();
 	$timeout = 20;

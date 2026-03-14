@@ -47,11 +47,11 @@ if (empty($_POST)) {
 	$colors[$GLOBALS['LEVEL_SERVICE_USER']] = 	"#F5F6CE";		// lt yellow
 	$colors[$GLOBALS['LEVEL_FACILITY']] =		"#F3E2A9";		// lt orange
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `email` IS NOT NULL
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `email` IS NOT NULL
 		ORDER BY `level` ASC,`user` ASC" ;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 	$rows = array();
-	while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+	while($row = stripslashes_deep($result->fetch_assoc())){
 		if (is_email($row['email'])) {
 			$rows[] = $row;
 			}
@@ -186,10 +186,10 @@ if (empty($_POST)) {
 					<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-							print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+						$result = db_query($query);
+						while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
+							print "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</OPTION>\n";		// pipe separator
 							}
 ?>
 					</SELECT>

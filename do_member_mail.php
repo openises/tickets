@@ -19,11 +19,11 @@ if (!(empty($_GET))) {
 else {
 //	dump(__LINE__);
 	if (empty($_POST)) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` `m`
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` `m`
 			ORDER BY `m`.`id` ASC" ;
-	
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$no_members = mysql_affected_rows();
+
+		$result = db_query($query);
+		$no_members = db()->affected_rows;
 		$step = 1;
 		} else {
 		$step = $_POST['frm_step'];
@@ -128,12 +128,15 @@ TEXTAREA {FONT-SIZE: 1vw;}
 <?php
 	switch($step) {
 			case 0:
-				$where = (((integer) $_GET['name'])==0)? 
-					" ORDER BY `name` ASC " : 
-					" WHERE `id` = " . quote_smart($_GET['name']) . " LIMIT 1";		 // if id supplied
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` {$where};";		// 
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				if (((integer) $_GET['name'])==0) {
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` ORDER BY `name` ASC;";
+					$result = db_query($query);
+				} else {
+					$get_name = sanitize_int($_GET['name']);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ? LIMIT 1;";
+					$result = db_query($query, [$get_name]);
+				}
+				$row = stripslashes_deep($result->fetch_assoc());
 ?>
 			<BODY scroll='auto' onLoad = "reSizeScr(1); document.mail_form.frm_subj.focus();"><CENTER>
 			<FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
@@ -173,21 +176,21 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				break;
 
 		case 1:
-			$query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]assigns` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-				WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']}		
+			$query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `{$GLOBALS['mysql_prefix']}assigns`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
+				WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']}
 				ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;
-		
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			$no_tickets = mysql_affected_rows();
+
+			$result = db_query($query);
+			$no_tickets = db()->affected_rows;
 			if($no_tickets==1) {
-				$row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC) ;
+				$row = stripslashes_deep($result->fetch_assoc()) ;
 //				dump($row);
 ?>
 				<BODY scroll='auto' onLoad = "document.mail_form_single.submit();">	<!-- 1/12/09 -->
 				<FORM NAME='mail_form_single' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
 				<INPUT TYPE='hidden' NAME='frm_step' VALUE='2'>	<!-- '2' = select units, '3' = send to selected units -->
-				<INPUT TYPE='hidden' NAME='frm_sel_inc' VALUE='<?php print $row['ticket_id'];?>'>	
+				<INPUT TYPE='hidden' NAME='frm_sel_inc' VALUE='<?php print $row['ticket_id'];?>'>
 				</FORM></BODY></HTML>			
 <?php			
 				}
@@ -211,14 +214,14 @@ TEXTAREA {FONT-SIZE: 1vw;}
 		case 2:
 	
 			if ((!array_key_exists ( 'frm_sel_inc', $_POST)) || ($_POST['frm_sel_inc']==0)) {
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` `m`
-					LEFT JOIN `$GLOBALS[mysql_prefix]member_status`	`s` ON (`m`.`field21` = `s`.`id`)
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` `m`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}member_status`	`s` ON (`m`.`field21` = `s`.`id`)
 					WHERE LOCATE('@', `field25`) > 1
 					ORDER BY  `field1` ASC ";
 				}
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			$lines = mysql_affected_rows() +8;
-			$no_rows = mysql_affected_rows();
+			$result = db_query($query);
+			$lines = db()->affected_rows +8;
+			$no_rows = db()->affected_rows;
 ?>
 			<SCRIPT>
 			
@@ -268,7 +271,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				<DIV id='leftcol' style='position: relative; top: 10px; left: 0px; width: 90%; border: 2px outset #707070; padding-left: 10%; padding-top: 5%; text-align: left;'>
 					<DIV style='position: relative: left: 10%; top: 5%; width: 90%; max-height: 400px; overflow-y: scroll; overflow-x: none;' >
 <?php
-						while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+						while($row = stripslashes_deep($result->fetch_assoc())){
 							$nickname = ($row['field6'] != "") ? $row['field6'] : "&nbsp;"; 
 ?>
 							<SPAN STYLE='background-color:#F0F0F0; color:blue; display: inline; width: 80%;'>

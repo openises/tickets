@@ -96,21 +96,26 @@ if (empty($_POST)) {
 	
 <?php
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ";		// (array_key_exists('first', $search_array)) 
-	$query .= (array_key_exists('fac_id', $_GET))? " WHERE `id` = " . quote_smart(trim($_GET['fac_id'])) . " LIMIT 1": " WHERE `contact_email` != '' OR `security_email` != ''";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if (array_key_exists('fac_id', $_GET)) {
+		$fac_id = sanitize_int($_GET['fac_id']);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$fac_id]);
+	} else {
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `contact_email` != '' OR `security_email` != ''";
+		$result = db_query($query);
+	}
 //	dump($query);
 ?>
-	<BODY onLoad = "reSizeScr(<?php print mysql_affected_rows();?>)"><CENTER>		<!-- 1/12/09 -->
+	<BODY onLoad = "reSizeScr(<?php print db()->affected_rows;?>)"><CENTER>		<!-- 1/12/09 -->
 
 	<CENTER>		<!-- 1/12/09 -->
 	<CENTER><H3>Mail Facilities </H3>
 <?php
 	$i = 0;
-	if (mysql_affected_rows()>0) {
+	if (db()->affected_rows>0) {
 		print "<FORM NAME='mail_form' METHOD='post' ACTION='" . basename(__FILE__) . "'>\n";
 		print "<TABLE BORDER = 0 ALIGN='center'>\n";
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while($row = stripslashes_deep($result->fetch_assoc())) {
 			if (is_email($row['contact_email'])) {
 				print "<TR CLASS = '{$evenodd[($i%2)]}'><TD><INPUT TYPE='checkbox' NAME='cb{$i}' VALUE='{$row['contact_email']}' CHECKED></TD>
 					<TD>{$row['name']}</TD><TD>{$row['contact_name']}</TD><TD>{$row['contact_email']}</TD><TD></TD></TR>\n";

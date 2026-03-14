@@ -24,13 +24,13 @@ $tickets_dir = getcwd();
 <?php
 
 function module_tabs_exist($name) {
-	$query 		= "SELECT COUNT(*) FROM `$GLOBALS[mysql_prefix]modules`";
-	$result 	= mysql_query($query);
-	$num_rows 	= @mysql_num_rows($result);
+	$query 		= "SELECT COUNT(*) FROM `{$GLOBALS['mysql_prefix']}modules`";
+	$result 	= db_query($query);
+	$num_rows 	= @$result->num_rows;
 	if($num_rows) {
-		$query_exists	= "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_name`=\"{$name}\"";
-		$result_exists	= mysql_query($query_exists) or do_error($query_exists, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$num_rows = mysql_num_rows($result_exists);
+		$query_exists	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`=?";
+		$result_exists	= db_query($query_exists, [$name]);
+		$num_rows = $result_exists->num_rows;
 		if($num_rows != 0) {
 			return 1;
 		} else {
@@ -43,8 +43,8 @@ function module_tabs_exist($name) {
 	
 function mod_table_exists($tablename) {			//check if mysql table exists, if it's a re-install
 	$query 		= "SELECT COUNT(*) FROM $tablename";
-	$result 	= mysql_query($query);
-	$num_rows 	= @mysql_num_rows($result);
+	$result 	= db_query($query);
+	$num_rows 	= @$result->num_rows;
 	if($num_rows) {
 		return 1;
 	} else {
@@ -54,7 +54,7 @@ function mod_table_exists($tablename) {			//check if mysql table exists, if it's
 	
 
 if (isset($_POST['module_choice'])) { // Handle the form.
-//	$query_exists	= "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_name`=\"{$name}\"";
+//	$query_exists	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`=\"{$name}\"";
 //	$result_exists	= mysql_query($query_exists) or do_error($query_exists, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 //	$num_rows = mysql_num_rows($result_exists);
 ?>
@@ -79,10 +79,10 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 
 <?php	
 } elseif (isset($_POST['confirmation'])) { // If form not submitted print form.
-	$mod_name = $_POST['confirmation'];
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_name`= '$mod_name'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$row = mysql_fetch_assoc($result);
+	$mod_name = sanitize_string($_POST['confirmation']);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`= ?";
+	$result	= db_query($query, [$mod_name]);
+	$row = $result->fetch_assoc();
 	$module_name = $row['mod_name'];
 	$table = $row['table'];	
 
@@ -106,8 +106,8 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 	Deleting Tickets Module........<?php print $_POST['confirmation'];?><BR /><BR />
 	Dropping Table........<?php print $table;?>...........	
 <?php	
-	$query	= "DROP table `$GLOBALS[mysql_prefix]" . $table ."`";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	$query	= "DROP table `{$GLOBALS['mysql_prefix']}" . $table ."`";
+	$result	= db_query($query);
 	if($result) {
 		print "Success<BR />";
 		} else {
@@ -127,8 +127,8 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 ?>
 	Removing Entry from Modules Table..........
 <?php
-	$query	= "DELETE FROM `$GLOBALS[mysql_prefix]modules` WHERE `mod_name`= '$mod_name'";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+	$query	= "DELETE FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`= ?";
+	$result	= db_query($query, [$mod_name]);
 	if($result) {
 		print "Success<BR />";
 		} else {
@@ -142,14 +142,14 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 
 } else {
 
-	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]modules`";
-	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-	$num = mysql_num_rows($result);
+	$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules`";
+	$result	= db_query($query);
+	$num = $result->num_rows;
 
-	
+
 	$choice = "<SELECT name='module_choice' >";
 	$choice .= "<OPTION style='color:#FFFF00; background-color:#CC0000;' selected>Select Module to Delete</OPTION>";
-	while ($row = mysql_fetch_assoc($result)) {
+	while ($row = $result->fetch_assoc()) {
 		$module_name = $row['mod_name'];
 		$table = $row['table'];
 		$choice .= "<OPTION VALUE='$module_name'>$module_name</OPTION>";

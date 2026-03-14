@@ -15,7 +15,7 @@ $css_count = count($css);
 if(empty($_POST)) {
 	$connect = mysql_connect($mysql_host, $mysql_user, $mysql_passwd);
 	$db_selected = mysql_select_db($mysql_db);
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]css_day`";
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}css_day`";
 	$result = mysql_query($query);
 	if($result) {
 		while ($row = mysql_fetch_assoc($result)){
@@ -81,7 +81,7 @@ function get_variable($which){
 	$connect = mysql_connect($mysql_host, $mysql_user, $mysql_passwd);
 	$db_selected = mysql_select_db($mysql_db);
 	if (empty($variables)) {
-		$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]settings`");
+		$result = mysql_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings`");
 		if($result) {
 			while ($row = mysql_fetch_assoc($result)) {
 				$name = $row['name']; $value=$row['value'] ;
@@ -684,7 +684,7 @@ if(empty($_GET)) {
 		$existingDataCount = 0;
 		$db_selected = mysql_select_db($_POST['ticketsdb']);
 		for($i = 0; $i < $tableCount; $i++) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]" . $tables[$i] . "`";
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $tables[$i] . "`";
 			$result = mysql_query($query);
 			if($result && mysql_num_rows($result) > 0) {
 				$existingDataCount++;
@@ -822,7 +822,7 @@ if(empty($_GET)) {
 			$db_selected = mysql_select_db($_POST['ticketsdb']);
 			if($db_selected) {
 				for($i = 0; $i < $tableCount; $i++) {
-					$query = "DROP TABLE `$GLOBALS[mysql_prefix]" . $tables[$i] . "`";
+					$query = "DROP TABLE `{$GLOBALS['mysql_prefix']}" . $tables[$i] . "`";
 					$result = mysql_query($query);
 					if($result) {
 						$output = $_POST['ticketsdb'] . " Database " . $tables[$i] . " Table dropped successfully<BR />";

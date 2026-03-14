@@ -7,19 +7,18 @@ error_reporting(E_ALL);		// 10/1/08
 @session_start();	
 session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
-extract($_GET);
-$theName = base64_decode($nx);
-$theEmail = base64_decode($ex);
-$theSec = base64_decode($sx);
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]access_requests` WHERE `name` = '" . $theName . "' AND `email` = '" . $theEmail . "' AND `sec_code` = '" . $theSec . "' LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-$rows = mysql_num_rows($result);
+$theName = isset($_GET['nx']) ? base64_decode($_GET['nx']) : '';
+$theEmail = isset($_GET['ex']) ? base64_decode($_GET['ex']) : '';
+$theSec = isset($_GET['sx']) ? base64_decode($_GET['sx']) : '';
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}access_requests` WHERE `name` = ? AND `email` = ? AND `sec_code` = ? LIMIT 1";
+$result = db_query($query, [$theName, $theEmail, $theSec]);
+$rows = $result->num_rows;
 if($rows > 0) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = stripslashes_deep($result->fetch_assoc());
 	$success = true;
 	$theID = $row['id'];
-	$query1	= "DELETE FROM `$GLOBALS[mysql_prefix]access_requests` WHERE `id` = " . $theID;
-	$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+	$query1	= "DELETE FROM `{$GLOBALS['mysql_prefix']}access_requests` WHERE `id` = ?";
+	$result1 = db_query($query1, [$theID]);	
 	$theText = "Thank you, your request has been submitted<BR />";
 	} else {
 	$success = false;

@@ -71,12 +71,12 @@ if ((!(empty($_GET))) && (array_key_exists('name', $_GET))) {	//	10/23/12
 	} else {
 //	dump(__LINE__);
 	if (empty($_POST)) {
-		$query = "SELECT DISTINCT `ticket_id` , scope, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]assigns` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
+		$query = "SELECT DISTINCT `ticket_id` , scope, `ticket_id` AS `incident` FROM `{$GLOBALS['mysql_prefix']}assigns`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
 			WHERE `status` = {$GLOBALS['STATUS_OPEN']} OR  `status` = {$GLOBALS['STATUS_OPEN']}
 			ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;				// 4/28/10
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$no_open_tickets = mysql_affected_rows();
+		$result = db_query($query);
+		$no_open_tickets = db()->affected_rows;
 		if($no_open_tickets==0) {			// 6/28/09
 			$step = 2;
 			} else {
@@ -281,12 +281,15 @@ TEXTAREA {FONT-SIZE: 1vw;}
 <?php
 	switch($step) {
 			case 0:
-				$where = (((integer) $_GET['name'])==0)? 
-					" ORDER BY `name` ASC " : 
-					" WHERE `id` = {$_GET['name']} LIMIT 1";		 // if id supplied
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` {$where};";		// 
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+				if (((integer) $_GET['name']) == 0) {
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name` ASC;";
+					$result = db_query($query);
+				} else {
+					$get_name = sanitize_int($_GET['name']);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1;";
+					$result = db_query($query, [$get_name]);
+				}
+				$row = stripslashes_deep($result->fetch_assoc());
 				$smsg_ids = (isset($row['smsg_id'])) ? $row['smsg_id'] : "";			
 ?>
 			<BODY scroll='auto' onLoad = "reSizeScr(1); document.mail_form.frm_subj.focus();"><CENTER>
@@ -328,9 +331,9 @@ TEXTAREA {FONT-SIZE: 1vw;}
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-							$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-							$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-							while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) {
+							$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+							$result2 = db_query($query2);
+							while ($row2 = stripslashes_deep($result2->fetch_assoc())) {
 								print "\t<OPTION VALUE='{$row2['code']}'>{$row2['code']}|{$row2['text']}</OPTION>\n";		// pipe separator
 								}
 ?>
@@ -398,15 +401,15 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				break;
 
 		case 1:
-			$query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]assigns` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-				WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']}	
+			$query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `{$GLOBALS['mysql_prefix']}assigns`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
+				WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']}
 				ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;				// 4/28/10
-		
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			$no_tickets = mysql_affected_rows();
+
+			$result = db_query($query);
+			$no_tickets = db()->affected_rows;
 			if($no_tickets==1) {
-				$row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC) ;
+				$row = stripslashes_deep($result->fetch_assoc()) ;
 //				dump($row);
 ?>
 				<BODY scroll='auto' onLoad = "document.mail_form_single.submit();">	<!-- 1/12/09 -->
@@ -432,7 +435,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				print "<EM>". get_text("Units"). " assigned to ". get_text("Incident") . "</EM>: 
 					<SELECT NAME='frm_sel_inc' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;'>\n\t
 					<OPTION VALUE=0 SELECTED>All incidents </OPTION>\n";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+				while($row = stripslashes_deep($result->fetch_assoc())){
 					$bg_color = $bg_colors_arr[$row['severity']];
 					if(!(empty($row['scope']))) {				// 6/28/09
 						print "\t<OPTION VALUE='{$row['incident']}' STYLE='background-color:{$bg_color}; color:black;' >{$row['scope']} </OPTION>\n";
@@ -453,58 +456,63 @@ TEXTAREA {FONT-SIZE: 1vw;}
 
 		case 2:													// 9/19/10
 //			dump(__LINE__);
-			$tik_id = ((isset($_GET['the_ticket'])) && ($_GET['the_ticket'] != 0)) ? $_GET['the_ticket'] : 0;	//	10/23/12
-			$t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`	FROM `$GLOBALS[mysql_prefix]ticket` `t`	WHERE `id` = {$tik_id} LIMIT 1";
-			$t_result = mysql_query($t_query) or do_error($t_query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			$t_row = stripslashes_deep(mysql_fetch_assoc($t_result), MYSQL_ASSOC);			
+			$tik_id = ((isset($_GET['the_ticket'])) && ($_GET['the_ticket'] != 0)) ? sanitize_int($_GET['the_ticket']) : 0;	//	10/23/12
+			$t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`	WHERE `id` = ? LIMIT 1";
+			$t_result = db_query($t_query, [$tik_id]);
+			$t_row = stripslashes_deep($t_result->fetch_assoc());			
 			$assigned_resp = array();			
 			$default_msg = "Ticket ID *" . $tik_id . "*";	//	10/23/12
 			if ((!array_key_exists ( 'frm_sel_inc', $_POST)) || ($_POST['frm_sel_inc']==0)) {
 				$default_msg = "Ticket ID *" . $tik_id . "*";	//	10/23/12
-				$query_ass = "SELECT *, 
+				$query_ass = "SELECT *,
 					`r`.`id` AS `responder_id`
-					FROM `$GLOBALS[mysql_prefix]assigns` `a`
-					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`a`.`responder_id` = `r`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	 `s` ON (`r`.`un_status_id` = `s`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
-					WHERE `ticket_id` = {$tik_id} 
-					AND (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> '')) 
+					FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	 `r` ON (`a`.`responder_id` = `r`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status`	 `s` ON (`r`.`un_status_id` = `s`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
+					WHERE `ticket_id` = ?
+					AND (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> ''))
 					AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
-					ORDER BY `r`.`id` ASC ";	//	10/23/12			
-				$result_ass = mysql_query($query_ass) or do_error($query_ass, 'mysql query failed', mysql_error(), __FILE__, __LINE__);				
-				while($row_ass = stripslashes_deep(mysql_fetch_assoc($result_ass), MYSQL_ASSOC)){
+					ORDER BY `r`.`id` ASC ";	//	10/23/12
+				$result_ass = db_query($query_ass, [$tik_id]);
+				while($row_ass = stripslashes_deep($result_ass->fetch_assoc())){
 					$assigned_resp[] = $row_ass['responder_id'];
 					}
 			
 				$query = "SELECT *,	`r`.`id` AS `responder_id`,
 					`r`.`lat` AS `r_lat`,
-					`r`.`lng` AS `r_lng`				
-					FROM `$GLOBALS[mysql_prefix]responder` `r`
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	`s` ON (`r`.`un_status_id` = `s`.`id`)
+					`r`.`lng` AS `r_lng`
+					FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status`	`s` ON (`r`.`un_status_id` = `s`.`id`)
 					WHERE LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> '')
 					ORDER BY  `name` ASC ";	//	10/23/12
 //			dump(__LINE__);
 //			dump($step);
 				} else {												// 7/1/10 - 9/19/10
+				$frm_sel_inc = sanitize_int($_POST['frm_sel_inc']);
 				$query = "SELECT *, `r`.`id` AS `responder_id`,
 					`t`.`lat` AS `t_lat`,
 					`t`.`lng` AS `t_lng`,
 					`r`.`lat` AS `r_lat`,
 					`r`.`lng` AS `r_lng`
-					FROM `$GLOBALS[mysql_prefix]assigns` `a`
-					LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`a`.`responder_id` = `r`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	 `s` ON (`r`.`un_status_id` = `s`.`id`)
-					LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
-					WHERE `ticket_id` = {$_POST['frm_sel_inc']} AND (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> ''))
+					FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	 `r` ON (`a`.`responder_id` = `r`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status`	 `s` ON (`r`.`un_status_id` = `s`.`id`)
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
+					WHERE `ticket_id` = ? AND (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> ''))
 					AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 					ORDER BY `name` ASC ";	//	10/23/12
 //			dump(__LINE__);
-				$tik_id = $_POST['frm_sel_inc'];
+				$tik_id = $frm_sel_inc;
 				$default_msg = "Ticket ID *" . $tik_id . "*";	//	10/23/12
 				}
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			$lines = mysql_affected_rows() +8;
-			$no_rows = mysql_affected_rows();
+			if ((!array_key_exists('frm_sel_inc', $_POST)) || ($_POST['frm_sel_inc']==0)) {
+				$result = db_query($query);
+			} else {
+				$result = db_query($query, [$frm_sel_inc]);
+			}
+			$lines = db()->affected_rows +8;
+			$no_rows = db()->affected_rows;
 ?>
 			<SCRIPT>
 			
@@ -559,7 +567,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
 				if($no_rows>0) {
 					$the_arr = array();
 					$n=1;
-					while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){	//	create an array from the result row
+					while($row = stripslashes_deep($result->fetch_assoc())){	//	create an array from the result row
 						$smsg_arr = array();
 						$temp_arr = array();
 						$temp_smsg = get_smsgid($row['responder_id']);
@@ -687,9 +695,9 @@ TEXTAREA {FONT-SIZE: 1vw;}
 					<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 //					dump(__LINE__);
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+					$result = db_query($query);
+					while ($row = stripslashes_deep($result->fetch_assoc())) {
 						print "\t<OPTION VALUE='{$row['code']}'>{$row['code']}|{$row['text']}</OPTION>\n";
 
 						}
@@ -744,7 +752,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
 <?php
 				print "</TABLE></TD></TR></TABLE></FORM><BR />";
 				
-				} else {		// end if(mysql_affected_rows()>0)		
+				} else {		// end if(db()->affected_rows>0)		
 ?>
 				<H3>No addresses available!</H3>
 					<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="window.close();"><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>

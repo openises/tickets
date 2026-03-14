@@ -31,10 +31,10 @@ require_once($_SESSION['fip']);		//7/28/10
 //dump($_POST);
 
 if (empty($_POST)) {
-	$id = quote_smart(trim($_GET['the_id']));
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id . " LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = mysql_fetch_assoc($result);
+	$id = sanitize_int($_GET['the_id']);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 ?>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>

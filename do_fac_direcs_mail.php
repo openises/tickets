@@ -47,9 +47,10 @@ if (empty($_POST) || $display_form) {
 	if(array_key_exists('subject', $_GET)) {
 		$mail_subject = $_GET['subject'];
 		}
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = $unit_id";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+	$unit_id = sanitize_int($unit_id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$unit_id]);
+	while ($row = stripslashes_deep($result->fetch_array())) {
 		$contact_email = $row['contact_via'];
 		$contact_name = $row['contact_name'];
 		$smsg_id = $row['smsg_id'];
