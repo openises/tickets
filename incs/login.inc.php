@@ -28,9 +28,8 @@ function userlist(){		/* list users */
 	global $colors;
 	$ary = array();
 	$output = "";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` ORDER BY `u`.`user` ASC ";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	if (mysql_num_rows($result)==0) 	 {
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` ORDER BY `u`.`user` ASC");
+	if (!$result || $result->num_rows == 0) {
 		print '<B>[no users found]</B><BR />';
 		return;
 		}
@@ -41,7 +40,7 @@ function userlist(){		/* list users */
 	$output .= "<TR CLASS='even'>";
 	$output .= "<TD CLASS='heading' COLSPAN='99' ALIGN='center'>Users Currently or recently online</TD></TR>";
 	$i=0;
-	while($row = stripslashes_deep(mysql_fetch_array($result))) {
+	while($row = stripslashes_deep($result->fetch_array())) {
 		$level = get_level_text($row['level']);
 		$lastlogintime = format_date_2(mysql_format_date(strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
 		$isonline = ($row['expires'] > $now) ? true: false;
@@ -68,16 +67,17 @@ function do_logout($return=FALSE){						/* logout - destroy session data */
 	@session_start();
  	$_SESSION['expires'] = 0;
 	if (array_key_exists ('user_id', $_SESSION)) {			// 7/27/10 - 8/10/10
-		$query = "DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_RESERVED']} AND `_by` = {$_SESSION['user_id']};";	//8/10/10
-		$result = mysql_query($query);
+		db_query(
+			"DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?",
+			[sanitize_int($GLOBALS['STATUS_RESERVED']), sanitize_int($_SESSION['user_id'])]
+		);
 		}
 	$sid = session_id();
 												// 1/8/10
-	$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET
-		`sid` = NULL,
-		`expires` = NULL
-		WHERE `$GLOBALS[mysql_prefix]user`.`sid` = '{$sid}' LIMIT 1 ;";	 // 8/10/10
-	$result = mysql_query($query);				// toss any error
+	db_query(
+		"UPDATE `{$GLOBALS['mysql_prefix']}user` SET `sid` = NULL, `expires` = NULL WHERE `sid` = ? LIMIT 1",
+		[$sid]
+	);
 	$browser = checkBrowser(FALSE);
 	$the_id = array_key_exists ('user_id', $_SESSION)? $_SESSION['user_id'] : 0;	// possibly already logged out
 	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $browser);								// log this logout
@@ -173,11 +173,15 @@ function set_filenames($internet, $userchoice) {
 
 function is_expired($id) {		// returns boolean
 	$now = time() - (intval(get_variable('delta_mins'))*60);
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$id} LIMIT 1;";
-	$result = mysql_query($query);
-	$row = @stripslashes_deep(mysql_fetch_assoc($result));
-	$expires = ($row && array_key_exists('expires', $row) && !is_null($row['expires'])) ? strtotime($row['expires']) : 0;
-	return ((mysql_num_rows($result)==1) && ($expires > $now));
+	$id = sanitize_int($id);
+	$row = db_fetch_one(
+		"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1",
+		[$id]
+	);
+	if (!$row) return false;
+	$row = stripslashes_deep($row);
+	$expires = (array_key_exists('expires', $row) && !is_null($row['expires'])) ? strtotime($row['expires']) : 0;
+	return ($expires > $now);
 	}
 
 function redir($url, $time = 0) {
@@ -186,13 +190,11 @@ function redir($url, $time = 0) {
 	}
 
 function dupe_user($id, $ip) {
-	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user` = " . $id . " AND `_from` != '" . $ip . "' LIMIT 1";
-	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) == 1) {
-		return true;
-		} else {
-		return false;
-		}
+	$row = db_fetch_one(
+		"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? AND `_from` != ? LIMIT 1",
+		[$id, $ip]
+	);
+	return ($row !== null);
 	}
 
 function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09,	1/30/14
@@ -214,8 +216,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			}
 		$the_date = mysql_format_date($expiry) ;
 		$sess_key = session_id();										// not expired
-		$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `expires`= '{$the_date}' WHERE `sid` = '{$sess_key}' LIMIT 1";
-		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		db_query(
+			"UPDATE `{$GLOBALS['mysql_prefix']}user` SET `expires` = ? WHERE `sid` = ? LIMIT 1",
+			[$the_date, $sess_key]
+		);
 		$_SESSION['expires'] = $expiry;
 		$userchoice = $_SESSION['maps_sh'];
 		$warn = "";
@@ -228,16 +232,14 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			$userchoice = $_POST['frm_maps'];
 			$categories = array();													// 3/15/11
 //			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";	// 3/15/11
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ISNULL (`clear`)";	// 12/2/2021
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$num_disp = mysql_num_rows($result);	//
+			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ISNULL (`clear`)");
+			$num_disp = $result ? $result->num_rows : 0;
 			if(($num_disp > 0) && ($hide_dispatched == 1)) { $category_butts[0] = "Deployed"; $i=1; } else { $i=0; }
 
 			if($hide_status_groups == 1) {	// 3/15/11
-				$query = "SELECT DISTINCT `group` FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `group` ASC";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				$result = db_query("SELECT DISTINCT `group` FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC");
 
-				while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				while ($result && $row = stripslashes_deep($result->fetch_assoc())) {
 					$categories[$i] = $row['group'];
 					$i++;
 					}
@@ -250,9 +252,8 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 
 			$fac_categories = array();
 			$i=0;
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `name` ASC";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `name` ASC");
+			while ($result && $row = stripslashes_deep($result->fetch_assoc())) {
 				$fac_categories[$i] = $row['name'];
 				$i++;
 				}
@@ -268,9 +269,18 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			$result = mysql_stmt_get_result($stmt);
 			$row = mysql_fetch_assoc($result);
 			mysql_stmt_close($stmt);
-			$authenticated = $row && (password_verify($login_passwd, $row['passwd'])
-				|| $row['passwd'] === md5(strtolower($login_passwd))
-				|| $row['passwd'] === md5($login_passwd));
+			$auth_result = $row ? verify_password($login_passwd, $row['passwd']) : ['valid' => false, 'needs_rehash' => false];
+			$authenticated = $auth_result['valid'];
+
+			// Auto-rehash legacy MD5 passwords to bcrypt on successful login
+			if ($authenticated && $auth_result['needs_rehash']) {
+				$new_hash = hash_password($login_passwd);
+				db_query(
+					"UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd` = ? WHERE `id` = ? LIMIT 1",
+					[$new_hash, $row['id']]
+				);
+			}
+
             if ( $authenticated ) {
 				$row = stripslashes_deep($row);
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
@@ -651,9 +661,11 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
 		$my_click = ($_SERVER["HTTP_HOST"] == "127.0.0.1")? " onClick = \"document.login_form.frm_user.value='admin';document.login_form.frm_passwd.value='admin';\"" : "" ;
 //	6/1/12
-		$query_guest 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user`='guest' LIMIT 1";
-		$result_guest = mysql_query($query_guest) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$guest_exists =  (mysql_num_rows($result_guest)==1);
+		$result_guest = db_query(
+			"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1",
+			['guest']
+		);
+		$guest_exists = ($result_guest && $result_guest->num_rows == 1);
 
 // End of code to check for guest account existence
 ?>
@@ -763,8 +775,8 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'frm_maps' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'frm_daynight' VALUE=''>
-		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
-		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE=<?php print $no_autoforward; ?>>
+		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print e($temp); ?>">
+		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE="<?php print e($no_autoforward); ?>">
 		</FORM><BR /><BR />
 		</DIV>
 		</CENTER>
