@@ -198,6 +198,8 @@ if( !extension_loaded('mysql') ){
 	}
 require_once('istest.inc.php');
 require_once('mysql.inc.php');
+require_once(__DIR__ . '/db.inc.php');          // Secure database abstraction layer
+require_once(__DIR__ . '/security.inc.php');    // Security helpers (XSS, CSRF, etc.)
 require_once("phpcoord.php");				// UTM converter
 require_once("usng.inc.php");				// USNG converter 9/12/08
 require_once("browser.inc.php");			// added 1/23/10
