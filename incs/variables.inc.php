@@ -39,7 +39,7 @@ $un_stat_cats = get_all_categories();
 $guest = (is_guest()) ? 1 : 0;
 $mapzooms = array();
 $dir = '../_osm/tiles';
-$mapdir = scandir($dir);
+$mapdir = is_dir($dir) ? scandir($dir) : [];
 foreach($mapdir as $val) {
 	if($val <> "." && $val <> "..") {
 		if(is_dir('../_osm/tiles/' . $val)) {
