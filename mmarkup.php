@@ -423,64 +423,88 @@ extract($_POST);
 		if ($_getgoedit == 'true') {
 			$line_status = (trim($_POST['rb_line_is_vis'])=='on')?  0: 1;
 			$line_width = ($_POST['frm_line_type']=="b") ? $_POST['frm_font_size'] : $_POST['frm_line_width'];
-			$query = "UPDATE `{$tablename}` SET 
-				`line_name` = " . 		quote_smart(trim($_POST['frm_name'])) .",
-				`line_ident` = " . 		quote_smart(trim($_POST['frm_ident'])) .",
-				`line_cat_id` = " . 	quote_smart(trim($_POST['frm_line_cat_id'])) .",
-				`line_status` = 		'{$line_status}',
-				`line_type` = " . 		quote_smart(trim($_POST['frm_line_type'])) .",
-				`line_data` = " .  		quote_smart(trim($_POST['frm_line_data'])) .",
-				`use_with_bm` = " .  	quote_smart(trim($_POST['frm_use_with_bm'])) .",
-				`use_with_r` = " .  	quote_smart(trim($_POST['frm_use_with_r'])) .",
-				`use_with_f` = " .  	quote_smart(trim($_POST['frm_use_with_f'])) .",
-				`use_with_u_ex` = " .  	quote_smart(trim($_POST['frm_use_with_u_ex'])) .",
-				`use_with_u_rf` = " .  	quote_smart(trim($_POST['frm_use_with_u_rf'])) .",			
-				`line_color` = " .  	quote_smart(trim($_POST['frm_line_color'])) .",
-				`line_opacity` = " .  	quote_smart(trim($_POST['frm_line_opacity'])) .",
-				`filled` = " .  		quote_smart(trim($_POST['frm_filled'])) .",
-				`fill_color` = " .  	quote_smart(trim($_POST['frm_fill_color'])) .",
-				`fill_opacity` = " .  	quote_smart(trim($_POST['frm_fill_opacity'])) .",
-				`line_width` = " .  	quote_smart(trim($line_width)) .",
-				`_by` =   				'{$by}' ,
-				`_from` =	 			'{$from}' ,
-				`_on` =   				'{$now}'
-				WHERE `id` = 			" . intval($_POST['frm_id']);
-			$result = db_query($query);
+			$query = "UPDATE `{$tablename}` SET
+				`line_name` = ?,
+				`line_ident` = ?,
+				`line_cat_id` = ?,
+				`line_status` = ?,
+				`line_type` = ?,
+				`line_data` = ?,
+				`use_with_bm` = ?,
+				`use_with_r` = ?,
+				`use_with_f` = ?,
+				`use_with_u_ex` = ?,
+				`use_with_u_rf` = ?,
+				`line_color` = ?,
+				`line_opacity` = ?,
+				`filled` = ?,
+				`fill_color` = ?,
+				`fill_opacity` = ?,
+				`line_width` = ?,
+				`_by` = ?,
+				`_from` = ?,
+				`_on` = ?
+				WHERE `id` = ?";
+			$result = db_query($query, [
+				trim($_POST['frm_name']),
+				trim($_POST['frm_ident']),
+				trim($_POST['frm_line_cat_id']),
+				$line_status,
+				trim($_POST['frm_line_type']),
+				trim($_POST['frm_line_data']),
+				trim($_POST['frm_use_with_bm']),
+				trim($_POST['frm_use_with_r']),
+				trim($_POST['frm_use_with_f']),
+				trim($_POST['frm_use_with_u_ex']),
+				trim($_POST['frm_use_with_u_rf']),
+				trim($_POST['frm_line_color']),
+				trim($_POST['frm_line_opacity']),
+				trim($_POST['frm_filled']),
+				trim($_POST['frm_fill_color']),
+				trim($_POST['frm_fill_opacity']),
+				trim($line_width),
+				$by,
+				$from,
+				$now,
+				intval($_POST['frm_id'])
+			]);
 			$caption = "<B>Map Markup <i> " . stripslashes_deep($_POST['frm_name']) . "</i>' data has been updated </B><BR /><BR />";
 			}
 		}				// end else {}
 
 	if ($_getgoadd == 'true') {
 		$line_width = ($_POST['frm_line_type']=="b") ? $_POST['frm_font_size'] : $_POST['frm_line_width'];
-		$filled =		(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_filled'])) ; 
-		$fill_color =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_color'])) ; 
-		$fill_opacity =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_opacity'])) ; 
-		$query = "INSERT INTO `{$tablename}` (`line_name`, `line_ident`, `line_cat_id`, `line_status`, `line_type`, `line_data`, `use_with_bm`, `use_with_r`, `use_with_f`, `use_with_u_ex`, `use_with_u_rf`, `line_color`, `line_opacity`, `filled`, `fill_color`, `fill_opacity`,`line_width`,
-		`_by`, `_from`, `_on`) 
-			VALUES (" .
-			 quote_smart(trim($_POST['frm_name'])) ."," .
-			 quote_smart(trim($_POST['frm_ident'])) ."," .
-			 quote_smart(trim($_POST['frm_line_cat_id'])) ."," .
-			 quote_smart(trim($_POST['frm_line_status'])) ."," .
-			 quote_smart(trim($_POST['frm_line_type'])) ."," .
-			 quote_smart(trim($_POST['frm_line_data'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_bm'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_r'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_f'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_u_ex'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_u_rf'])) ."," .			 
-			 quote_smart(trim($_POST['frm_line_color'])) ."," .
-			 quote_smart(trim($_POST['frm_line_opacity'])) ."," .
-			 $filled ."," .
-			 $fill_color ."," .
-			 $fill_opacity ."," .
-			 quote_smart(trim($line_width)) ."," .
-			 quote_smart($by) ."," .
-			 quote_smart($from) ."," .
-			 quote_smart(trim($now)) . ")" ;
+		$is_type_t = (trim($_POST['frm_line_type']) == "t");
+		$filled =		$is_type_t ? null : trim($_POST['frm_filled']);
+		$fill_color =	$is_type_t ? null : trim($_POST['frm_fill_color']);
+		$fill_opacity =	$is_type_t ? null : trim($_POST['frm_fill_opacity']);
+		$query = "INSERT INTO `{$tablename}` (`line_name`, `line_ident`, `line_cat_id`, `line_status`, `line_type`, `line_data`, `use_with_bm`, `use_with_r`, `use_with_f`, `use_with_u_ex`, `use_with_u_rf`, `line_color`, `line_opacity`, `filled`, `fill_color`, `fill_opacity`, `line_width`,
+		`_by`, `_from`, `_on`)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		$result = db_query($query);
-		$insert_id = db()->insert_id;
+		$result = db_query($query, [
+			trim($_POST['frm_name']),
+			trim($_POST['frm_ident']),
+			trim($_POST['frm_line_cat_id']),
+			trim($_POST['frm_line_status']),
+			trim($_POST['frm_line_type']),
+			trim($_POST['frm_line_data']),
+			trim($_POST['frm_use_with_bm']),
+			trim($_POST['frm_use_with_r']),
+			trim($_POST['frm_use_with_f']),
+			trim($_POST['frm_use_with_u_ex']),
+			trim($_POST['frm_use_with_u_rf']),
+			trim($_POST['frm_line_color']),
+			trim($_POST['frm_line_opacity']),
+			$filled,
+			$fill_color,
+			$fill_opacity,
+			trim($line_width),
+			$by,
+			$from,
+			trim($now)
+		]);
+		$insert_id = db_insert_id();
 		$caption = "<B>Map Markup <i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been applied </B><BR /><BR />";
 		}							// end if ($_getgoadd == 'true')
 

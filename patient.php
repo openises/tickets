@@ -257,7 +257,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='$_GET[ticket_id]' LIMIT 1")) {
+		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=? LIMIT 1", [$_GET['ticket_id']])) {
 			print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
 			} else {
 			$_POST['frm_description'] = strip_html($_POST['frm_description']); 				//fix formatting, custom tags etc.
@@ -265,39 +265,41 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$post_frm_meridiem_asof = empty($_POST['frm_meridiem_asof'])? "" : $_POST['frm_meridiem_asof'] ;
 			$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$post_frm_meridiem_asof";
 															//  8/15/10	
-     		$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}patient` WHERE 
-     			`description` =	'" . addslashes($_POST['frm_description']) . "' AND
-     			`ticket_id` =	'{$_GET['ticket_id']}' AND
-     			`user` =		'{$_SESSION['user_id']}' AND
-     			`action_type` =	'{$GLOBALS['ACTION_COMMENT']}' AND 
-     			`name` = 		'" . addslashes($_POST['frm_name']) . "' AND 
-     			`updated` =		'{$frm_asof}' LIMIT 1";
-     			
-			$result	= db_query($query);
+     		$query 	= "SELECT * FROM  `{$GLOBALS['mysql_prefix']}patient` WHERE
+     			`description` =	? AND
+     			`ticket_id` =	? AND
+     			`user` =		? AND
+     			`action_type` =	? AND
+     			`name` = 		? AND
+     			`updated` =		? LIMIT 1";
+
+			$result	= db_query($query, [$_POST['frm_description'], $_GET['ticket_id'], $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $_POST['frm_name'], $frm_asof]);
 			if (db()->affected_rows==0) {		// not a duplicate - 8/15/10
 
+				$ins_params = [];
 				if ((array_key_exists ('frm_fullname', $_POST))) {		// 6/22/11
 					$ins_data = "
-						`fullname`	= " . 			quote_smart(addslashes(trim($_POST['frm_fullname']))) . ",
-						`dob`	= " .				quote_smart(addslashes(trim($_POST['frm_dob']))) . ",
-						`gender`	= " .			quote_smart(addslashes(trim($_POST['frm_gender_val']))) . ",
-						`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",
-						`facility_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",						
-						`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",";
+						`fullname`	= ?,
+						`dob`	= ?,
+						`gender`	= ?,
+						`insurance_id`	= ?,
+						`facility_id`	= ?,
+						`facility_contact` = ?,";
+					$ins_params = [trim($_POST['frm_fullname']), trim($_POST['frm_dob']), trim($_POST['frm_gender_val']), trim($_POST['frm_ins_id']), trim($_POST['frm_facility_id']), trim($_POST['frm_fac_cont'])];
 					}
-				else { $ins_data = "";}
-					
-	     		$query 	= "INSERT INTO `{$GLOBALS['mysql_prefix']}patient` SET 
-	     			{$ins_data}
-	     			`description`= " .  quote_smart(addslashes(trim($_POST['frm_description']))) . ",
-	     			`ticket_id`= " .  	quote_smart(addslashes(trim($_GET['ticket_id']))) .	",
-	     			`date`= " .  		quote_smart(addslashes(trim($now))) . ",
-	     			`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
-	     			`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
-	     			`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ", 
-	     			`updated` = " .  	quote_smart(addslashes(trim($frm_asof)));
+				else { $ins_data = ""; $ins_params = [];}
 
-				$result	= db_query($query);
+	     		$query 	= "INSERT INTO `{$GLOBALS['mysql_prefix']}patient` SET
+	     			{$ins_data}
+	     			`description`= ?,
+	     			`ticket_id`= ?,
+	     			`date`= ?,
+	     			`user`= ?,
+	     			`action_type` = ?,
+	     			`name` = ?,
+	     			`updated` = ?";
+
+				$result	= db_query($query, array_merge($ins_params, [trim($_POST['frm_description']), trim($_GET['ticket_id']), trim($now), trim($_SESSION['user_id']), trim($GLOBALS['ACTION_COMMENT']), trim($_POST['frm_name']), trim($frm_asof)]));
 				do_log($GLOBALS['LOG_PATIENT_ADD'], $_GET['ticket_id'], 0, db()->insert_id);		// 3/18/10
 //				($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
 	
@@ -321,15 +323,15 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		if (array_key_exists('confirm', ($_GET))) {
 			do_log($GLOBALS['LOG_PATIENT_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 3/18/10
 //			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
-			$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`='$_GET[id]' LIMIT 1";
-			$result = db_query($query);
+			$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$_GET['id']]);
 			print '<FONT CLASS="header">' . get_text("Patient") . ' record deleted</FONT><BR /><BR />';
 			$col_width= max(320, intval($_SESSION['scr_width']* 0.45));
 			add_header($_GET['ticket_id']);				// 8/16/08
 			show_ticket($_GET['ticket_id']);
 			} else {
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`='$_GET[id]' LIMIT 1";
-			$result = db_query($query);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$_GET['id']]);
 			$row = stripslashes_deep($result->fetch_assoc());
 			print "<FONT CLASS='header'>Really delete " . get_text("Patient") . " record ' " .shorten($row['description'], 24) . "' ?</FONT><BR /><BR />";
 			print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=$_GET[id]&ticket_id=$_GET[ticket_id]&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -341,61 +343,57 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
 		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
 		$now = mysql_format_date(now());
+		$ins_params = [];
 		if ((array_key_exists ('frm_fullname', $_POST))) {		// 6/22/11
 			$ins_data = "
-				`fullname`	= " . 			quote_smart(addslashes(trim($_POST['frm_fullname']))) . ",
-				`dob`	= " .				quote_smart(addslashes(trim($_POST['frm_dob']))) . ",
-				`gender`	= " .			quote_smart(addslashes(trim($_POST['frm_gender_val']))) . ",
-				`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",";
-
+				`fullname`	= ?,
+				`dob`	= ?,
+				`gender`	= ?,
+				`insurance_id`	= ?,";
+			$ins_params = [trim($_POST['frm_fullname']), trim($_POST['frm_dob']), trim($_POST['frm_gender_val']), trim($_POST['frm_ins_id'])];
 			} else { 
 			$ins_data = "";
 			}
-		$query 	= "UPDATE `{$GLOBALS['mysql_prefix']}patient` SET 
+		$query 	= "UPDATE `{$GLOBALS['mysql_prefix']}patient` SET
 			{$ins_data}
-			`description`= " .  quote_smart(addslashes(trim($_POST['frm_description']))) . ",
-			`ticket_id`= " .  	quote_smart(addslashes(trim($_GET['ticket_id']))) .	",
-			`date`= " .  		quote_smart(addslashes(trim($frm_asof))) . ",
-			`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
-			`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
-			`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ",
-			`facility_id` =" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",
-			`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",			
-			`updated` = " .  	quote_smart(addslashes(trim($now))) . "
-			WHERE id= " . 		quote_smart($_GET['id']) . " LIMIT 1";
+			`description`= ?,
+			`ticket_id`= ?,
+			`date`= ?,
+			`user`= ?,
+			`action_type` = ?,
+			`name` = ?,
+			`facility_id` = ?,
+			`facility_contact` = ?,
+			`updated` = ?
+			WHERE id= ? LIMIT 1";
 
-		$result = db_query($query);
+		$result = db_query($query, array_merge($ins_params, [trim($_POST['frm_description']), trim($_GET['ticket_id']), trim($frm_asof), trim($_SESSION['user_id']), trim($GLOBALS['ACTION_COMMENT']), trim($_POST['frm_name']), trim($_POST['frm_facility_id']), trim($_POST['frm_fac_cont']), trim($now), $_GET['id']]));
 
-		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'";
-		$result = db_query($query);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=?";
+		$result = db_query($query, [$frm_asof, $_GET['ticket_id']]);
 
 		$result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=?", [$_GET['id']]);
 		$row = stripslashes_deep($result->fetch_assoc());
 
 		if($_POST['assigns'] != "0") {
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = " . $_GET['id'];
-			$result = db_query($query);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
+			$result = db_query($query, [$_GET['id']]);
 			if($result->num_rows > 0) {
-				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id`= " . $_GET['id'];
-				$result = db_query($query);
+				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id`= ?";
+				$result = db_query($query, [$_GET['id']]);
 				}			
 			
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 6/4/2013
 			$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}patient_x` (
 					`patient_id`, `assign_id`, `_by`, `_on`, `_from`
-					) VALUES (" .
-					quote_smart(trim($_GET['id'])) . "," .
-					quote_smart(trim($_POST['assigns'])) . "," .
-					quote_smart(trim($_SESSION['user_id'])) . "," .
-					quote_smart(trim($now)) . "," .
-					quote_smart(trim($_SERVER['REMOTE_ADDR'])) . ");";
-			$result = db_query($query);
+					) VALUES (?, ?, ?, ?, ?)";
+			$result = db_query($query, [trim($_GET['id']), trim($_POST['assigns']), trim($_SESSION['user_id']), trim($now), trim($_SERVER['REMOTE_ADDR'])]);
 			} else {
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = " . $_GET['id'];
-			$result = db_query($query);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
+			$result = db_query($query, [$_GET['id']]);
 			if($result->num_rows > 0) {
-				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id`= " . $_GET['id'];
-				$result = db_query($query);
+				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id`= ?";
+				$result = db_query($query, [$_GET['id']]);
 				}					
 			}
 		
@@ -414,8 +412,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 			}				// end if/else ($addrs)
 		} else if ($get_action == 'edit') {		//get and show action to update
 
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = " . $_GET['id'];
-		$result = db_query($query);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
+		$result = db_query($query, [$_GET['id']]);
 		if($result->num_rows > 0) {
 			$row = stripslashes_deep($result->fetch_assoc());
 			$assigned_to = $row['assign_id'];
@@ -462,8 +460,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 				}
 			}	
 	
-		$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id='$_GET[id]' LIMIT 1";	// 8/11/08
-		$result = db_query($query);
+		$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";	// 8/11/08
+		$result = db_query($query, [$_GET['id']]);
 		$row = stripslashes_deep($result->fetch_assoc());
 ?>
 		<SPAN STYLE='margin-left:83px;'><FONT CLASS="header">Edit <?php print get_text('Patient');?> Record</FONT></SPAN><BR /><BR />
@@ -592,8 +590,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 					<SELECT NAME='assigns'>
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . $row['ticket_id'] . " AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
-						$result = db_query($query);
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ? AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
+						$result = db_query($query, [$row['ticket_id']]);
 						while ($row_ass = stripslashes_deep($result->fetch_assoc())) {
 							$sel = ($row_ass['id'] == $assigned_to) ? "SELECTED" : "";
 							print "\t<OPTION VALUE='{$row_ass['id']}' {$sel}>{$responder_details[$row_ass['responder_id']]}&nbsp;|&nbsp;{$row_ass['as_of']}</OPTION>\n";		// pipe separator

@@ -137,8 +137,8 @@ if (empty($_GET)) {
 		$result = db_query($query);
 		if ($result->num_rows> 0) {							// build return string from newest incident data
 			$row = stripslashes_deep($result->fetch_array());
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}caller_id` SET `status` = 1 WHERE `id` = " . quote_smart($row['id']);
-			$result = db_query($query);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}caller_id` SET `status` = 1 WHERE `id` = ?";
+			$result = db_query($query, [$row['id']]);
 			$lookup_vals = explode (";", $row['lookup_vals']);
 			$cid_calls = $lookup_vals[0];
 			$cid_name = $lookup_vals[1];
@@ -176,10 +176,10 @@ function get_res_row() {				// writes empty ticket if none exists - returns a ro
 	$by = $_SESSION['user_id'];			// 5/27/10
 
 	$query  = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`
-		WHERE `status`= '{$GLOBALS['STATUS_RESERVED']}'
-		AND  `_by` = '{$by}' LIMIT 1";
+		WHERE `status`= ?
+		AND  `_by` = ? LIMIT 1";
 
-	$result = db_query($query);
+	$result = db_query($query, [$GLOBALS['STATUS_RESERVED'], $by]);
 	if ($result->num_rows == 1) {							// any ?
 		$row = stripslashes_deep($result->fetch_array());	// yes, return it
 		}
@@ -190,13 +190,13 @@ function get_res_row() {				// writes empty ticket if none exists - returns a ro
 				`severity` , `updated`, `booked_date`, `_by`
 			) VALUES (
 				NULL , 0, 0, NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL ,
-				NULL , NULL , '', NULL , '', NULL , '" . $GLOBALS['STATUS_RESERVED'] . "', '0', '0', NULL, NULL, $by
+				NULL , NULL , '', NULL , '', NULL , ?, '0', '0', NULL, NULL, ?
 			)";	//	9/10/13
 
-		$result_insert	= db_query($query_insert);
+		$result_insert	= db_query($query_insert, [$GLOBALS['STATUS_RESERVED'], $by]);
 		}
 
-	$result = db_query($query);
+	$result = db_query($query, [$GLOBALS['STATUS_RESERVED'], $by]);
 	$row = stripslashes_deep($result->fetch_assoc());			// get the reserved row
 	return $row;													// and return it - 11/5/10
 
@@ -254,7 +254,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 						}
 					}
 				}
-			$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart("$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00") : "NULL";
+			$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  "$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00" : null;
 
 			$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 			if(empty($post_frm_owner)) {$post_frm_owner=0;}
@@ -320,8 +320,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 			$out_str = base64_encode(serialize ($inc_num_ary));						// 3/2/11
 
-			$query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
-			$result = db_query($query);
+			$query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = '_inc_num'";
+			$result = db_query($query, [$out_str]);
 
 			// end of serial increment
 
@@ -331,14 +331,14 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			$groups = "," . implode(',', $_POST['frm_group']) . ",";	//	6/10/11
 			if ($facility_id > 0) {			// 9/22/09
 
-				$query_g = "SELECT * FROM {$GLOBALS['mysql_prefix']}facilities WHERE `id`= $facility_id LIMIT 1";
-				$result_g = db_query($query_g);
+				$query_g = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ? LIMIT 1";
+				$result_g = db_query($query_g, [$facility_id]);
 				$row_g = stripslashes_deep($result_g->fetch_array());
 				$the_lat = $row_g['lat'];								// use facility location
 				$the_lng = $row_g['lng'];
 			} else {
-				$the_lat = quote_smart(trim($_POST['frm_lat']));		// use incident location
-				$the_lng = quote_smart(trim($_POST['frm_lng']));
+				$the_lat = trim($_POST['frm_lat']);		// use incident location
+				$the_lng = trim($_POST['frm_lng']);
 			}
 
 			if ((strlen($the_lat) < 3 ) && (strlen($the_lng) < 3)) {	// 1/29/11
@@ -347,47 +347,75 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 			// perform db update	//9/22/09 added facility capability, 10/1/09 added receiving facility
 			$by = $_SESSION['user_id'];
-			$booked_date = (intval(trim($_POST['frm_do_scheduled'])==1))?  quote_smart($frm_booked_date): "NULL" ;	// 1/2/11, 1/19/10
+			$booked_date = (intval(trim($_POST['frm_do_scheduled'])==1))?  $frm_booked_date : null ;	// 1/2/11, 1/19/10
 			// 6/26/10
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET
-				`portal_user`= " . 	quote_smart(trim($portal_user)) . ",
-				`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
-				`street`= " . 		quote_smart(trim($_POST['frm_street'])) .",
-				`address_about`= " . 		quote_smart(trim($_POST['frm_address_about'])) .",
-				`city`= " . 		quote_smart(trim($_POST['frm_city'])) .",
-				`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
-				`phone`= " . 		quote_smart(trim($_POST['frm_phone'])) . ",
-				`to_address`= " . 		quote_smart(trim($_POST['frm_to_address'])) . ",
-				`facility`= " . 		quote_smart($facility_id ) . ",
-				`rec_facility`= " . 	quote_smart($rec_facility_id) . ",
-				`lat`= " . 			$the_lat . ",
-				`lng`= " . 			$the_lng . ",
-				`scope`= " . 		quote_smart(trim($scope)) . ",
-				`owner`= " . 		quote_smart(trim($post_frm_owner)) . ",
-				`severity`= " . 	quote_smart(trim($_POST['frm_severity'])) . ",
-				`in_types_id`= " . 	quote_smart(trim($_POST['frm_in_types_id'])) . ",
-				`status`=" . 		quote_smart(trim($_POST['frm_status'])) . ",
-				`problemstart`=".	quote_smart(trim($frm_problemstart)) . ",
-				`problemend`=".		$frm_problemend . ",
-				`description`= " .	quote_smart(trim($_POST['frm_description'] . "\n")) .",
-				`comments`= " . 	quote_smart(trim($_POST['frm_comments'])) .",
-				`nine_one_one`= " . quote_smart(trim($_POST['frm_nine_one_one'])) .",
-				`booked_date`= " . 	$booked_date .",
-				`date`='$now',
-				`updated`='$now',
-				`_by` = $by
-				WHERE ID=" . $id;	//	9/10/13
-			$result = db_query($query);
+				`portal_user`= ?,
+				`contact`= ?,
+				`street`= ?,
+				`address_about`= ?,
+				`city`= ?,
+				`state`= ?,
+				`phone`= ?,
+				`to_address`= ?,
+				`facility`= ?,
+				`rec_facility`= ?,
+				`lat`= ?,
+				`lng`= ?,
+				`scope`= ?,
+				`owner`= ?,
+				`severity`= ?,
+				`in_types_id`= ?,
+				`status`= ?,
+				`problemstart`= ?,
+				`problemend`= ?,
+				`description`= ?,
+				`comments`= ?,
+				`nine_one_one`= ?,
+				`booked_date`= ?,
+				`date`= ?,
+				`updated`= ?,
+				`_by` = ?
+				WHERE ID= ?";	//	9/10/13
+			$result = db_query($query, [
+				trim($portal_user),
+				trim($_POST['frm_contact']),
+				trim($_POST['frm_street']),
+				trim($_POST['frm_address_about']),
+				trim($_POST['frm_city']),
+				trim($_POST['frm_state']),
+				trim($_POST['frm_phone']),
+				trim($_POST['frm_to_address']),
+				$facility_id,
+				$rec_facility_id,
+				$the_lat,
+				$the_lng,
+				trim($scope),
+				trim($post_frm_owner),
+				trim($_POST['frm_severity']),
+				trim($_POST['frm_in_types_id']),
+				trim($_POST['frm_status']),
+				trim($frm_problemstart),
+				$frm_problemend,
+				trim($_POST['frm_description'] . "\n"),
+				trim($_POST['frm_comments']),
+				trim($_POST['frm_nine_one_one']),
+				$booked_date,
+				$now,
+				$now,
+				$by,
+				$id
+			]);
 
 			$tick_stat = $_POST['frm_status'];	// 6/10/11
-			$prob_start = quote_smart(trim($frm_problemstart));	// 6/10/11
+			$prob_start = trim($frm_problemstart);	// 6/10/11
 
 //	If portal user is set, insert an associated request if one does not already exist for this Ticket	9/10/13
 
 			$where = $_SERVER['REMOTE_ADDR'];		//	9/10/13
 			if(($portal_user != NULL) && ($portal_user != 0)) {		//	9/10/13
-				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `ticket_id` = " . $id;		//	9/10/13
-				$result = db_query($query);			//	9/10/13
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `ticket_id` = ?";		//	9/10/13
+				$result = db_query($query, [$id]);			//	9/10/13
 				if(db()->affected_rows == 0) {		//	9/10/13
 					$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}requests` (
 					`org`,
@@ -418,34 +446,30 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 					`_on`,
 					`_from`
 					) VALUES (
-					" . 0 . ",
-					'" . get_owner($_POST['frm_portal_user']) . "',
-					" . quote_smart(trim($_POST['frm_street'])) . ",
-					" . quote_smart(trim($_POST['frm_city'])) . ",
-					" . quote_smart(trim($_POST['frm_state'])) . ",
-					" . quote_smart(trim($_POST['frm_contact'])) . ",
-					" . quote_smart(trim($_POST['frm_phone'])) . ",
-					" . quote_smart(trim($_POST['frm_to_address'])) . ",
-					" . quote_smart($facility_id ) . ",
-					" . quote_smart($rec_facility_id ) . ",
-					" . quote_smart(trim($name_rev)) . ",
-					" . quote_smart(trim($_POST['frm_description'] + '\n')) . ",
-					" . quote_smart(trim($_POST['frm_comments'])) . ",
-					" . $the_lat . ",
-					" . $the_lng . ",
-					" . quote_smart(trim($frm_problemstart)) . ",
-					'Accepted',
-					'" . $now . "',
-					NULL,
-					NULL,
-					NULL,
-					NULL,
-					" . $portal_user . ",
-					" . $id . ",
-					" . $_SESSION['user_id'] . ",
-					'" . $now . "',
-					'" . $where . "')";
-					$result	= db_query($query);		//	9/10/13
+					0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Accepted', ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?)";
+					$result	= db_query($query, [
+						get_owner($_POST['frm_portal_user']),
+						trim($_POST['frm_street']),
+						trim($_POST['frm_city']),
+						trim($_POST['frm_state']),
+						trim($_POST['frm_contact']),
+						trim($_POST['frm_phone']),
+						trim($_POST['frm_to_address']),
+						$facility_id,
+						$rec_facility_id,
+						trim($name_rev),
+						trim($_POST['frm_description'] . "\n"),
+						trim($_POST['frm_comments']),
+						$the_lat,
+						$the_lng,
+						trim($frm_problemstart),
+						$now,
+						$portal_user,
+						$id,
+						$_SESSION['user_id'],
+						$now,
+						$where
+					]);		//	9/10/13
 				}
 			}
 
@@ -475,8 +499,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 //	Does the file already exist in the files table
 
-					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
-					$result = db_query($query);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
+					$result = db_query($query, [$realfilename]);
 					if(db()->affected_rows == 0) {	//	file doesn't exist already
 						if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 							if (strlen(filesize($file)) < 20000000) {
@@ -498,10 +522,13 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 					$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 							`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
 						) VALUES (
-							'" . $_POST['frm_file_title'] . "', '" . $filename . "', '" . $realfilename . "', " . $id . ", 0,
-							0, 0, '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
+							?, ?, ?, ?, 0,
+							0, 0, ?, ?, ?, ?
 						)";
-					$result_insert	= db_query($query_insert);
+					$result_insert	= db_query($query_insert, [
+						$_POST['frm_file_title'], $filename, $realfilename, $id,
+						$_FILES['frm_file']['type'], $by, $now, $from
+					]);
 					if($result_insert) {	//	is the database insert successful
 						$dbUpdated = true;
 						} else {	//	problem with the database insert
@@ -516,25 +543,23 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			foreach ($_POST['frm_group'] as $grp_val) {	// 6/10/11
 				if(test_allocates($id, $grp_val, 1))	{
 					$query_a  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
-							($grp_val, 1, '$now', 1, $id, 'Allocated to Group' , $by)";
-					$result_a = db_query($query_a);
+							(?, 1, ?, 1, ?, 'Allocated to Group' , ?)";
+					$result_a = db_query($query_a, [$grp_val, $now, $id, $by]);
 					}
 				}
 
 // If Major Incident Set
 			if(array_key_exists('frm_maj_inc', $_POST) && $_POST['frm_maj_inc'] != 0) {
 				// Delete existing entries to avoid dupes
-				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `ticket_id` = '$id'";
-				$result = db_query($query);
+				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `ticket_id` = ?";
+				$result = db_query($query, [$id]);
 				// Insert new entry
 				$maj_inc = intval($_POST['frm_maj_inc']);
 				$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (
 					`mi_id`,
 					`ticket_id`)
-					VALUES (
-					" . $maj_inc . ",
-					" . $id . ")";
-				$result = db_query($query);
+					VALUES (?, ?)";
+				$result = db_query($query, [$maj_inc, $id]);
 				}
 
 			do_log($GLOBALS['LOG_INCIDENT_OPEN'], $id);
@@ -1796,7 +1821,7 @@ if($in_win) {
 							}
 						$color = $temp_row['color'];
 						$bgcolor = "white";
-						print  "\t<OPTION VALUE=' {$temp_row['id']}' CLASS='{$temp_row['group']}' style='color: {$color}; background-color: {$bgcolor};' title='" . addslashes($temp_row['description']) . "'> " . addslashes($temp_row['type']) . " </OPTION>\n";
+						print  "\t<OPTION VALUE=' {$temp_row['id']}' CLASS='{$temp_row['group']}' style='color: {$color}; background-color: {$bgcolor};' title='" . htmlspecialchars($temp_row['description'], ENT_QUOTES) . "'> " . htmlspecialchars($temp_row['type'], ENT_QUOTES) . " </OPTION>\n";
 						$i++;
 						}		// end while()
 					print "\n</OPTGROUP>\n";

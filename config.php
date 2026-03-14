@@ -1144,8 +1144,8 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
 
         if (isset($_POST['frm_delete'][$i])) {
             $msg = "Notify deletion complete!";                    // pre-set
-            $query = "DELETE from {$GLOBALS['mysql_prefix']}notify WHERE id='" . sanitize_int($_POST['frm_id'][$i]) . "' LIMIT 1";
-            $result = db_query($query);
+            $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}notify` WHERE `id` = ? LIMIT 1";
+            $result = db_query($query, [sanitize_int($_POST['frm_id'][$i])]);
         } else {                    //email validation check
             $msg = "Notify update complete.";            // pre-set
 
@@ -1163,19 +1163,18 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
             $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));
             // 1/27/09 - 1/22/11
             $query = "UPDATE `{$GLOBALS['mysql_prefix']}notify` SET
-							`execute_path`=" . quote_smart($_POST['frm_execute'][$i]) . ",
-							`email_address`=" . quote_smart($_POST['frm_email'][$i]) . ",
-							`mailgroup`=" . quote_smart($mailGroup) . ",
-							`on_action`='" . $on_action_val . "', 
-							`on_patient`='" . $on_patient_val . "', 
-							`on_ticket`='" . $on_ticket_val . "',
-							`by`=" . $_SESSION['user_id'] . ",
-							`from`=" . quote_smart($_SERVER['REMOTE_ADDR']) . ",
-							`on`=" . quote_smart($now) . "
-						
-							WHERE `id`='" . $_POST['frm_id'][$i] . "'";
+							`execute_path` = ?,
+							`email_address` = ?,
+							`mailgroup` = ?,
+							`on_action` = ?,
+							`on_patient` = ?,
+							`on_ticket` = ?,
+							`by` = ?,
+							`from` = ?,
+							`on` = ?
+							WHERE `id` = ?";
 
-            $result = db_query($query);
+            $result = db_query($query, [$_POST['frm_execute'][$i], $_POST['frm_email'][$i], $mailGroup, $on_action_val, $on_patient_val, $on_ticket_val, $_SESSION['user_id'], $_SERVER['REMOTE_ADDR'], $now, $_POST['frm_id'][$i]]);
         }
     }
 
@@ -1195,21 +1194,21 @@ else if ((array_key_exists('add', ($_GET))) && ($_GET['add'] == 'true')) {    //
     $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));                // 1/22/11
     $mailGroup = ($_POST['frm_mailgroup']) ? $_POST['frm_mailgroup'] : 0;
 
-    $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}notify` SET 
-					`ticket_id`=		'$_POST[frm_id]',
-					`user`=				'$_SESSION[user_id]',
-					`email_address`=	'$_POST[frm_email]',
-					`mailgroup`=		'$mailGroup',
-					`execute_path`=		'$_POST[frm_execute]',
-					`on_action`=		'$on_action',
-					`on_patient`=		'$on_action',
-					`on_ticket`=		'$on_ticket',
-					`severities`=		'$_POST[frm_severity]',
-					`by`=" . $_SESSION['user_id'] . ",
-					`from`=" . quote_smart($_SERVER['REMOTE_ADDR']) . ",
-					`on`=" . quote_smart($now) . ";";
+    $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}notify` SET
+					`ticket_id` = ?,
+					`user` = ?,
+					`email_address` = ?,
+					`mailgroup` = ?,
+					`execute_path` = ?,
+					`on_action` = ?,
+					`on_patient` = ?,
+					`on_ticket` = ?,
+					`severities` = ?,
+					`by` = ?,
+					`from` = ?,
+					`on` = ?";
 
-    $result = db_query($query);
+    $result = db_query($query, [$_POST['frm_id'], $_SESSION['user_id'], $_POST['frm_email'], $mailGroup, $_POST['frm_execute'], $on_action, $on_action, $on_ticket, $_POST['frm_severity'], $_SESSION['user_id'], $_SERVER['REMOTE_ADDR'], $now]);
     if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
     print "<FONT SIZE='3'><B>Notify update complete.</B></FONT><BR /><BR />";
 }            // end array_key_exists('add')
@@ -1313,14 +1312,14 @@ case 'profile' :                    //update profile
         $result = db_query($query, [$frm_hash, $frm_info, $frm_email, $frm_sortorder, $frm_sort_desc, $frm_ticket_per_page, $_SESSION['user_id']]);
         print '<B>Your profile has been updated.</B><BR /><BR />';
     } else {
-        $query = "SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id='" . $_SESSION['user_id'] . "'";
-        if ($_SESSION['user_id'] < 0 or check_for_rows($query) == 0) {
+        $query = "SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id = ?";
+        if ($_SESSION['user_id'] < 0 or check_for_rows($query, [$_SESSION['user_id']]) == 0) {
             print __LINE__ . " Invalid user id '" . e($_SESSION['user_id']) . "'.";
             exit();
         }
 
-        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`='{$_SESSION['user_id']}'";
-        $result = db_query($query);
+        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ?";
+        $result = db_query($query, [$_SESSION['user_id']]);
         $row = $result->fetch_array();
         ?>
         <BR/>
@@ -1587,8 +1586,8 @@ case 'settings' :
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";        // 1/23/10
         foreach ($_POST as $VarName => $VarValue) {
-            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-            $result = db_query($query);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = ?";
+            $result = db_query($query, [$VarValue, $VarName]);
         }
         print '<FONT CLASS="update_conf">Settings saved - will take effect at <font color="red"> next Tickets re-start</FONT>.</FONT><BR /><BR />';
     } else {
@@ -1671,13 +1670,13 @@ case 'msg_settings' :    //	10/23/12
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";        // 1/23/10
         foreach ($_POST as $VarName => $VarValue) {
             if ($VarName != "columns") {
-                $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                $result = db_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value` = ? WHERE `name` = ?";
+                $result = db_query($query, [$VarValue, $VarName]);
             }
             if ($VarName == "columns") {
                 $the_val = implode(",", $_POST['columns']);
-                $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value`=" . quote_smart($the_val) . " WHERE `name`='columns'";
-                $result = db_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value` = ? WHERE `name` = 'columns'";
+                $result = db_query($query, [$the_val]);
             }
         }
         print '<FONT CLASS="update_conf">Messaging Settings saved.</FONT><BR /><BR />';
@@ -1813,11 +1812,11 @@ case 'mdb_settings' :
                 $var_arr = array();
                 $count = count($_POST['date_tracking']);
                 $var_str = implode(",", $_POST['date_tracking']);
-                $query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_settings` SET `value`=" . quote_smart($var_str) . " WHERE `name`='" . $VarName . "'";
-                $result = db_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_settings` SET `value` = ? WHERE `name` = ?";
+                $result = db_query($query, [$var_str, $VarName]);
             } else {
-                $query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                $result = db_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_settings` SET `value` = ? WHERE `name` = ?";
+                $result = db_query($query, [$VarValue, $VarName]);
             }
         }
         print '<FONT CLASS="update_conf">Membership Database Settings saved.<BR /><BR />';
@@ -1959,8 +1958,8 @@ case 'wizard_settings' :
         if (array_key_exists('frm_delete', $_POST)) {
             foreach ($_POST['frm_delete'] as $key => $val) {
                 if ($val == "1") {
-                    $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}wizard_settings` WHERE id='" . $key . "' LIMIT 1";
-                    $result = db_query($query);
+                    $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}wizard_settings` WHERE `id` = ? LIMIT 1";
+                    $result = db_query($query, [$key]);
                     $delcounter++;
                 }
             }
@@ -1993,9 +1992,8 @@ case 'wizard_settings' :
             } else {
                 $maxlength = $fieldsize;
             }
-            $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}wizard_settings` (`fieldname` , `label`, `screen`, `display_order` , `maxlength` , `fieldtype` , `size`, `default_text`, `helptext` ) VALUES 
-					('" . $fieldname . "', '" . $_POST['frm_label'][0] . "', " . $_POST['frm_screen'][0] . ", " . $_POST['frm_display_order'][0] . ", " . $maxlength . ", '" . $fieldtype . "', " . $fieldsize . ", '" . $_POST['frm_default_text'][0] . "', '" . $_POST['frm_helptext'][0] . "')";
-            $result = db_query($query);
+            $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}wizard_settings` (`fieldname`, `label`, `screen`, `display_order`, `maxlength`, `fieldtype`, `size`, `default_text`, `helptext`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $result = db_query($query, [$fieldname, $_POST['frm_label'][0], $_POST['frm_screen'][0], $_POST['frm_display_order'][0], $maxlength, $fieldtype, $fieldsize, $_POST['frm_default_text'][0], $_POST['frm_helptext'][0]]);
             print "New Setting Submitted<BR />";
         } else {
             $output_arr = array();
@@ -2005,18 +2003,18 @@ case 'wizard_settings' :
                 }
             }
             foreach ($output_arr as $key => $val) {
-                $query = "UPDATE `{$GLOBALS['mysql_prefix']}wizard_settings` SET 
-						`fieldname` = " . quote_smart($val['frm_fieldname']) . ",
-						`label` = " . quote_smart($val['frm_label']) . ",
-						`screen` = " . quote_smart($val['frm_screen']) . ",
-						`display_order` = " . quote_smart($val['frm_display_order']) . ",
-						`maxlength` = " . quote_smart($val['frm_maxlength']) . ",
-						`fieldtype` = " . quote_smart($val['frm_fieldtype']) . ",
-						`helptext` = " . quote_smart($val['frm_helptext']) . ",
-						`default_text` = " . quote_smart($val['frm_default_text']) . ",
-						`size` = " . quote_smart($val['frm_fieldsize']) . " 
-						WHERE `id`='" . $key . "'";
-                $result = db_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}wizard_settings` SET
+						`fieldname` = ?,
+						`label` = ?,
+						`screen` = ?,
+						`display_order` = ?,
+						`maxlength` = ?,
+						`fieldtype` = ?,
+						`helptext` = ?,
+						`default_text` = ?,
+						`size` = ?
+						WHERE `id` = ?";
+                $result = db_query($query, [$val['frm_fieldname'], $val['frm_label'], $val['frm_screen'], $val['frm_display_order'], $val['frm_maxlength'], $val['frm_fieldtype'], $val['frm_helptext'], $val['frm_default_text'], $val['frm_fieldsize'], $key]);
             }
             print '<FONT CLASS="update_conf">Wizard Settings saved.<BR /><BR />';
         }
@@ -2253,8 +2251,8 @@ case 'sound_settings' :
         if (array_key_exists('frm_delete', $_POST)) {
             foreach ($_POST['frm_delete'] as $key => $val) {
                 if ($val == "1") {
-                    $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}sound_settings` WHERE id='" . $key . "' LIMIT 1";
-                    $result = db_query($query);
+                    $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}sound_settings` WHERE `id` = ? LIMIT 1";
+                    $result = db_query($query, [$key]);
                     $delcounter++;
                 }
             }
@@ -2278,13 +2276,13 @@ case 'sound_settings' :
             }
         }
         foreach ($output_arr as $key => $val) {
-            $query = "UPDATE `{$GLOBALS['mysql_prefix']}sound_settings` SET 
-					`name` = " . quote_smart($val['frm_name']) . ",
-					`filename` = " . quote_smart($val['frm_filename']) . ",
-					`mp3_filename` = " . quote_smart($val['frm_mp3_filename']) . ",
-					`ison` = " . quote_smart($val['frm_ison']) . " 
-					WHERE `id`='" . $key . "'";
-            $result = db_query($query);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}sound_settings` SET
+					`name` = ?,
+					`filename` = ?,
+					`mp3_filename` = ?,
+					`ison` = ?
+					WHERE `id` = ?";
+            $result = db_query($query, [$val['frm_name'], $val['frm_filename'], $val['frm_mp3_filename'], $val['frm_ison'], $key]);
         }
         print '<FONT CLASS="update_conf">Sound Settings saved.<BR /><BR />';
     } else {
@@ -2404,7 +2402,7 @@ case 'user' :
         if (is_administrator()) {                // admin or super
 
             $id = sanitize_int($_GET['id']);
-            if ($id < 0 or check_for_rows("SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id='$id'") == 0) {
+            if ($id < 0 or check_for_rows("SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id = ?", [$id]) == 0) {
                 print __LINE__ . " Invalid user id '" . e($id) . "'.";
                 exit();
             }
@@ -2771,33 +2769,60 @@ case 'user' :
                 print "<B>User <i>" . e($_POST['frm_user']) . "</i> has been deleted from database.</B><BR /><BR />";
             }
         } else {                                                                            // 7/12/10
-            $pass = empty($_POST['frm_hash']) ? "" : "`passwd`='" . sanitize_string($_POST['frm_hash']) . "',";        // note trailing comma
-            $dob = empty($_POST['frm_dob']) ? "NULL" : quote_smart(trim($_POST['frm_dob']));        // 6/25/10
-            $fields = " `addr_city` = " . quote_smart(trim($_POST['frm_addr_city'])) . ",	
-								`addr_st` = " . quote_smart(trim($_POST['frm_addr_st'])) . ",	
-								`addr_street` = " . quote_smart(trim($_POST['frm_addr_street'])) . ",
-								`callsign` = " . quote_smart(trim($_POST['frm_callsign'])) . ",	
-								`dob` = {$dob},		
-								`email` = " . quote_smart(trim($_POST['frm_email'])) . ",			
-								`email_s` = " . quote_smart(trim($_POST['frm_email_s'])) . ",	
-								`ident` = " . quote_smart(trim($_POST['frm_ident'])) . ",			
-								`info` = " . quote_smart(trim($_POST['frm_info'])) . ",		
-								`level` = " . quote_smart(trim($_POST['frm_level'])) . ",			
-								`responder_id` = " . quote_smart(trim($_POST['frm_responder_id'])) . ",		
-								`facility_id` = " . quote_smart(trim($_POST['frm_facility_id'])) . ",								
-								`name_f` = " . quote_smart(trim($_POST['frm_name_f'])) . ",		
-								`name_l` = " . quote_smart(trim($_POST['frm_name_l'])) . ",		
-								`name_mi` = " . quote_smart(trim($_POST['frm_name_mi'])) . ",	
-								`phone_m` = " . quote_smart(trim($_POST['frm_phone_m'])) . ",	
-								`phone_p` = " . quote_smart(trim($_POST['frm_phone_p'])) . ",	
-								`phone_s` = " . quote_smart(trim($_POST['frm_phone_s'])) . ",	
-								`org` = " . quote_smart(trim($_POST['frm_org_cntl'])) . ",	
-								`user` = " . quote_smart(trim($_POST['frm_user']));
+            $dob = empty($_POST['frm_dob']) ? null : trim($_POST['frm_dob']);        // 6/25/10
+            $params = [];
+            $pass_sql = "";
+            if (!empty($_POST['frm_hash'])) {
+                $pass_sql = "`passwd` = ?, ";
+                $params[] = sanitize_string($_POST['frm_hash']);
+            }
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET " . $pass_sql . "
+								`addr_city` = ?,
+								`addr_st` = ?,
+								`addr_street` = ?,
+								`callsign` = ?,
+								`dob` = ?,
+								`email` = ?,
+								`email_s` = ?,
+								`ident` = ?,
+								`info` = ?,
+								`level` = ?,
+								`responder_id` = ?,
+								`facility_id` = ?,
+								`name_f` = ?,
+								`name_l` = ?,
+								`name_mi` = ?,
+								`phone_m` = ?,
+								`phone_p` = ?,
+								`phone_s` = ?,
+								`org` = ?,
+								`user` = ?
+								WHERE `id` = ?";
+            $params = array_merge($params, [
+                trim($_POST['frm_addr_city']),
+                trim($_POST['frm_addr_st']),
+                trim($_POST['frm_addr_street']),
+                trim($_POST['frm_callsign']),
+                $dob,
+                trim($_POST['frm_email']),
+                trim($_POST['frm_email_s']),
+                trim($_POST['frm_ident']),
+                trim($_POST['frm_info']),
+                trim($_POST['frm_level']),
+                trim($_POST['frm_responder_id']),
+                trim($_POST['frm_facility_id']),
+                trim($_POST['frm_name_f']),
+                trim($_POST['frm_name_l']),
+                trim($_POST['frm_name_mi']),
+                trim($_POST['frm_phone_m']),
+                trim($_POST['frm_phone_p']),
+                trim($_POST['frm_phone_s']),
+                trim($_POST['frm_org_cntl']),
+                trim($_POST['frm_user']),
+                $_POST['frm_id']
+            ]);
 
-            $where = " WHERE `id`=" . quote_smart($_POST['frm_id']);
-
-            $query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET " . $pass . $fields . $where;
-            $result = db_query($query);
+            $result = db_query($query, $params);
 
             $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //	6/10/11
             $by = $_SESSION['user_id'];    //	6/10/11
@@ -2808,16 +2833,15 @@ case 'user' :
             if ($curr_groups != $groups) {    //	6/10/11
                 foreach ($_POST['frm_group'] as $posted_grp) {    //	6/10/11
                     if (!in_array($posted_grp, $ex_grps)) {
-                        $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
-										(?, 4, '$now', 0, ?, 'Allocated to Group' , $by)";
-                        $result = db_query($query, [sanitize_int($posted_grp), sanitize_int($_POST['frm_id'])]);
+                        $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group`, `type`, `al_as_of`, `al_status`, `resource_id`, `sys_comments`, `user_id`) VALUES
+										(?, 4, ?, 0, ?, 'Allocated to Group', ?)";
+                        $result = db_query($query, [sanitize_int($posted_grp), $now, sanitize_int($_POST['frm_id']), $by]);
                     }
                 }
                 foreach ($ex_grps as $existing_grps) {    //	6/10/11
                     if (!in_array($existing_grps, $_POST['frm_group'])) {
                         $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 4 AND `group` = ? AND `resource_id` = ?";
                         $result = db_query($query, [sanitize_int($existing_grps), sanitize_int($_POST['frm_id'])]);
-                        $result = db_query($query);
                     }
                 }
             }
@@ -2829,41 +2853,41 @@ case 'user' :
         if (is_administrator()) {
             if ((array_key_exists('go', ($_GET))) && ($_GET['go'] == 'true')) {
                 if ($_POST['frm_passwd'] == $_POST['frm_passwd_confirm']) {                        // 11/30/08
-                    $dob = empty($_POST['frm_dob']) ? "NULL" : quote_smart(trim($_POST['frm_dob']));        // 6/25/10
+                    $dob = empty($_POST['frm_dob']) ? null : trim($_POST['frm_dob']);        // 6/25/10
 
-                    $query = sprintf("INSERT INTO`{$GLOBALS['mysql_prefix']}user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`facility_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`org`,`user`)
-							 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`facility_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`org`,`user`)
+							 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-                        quote_smart(trim($_POST['frm_addr_city'])),
-                        quote_smart(trim($_POST['frm_addr_st'])),
-                        quote_smart(trim($_POST['frm_addr_street'])),
-                        quote_smart(trim($_POST['frm_callsign'])),
+                    $result = db_query($query, [
+                        trim($_POST['frm_addr_city']),
+                        trim($_POST['frm_addr_st']),
+                        trim($_POST['frm_addr_street']),
+                        trim($_POST['frm_callsign']),
                         $dob,
-                        quote_smart(trim($_POST['frm_email'])),
-                        quote_smart(trim($_POST['frm_email_s'])),
-                        quote_smart(trim($_POST['frm_hash'])),
-                        quote_smart(trim($_POST['frm_ident'])),
-                        quote_smart(trim($_POST['frm_info'])),
-                        quote_smart(trim($_POST['frm_level'])),
-                        quote_smart(trim($_POST['frm_responder_id'])),
-                        quote_smart(trim($_POST['frm_facility_id'])),
-                        quote_smart(trim($_POST['frm_name_f'])),
-                        quote_smart(trim($_POST['frm_name_l'])),
-                        quote_smart(trim($_POST['frm_name_mi'])),
-                        quote_smart(trim($_POST['frm_phone_m'])),
-                        quote_smart(trim($_POST['frm_phone_p'])),
-                        quote_smart(trim($_POST['frm_phone_s'])),
-                        quote_smart(trim($_POST['frm_org_cntl'])),
-                        quote_smart(trim($_POST['frm_user'])));
-
-                    $result = db_query($query);
+                        trim($_POST['frm_email']),
+                        trim($_POST['frm_email_s']),
+                        trim($_POST['frm_hash']),
+                        trim($_POST['frm_ident']),
+                        trim($_POST['frm_info']),
+                        trim($_POST['frm_level']),
+                        trim($_POST['frm_responder_id']),
+                        trim($_POST['frm_facility_id']),
+                        trim($_POST['frm_name_f']),
+                        trim($_POST['frm_name_l']),
+                        trim($_POST['frm_name_mi']),
+                        trim($_POST['frm_phone_m']),
+                        trim($_POST['frm_phone_p']),
+                        trim($_POST['frm_phone_s']),
+                        trim($_POST['frm_org_cntl']),
+                        trim($_POST['frm_user'])
+                    ]);
                     $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //	6/10/11
                     $by = $_SESSION['user_id'];    //	6/10/11
                     $new_id = db()->insert_id;    //	6/10/11
                     foreach ($_POST['frm_group'] as $grp_val) {    // 6/10/11
-                        $query_a = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
-									(?, 4, '$now', 0, ?, 'Allocated to Group' , ?)";
-                        $result_a = db_query($query_a, [sanitize_int($grp_val), $new_id, $by]);
+                        $query_a = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group`, `type`, `al_as_of`, `al_status`, `resource_id`, `sys_comments`, `user_id`) VALUES
+									(?, 4, ?, 0, ?, 'Allocated to Group', ?)";
+                        $result_a = db_query($query_a, [sanitize_int($grp_val), $now, $new_id, $by]);
                     }
 
                     print "<B>User <i>'" . e($_POST['frm_user']) . "'</i> has been added.</B><BR /><BR />";
@@ -3376,14 +3400,14 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     <?php
                     $i = 0;
                     while ($row = stripslashes_deep($result->fetch_array())) {
-                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = " . $row['id'];
-                        $res_temp = db_query($query);
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = ?";
+                        $res_temp = db_query($query, [$row['id']]);
                         $no_acts = db()->affected_rows;
-                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = " . $row['id'];
-                        $res_temp = db_query($query);
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = ?";
+                        $res_temp = db_query($query, [$row['id']]);
                         $no_pers = db()->affected_rows;
-                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . $row['id'];
-                        $res_temp = db_query($query);
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ?";
+                        $res_temp = db_query($query, [$row['id']]);
                         $no_assns = db()->affected_rows;
                         ?>
                         <TR CLASS='<?php print $evenodd[$i % 2]; ?>'>
@@ -3495,17 +3519,18 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
     case 'do_del':
     $temp = explode(",", $_POST['idstr']);
     for ($i = 0; $i < count($temp); $i++) {
-        $query = "DELETE from `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = " . $temp[$i] . " LIMIT 1";
-        $result = db_query($query);    // 6/4/08 - corrected table names
-        $query = "DELETE from `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = " . $temp[$i];
-        $result = db_query($query);
-        $query = "DELETE from `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = " . $temp[$i];
-        $result = db_query($query);
-        $query = "DELETE from `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . $temp[$i];
-        $result = db_query($query);
-        $query = "DELETE from `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 1 AND `resource_id` = " . $temp[$i];
-        $result = db_query($query);
-        do_log($GLOBALS['LOG_INCIDENT_DELETE'], $temp[$i]);                                                                // added 6/4/08
+        $ticket_id = sanitize_int($temp[$i]);
+        $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+        $result = db_query($query, [$ticket_id]);    // 6/4/08 - corrected table names
+        $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = ?";
+        $result = db_query($query, [$ticket_id]);
+        $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = ?";
+        $result = db_query($query, [$ticket_id]);
+        $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ?";
+        $result = db_query($query, [$ticket_id]);
+        $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 1 AND `resource_id` = ?";
+        $result = db_query($query, [$ticket_id]);
+        do_log($GLOBALS['LOG_INCIDENT_DELETE'], $ticket_id);                                                                // added 6/4/08
 
         //				dump ($query);
     }
@@ -3556,8 +3581,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             $in_nums_ary[5] = date("y");
             $the_val = base64_encode(serialize($in_nums_ary));
             $the_field = "_inc_num";    //	3/15/11
-            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = '$the_val' WHERE `name` = '$the_field'";    //	3/15/11
-            $result = db_query($query);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = ?";    //	3/15/11
+            $result = db_query($query, [$the_val, $the_field]);
 
             $top_notice = "Incident number update applied";
         } else {                // do edit
@@ -3804,8 +3829,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             foreach ($_POST as $VarName => $VarValue) {
                 if ($VarName != 'func') {
                     shorten($VarValue, 511);
-                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}hints` SET `hint`=" . quote_smart($VarValue) . " WHERE `tag`='" . $VarName . "'";
-                    $result = db_query($query);
+                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}hints` SET `hint` = ? WHERE `tag` = ?";
+                    $result = db_query($query, [$VarValue, $VarName]);
                 }
             }
             ?>
@@ -3824,8 +3849,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
                 foreach ($_POST as $VarName => $VarValue) {
-                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_day` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                    $result = db_query($query);
+                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_day` SET `value` = ? WHERE `name` = ?";
+                    $result = db_query($query, [$VarValue, $VarName]);
                 }
                 print '<FONT CLASS="update_conf">CSS Day Settings saved</FONT>.</FONT><BR /><BR />';
             } else {
@@ -3910,8 +3935,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
                 foreach ($_POST as $VarName => $VarValue) {
-                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_night` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                    $result = db_query($query);
+                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_night` SET `value` = ? WHERE `name` = ?";
+                    $result = db_query($query, [$VarValue, $VarName]);
                 }
                 print '<FONT CLASS="update_conf">CSS Night Settings saved</FONT>.</FONT><BR /><BR />';
             } else {

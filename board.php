@@ -790,9 +790,9 @@ if(empty($_SESSION)) {		// expired?
 			$result = db_query($query);
 			$lines = $result->num_rows;
 
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = {$frm_ticket_id}
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?
 					LIMIT 1"; 		// see case $func = 'add_b'
-			$result = db_query($query);
+			$result = db_query($query, [$frm_ticket_id]);
 			$row = $result->fetch_array();
 			$latitude = $row['lat'];
 			$longitude = $row['lng'];
@@ -1066,20 +1066,10 @@ if(empty($_SESSION)) {		// expired?
 				$temp = trim($frm_miles_tot);
 				$tot_mi = (empty($temp))? 0: $temp ;		//	10/23/12
 																// 12/9/10
-				$query  = sprintf("INSERT INTO `{$GLOBALS['mysql_prefix']}assigns` (`as_of`, `dispatched`, `ticket_id`, `responder_id`, `comments`, `start_miles`, `on_scene_miles`, `end_miles`, `miles`, `user_id`)
-								VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-									quote_smart($now),
-									quote_smart($now),
-									quote_smart($frm_ticket_id),
-									quote_smart($unit_ids[$i]),
-									quote_smart($frm_comments),
-									quote_smart($start_mi),
-									quote_smart($onsc_mi),
-									quote_smart($end_mi),
-									quote_smart($tot_mi),
-									quote_smart($frm_by_id));
+				$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}assigns` (`as_of`, `dispatched`, `ticket_id`, `responder_id`, `comments`, `start_miles`, `on_scene_miles`, `end_miles`, `miles`, `user_id`)
+								VALUES (?,?,?,?,?,?,?,?,?,?)";
 
-				$result	= db_query($query);
+				$result	= db_query($query, [$now, $now, $frm_ticket_id, $unit_ids[$i], $frm_comments, $start_mi, $onsc_mi, $end_mi, $tot_mi, $frm_by_id]);
 									// apply status update to unit status
 				do_log($GLOBALS['LOG_CALL_DISP'], $frm_ticket_id, $unit_ids[$i], 0);	// 3/18/10
 				}					// end for ($i=0; $i< count($unit_ids)-1; $i++)
@@ -1234,9 +1224,9 @@ if(empty($_SESSION)) {		// expired?
 				function get_un_stat_sel($s_id, $b_id) {					// returns select list as string
 					global $guest;
 					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`, `{$GLOBALS['mysql_prefix']}un_status`
-						WHERE `{$GLOBALS['mysql_prefix']}un_status`.`id` = $s_id
+						WHERE `{$GLOBALS['mysql_prefix']}un_status`.`id` = ?
 						AND `{$GLOBALS['mysql_prefix']}un_status`.`id` = `{$GLOBALS['mysql_prefix']}responder`.`un_status_id` LIMIT 1" ;
-					$result_st = db_query($query);
+					$result_st = db_query($query, [$s_id]);
 					$row = ($result_st->num_rows>0)? stripslashes_deep($result_st->fetch_assoc()) : FALSE;
 					$init_bg_color = ($row)? $row['bg_color'] : "transparent";
 					$init_txt_color = ($row)? $row['text_color']: "black";
@@ -1593,8 +1583,8 @@ if(empty($_SESSION)) {		// expired?
 					$unit_ids = array();
 					while($row = stripslashes_deep($result->fetch_assoc())) {		// major while () - 3/25/09
 //	============================= Regions stuff
-						$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = '$row[unit_id]' ORDER BY `id` ASC;";	// 6/10/11
-						$result_un = db_query($query_un);	// 6/10/11
+						$query_un = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 2 AND `resource_id` = ? ORDER BY `id` ASC";	// 6/10/11
+						$result_un = db_query($query_un, [$row['unit_id']]);	// 6/10/11
 						$un_groups = array();
 						while ($row_un = stripslashes_deep($result_un->fetch_assoc())) 	{	// 6/10/11
 							$un_groups[] = $row_un['group'];
@@ -1659,8 +1649,8 @@ if(empty($_SESSION)) {		// expired?
 								$strike = $strikend = "";
 								}
 							if (!($row['unit_id'] == 0)) {																	// 5/11/09
-								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`	WHERE `id`= '{$row['unit_type']}' LIMIT 1";
-								$result_type = db_query($query);
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`	WHERE `id`= ? LIMIT 1";
+								$result_type = db_query($query, [$row['unit_type']]);
 								$row_type = ($result_type->num_rows > 0) ? stripslashes_deep($result_type->fetch_assoc()) : "";
 								$the_bg_color = empty($row_type)?	"transparent" : $GLOBALS['UNIT_TYPES_BG'][$row_type['icon']];		// 3/15/10
 								$the_text_color = empty($row_type)? "black" :		$GLOBALS['UNIT_TYPES_TEXT'][$row_type['icon']];		//
@@ -1867,9 +1857,9 @@ if(empty($_SESSION)) {		// expired?
 			LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON (`{$GLOBALS['mysql_prefix']}assigns`.`status_id` = `s`.`id`)
 			LEFT JOIN `{$GLOBALS['mysql_prefix']}user` `u` 		ON (`{$GLOBALS['mysql_prefix']}assigns`.`user_id` = `u`.`id`)
 			LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
-			WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = $frm_id LIMIT 1";
+			WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = ? LIMIT 1";
 
-			$asgn_result = db_query($query);
+			$asgn_result = db_query($query, [$frm_id]);
 			$asgn_row = stripslashes_deep($asgn_result->fetch_assoc());
 
 ?>
@@ -2066,9 +2056,9 @@ if(empty($_SESSION)) {		// expired?
 						LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON (`{$GLOBALS['mysql_prefix']}assigns`.`status_id` = `s`.`id`)
 						LEFT JOIN `{$GLOBALS['mysql_prefix']}user` `u` 		ON (`{$GLOBALS['mysql_prefix']}assigns`.`user_id` = `u`.`id`)
 						LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
-						WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = $frm_id LIMIT 1";
+						WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = ? LIMIT 1";
 
-					$asgn_result = db_query($query);
+					$asgn_result = db_query($query, [$frm_id]);
 					$asgn_row = stripslashes_deep($asgn_result->fetch_array());
 					$clear = (is_date($asgn_row['clear']))? "<FONT COLOR='red'><B>Cleared</B></FONT>": "";
 					$disabled = "";
@@ -2130,8 +2120,8 @@ if(empty($_SESSION)) {		// expired?
 							<TD CLASS="td_data text">
 <?php
 								if($asgn_row['un_status_id'] != 0) {
-									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`=" . $asgn_row['un_status_id'];
-									$result = db_query($query);
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`= ?";
+									$result = db_query($query, [$asgn_row['un_status_id']]);
 									if($result->num_rows > 0) {
 										$temprow = stripslashes_deep($result->fetch_array());
 										$set_color[0] = $temprow['bg_color'];
@@ -2359,63 +2349,79 @@ if(empty($_SESSION)) {		// expired?
 				$now = mysql_format_date(time() - ($delta*60));
 
 				if (isset($frm_inc_status_id)) {
-					$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `status`= " . quote_smart($frm_inc_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_ticket_id) ." LIMIT 1";
-					$result	= db_query($query);
+					$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `status`= ?, `updated` = ? WHERE `id` = ? LIMIT 1";
+					$result	= db_query($query, [$frm_inc_status_id, $now, $frm_ticket_id]);
 					do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $frm_ticket_id);
 					}
 
 				if (isset($frm_unit_status_id)) {
-					$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= " . quote_smart($frm_unit_status_id) . ", `updated` = " . quote_smart($now) . " WHERE `id` = " . quote_smart($frm_unit_id) ." LIMIT 1";
-					$result	= db_query($query);
+					$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= ?, `updated` = ? WHERE `id` = ? LIMIT 1";
+					$result	= db_query($query, [$frm_unit_status_id, $now, $frm_unit_id]);
 					do_log($GLOBALS['LOG_UNIT_CHANGE'], $frm_unit_id);
 					}
 
 				if (!(empty($frm_complete))) 	{			// is run completed?  6/4/08	// 6/26/08
 					do_log($GLOBALS['LOG_UNIT_COMPLETE'], $frm_ticket_id, $frm_unit_id);		// set clear times
-					$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET `as_of`= " . quote_smart($now) . ", `clear`= " . quote_smart($now) . " WHERE `id` = " . quote_smart($_POST[frm_id]) . " LIMIT 1";
-					$result	= db_query($query);
+					$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET `as_of`= ?, `clear`= ? WHERE `id` = ? LIMIT 1";
+					$result	= db_query($query, [$now, $now, $_POST['frm_id']]);
 					}
 
-				$frm_dispatched =	(array_key_exists('frm_db', $_POST))? 	quote_smart($_POST['frm_year_dispatched'] . "-" . $_POST['frm_month_dispatched'] . "-" . $_POST['frm_day_dispatched']." " . $_POST['frm_hour_dispatched'] . ":". $_POST['frm_minute_dispatched'] .":00") : "";
-				$frm_responding = 	(array_key_exists('frm_rb', $_POST))? 	quote_smart($_POST['frm_year_responding'] . "-" . $_POST['frm_month_responding'] . "-" . $_POST['frm_day_responding']." " . $_POST['frm_hour_responding'] . ":". $_POST['frm_minute_responding'] .":00") : "";
-				$frm_on_scene = 	(array_key_exists('frm_ob', $_POST))?  	quote_smart($_POST['frm_year_on_scene'] . "-" .   $_POST['frm_month_on_scene'] . "-" .   $_POST['frm_day_on_scene']." " .   $_POST['frm_hour_on_scene'] . ":".   $_POST['frm_minute_on_scene'] .":00") : "";	// 10/20/12
-				$frm_u2fenr = 		(array_key_exists('frm_fe', $_POST))?  	quote_smart($_POST['frm_year_u2fenr'] . "-" .   $_POST['frm_month_u2fenr'] . "-" .   $_POST['frm_day_u2fenr']." " .   $_POST['frm_hour_u2fenr'] . ":".   $_POST['frm_minute_u2fenr'] .":00") : "";	//10/6/09
-				$frm_u2farr = 		(array_key_exists('frm_fa', $_POST))?  	quote_smart($_POST['frm_year_u2farr'] . "-" .   $_POST['frm_month_u2farr'] . "-" .   $_POST['frm_day_u2farr']." " .   $_POST['frm_hour_u2farr'] . ":".   $_POST['frm_minute_u2farr'] .":00") : "";	//10/6/09
-				$frm_clear = 		(array_key_exists('frm_cb', $_POST))?  	quote_smart($_POST['frm_year_clear'] . "-" . 	  $_POST['frm_month_clear'] . "-" 	.    $_POST['frm_day_clear']." " .      $_POST['frm_hour_clear'] . ":".      $_POST['frm_minute_clear'] .":00") : "";
+				$frm_dispatched =	(array_key_exists('frm_db', $_POST))? 	($_POST['frm_year_dispatched'] . "-" . $_POST['frm_month_dispatched'] . "-" . $_POST['frm_day_dispatched']." " . $_POST['frm_hour_dispatched'] . ":". $_POST['frm_minute_dispatched'] .":00") : "";
+				$frm_responding = 	(array_key_exists('frm_rb', $_POST))? 	($_POST['frm_year_responding'] . "-" . $_POST['frm_month_responding'] . "-" . $_POST['frm_day_responding']." " . $_POST['frm_hour_responding'] . ":". $_POST['frm_minute_responding'] .":00") : "";
+				$frm_on_scene = 	(array_key_exists('frm_ob', $_POST))?  	($_POST['frm_year_on_scene'] . "-" .   $_POST['frm_month_on_scene'] . "-" .   $_POST['frm_day_on_scene']." " .   $_POST['frm_hour_on_scene'] . ":".   $_POST['frm_minute_on_scene'] .":00") : "";	// 10/20/12
+				$frm_u2fenr = 		(array_key_exists('frm_fe', $_POST))?  	($_POST['frm_year_u2fenr'] . "-" .   $_POST['frm_month_u2fenr'] . "-" .   $_POST['frm_day_u2fenr']." " .   $_POST['frm_hour_u2fenr'] . ":".   $_POST['frm_minute_u2fenr'] .":00") : "";	//10/6/09
+				$frm_u2farr = 		(array_key_exists('frm_fa', $_POST))?  	($_POST['frm_year_u2farr'] . "-" .   $_POST['frm_month_u2farr'] . "-" .   $_POST['frm_day_u2farr']." " .   $_POST['frm_hour_u2farr'] . ":".   $_POST['frm_minute_u2farr'] .":00") : "";	//10/6/09
+				$frm_clear = 		(array_key_exists('frm_cb', $_POST))?  	($_POST['frm_year_clear'] . "-" . 	  $_POST['frm_month_clear'] . "-" 	.    $_POST['frm_day_clear']." " .      $_POST['frm_hour_clear'] . ":".      $_POST['frm_minute_clear'] .":00") : "";
 
-				$date_part = (empty($frm_dispatched))? 	"": ", `dispatched`= " . 	$frm_dispatched ;
-				$date_part .= (empty($frm_responding))? "": ", `responding`= " . 	$frm_responding;
-				$date_part .= (empty($frm_on_scene))? 	"": ", `on_scene`= " 	. 	$frm_on_scene;
-				$date_part .= (empty($frm_u2fenr))? 	"": ", `u2fenr`= " 	. 		$frm_u2fenr;
-				$date_part .= (empty($frm_u2farr))? 	"": ", `u2farr`= " 	. 		$frm_u2farr;
-				$date_part .= (empty($frm_clear))? 		"": ", `clear`= " . 		$frm_clear;
+				$date_part = "";
+				$date_params = [];
+				if (!empty($frm_dispatched)) 	{ $date_part .= ", `dispatched`= ?"; 	$date_params[] = $frm_dispatched; }
+				if (!empty($frm_responding)) 	{ $date_part .= ", `responding`= ?"; 	$date_params[] = $frm_responding; }
+				if (!empty($frm_on_scene)) 		{ $date_part .= ", `on_scene`= ?"; 		$date_params[] = $frm_on_scene; }
+				if (!empty($frm_u2fenr)) 		{ $date_part .= ", `u2fenr`= ?"; 		$date_params[] = $frm_u2fenr; }
+				if (!empty($frm_u2farr)) 		{ $date_part .= ", `u2farr`= ?"; 		$date_params[] = $frm_u2farr; }
+				if (!empty($frm_clear)) 		{ $date_part .= ", `clear`= ?"; 		$date_params[] = $frm_clear; }
 
-				$unit_sql = (isset($frm_unit_id))?	" `responder_id`=" .quote_smart($frm_unit_id) . ", " :"";			// 1/15/09
+				$update_params = [];
+				$unit_sql = "";
+				if (isset($frm_unit_id)) {
+					$unit_sql = " `responder_id`= ?,";			// 1/15/09
+					$update_params[] = $frm_unit_id;
+				}
+
+				$update_params[] = $now;
+				$update_params[] = $_POST['frm_comments'];
+				$update_params[] = $_POST['frm_miles_strt'];
+				$update_params[] = $_POST['frm_on_scene_miles'];
+				$update_params[] = $_POST['frm_miles_end'];
+				$update_params[] = $_POST['frm_miles_tot'];
 
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET
-							 {$unit_sql} `as_of`= " . 	quote_smart($now) . ",
-							 `comments`= " . 			quote_smart($_POST['frm_comments']) . ",
-							 `start_miles`= " . 		quote_smart($_POST['frm_miles_strt']) . ",
-							 `on_scene_miles`= " . 		quote_smart($_POST['frm_on_scene_miles']) . ",
-							 `end_miles`= " . 			quote_smart($_POST['frm_miles_end']) . ",
-							 `miles`= " . 				quote_smart($_POST['frm_miles_tot']) ;	//10/6/09, 10/23/12
+							 {$unit_sql} `as_of`= ?,
+							 `comments`= ?,
+							 `start_miles`= ?,
+							 `on_scene_miles`= ?,
+							 `end_miles`= ?,
+							 `miles`= ?";	//10/6/09, 10/23/12
 
 				$query .= $date_part;
-				$query .=  " WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1";		// 5/26/11
+				$all_params = array_merge($update_params, $date_params);
+				$all_params[] = $_POST['frm_id'];
+				$query .=  " WHERE `id` = ? LIMIT 1";		// 5/26/11
 
-				$result	= db_query($query);
+				$result	= db_query($query, $all_params);
 
 //						generate log entry for each changed event - 10/20/12
-				$as_query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1";
-				$as_result	= db_query($as_query);
+				$as_query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
+				$as_result	= db_query($as_query, [$_POST['frm_id']]);
 				$as_row = stripslashes_deep($as_result->fetch_assoc());
 
-				if ((array_key_exists('frm_db', $_POST)) && (quote_smart($as_row['dispatched']) <> $frm_dispatched)) 	{do_log($GLOBALS['LOG_CALL_DISP'], 	$frm_ticket_id, $frm_unit_id, $frm_id);}
-				if ((array_key_exists('frm_rb', $_POST)) && (quote_smart($as_row['responding']) <> $frm_responding)) 	{do_log($GLOBALS['LOG_CALL_RESP'], 	$frm_ticket_id, $frm_unit_id, $frm_id);}
-				if ((array_key_exists('frm_ob', $_POST)) && (quote_smart($as_row['on_scene']) <> $frm_on_scene)) 		{do_log($GLOBALS['LOG_CALL_ONSCN'],	$frm_ticket_id, $frm_unit_id, $frm_id);}
-				if ((array_key_exists('frm_cb', $_POST)) && (quote_smart($as_row['clear']) <> $frm_clear)) 				{do_log($GLOBALS['LOG_CALL_CLR'], 	$frm_ticket_id, $frm_unit_id, $frm_id);}
-				if ((array_key_exists('frm_fe', $_POST)) && (quote_smart($as_row['u2fenr']) <> $frm_u2fenr)) 			{do_log($GLOBALS['LOG_CALL_U2FENR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
-				if ((array_key_exists('frm_fa', $_POST)) && (quote_smart($as_row['u2farr']) <> $frm_u2farr)) 			{do_log($GLOBALS['LOG_CALL_U2FARR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
+				if ((array_key_exists('frm_db', $_POST)) && ($as_row['dispatched'] <> $frm_dispatched)) 	{do_log($GLOBALS['LOG_CALL_DISP'], 	$frm_ticket_id, $frm_unit_id, $frm_id);}
+				if ((array_key_exists('frm_rb', $_POST)) && ($as_row['responding'] <> $frm_responding)) 	{do_log($GLOBALS['LOG_CALL_RESP'], 	$frm_ticket_id, $frm_unit_id, $frm_id);}
+				if ((array_key_exists('frm_ob', $_POST)) && ($as_row['on_scene'] <> $frm_on_scene)) 		{do_log($GLOBALS['LOG_CALL_ONSCN'],	$frm_ticket_id, $frm_unit_id, $frm_id);}
+				if ((array_key_exists('frm_cb', $_POST)) && ($as_row['clear'] <> $frm_clear)) 				{do_log($GLOBALS['LOG_CALL_CLR'], 	$frm_ticket_id, $frm_unit_id, $frm_id);}
+				if ((array_key_exists('frm_fe', $_POST)) && ($as_row['u2fenr'] <> $frm_u2fenr)) 			{do_log($GLOBALS['LOG_CALL_U2FENR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
+				if ((array_key_exists('frm_fa', $_POST)) && ($as_row['u2farr'] <> $frm_u2farr)) 			{do_log($GLOBALS['LOG_CALL_U2FARR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
 
 				$message = "Update Applied";
 ?>
@@ -2437,8 +2443,8 @@ if(empty($_SESSION)) {		// expired?
 
 			case 'delete_db':		// =====  {  =====================  6/4/08
 
-				$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1";
-				$result	= db_query($query);
+				$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
+				$result	= db_query($query, [$_POST['frm_id']]);
 
 				$message = "Assign record deleted";
 ?>

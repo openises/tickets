@@ -477,158 +477,159 @@ function linkFromSumm(table, index) {
 			$filename = "";
 			}
 		
-		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}waste_basket_m` 
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}waste_basket_m`
 				(`field1`,
-				`field2`, 
-				`field3`, 
-				`field4`, 
-				`field5`, 
-				`field6`, 
-				`field7`, 
-				`field8`, 
-				`field9`, 
-				`field10`, 
-				`field11`, 
-				`field12`, 
-				`field13`, 
-				`field14`, 
-				`field15`, 
-				`field16`, 
-				`field17`, 
-				`field18`, 
-				`field19`, 
-				`field20`, 
-				`field21`, 
-				`field22`, 
-				`field23`, 
-				`field24`, 
+				`field2`,
+				`field3`,
+				`field4`,
+				`field5`,
+				`field6`,
+				`field7`,
+				`field8`,
+				`field9`,
+				`field10`,
+				`field11`,
+				`field12`,
+				`field13`,
+				`field14`,
+				`field15`,
+				`field16`,
+				`field17`,
+				`field18`,
+				`field19`,
+				`field20`,
+				`field21`,
+				`field22`,
+				`field23`,
+				`field24`,
 				`field25`,
-				`field26`, 
-				`field27`, 
-				`field28`, 
-				`field29`, 
-				`field30`, 
-				`field31`, 
-				`field32`, 
-				`field33`, 
-				`field34`, 
-				`field35`, 
-				`field36`, 
-				`field37`, 
-				`field38`, 
-				`field39`, 
-				`field40`, 
-				`field41`, 
+				`field26`,
+				`field27`,
+				`field28`,
+				`field29`,
+				`field30`,
+				`field31`,
+				`field32`,
+				`field33`,
+				`field34`,
+				`field35`,
+				`field36`,
+				`field37`,
+				`field38`,
+				`field39`,
+				`field40`,
+				`field41`,
 				`field42`,
-				`field43`, 
-				`field44`, 
-				`field45`, 
-				`field46`, 
-				`field47`, 
-				`field48`, 
-				`field49`, 
-				`field50`, 
-				`field51`, 
-				`field52`, 
-				`field53`, 
-				`field54`, 
-				`field55`, 
-				`field56`, 
-				`field57`, 
-				`field58`, 
-				`field59`, 
-				`field60`, 
-				`field61`, 
-				`field62`, 
-				`field63`, 
-				`field64`, 
-				`field65`, 				
-				`training`, 
-				`capabilities`, 
-				`equipment`, 
-				`vehicles`, 
-				`clothing`, 				
-				`_by`, 
-				`_on`, 						
+				`field43`,
+				`field44`,
+				`field45`,
+				`field46`,
+				`field47`,
+				`field48`,
+				`field49`,
+				`field50`,
+				`field51`,
+				`field52`,
+				`field53`,
+				`field54`,
+				`field55`,
+				`field56`,
+				`field57`,
+				`field58`,
+				`field59`,
+				`field60`,
+				`field61`,
+				`field62`,
+				`field63`,
+				`field64`,
+				`field65`,
+				`training`,
+				`capabilities`,
+				`equipment`,
+				`vehicles`,
+				`clothing`,
+				`_by`,
+				`_on`,
 				`_from`,
 				`old_id` )
-			VALUES (" . 
-				quote_smart(trim($_POST['frm_field1'])) . "," .
-				quote_smart(trim($_POST['frm_field2'])) . "," .
-				quote_smart(trim($frm_field3)) . "," .
-				quote_smart(trim($_POST['frm_field4'])) . "," .	
-				quote_smart(trim($filename)) . "," .
-				quote_smart(trim($_POST['frm_field6'])) . "," .
-				quote_smart(trim($_POST['frm_field7'])) . "," .		
-				quote_smart(trim($_POST['frm_field8'])) . "," .		
-				quote_smart(trim($_POST['frm_field9'])) . "," .	
-				quote_smart(trim($_POST['frm_field10'])) . "," .				
-				quote_smart(trim($_POST['frm_field11'])) . "," .	
-				quote_smart(trim($_POST['frm_field12'])) . "," .					
-				quote_smart(trim($_POST['frm_field13'])) . "," .
-				quote_smart(trim($_POST['frm_field14'])) . "," .	
-				quote_smart(trim($_POST['frm_field15'])) . "," .					
-				quote_smart(trim($frm_field16)) . "," .						
-				quote_smart(trim($frm_field17)) . "," .	
-				quote_smart(trim($frm_field18)) . "," .
-				quote_smart(trim($_POST['frm_field19'])) . "," .
-				quote_smart(trim($_POST['frm_field20'])) . "," .	
-				quote_smart(trim($_POST['frm_field21'])) . "," .
-				quote_smart(trim($_POST['frm_field22'])) . "," .
-				quote_smart(trim($_POST['frm_field23'])) . "," .		
-				quote_smart(trim($_POST['frm_field24'])) . "," .		
-				quote_smart(trim($_POST['frm_field25'])) . "," .	
-				quote_smart(trim($_POST['frm_field26'])) . "," .				
-				quote_smart(trim($_POST['frm_field27'])) . "," .	
-				quote_smart(trim($_POST['frm_field28'])) . "," .					
-				quote_smart(trim($_POST['frm_field29'])) . "," .
-				quote_smart(trim($_POST['frm_field30'])) . "," .	
-				quote_smart(trim($_POST['frm_field31'])) . "," .	
-				quote_smart(trim($_POST['frm_field32'])) . "," .	
-				quote_smart(trim($_POST['frm_field33'])) . "," .	
-				quote_smart(trim($_POST['frm_field34'])) . "," .	
-				quote_smart(trim($_POST['frm_field35'])) . "," .	
-				quote_smart(trim($_POST['frm_field36'])) . "," .	
-				quote_smart(trim($_POST['frm_field37'])) . "," .	
-				quote_smart(trim($_POST['frm_field38'])) . "," .	
-				quote_smart(trim($_POST['frm_field39'])) . "," .	
-				quote_smart(trim($_POST['frm_field40'])) . "," .	
-				quote_smart(trim($_POST['frm_field41'])) . "," .	
-				quote_smart(trim($_POST['frm_field42'])) . "," .	
-				quote_smart(trim($_POST['frm_field43'])) . "," .	
-				quote_smart(trim($_POST['frm_field44'])) . "," .	
-				quote_smart(trim($_POST['frm_field45'])) . "," .						
-				quote_smart(trim($_POST['frm_field46'])) . "," .	
-				quote_smart(trim($_POST['frm_field47'])) . "," .
-				quote_smart(trim($_POST['frm_field48'])) . "," .	
-				quote_smart(trim($_POST['frm_field49'])) . "," .	
-				quote_smart(trim($_POST['frm_field50'])) . "," .	
-				quote_smart(trim($_POST['frm_field51'])) . "," .	
-				quote_smart(trim($_POST['frm_field52'])) . "," .	
-				quote_smart(trim($_POST['frm_field53'])) . "," .	
-				quote_smart(trim($_POST['frm_field54'])) . "," .	
-				quote_smart(trim($_POST['frm_field55'])) . "," .
-				quote_smart(trim($frm_field56)) . "," .		
-				quote_smart(trim($frm_field57)) . "," .		
-				quote_smart(trim($frm_field58)) . "," .		
-				quote_smart(trim($frm_field59)) . "," .		
-				quote_smart(trim($frm_field60)) . "," .		
-				quote_smart(trim($frm_field61)) . "," .		
-				quote_smart(trim($frm_field62)) . "," .		
-				quote_smart(trim($frm_field63)) . "," .		
-				quote_smart(trim($frm_field64)) . "," .		
-				quote_smart(trim($frm_field65)) . "," .		
-				quote_smart(trim($old_t)) . "," .
-				quote_smart(trim($old_c)) . "," .
-				quote_smart(trim($old_e)) . "," .
-				quote_smart(trim($old_v)) . "," .
-				quote_smart(trim($old_cl)) . "," .
-				quote_smart(trim($who)) . "," .	
-				quote_smart(trim($now)) . "," .					
-				quote_smart(trim($from)) . "," .
-				quote_smart(trim($_POST['frm_id'])) . ");";
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-		$result = db_query($query);	
+		$result = db_query($query, [
+				trim($_POST['frm_field1']),
+				trim($_POST['frm_field2']),
+				trim($frm_field3),
+				trim($_POST['frm_field4']),
+				trim($filename),
+				trim($_POST['frm_field6']),
+				trim($_POST['frm_field7']),
+				trim($_POST['frm_field8']),
+				trim($_POST['frm_field9']),
+				trim($_POST['frm_field10']),
+				trim($_POST['frm_field11']),
+				trim($_POST['frm_field12']),
+				trim($_POST['frm_field13']),
+				trim($_POST['frm_field14']),
+				trim($_POST['frm_field15']),
+				trim($frm_field16),
+				trim($frm_field17),
+				trim($frm_field18),
+				trim($_POST['frm_field19']),
+				trim($_POST['frm_field20']),
+				trim($_POST['frm_field21']),
+				trim($_POST['frm_field22']),
+				trim($_POST['frm_field23']),
+				trim($_POST['frm_field24']),
+				trim($_POST['frm_field25']),
+				trim($_POST['frm_field26']),
+				trim($_POST['frm_field27']),
+				trim($_POST['frm_field28']),
+				trim($_POST['frm_field29']),
+				trim($_POST['frm_field30']),
+				trim($_POST['frm_field31']),
+				trim($_POST['frm_field32']),
+				trim($_POST['frm_field33']),
+				trim($_POST['frm_field34']),
+				trim($_POST['frm_field35']),
+				trim($_POST['frm_field36']),
+				trim($_POST['frm_field37']),
+				trim($_POST['frm_field38']),
+				trim($_POST['frm_field39']),
+				trim($_POST['frm_field40']),
+				trim($_POST['frm_field41']),
+				trim($_POST['frm_field42']),
+				trim($_POST['frm_field43']),
+				trim($_POST['frm_field44']),
+				trim($_POST['frm_field45']),
+				trim($_POST['frm_field46']),
+				trim($_POST['frm_field47']),
+				trim($_POST['frm_field48']),
+				trim($_POST['frm_field49']),
+				trim($_POST['frm_field50']),
+				trim($_POST['frm_field51']),
+				trim($_POST['frm_field52']),
+				trim($_POST['frm_field53']),
+				trim($_POST['frm_field54']),
+				trim($_POST['frm_field55']),
+				trim($frm_field56),
+				trim($frm_field57),
+				trim($frm_field58),
+				trim($frm_field59),
+				trim($frm_field60),
+				trim($frm_field61),
+				trim($frm_field62),
+				trim($frm_field63),
+				trim($frm_field64),
+				trim($frm_field65),
+				trim($old_t),
+				trim($old_c),
+				trim($old_e),
+				trim($old_v),
+				trim($old_cl),
+				trim($who),
+				trim($now),
+				trim($from),
+				trim($_POST['frm_id'])
+			]);	
 		
 		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}member WHERE `id`=" . intval($_POST['frm_id']);
 		$result = db_query($query);
@@ -654,19 +655,20 @@ function linkFromSumm(table, index) {
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$oldname = explode("/",$row['name']);
 			$filename = "./file_waste/" . $_POST['frm_id'] . "/" . $oldname[3];
-			$query2 = "INSERT INTO `{$GLOBALS['mysql_prefix']}waste_basket_f` 
-					(`member_id`, 
-					`name`, 
-					`shortname`, 
-					`description`, 
+			$query2 = "INSERT INTO `{$GLOBALS['mysql_prefix']}waste_basket_f`
+					(`member_id`,
+					`name`,
+					`shortname`,
+					`description`,
 					`_on`)
-				VALUES (" . 
-					quote_smart(trim($row['member_id'])) . "," .
-					quote_smart(trim($filename)) . "," .
-					quote_smart(trim($row['shortname'])) . "," .	
-					quote_smart(trim($row['description'])) . "," .			
-					quote_smart(trim($now)) . ");";		
-			$result2 = db_query($query2);		
+				VALUES (?,?,?,?,?)";
+			$result2 = db_query($query2, [
+					trim($row['member_id']),
+					trim($filename),
+					trim($row['shortname']),
+					trim($row['description']),
+					trim($now)
+				]);		
 			}
 			
 		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `member_id`=" . intval($_POST['frm_id']);
@@ -728,77 +730,93 @@ function linkFromSumm(table, index) {
 			$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 			$from = $_SERVER['REMOTE_ADDR'];			
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
-				`field1`= " . 		quote_smart(trim($_POST['frm_field1'])) . ",
-				`field2`= " . 		quote_smart(trim($_POST['frm_field2'])) . ",
-				`field3`= " . 		quote_smart(trim($frm_field3)) . ",
-				`field4`= " . 		quote_smart(trim($_POST['frm_field4'])) . ",
-				`field5`= " . 		quote_smart(trim($filename)) . ",		
-				`field6`= " . 		quote_smart(trim($frm_field6)) . ",
-				`field7`= " . 		quote_smart(trim($_POST['frm_field7'])) . ",
-				`field8`= " . 		quote_smart(trim($_POST['frm_field8'])) . ",
-				`field9`= " . 		quote_smart(trim($_POST['frm_field9'])) . ",
-				`field10`= " . 		quote_smart(trim($_POST['frm_field10'])) . ",
-				`field11`= " . 		quote_smart(trim($_POST['frm_field11'])) . ",
-				`field12`= " . 		quote_smart(trim($_POST['frm_field12'])) . ",
-				`field13`= " . 		quote_smart(trim($_POST['frm_field13'])) . ",
-				`field14`= " . 		quote_smart(trim($_POST['frm_field14'])) . ",
-				`field15`= " . 		quote_smart(trim($_POST['frm_field15'])) . ",
-				`field16`= " . 		quote_smart(trim($frm_field16)) . ",				
-				`field17`= " . 		quote_smart(trim($frm_field17)) . ",
-				`field18`= " . 		quote_smart(trim($frm_field18)) . ",
-				`field19`= " . 		quote_smart(trim($_POST['frm_field19'])) . ",
-				`field20`= " . 		quote_smart(trim($_POST['frm_field20'])) . ",
-				`field21`= " . 		quote_smart(trim($_POST['frm_field21'])) . ",
-				`field22`= " . 		quote_smart(trim($_POST['frm_field22'])) . ",
-				`field23`= " . 		quote_smart(trim($_POST['frm_field23'])) . ",
-				`field24`= " . 		quote_smart(trim($_POST['frm_field24'])) . ",
-				`field25`= " . 		quote_smart(trim($_POST['frm_field25'])) . ",			
-				`field26`= " . 		quote_smart(trim($_POST['frm_field26'])) . ",
-				`field27`= " . 		quote_smart(trim($_POST['frm_field27'])) . ",
-				`field28`= " . 		quote_smart(trim($_POST['frm_field28'])) . ",
-				`field29`= " . 		quote_smart(trim($_POST['frm_field29'])) . ",
-				`field30`= " . 		quote_smart(trim($_POST['frm_field30'])) . ",
-				`field31`= " . 		quote_smart(trim($_POST['frm_field31'])) . ",
-				`field32`= " . 		quote_smart(trim($_POST['frm_field32'])) . ",
-				`field33`= " . 		quote_smart(trim($_POST['frm_field33'])) . ",
-				`field34`= " . 		quote_smart(trim($_POST['frm_field34'])) . ",
-				`field35`= " . 		quote_smart(trim($_POST['frm_field35'])) . ",
-				`field36`= " . 		quote_smart(trim($_POST['frm_field36'])) . ",				
-				`field37`= " . 		quote_smart(trim($_POST['frm_field37'])) . ",
-				`field38`= " . 		quote_smart(trim($_POST['frm_field38'])) . ",
-				`field39`= " . 		quote_smart(trim($_POST['frm_field39'])) . ",
-				`field40`= " . 		quote_smart(trim($_POST['frm_field40'])) . ",
-				`field41`= " . 		quote_smart(trim($_POST['frm_field41'])) . ",			
-				`field42`= " . 		quote_smart(trim($_POST['frm_field42'])) . ",
-				`field43`= " . 		quote_smart(trim($_POST['frm_field43'])) . ",
-				`field44`= " . 		quote_smart(trim($_POST['frm_field44'])) . ",
-				`field45`= " . 		quote_smart(trim($_POST['frm_field45'])) . ",
-				`field46`= " . 		quote_smart(trim($_POST['frm_field46'])) . ",
-				`field47`= " . 		quote_smart(trim($_POST['frm_field47'])) . ",
-				`field48`= " . 		quote_smart(trim($_POST['frm_field48'])) . ",
-				`field49`= " . 		quote_smart(trim($_POST['frm_field49'])) . ",
-				`field50`= " . 		quote_smart(trim($_POST['frm_field50'])) . ",
-				`field51`= " . 		quote_smart(trim($_POST['frm_field51'])) . ",
-				`field52`= " . 		quote_smart(trim($_POST['frm_field52'])) . ",				
-				`field53`= " . 		quote_smart(trim($_POST['frm_field53'])) . ",
-				`field54`= " . 		quote_smart(trim($_POST['frm_field54'])) . ",
-				`field55`= " . 		quote_smart(trim($_POST['frm_field55'])) . ",
-				`field56`= " . 		quote_smart(trim($frm_field56)) . ",
-				`field57`= " . 		quote_smart(trim($frm_field57)) . ",
-				`field58`= " . 		quote_smart(trim($frm_field58)) . ",
-				`field59`= " . 		quote_smart(trim($frm_field59)) . ",
-				`field60`= " . 		quote_smart(trim($frm_field60)) . ",
-				`field61`= " . 		quote_smart(trim($frm_field61)) . ",
-				`field62`= " . 		quote_smart(trim($frm_field62)) . ",				
-				`field63`= " . 		quote_smart(trim($frm_field63)) . ",
-				`field64`= " . 		quote_smart(trim($frm_field64)) . ",
-				`field65`= " . 		quote_smart(trim($frm_field65)) . ",				
-				`_by`= " . 			quote_smart(trim($who)) . ",				
-				`_on`= " . 			quote_smart(trim($now)) . ",
-				`_from`= " . 		quote_smart(trim($from)) . "					
-				WHERE `id`= " . 	quote_smart(trim(intval($_POST['frm_id']))) . ";";
+				`field1`=?, `field2`=?, `field3`=?, `field4`=?, `field5`=?,
+				`field6`=?, `field7`=?, `field8`=?, `field9`=?, `field10`=?,
+				`field11`=?, `field12`=?, `field13`=?, `field14`=?, `field15`=?,
+				`field16`=?, `field17`=?, `field18`=?, `field19`=?, `field20`=?,
+				`field21`=?, `field22`=?, `field23`=?, `field24`=?, `field25`=?,
+				`field26`=?, `field27`=?, `field28`=?, `field29`=?, `field30`=?,
+				`field31`=?, `field32`=?, `field33`=?, `field34`=?, `field35`=?,
+				`field36`=?, `field37`=?, `field38`=?, `field39`=?, `field40`=?,
+				`field41`=?, `field42`=?, `field43`=?, `field44`=?, `field45`=?,
+				`field46`=?, `field47`=?, `field48`=?, `field49`=?, `field50`=?,
+				`field51`=?, `field52`=?, `field53`=?, `field54`=?, `field55`=?,
+				`field56`=?, `field57`=?, `field58`=?, `field59`=?, `field60`=?,
+				`field61`=?, `field62`=?, `field63`=?, `field64`=?, `field65`=?,
+				`_by`=?, `_on`=?, `_from`=?
+				WHERE `id`=?";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+				trim($_POST['frm_field1']),
+				trim($_POST['frm_field2']),
+				trim($frm_field3),
+				trim($_POST['frm_field4']),
+				trim($filename),
+				trim($frm_field6),
+				trim($_POST['frm_field7']),
+				trim($_POST['frm_field8']),
+				trim($_POST['frm_field9']),
+				trim($_POST['frm_field10']),
+				trim($_POST['frm_field11']),
+				trim($_POST['frm_field12']),
+				trim($_POST['frm_field13']),
+				trim($_POST['frm_field14']),
+				trim($_POST['frm_field15']),
+				trim($frm_field16),
+				trim($frm_field17),
+				trim($frm_field18),
+				trim($_POST['frm_field19']),
+				trim($_POST['frm_field20']),
+				trim($_POST['frm_field21']),
+				trim($_POST['frm_field22']),
+				trim($_POST['frm_field23']),
+				trim($_POST['frm_field24']),
+				trim($_POST['frm_field25']),
+				trim($_POST['frm_field26']),
+				trim($_POST['frm_field27']),
+				trim($_POST['frm_field28']),
+				trim($_POST['frm_field29']),
+				trim($_POST['frm_field30']),
+				trim($_POST['frm_field31']),
+				trim($_POST['frm_field32']),
+				trim($_POST['frm_field33']),
+				trim($_POST['frm_field34']),
+				trim($_POST['frm_field35']),
+				trim($_POST['frm_field36']),
+				trim($_POST['frm_field37']),
+				trim($_POST['frm_field38']),
+				trim($_POST['frm_field39']),
+				trim($_POST['frm_field40']),
+				trim($_POST['frm_field41']),
+				trim($_POST['frm_field42']),
+				trim($_POST['frm_field43']),
+				trim($_POST['frm_field44']),
+				trim($_POST['frm_field45']),
+				trim($_POST['frm_field46']),
+				trim($_POST['frm_field47']),
+				trim($_POST['frm_field48']),
+				trim($_POST['frm_field49']),
+				trim($_POST['frm_field50']),
+				trim($_POST['frm_field51']),
+				trim($_POST['frm_field52']),
+				trim($_POST['frm_field53']),
+				trim($_POST['frm_field54']),
+				trim($_POST['frm_field55']),
+				trim($frm_field56),
+				trim($frm_field57),
+				trim($frm_field58),
+				trim($frm_field59),
+				trim($frm_field60),
+				trim($frm_field61),
+				trim($frm_field62),
+				trim($frm_field63),
+				trim($frm_field64),
+				trim($frm_field65),
+				trim($who),
+				trim($now),
+				trim($from),
+				intval($_POST['frm_id'])
+			]);
 			do_log($GLOBALS['LOG_MEMBER_CHANGE'], $_POST['frm_id'], $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);
 
 			$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been Changed by user " . get_owner($who) . " on " . $now . "\n\n";
@@ -860,146 +878,93 @@ function linkFromSumm(table, index) {
 			$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 			$from = $_SERVER['REMOTE_ADDR'];			
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
-			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}member` 
-					(`field1`,
-					`field2`, 
-					`field3`, 
-					`field4`, 
-					`field5`, 
-					`field6`, 
-					`field7`, 
-					`field8`, 
-					`field9`, 
-					`field10`, 
-					`field11`, 
-					`field12`, 
-					`field13`, 
-					`field14`, 
-					`field15`, 
-					`field16`, 
-					`field17`, 
-					`field18`, 
-					`field19`, 
-					`field20`, 
-					`field21`, 
-					`field22`, 
-					`field23`, 
-					`field24`, 
-					`field25`,
-					`field26`, 
-					`field27`, 
-					`field28`, 
-					`field29`, 
-					`field30`, 
-					`field31`, 
-					`field32`, 
-					`field33`, 
-					`field34`, 
-					`field35`, 
-					`field36`, 
-					`field37`, 
-					`field38`, 
-					`field39`, 
-					`field40`, 
-					`field41`, 
-					`field42`,
-					`field43`, 
-					`field44`, 
-					`field45`, 
-					`field46`, 
-					`field47`, 
-					`field48`, 
-					`field49`, 
-					`field50`, 
-					`field51`, 
-					`field52`, 
-					`field53`, 
-					`field54`, 
-					`field55`, 
-					`field56`, 
-					`field57`, 
-					`field58`, 
-					`field59`, 
-					`field60`, 
-					`field61`, 
-					`field62`, 
-					`field63`, 
-					`field64`, 
-					`field65`, 					
-					`_by`, 
-					`_on`, 						
-					`_from` )
-				VALUES (" . 
-					quote_smart(trim($_POST['frm_field1'])) . "," .
-					quote_smart(trim($_POST['frm_field2'])) . "," .
-					quote_smart(trim($frm_field3)) . "," .
-					quote_smart(trim($_POST['frm_field4'])) . "," .	
-					quote_smart(trim($filename)) . "," .
-					quote_smart(trim($frm_field6)) . "," .
-					quote_smart(trim($_POST['frm_field7'])) . "," .		
-					quote_smart(trim($_POST['frm_field8'])) . "," .		
-					quote_smart(trim($_POST['frm_field9'])) . "," .	
-					quote_smart(trim($_POST['frm_field10'])) . "," .				
-					quote_smart(trim($_POST['frm_field11'])) . "," .	
-					quote_smart(trim($_POST['frm_field12'])) . "," .					
-					quote_smart(trim($_POST['frm_field13'])) . "," .
-					quote_smart(trim($_POST['frm_field14'])) . "," .	
-					quote_smart(trim($_POST['frm_field15'])) . "," .					
-					quote_smart(trim($frm_field16)) . "," .						
-					quote_smart(trim($frm_field17)) . "," .	
-					quote_smart(trim($frm_field18)) . "," .
-					quote_smart(trim($_POST['frm_field19'])) . "," .
-					quote_smart(trim($_POST['frm_field20'])) . "," .	
-					quote_smart(trim($_POST['frm_field21'])) . "," .
-					quote_smart(trim($_POST['frm_field22'])) . "," .
-					quote_smart(trim($_POST['frm_field23'])) . "," .		
-					quote_smart(trim($_POST['frm_field24'])) . "," .		
-					quote_smart(trim($_POST['frm_field25'])) . "," .	
-					quote_smart(trim($_POST['frm_field26'])) . "," .				
-					quote_smart(trim($_POST['frm_field27'])) . "," .	
-					quote_smart(trim($_POST['frm_field28'])) . "," .					
-					quote_smart(trim($_POST['frm_field29'])) . "," .
-					quote_smart(trim($_POST['frm_field30'])) . "," .	
-					quote_smart(trim($_POST['frm_field31'])) . "," .	
-					quote_smart(trim($_POST['frm_field32'])) . "," .	
-					quote_smart(trim($_POST['frm_field33'])) . "," .	
-					quote_smart(trim($_POST['frm_field34'])) . "," .	
-					quote_smart(trim($_POST['frm_field35'])) . "," .	
-					quote_smart(trim($_POST['frm_field36'])) . "," .	
-					quote_smart(trim($_POST['frm_field37'])) . "," .	
-					quote_smart(trim($_POST['frm_field38'])) . "," .	
-					quote_smart(trim($_POST['frm_field39'])) . "," .	
-					quote_smart(trim($_POST['frm_field40'])) . "," .	
-					quote_smart(trim($_POST['frm_field41'])) . "," .	
-					quote_smart(trim($_POST['frm_field42'])) . "," .	
-					quote_smart(trim($_POST['frm_field43'])) . "," .	
-					quote_smart(trim($_POST['frm_field44'])) . "," .	
-					quote_smart(trim($_POST['frm_field45'])) . "," .						
-					quote_smart(trim($_POST['frm_field46'])) . "," .	
-					quote_smart(trim($_POST['frm_field47'])) . "," .
-					quote_smart(trim($_POST['frm_field48'])) . "," .	
-					quote_smart(trim($_POST['frm_field49'])) . "," .	
-					quote_smart(trim($_POST['frm_field50'])) . "," .	
-					quote_smart(trim($_POST['frm_field51'])) . "," .	
-					quote_smart(trim($_POST['frm_field52'])) . "," .	
-					quote_smart(trim($_POST['frm_field53'])) . "," .	
-					quote_smart(trim($_POST['frm_field54'])) . "," .	
-					quote_smart(trim($_POST['frm_field55'])) . "," .	
-					quote_smart(trim($frm_field56)) . "," .	
-					quote_smart(trim($frm_field57)) . "," .
-					quote_smart(trim($frm_field58)) . "," .	
-					quote_smart(trim($frm_field59)) . "," .	
-					quote_smart(trim($frm_field60)) . "," .	
-					quote_smart(trim($frm_field61)) . "," .	
-					quote_smart(trim($frm_field62)) . "," .	
-					quote_smart(trim($frm_field63)) . "," .	
-					quote_smart(trim($frm_field64)) . "," .	
-					quote_smart(trim($frm_field65)) . "," .						
-					quote_smart(trim($who)) . "," .	
-					quote_smart(trim($now)) . "," .					
-					quote_smart(trim($from)) . ");";								// 8/23/08
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}member`
+					(`field1`, `field2`, `field3`, `field4`, `field5`,
+					`field6`, `field7`, `field8`, `field9`, `field10`,
+					`field11`, `field12`, `field13`, `field14`, `field15`,
+					`field16`, `field17`, `field18`, `field19`, `field20`,
+					`field21`, `field22`, `field23`, `field24`, `field25`,
+					`field26`, `field27`, `field28`, `field29`, `field30`,
+					`field31`, `field32`, `field33`, `field34`, `field35`,
+					`field36`, `field37`, `field38`, `field39`, `field40`,
+					`field41`, `field42`, `field43`, `field44`, `field45`,
+					`field46`, `field47`, `field48`, `field49`, `field50`,
+					`field51`, `field52`, `field53`, `field54`, `field55`,
+					`field56`, `field57`, `field58`, `field59`, `field60`,
+					`field61`, `field62`, `field63`, `field64`, `field65`,
+					`_by`, `_on`, `_from` )
+				VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_field1']),
+					trim($_POST['frm_field2']),
+					trim($frm_field3),
+					trim($_POST['frm_field4']),
+					trim($filename),
+					trim($frm_field6),
+					trim($_POST['frm_field7']),
+					trim($_POST['frm_field8']),
+					trim($_POST['frm_field9']),
+					trim($_POST['frm_field10']),
+					trim($_POST['frm_field11']),
+					trim($_POST['frm_field12']),
+					trim($_POST['frm_field13']),
+					trim($_POST['frm_field14']),
+					trim($_POST['frm_field15']),
+					trim($frm_field16),
+					trim($frm_field17),
+					trim($frm_field18),
+					trim($_POST['frm_field19']),
+					trim($_POST['frm_field20']),
+					trim($_POST['frm_field21']),
+					trim($_POST['frm_field22']),
+					trim($_POST['frm_field23']),
+					trim($_POST['frm_field24']),
+					trim($_POST['frm_field25']),
+					trim($_POST['frm_field26']),
+					trim($_POST['frm_field27']),
+					trim($_POST['frm_field28']),
+					trim($_POST['frm_field29']),
+					trim($_POST['frm_field30']),
+					trim($_POST['frm_field31']),
+					trim($_POST['frm_field32']),
+					trim($_POST['frm_field33']),
+					trim($_POST['frm_field34']),
+					trim($_POST['frm_field35']),
+					trim($_POST['frm_field36']),
+					trim($_POST['frm_field37']),
+					trim($_POST['frm_field38']),
+					trim($_POST['frm_field39']),
+					trim($_POST['frm_field40']),
+					trim($_POST['frm_field41']),
+					trim($_POST['frm_field42']),
+					trim($_POST['frm_field43']),
+					trim($_POST['frm_field44']),
+					trim($_POST['frm_field45']),
+					trim($_POST['frm_field46']),
+					trim($_POST['frm_field47']),
+					trim($_POST['frm_field48']),
+					trim($_POST['frm_field49']),
+					trim($_POST['frm_field50']),
+					trim($_POST['frm_field51']),
+					trim($_POST['frm_field52']),
+					trim($_POST['frm_field53']),
+					trim($_POST['frm_field54']),
+					trim($_POST['frm_field55']),
+					trim($frm_field56),
+					trim($frm_field57),
+					trim($frm_field58),
+					trim($frm_field59),
+					trim($frm_field60),
+					trim($frm_field61),
+					trim($frm_field62),
+					trim($frm_field63),
+					trim($frm_field64),
+					trim($frm_field65),
+					trim($who),
+					trim($now),
+					trim($from)
+				]);
 			$new_id = db()->insert_id;	
 			do_log($GLOBALS['LOG_MEMBER_ADD'], db()->insert_id, $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);			
 			
@@ -1028,9 +993,9 @@ function linkFromSumm(table, index) {
 			$image = $filename;
 			
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
-				`field5`= " . quote_smart(trim($filename)) . "				
-				WHERE `id`= '{$new_id}';";
-			$result = db_query($query);
+				`field5`=?
+				WHERE `id`=?";
+			$result = db_query($query, [trim($filename), $new_id]);
 
 			$caption = "<B>Member  <i>" . stripslashes_deep($_POST['frm_field2']) . " " . stripslashes_deep($_POST['frm_field1']) . "</i> data has been added.</B>";
 
@@ -1056,16 +1021,17 @@ function linkFromSumm(table, index) {
 			$frm_refresh = ($expires == "Yes") ? "$_POST[frm_year_refresh]-$_POST[frm_month_refresh]-$_POST[frm_day_refresh]" : "";
 			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `frequency`, `completed`, `refresh_due`, `_on` )
-				VALUES (" .
-					quote_smart(trim($_POST['frm_id'])) . "," .
-					1 . "," .
-					quote_smart(trim($_POST['frm_skill'])) . "," .
-					quote_smart(trim($expires)) . "," .
-					quote_smart(trim($frm_completed)) . "," .				
-					quote_smart(trim($frm_refresh)) . "," .
-					quote_smart(trim($now)) . ");";
+				VALUES (?,?,?,?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_id']),
+					1,
+					trim($_POST['frm_skill']),
+					trim($expires),
+					trim($frm_completed),
+					trim($frm_refresh),
+					trim($now)
+				]);
 			
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been added.";	
@@ -1088,15 +1054,16 @@ function linkFromSumm(table, index) {
 			
 			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `start`, `end`, `_on` )
-				VALUES (" .
-					quote_smart(trim($_POST['frm_id'])) . "," .
-					6 . "," .
-					quote_smart(trim($_POST['frm_skill'])) . "," .
-					quote_smart(trim($start)) . "," .
-					quote_smart(trim($end)) . "," .
-					quote_smart(trim($now)) . ");";
+				VALUES (?,?,?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_id']),
+					6,
+					trim($_POST['frm_skill']),
+					trim($start),
+					trim($end),
+					trim($now)
+				]);
 			
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been added.";	
@@ -1116,14 +1083,15 @@ function linkFromSumm(table, index) {
 			
 			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `completed`, `_on` )
-				VALUES (" .
-					quote_smart(trim($_POST['frm_id'])) . "," .
-					5 . "," .
-					quote_smart(trim($_POST['frm_skill'])) . "," .	
-					quote_smart(trim($now)) . "," .	
-					quote_smart(trim($now)) . ");";
+				VALUES (?,?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_id']),
+					5,
+					trim($_POST['frm_skill']),
+					trim($now),
+					trim($now)
+				]);
 			
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been added.";	
@@ -1143,13 +1111,14 @@ function linkFromSumm(table, index) {
 			
 			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `_on` )
-				VALUES (" .
-					quote_smart(trim($_POST['frm_id'])) . "," .
-					2 . "," .
-					quote_smart(trim($_POST['frm_skill'])) . "," .	
-					quote_smart(trim($now)) . ");";
+				VALUES (?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_id']),
+					2,
+					trim($_POST['frm_skill']),
+					trim($now)
+				]);
 
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been added.";	
@@ -1169,13 +1138,14 @@ function linkFromSumm(table, index) {
 			
 			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `_on` )
-				VALUES (" .
-					quote_smart(trim($_POST['frm_id'])) . "," .
-					3 . "," .
-					quote_smart(trim($_POST['frm_skill'])) . "," .	
-					quote_smart(trim($now)) . ");";
+				VALUES (?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_id']),
+					3,
+					trim($_POST['frm_skill']),
+					trim($now)
+				]);
 
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been added.";	
@@ -1201,17 +1171,18 @@ function linkFromSumm(table, index) {
 			
 			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `frequency`, `start`, `end`, `days`, `_on` )
-				VALUES (" .
-					quote_smart(trim($_POST['frm_id'])) . "," .
-					4 . "," .
-					quote_smart(trim($_POST['frm_skill'])) . "," .						
-					quote_smart(trim($frequency)) . "," .
-					quote_smart(trim($start)) . "," .
-					quote_smart(trim($end)) . "," .
-					quote_smart(trim($days)) . "," .					
-					quote_smart(trim($now)) . ");";
+				VALUES (?,?,?,?,?,?,?,?)";
 
-			$result = db_query($query);
+			$result = db_query($query, [
+					trim($_POST['frm_id']),
+					4,
+					trim($_POST['frm_skill']),
+					trim($frequency),
+					trim($start),
+					trim($end),
+					trim($days),
+					trim($now)
+				]);
 
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been added.";	
@@ -1247,15 +1218,16 @@ function linkFromSumm(table, index) {
 						$filename = $file;
 						$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}mdb_files` (
 							`member_id`, `name`, `shortname`, `description`, `filesize`, `_on` )
-							VALUES (" .
-								quote_smart(trim($_POST['frm_id'])) . "," .
-								quote_smart(trim($filename)) . "," .
-								quote_smart(trim($shortname)) . "," .								
-								quote_smart(trim($_POST['frm_descr'])) . "," .	
-								quote_smart(trim($_FILES['frm_file']['size'])) . "," .	
-								quote_smart(trim($now)) . ");";
+							VALUES (?,?,?,?,?,?)";
 
-						$result = db_query($query);
+						$result = db_query($query, [
+								trim($_POST['frm_id']),
+								trim($filename),
+								trim($shortname),
+								trim($_POST['frm_descr']),
+								trim($_FILES['frm_file']['size']),
+								trim($now)
+							]);
 						$caption = "<B>File \"" . $shortname . "\" has been added to the member file store.</B>";
 						} else {
 						$flag = "No update done";
@@ -1302,15 +1274,18 @@ function linkFromSumm(table, index) {
 				$frm_refresh = ($expires == "Yes") ? "$_POST[frm_year_refresh]-$_POST[frm_month_refresh]-$_POST[frm_day_refresh]" : "";
 
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
-					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
-					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
-					`frequency`= " . 		quote_smart(trim($expires)) . ",		
-					`completed`= " . 		quote_smart(trim($frm_completed)) . ",				
-					`refresh_due`= " . 		quote_smart(trim($frm_refresh)) . ",
-					`_on`= " . 				quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
+					`member_id`=?, `skill_id`=?, `frequency`=?, `completed`=?, `refresh_due`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_id']),
+					trim($_POST['frm_skill']),
+					trim($expires),
+					trim($frm_completed),
+					trim($frm_refresh),
+					trim($now),
+					intval($_POST['frm_all_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been changed.";	
@@ -1341,14 +1316,17 @@ function linkFromSumm(table, index) {
 				$start = "$_POST[frm_year_start]-$_POST[frm_month_start]-$_POST[frm_day_start]";
 				$end = "$_POST[frm_year_end]-$_POST[frm_month_end]-$_POST[frm_day_end]";
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
-					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
-					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
-					`start`= " . 		quote_smart(trim($start)) . ",
-					`end`= " . 		quote_smart(trim($end)) . ",
-					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
+					`member_id`=?, `skill_id`=?, `start`=?, `end`=?, `_on`=?
+					WHERE `id`=?";
 
-				$result = db_query($query);
+				$result = db_query($query, [
+					trim($_POST['frm_id']),
+					trim($_POST['frm_skill']),
+					trim($start),
+					trim($end),
+					trim($now),
+					intval($_POST['frm_all_id'])
+				]);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been changed.";	

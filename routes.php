@@ -126,8 +126,8 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query, []);
+while ($row = $result->fetch_assoc()) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 
@@ -137,9 +137,9 @@ $sm_icons = $GLOBALS['sm_icons'];
 function get_icon_legend (){			// returns legend string - 1/1/09
 	global $u_types, $sm_icons;
 	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle` ASC, `name` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query, []);
 	$print = "";											// output string
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = $result->fetch_assoc()) {
 		$type_data = $u_types[$row['type']];
 		$print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$type_data[1]] . "' BORDER=0 />&nbsp;&nbsp;&nbsp;\n";
 		}
@@ -344,21 +344,12 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
 	$assigns = explode ("|", $_REQUEST['frm_id_str']);		// pipe sep'd id's in frm_id_str
 	for ($i=0;$i<count($assigns); $i++) {		//10/6/09 added facility and receiving facility
-		$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`, `facility_id`, `rec_facility_id`)
-						VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-							quote_smart($now),
-							quote_smart($frm_status_id),
-							quote_smart($frm_ticket_id),
-							quote_smart($assigns[$i]),
-							quote_smart($frm_comments),
-							quote_smart($frm_by_id),
-							quote_smart($now),
-							quote_smart($frm_facility_id),
-							quote_smart($frm_rec_facility_id));
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		$query  = "INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`, `facility_id`, `rec_facility_id`)
+						VALUES (?,?,?,?,?,?,?,?,?)";
+		$result	= db_query($query, [$now, $frm_status_id, $frm_ticket_id, $assigns[$i], $frm_comments, $frm_by_id, $now, $frm_facility_id, $frm_rec_facility_id]);
 //										remove placeholder inserted by 'add'		
-		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = ? AND `responder_id` = 0 LIMIT 1";
+		$result	= db_query($query, [$frm_ticket_id]);
 		
 							//	Automatic Status Update by Dispatch Status
 		$use_status_update = get_variable('use_disp_autostat');		//	9/10/13
@@ -368,9 +359,8 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 		
 							// apply status update to unit status
 
-		$query = "SELECT `id`, `contact_via`, `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";		// 10/7/08
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$row_addr = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT `id`, `contact_via`, `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = ? LIMIT 1";		// 10/7/08
+		$row_addr = db_fetch_one($query, [$assigns[$i]]);
 		if (is_email($row_addr['contact_via'])) {array_push($addrs, $row_addr['contact_via']); }		// to array for emailing to unit
 		if ($row_addr['smsg_id'] != "") {array_push($smsgaddrs, $row_addr['smsg_id']); }		// to array for sending message via SMS Gateway to unit	//	10/23/12
 		do_log($GLOBALS['LOG_CALL_DISP'], $frm_ticket_id, $assigns[$i], $frm_status_id);		// 3/13/12
@@ -654,9 +644,9 @@ function doReset() {
 		AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";				// 6/25/10
 
 	
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query, []);
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = $result->fetch_assoc()) {
 		if(!(empty($row['theunit_id']))) {
 			$dispatches_act[$row['theunit_id']] = (empty($row['clear']))? $row['ticket_id']:"";	// blank = unit unassigned
 
@@ -693,10 +683,9 @@ function doReset() {
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` ON (`$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]ticket`.`facility`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`={$the_ticket_id} LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
+		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`=? LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row_ticket = stripslashes_deep(mysql_fetch_array($result));
+	$row_ticket = db_fetch_one($query, [$the_ticket_id]);
 	$facility = $row_ticket['facility'];
 	$rec_fac = $row_ticket['rec_facility'];
 	$lat = $row_ticket['lat'];
@@ -705,20 +694,17 @@ function doReset() {
 	print "var thelat = " . $lat . ";\nvar thelng = " . $lng . ";\n";		// set js-accessible location data
 
 	if ($rec_fac > 0) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`=" . $rec_fac . "";			// 10/6/09
-		$result_rfc = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_rec_fac = stripslashes_deep(mysql_fetch_array($result_rfc));
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`=?";			// 10/6/09
+		$row_rec_fac = db_fetch_one($query, [$rec_fac]);
 		$rf_lat = $row_rec_fac['lat'];
 		$rf_lng = $row_rec_fac['lng'];
 		$rf_name = $row_rec_fac['name'];		
 		
-		unset ($result_rfc);
 		}
 	
 	function get_addr(){				// returns incident address 11/27/09
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= " . get_ticket_id () . " LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_array($result));
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`= ? LIMIT 1";
+		$row = db_fetch_one($query, [get_ticket_id()]);
 		return "{$row['street']} {$row['city']} {$row['state']}"; 
 		}		// end function get_addr()
 
@@ -872,9 +858,8 @@ function doReset() {
 	<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
 <?php
 		$query = "SELECT `id` FROM `$GLOBALS[mysql_prefix]responder`";		// 5/12/10
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		unset($result);		
-		$required = 96 + (mysql_affected_rows()*22);		// 7/9/10
+		$result = db_query($query, []);
+		$required = 96 + ($result->num_rows * 22);		// 7/9/10
 		$the_height = (integer)  min (round($units_side_bar_height * $_SESSION['scr_height']), $required );		// set the max
 		$unit_id = (array_key_exists('unit_id', $_GET))? $_GET['unit_id'] : "" ;
 		$capabilities = (array_key_exists('capabilities', $_GET))? stripslashes(trim(str_replace('/', '|', $_GET['capabilities']))) : "" ;	// 11/18/10

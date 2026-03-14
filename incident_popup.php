@@ -439,35 +439,36 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 <INPUT TYPE='hidden' NAME='status' VALUE=''>
 </FORM>
 <?php
-		$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
+		$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=?" : "";
+		$restrict_params = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? [$_SESSION['user_id']] : [];
 											// 1/7/10
 		$query = "SELECT *,
 			`problemstart` AS `my_start`,
 			`problemstart` AS `problemstart`,
 			`problemend` AS `problemend`,
 			`date` AS `date`,
-			`booked_date` AS `booked_date`,		
-			`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,		
+			`booked_date` AS `booked_date`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
-			`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,		
-			`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,		
+			`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
-			`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,		
+			`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,
 			`rf`.`name` AS `rec_fac_name`,
-			`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,		
-			`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`,		 
+			`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,
+			`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`
-			FROM `{$GLOBALS['mysql_prefix']}ticket` 
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` 	ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)	
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` 		ON (`{$GLOBALS['mysql_prefix']}facilities`.id = `{$GLOBALS['mysql_prefix']}ticket`.`facility`) 
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` rf 	ON (`rf`.id = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`) 
-			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= $ticket_id $restrict_ticket";			// 7/16/09, 8/12/09
+			FROM `{$GLOBALS['mysql_prefix']}ticket`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` 	ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` 		ON (`{$GLOBALS['mysql_prefix']}facilities`.id = `{$GLOBALS['mysql_prefix']}ticket`.`facility`)
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` rf 	ON (`rf`.id = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`)
+			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= ? $restrict_ticket";			// 7/16/09, 8/12/09
 
 
-		$result = db_query($query);
+		$result = db_query($query, array_merge([$ticket_id], $restrict_params));
 		$row = stripslashes_deep($result->fetch_array());
 
 		$lat = $row['lat']; $lng = $row['lng'];
@@ -518,41 +519,42 @@ var zoom = map.getZoom();
 			dump($_POST);
 			}
 
-		if ($ticket_id == '' OR $ticket_id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='$ticket_id'")) {	/* sanity check */
+		if ($ticket_id == '' OR $ticket_id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$ticket_id])) {	/* sanity check */
 			print "Invalid Ticket ID: '$ticket_id'<BR />";
 			return;
 			}
 
-		$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
+		$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=?" : "";
+		$restrict_params = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? [$_SESSION['user_id']] : [];
 											// 1/7/10
 		$query = "SELECT *,
 			`problemstart` AS `my_start`,
 			`problemstart` AS `problemstart`,
 			`problemend` AS `problemend`,
 			`date` AS `date`,
-			`booked_date` AS `booked_date`,		
-			`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,		
+			`booked_date` AS `booked_date`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
-			`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,		
-			`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,		
+			`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
-			`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,		
+			`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,
 			`rf`.`name` AS `rec_fac_name`,
-			`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,		
+			`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,
 			`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`,
-			`ty`.`type` AS `type`, 			
+			`ty`.`type` AS `type`,
 			`{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`
-			FROM `{$GLOBALS['mysql_prefix']}ticket` 
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` 	ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)	
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` 		ON (`{$GLOBALS['mysql_prefix']}facilities`.id = `{$GLOBALS['mysql_prefix']}ticket`.`facility`) 
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` rf 	ON (`rf`.id = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`) 
-			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= $ticket_id $restrict_ticket";			// 7/16/09, 8/12/09
+			FROM `{$GLOBALS['mysql_prefix']}ticket`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` 	ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` 		ON (`{$GLOBALS['mysql_prefix']}facilities`.id = `{$GLOBALS['mysql_prefix']}ticket`.`facility`)
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` rf 	ON (`rf`.id = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`)
+			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= ? $restrict_ticket";			// 7/16/09, 8/12/09
 
 
-		$result = db_query($query);
+		$result = db_query($query, array_merge([$ticket_id], $restrict_params));
 		$row = stripslashes_deep($result->fetch_array());
 		$tip =  htmlentities ("{$row['contact']}/{$row['tick_street']}/{$row['tick_city']}/{$row['tick_state']}/{$row['phone']}/{$row['scope']}", ENT_QUOTES);		// tooltip string - 10/28/2012
 		$sched_flag = ($row['status'] == $GLOBALS['STATUS_SCHEDULED']) ? "*" : "";		
@@ -729,12 +731,12 @@ var zoom = map.getZoom();
 				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . $the_status . " </TD></TR>";
 				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
-				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). " Via: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
-				if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
-				if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
+				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['contact_name']). " Via: " . htmlspecialchars($row_fac['contact_email']) . "</TD></TR>";
+				if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . htmlspecialchars($row_fac['security_contact']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['security_email']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['security_phone']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
+				if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
 				if(!(isempty(trim($row_fac['opening_hours']))))  	{
 					$opening_arr_serial = base64_decode($row_fac['opening_hours']);
 					$opening_arr = unserialize($opening_arr_serial);
@@ -775,8 +777,8 @@ var zoom = map.getZoom();
 					$openingTimes = "Opening Times Today (" . $the_day . ")  ---  " . $outputstring;
 					$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Opening today (" . $the_day . ")&nbsp;</TD><TD ALIGN='left'>" . $outputstring . "</TD></TR>";
 					}
-				if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['pager_p']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['pager_s']) . " </TD></TR>";}
 				$tab_1 .= "</TABLE></TD></TR>";
 				$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE>";
 				$tab_1 .= "</TABLE></TD></TR></TABLE>";
@@ -827,8 +829,8 @@ var zoom = map.getZoom();
 // ================================End of Facilities========================================
 // ====================================Add Responding Units to Map================================================
 
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id='$ticket_id' AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'";
-		$result = db_query($query);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=? AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
+		$result = db_query($query, [$ticket_id]);
 		while($row = $result->fetch_array()){
 			$responder_id=($row['responder_id']);
 			$query_unit = "SELECT *, r.updated AS `r_updated`,
@@ -839,17 +841,17 @@ var zoom = map.getZoom();
 				`r`.`name` AS `name`,
 				`t`.`name` AS `un_type_name`,
 				`s`.`description` AS `stat_descr`,
-				`r`.`description` AS `unit_descr`, 
-				`r`.`ring_fence` AS `ring_fence`,	
-				`r`.`excl_zone` AS `excl_zone`,		
+				`r`.`description` AS `unit_descr`,
+				`r`.`ring_fence` AS `ring_fence`,
+				`r`.`excl_zone` AS `excl_zone`,
 				(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns`
-				WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = unit_id  AND  (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )) AS `nr_assigned` 
-				FROM `{$GLOBALS['mysql_prefix']}responder` `r` 
-				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = a.resource_id )			
-				LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON ( `r`.`type` = t.id )	
-				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
-				WHERE `r`.`id`='$responder_id';";
-			$result_unit = db_query($query_unit);
+				WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = unit_id  AND  (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )) AS `nr_assigned`
+				FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = a.resource_id )
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON ( `r`.`type` = t.id )
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
+				WHERE `r`.`id`=?";
+			$result_unit = db_query($query_unit, [$responder_id]);
 			while($row_unit = $result_unit->fetch_array()){
 				$unit_id = $row_unit['unit_id'];
 				$mobile = $row_unit['mobile'];
@@ -869,13 +871,13 @@ var zoom = map.getZoom();
 					$theTabs .= '<div class="contentwrapper">';
 					
 					$tab_1 = "<TABLE width='{$iw_width}' style='height: 280px;'><TR><TD><TABLE>";			
-					$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_unit['name'], 48)) . "</B></TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . addslashes(shorten(str_replace($eols, " ", $row_unit['description']), 32)) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . htmlspecialchars(shorten($row_unit['name'], 48)) . "</B></TD></TR>";
+					$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . htmlspecialchars(shorten(str_replace($eols, " ", $row_unit['description']), 32)) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row_unit['contact_name']). " Via: " . addslashes($row_unit['contact_via']) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . htmlspecialchars($row_unit['contact_name']). " Via: " . htmlspecialchars($row_unit['contact_via']) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($the_time) . "</TD></TR>";		// 4/11/10
 					if (array_key_exists($unit_id, $assigns)) {
-						$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$unit_id] . "'>" . addslashes(shorten($assigns[$unit_id], 20)) . "</A></TD></TR>";
+						$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$unit_id] . "'>" . htmlspecialchars(shorten($assigns[$unit_id], 20)) . "</A></TD></TR>";
 						}
 					$tab_1 .= "</TABLE></TD></TR></TABLE>";
 				

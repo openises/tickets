@@ -75,8 +75,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	
 function get_building_details($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = " . $id;		// types in use
-	$result = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = ?";		// types in use
+	$result = db_query($query, [intval($id)]);
 	if($result) {
 		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr[0] = $row['name'];
@@ -364,8 +364,8 @@ function get_loc_name($id) {
 	if($id == 0) {
 		return "";
 		}
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' AND `id` = " . $id . " ORDER BY `name` ASC";		// types in use
-	$result = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' AND `id` = ? ORDER BY `name` ASC";		// types in use
+	$result = db_query($query, [intval($id)]);
 	if($result->num_rows > 0) {
 		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['name'];
@@ -1424,22 +1424,22 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			$from = $_SERVER['REMOTE_ADDR'];
 			$incs_arr = (isset($_POST['frm_inc'])) ? $_POST['frm_inc'] : array();
 
-			if(quote_smart(trim($_POST['frm_gold_loc'])) != 0) {
+			if(intval(trim($_POST['frm_gold_loc'])) != 0) {
 				$_POST['frm_gold_street'] = $_POST['frm_gold_city'] = $_POST['frm_gold_state'] = $_POST['frm_gold_lat'] = $_POST['frm_gold_lng'] = "";
 				}
-			if(quote_smart(trim($_POST['frm_silver_loc'])) != 0) {
+			if(intval(trim($_POST['frm_silver_loc'])) != 0) {
 				$_POST['frm_silver_street'] = $_POST['frm_silver_city'] = $_POST['frm_silver_state'] = $_POST['frm_silver_lat'] = $_POST['frm_silver_lng'] = "";
 				}
-			if(quote_smart(trim($_POST['frm_bronze_loc'])) != 0) {
+			if(intval(trim($_POST['frm_bronze_loc'])) != 0) {
 				$_POST['frm_bronze_street'] = $_POST['frm_bronze_city'] = $_POST['frm_bronze_state'] = $_POST['frm_bronze_lat'] = $_POST['frm_bronze_lng'] = "";
 				}
-			if(quote_smart(trim($_POST['frm_level4_loc'])) != 0) {
+			if(intval(trim($_POST['frm_level4_loc'])) != 0) {
 				$_POST['frm_level4_street'] = $_POST['frm_level4_city'] = $_POST['frm_level4_state'] = $_POST['frm_level4_lat'] = $_POST['frm_level4_lng'] = "";
 				}
-			if(quote_smart(trim($_POST['frm_level5_loc'])) != 0) {
+			if(intval(trim($_POST['frm_level5_loc'])) != 0) {
 				$_POST['frm_level5_street'] = $_POST['frm_level5_city'] = $_POST['frm_level5_state'] = $_POST['frm_level5_lat'] = $_POST['frm_level5_lng'] = "";
 				}
-			if(quote_smart(trim($_POST['frm_level6_loc'])) != 0) {
+			if(intval(trim($_POST['frm_level6_loc'])) != 0) {
 				$_POST['frm_level6_street'] = $_POST['frm_level6_city'] = $_POST['frm_level6_state'] = $_POST['frm_level6_lat'] = $_POST['frm_level6_lng'] = "";
 				}
 			if($_POST['frm_gold_street'] == "") {
@@ -1461,65 +1461,120 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				$_POST['frm_level6_city'] = $_POST['frm_level6_state'] = $_POST['frm_level6_lat'] = $_POST['frm_level6_lng'] = "";
 				}
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}major_incidents` SET
-				`name`= " . 			quote_smart(trim($_POST['frm_name'])) . ",
-				`description`= " . 		quote_smart(trim($_POST['frm_descr'])) . ",
-				`type`= " . 			quote_smart(trim($_POST['frm_type'])) . ",
-				`mi_status`= " . 		quote_smart(trim($status)) . ",
-				`gold`= " . 			quote_smart(trim($_POST['frm_gold'])) . ",
-				`silver`= " . 			quote_smart(trim($_POST['frm_silver'])) . ",
-				`bronze`= " . 			quote_smart(trim($_POST['frm_bronze'])) . ",
-				`level4`= " . 			quote_smart(trim($_POST['frm_level4'])) . ",
-				`level5`= " . 			quote_smart(trim($_POST['frm_level5'])) . ",
-				`level6`= " . 			quote_smart(trim($_POST['frm_level6'])) . ",
-				`gold_loc`= " . 		quote_smart(trim($_POST['frm_gold_loc'])) . ",
-				`gold_street`= " . 		quote_smart(trim($_POST['frm_gold_street'])) . ",
-				`gold_city`= " . 		quote_smart(trim($_POST['frm_gold_city'])) . ",
-				`gold_state`= " . 		quote_smart(trim($_POST['frm_gold_state'])) . ",
-				`gold_lat`= " . 		quote_smart(trim($_POST['frm_gold_lat'])) . ",
-				`gold_lng`= " . 		quote_smart(trim($_POST['frm_gold_lng'])) . ",
-				`silver_loc`= " . 		quote_smart(trim($_POST['frm_silver_loc'])) . ",
-				`silver_street`= " . 	quote_smart(trim($_POST['frm_silver_street'])) . ",
-				`silver_city`= " . 		quote_smart(trim($_POST['frm_silver_city'])) . ",
-				`silver_state`= " . 	quote_smart(trim($_POST['frm_silver_state'])) . ",
-				`silver_lat`= " . 		quote_smart(trim($_POST['frm_silver_lat'])) . ",
-				`silver_lng`= " . 		quote_smart(trim($_POST['frm_silver_lng'])) . ",
-				`bronze_loc`= " . 		quote_smart(trim($_POST['frm_bronze_loc'])) . ",
-				`bronze_street`= " . 	quote_smart(trim($_POST['frm_bronze_street'])) . ",
-				`bronze_city`= " . 		quote_smart(trim($_POST['frm_bronze_city'])) . ",
-				`bronze_state`= " . 	quote_smart(trim($_POST['frm_bronze_state'])) . ",
-				`bronze_lat`= " . 		quote_smart(trim($_POST['frm_bronze_lat'])) . ",
-				`bronze_lng`= " . 		quote_smart(trim($_POST['frm_bronze_lng'])) . ",
-				`level4_loc`= " . 		quote_smart(trim($_POST['frm_level4_loc'])) . ",
-				`level4_street`= " . 	quote_smart(trim($_POST['frm_level4_street'])) . ",
-				`level4_city`= " . 		quote_smart(trim($_POST['frm_level4_city'])) . ",
-				`level4_state`= " . 	quote_smart(trim($_POST['frm_level4_state'])) . ",
-				`level4_lat`= " . 		quote_smart(trim($_POST['frm_level4_lat'])) . ",
-				`level4_lng`= " . 		quote_smart(trim($_POST['frm_level4_lng'])) . ",
-				`level5_loc`= " . 		quote_smart(trim($_POST['frm_level5_loc'])) . ",
-				`level5_street`= " . 	quote_smart(trim($_POST['frm_level5_street'])) . ",
-				`level5_city`= " . 		quote_smart(trim($_POST['frm_level5_city'])) . ",
-				`level5_state`= " . 	quote_smart(trim($_POST['frm_level5_state'])) . ",
-				`level5_lat`= " . 		quote_smart(trim($_POST['frm_level5_lat'])) . ",
-				`level5_lng`= " . 		quote_smart(trim($_POST['frm_level5_lng'])) . ",
-				`level6_loc`= " . 		quote_smart(trim($_POST['frm_level6_loc'])) . ",
-				`level6_street`= " . 	quote_smart(trim($_POST['frm_level6_street'])) . ",
-				`level6_city`= " . 		quote_smart(trim($_POST['frm_level6_city'])) . ",
-				`level6_state`= " . 	quote_smart(trim($_POST['frm_level6_state'])) . ",
-				`level6_lat`= " . 		quote_smart(trim($_POST['frm_level6_lat'])) . ",
-				`level6_lng`= " . 		quote_smart(trim($_POST['frm_level6_lng'])) . ",
-				`boundary`= " . 		quote_smart(trim($_POST['frm_boundary'])) . ",
-				`inc_startime`=".		quote_smart(trim($frm_mistart)) . ",
-				`inc_endtime`=".		quote_smart(trim($frm_miend)) . ",
-				`incident_notes`= " . 	quote_smart(trim($_POST['frm_notes'])) . ",
-				`_by`= " . 		$by . ",
-				`_on`= '" . 	$now . "',
-				`_from`= '" . $from . "'
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
-			$result = db_query($query);
+				`name`= ?,
+				`description`= ?,
+				`type`= ?,
+				`mi_status`= ?,
+				`gold`= ?,
+				`silver`= ?,
+				`bronze`= ?,
+				`level4`= ?,
+				`level5`= ?,
+				`level6`= ?,
+				`gold_loc`= ?,
+				`gold_street`= ?,
+				`gold_city`= ?,
+				`gold_state`= ?,
+				`gold_lat`= ?,
+				`gold_lng`= ?,
+				`silver_loc`= ?,
+				`silver_street`= ?,
+				`silver_city`= ?,
+				`silver_state`= ?,
+				`silver_lat`= ?,
+				`silver_lng`= ?,
+				`bronze_loc`= ?,
+				`bronze_street`= ?,
+				`bronze_city`= ?,
+				`bronze_state`= ?,
+				`bronze_lat`= ?,
+				`bronze_lng`= ?,
+				`level4_loc`= ?,
+				`level4_street`= ?,
+				`level4_city`= ?,
+				`level4_state`= ?,
+				`level4_lat`= ?,
+				`level4_lng`= ?,
+				`level5_loc`= ?,
+				`level5_street`= ?,
+				`level5_city`= ?,
+				`level5_state`= ?,
+				`level5_lat`= ?,
+				`level5_lng`= ?,
+				`level6_loc`= ?,
+				`level6_street`= ?,
+				`level6_city`= ?,
+				`level6_state`= ?,
+				`level6_lat`= ?,
+				`level6_lng`= ?,
+				`boundary`= ?,
+				`inc_startime`= ?,
+				`inc_endtime`= ?,
+				`incident_notes`= ?,
+				`_by`= ?,
+				`_on`= ?,
+				`_from`= ?
+				WHERE `id`= ?";
+			$result = db_query($query, [
+				trim($_POST['frm_name']),
+				trim($_POST['frm_descr']),
+				trim($_POST['frm_type']),
+				trim($status),
+				trim($_POST['frm_gold']),
+				trim($_POST['frm_silver']),
+				trim($_POST['frm_bronze']),
+				trim($_POST['frm_level4']),
+				trim($_POST['frm_level5']),
+				trim($_POST['frm_level6']),
+				trim($_POST['frm_gold_loc']),
+				trim($_POST['frm_gold_street']),
+				trim($_POST['frm_gold_city']),
+				trim($_POST['frm_gold_state']),
+				trim($_POST['frm_gold_lat']),
+				trim($_POST['frm_gold_lng']),
+				trim($_POST['frm_silver_loc']),
+				trim($_POST['frm_silver_street']),
+				trim($_POST['frm_silver_city']),
+				trim($_POST['frm_silver_state']),
+				trim($_POST['frm_silver_lat']),
+				trim($_POST['frm_silver_lng']),
+				trim($_POST['frm_bronze_loc']),
+				trim($_POST['frm_bronze_street']),
+				trim($_POST['frm_bronze_city']),
+				trim($_POST['frm_bronze_state']),
+				trim($_POST['frm_bronze_lat']),
+				trim($_POST['frm_bronze_lng']),
+				trim($_POST['frm_level4_loc']),
+				trim($_POST['frm_level4_street']),
+				trim($_POST['frm_level4_city']),
+				trim($_POST['frm_level4_state']),
+				trim($_POST['frm_level4_lat']),
+				trim($_POST['frm_level4_lng']),
+				trim($_POST['frm_level5_loc']),
+				trim($_POST['frm_level5_street']),
+				trim($_POST['frm_level5_city']),
+				trim($_POST['frm_level5_state']),
+				trim($_POST['frm_level5_lat']),
+				trim($_POST['frm_level5_lng']),
+				trim($_POST['frm_level6_loc']),
+				trim($_POST['frm_level6_street']),
+				trim($_POST['frm_level6_city']),
+				trim($_POST['frm_level6_state']),
+				trim($_POST['frm_level6_lat']),
+				trim($_POST['frm_level6_lng']),
+				trim($_POST['frm_boundary']),
+				trim($frm_mistart),
+				$frm_miend,
+				trim($_POST['frm_notes']),
+				intval($by),
+				$now,
+				$from,
+				intval(trim($_POST['frm_id']))
+			]);
 			
 			$existing_incs = array();
-			$query_x = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = " . $mi_id . " ORDER BY `id`;";
-			$result_x = db_query($query_x);
+			$query_x = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = ? ORDER BY `id`";
+			$result_x = db_query($query_x, [intval($mi_id)]);
 			while ($row_x = stripslashes_deep($result_x->fetch_assoc())) {
 				$existing_incs[] = $row_x['ticket_id'];
 				}
@@ -1527,15 +1582,15 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			if(isset($_POST['frm_inc'])) {
 				foreach($_POST['frm_inc'] AS $val) {
 					if(!in_array($val, $existing_incs, TRUE)) {
-						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (`mi_id`, `ticket_id`) VALUES ($mi_id, $val)";
-						$result = db_query($query);	
+						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (`mi_id`, `ticket_id`) VALUES (?, ?)";
+						$result = db_query($query, [intval($mi_id), intval($val)]);
 						}
 					}
 				}
 			foreach($existing_incs AS $val) {
 				if(!in_array($val, $incs_arr, TRUE)) {
-					$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = $mi_id AND `ticket_id` = $val";
-					$result = db_query($query);	
+					$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = ? AND `ticket_id` = ?";
+					$result = db_query($query, [intval($mi_id), intval($val)]);
 					}
 				}
 
@@ -1563,8 +1618,8 @@ require_once('./incs/all_forms_js_variables.inc.php');
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = db_query($query);	
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
+				$result = db_query($query, [$realfilename]);
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
@@ -1576,12 +1631,12 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						$print .= "Error uploading file";
 						}
 					} else {
-					$row = stripslashes_deep($result->fetch_assoc());			
+					$row = stripslashes_deep($result->fetch_assoc());
 					$exists = true;
 					$existing_file = $row['filename'];	//	get existing file name
 					}
-					
-				$from = $_SERVER['REMOTE_ADDR'];	
+
+				$from = $_SERVER['REMOTE_ADDR'];
 				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
 				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` ,
@@ -1596,20 +1651,17 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						`_by`,
 						`_on`,
 						`_from`
-					) VALUES (
-						'" . $_POST['frm_file_title'] . "',
-						'" . $filename . "',
-						'" . $realfilename . "',
-						0,
-						0,
-						0,
-						" . $mi_id . ",
-						0,
-						'" . $_FILES['frm_file']['type'] . "',
-						$by,
-						'" . $now . "',
-						'" . $from . "')";
-				$result_insert	= db_query($query_insert);
+					) VALUES (?, ?, ?, 0, 0, 0, ?, 0, ?, ?, ?, ?)";
+				$result_insert	= db_query($query_insert, [
+					$_POST['frm_file_title'],
+					$filename,
+					$realfilename,
+					intval($mi_id),
+					$_FILES['frm_file']['type'],
+					intval($by),
+					$now,
+					$from
+				]);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1626,7 +1678,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 
 	if ($_getgoadd == 'true') {
 		$frm_mistart = "$_POST[frm_year_inc_startime]-$_POST[frm_month_inc_startime]-$_POST[frm_day_inc_startime] $_POST[frm_hour_inc_startime]:$_POST[frm_minute_inc_startime]:00";
-		$frm_miend  = (array_key_exists('frm_year_inc_endtime', $_POST)) ? quote_smart("$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00") : "NULL";
+		$frm_miend  = (array_key_exists('frm_year_inc_endtime', $_POST)) ? "$_POST[frm_year_inc_endtime]-$_POST[frm_month_inc_endtime]-$_POST[frm_day_inc_endtime] $_POST[frm_hour_inc_endtime]:$_POST[frm_minute_inc_endtime]:00" : null;
 		$by = $_SESSION['user_id'];
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$from = $_SERVER['REMOTE_ADDR'];
@@ -1687,53 +1739,53 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			$level6City = $level6State = $level6Lat = $level6Lng = "";
 			}
 		
-		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}major_incidents` 
-				(`name`, 
-				`description`, 
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}major_incidents`
+				(`name`,
+				`description`,
 				`type`,
 				`mi_status`,
-				`gold`, 
-				`silver`, 
-				`bronze`, 
+				`gold`,
+				`silver`,
+				`bronze`,
 				`level4`,
 				`level5`,
 				`level6`,
-				`gold_loc`, 
-				`gold_street`, 
-				`gold_city`, 
-				`gold_state`, 
-				`gold_lat`, 
-				`gold_lng`, 
-				`silver_loc`, 
-				`silver_street`, 
-				`silver_city`, 
-				`silver_state`, 
-				`silver_lat`, 
-				`silver_lng`, 				
-				`bronze_loc`, 
-				`bronze_street`, 
-				`bronze_city`, 
-				`bronze_state`, 
-				`bronze_lat`, 
+				`gold_loc`,
+				`gold_street`,
+				`gold_city`,
+				`gold_state`,
+				`gold_lat`,
+				`gold_lng`,
+				`silver_loc`,
+				`silver_street`,
+				`silver_city`,
+				`silver_state`,
+				`silver_lat`,
+				`silver_lng`,
+				`bronze_loc`,
+				`bronze_street`,
+				`bronze_city`,
+				`bronze_state`,
+				`bronze_lat`,
 				`bronze_lng`,
-				`level4_loc`, 
-				`level4_street`, 
-				`level4_city`, 
-				`level4_state`, 
-				`level4_lat`, 
+				`level4_loc`,
+				`level4_street`,
+				`level4_city`,
+				`level4_state`,
+				`level4_lat`,
 				`level4_lng`,
-				`level5_loc`, 
-				`level5_street`, 
-				`level5_city`, 
-				`level5_state`, 
-				`level5_lat`, 
+				`level5_loc`,
+				`level5_street`,
+				`level5_city`,
+				`level5_state`,
+				`level5_lat`,
 				`level5_lng`,
-				`level6_loc`, 
-				`level6_street`, 
-				`level6_city`, 
-				`level6_state`, 
-				`level6_lat`, 
-				`level6_lng`, 					
+				`level6_loc`,
+				`level6_street`,
+				`level6_city`,
+				`level6_state`,
+				`level6_lat`,
+				`level6_lng`,
 				`boundary`,
 				`inc_startime`,
 				`inc_endtime`,
@@ -1741,62 +1793,63 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				`_by`,
 				`_on`,
 				`_from` )
-			VALUES (" .
-				quote_smart(trim($_POST['frm_name'])) . "," .
-				quote_smart(trim($_POST['frm_descr'])) . "," .
-				quote_smart(trim($_POST['frm_type'])) . "," .
-				quote_smart(trim($status)) . "," .
-				quote_smart(trim($_POST['frm_gold'])) . "," .
-				quote_smart(trim($_POST['frm_silver'])) . "," .
-				quote_smart(trim($_POST['frm_bronze'])) . "," .
-				quote_smart(trim($_POST['frm_level4'])) . "," .
-				quote_smart(trim($_POST['frm_level5'])) . "," .
-				quote_smart(trim($_POST['frm_level6'])) . "," .
-				quote_smart(trim($gold_loc)) . "," .
-				quote_smart(trim($goldStreet)) . "," .
-				quote_smart(trim($goldCity)) . "," .
-				quote_smart(trim($goldState)) . "," .
-				quote_smart(trim($goldLat)) . "," .
-				quote_smart(trim($goldLng)) . "," .		
-				quote_smart(trim($silver_loc)) . "," .
-				quote_smart(trim($silverStreet)) . "," .
-				quote_smart(trim($silverCity)) . "," .
-				quote_smart(trim($silverState)) . "," .
-				quote_smart(trim($silverLat)) . "," .
-				quote_smart(trim($silverLng)) . "," .
-				quote_smart(trim($bronze_loc)) . "," .
-				quote_smart(trim($bronzeStreet)) . "," .
-				quote_smart(trim($bronzeCity)) . "," .
-				quote_smart(trim($bronzeState)) . "," .
-				quote_smart(trim($bronzeLat)) . "," .
-				quote_smart(trim($bronzeLng)) . "," .
-				quote_smart(trim($level4_loc)) . "," .
-				quote_smart(trim($level4Street)) . "," .
-				quote_smart(trim($level4City)) . "," .
-				quote_smart(trim($level4State)) . "," .
-				quote_smart(trim($level4Lat)) . "," .
-				quote_smart(trim($level4Lng)) . "," .
-				quote_smart(trim($level5_loc)) . "," .
-				quote_smart(trim($level5Street)) . "," .
-				quote_smart(trim($level5City)) . "," .
-				quote_smart(trim($level5State)) . "," .
-				quote_smart(trim($level5Lat)) . "," .
-				quote_smart(trim($level5Lng)) . "," .
-				quote_smart(trim($level6_loc)) . "," .
-				quote_smart(trim($level6Street)) . "," .
-				quote_smart(trim($level6City)) . "," .
-				quote_smart(trim($level6State)) . "," .
-				quote_smart(trim($level6Lat)) . "," .
-				quote_smart(trim($level6Lng)) . "," .
-				quote_smart(trim($_POST['frm_boundary'])) . "," .
-				quote_smart(trim($frm_mistart)) . "," .
-				quote_smart(trim($frm_miend)) . "," .
-				quote_smart(trim($_POST['frm_notes'])) . "," .
-				quote_smart(trim($_SESSION['user_id'])) . "," .
-				quote_smart(trim($now)) . "," .
-				quote_smart(trim($from)) . ");";
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-		$result = db_query($query);
+		$result = db_query($query, [
+			trim($_POST['frm_name']),
+			trim($_POST['frm_descr']),
+			trim($_POST['frm_type']),
+			trim($status),
+			trim($_POST['frm_gold']),
+			trim($_POST['frm_silver']),
+			trim($_POST['frm_bronze']),
+			trim($_POST['frm_level4']),
+			trim($_POST['frm_level5']),
+			trim($_POST['frm_level6']),
+			trim($gold_loc),
+			trim($goldStreet),
+			trim($goldCity),
+			trim($goldState),
+			trim($goldLat),
+			trim($goldLng),
+			trim($silver_loc),
+			trim($silverStreet),
+			trim($silverCity),
+			trim($silverState),
+			trim($silverLat),
+			trim($silverLng),
+			trim($bronze_loc),
+			trim($bronzeStreet),
+			trim($bronzeCity),
+			trim($bronzeState),
+			trim($bronzeLat),
+			trim($bronzeLng),
+			trim($level4_loc),
+			trim($level4Street),
+			trim($level4City),
+			trim($level4State),
+			trim($level4Lat),
+			trim($level4Lng),
+			trim($level5_loc),
+			trim($level5Street),
+			trim($level5City),
+			trim($level5State),
+			trim($level5Lat),
+			trim($level5Lng),
+			trim($level6_loc),
+			trim($level6Street),
+			trim($level6City),
+			trim($level6State),
+			trim($level6Lat),
+			trim($level6Lng),
+			trim($_POST['frm_boundary']),
+			trim($frm_mistart),
+			$frm_miend,
+			trim($_POST['frm_notes']),
+			intval(trim($_SESSION['user_id'])),
+			trim($now),
+			trim($from)
+		]);
 		$new_id=db()->insert_id;
 		
 //	9/10/13 File Upload support
@@ -1823,8 +1876,8 @@ require_once('./incs/all_forms_js_variables.inc.php');
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = db_query($query);	
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
+				$result = db_query($query, [$realfilename]);
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
@@ -1836,12 +1889,12 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						$print .= "Error uploading file";
 						}
 					} else {
-					$row = stripslashes_deep($result->fetch_assoc());			
+					$row = stripslashes_deep($result->fetch_assoc());
 					$exists = true;
 					$existing_file = $row['filename'];	//	get existing file name
 					}
-					
-				$from = $_SERVER['REMOTE_ADDR'];	
+
+				$from = $_SERVER['REMOTE_ADDR'];
 				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
 				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` ,
@@ -1856,20 +1909,17 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						`_by`,
 						`_on`,
 						`_from`
-					) VALUES (
-						'" . $_POST['frm_file_title'] . "',
-						'" . $filename . "',
-						'" . $realfilename . "',
-						0,
-						0,
-						0,
-						" . $new_id . ",
-						0,
-						'" . $_FILES['frm_file']['type'] . "',
-						$by,
-						'" . $now . "',
-						'" . $from . "')";
-				$result_insert	= db_query($query_insert);
+					) VALUES (?, ?, ?, 0, 0, 0, ?, 0, ?, ?, ?, ?)";
+				$result_insert	= db_query($query_insert, [
+					$_POST['frm_file_title'],
+					$filename,
+					$realfilename,
+					intval($new_id),
+					$_FILES['frm_file']['type'],
+					intval($by),
+					$now,
+					$from
+				]);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1883,8 +1933,8 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // End of file upload
 		
 		foreach($incs_arr AS $val) {
-			$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (`mi_id`, `ticket_id`) VALUES ($new_id, $val)";
-			$result = db_query($query);	
+			$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (`mi_id`, `ticket_id`) VALUES (?, ?)";
+			$result = db_query($query, [intval($new_id), intval($val)]);
 			}
 
 		$caption = "<B>Major Incident<i> " . stripslashes_deep($_POST['frm_name']) . "</i>' has been created </B><BR /><BR />";

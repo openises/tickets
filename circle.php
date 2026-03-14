@@ -667,7 +667,7 @@ switch ($_POST["_func"]) {
 				<TD ALIGN='right'>&nbsp;" . format_date($row['_on']) . "</TD></TR>\n";
 			$i++;
 			}
-		}		// end if/else (mysql_num_rows($result)==0)
+		}		// end if/else ($result->num_rows==0)
 ?>		
 		<TR CLASS = 'odd'><TD COLSPAN=99 ALIGN='center'  STYLE = 'white-space:nowrap;'><BR />	
 		  	<INPUT TYPE="button" VALUE="Add new =>" >
@@ -844,36 +844,38 @@ function buildMap_c() {															// 'create' version
 	    
 	case "cp":				// 'create' process
 		dump($_POST);
-		$filled =		(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_filled'])) ; 
-		$fill_color =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_color'])) ; 
-		$fill_opacity =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_opacity'])) ; 
+		$is_text = (trim($_POST['frm_line_type']) == "t");
+		$filled =		$is_text ?	NULL : trim($_POST['frm_filled']);
+		$fill_color =	$is_text ?	NULL : trim($_POST['frm_fill_color']);
+		$fill_opacity =	$is_text ?	NULL : trim($_POST['frm_fill_opacity']);
 //		dump($fill_opacity);
 		$query = "INSERT INTO `{$tablename}` (`line_name`, `line_ident`, `line_cat_id`, `line_status`, `line_type`, `line_data`, `use_with_bm`, `use_with_r`, `use_with_f`, `use_with_u_ex`, `use_with_u_rf`, `line_color`, `line_opacity`, `filled`, `fill_color`, `fill_opacity`,`line_width`,
-		`_by`, `_from`, `_on`) 
-			VALUES (" .
-			 quote_smart(trim($_POST['frm_name'])) ."," .
-			 quote_smart(trim($_POST['frm_ident'])) ."," .
-			 quote_smart(trim($_POST['frm_line_cat_id'])) ."," .
-			 quote_smart(trim($_POST['frm_line_status'])) ."," .
-			 quote_smart(trim($_POST['frm_line_type'])) ."," .
-			 quote_smart(trim($_POST['frm_line_data'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_bm'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_r'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_f'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_u_ex'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_u_rf'])) ."," .	
-			 quote_smart(trim($_POST['frm_line_color'])) ."," .
-			 quote_smart(trim($_POST['frm_line_opacity'])) ."," .
-			 $filled ."," .
-			 $fill_color ."," .
-			 $fill_opacity ."," .
-			 quote_smart(trim($_POST['frm_line_width'])) ."," .
-			 quote_smart($by) ."," .
-			 quote_smart($from) ."," .
-			 quote_smart(trim($now)) . ")" ;
+		`_by`, `_from`, `_on`)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		$result = db_query($query);
-		$insert_id = db()->insert_id;
+		$result = db_query($query, [
+			trim($_POST['frm_name']),
+			trim($_POST['frm_ident']),
+			trim($_POST['frm_line_cat_id']),
+			trim($_POST['frm_line_status']),
+			trim($_POST['frm_line_type']),
+			trim($_POST['frm_line_data']),
+			trim($_POST['frm_use_with_bm']),
+			trim($_POST['frm_use_with_r']),
+			trim($_POST['frm_use_with_f']),
+			trim($_POST['frm_use_with_u_ex']),
+			trim($_POST['frm_use_with_u_rf']),
+			trim($_POST['frm_line_color']),
+			trim($_POST['frm_line_opacity']),
+			$filled,
+			$fill_color,
+			$fill_opacity,
+			trim($_POST['frm_line_width']),
+			$by,
+			$from,
+			trim($now)
+		]);
+		$insert_id = db_insert_id();
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML><HEAD><TITLE><?php echo basename(__FILE__);?></TITLE></HEAD>
@@ -1287,29 +1289,51 @@ else {
 	case "up":				// process 'update'
 		$line_status = (trim($_POST['frm_line_is_vis'])=='on')?  0: 1;
 
-		$query = "UPDATE `{$tablename}` SET 
-			`line_name` = " . 		quote_smart(trim($_POST['frm_name'])) .",
-			`line_ident` = " . 		quote_smart(trim($_POST['frm_ident'])) .",
-			`line_cat_id` = " . 	quote_smart(trim($_POST['frm_line_cat_id'])) .",
-			`line_status` = 		'{$line_status}',
-			`line_type` = " . 		quote_smart(trim($_POST['frm_line_type'])) .",
-			`line_data` = " .  		quote_smart(trim($_POST['frm_line_data'])) .",
-			`use_with_bm` = " .  	quote_smart(trim($_POST['frm_use_with_bm'])) .",
-			`use_with_r` = " .  	quote_smart(trim($_POST['frm_use_with_r'])) .",
-			`use_with_f` = " .  	quote_smart(trim($_POST['frm_use_with_f'])) .",
-			`use_with_u_ex` = " .  	quote_smart(trim($_POST['frm_use_with_u_ex'])) .",
-			`use_with_u_rf` = " .  	quote_smart(trim($_POST['frm_use_with_u_rf'])) .",	
-			`line_color` = " .  	quote_smart(trim($_POST['frm_line_color'])) .",
-			`line_opacity` = " .  	quote_smart(trim($_POST['frm_line_opacity'])) .",
-			`filled` = " .  		quote_smart(trim($_POST['frm_filled'])) .",
-			`fill_color` = " .  	quote_smart(trim($_POST['frm_fill_color'])) .",
-			`fill_opacity` = " .  	quote_smart(trim($_POST['frm_fill_opacity'])) .",
-			`line_width` = " .  	quote_smart(trim($_POST['frm_line_width'])) .",
-			`_by` =   				'{$by}' ,
-			`_from` =	 			'{$from}' ,
-			`_on` =   				'{$now}'
-			WHERE `id` = 			{$_POST['frm_id']}";
-		$result = db_query($query);
+		$query = "UPDATE `{$tablename}` SET
+			`line_name` = ?,
+			`line_ident` = ?,
+			`line_cat_id` = ?,
+			`line_status` = ?,
+			`line_type` = ?,
+			`line_data` = ?,
+			`use_with_bm` = ?,
+			`use_with_r` = ?,
+			`use_with_f` = ?,
+			`use_with_u_ex` = ?,
+			`use_with_u_rf` = ?,
+			`line_color` = ?,
+			`line_opacity` = ?,
+			`filled` = ?,
+			`fill_color` = ?,
+			`fill_opacity` = ?,
+			`line_width` = ?,
+			`_by` = ?,
+			`_from` = ?,
+			`_on` = ?
+			WHERE `id` = ?";
+		$result = db_query($query, [
+			trim($_POST['frm_name']),
+			trim($_POST['frm_ident']),
+			trim($_POST['frm_line_cat_id']),
+			$line_status,
+			trim($_POST['frm_line_type']),
+			trim($_POST['frm_line_data']),
+			trim($_POST['frm_use_with_bm']),
+			trim($_POST['frm_use_with_r']),
+			trim($_POST['frm_use_with_f']),
+			trim($_POST['frm_use_with_u_ex']),
+			trim($_POST['frm_use_with_u_rf']),
+			trim($_POST['frm_line_color']),
+			trim($_POST['frm_line_opacity']),
+			trim($_POST['frm_filled']),
+			trim($_POST['frm_fill_color']),
+			trim($_POST['frm_fill_opacity']),
+			trim($_POST['frm_line_width']),
+			$by,
+			$from,
+			trim($now),
+			$_POST['frm_id']
+		]);
 //		snap(__LINE__, $query);
 // _______________________________________________
 ?>

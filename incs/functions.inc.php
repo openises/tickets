@@ -486,8 +486,8 @@ function get_issue_date($id){
 	if ($row) { print $row['date']; }
 	}
 
-function check_for_rows($query) {		/* check sql query for returning rows, courtesy of Micah Snyder */
-	$sql = db_query($query);
+function check_for_rows($query, $params = []) {		/* check sql query for returning rows, courtesy of Micah Snyder */
+	$sql = db_query($query, $params);
 	if($sql && $sql->num_rows !== 0)
 		return $sql->num_rows;
 	else
@@ -522,36 +522,36 @@ function get_disp_closure_summary($tick_id) {
 
 function get_disps($tick_id, $resp_id) {				// 7/4/10, 10/20/12
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-		WHERE `ticket_id`='$tick_id' AND `responder_id` = '$resp_id'
+		WHERE `ticket_id`= ? AND `responder_id` = ?
 		AND ((`dispatched` IS NOT NULL) 	AND (DATE_FORMAT(`dispatched`,'%y') != '00'))
 		AND ((`responding` IS NULL) 		OR (DATE_FORMAT(`responding`,'%y') = '00'))
 		AND ((`on_scene` IS NULL) 			OR (DATE_FORMAT(`on_scene`,'%y') = '00'))
 		AND ((`clear` IS NULL) 				OR (DATE_FORMAT(`clear`,'%y') = '00'))
 		ORDER BY `id` DESC LIMIT 1";
-	$result = db_query($query);
+	$result = db_query($query, [$tick_id, $resp_id]);
 	if ($result->num_rows>0) {
 		$row = $result->fetch_assoc();
 		return "dispatched " . substr ($row['dispatched'] ,11 ,5 );
 		}
 
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-		WHERE `ticket_id`='$tick_id' AND `responder_id` = '$resp_id'
+		WHERE `ticket_id`= ? AND `responder_id` = ?
 		AND ((`responding` IS NOT NULL) 	AND (DATE_FORMAT(`responding`,'%y') != '00'))
 		AND ((`on_scene` IS NULL) 			OR (DATE_FORMAT(`on_scene`,'%y') = '00'))
 		AND ((`clear` IS NULL) 				OR (DATE_FORMAT(`clear`,'%y') = '00'))
 		ORDER BY `id` DESC LIMIT 1";
-	$result = db_query($query);
+	$result = db_query($query, [$tick_id, $resp_id]);
 	if ($result->num_rows>0) {
 		$row = $result->fetch_assoc();
 		return "responding " . substr ($row['responding'] ,11 ,5 );
 		}
 
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-		WHERE `ticket_id`='$tick_id'  AND `responder_id` = '$resp_id'
+		WHERE `ticket_id`= ?  AND `responder_id` = ?
 		AND ((`on_scene` IS NOT NULL) 	AND (DATE_FORMAT(`dispatched`,'%y') != '00'))
 		AND (`clear` IS NULL 				OR DATE_FORMAT(`clear`,'%y') = '00')
 		ORDER BY `id` DESC LIMIT 1";
-	$result = db_query($query);
+	$result = db_query($query, [$tick_id, $resp_id]);
 	if ($result->num_rows>0) {
 		$row = $result->fetch_assoc();
 		return "on_scene " . substr ($row['on_scene'] ,11 ,5 );
@@ -579,8 +579,8 @@ function show_assigns($which, $id_in){				// 10/20/12
 		FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r`	ON (`r`.`id` = `a`.`responder_id`)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`t`.`id` = `a`.`ticket_id`)
-		WHERE `a`.`{$which_ar[$which]}` = {$id_in} ORDER BY `problemstart_i` DESC LIMIT 50";
-	$as_result	= db_query($as_query);
+		WHERE `a`.`{$which_ar[$which]}` = ? ORDER BY `problemstart_i` DESC LIMIT 50";
+	$as_result	= db_query($as_query, [$id_in]);
 	$out_str = $the_handle = "";
 	$i=0;		// line counter
 	if ($as_result->num_rows){	//
@@ -651,9 +651,9 @@ function show_actions ($the_id, $theSort, $links, $display, $mode=0) {			/* list
 	$query = "SELECT *, `p`.`id` AS `pat_id`
 		FROM `{$GLOBALS['mysql_prefix']}patient` `p`
  		LEFT JOIN `{$GLOBALS['mysql_prefix']}insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
- 		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";	//	7/10/13
+ 		WHERE `ticket_id`= ? ORDER BY `date`";	//	7/10/13
 
-	$result = db_query($query);
+	$result = db_query($query, [$the_id]);
 	$caption = get_text("Patients");
 	$pctr=0;
 	$genders = array("", "M", "F", "T", "U");
@@ -685,8 +685,8 @@ function show_actions ($the_id, $theSort, $links, $display, $mode=0) {			/* list
 		$print .= "</TABLE>";	//	End of Patients Table
 		}
 														/* list actions */
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = '$the_id' ORDER BY `date`";
-	$result = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = ? ORDER BY `date`";
+	$result = db_query($query, [$the_id]);
 	$caption = get_text("Actions");
 	$actr=0;
 	if ($result->num_rows > 0) {
@@ -738,8 +738,8 @@ function list_messages($the_id, $theSort, $links, $display) {
 		$print .= "<TR><TD CLASS='heading text text_center text_bold' COLSPAN=99><U>Messages</U></TD></TR>";
 		$print .= "<TR CLASS='odd' STYLE='width: 98%;'><TD CLASS='td_label text text_left text_bold'>Type</TD><TD CLASS='td_label text text_left text_bold'>To</TD><TD CLASS='td_label text text_left text_bold'>From</TD><TD CLASS='td_label text text_left text_bold'>Subject</TD><TD CLASS='td_label text text_left text_bold'>Message</TD><TD CLASS='td_label text text_left text_bold' WIDTH='10%'>Date</TD></TR>";
 		$actr++;
-		$query_messages = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `ticket_id`= " . $the_id . " ORDER BY '" . $theSort . "' ASC;";
-		$result_messages = db_query($query_messages);
+		$query_messages = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `ticket_id`= ? ORDER BY `" . preg_replace('/[^a-zA-Z0-9_]/', '', $theSort) . "` ASC;";
+		$result_messages = db_query($query_messages, [$the_id]);
 		if($result_messages->num_rows == 0) {
 			$print .= "<TR CLASS='{$evenodd[$actr%2]}'><TD ALIGN='center' COLSPAN='99'>No Messages</TD></TR>";
 			} else {
@@ -804,9 +804,9 @@ function show_actions_orig ($the_id, $theSort, $links, $display) {			/* list act
 		`p`.`id` AS `patient_id`
 		FROM `{$GLOBALS['mysql_prefix']}patient` `p`
  		LEFT JOIN `{$GLOBALS['mysql_prefix']}insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
- 		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";
+ 		WHERE `ticket_id`= ? ORDER BY `date`";
 
-	$result = db_query($query);
+	$result = db_query($query, [$the_id]);
 	$caption = get_text("Patient") . ": &nbsp;&nbsp;";
 	$actr=0;
 //	$genders = array("M", "F", "T", "U");
@@ -837,9 +837,9 @@ function show_actions_orig ($the_id, $theSort, $links, $display) {			/* list act
 		`date` AS `date`,
 		`updated` AS `updated`
 		FROM `{$GLOBALS['mysql_prefix']}action`
-		WHERE `ticket_id`='$the_id'
+		WHERE `ticket_id`= ?
 		ORDER BY `date`";
-	$result = db_query($query);
+	$result = db_query($query, [$the_id]);
 	if (($result->num_rows + $actr)==0) { 				// 8/6/08
 		return "";
 		}
@@ -900,8 +900,8 @@ function show_messages ($the_id, $theSort, $links, $display) {			/* list message
 		`m`.`id` AS `message_id`,
 		`m`.`message` AS `message`
 		FROM `{$GLOBALS['mysql_prefix']}messages` `m`
- 		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";
-	$result = db_query($query);
+ 		WHERE `ticket_id`= ? ORDER BY `date`";
+	$result = db_query($query, [$the_id]);
 	if ($result->num_rows == 0) {
 		print "No Messages";
 //		return "";
@@ -1037,8 +1037,8 @@ function show_log($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/1
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` r 	ON (`{$GLOBALS['mysql_prefix']}log`.`responder_id` = `r`.`id`)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` s 	ON (`{$GLOBALS['mysql_prefix']}log`.`code` = `s`.`id`)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}user` u 		ON (`{$GLOBALS['mysql_prefix']}log`.`who` = `u`.`id`)
-		WHERE `{$GLOBALS['mysql_prefix']}log`.`ticket_id` = " . $theid . " ORDER BY `when` ASC";								// 10/2/12
-	$result = db_query($query);
+		WHERE `{$GLOBALS['mysql_prefix']}log`.`ticket_id` = ? ORDER BY `when` ASC";								// 10/2/12
+	$result = db_query($query, [$theid]);
 	$i = 0;
 	$print = "<TABLE style='width: 100%;' ID='theLog'>";
 	while ($row = stripslashes_deep($result->fetch_assoc())) {
@@ -1089,9 +1089,9 @@ function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` r 	ON (l.responder_id = r.id)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` s 	ON (l.info = s.id)
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}user` u 		ON (l.who = u.id)
-		WHERE `l`.`responder_id` = {$theid}
+		WHERE `l`.`responder_id` = ?
 		ORDER BY `when` DESC LIMIT 100";								// 10/2/12
-	$result = db_query($query);
+	$result = db_query($query, [$theid]);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
 
@@ -1122,13 +1122,13 @@ function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
 //	} -- dummy
 
 function set_ticket_status($status,$id){				/* alter ticket status */
-	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET status='$status' WHERE ID='$id'LIMIT 1";
-	$result = db_query($query);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET status= ? WHERE ID= ? LIMIT 1";
+	$result = db_query($query, [$status, $id]);
 	}
 
 function get_allocates($type, $resource) {	//	6/10/11
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= '$type' AND `resource_id` = '$resource' ORDER BY `group`;";		//	6/10/11
-	$result = db_query($query);	// 4/13/11
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= ? AND `resource_id` = ? ORDER BY `group`;";		//	6/10/11
+	$result = db_query($query, [$type, $resource]);	// 4/13/11
 	$al_groups = array();
 	if($result->num_rows == 0) {
 		$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region`;";		//	6/10/11
@@ -1145,8 +1145,8 @@ function get_allocates($type, $resource) {	//	6/10/11
 	}
 
 function get_allocated_names($type, $resource) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= " . $type . " AND `resource_id` = " . $resource . " ORDER BY `group`;";
-	$result = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= ? AND `resource_id` = ? ORDER BY `group`;";
+	$result = db_query($query, [$type, $resource]);
 	$temp_ary = array();
 	if($result->num_rows != 0) {
 		while($row = stripslashes_deep($result->fetch_assoc())) {

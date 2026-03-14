@@ -1328,37 +1328,34 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				$limit = "LIMIT 0,$_SESSION[ticket_per_page]";
 				}
 			}
-		$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
+		$restrict_ticket = "";
+	$restrict_ticket_params = [];
+	if ((get_variable('restrict_user_tickets')==1) && !(is_administrator())) {
+		$restrict_ticket = " AND owner=?";
+		$restrict_ticket_params = [$_SESSION['user_id']];
+	}
 		$time_back = mysql_format_date(time() - (get_variable('delta_mins')*60) - ($cwi*3600));
-		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
-			$where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
-			} else {		
+		$where2_params = [];
+		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = " AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
+			} else {
 			if(!isset($_POST['frm_group'])) {
-				$x=0;	
-				$where2 = "AND (";
-				foreach($al_groups as $grp) {
-					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
-					$where2 .= $where3;
-					$x++;
-					}
+				$grp_list = $al_groups;
 				} else {
-				$x=0;	
-				$where2 = "AND (";	
-				foreach($_POST['frm_group'] as $grp) {
-					$where3 = (count($_POST['frm_group']) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
-					$where2 .= $where3;
-					$x++;
-					}
+				$grp_list = $_POST['frm_group'];
 				}
-			$where2 .= " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	
+			$placeholders = implode(',', array_fill(0, count($grp_list), '?'));
+			$where2 = "AND (`{$GLOBALS['mysql_prefix']}allocates`.`group` IN ({$placeholders}))";
+			$where2_params = array_values($grp_list);
+			$where2 .= " AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
 			}
 
+		$where_params = [];
 		switch($func) {				//9/29/09 Added capability for Special Incidents 10/27/09 changed to bring scheduled incidents to front when due.
-				case 0: 
-					$where = "WHERE (`status`='{$GLOBALS['STATUS_OPEN']}' OR (`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `booked_date` <= (NOW() + INTERVAL 2 DAY)) OR 
-					(`status`='{$GLOBALS['STATUS_CLOSED']}'  AND `problemend` >= '{$time_back}')){$where2}";	//	11/29/10, 6/10/11, 6/10/11
+				case 0:
+					$where = "WHERE (`status`= ? OR (`status`= ? AND `booked_date` <= (NOW() + INTERVAL 2 DAY)) OR
+					(`status`= ?  AND `problemend` >= ?)){$where2}";	//	11/29/10, 6/10/11, 6/10/11
+					$where_params = [$GLOBALS['STATUS_OPEN'], $GLOBALS['STATUS_SCHEDULED'], $GLOBALS['STATUS_CLOSED'], $time_back];
 
 					break;
 				case 1:
@@ -1370,13 +1367,15 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				case 7:
 				case 8:
 				case 9:
-					$the_start = get_start($func);		// mysql timestamp format 
+					$the_start = get_start($func);		// mysql timestamp format
 					$the_end = get_end($func);
-					$where = " WHERE (`status`='{$GLOBALS['STATUS_CLOSED']}' AND `problemend` BETWEEN '{$the_start}' AND '{$the_end}') {$where2} ";		//	6/10/11, 6/10/11
-					break;	
+					$where = " WHERE (`status`= ? AND `problemend` BETWEEN ? AND ?) {$where2} ";		//	6/10/11, 6/10/11
+					$where_params = [$GLOBALS['STATUS_CLOSED'], $the_start, $the_end];
+					break;
 				case 10:
-					$where = "WHERE (`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `booked_date` >= (NOW() + INTERVAL 2 DAY)) {$where2}";	//	11/29/10, 6/10/11, 6/10/11
-					break;				
+					$where = "WHERE (`status`= ? AND `booked_date` >= (NOW() + INTERVAL 2 DAY)) {$where2}";	//	11/29/10, 6/10/11, 6/10/11
+					$where_params = [$GLOBALS['STATUS_SCHEDULED']];
+					break;
 				default: print "error - error - error - error " . __LINE__;
 //				default: $where = "WHERE `status`='{$GLOBALS['STATUS_OPEN']}' OR (`status`='3'  AND `booked_date` <= (NOW() - INTERVAL 6 HOUR))"; break;
 				}				// end switch($func) 
@@ -1407,7 +1406,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			 GROUP BY ticket_id ORDER BY `status` DESC, `severity` DESC, `$GLOBALS[mysql_prefix]ticket`.`id` ASC";		// 2/2/09, 10/28/09
 
 
-		$result = db_query($query);
+		$all_params = array_merge($where_params, $where2_params, $restrict_ticket_params);
+		$result = db_query($query, !empty($all_params) ? $all_params : null);
 		$curr_incs =  $result->num_rows;
 		$sb_indx = 0;				// note zero base!			
 								// major while ... starts here
@@ -1605,31 +1605,21 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	if(array_key_exists('viewed_groups', $_SESSION)) {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
+	$where2_params = [];
 	if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 		$where2 = " AND `a`.`type` = 2";
 		} else {
-		if(!isset($curr_viewed)) {		
-			$x=0;	//	6/10/11
-			$where2 = "AND (";	//	6/10/11
-			foreach($al_groups as $grp) {	//	6/10/11
-				$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-				$where2 .= "`a`.`group` = '{$grp}'";
-				$where2 .= $where3;
-				$x++;
-				}
+		if(!isset($curr_viewed)) {
+			$grp_list = $al_groups;
 			} else {
-			$x=0;	//	6/10/11
-			$where2 = "AND (";	//	6/10/11
-			foreach($curr_viewed as $grp) {	//	6/10/11
-				$where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
-				$where2 .= "`a`.`group` = '{$grp}'";
-				$where2 .= $where3;
-				$x++;
-				}
+			$grp_list = $curr_viewed;
 			}
-		$where2 .= " AND `a`.`type` = 2";	
+		$placeholders = implode(',', array_fill(0, count($grp_list), '?'));
+		$where2 = "AND (`a`.`group` IN ({$placeholders}))";
+		$where2_params = array_values($grp_list);
+		$where2 .= " AND `a`.`type` = 2";
 		}
-	
+
 	$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of,
 		`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
 		`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
@@ -1651,10 +1641,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder`	`r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )		
-			WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') {$where2}   
-		GROUP BY `unit_id` ORDER BY `severity` DESC, `tick_pstart` ASC";		
+			WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') {$where2}
+		GROUP BY `unit_id` ORDER BY `severity` DESC, `tick_pstart` ASC";
 
-		$result = db_query($query);
+		$result = db_query($query, !empty($where2_params) ? $where2_params : null);
 		$curr_calls =  $result->num_rows;
 
 		$guest = is_guest();
@@ -1783,9 +1773,9 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 									FROM `$GLOBALS[mysql_prefix]responder` `r` 
 									LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
 									LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 
-									WHERE `r`.`id` = '{$row['unit_id']}' LIMIT 1";
+									WHERE `r`.`id` = ? LIMIT 1";
 
-								$result_unit = db_query($query);
+								$result_unit = db_query($query, [intval($row['unit_id'])]);
 								$row_unit = stripslashes_deep($result_unit->fetch_assoc());
 ?>
 								sidebar_line += "<DIV CLASS='unit_s' <?php print $bg_color_class;?>'><DIV class='incs' onmouseover=\"Tip('<?php print substr($row_unit['stat_descr'], 0, 12);?>')\" onmouseout=\"UnTip()\">&nbsp;<?php print substr($row_unit['stat_descr'], 0, 12);?></DIV></DIV>";
@@ -1853,28 +1843,18 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 		
 		$al_groups = $_SESSION['user_groups'];
 		
+		$where2_params = [];
 		if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-			$where2 .= " WHERE `a`.`type` = 2";
+			$where2 = " WHERE `a`.`type` = 2";
 			} else {
 			if(!isset($_POST['frm_group'])) {
-				$x=0;	//	6/10/11
-				$where2 = "WHERE (";	//	6/10/11
-				foreach($al_groups as $grp) {	//	6/10/11
-					$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`a`.`group` = '{$grp}'";
-					$where2 .= $where3;
-					$x++;
-					}
+				$grp_list = $al_groups;
 				} else {
-				$x=0;	//	6/10/11
-				$where2 = "WHERE (";	//	6/10/11
-				foreach($_POST['frm_group'] as $grp) {	//	6/10/11
-					$where3 = (count($_POST['frm_group']) > ($x+1)) ? " OR " : ")";	
-					$where2 .= "`a`.`group` = '{$grp}'";
-					$where2 .= $where3;
-					$x++;
-					}
+				$grp_list = $_POST['frm_group'];
 				}
+			$placeholders = implode(',', array_fill(0, count($grp_list), '?'));
+			$where2 = "WHERE (`a`.`group` IN ({$placeholders}))";
+			$where2_params = array_values($grp_list);
 			$where2 .= " AND `a`.`type` = 2";
 			}
 		
@@ -2174,10 +2154,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 	// assignments 3/16/09
 	
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-				WHERE `responder_id` = '{$row['id']}' AND `clear` IS NULL ";
-	
-			$result_as = db_query($query);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`  LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
+				WHERE `responder_id` = ? AND `clear` IS NULL ";
+
+			$result_as = db_query($query, [intval($row['id'])]);
 			$num_assigns_as = $result_as->num_rows;
 			$row_assign = ($num_assigns_as==0)?  FALSE : stripslashes_deep($result_as->fetch_assoc()) ;
 			unset($result_as);
