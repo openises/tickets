@@ -31,9 +31,9 @@ if (array_key_exists('frm_mode', $_GET)) {$mode =  $_GET['frm_mode'];
 	if (is_unit())  {
 		$mode = UNIT;
 		} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";			
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
+		$result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$user_row = stripslashes_deep($result->fetch_assoc());
 		$mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;		// $mode => 'all' if no unit associated this user - 10/3/10
 		}
 	}		// end if/else initialize $mode
@@ -46,12 +46,12 @@ if (($mode == UNIT) || ($mode == MINE)){
 	}	
 	
 if ((($mode==0) || ($mode==1))) {									// pull $the_unit, $the_unit_name, this user
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `u`.`responder_id` = `r`.`id` )
-		WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";		
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `u`.`responder_id` = `r`.`id` )
+		WHERE `u`.`id` = ? LIMIT 1";
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+	$result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$user_row = stripslashes_deep($result->fetch_assoc());
 	$the_unit = $user_row['responder_id'];
 	$the_unit_name = (empty($user_row['name']))? "NA": $user_row['name'];	// 'NA' if no responder this user
 	} else {
@@ -83,8 +83,8 @@ $query = "SELECT *,  `t`.`id` AS `tick_id`,
 		ORDER BY `t`.`status` DESC, `t`.`severity` DESC, `t`.`problemstart` ASC";
 
 // dump($query);
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-if (mysql_affected_rows()==0) {
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+if (db()->affected_rows==0) {
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 
 	$unit_str = $the_unit_name . ": no current calls  as of " . substr($now, 11,5);
@@ -95,7 +95,7 @@ if (mysql_affected_rows()==0) {
 	$num_tickets = 0;
 	$i = $selected_indx = 0;
 	$assigns_stack = array();
-	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+	while ($in_row = stripslashes_deep($result->fetch_assoc())) {			// 
 //		dump($in_row);
 		array_push($assigns_stack, $in_row);									// stack it up	
 		if (empty($_GET['assign_id']) && empty($_GET['ticket_id'])) {
@@ -125,13 +125,13 @@ if (mysql_affected_rows()==0) {
 	$time_now = mysql_format_date(now());			// collect ticket id's into $id_array 
 	
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `updated` > ('{$time_now}' - INTERVAL 5 MINUTE);";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+	while ($in_row = stripslashes_deep($result->fetch_assoc())) {			// 
 		array_push($id_array, $in_row['ticket_id']);
 		}
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `updated` > ('{$time_now}' - INTERVAL 5 MINUTE);";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+	while ($in_row = stripslashes_deep($result->fetch_assoc())) {			// 
 		array_push($id_array, $in_row['ticket_id']);
 		}			
 

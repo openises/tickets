@@ -6,8 +6,8 @@ if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
-$sortby = (!(array_key_exists('sort', $_GET))) ? "mi_id" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "mi_id" : sanitize_string($_GET['sort']);
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
 
 $istest = FALSE;
 $output_arr = array();
@@ -30,18 +30,18 @@ function subval_sort($a,$subkey, $dd) {
 	}
 	
 function get_categoryName($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $id . " LIMIT 1";
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return $row['category'];
 	}
 	
 function get_markup($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = " . $id;
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = ?";
+	$result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr['id'] = $row['id'];
 		$ret_arr['name'] = $row['line_name'];
 		$ret_arr['type'] = $row['line_type'];
@@ -79,14 +79,14 @@ function mi_list($sortby="mi_id", $sortdir="ASC") {
 	FROM `$GLOBALS[mysql_prefix]major_incidents` `mi` 
 	LEFT JOIN `$GLOBALS[mysql_prefix]mi_types` `mt` ON ( `mi`.`type` = `mt`.`id` )
 	GROUP BY `majinc_id` ORDER BY `majinc_id` DESC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$num_rows = mysql_num_rows($result);
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$mi_row[0][0] = 0;
 		} else {
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$tip =  addslashes ( "");		// tooltip string - 10/28/2012
 			$type = shorten($row['type_name'], 50);
 			$severity = $row['severity'];

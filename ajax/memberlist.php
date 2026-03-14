@@ -7,55 +7,63 @@ require_once('../incs/functions.inc.php');
 	// exit();
 	// } else {
 
-$page = (isset($_GET['page'])) ? $_GET['page'] : 1; 
+$page = (isset($_GET['page'])) ? sanitize_int($_GET['page']) : 1;
 $the_list_lengths = explode(',', get_variable('list_length'));
 $def_list_leng = $the_list_lengths[0];
 $where="";
- 
-// get how many rows we want to have into the grid - rowNum parameter in the grid 
-$limit = (isset($_GET['rows'])) ? $_GET['rows'] : $def_list_leng; 
- 
+$where_params = [];
+
+// get how many rows we want to have into the grid - rowNum parameter in the grid
+$limit = (isset($_GET['rows'])) ? sanitize_int($_GET['rows']) : $def_list_leng;
+
 // get index row - i.e. user click to sort. At first time sortname parameter -
-// after that the index from colModel 
-$sidx = (isset($_GET['sidx'])) ? $_GET['sidx'] : 1; 
- 
-// sorting order - at first time sortorder 
-$sord = (isset($_GET['sord'])) ? $_GET['sord'] : 'ASC';
+// after that the index from colModel
+$sidx = (isset($_GET['sidx'])) ? sanitize_string($_GET['sidx']) : 1;
 
-// User level 
-$lev = (isset($_GET['lev'])) ? $_GET['lev'] : $_SESSION['level'] ;  
+// sorting order - at first time sortorder
+$sord = (isset($_GET['sord'])) ? sanitize_string($_GET['sord']) : 'ASC';
 
-// Team 
-$team = (isset($_GET['team'])) ? $_GET['team'] : 0;  
+// User level
+$lev = (isset($_GET['lev'])) ? sanitize_int($_GET['lev']) : $_SESSION['level'] ;
+
+// Team
+$team = (isset($_GET['team'])) ? sanitize_int($_GET['team']) : 0;  
 
 // User 
-$user = (isset($_GET['user'])) ? $_GET['user'] : $SESSION['user_id'];  
+$user = (isset($_GET['user'])) ? sanitize_int($_GET['user']) : $SESSION['user_id'];
 
-$query = "SELECT * from `$GLOBALS[mysql_prefix]user` WHERE `id` = '{$user}'";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_num_rows($result);
+$query = "SELECT * from `$GLOBALS[mysql_prefix]user` WHERE `id` = ?";
+$result = db_query($query, [$user]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num_rows = $result->num_rows;
 if($num_rows !=0) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = stripslashes_deep($result->fetch_assoc());
 	$member = $row['member'];
 	} else {
 	$member = NULL;
 	}
 // if we not pass at first time index use the first column for the index or what you want
-if(!$sidx) $sidx =1; 
+if(!$sidx) $sidx =1;
+
+// Whitelist sidx and sord to prevent SQL injection
+$allowed_sidx = ['m.id', 'm.field1', 'm.field2', 'm.field6', 'm.field4', 'm.field9', 'm.field10', 'm.field11', 'm.field17', 'm.field16', 'm._on', '1'];
+if (!in_array($sidx, $allowed_sidx)) $sidx = '1';
+$sord = (strtoupper($sord) === 'DESC') ? 'DESC' : 'ASC';
 
 if(($lev == 0) || ($lev == 1) || ($lev == 2)) {
 	$where = "";
 	} elseif (($team !=0 ) && ($lev == 3)) {
-	$where = "WHERE `te`.`id` = $team ";
+	$where = "WHERE `te`.`id` = ? ";
+	$where_params[] = $team;
 	} elseif (($lev == 4) && ($member != NULL)) {
-	$where = "WHERE `m`.`id` = $member ";
+	$where = "WHERE `m`.`id` = ? ";
+	$where_params[] = $member;
 	} else {
 	exit();
 	}
 
 // calculate the number of rows for the query. We need this for paging the result 
-$result = mysql_query("SELECT COUNT(*) AS count FROM `$GLOBALS[mysql_prefix]member`"); 
-$row = mysql_fetch_array($result,MYSQL_ASSOC); 
+$result = db_query("SELECT COUNT(*) AS count FROM `$GLOBALS[mysql_prefix]member`");
+$row = $result->fetch_assoc(); 
 $count = $row['count']; 
  
 // calculate the total pages for the query 
@@ -110,9 +118,11 @@ $query = "SELECT *, `m`.`_on` AS `updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]member_status` `s` ON ( `m`.`field21` = s.id ) 	
 	LEFT JOIN `$GLOBALS[mysql_prefix]team` `te` ON ( `m`.`field3` = te.id ) 
 	LEFT JOIN `$GLOBALS[mysql_prefix]user` `us` ON ( `m`.`id` = us.member ) 	
-	$where ORDER BY $sidx $sord LIMIT $start , $limit";
+	$where ORDER BY $sidx $sord LIMIT ? , ?";
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$where_params[] = $start;
+$where_params[] = $limit;
+$result = db_query($query, $where_params) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
 
 // we should set the appropriate header information. Do not forget this.
@@ -125,7 +135,7 @@ $s .= "<total>".$total_pages."</total>";
 $s .= "<records>".$count."</records>";
  
 // be sure to put text data in CDATA
-while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+while($row = $result->fetch_assoc()) {
 	if((can_edit()) || (is_manager($row['member_id'])) || (is_curr_member($row['member_id']))) {
 		$statusmenu = get_status_sel($row['member_id'], $row['member_status_id'], "m");
 		} else {

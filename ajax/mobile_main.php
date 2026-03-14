@@ -7,9 +7,9 @@ $incident = get_text('Incident');
 $evenodd = array ("even", "odd", "heading");	// class names for alternating table row css colors
 
 function get_updated($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?";
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return strtotime($row['updated']);
 	}
 
@@ -34,12 +34,12 @@ function log_details($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r 	ON (`$GLOBALS[mysql_prefix]log`.`responder_id` = `r`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s 	ON (`$GLOBALS[mysql_prefix]log`.`code` = `s`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]user` u 		ON (`$GLOBALS[mysql_prefix]log`.`who` = `u`.`id`)
-		WHERE `$GLOBALS[mysql_prefix]log`.`ticket_id` = " . $theid . " ORDER BY `when` ASC";								// 10/2/12
-	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+		WHERE `{$GLOBALS['mysql_prefix']}log`.`ticket_id` = ? ORDER BY `when` ASC";								// 10/2/12
+	$result = db_query($query, [$theid]) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		$code = $row['code'];
 		if ($i==0) {				// 11/20/09
 			$print .= "<TR CLASS='heading'><TD CLASS='heading' TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><U>Log: <I>". shorten($row['tickname'], 32) . "</I></U></TD></TR>";
@@ -113,16 +113,16 @@ function ticket_details($id, $theWidth, $search=FALSE, $dist=TRUE) {						// ret
 		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`ID`= $id $restrict_ticket";			// 7/16/09, 8/12/09
+		WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= ? $restrict_ticket";			// 7/16/09, 8/12/09
 
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (!mysql_num_rows($result)){
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if (!$result->num_rows){
 		print "<FONT CLASS=\"warn\">Internal error " . basename(__FILE__) ."/" .  __LINE__  .".  Notify developers of this message.</FONT>";	// 8/18/09
 		exit();
 		}
 
-	$theRow = stripslashes_deep(mysql_fetch_array($result));
+	$theRow = stripslashes_deep($result->fetch_array());
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";			// 1/25/09
 
 	switch($theRow['severity'])		{		//color tickets by severity

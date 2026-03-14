@@ -29,13 +29,13 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		FROM `$GLOBALS[mysql_prefix]messages` `m` 
 		{$where} {$order} {$order2}";
 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
+$result = db_query($query) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num=$result->num_rows;
 $i = 0;
-if (mysql_num_rows($result) == 0) {
+if ($result->num_rows == 0) {
 	$ret_arr[$i][0] = "No Messages";
 	} else {
-	while ($msg_row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($msg_row = stripslashes_deep($result->fetch_assoc())){
 		$fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
 		$ret_arr[$i][0] = $msg_row['id'];	
 		$ret_arr[$i][1] = $msg_row['ticket_id'];

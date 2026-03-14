@@ -39,31 +39,32 @@ function get_messagecolor($id) {
 	}
 	
 function get_ticketinfo($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $id;			
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$theRow = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$theRow = stripslashes_deep($result->fetch_assoc());
 	$scope = $theRow['scope'];
 	return $scope;
 	}
-	
+
 function get_unitinfo($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;			
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$theRow = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$theRow = stripslashes_deep($result->fetch_assoc());
 	$the_unit_name = (empty($theRow['name']))? "NA": $theRow['name'];
 	return $the_unit_name;
 	}
 
-$ticket_id = (array_key_exists('ticket_id', $_GET)) ? $_GET['ticket_id'] : 0;
+$ticket_id = (array_key_exists('ticket_id', $_GET)) ? sanitize_int($_GET['ticket_id']) : 0;
 $userid = (array_key_exists('user_id', $_SESSION)) ? $_SESSION['user_id'] : 0;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$userid} LIMIT 1";			
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
+$result = db_query($query, [$userid]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$user_row = stripslashes_deep($result->fetch_assoc());
 $unit_id =  intval($user_row['responder_id']);
 $the_unit_name = ($user_row['responder_id'] == 0)? "NA": get_unitinfo($unit_id);
 
-$where = ($userid != 0 && $ticket_id != 0) ? "WHERE `ticket_id` = " . $ticket_id . " AND (FIND_IN_SET(" . $unit_id . ", `resp_id`) > 0)" : "";
+$where = ($userid != 0 && $ticket_id != 0) ? "WHERE `ticket_id` = ? AND (FIND_IN_SET(?, `resp_id`) > 0)" : "";
+$where_params = ($userid != 0 && $ticket_id != 0) ? [$ticket_id, $unit_id] : [];
 
 $order = "ORDER BY `date` DESC";
 $the_user = $_SESSION['user_id'];	
@@ -81,10 +82,10 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		FROM `$GLOBALS[mysql_prefix]messages` `m` 
 		{$where} {$order}";
 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
+$result = db_query($query, $where_params) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num=$result->num_rows;
 $i = 0;
-if (mysql_num_rows($result) == 0) {
+if ($result->num_rows == 0) {
 	$ret_arr[0][12]= 0;
 	$ret_arr[0][9] = stripslashes_deep(get_ticketinfo($ticket_id));
 	$temp = explode("/", $the_unit_name);
@@ -95,7 +96,7 @@ if (mysql_num_rows($result) == 0) {
 	$temp = explode("/", $the_unit_name);
 	$unitName = $temp[0];
 	$ret_arr[0][10] = stripslashes_deep($unitName);
-	while ($msg_row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($msg_row = stripslashes_deep($result->fetch_assoc())){
 		$fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
 		$ret_arr[$i][0] = $msg_row['id'];	
 		$ret_arr[$i][1] = $msg_row['ticket_id'];

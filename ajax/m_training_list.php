@@ -5,7 +5,7 @@ session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	} */
-extract ($_GET);
+$member = (isset($_GET['member'])) ? sanitize_int($_GET['member']) : 0;
 $internet = ((array_key_exists('internet', $_SESSION)) && ($_SESSION['internet'] == true)) ? true: false;
 $istest = FALSE;
 $output_arr = array();
@@ -20,28 +20,28 @@ function tra_list($member) {
 	$tra_row = array();
 
 	// search rules
-	$query = "SELECT *, `tp`.`id` AS `tpid`, 
-		`a`.`id` AS `id`, 	
+	$query = "SELECT *, `tp`.`id` AS `tpid`,
+		`a`.`id` AS `id`,
 		`a`.`member_id` AS `mid`,
-		`tp`.`package_name` AS `package_name`,	
+		`tp`.`package_name` AS `package_name`,
 		`tp`.`description` AS `description`,
-		`a`.`completed` AS `completed`,	
-		`a`.`refresh_due` AS `refresh_due`		
+		`a`.`completed` AS `completed`,
+		`a`.`refresh_due` AS `refresh_due`
 		FROM `$GLOBALS[mysql_prefix]allocations` `a`
-		LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = tp.id ) 	
-		WHERE `a`.`member_id` = {$member} AND `a`.`skill_type` = '1' 
-		ORDER BY `package_name";	
+		LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = tp.id )
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = '1'
+		ORDER BY `package_name`";
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query, [$member]);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$tra_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$completed = $row['completed'];
 			$completed = do_datestring(strtotime($completed));
 			$refresh = $row['refresh_due'];

@@ -3,8 +3,8 @@
 */
 error_reporting(E_ALL);
 require_once('./incs/functions.inc.php');
-$memberid = $_GET['member_id'];
-$searchstring = (array_key_exists('searchstring', $_GET)) ? $_GET['searchstring'] : "";
+$memberid = sanitize_int($_GET['member_id']);
+$searchstring = (array_key_exists('searchstring', $_GET)) ? sanitize_string($_GET['searchstring']) : "";
 $func = (array_key_exists('func', $_GET)) ? intval($_GET['func']) : 0;
 	
 function get_capabilities($member_id) {
@@ -15,10 +15,10 @@ function get_capabilities($member_id) {
 		`a`.`refresh_due` AS `refresh_due`		
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = `tp`.`id` ) 	
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 1 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 1 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['training_package_name'];
 			$completed = $row['completed'];
 			$refresh_due = $row['refresh_due'];
@@ -30,10 +30,10 @@ function get_capabilities($member_id) {
 		`ct`.`name` AS `capability_name`
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]capability_types` `ct` ON ( `a`.`skill_id` = `ct`.`id` ) 
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['capability_name'];
 			$output .= $value . "<BR />";
 			}
@@ -44,10 +44,10 @@ function get_capabilities($member_id) {
 		`et`.`serial` AS `equipment_serial`	
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]equipment_types` `et` ON ( `a`.`skill_id` = `et`.`id` ) 		
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['equipment_name']. " - " . $row['equipment_serial'];
 			$output .= $value . "<BR />";
 			}
@@ -58,10 +58,10 @@ function get_capabilities($member_id) {
 		`cl`.`size` AS `size`		
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` ) 
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['clothing_item']. " - " . $row['size'];
 			$output .= $value . "<BR />";
 			}	
@@ -78,10 +78,10 @@ function search_capabilities($member_id, $searchstring) {
 		`a`.`refresh_due` AS `refresh_due`		
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = `tp`.`id` ) 	
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 1 AND `refresh_due` > NOW() ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 1 AND `refresh_due` > NOW() ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['training_package_name'] . " | " . $row['refresh_due'];
 			$theArray[$key] = $value;
 			$key++;
@@ -92,10 +92,10 @@ function search_capabilities($member_id, $searchstring) {
 		`ct`.`name` AS `capability_name`
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]capability_types` `ct` ON ( `a`.`skill_id` = `ct`.`id` ) 
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['capability_name'];
 			$theArray[$key] = $value;
 			$key++;
@@ -107,10 +107,10 @@ function search_capabilities($member_id, $searchstring) {
 		`et`.`serial` AS `equipment_serial`	
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]equipment_types` `et` ON ( `a`.`skill_id` = `et`.`id` ) 		
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['equipment_name']. " - " . $row['equipment_serial'];
 			$theArray[$key] = $value;
 			$key++;
@@ -122,10 +122,10 @@ function search_capabilities($member_id, $searchstring) {
 		`cl`.`size` AS `size`		
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` ) 
-		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
+	$result = db_query($query, [$member_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['clothing_item']. " - " . $row['size'];
 			$theArray[$key] = $value;
 			$key++;

@@ -6,8 +6,8 @@ if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
-$sortby = (!(array_key_exists('sort', $_GET))) ? "mi_id" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "mi_id" : sanitize_string($_GET['sort']);
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
 
 $istest = FALSE;
 $output_arr = array();
@@ -30,18 +30,18 @@ function subval_sort($a,$subkey, $dd) {
 	}
 	
 function get_categoryName($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $id . " LIMIT 1";
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return $row['category'];
 	}
 	
 function get_markup($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = " . $id;
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = ?";
+	$result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr['id'] = $row['id'];
 		$ret_arr['name'] = $row['line_name'];
 		$ret_arr['type'] = $row['line_type'];
@@ -65,10 +65,10 @@ function get_markup($id) {
 	
 function get_ticket($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = " . $id;
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";
+	$result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr['id'] = $row['id'];
 		$ret_arr['scope'] = $row['scope'];
 		$ret_arr['lat'] = $row['lat'];
@@ -87,10 +87,10 @@ function get_place_details($id) {
 		$ret_arr[2] = 0;
 		$ret_arr[3] = 0;
 		} else {
-		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = " . $id;
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-		if(mysql_num_rows($result) > 0) {
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = ?";
+		$result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
+		if($result->num_rows > 0) {
+			$row = stripslashes_deep($result->fetch_assoc());
 			$ret_arr[0] = $row['id'];
 			$ret_arr[1] = $row['name'];
 			$ret_arr[2] = $row['lat'];
@@ -121,14 +121,14 @@ function mt_list($sortby="mi_id", $sortdir="ASC") {
 	FROM `$GLOBALS[mysql_prefix]major_incidents` `mi` 
 	LEFT JOIN `$GLOBALS[mysql_prefix]mi_types` `mt` ON ( `mi`.`type` = `mt`.`id` )
 	GROUP BY `majinc_id` ORDER BY `inc_endtime`, `majinc_id` DESC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$num_rows = mysql_num_rows($result);
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$mi_row[0][0] = 0;
 		} else {
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$tip =  addslashes ( "");		// tooltip string - 10/28/2012
 			$type = shorten($row['type_name'], 50);
 			$updated = format_sb_date_2($row['mi_updated']);
@@ -161,12 +161,12 @@ function mt_list($sortby="mi_id", $sortdir="ASC") {
 				`t`.`in_types_id` AS `inc_type`
 				FROM `$GLOBALS[mysql_prefix]mi_x` `mx` 
 				LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON ( `mx`.`ticket_id` = `t`.`id` )
-				WHERE `mx`.`mi_id` = " . $row['majinc_id'] . " ORDER BY `tick_id` ASC";
-			$result_tick = mysql_query($query_tick) or do_error($query_tick, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$mi_num_tick = mysql_num_rows($result_tick);
+				WHERE `mx`.`mi_id` = ? ORDER BY `tick_id` ASC";
+			$result_tick = db_query($query_tick, [$row['majinc_id']]) or do_error($query_tick, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+			$mi_num_tick = $result_tick->num_rows;
 			if($mi_num_tick > 0) {
 				$z = 0;
-				while ($row_tick = stripslashes_deep(mysql_fetch_assoc($result_tick))) {
+				while ($row_tick = stripslashes_deep($result_tick->fetch_assoc())) {
 					if($row_tick['tick_id'] != "") {
 						$mi_row[$i][11][$z][0] = $row_tick['tick_id'];
 						$mi_row[$i][11][$z][1] = $row_tick['tick_scope'];
@@ -181,12 +181,12 @@ function mt_list($sortby="mi_id", $sortdir="ASC") {
 							`r`.`handle` AS `resp_handle`
 							FROM `$GLOBALS[mysql_prefix]assigns` `a` 
 							LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `a`.`responder_id` = `r`.`id` )
-							WHERE `a`.`ticket_id` = " . intval($row_tick['tick_id']) . " ORDER BY `resp_id` ASC";
-						$result_resp = mysql_query($query_resp) or do_error($query_resp, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-						$mi_num_resp = mysql_num_rows($result_resp);
+							WHERE `a`.`ticket_id` = ? ORDER BY `resp_id` ASC";
+						$result_resp = db_query($query_resp, [$row_tick['tick_id']]) or do_error($query_resp, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+						$mi_num_resp = $result_resp->num_rows;
 						$y = 0;
 						if($mi_num_resp > 0) {
-							while ($row_resp = stripslashes_deep(mysql_fetch_assoc($result_resp))) {
+							while ($row_resp = stripslashes_deep($result_resp->fetch_assoc())) {
 								$mi_row[$i][11][$z][6][$y][0] = $row_resp['resp_id'];
 								$mi_row[$i][11][$z][6][$y][1] = $row_resp['resp_handle'];
 								$mi_row[$i][11][$z][6][$y][2] = $row_resp['resp_lat'];

@@ -25,9 +25,9 @@ $query = "SELECT *, `updated` AS `updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]member_status` `s` ON ( `m`.`mem_status_id` = s.id ) 	
 	ORDER BY `m`.`id` ASC ";
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $ret .= "<tbody>";
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$ret .= "<tr>";
 	$ret .= "<td>" . $row['member_id'] . "</td>";
 	$ret .= "<td>" . $row['fullname'] . "</td>";

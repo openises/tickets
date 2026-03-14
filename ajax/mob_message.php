@@ -37,9 +37,10 @@ function get_messagecolor($id) {
 	return $color;
 	}
 
-$message_id = (array_key_exists('message_id', $_GET)) ? $_GET['message_id'] : 0;
+$message_id = (array_key_exists('message_id', $_GET)) ? sanitize_int($_GET['message_id']) : 0;
 
-$where = ($message_id != 0) ? "WHERE `id` = " . $message_id : "";
+$where = ($message_id != 0) ? "WHERE `id` = ?" : "";
+$where_params = ($message_id != 0) ? [$message_id] : [];
 
 $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`id` AS `message_id`,
@@ -54,9 +55,9 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		FROM `$GLOBALS[mysql_prefix]messages` `m` 
 		{$where}";
 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
-$msg_row = stripslashes_deep(mysql_fetch_assoc($result));
+$result = db_query($query, $where_params) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num=$result->num_rows;
+$msg_row = stripslashes_deep($result->fetch_assoc());
 $fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
 $ret_arr[0] = $msg_row['id'];	
 $ret_arr[1] = $msg_row['ticket_id'];

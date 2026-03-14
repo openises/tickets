@@ -5,7 +5,7 @@ session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	} */
-extract ($_GET);
+$member = (isset($_GET['member'])) ? sanitize_int($_GET['member']) : 0;
 $internet = ((array_key_exists('internet', $_SESSION)) && ($_SESSION['internet'] == true)) ? true: false;
 $istest = FALSE;
 $output_arr = array();
@@ -20,29 +20,29 @@ function cloth_list($member) {
 	$cloth_row = array();
 
 	// search rules
-	
-	$query = "SELECT *, `ct`.`id` AS `ctid`, 
-		`a`.`id` AS `id`, 	
+
+	$query = "SELECT *, `ct`.`id` AS `ctid`,
+		`a`.`id` AS `id`,
 		`a`.`member_id` AS `mid`,
 		`a`.`completed` AS `issued`,
-		`ct`.`clothing_item` AS `name`,	
-		`ct`.`description` AS `description`, 
-		`ct`.`size` AS `size` 	
+		`ct`.`clothing_item` AS `name`,
+		`ct`.`description` AS `description`,
+		`ct`.`size` AS `size`
 		FROM `$GLOBALS[mysql_prefix]allocations` `a`
-		LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `ct` ON ( `a`.`skill_id` = ct.id ) 	
-		WHERE `a`.`member_id` = {$member} AND `a`.`skill_type` = '5' 
-		ORDER BY `a`.`completed`";		
-	
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `ct` ON ( `a`.`skill_id` = ct.id )
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = '5'
+		ORDER BY `a`.`completed`";
+
+	$result = db_query($query, [$member]);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$cloth_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$completed = $row['issued'];
 			$completed = do_datestring(strtotime($completed));
 			$cloth_row[$i][0] = $row['id'];

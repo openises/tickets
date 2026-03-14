@@ -5,10 +5,9 @@ session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	} */
-extract ($_GET);
 $internet = ((array_key_exists('internet', $_SESSION)) && ($_SESSION['internet'] == true)) ? true: false;
-$sortby = (!(array_key_exists('sort', $_GET))) ? "member_id" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "member_id" : sanitize_string($_GET['sort']);
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
 $istest = FALSE;
 $output_arr = array();
 $num_rows = 0;
@@ -76,16 +75,16 @@ function member_list() {
 		LEFT JOIN `$GLOBALS[mysql_prefix]team` `te` ON ( `m`.`field3` = te.id ) 
 		LEFT JOIN `$GLOBALS[mysql_prefix]user` `us` ON ( `m`.`id` = us.member ) 	
 		GROUP BY `member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$member_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			if((can_edit()) || (is_manager($row['member_id'])) || (is_curr_member($row['member_id']))) {
 				$statusmenu = get_member_status_sel($row['member_id'], $row['member_status_id'], "m");
 				} else {

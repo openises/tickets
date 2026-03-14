@@ -6,13 +6,13 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
-$id = $_GET['id'];
+$id = sanitize_int($_GET['id']);
 $ret_arr = array();
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['color'], $row['background']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 unset($result);
@@ -27,8 +27,8 @@ $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$result_st = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	}
@@ -68,16 +68,16 @@ $query = "SELECT `m`.`_on` AS `updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]member_status` `s` ON ( `m`.`field21` = s.id ) 	
 	LEFT JOIN `$GLOBALS[mysql_prefix]team` `te` ON ( `m`.`field3` = te.id ) 
 	LEFT JOIN `$GLOBALS[mysql_prefix]user` `us` ON ( `m`.`id` = us.member ) 	
-	WHERE `m`.`id` = " . $id;
+	WHERE `m`.`id` = ?";
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$units_ct = mysql_affected_rows();			// 1/4/10
+$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$units_ct = db()->affected_rows;			// 1/4/10
 
 $aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = FALSE;		//7/23/09
 
 $utc = gmdate ("U");				// 3/25/09
 
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$row = stripslashes_deep($result->fetch_assoc());
 $latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');		// 7/18/10		
 $longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');		// 7/18/10
 

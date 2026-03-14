@@ -5,18 +5,13 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
-if (!(array_key_exists('func', $_GET))) {		//	3/15/11
-	$func = 0;
-} else {
-	extract ($_GET);
-	}
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
-$sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
-$func = (!(array_key_exists('func', $_GET))) ? 0 : $_GET['func'];
-$sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : $_GET['sortbyfield'];
-$sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : $_GET['sort_value'];
-$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : $_GET['my_offset'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : sanitize_string($_GET['sort']);
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
+$func = (!(array_key_exists('func', $_GET))) ? 0 : sanitize_int($_GET['func']);
+$sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : sanitize_string($_GET['sortbyfield']);
+$sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : sanitize_string($_GET['sort_value']);
+$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : sanitize_int($_GET['my_offset']);
 $istest = FALSE;
 $iw_width= "270px";					// map infowindow with
 $nature = get_text("Nature");			// 12/03/10
@@ -72,16 +67,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 
 	$acts_ary = $pats_ary = array();				// 6/2/10
 	$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` GROUP BY `ticket_id`";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+	$result_temp = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 		$acts_ary[$row['ticket_id']] = $row['the_count'];
 		}
 
 //	Count number of patients on Ticket
 
 	$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` GROUP BY `ticket_id`";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+	$result_temp = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 		$pats_ary[$row['ticket_id']] = $row['the_count'];
 		}	
 		
@@ -105,7 +100,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	if (!(array_key_exists('func', $_GET))) {		//	3/15/11
 		$func = 0;
 	} else {
-		extract ($_GET);
+		$func = sanitize_int($_GET['func']);
 		}
 	if ((array_key_exists('func', $_GET)) && ($_GET['func'] == 10)) {		//	3/15/11
 		$func = 10;
@@ -204,16 +199,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity} 
 			LIMIT 1000 OFFSET {$my_offset}";		// 2/2/09, 10/28/09, 2/21/10
 		}
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$ticket_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$tick_gps = get_allocates(1, $row['tick_id']);	//	6/10/11
 			$grp_names = "Groups Assigned: ";	//	6/10/11
 			$y=0;	//	6/10/11

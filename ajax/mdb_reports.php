@@ -5,68 +5,68 @@ error_reporting(E_ALL);
 require_once('../incs/functions.inc.php');
 
 function get_fieldid($theval) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]defined_fields` WHERE `label` = '$theval' LIMIT 1";
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result)); 
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}defined_fields` WHERE `label` = ? LIMIT 1";
+	$result = db_query($query, [$theval]);
+	$row = stripslashes_deep($result->fetch_assoc()); 
 	$ret_val = "field" . $row['field_id'];
 	return $ret_val;
 	}
 	
 function get_training($id) {
-	$query = "SELECT `package_name`, `description`, `available`, `cost` FROM `$GLOBALS[mysql_prefix]training_packages` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row = mysql_fetch_array($result, MYSQL_ASSOC);
+	$query = "SELECT `package_name`, `description`, `available`, `cost` FROM `{$GLOBALS['mysql_prefix']}training_packages` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	return $row;
 	}
 	
 function get_event($id) {
-	$query = "SELECT `event_name`, `description` FROM `$GLOBALS[mysql_prefix]events` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row = mysql_fetch_array($result, MYSQL_ASSOC);
+	$query = "SELECT `event_name`, `description` FROM `{$GLOBALS['mysql_prefix']}events` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	return $row;
 	}
 	
 function get_capabilities($id) {
-	$query = "SELECT `name`, `description` FROM `$GLOBALS[mysql_prefix]capability_types` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row = mysql_fetch_array($result, MYSQL_ASSOC);
+	$query = "SELECT `name`, `description` FROM `{$GLOBALS['mysql_prefix']}capability_types` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	return $row;
 	}
 	
 function get_equipment($id) {
-	$query = "SELECT `equipment_name`, `spec`, `serial`, `condition` FROM `$GLOBALS[mysql_prefix]equipment_types` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row = mysql_fetch_array($result, MYSQL_ASSOC);
+	$query = "SELECT `equipment_name`, `spec`, `serial`, `condition` FROM `{$GLOBALS['mysql_prefix']}equipment_types` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	return $row;
 	}
 
 function get_clothing($id) {
-	$query = "SELECT `clothing_item`, `description`, `size` FROM `$GLOBALS[mysql_prefix]clothing_types` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row = mysql_fetch_array($result, MYSQL_ASSOC);
+	$query = "SELECT `clothing_item`, `description`, `size` FROM `{$GLOBALS['mysql_prefix']}clothing_types` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row = $result->fetch_assoc();
 	return $row;
 	}
 	
 function get_memberType($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_types` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row= mysql_fetch_assoc($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_types` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row= $result->fetch_assoc();
 	return $row['name'];		
 	}
 
 function get_memberStatus($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_status` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row= mysql_fetch_assoc($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row= $result->fetch_assoc();
 	return $row['status_val'];		
 	}
 	
 function get_memberName($id) {
 	$surname = "";
 	$firstname = "";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	$row= mysql_fetch_assoc($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row= $result->fetch_assoc();
 	foreach ($row as $col_name => $cell) {
 		if($col_name == "_by" && $col_name != "_on" && $col_name != "_from" && $col_name != "id") {
 			$col_name = substr($col_name, 5);
@@ -88,15 +88,15 @@ function get_vehicle($id) {
 		`ve`.`fueltype` AS `vehicle_fuel`	
 		FROM `$GLOBALS[mysql_prefix]vehicles` `ve` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `ve`.`owner` = `m`.`id` ) 			
-		WHERE `ve`.`id` = '$id'";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = mysql_fetch_array($result, MYSQL_ASSOC);
+		WHERE `ve`.`id` = ?";
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$row = $result->fetch_assoc();
 	return $row;
 	}
 	
-$report = (array_key_exists('report', $_GET)) ? $_GET['report'] : 1;
-$member = (array_key_exists('member', $_GET)) ? $_GET['member'] : 0;
-$team = (array_key_exists('team', $_GET)) ? $_GET['team'] : 0;
+$report = (array_key_exists('report', $_GET)) ? sanitize_int($_GET['report']) : 1;
+$member = (array_key_exists('member', $_GET)) ? sanitize_int($_GET['member']) : 0;
+$team = (array_key_exists('team', $_GET)) ? sanitize_int($_GET['team']) : 0;
 $output = array();
 if($team != 0) {
 	$scope = 3;
@@ -110,22 +110,24 @@ if($team != 0) {
 
 switch($scope) {
 	case 1:		//	scope equals 1 - individual member
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $member;
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
+	$result = db_query($query, [$member]);
 	break;
-	
+
 	case 2:		//	scope equals 1 - all members
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` ORDER by `field4`";
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` ORDER by `field4`";
+	$result = db_query($query);
 	break;
-	
+
 	case 3:		//	scope equals 1 - all members in specific team
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` WHERE `field3` = " . $team . " ORDER by `id`";
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `field3` = ? ORDER by `id`";
+	$result = db_query($query, [$team]);
 	break;
 	}
-$result = mysql_query($query);
 
 $class='even';
 if($report != 8) {
-	while ($row = mysql_fetch_assoc($result)) {
+	while ($row = $result->fetch_assoc()) {
 		if($report == 7) {
 			$print = "<TABLE style='width: 100%; border: 1px solid #707070;'>";
 			$member = $row['id'];
@@ -178,16 +180,16 @@ if($report != 8) {
 			$query1 = "SELECT `refresh_due` AS `refresh_due`, 
 					`completed` AS `completed`,
 					`skill_id` AS `skill_id`
-					FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = " . $member . " AND `skill_type` = 1";
-			$result1 = mysql_query($query1);
+					FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = 1";
+			$result1 = db_query($query1, [$member]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1) > 0) {
+				if($result1->num_rows > 0) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Training</SPAN></TD></TR>";
 					$print .= "<TR><TD class='heading2'>Training Package</TD><TD class='heading2'>Description</TD><TD class='heading2'>Available</TD><TD class='heading2'>Cost</TD><TD class='heading2'>Completed</TD><TD class='heading2'>Refresh Due</TD></TR>";	
 					$class='even';
-					while ($row1 = mysql_fetch_assoc($result1)) {
+					while ($row1 = $result1->fetch_assoc()) {
 						$print .= "<TR class='" . $class . "'>";
 						$completed = format_dateonly($row1['completed']);
 						$refresh_due = format_dateonly($row1['refresh_due']);
@@ -208,16 +210,16 @@ if($report != 8) {
 		if($report == 1 || $report == 5) {
 			$query1 = "SELECT `_on` AS `updated`, 
 					`skill_id` AS `skill_id` 
-					FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = " . $member . " AND `skill_type` = 2";
-			$result1 = mysql_query($query1);
+					FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = 2";
+			$result1 = db_query($query1, [$member]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1) > 0) {
+				if($result1->num_rows > 0) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Other Capabilities</SPAN></TD></TR>";
 					$print .= "<TR><TD class='heading2'>Capability</TD><TD class='heading2'>Description</TD><TD class='heading2'>Registered</TD></TR>";	
 					$class='even';
-					while ($row1 = mysql_fetch_assoc($result1)) {
+					while ($row1 = $result1->fetch_assoc()) {
 						$print .= "<TR class='" . $class . "'>";
 						$skillid = $row1['skill_id'];
 						$registered = format_dateonly($row1['updated']);
@@ -236,16 +238,16 @@ if($report != 8) {
 		if($report == 2 || $report == 5) {
 			$query1 = "SELECT `_on` AS `updated`, 
 					`skill_id` AS `skill_id` 
-					FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = " . $member . " AND `skill_type` = 3";
-			$result1 = mysql_query($query1);
+					FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = 3";
+			$result1 = db_query($query1, [$member]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1) > 0) {
+				if($result1->num_rows > 0) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Equipment</SPAN></TD></TR>";
 					$print .= "<TR><TD class='heading2'>Item</TD><TD class='heading2'>Spec</TD><TD class='heading2'>Serial</TD><TD class='heading2'>Condition</TD><TD class='heading2'>Allocated</TD></TR>";	
 					$class='even';
-					while ($row1 = mysql_fetch_assoc($result1)) {
+					while ($row1 = $result1->fetch_assoc()) {
 						$print .= "<TR class='" . $class . "'>";
 						$skillid = $row1['skill_id'];
 						$allocated = format_dateonly($row1['updated']);
@@ -264,16 +266,16 @@ if($report != 8) {
 		if($report == 3 || $report == 5) {
 			$query1 = "SELECT `_on` AS `updated`, 
 					`skill_id` AS `skill_id` 
-					FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = " . $member . " AND `skill_type` = 4";
-			$result1 = mysql_query($query1);
+					FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = 4";
+			$result1 = db_query($query1, [$member]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1) > 0) {
+				if($result1->num_rows > 0) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Vehicles</SPAN></TD></TR>";
 					$print .= "<TR><TD class='heading2'>Reg No</TD><TD class='heading2'>Owner</TD><TD class='heading2'>Make</TD><TD class='heading2'>Model</TD><TD class='heading2'>Seats</TD><TD class='heading2'>Fuel</TD></TR>";				
 					$class='even';
-					while ($row1 = mysql_fetch_assoc($result1)) {
+					while ($row1 = $result1->fetch_assoc()) {
 						$skillid = $row1['skill_id'];
 						$vehicles_arr = get_vehicle($skillid);
 						if($vehicles_arr) {
@@ -302,16 +304,16 @@ if($report != 8) {
 		if($report == 4 || $report == 5) { 
 			$query1 = "SELECT `_on` AS `updated`, 
 					`skill_id` AS `skill_id` 
-					FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = " . $member . " AND `skill_type` = 5";
-			$result1 = mysql_query($query1);
+					FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = 5";
+			$result1 = db_query($query1, [$member]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1) > 0) {
+				if($result1->num_rows > 0) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Clothing</SPAN></TD></TR>";
 					$print .= "<TR><TD class='heading2'>Item</TD><TD class='heading2'>Description</TD><TD class='heading2'>Size</TD><TD class='heading2'>Allocated</TD></TR>";				
 					$class='even';		
-					while ($row1 = mysql_fetch_assoc($result1)) {
+					while ($row1 = $result1->fetch_assoc()) {
 						$print .= "<TR class='" . $class . "'>";
 						$skillid = $row1['skill_id'];
 						$allocated = format_dateonly($row1['updated']);
@@ -334,15 +336,15 @@ if($report != 8) {
 			$query1 = "SELECT *, `refresh_due` AS `refresh_due`,`$GLOBALS[mysql_prefix]allocations`.`id` AS `all_id`,`$GLOBALS[mysql_prefix]member`.`id` AS `member_id` FROM `$GLOBALS[mysql_prefix]allocations`
 						LEFT JOIN `$GLOBALS[mysql_prefix]member` ON `$GLOBALS[mysql_prefix]allocations`.`member_id`=`$GLOBALS[mysql_prefix]member`.`id`
 						LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` ON `$GLOBALS[mysql_prefix]allocations`.`skill_id`=`$GLOBALS[mysql_prefix]training_packages`.`id`					
-						WHERE `member_id` = " . $member . " AND `skill_type` = '1' AND (`refresh_due` < " . $datetoday . "  + INTERVAL 1 MONTH))";
-			$result1 = mysql_query($query1);
+						WHERE `member_id` = ? AND `skill_type` = '1' AND (`refresh_due` < ? + INTERVAL 1 MONTH))";
+			$result1 = db_query($query1, [$member, $datetoday]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1)) {
+				if($result1->num_rows) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Training Due</SPAN></TD></TR>";
 					$class='even';
-					while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+					while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 						$print .= "<TR class='" . $class . "'>";
 						$print .= "<TD class='td_data_wrap text'>" . $row1['package_name'] . "</TD>";
 						$numDays = abs($today - strtotime($row1['refresh_due']))/60/60/24;
@@ -373,11 +375,11 @@ if($report != 8) {
 			$query1 = "SELECT *, `start` AS `start`, `end` AS `end`, `$GLOBALS[mysql_prefix]allocations`.`id` AS `all_id`,`$GLOBALS[mysql_prefix]member`.`id` AS `member_id` FROM `$GLOBALS[mysql_prefix]allocations`
 						LEFT JOIN `$GLOBALS[mysql_prefix]member` ON `$GLOBALS[mysql_prefix]allocations`.`member_id`=`$GLOBALS[mysql_prefix]member`.`id`
 						LEFT JOIN `$GLOBALS[mysql_prefix]events` ON `$GLOBALS[mysql_prefix]allocations`.`skill_id`=`$GLOBALS[mysql_prefix]events`.`id`					
-						WHERE `member_id` = " . $member . " AND `skill_type` = '6' ORDER BY `start`";
-			$result1 = mysql_query($query1);
+						WHERE `member_id` = ? AND `skill_type` = '6' ORDER BY `start`";
+			$result1 = db_query($query1, [$member]);
 			if(!$result1) {
 				} else {
-				if(mysql_num_rows($result1)) {
+				if($result1->num_rows) {
 					$print .= "<TR><TD COLSPAN=99><TABLE style='width:100%; border: 1px solid #707070;'>";
 					$print .= "<TR><TD COLSPAN=99><SPAN class='heading1'>Events Attended</SPAN></TD></TR>";
 					$print .= "<TR CLASS='heading2'>";
@@ -387,7 +389,7 @@ if($report != 8) {
 					$print .= "<TD CLASS='heading2'>End Date</TD>";
 					$print .= "</TR>";					
 					$class='even';
-					while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+					while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 						$print .= "<TR class='" . $class . "'>";
 						$print .= "<TD class='td_data_wrap text'>" . $row1['event_name'] . "</TD>";
 						$print .= "<TD class='td_data_wrap text'>" . $row1['description'] . "</TD>";
@@ -414,8 +416,8 @@ if($report != 8) {
 		print $print;
 		}
 	} else {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member` ORDER by `field4`";
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` ORDER by `field4`";
+	$result = db_query($query);
 	$cols = array('Team ID', 'First Name', 'Surname', 'Member Type', 'Mobile', 'Email', 'City', 'Picture');
 	$print = "<TABLE style='width: 100%; border: 1px solid #707070;'>";
 	$print .= "<TR><TD class='reportheading' COLSPAN=99>CONTACT LIST</TD></TR>";
@@ -425,7 +427,7 @@ if($report != 8) {
 		}
 	$print .= "</TR>";
 	$status_arr = array(6,7,8);
-	while ($row = mysql_fetch_assoc($result)) {
+	while ($row = $result->fetch_assoc()) {
 		$member = $row['id'];
 		$name = $row['field2'] . " " . $row['field1'];
 		$print .= "<TR>";

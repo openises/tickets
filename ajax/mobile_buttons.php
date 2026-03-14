@@ -35,20 +35,20 @@ if (array_key_exists('frm_mode', $_GET)) {$mode =  $_GET['frm_mode'];
 	if (is_unit())  {
 		$mode = UNIT;
 		} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";			
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
+		$result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$user_row = stripslashes_deep($result->fetch_assoc());
 		$mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;		// $mode => 'all' if no unit associated this user - 10/3/10
 		}
 	}		// end if/else initialize $mode
 
 if ((($mode==0) || ($mode==1))) {									// pull $the_unit, $the_unit_name, this user
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON ( `u`.`responder_id` = `r`.`id` )
-		WHERE `u`.`id` = {$_SESSION['user_id']} LIMIT 1";		
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `u`.`responder_id` = `r`.`id` )
+		WHERE `u`.`id` = ? LIMIT 1";
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+	$result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+	$user_row = stripslashes_deep($result->fetch_assoc());
 	$the_unit = $user_row['responder_id'];
 	$the_unit_name = (empty($user_row['name']))? "NA": $user_row['name'];	// 'NA' if no responder this user
 	}
@@ -82,8 +82,8 @@ $query = "SELECT *,  `t`.`id` AS `tick_id`,
 		ORDER BY `t`.`status` DESC, `t`.`severity` DESC, `t`.`problemstart` ASC";
 
 // dump($query);
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-if (mysql_affected_rows()==0) {
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+if (db()->affected_rows==0) {
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 
 	$for_str = $the_unit_name;
@@ -94,7 +94,7 @@ if (mysql_affected_rows()==0) {
  
 	$i = $selected_indx = 0;
 	$assigns_stack = array();
-	while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+	while ($in_row = stripslashes_deep($result->fetch_assoc())) {			// 
 		array_push($assigns_stack, $in_row);									// stack it up		
 		if (empty($_GET['assign_id']) && empty($_GET['ticket_id'])) {
 			if (empty($_GET) && ($i==0))	{$selected_indx = $i;}
@@ -117,13 +117,13 @@ if (mysql_affected_rows()==0) {
 	}
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `updated` > ('{$time_now}' - INTERVAL 5 MINUTE);";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+while ($in_row = stripslashes_deep($result->fetch_assoc())) {			// 
 	array_push($id_array, $in_row['ticket_id']);
 	}
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `updated` > ('{$time_now}' - INTERVAL 5 MINUTE);";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-while ($in_row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+while ($in_row = stripslashes_deep($result->fetch_assoc())) {			// 
 	array_push($id_array, $in_row['ticket_id']);
 	}			
 
@@ -218,20 +218,20 @@ for ($i = 0; $i<count($assigns_stack); $i++) {
 		}		// end if (is_date($time_clear))
 
 	if ((is_unit()) || ((has_admin())&&(intval($unit_id)>0))) {				// do/do-not allow status change - 2/7/12
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $unit_id . " LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$temp_row = mysql_fetch_assoc($result);    
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$unit_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$temp_row = $result->fetch_assoc();    
 		$ret_arr[6] ="<DIV CLASS='sel' style='width: 152px; display:" . $display_val . ";'>" . get_text("Status") . ":<BR />" . get_status_sel($unit_id, $temp_row['un_status_id'], "u", 10) . "</DIV>";
 		$ret_arr[6] ="<DIV CLASS='sel' style='width: 152px; display:" . $display_val . ";'>" . get_text("Receiving Facility") . ":<BR />" . get_recfac_sel($unit_id, $ticket_id, $assign_id) . "</DIV>";	
 		}
 	if ($mode == ALL) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`
-			LEFT JOIN `$GLOBALS[mysql_prefix]responder` ON (`$GLOBALS[mysql_prefix]responder`.`id` = `$GLOBALS[mysql_prefix]user`.`responder_id`)
-			WHERE `$GLOBALS[mysql_prefix]user`.`id` = {$_SESSION['user_id']}
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` ON (`{$GLOBALS['mysql_prefix']}responder`.`id` = `{$GLOBALS['mysql_prefix']}user`.`responder_id`)
+			WHERE `{$GLOBALS['mysql_prefix']}user`.`id` = ?
 			LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-		$user_row = stripslashes_deep(mysql_fetch_assoc($result));
+		$user_row = stripslashes_deep($result->fetch_assoc());
 		if (intval($user_row['responder_id'])>0) {
 			$ret_arr[7] = 1;
 			}

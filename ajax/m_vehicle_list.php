@@ -5,7 +5,7 @@ session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	} */
-extract ($_GET);
+$member = (isset($_GET['member'])) ? sanitize_int($_GET['member']) : 0;
 $internet = ((array_key_exists('internet', $_SESSION)) && ($_SESSION['internet'] == true)) ? true: false;
 $istest = FALSE;
 $output_arr = array();
@@ -21,31 +21,31 @@ function veh_list($member) {
 
 	// search rules
 
-	$query = "SELECT *, `v`.`id` AS `vid`, 
-		`a`.`id` AS `id`, 	
+	$query = "SELECT *, `v`.`id` AS `vid`,
+		`a`.`id` AS `id`,
 		`a`.`member_id` AS `mid`,
 		`v`.`make` AS `make`,
 		`v`.`model` AS `model`,
 		`v`.`year` AS `year`,
-		`v`.`color` AS `color`,	
-		`v`.`regno` AS `regno`,		
-		`t`.`name` AS `type_name` 
+		`v`.`color` AS `color`,
+		`v`.`regno` AS `regno`,
+		`t`.`name` AS `type_name`
 		FROM `$GLOBALS[mysql_prefix]allocations` `a`
-		LEFT JOIN `$GLOBALS[mysql_prefix]vehicles` `v` ON ( `a`.`skill_id` = v.id ) 
-		LEFT JOIN `$GLOBALS[mysql_prefix]vehicle_types` `t` ON ( `v`.`type` = `t`.`id` )		
-		WHERE `a`.`member_id` = {$member} AND `a`.`skill_type` = '4' 
-		ORDER BY `v`.`regno`";	
+		LEFT JOIN `$GLOBALS[mysql_prefix]vehicles` `v` ON ( `a`.`skill_id` = v.id )
+		LEFT JOIN `$GLOBALS[mysql_prefix]vehicle_types` `t` ON ( `v`.`type` = `t`.`id` )
+		WHERE `a`.`member_id` = ? AND `a`.`skill_type` = '4'
+		ORDER BY `v`.`regno`";
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query, [$member]);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$veh_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$veh_row[$i][0] = $row['id'];
 			$veh_row[$i][1] = htmlentities($row['make'], ENT_QUOTES);
 			$veh_row[$i][2] = htmlentities($row['model'], ENT_QUOTES);
