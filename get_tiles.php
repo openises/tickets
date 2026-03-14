@@ -393,6 +393,22 @@ $tiles = dirToArray('./_osm/tiles');
 <BODY>
 <DIV id='outer' style='position: relative; top: 0px; left: 0px; width: 100%;'>
 <?php
+// Show OSM policy warning when tile server URL points to openstreetmap.org
+$_tile_url_check = get_variable('tile_server_url');
+if ($_tile_url_check === FALSE || trim($_tile_url_check) === '') {
+	$_tile_url_check = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+}
+if (stripos($_tile_url_check, 'openstreetmap.org') !== false) {
+?>
+<DIV style="background: #FFF3CD; border: 2px solid #FFC107; padding: 10px 15px; margin: 5px 10px; font-size: 13px; color: #856404;">
+	<strong>Important:</strong> OpenStreetMap's <a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" style="color: #533f03;">tile usage policy</a>
+	prohibits bulk downloading tiles from their servers. This tool should only be used with your own tile server.
+	For caching OSM tiles on demand, use <strong>Proxy Cache</strong> mode in
+	<a href="config.php?func=tiles" style="color: #533f03;">Tile Settings</a>.
+</DIV>
+<?php
+}
+
 if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 ?>
 	<DIV id='banner' class='bannertext'>Get Local Map Tiles</DIV>
@@ -482,7 +498,7 @@ if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 		var map;
 		map = L.map('map_canvas').setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 1);
 		L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>[…]',
+		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ï¿½ <a href="http://cloudmade.com">CloudMade</a>[ï¿½]',
 		maxZoom: 18
 		}).addTo(map);
 		</SCRIPT>

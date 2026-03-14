@@ -513,6 +513,9 @@ function get_setting_help($setting){/* get help for settings */
 		case "use_responder_mobile": 			return "Use Responder Mobile (rm) page - provides for auto redirect to mobile page for smartphone devices";	 break;	// 9/10/13
 		case "responder_mobile_tracking": 		return "Use inbuilt tracking from Responder Mobile (rm) page. 0 is switched off, a positive whole number is the number of minutes between updates.";	 break;	// 9/10/13
 		case "local_maps": 						return "Use local maps (OSM). Requires download of map tiles from config page";	 break;	// 10/12/15
+		case "tile_mode": 						return "Tile source mode: online (direct from tile server), proxy (cached through Tickets CAD server - recommended), or offline (local tiles only)";	 break;	// 3/14/26
+		case "tile_server_url": 				return "Upstream tile server URL template. Use {z},{x},{y} for coordinates and {s} for subdomain. Default: https://tile.openstreetmap.org/{z}/{x}/{y}.png";	 break;	// 3/14/26
+		case "tile_cache_days": 				return "Number of days to cache map tiles locally before re-fetching from the tile server. Default: 60. Set to 0 to force fresh tiles on every request (useful for debugging).";	 break;	// 3/14/26
 		case "cloudmade_api": 					return "Cloudmade API code. Used to provide night mode on Responder Mobile (rm) page.";	 break;	// 9/10/13
 		case "responder_mobile_forcelogin": 	return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 9/10/13
 		case "use_disp_autostat": 				return "Use Automatic Status updates for Responder status based on changes in dispatch status - Needs setup through config page.";	 break;	// 9/10/13

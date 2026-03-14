@@ -387,12 +387,17 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 				});
 			var iconurl = "./markers/crosshair.png";	
 			function do_map(lat, lng, zoom, sourcemap) {
-				var osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+				// Use server-configured tile URL; fallback for legacy installs
+				var cfgTileMode = "<?php print get_tile_mode(); ?>";
+				var cfgTileUrl = "<?php print get_tile_url(); ?>";
+				var osmUrl = cfgTileUrl;
 				var localUrl = "./_osm/tiles/{z}/{x}/{y}.png";
 				var	cmAttr = '';
 				// Provide transparent placeholder for missing local tiles to prevent 404 log flooding  3/14/26
 				var localErrorTile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
-				OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
+				var osmOpts = {attribution: cmAttr};
+				if (cfgTileMode == "offline") { osmOpts.errorTileUrl = localErrorTile; }
+				OSM = L.tileLayer(osmUrl, osmOpts);
 				localMap = L.tileLayer(localUrl, {attribution: cmAttr, errorTileUrl: localErrorTile});
 				if (map) { map.remove(); map = null;} 
 				map = L.map('map_canvas',

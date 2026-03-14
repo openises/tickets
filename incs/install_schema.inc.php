@@ -2035,7 +2035,7 @@ $INSTALL_SCHEMA_SEED = array(
     'INSERT INTO `settings` VALUES
 (1,\'_aprs_time\',\'1772361207\'),
 (2,\'_sleep\',\'5\'),
-(3,\'_version\',\'v3.43.0\'),
+(3,\'_version\',\'v3.44.0\'),
 (4,\'abbreviate_affected\',\'30\'),
 (5,\'abbreviate_description\',\'30\'),
 (6,\'allow_custom_tags\',\'0\'),
@@ -2188,7 +2188,10 @@ $INSTALL_SCHEMA_SEED = array(
 (153,\'map_on_rm\',\'1\'),
 (154,\'sslcert_location\',\'\'),
 (155,\'sslcert_passphrase\',\'\'),
-(156,\'tracks_length\',\'12\')',
+(156,\'tracks_length\',\'12\'),
+(157,\'tile_mode\',\'online\'),
+(158,\'tile_server_url\',\'https://tile.openstreetmap.org/{z}/{x}/{y}.png\'),
+(159,\'tile_cache_days\',\'60\')',
     'INSERT INTO `sound_settings` VALUES
 (1,\'Incident\',\'aooga.wav\',\'klaxon.mp3\',1),
 (2,\'Responder\',\'aooga.wav\',\'klaxon.mp3\',1),

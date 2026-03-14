@@ -150,6 +150,32 @@ function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
     }
 }
 
+/**
+ * Insert a setting if it doesn't already exist. Used during upgrades to add
+ * new settings without overwriting any value an admin has already configured.
+ */
+function ensure_setting($mysqli, $prefix, $name, $default_value) {
+    $table = $prefix . 'settings';
+    if (!table_exists_mysqli($mysqli, $table)) { return; }
+    // Check if setting already exists
+    $stmt = $mysqli->prepare("SELECT `value` FROM `{$table}` WHERE `name` = ?");
+    if ($stmt) {
+        $stmt->bind_param('s', $name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $exists = ($result && $result->num_rows > 0);
+        $stmt->close();
+        if ($exists) { return; } // Already present, don't overwrite
+    }
+    // Insert with default value
+    $stmt = $mysqli->prepare("INSERT INTO `{$table}` (`name`,`value`) VALUES (?, ?)");
+    if ($stmt) {
+        $stmt->bind_param('ss', $name, $default_value);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+
 function upsert_version_setting($mysqli, $prefix, $version) {
     $table = $prefix . 'settings';
     if (!table_exists_mysqli($mysqli, $table)) { return; }
@@ -437,6 +463,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $messages[] = 'Updating installed version setting...';
             upsert_version_setting($mysqli, $cfg['prefix'], $installerVersion);
             $messages[] = 'Installer version recorded as ' . $installerVersion . '.';
+            // Ensure new settings exist (added in v3.44.0)
+            ensure_setting($mysqli, $cfg['prefix'], 'tile_mode', 'online');
+            ensure_setting($mysqli, $cfg['prefix'], 'tile_server_url', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+            ensure_setting($mysqli, $cfg['prefix'], 'tile_cache_days', '60');
+            $messages[] = 'Tile settings provisioned.';
             break;
         case 'config':
             $messages[] = 'Writing mysql config file...';

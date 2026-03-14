@@ -2811,12 +2811,14 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 			sendRequest (url, layer_handleResult, params);
 			});
 		} else {
-		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+		// Use server-configured tile URL if available, fallback to legacy my_Local check
+		var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 		var	cmAttr = '';
 		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 		var tileOpts = {attribution: cmAttr};
-		if (my_Local == "1") {
-			// When using local tiles, provide a transparent 1px placeholder for missing tiles.
+		var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
+		if (effectiveMode == "offline") {
+			// When using local/offline tiles, provide a transparent 1px placeholder for missing tiles.
 			// This prevents Leaflet from continuously retrying 404s, which would flood the
 			// Apache error log and eventually fill the disk or exhaust resources.  3/14/26
 			tileOpts.errorTileUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
@@ -3136,9 +3138,15 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 			sendRequest (url, layer_handleResult, params);
 			});
 		} else {
-		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+		// Use server-configured tile URL if available, fallback to legacy my_Local check
+		var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 		var	cmAttr = '';
-		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
+		var fsTileOpts = {attribution: cmAttr};
+		var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
+		if (effectiveMode == "offline") {
+			fsTileOpts.errorTileUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
+		}
+		var OSM = L.tileLayer(osmUrl, fsTileOpts);
 		if(good_gmapsapi == 1) {
 			var ggl = new L.Google('ROAD');
 			var ggl1 = new L.Google('TERRAIN');
@@ -3350,9 +3358,15 @@ function init_fsmap(theType, lat, lng, icon, initzoom, locale, useOSMAP, control
 function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	var protocol = (https == "1") ? "https://" : "http://";
 	var my_Path = "http://127.0.0.1/_osm/tiles/";
-	var osmUrl = (my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+	// Use server-configured tile URL if available, fallback to legacy my_Local check
+	var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 	var	cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-	var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
+	var miniTileOpts = {attribution: cmAttr};
+	var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
+	if (effectiveMode == "offline") {
+		miniTileOpts.errorTileUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
+	}
+	var OSM   = L.tileLayer(osmUrl, miniTileOpts);
 	if(minimap) { minimap.remove(); }
 	minimap = L.map('minimap',
 		{

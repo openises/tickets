@@ -6,16 +6,23 @@ if(empty($_GET)) {
 	exit();
 	}
 require_once('../incs/functions.inc.php');
+require_once('../incs/versions.inc.php');
 $completed = array();
 $dir = $_GET['dir'];
 $subdir = $_GET['subdir'];
 $file = $_GET['file'];
 
 do_login(basename(__FILE__));
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 set_time_limit(0);
 $got_curl = function_exists("curl_init");
-$base = "http://tile.openstreetmap.org";
+
+// Use configurable tile server URL instead of hardcoded OSM
+$tile_server_tpl = get_variable('tile_server_url');
+if ($tile_server_tpl === FALSE || trim($tile_server_tpl) === '') {
+	$tile_server_tpl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+}
+$tile_user_agent = get_tile_user_agent();
 $directory_separator = DIRECTORY_SEPARATOR;
 $ajax_dir = dirname( realpath( __FILE__ ) ) . DIRECTORY_SEPARATOR;
 $tickets_root = preg_replace( '~[/\\\\][^/\\\\]*[/\\\\]$~' , DIRECTORY_SEPARATOR , $ajax_dir );
@@ -39,7 +46,7 @@ function chmod_r($Path) {
 	}
 
 function do_file ($dir, $subdir, $file) {
-	global $got_curl, $base, $local, $url, $completed;
+	global $got_curl, $local, $url, $completed, $tile_server_tpl, $tile_user_agent;
 	if (!(file_exists($local))) {
 		mkdir($local) OR die(__LINE__);
 		}	
@@ -55,19 +62,23 @@ function do_file ($dir, $subdir, $file) {
 			mkdir($dirname) OR die(__LINE__);
 			}
 	
-		$url = "{$base}/{$dir}/{$subdir}/{$file}.png";
+		// Build URL from configurable tile server template
+		$subdomains = array('a', 'b', 'c');
+		$s = $subdomains[array_rand($subdomains)];
+		$url = str_replace(array('{z}', '{x}', '{y}', '{s}'), array($dir, $subdir, $file, $s), $tile_server_tpl);
 		$theFileName = "_osm/tiles/{$dir}/{$subdir}/{$file}.png";
 		if ($got_curl) {
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_USERAGENT, "nice_guy_trying_with_TicketsCAD");
+			curl_setopt($ch, CURLOPT_USERAGENT, $tile_user_agent);
 			curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
 			$the_tile = curl_exec ($ch);
 			$completed[1] = "{$theFileName} downloaded";
 			curl_close ($ch);
 			}
-		else {				// not CURL
-			$the_tile = file_get_contents($url);
+		else {				// not CURL - use stream context with proper User-Agent
+			$ctx = stream_context_create(array('http' => array('user_agent' => $tile_user_agent)));
+			$the_tile = file_get_contents($url, false, $ctx);
 			}
 	
 		if ($fp = fopen($my_addr, 'wb')) {

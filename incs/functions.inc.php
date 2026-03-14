@@ -1523,6 +1523,59 @@ function get_variable($which){								/* get variable from db settings table, re
 //	return $variables[$which];
 	}
 
+/**
+ * Get the current tile mode: 'online', 'proxy', or 'offline'.
+ * Falls back to reading legacy 'local_maps' setting for pre-upgrade installs.
+ */
+function get_tile_mode() {
+	$mode = get_variable('tile_mode');
+	if ($mode !== FALSE && in_array($mode, array('online', 'proxy', 'offline'))) {
+		return $mode;
+	}
+	// Fallback for installs that haven't upgraded yet
+	$local = get_variable('local_maps');
+	return ($local == '1') ? 'offline' : 'online';
+}
+
+/**
+ * Get the Leaflet tile URL template based on the current tile mode.
+ */
+function get_tile_url() {
+	$mode = get_tile_mode();
+	switch ($mode) {
+		case 'proxy':
+			return './tile_proxy.php?z={z}&x={x}&y={y}';
+		case 'offline':
+			return './_osm/tiles/{z}/{x}/{y}.png';
+		case 'online':
+		default:
+			$url = get_variable('tile_server_url');
+			if ($url === FALSE || trim($url) === '') {
+				$url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+			}
+			return $url;
+	}
+}
+
+/**
+ * Get the User-Agent string for outbound tile requests.
+ * Format: TicketsCAD/v3.43.0
+ */
+function get_tile_user_agent() {
+	if (isset($GLOBALS['tickets_current_version'])) {
+		return 'TicketsCAD/' . $GLOBALS['tickets_current_version'];
+	}
+	// Fallback if versions.inc.php hasn't been loaded
+	$ver_file = __DIR__ . '/versions.inc.php';
+	if (is_readable($ver_file)) {
+		require_once($ver_file);
+		if (isset($GLOBALS['tickets_current_version'])) {
+			return 'TicketsCAD/' . $GLOBALS['tickets_current_version'];
+		}
+	}
+	return 'TicketsCAD/unknown';
+}
+
 $msg_variables = array();
 function get_msg_variable($which){								/* get variable from db msg_settings table, returns FALSE if absent  */
 	global $msg_variables;
