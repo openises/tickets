@@ -35,6 +35,19 @@ $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
 $id =	(array_key_exists('id', ($_GET)))?	sanitize_int($_GET['id'])  :	NULL;
 
+if (empty($id)) {
+	echo '<!DOCTYPE html><html><head><title>Map Popup</title>';
+	echo '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />';
+	echo '<style>body{font-family:Arial,sans-serif;padding:40px;text-align:center;color:#333;}</style></head><body>';
+	echo '<h2>No Incident Selected</h2>';
+	echo '<p>This page displays a map view of a specific incident.</p>';
+	echo '<p>To use it, click on an incident from the <strong>Situation</strong> screen, ';
+	echo 'then select the <strong>Map</strong> option.</p>';
+	echo '<p style="margin-top:20px;"><button onclick="window.close();">Close Window</button></p>';
+	echo '</body></html>';
+	exit();
+}
+
 $result = db_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id]);
 $row = $result->fetch_assoc();
 if(!is_array($row)) { $row = array(); }
