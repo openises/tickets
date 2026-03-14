@@ -173,9 +173,11 @@ $disallow = FALSE;										// 2/25/10
 if ((isset($tablename)) && (!isset($indexname))) {
 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 	$result = db_query($query);
-	for($i = 0; $i < mysql_num_fields($result); $i++) {
-		if(strpos(mysql_field_flags($result, $i), 'primary_key') !== false) {
-			$indexname = mysql_field_name($result, $i);
+	$num_fields = $result->field_count;
+	for($i = 0; $i < $num_fields; $i++) {
+		$finfo = $result->fetch_field_direct($i);
+		if($finfo->flags & MYSQLI_PRI_KEY_FLAG) {
+			$indexname = $finfo->name;
 			unset ($result);
 			break;
 			}
