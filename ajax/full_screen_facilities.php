@@ -19,8 +19,8 @@ $sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$result_st = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	}
@@ -45,9 +45,9 @@ function isempty($arg) {
 	}
 	
 function fac_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = " . $id;	// all dispatches this unit
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = ?";
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
 	
@@ -64,8 +64,8 @@ $fac_order_str = $fac_order_values[$_SESSION['fac_flag_2']];		// 3/15/11
 
 $f_types = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$f_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 unset($result);	
@@ -118,8 +118,8 @@ $query_fac = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`
 	{$where2} 
 	GROUP BY fac_id ORDER BY {$fac_order_str} ";											// 3/15/11, 6/10/11
 
-$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-$facs_ct = mysql_affected_rows();			// 1/4/10
+$result_fac = db_query($query_fac) or do_error($query_fac, 'mysql query failed', '', basename(__FILE__), __LINE__);
+$facs_ct = db_affected_rows();			// 1/4/10
 if ($facs_ct==0){
 	} else {
 	$fs_checked = array ("", "", "", "");
@@ -131,7 +131,7 @@ if ($facs_ct==0){
 $quick = (!(is_guest()) && (intval(get_variable('quick')==1)));				// 11/27/09		
 $f_sb_indx = 0;							// for fac's only 8/5/10, 12/23/13
 $i = 1;
-while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
+while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 	$fac_gps = get_allocates(3, $row_fac['fac_id']);	//	6/10/11
 	$grp_names = "Groups Assigned: ";	//	6/10/11
 	$y=0;	//	6/10/11
@@ -191,8 +191,8 @@ while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
 		$line_ctr = 0;
 		$temp_array[0] = $row_fac['lat'];
 		$temp_array[1] = $row_fac['lng'];
-		$temp_array[2] = addslashes(shorten($facility_display_name, 48));
-		$temp_array[3] = addslashes(shorten(str_replace($eols, " ", $facility_display_name), 48));
+		$temp_array[2] = e(shorten($facility_display_name, 48));
+		$temp_array[3] = e(shorten(str_replace($eols, " ", $facility_display_name), 48));
 		$theTabs = "<div class='infowin'><BR />";
 		$theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
 		$theTabs .= '<div class="tabArea">';
@@ -202,16 +202,16 @@ while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
 		$theTabs .= '<div class="contentwrapper">';		
 
 		$tab_1 = "<TABLE width='280px' style='height: 280px;'><TR><TD><TABLE width='98%'>";	
-		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($facility_display_name, 48)) . "</B> - " . $the_type . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32)) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . e(shorten($facility_display_name, 48)) . "</B> - " . e($the_type) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . e(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32)) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . $the_status . " </TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
-		$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). " Via: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
-		if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";}
-		if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";}
-		if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";}
-		if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
-		if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
+		$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['contact_name']). " Via: " . e($row_fac['contact_email']) . "</TD></TR>";
+		if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . e($row_fac['security_contact']) . " </TD></TR>";}
+		if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['security_email']) . " </TD></TR>";}
+		if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['security_phone']) . " </TD></TR>";}
+		if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD ALIGN='left'>" . e(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
+		if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . e(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
 		if(!(isempty(trim($row_fac['opening_hours']))))  	{
 			$opening_arr_serial = base64_decode($row_fac['opening_hours']);
 			$opening_arr = unserialize($opening_arr_serial);
@@ -252,8 +252,8 @@ while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
 			$openingTimes = "Opening Times Today (" . $the_day . ")  ---  " . $outputstring;
 			$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Opening today (" . $the_day . ")&nbsp;</TD><TD ALIGN='left'>" . $outputstring . "</TD></TR>";
 			}
-		if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";}
-		if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";}
+		if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['pager_p']) . " </TD></TR>";}
+		if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['pager_s']) . " </TD></TR>";}
 		$tab_1 .= "</TABLE></TD></TR>";
 		$tab_1 .= "</TABLE>";
 		$tab_2 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
@@ -318,10 +318,10 @@ $cats_buttons = "<TABLE WIDTH='100%'><TR class='heading_2'><TH ALIGN='center'>Fa
 function get_fac_icon($fac_cat){			// returns legend string
 	$icons = $GLOBALS['fac_icons'];
 	$sm_fac_icons = $GLOBALS['sm_fac_icons'];
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `name` = \"$fac_cat\"";		// types in use
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `name` = ?";		// types in use
+	$result = db_query($query, [$fac_cat]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 	$print = "";
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$fac_icon = $row['icon'];
 		$print .= "<IMG SRC = './our_icons/" . $sm_fac_icons[$fac_icon] . "' STYLE = 'vertical-align: middle'>";
 		}

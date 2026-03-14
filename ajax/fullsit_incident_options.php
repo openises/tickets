@@ -10,14 +10,16 @@ if (!(array_key_exists('ticket_id', $_GET))) {		//	3/15/11
 	} else {
 	extract ($_GET);
 	}
-	
-$query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]assigns` 
+
+$ticket_id = sanitize_int($ticket_id);
+
+$query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]assigns`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-	WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']}	
+	WHERE `t`.`status` = {$GLOBALS['STATUS_OPEN']} OR `t`.`status` = {$GLOBALS['STATUS_SCHEDULED']}
 	ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;				// 4/28/10
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-$no_assigns = mysql_affected_rows();
+$result = db_query($query) or do_error($query, 'mysql query failed', '', __FILE__, __LINE__);
+$no_assigns = db_affected_rows();
 
 $outputtext = "<DIV><BR />";	
 $tabindex = 1;

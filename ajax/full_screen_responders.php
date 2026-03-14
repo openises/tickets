@@ -25,8 +25,8 @@ $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) 
 $u_sb_indx = 0;	//	12/23/13
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 unset($result);
@@ -48,9 +48,9 @@ function subval_sort($a, $subkey, $dd) {
 
 function can_do_dispatch($the_row) {
 	if (intval($the_row['multi'])==1) return TRUE;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";	// all dispatches this unit
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {		// check any open runs this unit
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = ?";	// all dispatches this unit
+	$result_temp = db_query($query, [$the_row['unit_id']]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {		// check any open runs this unit
 		if (!(is_date($row_temp['clear']))) { 			// if  clear is empty, then NOT dispatch-able
 			unset ($result_temp, $row_temp); 
 			return FALSE;
@@ -61,9 +61,9 @@ function can_do_dispatch($the_row) {
 	}		// end function can do_dispatch()
 	
 function unit_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;	// all dispatches this unit
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = ?";	// all dispatches this unit
+	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
 	
@@ -84,8 +84,8 @@ $query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`,
 	`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` 
 	FROM `$GLOBALS[mysql_prefix]assigns` 
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
-$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
+$result_as = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row_as = stripslashes_deep($result_as->fetch_array())) {
 	$assigns[$row_as['responder_id']] = $row_as['ticket'];
 	$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 	}
@@ -97,8 +97,8 @@ $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$result_st = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	$status_hide[$temp] = $row_st['hide'];
@@ -108,8 +108,8 @@ unset($result_st);
 
 $assigns_ary = array();				// construct array of responder_id's on active calls
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$assigns_ary[$row['responder_id']] = TRUE;
 	}
 $order_values = array(1 => "`nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC", 2 => "`type_descr` ASC, `handle` ASC",  3 => "`stat_descr` ASC, `handle` ASC" , 4 => "`handle` ASC");	// 6/24/10
@@ -161,9 +161,9 @@ $query1 = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )			
 	{$where2} ORDER BY `unit_id` DESC LIMIT 1";
 
-$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row1 = stripslashes_deep(mysql_fetch_assoc($result1));
-$latest_id = (mysql_num_rows($result1) >0) ? $row1['unit_id'] : 0;
+$result1 = db_query($query1) or do_error($query1, 'mysql query failed', '', basename( __FILE__), __LINE__);
+$row1 = stripslashes_deep($result1->fetch_assoc());
+$latest_id = ($result1->num_rows >0) ? $row1['unit_id'] : 0;
 
 $query = "SELECT *, r.updated AS `r_updated`,
 	`r`.`status_updated` AS `status_updated`,
@@ -184,8 +184,8 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
 	{$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";											// 2/1/10, 3/15/10, 6/10/11
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$units_ct = mysql_affected_rows();			// 1/4/10
+$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+$units_ct = db_affected_rows();			// 1/4/10
 if ($units_ct==0){
 //	print "\n\t\tside_bar_html += \"<TR CLASS='odd'><TH></TH><TH ALIGN='center' COLSPAN=99><I><B>No units!</I></B></TH></TR>\"\n";
 	}
@@ -203,7 +203,7 @@ $utc = gmdate ("U");				// 3/25/09
 $chgd_unit = $_SESSION['unit_flag_1'];					// possibly 0 - 4/8/10
 $_SESSION['unit_flag_1'] = 0;							// one-time only - 4/11/10
 $i = 1;
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
+while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 	$resp_gps = get_allocates(2, $row['unit_id']);	//	6/10/11
 	$the_color = ($row['mobile']=="1")? 4 : 0;		// icon color black, white		-- 4/18/09
 	$grp_names = "Groups Assigned: ";	//	6/10/11
@@ -215,7 +215,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 		$y++;
 		}
 
-	$tip =  addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));		// tooltip string - 1/3/10
+	$tip =  e($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));		// tooltip string - 1/3/10
 		
 	$latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');		// 7/18/10		
 	$longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');		// 7/18/10
@@ -236,9 +236,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	if ($track_type > 0 ) {				// get most recent mobile track data
 		$do_legend = TRUE;
 		$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
-			WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-		$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_track = (mysql_affected_rows()>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+			WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";		// newest
+		$result_tr = db_query($query, [$row['callsign']]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+		$row_track = (db_affected_rows()>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 		$aprs_updated = $row_track['updated'];
 		$aprs_speed = $row_track['speed'];
 		if (($row_track) && (my_is_float($row_track['latitude']))) {
@@ -267,12 +267,12 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 
 	$units_assigned = 0;
 	if(array_key_exists ($row['unit_id'] , $assigns_ary)) {			// this unit assigned? - 6/4/10
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-			WHERE `responder_id` = '{$row['unit_id']}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+			WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
-		$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$units_assigned = mysql_num_rows($result_as);
+		$result_as = db_query($query, [$row['unit_id']]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+		$units_assigned = $result_as->num_rows;
 		}		// end if(array_key_exists ()
 
 	switch ($units_assigned) {		
@@ -281,7 +281,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 			$flaginfo = "";
 			break;			
 		case 1:
-			$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as));
+			$row_assign = stripslashes_deep($result_as->fetch_assoc());
 			$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 			$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
 			$addrs = $row_assign['street'] . " " . $row_assign['city'] . " " . $row_assign['state'];
@@ -360,8 +360,8 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 			$temptype = $u_types[$row['type_id']];
 			$temp_array[0] = $lat;
 			$temp_array[1] = $lng;
-			$temp_array[2] = addslashes(shorten($name, 48));
-			$temp_array[3] = addslashes(shorten(str_replace($eols, " ", $row['unit_descr']), 256));
+			$temp_array[2] = e(shorten($name, 48));
+			$temp_array[3] = e(shorten(str_replace($eols, " ", $row['unit_descr']), 256));
 			$the_type = $temptype[0];																			// 1/1/09
 			$toosmap = (!($internet))?				 								"" : "<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row['unit_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"responder\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>";
 
@@ -377,13 +377,13 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 			$theTabs .= '<div class="contentwrapper">';
 			
 			$tab_1 = "<TABLE width='280px' style='height: 280px;'><TR><TD><TABLE width='98%'>";			
-			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row['name'], 48)) . "</B> - " . $the_type . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . addslashes(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . e(shorten($row['name'], 48)) . "</B> - " . $the_type . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . e(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row['contact_name']). " Via: " . addslashes($row['contact_via']) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . e($row['contact_name']). " Via: " . e($row['contact_via']) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 			if (array_key_exists($row['unit_id'], $assigns)) {
-				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . addslashes(shorten($assigns[$row['unit_id']], 20)) . "</A></TD></TR>";
+				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . e(shorten($assigns[$row['unit_id']], 20)) . "</A></TD></TR>";
 				}
 			$tab_1 .= "</TABLE></TD></TR></TABLE>";
 

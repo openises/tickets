@@ -8,15 +8,16 @@ if($_GET['q'] != $_SESSION['id']) {
 if (!(array_key_exists('func', $_GET))) {		//	3/15/11
 	$func = 0;
 } else {
-	extract ($_GET);
+	$func = $_GET['func'];
 	}
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
-$sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
-$func = (!(array_key_exists('func', $_GET))) ? 0 : $_GET['func'];
-$sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : $_GET['sortbyfield'];
-$sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : $_GET['sort_value'];
-$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : $_GET['my_offset'];
+$allowed_sorts = array('tick_id','id','scope','street','type','a','p','u','updated');
+$sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : (in_array($_GET['sort'], $allowed_sorts) ? $_GET['sort'] : "tick_id");
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : (strtoupper($_GET['dir']) === 'DESC' ? 'DESC' : 'ASC');
+$func = (!(array_key_exists('func', $_GET))) ? 0 : sanitize_int($_GET['func'], 0);
+$sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : sanitize_string($_GET['sortbyfield']);
+$sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : sanitize_string($_GET['sort_value']);
+$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : sanitize_int($_GET['my_offset'], 0);
 $istest = FALSE;
 $iw_width= "270px";					// map infowindow with
 $nature = get_text("Nature");			// 12/03/10
@@ -72,16 +73,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 
 	$acts_ary = $pats_ary = array();				// 6/2/10
 	$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` GROUP BY `ticket_id`";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+	$result_temp = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 		$acts_ary[$row['ticket_id']] = $row['the_count'];
 		}
 
 //	Count number of patients on Ticket
 
 	$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` GROUP BY `ticket_id`";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+	$result_temp = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 		$pats_ary[$row['ticket_id']] = $row['the_count'];
 		}	
 		
@@ -91,21 +92,23 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 																				//fix limits according to setting "ticket_per_page"
 	$limit = "";
 	if ($_SESSION['ticket_per_page'] && (check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]ticket`") > $_SESSION['ticket_per_page']))	{
-		if ($_GET['offset']) {
-			$limit = "LIMIT $_GET[offset],$_SESSION[ticket_per_page]";
+		$safe_offset = isset($_GET['offset']) ? sanitize_int($_GET['offset'], 0) : 0;
+		$safe_per_page = intval($_SESSION['ticket_per_page']);
+		if ($safe_offset) {
+			$limit = "LIMIT {$safe_offset},{$safe_per_page}";
 			}
 		else {
-			$limit = "LIMIT 0,$_SESSION[ticket_per_page]";
+			$limit = "LIMIT 0,{$safe_per_page}";
 			}
 		}
-	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
+	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=" . intval($_SESSION['user_id']) : "";
 	$time_back = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60) - ($cwi*3600));
 	$sort_by_severity = ($func == 0)? "`severity` DESC ": "";
 
 	if (!(array_key_exists('func', $_GET))) {		//	3/15/11
 		$func = 0;
 	} else {
-		extract ($_GET);
+		$func = sanitize_int($_GET['func'], 0);
 		}
 	if ((array_key_exists('func', $_GET)) && ($_GET['func'] == 10)) {		//	3/15/11
 		$func = 10;
@@ -170,12 +173,15 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 		}				// end switch($func)
 		
 	if ($sort_by_field && $sort_value) {					//sort by field?
+		$allowed_fields = array('scope','street','city','state','contact','phone','description');
+		$safe_sort_field = in_array($sort_by_field, $allowed_fields) ? $sort_by_field : 'scope';
 		$query = "SELECT *,problemstart AS problemstart,problemend AS problemend,
-			`date` AS `date`,updated AS updated, in_types.type AS `type`, in_types.id AS `t_id` 
+			`date` AS `date`,updated AS updated, in_types.type AS `type`, in_types.id AS `t_id`
 			FROM `$GLOBALS[mysql_prefix]allocates`
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]allocates`.`resource_id`=`$GLOBALS[mysql_prefix]ticket`.`id` 			
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.`in_types_id`=`$GLOBALS[mysql_prefix]in_types`.`id` 
-			WHERE `ticket`.`{$sort_by_field}` LIKE '%{$sort_value}%' $restrict_ticket AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 ORDER BY $order_by";
+			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]allocates`.`resource_id`=`$GLOBALS[mysql_prefix]ticket`.`id`
+			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.`in_types_id`=`$GLOBALS[mysql_prefix]in_types`.`id`
+			WHERE `ticket`.`{$safe_sort_field}` LIKE ? $restrict_ticket AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 ORDER BY $order_by";
+		$result = db_query($query, ['%' . $sort_value . '%'], 's') or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 		}
 	else {					// 2/2/09, 8/12/09, updated 4/18/11 to support regional operation
 		$query = "SELECT *,problemstart AS problemstart,
@@ -211,16 +217,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity} 
 			LIMIT 1000 OFFSET {$my_offset}";		// 2/2/09, 10/28/09, 2/21/10
 		}
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$ticket_row[0][99] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$tick_gps = get_allocates(1, $row['tick_id']);	//	6/10/11
 			$grp_names = "Groups Assigned: ";	//	6/10/11
 			$y=0;	//	6/10/11

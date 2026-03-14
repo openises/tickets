@@ -5,7 +5,7 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
-$id = $_GET['id'];
+$id = sanitize_int($_GET['id']);
 
 $time = microtime(true); // Gets microseconds
 $eols = array ("\r\n", "\n", "\r");		// all flavors of eol
@@ -24,52 +24,52 @@ $ret_arr = array();
 
 $acts_ary = $pats_ary = array();				// 6/2/10
 $query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` GROUP BY `ticket_id`";
-$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+$result_temp = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 	$acts_ary[$row['ticket_id']] = $row['the_count'];
 	}
 
 //	Count number of patients on Ticket
 
 $query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` GROUP BY `ticket_id`";
-$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+$result_temp = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 	$pats_ary[$row['ticket_id']] = $row['the_count'];
-	}	
-	
+	}
+
 $query = "SELECT *,problemstart AS problemstart,
 	`problemend` AS `problemend`,
-	`booked_date` AS `booked_date`,	
-	`date` AS `date`, 
-	`$GLOBALS[mysql_prefix]ticket`.`scope` AS scope, 
-	`$GLOBALS[mysql_prefix]ticket`.`street` AS ticket_street, 
-	`$GLOBALS[mysql_prefix]ticket`.`state` AS ticket_city, 
+	`booked_date` AS `booked_date`,
+	`date` AS `date`,
+	`$GLOBALS[mysql_prefix]ticket`.`scope` AS scope,
+	`$GLOBALS[mysql_prefix]ticket`.`street` AS ticket_street,
+	`$GLOBALS[mysql_prefix]ticket`.`state` AS ticket_city,
 	`$GLOBALS[mysql_prefix]ticket`.`city` AS ticket_state,
 	`$GLOBALS[mysql_prefix]ticket`.`updated` AS `updated`,
 	`$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
-	`$GLOBALS[mysql_prefix]in_types`.`type` AS `type`, 
+	`$GLOBALS[mysql_prefix]in_types`.`type` AS `type`,
 	`$GLOBALS[mysql_prefix]in_types`.`id` AS `t_id`,
-	`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`, 
+	`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`,
 	`$GLOBALS[mysql_prefix]ticket`.lat AS `lat`,
-	`$GLOBALS[mysql_prefix]ticket`.lng AS `lng`, 
+	`$GLOBALS[mysql_prefix]ticket`.lng AS `lng`,
 	`$GLOBALS[mysql_prefix]facilities`.lat AS `fac_lat`,
-	`$GLOBALS[mysql_prefix]facilities`.lng AS `fac_lng`, 
+	`$GLOBALS[mysql_prefix]facilities`.lng AS `fac_lng`,
 	`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
-	(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-		WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`  
-		AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
-		AS `units_assigned`			
-	FROM `$GLOBALS[mysql_prefix]ticket` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
-		ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
-	LEFT JOIN `$GLOBALS[mysql_prefix]in_types` 
-		ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 
+	(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns`
+		WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`
+		AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
+		AS `units_assigned`
+	FROM `$GLOBALS[mysql_prefix]ticket`
+	LEFT JOIN `$GLOBALS[mysql_prefix]allocates`
+		ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
+	LEFT JOIN `$GLOBALS[mysql_prefix]in_types`
+		ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id`
+	LEFT JOIN `$GLOBALS[mysql_prefix]facilities`
 		ON `$GLOBALS[mysql_prefix]ticket`.rec_facility=`$GLOBALS[mysql_prefix]facilities`.`id`
-	WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = " . $id;
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_num_rows($result);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+	WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = ?";
+$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+$num_rows = $result->num_rows;
+$row = stripslashes_deep($result->fetch_assoc());
 $problemstart = strtotime($row['problemstart']);
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $now = strtotime($now);
@@ -94,7 +94,7 @@ else { $strike = $strikend = "";}
 
 if (intval($row['radius']) > 0) {
 	$color= (substr($row['color'], 0, 1)=="#")? $row['color']: "blue";		// black default
-	}				// end if (intval($row['radius']) 
+	}				// end if (intval($row['radius'])
 $color = isset($color) ? $color : "blue";
 if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 if (get_variable('abbreviate_description'))	{	//do abbreviations on description, affected if neccesary
@@ -111,16 +111,16 @@ if (get_variable('abbreviate_affected')) {
 $A = array_key_exists ($the_id , $acts_ary)? $acts_ary[$the_id]: "&nbsp;";		// 6/2/10
 $P = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: "&nbsp;";
 $pats_count = (isset($pats_ary[$the_id])) ? $pats_ary[$the_id] : "&nbsp;";
-$acts_count = (isset($acts_ary[$the_id])) ? $acts_ary[$the_id] : "&nbsp;";	
+$acts_count = (isset($acts_ary[$the_id])) ? $acts_ary[$the_id] : "&nbsp;";
 
-$locale = get_variable('locale');	// 08/03/09			
+$locale = get_variable('locale');	// 08/03/09
 if (my_is_float($row['lat'])) {		// 6/21/10
 	$temp_array[0] = $row['lat'];
 	$temp_array[1] = $row['lng'];
 	$temp_array[2] = htmlentities(shorten($row['scope'], 48), ENT_QUOTES);
 	$temp_array[3] = htmlentities(shorten(str_replace($eols, " ", $row['tick_descr']), 256), ENT_QUOTES);
 	$street = empty($row['ticket_street'])? "" : replace_quotes($row['ticket_street']) . "<BR/>" . replace_quotes($row['ticket_city']) . " " . replace_quotes($row['ticket_state']) ;
-	$todisp = (is_guest()|| is_unit())? "": "<A id='disp_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['routesfile']}?ticket_id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";	// 7/27/10
+	$todisp = (is_guest()|| is_unit())? "": "<A id='disp_" . intval($the_id) . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['routesfile']}?ticket_id=" . intval($the_id) . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";	// 7/27/10
 
 	$rand = ($istest)? "&rand=" . chr(rand(65,90)) : "";													// 10/21/08
 	$theTabs = "<div class='infowin'><BR />";
@@ -151,7 +151,7 @@ if (my_is_float($row['lat'])) {		// 6/21/10
 		$tab_1 .= "<TR CLASS='even'><TD class='td_label text text_left'>UTM grid:</TD><TD CLASS='td_data text text_left'>" . toUTM($coords) . "</TD></TR>";
 		}
 	$tab_1 .= "</TABLE></TD></TR>";
-	$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08	
+	$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08
 
 	$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
 	$tab_2 .= "<TR CLASS='even'><TD class='td_label text text_left'>Description:</TD><TD CLASS='td_data text text_left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
@@ -159,35 +159,35 @@ if (my_is_float($row['lat'])) {		// 6/21/10
 	$tab_2 .= "<TR CLASS='odd'><TD class='td_label text text_left'>{$disposition}:</TD><TD CLASS='td_data text text_left'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
 	$tab_2 .= "<TR><TD COLSPAN=2><DIV style='max-height: 200px; overflow-y: scroll;'>" . show_assigns(0, $the_id) . "</DIV></TD></TR>";
 
-	$tab_2 .= "</TABLE>";			// 11/6/08			
-	
+	$tab_2 .= "</TABLE>";			// 11/6/08
+
 	$tab_3 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
 	$tab_3 .= "<TABLE width='98%'>";
 
-	switch($locale) { 
+	switch($locale) {
 		case "0":
 		$tab_3 .= "<TR CLASS='odd'><TD class='td_label text text_left'>USNG:</TD><TD CLASS='td_data text text_left'>" . LLtoUSNG($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 		break;
-	
+
 		case "1":
 		$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text text_left'>OSGB:</TD><TD CLASS='td_data text text_left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 		break;
-	
+
 		case "2":
 		$coords =  $row['lat'] . "," . $row['lng'];							// 8/12/09
 		$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label text text_left'>UTM:</TD><TD CLASS='td_data text text_left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
 		break;
-	
+
 		default:
 		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
 		}
-	$tab_3 .= "<TR><TD class='td_label text text_left'>Lat</TD><TD class='td_data text text_left'>" . $row['lat'] . "</TD></TR>";
-	$tab_3 .= "<TR><TD class='td_label text text_left'>Lng</TD><TD class='td_data text text_left'>" . $row['lng'] . "</TD></TR>";
+	$tab_3 .= "<TR><TD class='td_label text text_left'>Lat</TD><TD class='td_data text text_left'>" . e($row['lat']) . "</TD></TR>";
+	$tab_3 .= "<TR><TD class='td_label text text_left'>Lng</TD><TD class='td_data text text_left'>" . e($row['lng']) . "</TD></TR>";
 	$tab_3 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
 	$tab_3 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
 	$tab_3 .= "</TABLE></TD</TR></TABLE>";
 	}
-	
+
 $theTabs .= "<div class='content' id='content1' style = 'display: block;'>" . $tab_1 . "</div>";
 $theTabs .= "<div class='content' id='content2' style = 'display: none;'>" . $tab_2 . "</div>";
 $theTabs .= "<div class='content' id='content3' style = 'display: none;'>" . $tab_3 . "</div>";

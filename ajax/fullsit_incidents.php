@@ -72,16 +72,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 
 	$acts_ary = $pats_ary = array();				// 6/2/10
 	$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` GROUP BY `ticket_id`";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+	$result_temp = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 		$acts_ary[$row['ticket_id']] = $row['the_count'];
 		}
 
 //	Count number of patients on Ticket
 
 	$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` GROUP BY `ticket_id`";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+	$result_temp = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+	while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 		$pats_ary[$row['ticket_id']] = $row['the_count'];
 		}	
 		
@@ -207,16 +207,16 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity} 
 			LIMIT 1000 OFFSET {$my_offset}";		// 2/2/09, 10/28/09, 2/21/10
 		}
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 	$the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
-	$num_rows = mysql_num_rows($result);
+	$num_rows = $result->num_rows;
 //	Major While
 	if($num_rows == 0) {
 		$ticket_row[0][0] = 0;
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$problemstart = strtotime($row['problemstart']);
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 			$now = strtotime($now);

@@ -12,14 +12,14 @@ $query = "SELECT *,
 		`fx`.`id` AS `x_id`,
 		`f`.`id` AS `f_id`
 		FROM `$GLOBALS[mysql_prefix]files` `f`
-		LEFT JOIN `$GLOBALS[mysql_prefix]files_x` `fx` ON `fx`.`file_id` = `f`.`id` 
-		ORDER BY `f`.`id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) == 0) {
+		LEFT JOIN `$GLOBALS[mysql_prefix]files_x` `fx` ON `fx`.`file_id` = `f`.`id`
+		ORDER BY `f`.`id` ASC";
+$result = db_query($query) or do_error('', 'mysql query failed', '', basename( __FILE__), __LINE__);
+if($result->num_rows == 0) {
 	$ret_arr[0]['id'] = 0;
 	} else {
 	$i = 0;
-	while($row = mysql_fetch_assoc($result)) {
+	while($row = $result->fetch_assoc()) {
 		$ret_arr[$i]['id'] = $row['f_id'];
 		$ret_arr[$i]['filename'] = $row['orig_filename'];
 		$ret_arr[$i]['ticket_id'] = $row['ticket_id'];
@@ -32,7 +32,7 @@ if(mysql_num_rows($result) == 0) {
 		$ret_arr[$i]['_from'] = $row['_from'];
 		$ret_arr[$i]['x_id'] = $row['x_id'];
 		$ret_arr[$i]['user_id'] = $row['user_id'];
-		$ret_arr[$i]['target_filename'] = $row['filename'];		
+		$ret_arr[$i]['target_filename'] = $row['filename'];
 		$i++;
 		}
 	}
