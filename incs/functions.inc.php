@@ -2034,11 +2034,8 @@ function dump($variable) {
 	}
 
 function shorten($instring, $limit) {
-	if (is_string($instring)) {
-		return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
-		} else {
-		return "ERROR: value is not a string";
-		}
+	$instring = (string)($instring ?? '');
+	return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
 }
 
 function format_phone ($instr) { // 11/16/10 added check for locale for UK phone number format.
