@@ -470,7 +470,8 @@ function remove_nls($instr) {                // 10/20/09
 	}        // end function
 
 function mysql_table_exists($name) {
-	$result = db_query("SHOW TABLES LIKE ?", [$name]);
+	$escaped = mysqli_real_escape_string(db(), $name);
+	$result = db_query("SHOW TABLES LIKE '{$escaped}'");
 	return boolVal($result->num_rows > 0);
 	}
 
