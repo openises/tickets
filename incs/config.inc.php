@@ -49,68 +49,71 @@ $colors = array ('odd', 'even');
 
 /* run the OPTIMIZE sql query on all tables */
 function optimize_db(){
-	$result = mysql_query("OPTIMIZE TABLE $GLOBALS[mysql_prefix]ticket, $GLOBALS[mysql_prefix]action, $GLOBALS[mysql_prefix]user, $GLOBALS[mysql_prefix]settings, $GLOBALS[mysql_prefix]notify") or do_error('functions.inc.php::optimize_db()', 'mysql_query(optimize) failed', mysql_error(), __FILE__, __LINE__);
+	$p = $GLOBALS['mysql_prefix'];
+	db_query("OPTIMIZE TABLE `{$p}ticket`, `{$p}action`, `{$p}user`, `{$p}settings`, `{$p}notify`");
 	}
 /* reset database to defaults */
 function reset_db($user=0,$ticket=0,$responders=0,$facilities=0,$settings=0,$messages=0,$purge=0){
+	$p = $GLOBALS['mysql_prefix'];
 	if($ticket)	{
 	 	print '<LI> Deleting actions...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]action") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}action`");
 	 	print '<LI> Deleting assigns...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]assigns") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}assigns`");
 	 	print '<LI> Deleting chat_messages...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]chat_messages") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}chat_messages`");
 	 	print '<LI> Deleting log...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]log") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}log`");
 	 	print '<LI> Deleting notifies...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]notify") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}notify`");
 	 	print '<LI> Deleting patient...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]patient") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}patient`");
 		print '<LI> Deleting tickets...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]ticket") or do_error("",'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]allocates WHERE `type` = 1") or do_error("",'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}ticket`");
+		db_query("DELETE FROM `{$p}allocates` WHERE `type` = ?", [1], 'i');
 		}
 
 	if($responders) {
 	 	print '<LI> Deleting responder...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]responder") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]allocates WHERE `type` = 2") or do_error("",'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}responder`");
+		db_query("DELETE FROM `{$p}allocates` WHERE `type` = ?", [2], 'i');
 	 	print '<LI> Deleting tracks...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]tracks") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]tracks_hh") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}tracks`");
+		db_query("DELETE FROM `{$p}tracks_hh`");
 		}
 
 	if($facilities) {
 	 	print '<LI> Deleting facilities...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]facilities") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]allocates WHERE `type` = 3") or do_error("",'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}facilities`");
+		db_query("DELETE FROM `{$p}allocates` WHERE `type` = ?", [3], 'i');
 		}
 
 	if($messages) {
 	 	print '<LI> Deleting messages...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]messages") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]messages_bin") or do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		db_query("DELETE FROM `{$p}messages`");
+		db_query("DELETE FROM `{$p}messages_bin`");
 		}
 
 	if($user)	{
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]notify") or do_error('reset_db()::mysql_query(delete notifies)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		db_query("DELETE FROM `{$p}notify`");
 		print '<LI> Deleting users and notifies...';
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]user") or do_error('reset_db()::mysql_query(delete users)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]allocates WHERE `type` = 4") or do_error("",'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		//	add admin user
-		$query = "INSERT INTO $GLOBALS[mysql_prefix]user (user,info,level,passwd) VALUES('admin','Administrator',$GLOBALS[LEVEL_ADMINISTRATOR],PASSWORD('admin'))";
-		$result = mysql_query($query) or do_error(query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();	//	get user id for new admin user
+		db_query("DELETE FROM `{$p}user`");
+		db_query("DELETE FROM `{$p}allocates` WHERE `type` = ?", [4], 'i');
+		//	add admin user - use password_hash instead of MySQL PASSWORD()
+		$admin_hash = hash_password('admin');
+		db_query("INSERT INTO `{$p}user` (`user`, `info`, `level`, `passwd`) VALUES (?, ?, ?, ?)",
+			['admin', 'Administrator', $GLOBALS['LEVEL_ADMINISTRATOR'], $admin_hash], 'ssis');
+		$new_id = db_insert_id();	//	get user id for new admin user
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));	//	get current time for insert
 		//	add allocation for new admin user to region / group 1
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group`,`type`,`al_as_of`,`al_status`,`resource_id`,`sys_comments`,`user_id`) VALUES (1,4,'$now',0,$new_id,'Allocated to Group after reset operation',$new_id)";
-		$result = mysql_query($query) or do_error(query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		db_query("INSERT INTO `{$p}allocates` (`group`, `type`, `al_as_of`, `al_status`, `resource_id`, `sys_comments`, `user_id`) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			[1, 4, $now, 0, $new_id, 'Allocated to Group after reset operation', $new_id], 'iisiiis');
 		print '<LI> Admin account created with password \'admin\'';
 		}
 	if($settings) {		//reset all default settings
 		print '<LI> Deleting settings...';
 
-		$result = mysql_query("DELETE FROM $GLOBALS[mysql_prefix]settings") or do_error('reset_db()::mysql_query(delete settings)', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		db_query("DELETE FROM `{$p}settings`");
 		do_insert_settings('_aprs_time','0');
 		do_insert_settings('_sleep','5');		//	10/23/12
 		do_insert_settings('_version',$version);
@@ -239,16 +242,26 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 
 
 
-	//get variables from db
-	$memb_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_MEMBER]"));		// 3/3/09
-	$oper_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_USER]"));
-	$admin_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_ADMINISTRATOR]"));
-	$guest_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_GUEST]"));
-	$super_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_SUPER] AND `passwd` <> '55606758fdb765ed015f0612112a6ca7'"));	//	11/07/11
-	$stats_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE level=$GLOBALS[LEVEL_STATS]"));
-	$ticket_in_db 		= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket`"));
-	$ticket_open_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE status='$GLOBALS[STATUS_OPEN]'"));
-	$ticket_rsvd_in_db 	= mysql_num_rows(mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE status='$GLOBALS[STATUS_RESERVED]'"));
+	//get variables from db - using COUNT(*) instead of SELECT * for efficiency
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}user` WHERE `level` = ?", [$GLOBALS['LEVEL_MEMBER']], 'i');
+	$memb_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}user` WHERE `level` = ?", [$GLOBALS['LEVEL_USER']], 'i');
+	$oper_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}user` WHERE `level` = ?", [$GLOBALS['LEVEL_ADMINISTRATOR']], 'i');
+	$admin_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}user` WHERE `level` = ?", [$GLOBALS['LEVEL_GUEST']], 'i');
+	$guest_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}user` WHERE `level` = ? AND `passwd` <> '55606758fdb765ed015f0612112a6ca7'", [$GLOBALS['LEVEL_SUPER']], 'i');
+	$super_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}user` WHERE `level` = ?", [$GLOBALS['LEVEL_STATS']], 'i');
+	$stats_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}ticket`");
+	$ticket_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}ticket` WHERE `status` = ?", [$GLOBALS['STATUS_OPEN']], 's');
+	$ticket_open_in_db = $row ? $row['cnt'] : 0;
+	$row = db_fetch_one("SELECT COUNT(*) AS cnt FROM `{$p}ticket` WHERE `status` = ?", [$GLOBALS['STATUS_RESERVED']], 's');
+	$ticket_rsvd_in_db = $row ? $row['cnt'] : 0;
 
 
 	$pluralM =  ($memb_in_db==1)? "": "s";
@@ -267,7 +280,7 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Tickets Version:</TD><TD ALIGN='left'><B>" . $system_version . "</B></TD></TR>";
 	print "<TR CLASS='even'><TD CLASS='td_label'>Server OS:</TD><TD ALIGN='left'>" . php_uname() . "</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>PHP Version:</TD><TD ALIGN='left'>" . phpversion() . " under " .$_SERVER['SERVER_SOFTWARE'] . "</TD></TR>";		// 8/8/08
-	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>$GLOBALS[mysql_db] on $GLOBALS[mysql_host] running mysql ".mysql_get_server_info()."</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Database:</TD><TD ALIGN='left'>" . e($GLOBALS['mysql_db']) . " on " . e($GLOBALS['mysql_host']) . " running mysql " . e(db()->server_info) . "</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Timezone set:</TD><TD ALIGN='left'>" . date_default_timezone_get() . "</TD></TR>";
 	$fmt = "m/d/Y H:i:s";
 	$now =  date($fmt,time());											// 8/26/08
@@ -282,63 +295,55 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 
 	$type_color=array();												// 1/28/09
 	$type_color[0] = "Error";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$type_color[$row['id']]=  $row['name'];
+	$unit_types = db_fetch_all("SELECT * FROM `{$p}unit_types`");
+	foreach($unit_types as $urow) {
+		$type_color[$urow['id']] = $urow['name'];
 		}
-	unset($result);
 
-	$query = "SELECT `type`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]responder` GROUP BY `type`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$resp_counts = db_fetch_all("SELECT `type`, COUNT(*) AS `the_count` FROM `{$p}responder` GROUP BY `type`");
 	$total = 0;
 	$out_str = "";
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-		$total += $row['the_count'];
-		$plural = ($row['the_count']!= 1)? "s": "";
-		$out_str .= $row['the_count'] ." " . $type_color[$row['type']] . $plural . ", " ;
+	foreach($resp_counts as $rrow) {
+		$total += $rrow['the_count'];
+		$plural = ($rrow['the_count']!= 1)? "s": "";
+		$out_str .= $rrow['the_count'] ." " . $type_color[$rrow['type']] . $plural . ", " ;
 		}
 	$show_str = $out_str . $total . " total";
-	unset($result);
 
 	print "<TR CLASS='even'><TD CLASS='td_label'>Units in database:</TD><TD ALIGN='left'>" . $show_str . "</TD></TR>";
 
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Users in database:</TD><TD ALIGN='left'>$super_in_db Super$pluralS, $admin_in_db Administrator$pluralA, $oper_in_db Operator$pluralOp, $guest_in_db Guest$pluralG, $memb_in_db Member$pluralM, $stats_in_db Statistics ".($super_in_db+$oper_in_db+$admin_in_db+$guest_in_db+$memb_in_db+$stats_in_db)." total</TD></TR>";	//	11/07/11
 
-	$query = "SELECT COUNT(*) as `num` FROM `$GLOBALS[mysql_prefix]log`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	$row = mysql_fetch_assoc($result);
-	$nr_logs = number_format($row['num']);
-	unset($result);
+	$log_row = db_fetch_one("SELECT COUNT(*) AS `num` FROM `{$p}log`");
+	$nr_logs = number_format($log_row ? $log_row['num'] : 0);
 
 	print "<TR CLASS='even'><TD CLASS='td_label'>Log records in database:&nbsp;&nbsp;</TD><TD ALIGN='left'>{$nr_logs}</TD></TR>";		// 4/5/09
 
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Current User:</TD><TD ALIGN='left'>";
-	print $_SESSION['user'] . ", " .	get_level_text ($_SESSION['level']);
+	print e($_SESSION['user']) . ", " . e(get_level_text($_SESSION['level']));
 
-	$_SESSION['ticket_per_page'] == 0 ? print ", unlimited " : print $_SESSION['ticket_per_page'];
-	print " tickets/page, order by '".str_replace('DESC','descending', $_SESSION['sortorder'])."'</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . $_SERVER['REMOTE_ADDR'] . ", " . gethostbyaddr($_SERVER['REMOTE_ADDR']) . "</TD></TR>";
+	$_SESSION['ticket_per_page'] == 0 ? print ", unlimited " : print e($_SESSION['ticket_per_page']);
+	print " tickets/page, order by '" . e(str_replace('DESC','descending', $_SESSION['sortorder'])) . "'</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Visting from:</TD><TD ALIGN='left'>" . e($_SERVER['REMOTE_ADDR']) . ", " . e(gethostbyaddr($_SERVER['REMOTE_ADDR'])) . "</TD></TR>";
 	print "<TR CLASS='odd'><TD CLASS='td_label'>Browser:</TD><TD ALIGN='left'>";
-	print $_SERVER["HTTP_USER_AGENT"];
+	print e($_SERVER["HTTP_USER_AGENT"]);
 	print  "</TD></TR>";
-	print "<TR CLASS='even'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . $_SESSION['scr_width'] . " x " . $_SESSION['scr_height'] . "</TD></TR>";
+	print "<TR CLASS='even'><TD CLASS='td_label'>Monitor resolution: </TD><TD ALIGN='left'>" . e($_SESSION['scr_width']) . " x " . e($_SESSION['scr_height']) . "</TD></TR>";
 	print "</TABLE>";		//
 	}
 
 function list_users(){		/* list users */
 	global $colors;						// 9/3/10
-//	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]user`") or do_error('list_users()::mysql_query()', 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-	$query = "SELECT *,
+	$p = $GLOBALS['mysql_prefix'];
+	$rows = db_fetch_all("SELECT *,
 		`u`.`id` AS `userid`,
 		`r`.`name` AS `unitname`,
 		`r`.`id` AS `unitid`
-		FROM `$GLOBALS[mysql_prefix]user` `u`
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`u`.`responder_id` = `r`.`id`)
+		FROM `{$p}user` `u`
+		LEFT JOIN `{$p}responder` `r` ON (`u`.`responder_id` = `r`.`id`)
 		WHERE `passwd` <> '55606758fdb765ed015f0612112a6ca7'
-		ORDER BY `u`.`user` ASC ";																// 5/25/09, 1/16/08
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-	if (mysql_affected_rows()==0) 	 { print '<B>[no users found]</B><BR />'; return; 	}
+		ORDER BY `u`.`user` ASC");
+	if (empty($rows)) { print '<B>[no users found]</B><BR />'; return; }
 
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 1/23/10
 
@@ -357,8 +362,9 @@ function list_users(){		/* list users */
 		<TD class='text'><B>&nbsp;Browser</B></TD>
 		</TR>";
 	$i=1;
-	while($row = stripslashes_deep(mysql_fetch_array($result))) {				// 10/8/08
-		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$row['userid']}' \"": "";
+	foreach($rows as $row) {
+		$safe_userid = e($row['userid']);
+		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$safe_userid}' \"": "";
 
 		$level = get_level_text($row['level']);
 		$login_ts = (!empty($row['login'])) ? strtotime((string)$row['login']) : false;
@@ -371,15 +377,15 @@ function list_users(){		/* list users */
 		$isonline = ($expires_val !== "" && $expires_val > $now) ? true: false;
 		$online = ($isonline)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
 		print "<TR CLASS='{$colors[$i%2]}' {$onclick}>
-				<TD class='text'>{$row['userid']}</TD>
-				<TD class='text'>&nbsp;{$row['user']}</TD>
+				<TD class='text'>" . e($row['userid']) . "</TD>
+				<TD class='text'>&nbsp;" . e($row['user']) . "</TD>
 				<TD class='text' ALIGN = 'center'>{$online}</TD>
-				<TD class='text'>{$level}</TD>
-				<TD class='text'>" . shorten($row['unitname'], 15) . "</TD>
-				<TD class='text'>" . shorten($row['info'], 15) . "</TD>
-				<TD class='text'>{$login}</TD>
-				<TD class='text'>{$row['_from']}</TD>
-				<TD class='text'>{$row['browser']}</TD>
+				<TD class='text'>" . e($level) . "</TD>
+				<TD class='text'>" . e(shorten($row['unitname'], 15)) . "</TD>
+				<TD class='text'>" . e(shorten($row['info'], 15)) . "</TD>
+				<TD class='text'>" . e($login) . "</TD>
+				<TD class='text'>" . e($row['_from']) . "</TD>
+				<TD class='text'>" . e($row['browser']) . "</TD>
 				</TR>\n";
 		$i++;
 		}
@@ -387,10 +393,9 @@ function list_users(){		/* list users */
 	}		// end function list_users()
 
 function do_insert_settings($name,$value){/* insert new values into settings table */
-	$query =  sprintf("INSERT INTO `$GLOBALS[mysql_prefix]settings` (`name`,`value`) VALUES(%s,%s)",
-								quote_smart(trim($name)),
-								quote_smart(trim($value)));
-	$result = mysql_query($query) or do_error($query, '', mysql_error(), __FILE__, __LINE__);
+	$p = $GLOBALS['mysql_prefix'];
+	db_query("INSERT INTO `{$p}settings` (`name`, `value`) VALUES (?, ?)",
+		[trim($name), trim($value)], 'ss');
 	}
 
 function validate_email($email){ 	//really validate? - code courtesy of Jerrett Taylor
