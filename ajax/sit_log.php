@@ -130,11 +130,11 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]log`
 	AND `when` >= CURRENT_DATE - INTERVAL " . $logdays . " DAY
 	ORDER BY `id` DESC LIMIT 1000";
 
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_num_rows($result);
+$result = db_query($query);
+$num_rows = $result->num_rows;
 $i = 0;
 if (($result) && ($num_rows >=1)) {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		if($row['ticket_id'] != 0) {
 			$the_onClick = "edit.php?id=" . $row['ticket_id'];
 			} else {

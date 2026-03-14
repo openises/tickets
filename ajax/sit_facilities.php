@@ -21,8 +21,8 @@ $sortby = (!(array_key_exists('sort', $_GET))) ? "id" : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 $locale = get_variable('locale');	// 08/03/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	}
@@ -48,8 +48,8 @@ function isempty($arg) {
 	
 function fac_cat($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$result = db_query($query);	
+	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
 	
@@ -79,9 +79,9 @@ function isTimeBetween($lower, $higher) {
 	
 function closedStatus() {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `status_unavailable` = 1 LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_array($result));
+	$result = db_query($query);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_array());
 		return $row['id'];
 		} else {
 		return 0;
@@ -90,9 +90,9 @@ function closedStatus() {
 	
 function openStatus() {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `status_available` = 1 LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_array($result));
+	$result = db_query($query);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_array());
 		return $row['id'];
 		} else {
 		return 0;
@@ -102,11 +102,15 @@ function openStatus() {
 function setStatus($statval, $id) {
 	$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 	$now = mysql_format_date(time() - ($delta*60));
-	$query = "UPDATE `$GLOBALS[mysql_prefix]facilities` SET
-		`status_id`= " .	quote_smart(trim($statval)) . ",
-		`updated`= " . 		quote_smart(trim($now)) . "
-		WHERE `id`= " . 	quote_smart(trim($id)) . ";";
-	$result = mysql_query($query);
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}facilities` SET
+		`status_id`= ?,
+		`updated`= ?
+		WHERE `id`= ?";
+	$result = db_query($query, [
+		['type' => 'i', 'value' => intval(trim($statval))],
+		['type' => 's', 'value' => trim($now)],
+		['type' => 'i', 'value' => intval(trim($id))]
+	]);
 	}
 
 if (array_key_exists ('forder' , $_POST))	{$_SESSION['fac_flag_2'] =  $_POST['forder'];}
@@ -116,8 +120,8 @@ $fac_order_str = $fac_order_values[$_SESSION['fac_flag_2']];		// 3/15/11
 
 $f_types = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$f_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 unset($result);	
@@ -172,8 +176,8 @@ $query_fac = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`
 	{$where2} 
 	GROUP BY fac_id ORDER BY {$fac_order_str} ";											// 3/15/11, 6/10/11
 
-$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-$facs_ct = mysql_affected_rows();			// 1/4/10
+$result_fac = db_query($query_fac);
+$facs_ct = db_affected_rows();			// 1/4/10
 if ($facs_ct==0){
 	} else {
 	$fs_checked = array ("", "", "", "");
@@ -185,7 +189,7 @@ if ($facs_ct==0){
 $quick = (!(is_guest()) && (intval(get_variable('quick')==1)));				// 11/27/09		
 $f_sb_indx = 0;							// for fac's only 8/5/10, 12/23/13
 $i = 1;
-while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
+while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 	$fac_gps = get_allocates(3, $row_fac['fac_id']);	//	6/10/11
 	$grp_names = "Groups Assigned: ";	//	6/10/11
 	$y=0;	//	6/10/11
@@ -324,9 +328,9 @@ function get_fac_icon($fac_cat){			// returns legend string
 	$icons = $GLOBALS['fac_icons'];
 	$sm_fac_icons = $GLOBALS['sm_fac_icons'];
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `name` = \"$fac_cat\"";		// types in use
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 	$print = "";
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$fac_icon = $row['icon'];
 		$print .= "<IMG SRC = './our_icons/" . $sm_fac_icons[$fac_icon] . "' STYLE = 'vertical-align: middle'>";
 		}

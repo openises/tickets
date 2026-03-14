@@ -7,14 +7,14 @@
 */
 error_reporting(0);
 require_once('../incs/functions.inc.php');
-$type = (isset($type)) ? clean_string($type) : "";
+$type = (isset($type)) ? sanitize_int($type) : "";
 
 function get_stat_type_type($value) {
 	$stat_type = "Not Used";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_type` WHERE `st_id` = {$value}";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
+	$result = db_query($query, [['type' => 'i', 'value' => intval($value)]]);
+	if($result->num_rows != 0) {
+	$row = stripslashes_deep($result->fetch_assoc());
 		$stat_type = $row['stat_type'];
 		}
 	return $stat_type;

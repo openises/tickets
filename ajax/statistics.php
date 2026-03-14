@@ -30,8 +30,8 @@ foreach($al_groups as $grp) {
 	
 
 $query_cs = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$user_id}";
-$result_cs = mysql_query($query_cs) or do_error($query_cs, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-while ($row_cs = stripslashes_deep(mysql_fetch_assoc($result_cs))) {
+$result_cs = db_query($query_cs);
+while ($row_cs = stripslashes_deep($result_cs->fetch_assoc())) {
 	$refresh_rate = $row_cs['refresh_rate'];
 	$f1 = $row_cs['f1'];
 	$f2 = $row_cs['f2'];
@@ -113,8 +113,8 @@ $query = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id` FROM `$GLOB
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 		WHERE (`status` = 2 or `status` = 3) $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_tick = mysql_num_rows($result);
+$result = db_query($query);
+$num_tick = $result->num_rows;
 
 //	Number of Tickets not assigned
 $query = "SELECT *,UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`problemstart`) AS problemstart,
@@ -149,8 +149,8 @@ $query = "SELECT *,UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`problemstart`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 			WHERE (`status` = 2 or `status` = 3) $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY tick_id";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	$tick_ids[] = $row['tick_id'];
 	$startdate = $row['problemstart'];
 	$time_running[$row['tick_id']] = datediff(time(), $startdate);
@@ -170,8 +170,8 @@ $query = "SELECT *,UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`problemstart`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 			WHERE (`status` = 1) $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	$tick_ids[] = $row['tick_id'];
 	$startdate = $row['problemstart'];
 	$enddate = $row['problemend'];	
@@ -192,8 +192,8 @@ $query = "SELECT `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 			WHERE ((`status` = 2) AND (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`) AND (`$GLOBALS[mysql_prefix]assigns`.`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00') AND (`$GLOBALS[mysql_prefix]assigns`.`responding` IS NULL OR DATE_FORMAT(`responding`,'%y') = '00') AND (`$GLOBALS[mysql_prefix]assigns`.`on_scene` IS NULL OR DATE_FORMAT(`on_scene`,'%y') = '00') AND (`$GLOBALS[mysql_prefix]assigns`.`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') $where2 $where2 AND (`$GLOBALS[mysql_prefix]allocates`.`type` = 1)) GROUP BY `resp_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-$y = mysql_num_rows($result);
+$result = db_query($query);	
+$y = $result->num_rows;
 	
 //	Number of Responders dispatched and responding not on scene
 $query = "SELECT `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
@@ -208,8 +208,8 @@ $query = "SELECT `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 			WHERE ((`status` = 2) AND (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`) AND (`$GLOBALS[mysql_prefix]assigns`.`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00') AND (`$GLOBALS[mysql_prefix]assigns`.`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00') AND (`$GLOBALS[mysql_prefix]assigns`.`on_scene` IS NULL OR DATE_FORMAT(`on_scene`,'%y') = '00') AND (`$GLOBALS[mysql_prefix]assigns`.`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') $where2 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1) GROUP BY `resp_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$z = mysql_num_rows($result);
+$result = db_query($query);
+$z = $result->num_rows;
 	
 //	Number of Responders dispatched, responding and on scene
 $query = "SELECT `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
@@ -224,8 +224,8 @@ $query = "SELECT `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 			WHERE ((`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `$GLOBALS[mysql_prefix]ticket`.`id`) AND (`$GLOBALS[mysql_prefix]assigns`.`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00') AND (`$GLOBALS[mysql_prefix]assigns`.`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00') AND (`$GLOBALS[mysql_prefix]assigns`.`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00') AND (`$GLOBALS[mysql_prefix]assigns`.`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') $where2 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1) GROUP BY `resp_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$r = mysql_num_rows($result);
+$result = db_query($query);
+$r = $result->num_rows;
 	
 // 	Average Time to Dispatch from ticket open
 $query = "SELECT *, 
@@ -235,16 +235,16 @@ $query = "SELECT *,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 		WHERE (`status` = 2 or `status` = 3) $where2 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	$tick_id = $row['tick_id'];
 	$problemstart = $row['problemstart'];
 	$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`
 				FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `ticket_id` = $tick_id AND (`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00')";
-	$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_01 = mysql_fetch_assoc($result_01)) {
+	$result_01 = db_query($query_01);
+	while ($row_01 = $result_01->fetch_assoc()) {
 		$disptime = $row_01['dispatched'];
 		$disp_list[$row['id']] = datediff($disptime,$problemstart);
 		}
@@ -259,16 +259,16 @@ $query = "SELECT *,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 		WHERE (`status` = 2 or `status` = 3) $where2 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	$f_tick_id = $row['tick_id'];
 	$f_problemstart = $row['problemstart'];
 	$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`
 				FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `ticket_id` = $f_tick_id AND (`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00')";
-	$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_01 = mysql_fetch_assoc($result_01)) {
+	$result_01 = db_query($query_01);
+	while ($row_01 = $result_01->fetch_assoc()) {
 		$f_disptime = $row_01['dispatched'];
 		$f_disp_list[$row['id']] = datediff($f_disptime,$f_problemstart);
 		}
@@ -281,16 +281,16 @@ $query = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 		WHERE (`status` = 2 or `status` = 3) $where2 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	$tick_id = $row['tick_id'];
 	$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00')";
-	$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_01 = mysql_fetch_assoc($result_01)) {
+	$result_01 = db_query($query_01);
+	while ($row_01 = $result_01->fetch_assoc()) {
 		$disptime = $row_01['dispatched'];
 		$resptime = $row_01['responding'];		
 		$resp_list[$row_01['id']] = datediff($resptime, $disptime);
@@ -302,9 +302,9 @@ $query = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 		WHERE (`status` = 2 or `status` = 3) $where2 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_tick3 = mysql_num_rows($result);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+$num_tick3 = $result->num_rows;
+while ($row = $result->fetch_assoc()) {
 	$tick_id = $row['tick_id'];
 	$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`,
@@ -312,8 +312,8 @@ while ($row = mysql_fetch_assoc($result)) {
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`on_scene`) as `on_scene`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `ticket_id` = $tick_id AND (`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00')";
-	$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_01 = mysql_fetch_assoc($result_01)) {
+	$result_01 = db_query($query_01);
+	while ($row_01 = $result_01->fetch_assoc()) {
 		$disptime = $row_01['dispatched'];
 		$ostime = $row_01['on_scene'];			
 		$os_list[$row_01['id']] = datediff($ostime, $disptime);		
@@ -339,8 +339,8 @@ $query = "SELECT *,	`$GLOBALS[mysql_prefix]responder`.`id` AS `resp_id`,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]responder`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`	
 		 $where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 2 GROUP BY `$GLOBALS[mysql_prefix]responder`.`id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	if($row['num_assignments'] == 0) {
 		$resp_ids_na[] = $row['resp_id'];
 		}
@@ -350,8 +350,8 @@ while ($row = mysql_fetch_assoc($result)) {
 		$query= "SELECT * FROM `$GLOBALS[mysql_prefix]responder`
 				LEFT JOIN `$GLOBALS[mysql_prefix]un_status` ON `$GLOBALS[mysql_prefix]responder`.`un_status_id` = `$GLOBALS[mysql_prefix]un_status`.`id`
 				WHERE `$GLOBALS[mysql_prefix]responder`.`id` = {$value} AND `$GLOBALS[mysql_prefix]un_status`.`hide` = 'n'";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$num_rows = mysql_num_rows($result);
+		$result = db_query($query);
+		$num_rows = $result->num_rows;
 		if($num_rows ==1) {
 			$fr++;
 			}
@@ -377,8 +377,8 @@ $query = "SELECT *,
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]responder`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`				
 		$where2 AND `$GLOBALS[mysql_prefix]allocates`.`type` = 2 GROUP BY `$GLOBALS[mysql_prefix]responder`.`id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = mysql_fetch_assoc($result)) {
+$result = db_query($query);
+while ($row = $result->fetch_assoc()) {
 	if($row['num_assignments'] == 1) {
 		$xx++;
 		}

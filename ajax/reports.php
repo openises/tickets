@@ -3,14 +3,16 @@
 session_write_close();
 require_once('../incs/functions.inc.php');		//7/28/10
 require_once('../incs/log_codes.inc.php'); 				// 3/25/10
-extract($_GET);
+$func = (array_key_exists('func', $_GET)) ? sanitize_string($_GET['func']) : "";
+$startdate = (array_key_exists('startdate', $_GET)) ? sanitize_string($_GET['startdate']) : "";
+$enddate = (array_key_exists('enddate', $_GET)) ? sanitize_string($_GET['enddate']) : "";
 $theWidth = "100%";
 $doprint = (array_key_exists('do_print', $_GET) && $_GET['do_print'] == 1) ? true : false;
 $dohtml = (array_key_exists('dohtml', $_GET) && $_GET['dohtml'] == true) ? true : false;
 $doDownload = $dohtml;
 $theStartDate = (array_key_exists('startdate', $_GET)) ? explode(",", $startdate) : "";
 $theEndDate = (array_key_exists('enddate', $_GET)) ? explode(",", $enddate) : "";
-$date = (array_key_exists('date', $_GET)) ? $date : "";
+$date = (array_key_exists('date', $_GET)) ? sanitize_string($_GET['date']) : "";
 $htmlheader = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 				<html xmlns="http://www.w3.org/1999/xhtml">
 				<html>
@@ -32,13 +34,13 @@ $htmlheader = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "h
 $htmlfooter = "</DIV></BODY></HTML>";
 
 	function get_responder_regions($id) {
-		$query = "SELECT * 
-		FROM `$GLOBALS[mysql_prefix]allocates` `a`
-		LEFT JOIN `$GLOBALS[mysql_prefix]region` `r` ON `a`.`group` = `r`.`id` 
-		WHERE `a`.`resource_id` = " . $id . " AND `a`.`type` = 2";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$query = "SELECT *
+		FROM `{$GLOBALS['mysql_prefix']}allocates` `a`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}region` `r` ON `a`.`group` = `r`.`id`
+		WHERE `a`.`resource_id` = ? AND `a`.`type` = 2";
+		$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 		$region = array();
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while($row = stripslashes_deep($result->fetch_assoc())) {
 			$region[] = $row['group_name'];
 			}
 		$return = implode(", ", $region);
@@ -46,10 +48,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		}
 		
 	function get_assignscount($id) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`	WHERE `ticket_id` = " . $id;
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ?";
+		$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 		$count = 0;
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while($row = stripslashes_deep($result->fetch_assoc())) {
 			$count++;
 			}
 		return $count;
@@ -257,8 +259,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 //		dump($query);
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		if (mysql_affected_rows()>0) {										// main loop - top
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
+		if (db()->affected_rows>0) {										// main loop - top
 			$temp = explode("/", get_variable('disp_stat'));				// 1/7/2013
 			if (count($temp)< 6) {$temp = 	explode("/", "D/R/O/FE/FA/Clear");}
 			$header= "<thead><TR CLASS = '{$evenodd[1]} {highest}'>
@@ -275,7 +277,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				</TR></thead><tbody>\n";
 			$table .= $header;
 			$i = 0;
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// main loop - top
+			while($row = stripslashes_deep($result->fetch_assoc())) {			// main loop - top
 				switch($row['severity'])		{		//style row by severity
 				 	case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='high'; break;
 					case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='highest'; break;
@@ -298,7 +300,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$table .= $row_tr;
 				$i++;
 				}
-			} else {		// end if (mysql_affected_rows()>0)
+			} else {		// end if (db()->affected_rows>0)
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .=  "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Dispatch Log</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
@@ -324,33 +326,33 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 		$incidents = $severity = $fac_names = $status_vals = $users = $fac_status_ids = array();
 		$query = "SELECT `id`, `scope`, `severity` FROM `$GLOBALS[mysql_prefix]ticket`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$incidents[0]="";
 
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$incidents[$temp_row['id']]=$temp_row['scope'];
 			$severity[$temp_row['id']]=$temp_row['severity'];
 			}
 
 		$query = "SELECT `id`, `name`, `status_id` FROM `$GLOBALS[mysql_prefix]facilities`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$fac_names[0]="TBD";
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$fac_names[$temp_row['id']]=$temp_row['name'];
 			$fac_status_ids[$temp_row['id']]=$temp_row['status_id'];
 			}
 
 		$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]fac_status`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$status_vals[0]="??";										// 2/2/09
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$status_vals[$temp_row['id']]=$temp_row['status_val'];
 			}
 
 		$query = "SELECT `id`, `user` FROM `$GLOBALS[mysql_prefix]user`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$users[0]="TBD";
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$users[$temp_row['id']]=$temp_row['user'];
 			}
 		$priorities = array("text_black","text_blue","text_red" );
@@ -375,18 +377,18 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 //		collect status values in use
 		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_FACILITY_STATUS'] . " ORDER BY `info` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$i++;
 
 		$table .= "<thead><TR style='width: 100%;'><TH class='plain_listheader text text_left'>" . get_text("Facility") . "</TH>";
 		$curr_unit = "";
 		$statuses = array();
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// build header row
+		while($row = stripslashes_deep($result->fetch_assoc())) {			// build header row
 			if (!empty($row['info'])){
 				$statuses[$row['info']] = "";										// define the entry
 				$query = "SELECT `status_val` FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $row['info'] . " LIMIT 1" ;// status type
-				$result_val= mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				$row_val = stripslashes_deep(mysql_fetch_assoc($result_val));
+				$result_val= db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
+				$row_val = stripslashes_deep($result_val->fetch_assoc());
 				$the_status = (empty($row_val))? "??": shorten($row_val['status_val'], 12); 		// 2/2/09
 				$table .= "\t<TH class='plain_listheader text text_left'>&nbsp;&nbsp;" . shorten($the_status, 12) . "&nbsp;&nbsp;</TH>\n";
 				}
@@ -407,11 +409,11 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` r ON (`$GLOBALS[mysql_prefix]log`.facility = r.id) ".
 			$where . " AND `code` = " . $GLOBALS['LOG_FACILITY_STATUS'] . " ORDER BY `name` ASC, `incident` ASC, `when` ASC" ;	//	9/10/13
 //		dump($query);
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$i = 0;
 
-		if (mysql_affected_rows()>0) {				// main loop - top
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		if (db()->affected_rows>0) {				// main loop - top
+			while($row = stripslashes_deep($result->fetch_assoc())) {
 				$do_date=$row['when'];
 				$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
 				$curr_facility = $row["facility"];
@@ -442,7 +444,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$i++;
 				$table .= "</TR>\n";
 				}		// end while($row...)		 main loop - bottom
-			} else {		// end if (mysql_affected_rows()>0)
+			} else {		// end if (db()->affected_rows>0)
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .=  "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>" . get_text("Facility") . " Report</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
@@ -475,26 +477,26 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 		$incidents = $severity = $unit_names = $status_vals = $users = $unit_status_ids = array();
 		$query = "SELECT `id`, `scope`, `severity` FROM `$GLOBALS[mysql_prefix]ticket`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$incidents[0]="";
 
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$incidents[$temp_row['id']]=$temp_row['scope'];
 			$severity[$temp_row['id']]=$temp_row['severity'];
 			}
 
 		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$unit_names[0]="TBD";
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$unit_names[$temp_row['id']]=$temp_row['name'];
 			$unit_status_ids[$temp_row['id']]=$temp_row['un_status_id'];
 			}
 
 		$query = "SELECT `id`, `user` FROM `$GLOBALS[mysql_prefix]user`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$users[0]="TBD";
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$users[$temp_row['id']]=$temp_row['user'];
 			}
 		$priorities = array("text_black","text_blue","text_red" );
@@ -519,7 +521,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 //		collect status values in use
 		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `info` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$i++;
 
 		$table .=  "<thead><TR style='width: 100%;'>";
@@ -529,17 +531,17 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$count = 0;
 		$statuses = array();
 		$statusvals = array();
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// build header row
+		while($row = stripslashes_deep($result->fetch_assoc())) {			// build header row
 			if (!empty($row['info'])) {
 				$query = "SELECT `status_val` FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . intval($row['info']) . " LIMIT 1" ;// status type
-				$result_val= mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-				if(mysql_num_rows($result_val) == 0) {
+				$result_val= db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
+				if($result_val->num_rows == 0) {
 					$statuses[0] = "";
 					$table .= "\t<TH CLASS='plain_listheader text text_center' TITLE='Status No Longer in use'>??</TH>\n";
 					$statusvals[0] = "?";
 					} else {
 					$statuses[$row['info']] = "";
-					$row_val = stripslashes_deep(mysql_fetch_assoc($result_val));
+					$row_val = stripslashes_deep($result_val->fetch_assoc());
 					$the_status = shorten($row_val['status_val'], 9);
 					$table .= "\t<TH CLASS='plain_listheader text text_center' TITLE='" . $row_val['status_val'] . "'>" . $the_status . "</TH>\n";
 					$statusvals[$row['info']] = $the_status;
@@ -561,10 +563,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			FROM `$GLOBALS[mysql_prefix]log`
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
 			$where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_UNIT_STATUS'] . ") OR (`code` = " . $GLOBALS['LOG_UNIT_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_COMMENT'] . ")) ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;	//	9/10/13
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$i = 0;
-		if (mysql_affected_rows()>0) {				// main loop - top
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		if (db()->affected_rows>0) {				// main loop - top
+			while($row = stripslashes_deep($result->fetch_assoc())) {
 				if (empty($curr_unit)) {
 					$curr_unit = $row['unit'];
 					$curr_inc = $row['incident'];
@@ -674,7 +676,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";
 				}
 			$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD></TR>";	//	Info Column
-			} else {	// end if (mysql_affected_rows()>0)
+			} else {	// end if (db()->affected_rows>0)
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .=  "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>" . get_text("Unit") . " Report</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
@@ -709,17 +711,17 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 		$unit_names = $users = $responders = array();
 		$query = "SELECT `id`, `name`, `un_status_id` FROM `$GLOBALS[mysql_prefix]responder`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$unit_names[0]="TBD";
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$unit_names[$temp_row['id']]=$temp_row['name'];
 			$unit_status_ids[$temp_row['id']]=$temp_row['un_status_id'];
 			}
 
 		$query = "SELECT `id`, `user` FROM `$GLOBALS[mysql_prefix]user`";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$temp_result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$users[0]="TBD";
-		while ($temp_row = mysql_fetch_assoc($temp_result)) {
+		while ($temp_row = $temp_result->fetch_assoc()) {
 			$users[$temp_row['id']]=$temp_row['user'];
 			}
 
@@ -745,7 +747,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 //		collect status values in use
 		$query = "SELECT DISTINCT `info` FROM `$GLOBALS[mysql_prefix]log` WHERE `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `info` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$i++;
 
 		$table .=  "<thead><TR style='width: 100%;'>";
@@ -766,10 +768,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			FROM `$GLOBALS[mysql_prefix]log`
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
 			$where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_UNIT_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_MESSAGE'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_ALERT'] . ")) ORDER BY `name` ASC, `when` ASC" ;	//	9/10/13
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 		$i = 0;
-		if (mysql_num_rows($result)>0) {				// main loop - top
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		if ($result->num_rows>0) {				// main loop - top
+			while($row = stripslashes_deep($result->fetch_assoc())) {
 				if (empty($curr_unit)) {
 					$who = $row['unit'];
 					$curr_date_test = date ('z', strtotime($row['when_num']));
@@ -860,7 +862,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			LEFT JOIN `$GLOBALS[mysql_prefix]user` `u` ON (`l`.`who` = `u`.`id`)
 	 		$where ORDER BY `when` ASC
 			";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 
 		$titles = array ();
 		$titles['dr'] = "Station Daily Report - ";
@@ -881,7 +883,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			} else {
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			}
-		if (mysql_affected_rows()>0) {
+		if (db()->affected_rows>0) {
 				$table .= "<thead><TR style='width: 100%;'>";
 				$table .= "<TH CLASS='plain_listheader text text_left'>Date</TH>";		// 4/4/10
 				$table .= "<TH CLASS='plain_listheader text text_left'>Time</TH>";
@@ -895,7 +897,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$table .= "</TR></thead><tbody>\n";
 
 			$of_interest = array($GLOBALS['LOG_ERROR'], $GLOBALS['LOG_INTRUSION'], $GLOBALS['LOG_ICS_MESSAGE_SEND'], $GLOBALS['LOG_BROADCAST_MESSAGE'], $GLOBALS['LOG_BROADCAST_ALERT'], $GLOBALS['LOG_BROADCAST_ERROR']);
-			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			// main loop - top
+			while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){			// main loop - top
 				if (($row['code']<20) || in_array( $row['code'], $of_interest) ) {		// 4/7/2014
 					$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
 
@@ -926,7 +928,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					$i++;
 					}
 				}		// end while($row = ...)
-			} else {		// end if (mysql_affected_rows() ...
+			} else {		// end if (db()->affected_rows ...
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .= "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Station Report</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
@@ -1012,7 +1014,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			". $where . $which_inc . " AND `code` >= '" . $GLOBALS['LOG_INCIDENT_OPEN'] ."'  AND `code` <= '" . $GLOBALS['LOG_INCIDENT_CLOSE'] . "'
 	 		ORDER BY `when` ASC
 			";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 
 		$titles = array ();
 		$titles['dr'] = "Incidents Daily Report - ";
@@ -1034,7 +1036,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			}
 		$curr_date="";
 		$secondTable = "";
-		$num_incs = mysql_num_rows($result);
+		$num_incs = $result->num_rows;
 		if ($num_incs>0) {
 			$table .= "<thead><TR style='width: 100%;'>";
 			$table .= "<TH CLASS='plain_listheader text text_left'>Date</TH>";
@@ -1046,7 +1048,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			$table .= "</TR></thead><tbody>\n";
 			$inc_types = array();
 
-			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			// 8/15/08 main loop - top
+			while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){			// 8/15/08 main loop - top
 				if ($row['code']<20) {
 					if (array_key_exists($row['in_types_id'], $inc_types)) {
 						$inc_types[$row['in_types_id']]++;
@@ -1075,8 +1077,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				}		// end while($row = ...)
 
 			$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id IN (" . $query . ")";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){			//
+			$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
+			while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){			//
 //				dump ($row['id']);
 				}																// end while($row ...
 //			graphics date range in db format and calculated img width - when` < '2013-06-01 23:59:59&p3=391'  AND `code` = '10'
@@ -1126,8 +1128,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 		WHERE (problemstart between '$from_to[0]' and '$from_to[1]') AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-		$result = mysql_query($query2) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$num_tick = mysql_num_rows($result);
+		$result = db_query($query2) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$num_tick = $result->num_rows;
 		$thirdTable .= "<tr><td class='even td_data text text_left text_bold'>Number of Calls</td><td CLASS='td_data text text_normal text_left'>$num_tick</td></tr>";
 
 		// Dispatch Time
@@ -1137,15 +1139,15 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 		WHERE (problemstart between '$from_to[0]' and '$from_to[1]')  AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		while ($row = $result->fetch_assoc()) {
 			$tick_id = $row['tick_id'];
 			$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00') order by responding";
-			$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while ($row_01 = mysql_fetch_assoc($result_01)) {
+			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+			while ($row_01 = $result_01->fetch_assoc()) {
 				$disptime = strtotime($row['problemstart']);
 				$resptime = $row_01['responding'];		
 				$resp_list[$row_01['id']] = datediff($resptime, $disptime);
@@ -1171,16 +1173,16 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 			ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 		WHERE (problemstart between '$from_to[0]' and '$from_to[1]')  AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		while ($row = $result->fetch_assoc()) {
 			$tick_id = $row['tick_id'];
 			$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00')";
-			$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while ($row_01 = mysql_fetch_assoc($result_01)) {
+			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+			while ($row_01 = $result_01->fetch_assoc()) {
 				$disptime = $row_01['dispatched'];
 				$resptime = $row_01['responding'];		
 				$resp_list[$row_01['id']] = datediff($resptime, $disptime);
@@ -1203,9 +1205,9 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 					ON `$GLOBALS[mysql_prefix]ticket`.`id`=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
 				WHERE (problemstart between '$from_to[0]' and '$from_to[1]') AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$num_tick3 = mysql_num_rows($result);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		$num_tick3 = $result->num_rows;
+		while ($row = $result->fetch_assoc()) {
 			$tick_id = $row['tick_id'];
 			$query_01 = "SELECT *,
 						UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`,
@@ -1213,8 +1215,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 						UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`on_scene`) as `on_scene`				
 						FROM `$GLOBALS[mysql_prefix]assigns` 
 						WHERE `ticket_id` = $tick_id AND (`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00')";
-			$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			while ($row_01 = mysql_fetch_assoc($result_01)) {
+			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+			while ($row_01 = $result_01->fetch_assoc()) {
 				$disptime = $row_01['dispatched'];
 				$ostime = $row_01['on_scene'];			
 				$os_list[$row_01['id']] = datediff($ostime, $disptime);		
@@ -1245,11 +1247,11 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 					ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 					WHERE (problemstart between '$from_to[0]' and '$from_to[1]') AND `$GLOBALS[mysql_prefix]assigns`.`on_scene` is not null GROUP BY `resp_id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 		$unit_cnt = 0;
 		$tot_onscene_time = 0;
-		$row_cnt = mysql_num_rows($result);
-		while ($row = mysql_fetch_assoc($result)) {
+		$row_cnt = $result->num_rows;
+		while ($row = $result->fetch_assoc()) {
 			$onscene_time = strtotime($row['on_scene']);
 			$clear_time = strtotime($row['clear']);
 			$tot_onscene_time += datediff($clear_time, $onscene_time);
@@ -1273,8 +1275,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 
 					ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 					WHERE (`status` = 1) and (problemstart between '$from_to[0]' and '$from_to[1]') AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 GROUP BY `tick_id`";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = mysql_fetch_assoc($result)) {
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+		while ($row = $result->fetch_assoc()) {
 			$tick_ids[] = $row['tick_id'];
 			$pbstartdate = $row['problemstart'];
 			$pbenddate = $row['problemend'];	
@@ -1344,7 +1346,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			LEFT JOIN `$GLOBALS[mysql_prefix]assigns` a ON (`t`.`id` = `a`.`ticket_id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`a`.`responder_id` = `r`.`id`)
 			". $where . $which_inc . " ORDER BY `problemstart` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
 
 		$titles = array ();
 		$titles['dr'] = "Incident Daily Report - ";
@@ -1365,7 +1367,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			}
 		$curr_tick = "";
-		$num_incs = mysql_num_rows($result);
+		$num_incs = $result->num_rows;
 		if ($num_incs>0) {
 			$table .= "<thead><TR style='width: 100%;'>";
 			$table .= "<TH CLASS='plain_listheader text text_left'>{$incident}</TH>";
@@ -1380,7 +1382,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			$table .= "<TH CLASS='plain_listheader text text_left'>Miles</TH>";
 			$table .= "</TR></thead><tbody>\n";
 			$inc_types = array();
-			while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+			while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){
 				$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
 				$temp = $row['user_firstname'] . " " . $row['user_surname'];
 				$controller = ($temp == " " || $temp == "") ? str_pad($row['user_name'], 20, " ", STR_PAD_RIGHT) : str_pad($temp, 20, " ", STR_PAD_RIGHT);
@@ -1459,53 +1461,53 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$tickets = $actions = $patients = $unit_names = $un_status = $unit_types = $users = $facilities = $fac_status = $fac_types = array();
 
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]ticket`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$tickets[$row['id']] = substr($row['scope'], 0, 10) . "/" . substr($row['street'], 0, 10);
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]action`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$actions[$row['id']] = substr($row['description'], 0, 20);
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]patient`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$patients[$row['id']] = substr($row['description'], 0, 20);
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]responder`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$unit_names[$row['id']] = $row['name'];
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]un_status`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$un_status[$row['id']] = $row['status_val'];
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]unit_types`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$unit_types[$row['id']] = $row['name'];
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]user`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$users[$row['id']] = $row['user'];
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]facilities`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$facilities[$row['id']] = $row['name'];
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]fac_status`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$fac_status[$row['id']] = $row['status_val'];
 			}
 		$query = "SELECT *FROM `$GLOBALS[mysql_prefix]fac_types`";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$fac_types[$row['id']] = $row['name'];
 			}
 // ______________________________________________________________________________
@@ -1531,9 +1533,9 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`)
 			WHERE `$GLOBALS[mysql_prefix]ticket`.`id`= '{$the_ticket_id}' LIMIT 1";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
 
-		$theRow = stripslashes_deep(mysql_fetch_array($result));
+		$theRow = stripslashes_deep($result->fetch_array());
 		$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";			// 1/25/09
 
 		switch($theRow['severity'])		{		//color tickets by severity
@@ -1604,14 +1606,14 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			WHERE `code` >= '{$GLOBALS['LOG_INCIDENT_OPEN']}'
 			AND `l`.`ticket_id` ={$the_ticket_id}
 			ORDER BY `log_id` ASC";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
 		$evenodd = array ("even", "odd");
 		$i = 0;
 		$table .= "<TABLE ALIGN='left' CELLSPACING = 1 border=0 WIDTH='100%'>";
 		$do_hdr = TRUE;
 		$day_part="";
 		$last_id = "";
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result)) ) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc()) ) 	{
 			if ($row['log_id'] <> $last_id ) {
 				$last_id = $row['log_id'] ;			// dupe preventer
 				if ($do_hdr) {
@@ -1722,8 +1724,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$from_to = date_range($date_in,$func_in);			// get date range as array
 		$where = " WHERE `problemstart` >= '{$from_to[0]}' AND `problemstart` < '{$from_to[1]}'";
 		$to_str = ($func_in=="dr")? "": " to {$from_to[3]} " . substr($from_to[1] ,0 , 4) ;
-		$title = "After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str;
-		$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
+		$title = "After Action Report - " . db()->affected_rows . " Incidents: " . $from_to[2] . $to_str;
+		$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . db()->affected_rows . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
 		$query = "SELECT *,
 			`problemstart` AS `problemstart`,
 			`problemend` AS `problemend`,
@@ -1751,18 +1753,18 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`)
 			{$where} ORDER BY `SEVERITY` ASC, `problemstart` ASC";
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-		if (mysql_affected_rows()==0) {
+		if (db()->affected_rows==0) {
 			$title = "After Action Report - 0 Incidents: " . $from_to[2] . $to_str;
-			$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
+			$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . db()->affected_rows . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
 			$table .= "<SPAN style='text-align: center; width: 100%; display: inline-block;'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></SPAN>";
 			} else {
-			$numrows = mysql_num_rows($result);
+			$numrows = $result->num_rows;
 			$title = "After Action Report - " . $numrows . " Incidents: " . $from_to[2] . $to_str;
-			$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . mysql_affected_rows() . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
+			$heading = "<DIV CLASS='heading text_large text_bold text_center'>After Action Report - " . db()->affected_rows . " Incidents: " . $from_to[2] . $to_str .  "</DIV>";
 			$page_num = 1;
-			while ($row_ticket = stripslashes_deep(mysql_fetch_array($result))){
+			while ($row_ticket = stripslashes_deep($result->fetch_array())){
 				$table .= do_ticket_wm($row_ticket, "98%", FALSE, FALSE);	//	2/4/13
 				$table .= "<BR />";
 				$table .= "<p class='page'>Page " . $page_num . " of " . $numrows . "</p>";
@@ -1911,8 +1913,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			{$where_l}
 			AND (`code` = {$GLOBALS['LOG_COMMENT']})
 			ORDER BY `when` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
+		while($row = stripslashes_deep($result->fetch_assoc())) {
 			array_push($logs, $row);
 			}
 		unset ($result);
@@ -1955,7 +1957,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			AND `t`.`status` <> '{$GLOBALS['STATUS_RESERVED']}'
 			ORDER BY `problemstart` ASC";
 			
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 		$to_str = ($func_in=="dr")? "": " to {$from_to[3]} " . substr($from_to[1] ,0 , 4) ;
 		$title = $incident . " Management Report - " . $from_to[2] . $to_str;
 		$heading = "<DIV CLASS='heading text_large text_bold text_center'>" . $title . "</DIV>";
@@ -1978,7 +1980,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$table .= "<TH CLASS='plain_listheader text text_left'>" .  get_text("Unit") . " responding</TH>";
 		$table .= "<TH CLASS='plain_listheader text text_left'>" .  get_text("Assigns") . " " . get_text("Comments") . "</TH>";
 		$table .= "</TR></thead><tbody>";
-		$num_incs = mysql_num_rows ($result);
+		$num_incs = $result->num_rows;
 		if ($num_incs == 0) {												// empty?
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .= "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Incident Summary</TD></TR></thead><tbody>";
@@ -1989,7 +1991,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			$today = $today_ref = "";
 			$buffer = "";
 			$sep = ", ";
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {					// major while ()
+			while($row = stripslashes_deep($result->fetch_assoc())) {					// major while ()
 				array_push ($tick_array, $row['tick_id']);									// stack them up
 				if (empty($buffer)) {											// first time
 					$buffer = $row;
@@ -2043,13 +2045,13 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				AND `t`.`id` NOT IN ({$tick_str})
 				AND `t`.`status` <> '{$GLOBALS['STATUS_RESERVED']}'
 				ORDER BY `problemstart` ASC";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+			$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 			$table .= "<TR style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>Not dispatched</B></TD></TR>";
-			if (mysql_num_rows($result)==0) {
+			if ($result->num_rows==0) {
 				$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>none</B></TD></TR>";
 				} else {
 				$units_str = "";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// incidents not dispatched
+				while($row = stripslashes_deep($result->fetch_assoc())) {		// incidents not dispatched
 					$table .= do_print($row);
 					$table .= do_stats($row) ;
 					}
@@ -2181,16 +2183,16 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				LEFT JOIN `$GLOBALS[mysql_prefix]responder` `re` ON `a`.`responder_id`=`re`.`id` 	
 				LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `r`.`ticket_id`=`t`.`id` 			
 				WHERE `r`.`status` = 'Closed' " . $where . $where2 . " ORDER BY `organisation`, `requester_name`, `request_date` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 		$i = 1;
 		$lastOrganisation = "";
 		$lastRequester = "";
-		if (mysql_num_rows($result)==0) {
+		if ($result->num_rows==0) {
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .=  "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Organisation Billing Report</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
 			} else {
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// incidents not dispatched
+			while($row = stripslashes_deep($result->fetch_assoc())) {		// incidents not dispatched
 				if($row['organisation'] == $lastOrganisation) {
 					$organisation = "";
 					} elseif($row['organisation'] != "" && $row['organisation'] != $lastOrganisation) {
@@ -2322,17 +2324,17 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `al` ON `t`.`id`=`al`.`resource_id` AND `al`.`type`=1
 				LEFT JOIN `$GLOBALS[mysql_prefix]region` `rg` ON `al`.`group`=`rg`.`id`
 				WHERE `t`.`status`='{$GLOBALS['STATUS_CLOSED']}' " . $where . " GROUP BY `assigns_id` ORDER BY `region`, `assigns_id`, `problemstart` ASC";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
 		$i = 1;
 		$lastRegion = "";
 		$lastTicket = "";
-		if (mysql_num_rows($result)==0) {
+		if ($result->num_rows==0) {
 			$table = "<TABLE id='reportstable' STYLE='width: 100%;'>";
 			$table .=  "<thead><TR style='width: 100%;'><TD CLASS='plain_listheader text text_center text_biggest' COLSPAN=99>Regions Report</TD></TR></thead><tbody>";
 			$table .= "<TR CLASS='even' style='width: 100%;'><TD COLSPAN=99 ALIGN='center'><B>----------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No data for this period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----------</B></TD></TR>";
 
 			} else {
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// incidents not dispatched
+			while($row = stripslashes_deep($result->fetch_assoc())) {		// incidents not dispatched
 				$address = $row['tick_street'] . ", " . $row['tick_city'] . " " . $row['tick_state'];
 				if($row['region_name'] == $lastRegion) {
 					$region = "";

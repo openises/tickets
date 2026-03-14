@@ -14,8 +14,8 @@ $capabilities = (array_key_exists('searchstring', $_GET)) ? $_GET['searchstring'
 
 $u_types = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 
@@ -35,9 +35,9 @@ function search_capabilities($member_id, $searchstring) {
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = `tp`.`id` ) 	
 		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 1 AND `refresh_due` > NOW() ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	$result = db_query($query);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['training_package_name'] . " | " . $row['refresh_due'];
 			$theArray[$key] = $value;
 			$key++;
@@ -49,9 +49,9 @@ function search_capabilities($member_id, $searchstring) {
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]capability_types` `ct` ON ( `a`.`skill_id` = `ct`.`id` ) 
 		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 2 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	$result = db_query($query);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['capability_name'];
 			$theArray[$key] = $value;
 			$key++;
@@ -64,9 +64,9 @@ function search_capabilities($member_id, $searchstring) {
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]equipment_types` `et` ON ( `a`.`skill_id` = `et`.`id` ) 		
 		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 3 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	$result = db_query($query);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['equipment_name']. " - " . $row['equipment_serial'];
 			$theArray[$key] = $value;
 			$key++;
@@ -79,9 +79,9 @@ function search_capabilities($member_id, $searchstring) {
 		FROM `$GLOBALS[mysql_prefix]allocations` `a` 
 		LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` ) 
 		WHERE `a`.`member_id` = '$member_id' AND `a`.`skill_type` = 5 ORDER BY `a`.`member_id`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	$result = db_query($query);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['clothing_item']. " - " . $row['size'];
 			$theArray[$key] = $value;
 			$key++;
@@ -103,9 +103,9 @@ function search_resp_capabilities($responder_id, $searchstring) {
 	$key = 1;
 	
 	$query = "SELECT `capab` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $responder_id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	$result = db_query($query);
+	if($result->num_rows != 0) {
+		while ($row = $result->fetch_assoc()) {
 			$value = $row['capab'];
 			$theArray[$key] = $value;
 			$key++;
@@ -125,9 +125,9 @@ function search_resp_capabilities($responder_id, $searchstring) {
 function get_icon_legend (){
 	global $u_types, $sm_icons;
 	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle` ASC, `name` ASC";
-	$result = mysql_query($query);
+	$result = db_query($query);
 	$print = "";											// output string
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$type_data = $u_types[$row['type']];
 		$print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$type_data[1]] . "' BORDER=0 />&nbsp;&nbsp;&nbsp;\n";
 		}
@@ -180,9 +180,9 @@ function get_assigns($id) {
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
 		AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
 	
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		if(!(empty($row['theunit_id']))) {
 			$dispatches_act[$row['theunit_id']] = (empty($row['clear']))? $row['ticket_id']:"";
 
@@ -221,16 +221,16 @@ function get_ticket($id) {
 		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
 		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`={$id} LIMIT 1";
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$result = db_query($query);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return $row;
 	}
 	
 function get_unit_icon_id($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = " . $id;
-	$result = mysql_query($query);
+	$result = db_query($query);
 	if($result) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['icon'];
 		} else {
 		return false;
@@ -239,9 +239,9 @@ function get_unit_icon_id($id) {
 	
 function get_unit_icon_name($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = " . $id;
-	$result = mysql_query($query);
+	$result = db_query($query);
 	if($result) {
-		$row = stripslashes_deep(mysql_fetch_associ($result));
+		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['name'];
 		} else {
 		return "Unk";
@@ -253,11 +253,11 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
 		WHERE `responder_id` = '{$unit_id}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	5/4/11
 	
-	$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if ( mysql_num_rows($result_as) == 0) {
+	$result_as = db_query($query);
+	if ( $result_as->num_rows == 0) {
 		unset($result_as); return "<SPAN>---------</SPAN>";
 		} else {		
-		$row_assign = stripslashes_deep(mysql_fetch_assoc($result_as)) ;
+		$row_assign = stripslashes_deep($result_as->fetch_assoc()) ;
 		unset($result_as);
 		$tip = str_replace ( "'", "`",    ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}   "));
 	
@@ -267,7 +267,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 			default: 							$severityclass='severity_normal'; break;
 			}
 	
-		switch (mysql_affected_rows()) {		// 8/30/10
+		switch (db_affected_rows()) {		// 8/30/10
 			case 0:
 				$the_disp_stat="";
 				break;			
@@ -275,7 +275,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 				$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
 				break;
 			default:							// multiples
-			    $the_disp_stat = "<SPAN CLASS='disp_stat'>&nbsp;" . mysql_affected_rows() . "&nbsp;</SPAN>&nbsp;";
+			    $the_disp_stat = "<SPAN CLASS='disp_stat'>&nbsp;" . db_affected_rows() . "&nbsp;</SPAN>&nbsp;";
 			    break;
 			}						// end switch()
 		$ass_td = "<SPAN onMouseover=\"Tip('" . $tip . "')\" onmouseout=\"UnTip();\" CLASS='" . $severityclass . "'  STYLE = 'white-space:nowrap;'>" . $the_disp_stat . " " . shorten($row_assign['scope'], 24) . "</SPAN>";
@@ -287,11 +287,11 @@ function get_cd_str($in_row, $ticket_id) {
 	global $unit_id;
 	$return = "";
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE  `ticket_id` = " . $ticket_id . " AND (`responder_id`= " . $in_row['unit_id'] . ") AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";
-	$result = mysql_query($query);
-	if(mysql_num_rows($result)==1) {
+	$result = db_query($query);
+	if($result->num_rows==1) {
 		$return = " CHECKED DISABLED ";
 		}
-	if (($unit_id != "") && ((mysql_affected_rows()!=1) || ((mysql_affected_rows()==1) && (intval($in_row['multi'])==1)))) { // 12/18/10 - Checkbox checked here individual unit seleted.
+	if (($unit_id != "") && ((db_affected_rows()!=1) || ((db_affected_rows()==1) && (intval($in_row['multi'])==1)))) { // 12/18/10 - Checkbox checked here individual unit seleted.
 		$return = " CHECKED ";
 		}
 	if (intval($in_row['dispatch'])==2) {
@@ -301,8 +301,8 @@ function get_cd_str($in_row, $ticket_id) {
 		$return = "";
 		}
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id`= " . $in_row['unit_id'] . " AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) LIMIT 1;";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result)==1) {
+	$result = db_query($query);
+	if($result->num_rows==1) {
 		$return = " DISABLED ";
 		} else {
 		$return = "";
@@ -312,7 +312,7 @@ function get_cd_str($in_row, $ticket_id) {
 	
 function is_assigned_to($tick_id, $resp_id) {
 	$query = "SELECT `ticket_id`, `responder_id` FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $tick_id . " AND `responder_id` = " . $resp_id . " LIMIT 1";
-	$result = mysql_query($query);
+	$result = db_query($query);
 	if($result) {
 		return TRUE;
 		} else {
@@ -352,9 +352,9 @@ switch (intval(trim(get_variable('locale')))) {
 $query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart, UNIX_TIMESTAMP(problemend) AS problemend, `scope` AS `scope` 
 	FROM `$GLOBALS[mysql_prefix]ticket` 
 	WHERE `id`= " . $ticket_id . " LIMIT 1;";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if(mysql_affected_rows()==1) {
-	$row = stripslashes_deep(mysql_fetch_array($result));
+$result = db_query($query);
+if(db_affected_rows()==1) {
+	$row = stripslashes_deep($result->fetch_array());
 	$latitude = $row['lat'];
 	$longitude = $row['lng'];
 	$problemstart = $row['problemstart'];
@@ -420,15 +420,15 @@ UNION DISTINCT
 	 WHERE  `dispatch` > 0 $where $where3 GROUP BY unit_id )
 	{$order}";		//	6/17/13				 
 	 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query);
 $i=0;
 
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$unit_id = $row['unit_id'];
 	$query2 = "SELECT `member_id` FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $unit_id;
-	$result2 = mysql_query($query2);
+	$result2 = db_query($query2);
 	$assigned_members = array();
-	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) {
+	while ($row2 = stripslashes_deep($result2->fetch_assoc())) {
 		$assigned_members[] = $row2['member_id'];
 		}
 	$counter = 0;

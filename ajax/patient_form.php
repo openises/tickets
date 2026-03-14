@@ -54,16 +54,16 @@ $output = "";
 
 $responder_details = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id` ASC";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$responder_details[$row['id']] = $row['handle'];
 	}
 	
 if ($get_action == 'edit') {		//get and show action to update
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient_x` WHERE `patient_id` = " . $_GET['id'];
-	$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
+	$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$assigned_to = $row['assign_id'];
 		} else {
 		$assigned_to = 0;				
@@ -107,9 +107,9 @@ if ($get_action == 'edit') {		//get and show action to update
 			$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11						
 			}
 		}	
-	$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `$GLOBALS[mysql_prefix]patient` WHERE id='$_GET[id]' LIMIT 1";	// 8/11/08
-	$result = mysql_query($query) or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";	// 8/11/08
+	$result = db_query($query, [['type' => 'i', 'value' => sanitize_int($_GET['id'])]]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	if ( can_edit()) {										// 8/27/10
 		$hdr_str = "Edit";
 		$dis = "";
@@ -119,7 +119,7 @@ if ($get_action == 'edit') {		//get and show action to update
 		}
 	$heading = $hdr_str . " " . $patient . "Record";
 	$output .= "<DIV STYLE='position: relative; top: 10px; left: 10px; padding: 10px; width: 95%;'>";
-	$output .= "<FORM ID='patientAdd' NAME='patientEd' METHOD='post' ACTION='./ajax/form_post.php?id=" . $_GET['id'] . "&ticket_id=" . $_GET['ticket_id'] . "&q=". $sess_id . "&function=editpatient'>";	
+	$output .= "<FORM ID='patientAdd' NAME='patientEd' METHOD='post' ACTION='./ajax/form_post.php?id=" . e(sanitize_int($_GET['id'])) . "&ticket_id=" . e(sanitize_int($_GET['ticket_id'])) . "&q=". e($sess_id) . "&function=editpatient'>";	
 	$output .= "<TABLE BORDER='0' STYLE='margin-left: 20px; position: relative; top: 70px;'>";
 	$output .= "<TR CLASS='even' >";
 	$output .= "<TD CLASS='td_label text'>" . get_text('Patient ID') . ": <font color='red' size='-1'>*</font></TD>";
@@ -129,11 +129,11 @@ if ($get_action == 'edit') {		//get and show action to update
 	$checks[intval($row['gender'])] = "CHECKED";
 
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
-	$result = mysql_query($query);
-	if(@mysql_num_rows($result) > 0) {
+	$result = db_query($query);
+	if(@$result->num_rows > 0) {
 		$ins_sel_str = "<SELECT CLASS='sit' name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
 		
-		while ($row_ins = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row_ins = stripslashes_deep($result->fetch_assoc())) {
 			$sel = (intval($row['insurance_id']) == intval($row_ins['id']))? "SELECTED": "";
 			$ins_sel_str .= "\t\t\t<OPTION VALUE={$row_ins['id']} {$sel}>{$row_ins['ins_value']}</OPTION>\n";		
 			}		// end while()
@@ -176,9 +176,9 @@ if ($get_action == 'edit') {		//get and show action to update
 		$query_fac = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
 			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )		
 			$where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";		
-		$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$result_fac = db_query($query_fac);
 		$pulldown = '<option value = 0 selected>Select</option>\n'; 	// 3/18/10
-			while ($row_fac = mysql_fetch_array($result_fac, MYSQL_ASSOC)) {
+			while ($row_fac = $result_fac->fetch_assoc()) {
 				$sel = ($row_fac['fac_id'] == $row['facility_id']) ? "SELECTED" : "";
 				$pulldown .= "<option value=\"{$row_fac['fac_id']}\" {$sel}>" . $row_fac['name'] . "</option>\n";
 				}	
@@ -200,8 +200,8 @@ if ($get_action == 'edit') {		//get and show action to update
 	$output .= "<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;' " . $dis . ">";
 	$output .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 		$output .= "\t<OPTION VALUE='" . $row_sig['code'] . "'>" . $row_sig['code'] . "|" . $row_sig['text'] . "</OPTION>\n";
 		}
 	$output .= "</SELECT>";
@@ -213,8 +213,8 @@ if ($get_action == 'edit') {		//get and show action to update
 	$output .= "<SELECT NAME='assigns'>";
 	$output .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $row['ticket_id'] . " AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row_ass = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while ($row_ass = stripslashes_deep($result->fetch_assoc())) {
 		$sel = ($row_ass['id'] == $assigned_to) ? "SELECTED" : "";
 		$output .= "\t<OPTION VALUE='" . $row_ass['id'] . "' " . $sel . ">" . $responder_details[$row_ass['responder_id']] . "&nbsp;|&nbsp;" . $row_ass['as_of'] . "</OPTION>\n";
 		}
@@ -236,7 +236,7 @@ if ($get_action == 'edit') {		//get and show action to update
 	$output .= "</TR>";
 	$output .= "<INPUT TYPE = 'hidden' NAME = 'frm_gender_val' VALUE = " . $row['gender'] . " />";
 	$output .= "<INPUT TYPE = 'hidden' NAME = 'frm_ins_id' VALUE = " . $row['insurance_id'] . " />";
-	$output .= "<INPUT TYPE = 'hidden' NAME = 'id' VALUE = " . $_GET['id'] . " />";	
+	$output .= "<INPUT TYPE = 'hidden' NAME = 'id' VALUE = " . e(sanitize_int($_GET['id'])) . " />";	
 	$output .= "</FORM>";
 	$output .= "</TABLE>";
 	$output .= "</DIV>";
@@ -297,9 +297,9 @@ if ($get_action == 'edit') {		//get and show action to update
 	$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`
 		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )		
 		$where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";		
-	$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$result_fc = db_query($query_fc);
 	$pulldown = '<option value = 0 selected>Select</option>\n'; 	// 3/18/10
-		while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+		while ($row_fc = $result_fc->fetch_assoc()) {
 			$pulldown .= "<option value=\"{$row_fc['id']}\">" . shorten($row_fc['name'], 20) . "</option>\n";
 			}
 //	list existing patients
@@ -308,18 +308,18 @@ if ($get_action == 'edit') {		//get and show action to update
 	FROM  `$GLOBALS[mysql_prefix]patient` `p`
 	LEFT JOIN `$GLOBALS[mysql_prefix]insurance` `i` 
 	ON (`p`.`insurance_id` = `i`.`id`)
-	WHERE `ticket_id` = {$_GET['ticket_id']}
+	WHERE `ticket_id` = " . sanitize_int($_GET['ticket_id']) . "
 	ORDER BY `name` ASC, `fullname` ASC";
 
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	$result	= db_query($query);
 			
-	if (mysql_num_rows($result) != 0) {
+	if ($result->num_rows != 0) {
 		$i = 0;
 		$output .= "<SPAN CLASS = 'text' style='text-align: center;'>" . $patient . " records - click line to edit</SPAN>";
 		$output .= "<DIV style='height: 100px; overflow-y: scroll;'>";
 		$output .= "<TABLE style='width: 100%;'>";
-		while($row =stripslashes_deep( mysql_fetch_array($result))){
-			$output .= "<TR CLASS='" . $evenodd[($i+1)%2] . "' VALIGN='baseline' onClick = 'patientedit(" . $_GET['ticket_id'] . ", " . $row['pat_id'] . ");'>";
+		while($row =stripslashes_deep( $result->fetch_array())){
+			$output .= "<TR CLASS='" . $evenodd[($i+1)%2] . "' VALIGN='baseline' onClick = 'patientedit(" . intval($_GET['ticket_id']) . ", " . intval($row['pat_id']) . ");'>";
 			$output .= "<TD CLASS='td_data text'>" . $row['name'] . "</TD>";
 			$output .= "<TD CLASS='td_data text'>" . shorten($row['fullname'], 24) . "</TD>";
 			$output .= "<TD CLASS='td_data text'>" . $row['ins_value'] . "</TD>";
@@ -336,18 +336,18 @@ if ($get_action == 'edit') {		//get and show action to update
 		}
 	$heading = "Add " . $patient . " Record";
 	$output .= "<DIV STYLE='padding: 10px; width: 95%;'>";
-	$output .= "<FORM ID='patientAdd' NAME='patientAdd' METHOD='post' ACTION='./ajax/form_post.php?ticket_id=" . $_GET['ticket_id'] . "&q=". $sess_id . "&function=addpatient'>";	
+	$output .= "<FORM ID='patientAdd' NAME='patientAdd' METHOD='post' ACTION='./ajax/form_post.php?ticket_id=" . e(sanitize_int($_GET['ticket_id'])) . "&q=". e($sess_id) . "&function=addpatient'>";	
 	$output .= "<TABLE BORDER='0' STYLE='margin-left: 20px; position: relative; top: 70px;'>";
 	$output .= "<TR CLASS='even'>";
 	$output .= "<TD CLASS='td_label text text'>" . get_text('Patient ID') . ": <font color='red' size='-1'>*</font></TD>";
 	$output .= "<TD CLASS='td_data text'><INPUT TYPE='text' NAME='frm_name' value='' size='32'></TD>";
 	$output .= "</TR>";
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]insurance` ORDER BY `sort_order` ASC, `ins_value` ASC";
-	$result = mysql_query($query);
-	if(@mysql_num_rows($result) > 0) {
+	$result = db_query($query);
+	if(@$result->num_rows > 0) {
 		$ins_sel_str = "<SELECT name='frm_insurance' onChange = 'this.form.frm_ins_id.value = this.options[this.selectedIndex].value;'>\n";
 		$ins_sel_str .= "\t\t\t<OPTION VALUE=0 SELECTED >Select</OPTION>\n";		// 7/27/11		
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$ins_sel_str .= "\t\t\t<OPTION VALUE={$row['id']}>{$row['ins_value']}</OPTION>\n";		
 			}		// end while()
 		$ins_sel_str .= "</SELECT>";
@@ -406,8 +406,8 @@ if ($get_action == 'edit') {		//get and show action to update
 	$output .= "<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>";
 	$output .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+	$result = db_query($query);
+	while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 		$output .= "\t<OPTION VALUE='" . $row_sig['code'] . "'>" . $row_sig['code'] . "|" . $row_sig['text'] . "</OPTION>\n";
 		}
 	$output .= "</SELECT>";
@@ -434,10 +434,10 @@ if ($get_action == 'edit') {		//get and show action to update
 	}
 $output .= "<FORM NAME='next_Form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
 $output .= "<INPUT TYPE='hidden' NAME='action' VALUE='list' />";
-$output .= "<INPUT TYPE='hidden' NAME='ticket_id' VALUE='" . $_GET['ticket_id'] . "' />";
+$output .= "<INPUT TYPE='hidden' NAME='ticket_id' VALUE='" . e(sanitize_int($_GET['ticket_id'])) . "' />";
 $output .= "</FORM>";
 $output .= "<FORM NAME='can_Form' ACTION='main.php'>";
-$output .= "<INPUT TYPE='hidden' NAME = 'id' VALUE = '" . $_GET['ticket_id'] . "'>";
+$output .= "<INPUT TYPE='hidden' NAME = 'id' VALUE = '" . e(sanitize_int($_GET['ticket_id'])) . "'>";
 $output .= "</FORM>";
 //print $output . "<BR />";
 $ret_arr[0] = $output;

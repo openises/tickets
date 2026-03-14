@@ -32,8 +32,8 @@ if($inorout) {
 
 if(isset($mi_id)) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = " . $mi_id;
-	$result = mysql_query($query);
-	while($mi_row = stripslashes_deep(mysql_fetch_assoc($result))){
+	$result = db_query($query);
+	while($mi_row = stripslashes_deep($result->fetch_assoc())){
 		$incs_arr[] = $mi_row['ticket_id'];
 		}
 	} elseif(isset($ticket_id)) {
@@ -87,12 +87,12 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`subject` AS `subject`	
 		FROM `$GLOBALS[mysql_prefix]messages` `m` 
 		{$where} {$order} {$order2}";
-$result = mysql_query($query);
-$num=mysql_num_rows($result);
-if (mysql_num_rows($result) == 0) { 				// 8/6/08
+$result = db_query($query);
+$num=$result->num_rows;
+if ($result->num_rows == 0) { 				// 8/6/08
 	$ret_arr[$i][0] = "No Messages";
 	} else {
-	while ($msg_row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($msg_row = stripslashes_deep($result->fetch_assoc())){
 		$the_readers = array();
 		$the_readers = explode("," , $msg_row['readby']);
 		if(($the_readers[0] == "") || (!in_array($the_user, $the_readers, true))) {

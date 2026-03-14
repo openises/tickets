@@ -9,18 +9,27 @@ extract($_GET);
 $ret_arr = array();
 
 function update_setting ($which, $what) {		//	3/15/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '" . $which . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result)!=0) {
-		$query2 = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`= '$what' WHERE `name` = '" . $which . "'";
-		$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$which = sanitize_string($which);
+	$what = sanitize_string($what);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= ? LIMIT 1";
+	$result = db_query($query, [['type' => 's', 'value' => $which]]);
+	if ($result->num_rows !=0) {
+		$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= ? WHERE `name` = ?";
+		$result2 = db_query($query2, [
+			['type' => 's', 'value' => $what],
+			['type' => 's', 'value' => $which]
+		]);
 		$success = ($result2) ? 1 : 0;
 		}
 	unset ($result);
 	unset ($result2);
 	return $success;
 	}				// end function update_setting ()
-	
+
+$bl_lat = isset($bl_lat) ? sanitize_string($bl_lat) : '';
+$bl_lon = isset($bl_lon) ? sanitize_string($bl_lon) : '';
+$tr_lat = isset($tr_lat) ? sanitize_string($tr_lat) : '';
+$tr_lon = isset($tr_lon) ? sanitize_string($tr_lon) : '';
 $boundsString = $bl_lat . "," . $bl_lon . "," . $tr_lat . "," . $tr_lon;
 
 $theResult = update_setting ('bounds', $boundsString);

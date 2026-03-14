@@ -11,50 +11,68 @@ if($_GET['q'] != $_SESSION['id']) {
 	}
 $istest = FALSE;
 
-$fac_id = $_GET['fac_id'];
-$resp_id = $_GET['resp_id'];
-$new_status = $_GET['status'];
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $resp_id . " LIMIT 1";
-$result = mysql_query($query);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$fac_id = sanitize_int($_GET['fac_id']);
+$resp_id = sanitize_int($_GET['resp_id']);
+$new_status = sanitize_int($_GET['status']);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [['type' => 'i', 'value' => $resp_id]]);
+$row = $result->fetch_assoc();
 $existing_status = $row['un_status_id'];
 $response = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $fac_id . " LIMIT 1";
-$result = mysql_query($query);
-if(mysql_num_rows($result) >= 1) {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [['type' => 'i', 'value' => $fac_id]]);
+if($result->num_rows >= 1) {
+	while ($row = $result->fetch_assoc()) {
 		$lat = $row['lat'];
 		$lng = $row['lng'];
 		}
 	}
-	
-$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
+
+$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 if($new_status == $existing_status) {
-	$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
-		`lat`= " . 			$lat . ",
-		`lng`= " . 			$lng . ",
-		`at_facility`= " . 	quote_smart(trim($fac_id)) . ",
-		`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
-		`updated`= " . 		quote_smart(trim($now)) . "
-		WHERE `id`= " . 	quote_smart(trim($resp_id)) . ";";
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
+		`lat`= ?,
+		`lng`= ?,
+		`at_facility`= ?,
+		`user_id`= ?,
+		`updated`= ?
+		WHERE `id`= ?";
+	$params = [
+		['type' => 'd', 'value' => $lat],
+		['type' => 'd', 'value' => $lng],
+		['type' => 'i', 'value' => $fac_id],
+		['type' => 'i', 'value' => $_SESSION['user_id']],
+		['type' => 's', 'value' => $now],
+		['type' => 'i', 'value' => $resp_id]
+	];
 	} else {
-	$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
-		`lat`= " . 			$lat . ",
-		`lng`= " . 			$lng . ",
-		`un_status_id`= " . $new_status . ",
-		`at_facility`= " . 	quote_smart(trim($fac_id)) . ",
-		`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
-		`updated`= " . 		quote_smart(trim($now)) . ",
-		`status_updated`= " . 		quote_smart(trim($now)) . "
-		WHERE `id`= " . 	quote_smart(trim($resp_id)) . ";";
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
+		`lat`= ?,
+		`lng`= ?,
+		`un_status_id`= ?,
+		`at_facility`= ?,
+		`user_id`= ?,
+		`updated`= ?,
+		`status_updated`= ?
+		WHERE `id`= ?";
+	$params = [
+		['type' => 'd', 'value' => $lat],
+		['type' => 'd', 'value' => $lng],
+		['type' => 'i', 'value' => $new_status],
+		['type' => 'i', 'value' => $fac_id],
+		['type' => 'i', 'value' => $_SESSION['user_id']],
+		['type' => 's', 'value' => $now],
+		['type' => 's', 'value' => $now],
+		['type' => 'i', 'value' => $resp_id]
+	];
 	}
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
-if(mysql_affected_rows() == 1) {
+$result = db_query($query, $params);
+if(db_affected_rows() == 1) {
 	$response[0] = 1;
 	} else {
 	$response[0] = 0;
 	}
-	
+
 print json_encode($response);
 exit();
 ?>

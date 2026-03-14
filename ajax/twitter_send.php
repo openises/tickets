@@ -11,7 +11,7 @@ if($_GET['q'] != $_SESSION['id']) {
 	}
 
 $ret_arr = array();
-$the_message = strip_tags($_GET['message']);
+$the_message = sanitize_string(strip_tags($_GET['message']));
 
 $theresult = do_tweet($the_message);
 if($theresult == 1) {

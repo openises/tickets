@@ -71,8 +71,8 @@ $query = "SELECT *,problemstart AS problemstart,
 		ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`			
 	$where 
 	GROUP BY tick_id";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_num_rows($result);
+$result = db_query($query);
+$num_rows = $result->num_rows;
 
 if($num_rows == 0) {
 	$ticket_row[0] = 0;

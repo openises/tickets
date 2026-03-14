@@ -7,16 +7,16 @@ require_once('../incs/functions.inc.php');
 if(empty($_GET)) {
 	exit;
 	}
-$ret_arr=array();	
+$ret_arr=array();
 $where = "WHERE `mobile` = 1";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` " . $where . " ORDER BY `id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if (mysql_affected_rows() == 0) { 
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` " . $where . " ORDER BY `id` ASC";
+$result = db_query($query);
+if (db_affected_rows() == 0) {
 	$ret_arr[0][0] = 0;
 	} else {
 	$i = 0;
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($row = $result->fetch_assoc()){
 		$ret_arr[$i][0] = $row['id'];
 		$ret_arr[$i][1] = $row['un_status_id'];
 		$ret_arr[$i][2] = $row['icon_str'];

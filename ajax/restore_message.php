@@ -5,12 +5,12 @@ restore_message.php - restores message from wastebasket to inbox.
 */
 require_once('../incs/functions.inc.php');
 
-$id = (isset($_GET['id'])) ? clean_string($_GET['id']) : NULL;
+$id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : NULL;
 $ret_arr = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages_bin` WHERE `id` = " . $id;
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
+$result = db_query($query, [['type' => 'i', 'value' => $id]]);
+$row = $result->fetch_assoc();
 $msg_type = $row['msg_type'];
 $message_id = $row['message_id'];
 $ticket_id = $row['ticket_id'];
@@ -30,31 +30,33 @@ $by = $row['_by'];
 $from = $row['_from'];
 $on = $row['_on'];
 
-$query = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (
+$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}messages` (
 		`msg_type`, `message_id`, `ticket_id`, `resp_id`, `recipients`, `from_address`, `fromname`, `subject`, `message`, `status`, `date`, `read_status`, `readby`, `delivered`, `delivery_status`, `_by`, `_from`, `_on`
-		) VALUES (" . 
-		quote_smart(trim($msg_type)) . "," . 
-		quote_smart(trim($message_id)) . "," . 
-		quote_smart(trim($ticket_id)) . "," . 
-		quote_smart(trim($resp_id)) . "," . 
-		quote_smart(trim($recipients)) . "," . 
-		quote_smart(trim($from_address)) . "," . 
-		quote_smart(trim($fromname)) . "," . 
-		quote_smart(trim($subject)) . "," . 
-		quote_smart(trim($message)) . "," .
-		quote_smart(trim($status)) . "," . 
-		quote_smart(trim($date)) . "," . 
-		quote_smart(trim($read_status)) . "," . 
-		quote_smart(trim($readby)) . "," . 
-		quote_smart(trim($delivered)) . "," . 
-		quote_smart(trim($delivery_status)) . "," . 
-		quote_smart(trim($by)) . "," . 
-		quote_smart(trim($from)) . "," . 
-		quote_smart(trim($on)) . ");";			
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$params = [
+	['type' => 's', 'value' => trim($msg_type)],
+	['type' => 's', 'value' => trim($message_id)],
+	['type' => 'i', 'value' => trim($ticket_id)],
+	['type' => 'i', 'value' => trim($resp_id)],
+	['type' => 's', 'value' => trim($recipients)],
+	['type' => 's', 'value' => trim($from_address)],
+	['type' => 's', 'value' => trim($fromname)],
+	['type' => 's', 'value' => trim($subject)],
+	['type' => 's', 'value' => trim($message)],
+	['type' => 's', 'value' => trim($status)],
+	['type' => 's', 'value' => trim($date)],
+	['type' => 's', 'value' => trim($read_status)],
+	['type' => 's', 'value' => trim($readby)],
+	['type' => 's', 'value' => trim($delivered)],
+	['type' => 's', 'value' => trim($delivery_status)],
+	['type' => 'i', 'value' => trim($by)],
+	['type' => 'i', 'value' => trim($from)],
+	['type' => 's', 'value' => trim($on)]
+];
+$result = db_query($query, $params);
 
-$query = "DELETE FROM `$GLOBALS[mysql_prefix]messages_bin` WHERE `id` = " . $id;
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
+$result = db_query($query, [['type' => 'i', 'value' => $id]]);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

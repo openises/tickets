@@ -53,8 +53,8 @@ $locale = get_variable('locale');
 $u_sb_indx = 0;
 $u_types = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 unset($result);
@@ -77,8 +77,8 @@ function subval_sort($a, $subkey, $dd) {
 function can_do_dispatch($the_row) {
 	if (intval($the_row['multi'])==1) return TRUE;
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = {$the_row['unit_id']}";
-	$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while ($row_temp = stripslashes_deep(mysql_fetch_array($result_temp))) {
+	$result_temp = db_query($query);
+	while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {
 		if (!(is_date($row_temp['clear']))) {
 			unset ($result_temp, $row_temp);
 			return FALSE;
@@ -90,8 +90,8 @@ function can_do_dispatch($the_row) {
 
 function unit_cat($id) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$result = db_query($query);
+	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
 
@@ -113,8 +113,8 @@ $query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
 
 
-$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
+$result_as = db_query($query);
+while ($row_as = stripslashes_deep($result_as->fetch_array())) {
 	$assigns[$row_as['responder_id']] = $row_as['ticket'];
 	$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 	}
@@ -127,8 +127,8 @@ $status_vals[''] = $status_vals['0']="TBD";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
 
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	$status_hide[$temp] = $row_st['hide'];
@@ -142,8 +142,8 @@ $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
 		WHERE (`t`.`status` = '{$GLOBALS['STATUS_OPEN']}' OR `t`.`status` = '{$GLOBALS['STATUS_SCHEDULED']}') AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
 
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$assigns_ary[$row['responder_id']] = TRUE;
 	}
 $numAssigns = count($assigns_ary);
@@ -194,9 +194,9 @@ $query1 = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )
 	{$where2} ORDER BY `unit_id` DESC LIMIT 1";
 
-$result1 = mysql_query($query1) or do_error($query1, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row1 = stripslashes_deep(mysql_fetch_assoc($result1));
-$latest_id = (mysql_num_rows($result1) >0) ? $row1['unit_id'] : 0;		// 12/4/2021
+$result1 = db_query($query1);
+$row1 = stripslashes_deep($result1->fetch_assoc());
+$latest_id = ($result1->num_rows >0) ? $row1['unit_id'] : 0;		// 12/4/2021
 
 $query = "SELECT *, r.updated AS `r_updated`,
 	`r`.`status_updated` AS `status_updated`,
@@ -217,8 +217,8 @@ $query = "SELECT *, r.updated AS `r_updated`,
 	LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id )
 	{$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$units_ct = mysql_num_rows($result);			// 1/4/10
+$result = db_query($query);
+$units_ct = $result->num_rows;			// 1/4/10
 if ($units_ct != 0){
 	$checked = array ("", "", "", "");
 	$checked[$_SESSION['unit_flag_2']] = " CHECKED";
@@ -233,7 +233,7 @@ $utc = gmdate ("U");
 $chgd_unit = $_SESSION['unit_flag_1'];
 $_SESSION['unit_flag_1'] = 0;
 $i = 1;
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$resp_gps = get_allocates(2, $row['unit_id']);
 	$the_color = ($row['mobile']=="1")? 4 : 0;
 	$grp_names = "Groups Assigned: ";
@@ -263,8 +263,8 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$do_legend = TRUE;
 		$query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `$GLOBALS[mysql_prefix]tracks`
 			WHERE `source`= '$row[callsign]' ORDER BY `packet_date` DESC LIMIT 1";		// newest
-		$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_track = (mysql_num_rows($result_tr)>0)? stripslashes_deep(mysql_fetch_assoc($result_tr)) : FALSE;
+		$result_tr = db_query($query);
+		$row_track = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : FALSE;
 		$aprs_updated = $row_track['updated'];
 		$aprs_speed = $row_track['speed'];
 		if (($row_track) && (my_is_float($row_track['latitude']))) {
@@ -294,9 +294,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	if($useMdb == "1" && $useMdbStatus == "1" && get_member_count($row['unit_id']) == 1) {
 		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder_x_member` WHERE `responder_id` = " . $row['unit_id'];
 
-		$result2 = mysql_query($query2);
-		if($result && mysql_num_rows($result2) == 1) {
-			$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+		$result2 = db_query($query2);
+		if($result && $result2->num_rows == 1) {
+			$row2 = stripslashes_deep($result2->fetch_assoc());
 			$memberID = $row2['member_id'];
 			} else {
 			$memberID = 0;
@@ -308,8 +308,8 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	if($memberID != 0) {
 		$query_updated = "SELECT `id`, `_on` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = " . $memberID;
 
-		$result_updated = mysql_query($query_updated);
-		$row_updated = stripslashes_deep(mysql_fetch_assoc($result_updated));
+		$result_updated = db_query($query_updated);
+		$row_updated = stripslashes_deep($result_updated->fetch_assoc());
 		$memUpdated = strtotime($row_updated['_on']);
 		$responderStatusUpdated = strtotime($row['status_updated']);
 		$member_status = (($useMdb == "1" && $useMdbStatus && "1") && (get_member_count($row['unit_id']) == 1) && ($memberID != 0)) ? get_member_status($memberID) : 0;
@@ -340,16 +340,14 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$status_about = $statusTemp;
 		$noSel = 0;
 		} else {
-		$query_upd = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`= ";
-		$query_upd .= quote_smart($responderUnavail) ;
-		$query_upd .= ", `updated` = " . quote_smart(mysql_format_date($now));
-		$query_upd .= ", `status_updated` = " . quote_smart(mysql_format_date($now));
-		$query_upd .= ", `user_id` = " . $_SESSION['user_id'];
-		$query_upd .= " WHERE `id` = ";
-		$query_upd .= quote_smart($row['unit_id']);
-		$query_upd .=" LIMIT 1";
-
-		$result_upd = mysql_query($query_upd);
+		$query_upd = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= ?, `updated` = ?, `status_updated` = ?, `user_id` = ? WHERE `id` = ? LIMIT 1";
+		$result_upd = db_query($query_upd, [
+			['type' => 'i', 'value' => $responderUnavail],
+			['type' => 's', 'value' => mysql_format_date($now)],
+			['type' => 's', 'value' => mysql_format_date($now)],
+			['type' => 'i', 'value' => $_SESSION['user_id']],
+			['type' => 'i', 'value' => $row['unit_id']]
+		]);
 		$status = (array_key_exists($row['un_status_id'], $validStatuses)) ? get_status_sel($row['unit_id'], $responderUnavail, "u") : "Status Error";
 		$status_name = (array_key_exists($row['un_status_id'], $validStatuses)) ? $status_vals[$row['un_status_id']] : "Status Error" ;
 		$status_id = $responderUnavail;

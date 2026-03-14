@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once('../incs/functions.inc.php');
 $ret_arr = array();
-$theError = $_GET['debugtxt'];
+$theError = sanitize_string($_GET['debugtxt']);
 $filename = "../debuglog.txt";
 
 if (file_exists($filename)) {
@@ -17,7 +17,7 @@ if (file_exists($filename)) {
 		fwrite($fp, "{$theError}\r\n\n");
 		fclose($fp);
 		$ret_arr[0] = 1;
-		}		
+		}
 	} else {
 	if(!$fp = fopen($filename, 'w')) {
 		$ret_arr[0] = 99;
@@ -31,7 +31,7 @@ if (file_exists($filename)) {
 			fwrite($fp, "{$theError}\r\n\n");
 			fclose($fp);
 			$ret_arr[0] = 1;
-			}		
+			}
 		}
 	}
 

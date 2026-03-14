@@ -7,28 +7,28 @@ $the_session = $_GET['session'];
 if(!(secure_page($the_session))) {
 	exit();
 	} else {
-	$tp_id = $_GET['tp_id'];
+	$tp_id = sanitize_int($_GET['tp_id']);
 
 	$ret_arr = array();
 
 	$query = "SELECT *
-		FROM `$GLOBALS[mysql_prefix]training_packages` `tp` 
-		WHERE `tp`.`id` = {$tp_id};";
+		FROM `{$GLOBALS['mysql_prefix']}training_packages` `tp`
+		WHERE `tp`.`id` = ?";
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$result = db_query($query, [['type' => 'i', 'value' => $tp_id]]);
 
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {	
+		while ($row = $result->fetch_assoc()) {
 			$ret_arr[] = $row['id'];
 			$ret_arr[] = $row['package_name'];
 			$ret_arr[] = $row['description'];
 			$ret_arr[] = $row['available'];
 			$ret_arr[] = $row['provider'];
-			$ret_arr[] = $row['address'];		
+			$ret_arr[] = $row['address'];
 			$ret_arr[] = $row['name'];
 			$ret_arr[] = $row['email'];
-			$ret_arr[] = $row['phone'];		
-			$ret_arr[] = $row['cost'];		
+			$ret_arr[] = $row['phone'];
+			$ret_arr[] = $row['cost'];
 			}
-		
+
 	print json_encode($ret_arr);
-}	
+}

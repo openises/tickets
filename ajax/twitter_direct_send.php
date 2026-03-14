@@ -10,9 +10,9 @@ if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
 $ret_arr = array();
-$the_message = strip_tags($_GET['message']);
-$the_userid = strip_tags($_GET['userid']);
-$the_screenname = strip_tags($_GET['screenname']);
+$the_message = sanitize_string(strip_tags($_GET['message']));
+$the_userid = sanitize_string(strip_tags($_GET['userid']));
+$the_screenname = sanitize_string(strip_tags($_GET['screenname']));
 $theresult = do_tweet_direct($the_message, $the_userid, $the_screenname);
 if($theresult == 1) {
 	$ret_arr[0] = 1;

@@ -3,16 +3,16 @@
 */
 error_reporting(E_ALL);
 
-require_once('../incs/functions.inc.php'); 
+require_once('../incs/functions.inc.php');
 @session_start();
 
 $ret_arr = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]waste_basket_m`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) != 0) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}waste_basket_m`";
+$result = db_query($query);
+if($result->num_rows != 0) {
 	$i=0;
-	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	while ($row = $result->fetch_assoc()) {
 		$ret_arr[$i][] = $row['id'];
 		$ret_arr[$i][] = $row['field1'];
 		$ret_arr[$i][] = $row['field2'];
