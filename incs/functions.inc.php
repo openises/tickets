@@ -4642,6 +4642,33 @@ function is_dir_empty($dir) {
 	}
 
 function get_tile_bounds ($repository) {
+	// Try cached bounds from database first to avoid expensive filesystem scan.
+	// The 'bounds' setting is updated by update_localmap_boundary.php after tile
+	// downloads and by recalculate_tile_bounds() after tile changes.  3/14/26
+	$cached = get_variable('bounds');
+	if (!empty($cached)) {
+		$parts = explode(',', $cached);
+		if (count($parts) === 4) {
+			// bounds format: "bl_lat,bl_lon,tr_lat,tr_lon" → return [west, north, east, south]
+			return array(
+				floatval($parts[1]),	// west  (bl_lon)
+				floatval($parts[2]),	// north (tr_lat)
+				floatval($parts[3]),	// east  (tr_lon)
+				floatval($parts[0])		// south (bl_lat)
+			);
+		}
+	}
+	// Fallback: scan filesystem (only reached if no cached bounds exist)
+	return scan_tile_bounds($repository);
+	}		// end function
+
+/**
+ * Scan the tile directory to compute geographic bounds from tile coordinates.
+ * This is expensive I/O on large tile sets — results should be cached via
+ * recalculate_tile_bounds(). All opendir() calls are guarded to prevent
+ * PHP warnings from flooding the error log.  3/14/26
+ */
+function scan_tile_bounds ($repository) {
 	if(!is_dir($repository) || is_dir_empty($repository)) {return false;}
 	if (!function_exists('tile2long')) {
 		function tile2long( $x, $z) {
@@ -4657,7 +4684,8 @@ function get_tile_bounds ($repository) {
 		}
 	if (!function_exists('low_high_dir')) {
 		function low_high_dir ($path, $low = TRUE) {
-			$dh  = opendir($path);
+			$dh  = @opendir($path);
+			if ($dh === false) { return ($low) ? 99999 : 0; }	// guard against missing dir
 			if ($low) {		// find min
 				$return = 99999;					// starter - see below
 				while (false !== ($filename = readdir($dh))  ) {
@@ -4674,30 +4702,36 @@ function get_tile_bounds ($repository) {
 						}
 					}		// end while ()
 				}		// end else
+			closedir($dh);
 			return $return;
 			}		// end function
 		}
 	//	1.  compute zoom
 	$dir = $repository;
-	$dh  = opendir($dir);
+	$dh  = @opendir($dir);
+	if ($dh === false) { return false; }	// guard against missing dir
 	$zoom = 99;						// starter - see below
 	while (false !== ($filename = readdir($dh))  ) {
 		if ( is_numeric ($filename ) && intval ($filename) < intval ($zoom ) ) { $zoom = intval ($filename) ; }
 		}		// end while ()
+	closedir($dh);
+
+	if ($zoom === 99) { return false; }	// no zoom directories found
 
 	// 2. compute west and east longs
 
 	$west = 99999;		// set extremes
 	$east = 0;
 	$path = "{$dir}/{$zoom}";
-	$dh  = opendir($path);
+	$dh  = @opendir($path);
+	if ($dh === false) { return false; }	// guard against missing zoom dir
 	while (false !== ($filename = readdir($dh) ) ) {	// walk down the selected zoom directory
 		if (is_numeric ($filename) ) {
 			if ( intval($filename ) < intval ($west) ) {$west = $filename;}		// min
 			if ( intval($filename ) > intval ($east) ) {$east = $filename;}		// max
 			}		// end if (is_numeric () )
 		}		// end while ()
-
+	closedir($dh);
 
 	// 3. compute northwest tile - OK
 
@@ -4715,7 +4749,30 @@ function get_tile_bounds ($repository) {
 	$south_lat = round (tile2lat( intval($southeast) + 1, $zoom), 6);		// note + 1
 
 	return array($west_long, $north_lat, $east_long, $south_lat );
-	}		// end function
+	}		// end function scan_tile_bounds
+
+/**
+ * Recalculate tile bounds from the filesystem and cache the result in the
+ * database 'bounds' setting. Call this after tiles are added or removed.  3/14/26
+ */
+function recalculate_tile_bounds ($repository) {
+	$bounds = scan_tile_bounds($repository);
+	if ($bounds === false) {
+		// No tiles — clear the cached bounds
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= '' WHERE `name` = 'bounds'";
+		db_query($query);
+		return false;
+	}
+	// Store as "south,west,north,east" (bl_lat,bl_lon,tr_lat,tr_lon)
+	$boundsString = $bounds[3] . "," . $bounds[0] . "," . $bounds[1] . "," . $bounds[2];
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= 'bounds' LIMIT 1";
+	$result = db_query($query);
+	if ($result && $result->num_rows > 0) {
+		$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= ? WHERE `name` = 'bounds'";
+		db_query($query2, [['type' => 's', 'value' => $boundsString]]);
+	}
+	return $bounds;
+	}		// end function recalculate_tile_bounds
 
 function  checkColExists($table, $col) {
 	$query = "SHOW COLUMNS FROM `{$GLOBALS['mysql_prefix']}" . $table . "` LIKE '" . $col . "'";

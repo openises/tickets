@@ -88,6 +88,9 @@ function do_file ($dir, $subdir, $file) {
 do_file($dir, $subdir, $file);
 if($_GET['lastfile'] == "yes") {
 	chmod_r($local);
+	// Recalculate and cache tile bounds in the database so get_tile_bounds()
+	// doesn't need to scan the filesystem on every page load.  3/14/26
+	recalculate_tile_bounds($local);
 	}
 $completed[1] = ($completed[1]) ? $completed[1] : "";
 $completed[0] = "Completed";

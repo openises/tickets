@@ -86,4 +86,163 @@ Provide a template system that lets users load, manage, and share pre-built demo
 
 ---
 
+## 3. Intelligent Map Tile Caching
+
+**Source:** Discussion during testing session (2026-03-14)
+**Reporter:** Eric Osterberg
+
+### Overview
+Cache map tiles locally on the server whenever they are loaded from the upstream tile provider (e.g., OpenStreetMap). Serve cached tiles when available, falling back to the upstream source only when a tile is missing or expired. This provides resilience against internet outages — as long as an area has been viewed before, the map remains functional offline.
+
+### Key features
+- **Transparent caching:** When a map tile is requested, the server checks the local cache first. On cache miss, it fetches from upstream, stores locally, and serves to the client.
+- **Configurable TTL (time-to-live):** Admin setting for how long cached tiles remain valid (e.g., 7 days, 30 days, 90 days). Tiles older than the TTL are replaced the next time the same tile is fetched from upstream.
+- **Lazy refresh:** Expired tiles are still served if the upstream source is unreachable (graceful degradation). They are replaced silently when connectivity returns and the tile is next requested.
+- **Enable/disable toggle:** Configurable option in admin settings — some installations may not want or need caching (e.g., cloud-hosted with reliable internet).
+- **Cache size management:** Optional max cache size setting with LRU (least recently used) eviction, or a manual "clear cache" button in admin.
+- **Zoom level limits:** Optionally limit which zoom levels are cached to manage disk usage (e.g., only cache zoom 10-18, skip very high or very low zoom).
+
+### How it works
+1. Client requests a tile via Leaflet (e.g., `/{z}/{x}/{y}.png`)
+2. Instead of hitting the tile provider directly, the request goes through a local PHP proxy endpoint (e.g., `ajax/tile_proxy.php?z=14&x=8192&y=5461`)
+3. The proxy checks `cache/tiles/{z}/{x}/{y}.png` on disk
+4. If the cached file exists and is within TTL → serve it directly with appropriate cache headers
+5. If the cached file is missing or expired → fetch from upstream, store to disk, serve to client
+6. If upstream is unreachable and a stale cached file exists → serve the stale tile (better than nothing)
+7. If upstream is unreachable and no cached file exists → return a placeholder "tile unavailable" image
+
+### Implementation notes
+- Tile cache directory: `cache/tiles/{z}/{x}/{y}.png` — standard slippy map directory structure
+- PHP proxy endpoint handles the fetch/cache/serve logic; Leaflet's tile URL template is pointed at it instead of directly at the tile provider
+- Respect tile provider terms of service (OSM allows caching with proper attribution and `User-Agent`)
+- Store tile metadata (fetch timestamp) either as file modification time or in a lightweight SQLite/JSON index
+- Consider supporting multiple tile providers (OSM, satellite, topo) with separate cache namespaces
+- The proxy should set `Content-Type: image/png` and appropriate browser cache headers
+- For Raspberry Pi deployments with limited SD card space, zoom level limits and max cache size are important
+- A pre-cache / seed feature (future enhancement) could allow admins to pre-download tiles for a bounding box + zoom range before deploying to a field location
+
+### Use cases
+- **Field deployments:** Amateur radio operators at a marathon or disaster exercise may have spotty or no internet. Pre-viewed areas remain available on the map.
+- **Remote stations:** Fire departments or medical ops in rural areas with unreliable connectivity.
+- **Bandwidth conservation:** Reduce repeated tile downloads for the same area across multiple users/sessions.
+- **Training environments:** Load the map once during setup, then run training exercises without depending on internet.
+
+### Admin settings
+- `tile_cache_enabled` — ON/OFF (default: OFF)
+- `tile_cache_ttl` — Days before a cached tile is considered stale (default: 30)
+- `tile_cache_max_size_mb` — Maximum disk usage for tile cache in MB (default: 500, 0 = unlimited)
+- `tile_cache_zoom_min` — Minimum zoom level to cache (default: 1)
+- `tile_cache_zoom_max` — Maximum zoom level to cache (default: 19)
+
+### Acceptance criteria
+- [ ] Tile proxy endpoint serves tiles from cache when available
+- [ ] Cache miss triggers upstream fetch, stores tile, and serves it transparently
+- [ ] Cached tiles are refreshed when older than the configured TTL
+- [ ] Stale cached tiles are served when upstream is unreachable (offline resilience)
+- [ ] Admin can enable/disable caching, set TTL, and set max cache size
+- [ ] Cache respects disk space limits and evicts oldest/least-used tiles when full
+- [ ] Map works normally from the user's perspective — caching is invisible
+- [ ] Tile provider terms of service are respected (User-Agent, attribution)
+
+---
+
+## 4. Local Map Missing Tile System Crash (Critical Stability Issue)
+
+**Source:** Discussion during testing session (2026-03-14)
+**Reporter:** Eric Osterberg
+**Category:** Bug / System Stability
+**Priority:** Critical
+
+### Overview
+When local maps are configured (`local_maps = 1`) and there are missing tiles,
+errors are logged continuously until the system crashes — either because all
+resources are consumed or the disk fills up. The load average stays maxed out
+even after the browser is closed and Apache is stopped, requiring a system
+reboot to recover.
+
+### Partial fix applied (3/14/26)
+**Browser-side 404 flooding:** Added Leaflet `errorTileUrl` option with a
+transparent 1x1 PNG data URI in `osm_map_functions.js` and
+`config.setcenter.inc.php`. This prevents Leaflet from continuously retrying
+failed tile requests, eliminating the 404 log flood from the browser side.
+
+This does NOT address the full issue — the crash persists even after closing
+the browser and stopping Apache, indicating a deeper server-side or OS-level
+problem.
+
+### Root cause analysis (needs live investigation with local maps configured)
+
+1. **`get_tile_bounds()` filesystem traversal on every page load:**
+   - Located in `functions.inc.php` (line ~4644)
+   - Called from ~40 PHP files via `all_forms_js_variables.inc.php` and inline
+   - Does `opendir()`/`readdir()` traversal of tile directories
+   - At high zoom levels (15+), tile directories can contain hundreds of
+     thousands of subdirectories and files
+   - Every page load = full directory scan = expensive disk I/O
+   - The situation screen auto-refreshes every 10-30 seconds, compounding this
+
+2. **Orphaned PHP processes with `set_time_limit(0)`:**
+   - 20+ scripts set `set_time_limit(0)`, including the main situation screen
+     (`full_scr.php`, `full_sit_scr.php`, `cb.php`)
+   - If a PHP process gets stuck doing filesystem operations on a massive tile
+     directory, it runs indefinitely — even after Apache's parent process stops
+   - Multiple orphaned PHP processes doing filesystem I/O simultaneously could
+     explain why load stays high after Apache shutdown
+
+3. **Cascading disk I/O and error log growth:**
+   - PHP warnings from `opendir()` on missing/corrupt paths write to error log
+   - Apache 404 errors from missing tile requests write to error log
+   - Rapid error log growth saturates disk I/O
+   - Disk I/O saturation causes other processes (including the OS) to queue
+   - Even after Apache stops, filesystem journal recovery from a multi-GB log
+     file can keep the system loaded
+
+4. **No error handling in `get_tile_bounds()`:**
+   - `opendir()` returns FALSE on failure but the return value is used directly
+     in `readdir()` without checking — generates continuous PHP warnings
+   - `low_high_dir()` helper has the same issue
+   - No guards against missing or incomplete tile directory structures
+
+### Recommended fixes
+
+**Short-term (next release):**
+- Add error checking to `get_tile_bounds()` — guard `opendir()` returns
+- Cache the bounds result in a database setting or flat file — only recalculate
+  when tiles are added or removed (via `gettiles.php` / `deltile.php`)
+- Remove `set_time_limit(0)` from page-rendering scripts (keep it only on
+  genuinely long-running operations like tile download and database import)
+
+**Medium-term:**
+- Add Apache error log rotation configuration to installation docs
+- Implement a tile coverage health check that warns admins when coverage is
+  incomplete for the configured area
+- Add a Leaflet-side `tileerror` counter that shows a user warning when too
+  many tiles are missing (e.g., "X tiles could not be loaded — check your
+  local map configuration")
+
+**Long-term:**
+- Replace `get_tile_bounds()` filesystem traversal with metadata stored during
+  tile download — the download process already knows the bounds
+- Consider the Intelligent Map Tile Caching feature (Backlog #3) as a
+  comprehensive replacement for the current local maps system
+
+### Files involved
+- `incs/functions.inc.php` — `get_tile_bounds()` function (line ~4644)
+- `incs/all_forms_js_variables.inc.php` — calls `get_tile_bounds()` (line 237)
+- `incs/variables.inc.php` — tile directory scanning (lines 40-51)
+- `js/osm_map_functions.js` — tile layer creation, errorTileUrl fix
+- `incs/config.setcenter.inc.php` — tile layer creation, errorTileUrl fix
+- `ajax/gettiles.php` — tile download process
+- `get_tiles.php` — tile management UI
+- ~40 form/screen files that call `get_tile_bounds()` inline
+
+### Acceptance criteria
+- [ ] System remains stable with local maps configured and missing tiles
+- [ ] No orphaned PHP processes after closing browser / stopping Apache
+- [ ] Error log does not grow unbounded from tile-related errors
+- [ ] `get_tile_bounds()` result is cached and not recalculated on every page load
+- [ ] Missing tiles produce a clear admin warning, not a system crash
+
+---
+
 *Add new backlog items below using the same format.*

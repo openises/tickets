@@ -162,12 +162,22 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 		<BR />
 		<BR />
 		<BR />
-		<SPAN STYLE = 'margin-left:80px;'><FONT CLASS='header'>Search results for '<?php print $_POST['frm_query'];?>' <?php print $year_text;?></FONT></SPAN>
+		<SPAN STYLE = 'margin-left:80px;'><FONT CLASS='header'>Search results for '<?php print htmlspecialchars($_POST['frm_query'], ENT_QUOTES, 'UTF-8');?>' <?php print htmlspecialchars($year_text, ENT_QUOTES, 'UTF-8');?></FONT></SPAN>
 		<BR />
 		<BR />
 <?php
 		$_POST['frm_query'] = str_replace(' ', '|', $_POST['frm_query']);
 		$query_str = sanitize_string(trim(str_replace(' ', '|', $_POST['frm_query'])));
+
+		// Escape MySQL REGEXP special characters in user input to prevent regex syntax errors.
+		// Convert glob-style '*' to '.*' (match anything) before escaping, so users can
+		// type '*' as a wildcard. A bare '.*' matches all rows (show everything).
+		$query_str = str_replace('*', '.*', $query_str);
+		$query_str = preg_replace('/([+?\[\]{}()^$\\\\])/', '\\\\$1', $query_str);		// escape regex metacharacters (but not . or | or *)
+		if ($query_str === '' || $query_str === '.*') {
+			$query_str = '.*';		// match everything
+		}
+
 		$search_params = [];
 		if($_POST['frm_search_in'])	{								//what field are we searching?
 			$search_fields = "CAST(`" . sanitize_string($_POST['frm_search_in']) . "` AS CHAR) REGEXP ?";	//
@@ -268,14 +278,10 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 			$result = db_query($query, $in_params);
 			if($result->num_rows == 1) {	//	revised to redirect to main.php rather than show ticket in search.php	4/29/13
 				$row = stripslashes_deep($result->fetch_assoc());
-				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-				header('Cache-Control: no-store, no-cache, must-revalidate');
-				header('Cache-Control: post-check=0, pre-check=0', FALSE);
-				header('Pragma: no-cache');
-
-				$host  = $_SERVER['HTTP_HOST'];
-				$url = "main.php?id=" . $row['id'];
-				redir($url);
+				// Use JS redirect instead of header() — HTML output has already started,
+				// so header() triggers "Cannot modify header" warnings.  3/14/26
+				$url = "main.php?id=" . intval($row['id']);
+				echo "<script>window.location.href='" . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . "';</script>";
 				exit();
 
 				} elseif ($result->num_rows == 0) {

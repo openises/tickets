@@ -31,6 +31,8 @@ $deltiles = isset($_GET['deltiles']) ? sanitize_string($_GET['deltiles']) : "";
 if($deltiles == "yes") {
 	rmdir_recurse($local);
 	mkdir($local);
+	// Clear cached tile bounds since all tiles are removed.  3/14/26
+	recalculate_tile_bounds($local);
 	$completed = "Completed";
 	print json_encode($completed);
 	}

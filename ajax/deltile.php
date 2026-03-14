@@ -70,6 +70,8 @@ $ret_arr[1] = e($theFile) . " deleted";
 
 if(directory_empty($filestore)) {
 	$ret_arr[2] = "alldone";
+	// All tiles removed — clear cached bounds.  3/14/26
+	recalculate_tile_bounds($filestore);
 	} else {
 	$ret_arr[2] = "continue";
 	}

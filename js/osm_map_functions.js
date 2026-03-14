@@ -2814,7 +2814,14 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 		var osmUrl = (my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 		var	cmAttr = '';
 		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-		var OSM   = L.tileLayer(osmUrl, {attribution: cmAttr});
+		var tileOpts = {attribution: cmAttr};
+		if (my_Local == "1") {
+			// When using local tiles, provide a transparent 1px placeholder for missing tiles.
+			// This prevents Leaflet from continuously retrying 404s, which would flood the
+			// Apache error log and eventually fill the disk or exhaust resources.  3/14/26
+			tileOpts.errorTileUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
+		}
+		var OSM   = L.tileLayer(osmUrl, tileOpts);
 		if(good_gmapsapi == 1) {
 			var ggl = new L.Google('ROAD');
 			var ggl1 = new L.Google('TERRAIN');

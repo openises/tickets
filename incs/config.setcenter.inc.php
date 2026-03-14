@@ -390,8 +390,10 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 				var osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 				var localUrl = "./_osm/tiles/{z}/{x}/{y}.png";
 				var	cmAttr = '';
+				// Provide transparent placeholder for missing local tiles to prevent 404 log flooding  3/14/26
+				var localErrorTile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
 				OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
-				localMap = L.tileLayer(localUrl, {attribution: cmAttr});
+				localMap = L.tileLayer(localUrl, {attribution: cmAttr, errorTileUrl: localErrorTile});
 				if (map) { map.remove(); map = null;} 
 				map = L.map('map_canvas',
 					{
