@@ -4,20 +4,20 @@
 */
 
 require_once('./incs/functions.inc.php');		//7/28/10
-extract($_GET);
+$p1 = sanitize_string($_GET['p1']);
+$p2 = sanitize_string($_GET['p2']);
 
-$where = " WHERE `problemstart` > '{$p1}' AND `problemstart` < '{$p2}' ";
 $query = "SELECT `city`, COUNT(*) AS `nr`
-	FROM `$GLOBALS[mysql_prefix]ticket` `t`
-	{$where}
+	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+	WHERE `problemstart` > ? AND `problemstart` < ?
 	AND  `t`.`status` != {$GLOBALS['STATUS_RESERVED']}
 	GROUP BY `city`
 	ORDER BY `nr` DESC
 	LIMIT 5";				// limit is a BAACHART issue
 
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+$result = db_query($query, [$p1, $p2]);
 
-if(mysql_num_rows($result) > 0) {
+if($result->num_rows > 0) {
 	$temp = explode ("/", get_variable('pie_charts'));
 	$type_diam = (count($temp)> 0 )? intval($temp[2]) : "450";		// 
 	$width = isset($img_width)? $img_width: $type_diam;	// 3/21/10
@@ -27,7 +27,7 @@ if(mysql_num_rows($result) > 0) {
 	$incidents_capt = get_text ("incidents");
 	$mygraph->setTitle("{$incidents_capt} by City","");
 	
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 
+	while($row = stripslashes_deep($result->fetch_assoc())) {			//
 		$row ['city']  = ( @strlen( @trim ( $row ['city'] ) )> 0 ) ? $row ['city'] : " ? " ;	// possible null/empty
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE, $row ['nr'] , $row ['city'] );
 		}

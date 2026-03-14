@@ -25,10 +25,10 @@ require_once('./incs/functions.inc.php');
 <?php
 if (array_key_exists('initialize', $_POST)) {
 	
-	$query 	= "DROP TABLE IF EXISTS `$GLOBALS[mysql_prefix]courses`;";
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	$query 	= "DROP TABLE IF EXISTS `{$GLOBALS['mysql_prefix']}courses`;";
+	$result	= db_query($query);
 
-	$query 	= " CREATE TABLE `$GLOBALS[mysql_prefix]courses` (
+	$query 	= " CREATE TABLE `{$GLOBALS['mysql_prefix']}courses` (
 		  `id` int(7) NOT NULL AUTO_INCREMENT,
 		  `course` varchar(48) NOT NULL,
 		  `group_name` varchar(48) DEFAULT NULL,
@@ -42,12 +42,12 @@ if (array_key_exists('initialize', $_POST)) {
 		  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		  PRIMARY KEY (`id`)
 		) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		$result	= db_query($query);
 			
-	$query 	= "DROP TABLE IF EXISTS `$GLOBALS[mysql_prefix]courses_taken`;";
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+	$query 	= "DROP TABLE IF EXISTS `{$GLOBALS['mysql_prefix']}courses_taken`;";
+	$result	= db_query($query);
 
-	$query 	= "CREATE TABLE `$GLOBALS[mysql_prefix]courses_taken` (
+	$query 	= "CREATE TABLE `{$GLOBALS['mysql_prefix']}courses_taken` (
 		  `id` int(7) NOT NULL AUTO_INCREMENT,
 		  `courses_id` int(7) NOT NULL,
 		  `user_id` int(7) NOT NULL,
@@ -58,7 +58,7 @@ if (array_key_exists('initialize', $_POST)) {
 		  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		  PRIMARY KEY (`id`)
 		) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
+		$result	= db_query($query);
 			
 ?>
 	<br /><br /><br /><br /><br /><br /><center>

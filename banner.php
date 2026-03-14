@@ -22,11 +22,12 @@ $from = $_SERVER['REMOTE_ADDR'];
 $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 
 if (array_key_exists("id", $_POST) && (!(empty($_POST['id'])))) {
-	$query 	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$tablename}` WHERE `id` = {$_POST['id']}";				// 1/27/09
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$safe_id = sanitize_int($_POST['id']);
+	$query 	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$tablename}` WHERE `id` = ?";				// 1/27/09
+	$result = db_query($query, [$safe_id]);
 
-	if (mysql_num_rows ($result) > 0) {	
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	if ($result->num_rows > 0) {	
+		$row = stripslashes_deep($result->fetch_assoc());
 		extract ($row);
 		$points_ary = array();
 		$points = explode (";", $line_data);
@@ -398,10 +399,10 @@ function buildMap_l() {				// 'list' version
 	var points = new Array();
 <?php
 	$query = "SELECT * FROM `{$tablename}` WHERE `line_type` = 'c'";
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+	$result = db_query($query);
 	$empty = TRUE;
 //
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$empty = FALSE;
 		extract ($row);
 		$name = $row['line_name'];
@@ -535,8 +536,8 @@ switch ($_POST["_func"]) {
 <?php
 	$line_types =  array("p" => "Poly", "c" =>"Circle", "t" =>"Banner");
 	$query 	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$tablename}` WHERE `line_type` = 'c'";				// 1/27/09
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result)==0) {		
+	$result = db_query($query);
+	if ($result->num_rows==0) {		
 		print "<TR CLASS = 'odd'><TH COLSPAN=99>No data</TH></TR>\n";
 		}
 	else {	
@@ -553,7 +554,7 @@ switch ($_POST["_func"]) {
 
 		$i = 0;
 		$targets = array( "p" =>"to_p",	"c" => "to_c", "t" => "to_t",  "k" => "to_k");
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while($row = stripslashes_deep($result->fetch_assoc())) {
 			extract ($row);
 			$visible = (intval($row['line_status'])==0)? "<IMG SRC = './markers/checked.png' BORDER=0 />" : "";
 
@@ -570,7 +571,7 @@ switch ($_POST["_func"]) {
 				<TD ALIGN='right'>&nbsp;" . format_date($row['_on']) . "</TD></TR>\n";
 			$i++;
 			}
-		}		// end if/else (mysql_num_rows($result)==0)
+		}		// end if/else ($result->num_rows==0)
 ?>		
 		<TR CLASS = 'odd'><TD COLSPAN=99 ALIGN='center'  STYLE = 'white-space:nowrap;'><BR />	
 		  	<INPUT TYPE="button" VALUE="Add new =>" >
@@ -687,11 +688,11 @@ switch ($_POST["_func"]) {
 	$capt_ary = array( "p" =>"click map - drag icons",	"c" => "Click map and enter form values", "t" => "Click map and enter form values",  "k" => "kml");
 	$line_ary = array( "p" =>"Line", 					"c" =>"Circle", "t" =>"Text", "k" => "kml");
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` ORDER BY `category` ASC";		
+	$result = db_query($query);
 	$cats_sel = "<SELECT NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
 	$cats_sel .= "<OPTION VALUE=0 SELECTED >Select</OPTION>\n";
-	while ($row = mysql_fetch_assoc($result)) {
+	while ($row = $result->fetch_assoc()) {
 		$cats_sel .= "<OPTION VALUE=\"{$row['id']}\">" . shorten($row['category'], 30) . "</OPTION>\n";
 		}
    $cats_sel .= "</SELECT>\n";
@@ -786,37 +787,38 @@ switch ($_POST["_func"]) {
 	    
 	case "cp":				// 'create' process
 //		dump($_POST);
-		$filled =		(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_filled'])) ; 
-		$fill_color =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_color'])) ; 
-		$fill_opacity =	(trim($_POST['frm_line_type']) == "t")?	"NULL" : quote_smart(trim($_POST['frm_fill_opacity'])) ; 
+		$filled =		(trim($_POST['frm_line_type']) == "t")?	NULL : trim($_POST['frm_filled']) ;
+		$fill_color =	(trim($_POST['frm_line_type']) == "t")?	NULL : trim($_POST['frm_fill_color']) ;
+		$fill_opacity =	(trim($_POST['frm_line_type']) == "t")?	NULL : trim($_POST['frm_fill_opacity']) ;
 //		dump($fill_opacity);
 		$query = "INSERT INTO `{$tablename}` (`line_name`, `line_ident`, `line_cat_id`, `line_status`, `line_type`, `line_data`, `use_with_bm`, `use_with_r`, `use_with_f`, `use_with_u_ex`, `use_with_u_rf`, `line_color`, `line_opacity`, `filled`, `fill_color`, `fill_opacity`,`line_width`,
-		`_by`, `_from`, `_on`) 
-			VALUES (" .
-			 quote_smart(trim($_POST['frm_name'])) ."," .
-			 quote_smart(trim($_POST['frm_ident'])) ."," .
-			 quote_smart(trim($_POST['frm_line_cat_id'])) ."," .
-			 quote_smart(trim($_POST['frm_line_status'])) ."," .
-			 quote_smart(trim($_POST['frm_line_type'])) ."," .
-			 quote_smart(trim($_POST['frm_line_data'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_bm'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_r'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_f'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_u_ex'])) ."," .
-			 quote_smart(trim($_POST['frm_use_with_u_rf'])) ."," .
-			 quote_smart(trim($_POST['frm_line_color'])) ."," .
-			 "NULL," .
-			 $filled ."," .
-			 $fill_color ."," .
-			 $fill_opacity ."," .
-			 quote_smart(trim($_POST['frm_line_width'])) ."," .
-			 quote_smart($by) ."," .
-			 quote_smart($from) ."," .
-			 quote_smart(trim($now)) . ")" ;
+		`_by`, `_from`, `_on`)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?)";
 
+		$params = [
+			trim($_POST['frm_name']),
+			trim($_POST['frm_ident']),
+			trim($_POST['frm_line_cat_id']),
+			trim($_POST['frm_line_status']),
+			trim($_POST['frm_line_type']),
+			trim($_POST['frm_line_data']),
+			trim($_POST['frm_use_with_bm']),
+			trim($_POST['frm_use_with_r']),
+			trim($_POST['frm_use_with_f']),
+			trim($_POST['frm_use_with_u_ex']),
+			trim($_POST['frm_use_with_u_rf']),
+			trim($_POST['frm_line_color']),
+			$filled,
+			$fill_color,
+			$fill_opacity,
+			trim($_POST['frm_line_width']),
+			$by,
+			$from,
+			trim($now)
+		];
 		snap(__LINE__, $query);
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$insert_id = mysql_insert_id();
+		$result = db_query($query, $params);
+		$insert_id = db()->insert_id;
 //		$where = basename(__FILE__);
 //		header("Location:{$where}");	
 ?>
@@ -825,7 +827,7 @@ switch ($_POST["_func"]) {
 <BODY onload = 'document.dummy.submit();'>
 <FORM NAME='dummy' METHOD = 'post' ACTION = '<?php echo basename(__FILE__);?>'>
 <INPUT TYPE = 'hidden' NAME = '_func' VALUE = 'r' />
-<INPUT TYPE = 'hidden' NAME = 'id' VALUE = '<?php echo $insert_id;?>' />
+<INPUT TYPE = 'hidden' NAME = 'id' VALUE = '<?php echo e($insert_id);?>' />
 </FORM></BODY></HTML>
 
 <?php
@@ -904,9 +906,10 @@ switch ($_POST["_func"]) {
 		var points = new Array();
 		
 <?php
-			$query = "SELECT * FROM `{$tablename}` WHERE `id`='{$_POST['id']}' LIMIT 1";
-			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$safe_id = sanitize_int($_POST['id']);
+			$query = "SELECT * FROM `{$tablename}` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$safe_id]);
+			$row = stripslashes_deep($result->fetch_assoc());
 			extract ($row);
 			$name = $row['line_name'];
 			$use_w_bm = ($use_with_bm==1) ? "CHECKED" : "";	// checkbox settings
@@ -1108,10 +1111,10 @@ else {
 
 //	dump ($row);
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` ORDER BY `category` ASC";		
+	$result = db_query($query);
 	$cats_sel = "<SELECT NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;' {$dis}>\n";
-	while ($row_cat = mysql_fetch_assoc($result)) {
+	while ($row_cat = $result->fetch_assoc()) {
 		$sel = ($row_cat['id']== $line_cat_id)? "SELECTED": "";
 		$cats_sel .= "<OPTION VALUE=\"{$row_cat['id']}\" {$sel}>" . shorten($row_cat['category'], 30) . "</OPTION>\n";
 		}
@@ -1241,30 +1244,49 @@ else {
 	case "up":				// process 'update'
 		$line_status = (trim($_POST['frm_line_is_vis'])=='on')?  0: 1;
 
-		$query = "UPDATE `{$tablename}` SET 
-			`line_name` = " . 		quote_smart(trim($_POST['frm_name'])) .",
-			`line_ident` = " . 		quote_smart(trim($_POST['frm_ident'])) .",
-			`line_cat_id` = " . 	quote_smart(trim($_POST['frm_line_cat_id'])) .",
-			`line_status` = 		'{$line_status}',
-			`line_type` = " . 		quote_smart(trim($_POST['frm_line_type'])) .",
-
-			`line_data` = " .  		quote_smart(trim($_POST['frm_line_data'])) .",
-			`use_with_bm` = " .  	quote_smart(trim($_POST['frm_use_with_bm'])) .",
-			`use_with_r` = " .  	quote_smart(trim($_POST['frm_use_with_r'])) .",
-			`use_with_f` = " .  	quote_smart(trim($_POST['frm_use_with_f'])) .",
-			`use_with_u_ex` = " .  	quote_smart(trim($_POST['frm_use_with_u_ex'])) .",
-			`use_with_u_rf` = " .  	quote_smart(trim($_POST['frm_use_with_u_rf'])) .",	
-			`line_color` = " .  	quote_smart(trim($_POST['frm_line_color'])) .",
-			`line_opacity` = 		NULL,
-			`filled` = " .  		0 .",
-			`fill_color` = " .  	0 .",
-			`fill_opacity` = " .  	0 .",
-			`line_width` = " .  	quote_smart(trim($_POST['frm_line_width'])) .",
-			`_by` =   				'{$by}' ,
-			`_from` =	 			'{$from}' ,
-			`_on` =   				'{$now}'
-			WHERE `id` = 			{$_POST['frm_id']}";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+		$safe_frm_id = sanitize_int($_POST['frm_id']);
+		$query = "UPDATE `{$tablename}` SET
+			`line_name` = ?,
+			`line_ident` = ?,
+			`line_cat_id` = ?,
+			`line_status` = ?,
+			`line_type` = ?,
+			`line_data` = ?,
+			`use_with_bm` = ?,
+			`use_with_r` = ?,
+			`use_with_f` = ?,
+			`use_with_u_ex` = ?,
+			`use_with_u_rf` = ?,
+			`line_color` = ?,
+			`line_opacity` = NULL,
+			`filled` = 0,
+			`fill_color` = 0,
+			`fill_opacity` = 0,
+			`line_width` = ?,
+			`_by` = ?,
+			`_from` = ?,
+			`_on` = ?
+			WHERE `id` = ?";
+		$params = [
+			trim($_POST['frm_name']),
+			trim($_POST['frm_ident']),
+			trim($_POST['frm_line_cat_id']),
+			$line_status,
+			trim($_POST['frm_line_type']),
+			trim($_POST['frm_line_data']),
+			trim($_POST['frm_use_with_bm']),
+			trim($_POST['frm_use_with_r']),
+			trim($_POST['frm_use_with_f']),
+			trim($_POST['frm_use_with_u_ex']),
+			trim($_POST['frm_use_with_u_rf']),
+			trim($_POST['frm_line_color']),
+			trim($_POST['frm_line_width']),
+			$by,
+			$from,
+			trim($now),
+			$safe_frm_id
+		];
+		$result = db_query($query, $params);
 //		snap(__LINE__, $query);
 // _______________________________________________
 ?>
@@ -1273,7 +1295,7 @@ else {
 <BODY onload = 'document.dummy.submit();'>
 <FORM NAME='dummy' METHOD = 'post' ACTION = '<?php echo basename(__FILE__);?>'>
 <INPUT TYPE = 'hidden' NAME = '_func' VALUE = 'r' />
-<INPUT TYPE = 'hidden' NAME = 'id' VALUE = '<?php echo $_POST['frm_id'];?>' />
+<INPUT TYPE = 'hidden' NAME = 'id' VALUE = '<?php echo e($safe_frm_id);?>' />
 </FORM></BODY></HTML>
 
 <?php
@@ -1282,12 +1304,13 @@ else {
 	    
 	case "dp":
 	
-		$query = "SELECT `line_name` FROM `{$tablename}` WHERE `id` = {$_POST['id']} LIMIT 1" ;
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$row = mysql_fetch_assoc($result);
-	
-		$query = "DELETE FROM `{$tablename}` WHERE `id` = {$_POST['id']} LIMIT 1" ;
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$safe_id = sanitize_int($_POST['id']);
+		$query = "SELECT `line_name` FROM `{$tablename}` WHERE `id` = ? LIMIT 1" ;
+		$result = db_query($query, [$safe_id]);
+		$row = $result->fetch_assoc();
+
+		$query = "DELETE FROM `{$tablename}` WHERE `id` = ? LIMIT 1" ;
+		$result = db_query($query, [$safe_id]);
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML><HEAD><TITLE><?php print basename(__FILE__);?></TITLE>
 <SCRIPT>

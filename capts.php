@@ -78,18 +78,19 @@ $func = (empty($_POST))? "l":$_POST['func'];
 <?php 
 	switch ($func) {
 		case "u" :			// update
-			$the_repl = quote_smart(trim($_POST['frm_repl'])) ;
-			$query = "UPDATE `$GLOBALS[mysql_prefix]captions` SET `repl` = {$the_repl} WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1;";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			$the_repl = trim($_POST['frm_repl']);
+			$safe_id = sanitize_int($_POST['frm_id']);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}captions` SET `repl` = ? WHERE `id` = ? LIMIT 1;";
+			$result = db_query($query, [$the_repl, $safe_id]);
 
 			$outstr = urlencode("Update applied!");
 			header("Location:capts.php?caption={$outstr}");
 			break;
 
 		case "l" :	
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` ORDER BY `capt` ASC ";		
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$rows =  mysql_affected_rows(); 			// Could be a mysql_num_rows() as well
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}captions` ORDER BY `capt` ASC ";
+			$result = db_query($query);
+			$rows =  $result->num_rows;
 			$j = 1;
 			$perCol = (integer)(ceil($rows/$cols)); 			// How many items per col
 			$colors = array ('odd', 'even');
@@ -97,20 +98,20 @@ $func = (empty($_POST))? "l":$_POST['func'];
 			$i=0;
 																		// outer table
 			echo "<TABLE ID='outer' ALIGN='center' CELLPADDING = 4 >";
-			$notice = (array_key_exists('caption', $_GET))? $_GET['caption']: "";
+			$notice = (array_key_exists('caption', $_GET))? e($_GET['caption']): "";
 			echo "<TR CLASS='odd'><TD COLSPAN=99 ALIGN='center'><B><I>{$notice}</I></B></TD></TR>\n";
 			echo "<TR CLASS='even'><TD COLSPAN=99 ALIGN='center'><H3>Click <u>caption</u> to edit</H3></TD></TR>\n";
 			echo "<TR style='vertical-align: top;'><TD style='vertical-align: top;'>";
 			$out_str = "<TABLE ALIGN='center' VALIGN='top' border=0>\n";
 		
 			$out_str .=  "<TR CLASS='odd'><TD><B>&nbsp;&nbsp;Caption</B></TD><TD><B>&nbsp;&nbsp;Replacement</B></TD></TR>\n";
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$i++;
 				$capt_val = shorten($row['capt'], 16);
 				$repl_val = shorten($row['repl'], 16);												// 1/28/11
-				$out_str .=  "<TR CLASS = '{$colors[$i%2]}' onClick = 'do_edit({$row['id']});'>
-					<TD CLASS='td_label text' onMouseover=\"Tip('" . addslashes($row['capt']) . "');\" onmouseout=\"UnTip();\">{$capt_val}</TD>
-					<TD CLASS='td_data text' onMouseover=\"Tip('" . addslashes($row['repl']) . "');\" onmouseout=\"UnTip();\">{$repl_val}</TD>
+				$out_str .=  "<TR CLASS = '{$colors[$i%2]}' onClick = 'do_edit(" . e($row['id']) . ");'>
+					<TD CLASS='td_label text' onMouseover=\"Tip('" . addslashes($row['capt']) . "');\" onmouseout=\"UnTip();\">" . e($capt_val) . "</TD>
+					<TD CLASS='td_data text' onMouseover=\"Tip('" . addslashes($row['repl']) . "');\" onmouseout=\"UnTip();\">" . e($repl_val) . "</TD>
 					</TR>\n";
 				if ($i == $perCol){
 					$i=0;
@@ -140,9 +141,10 @@ $func = (empty($_POST))? "l":$_POST['func'];
 			break;
 
 		case "e" :			// edit
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1";		
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-			$row =  stripslashes_deep(mysql_fetch_array($result));
+			$safe_id = sanitize_int($_POST['frm_id']);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}captions` WHERE `id` = ? LIMIT 1";
+			$result = db_query($query, [$safe_id]);
+			$row =  stripslashes_deep($result->fetch_array());
 ?>
 			<FORM NAME = 'editForm' METHOD = 'post' ACTION = '<?php print basename(__FILE__);?>'>
 			<TABLE ALIGN='center' STYLE = 'margin-top:60px'>
@@ -150,8 +152,8 @@ $func = (empty($_POST))? "l":$_POST['func'];
 				<TR CLASS='odd' VALIGN = 'bottom'><TD COLSPAN=2>&nbsp;</TD></TR>
 				
 				<TR CLASS='odd' VALIGN='baseline'>
-					<TD><?php print $row['capt'];?>:&nbsp;</TD>
-					<TD><INPUT TYPE = "text" NAME = "frm_repl" VALUE="<?php print $row['repl'];?>" size = 64></TD>	<!-- 8/30/10 , 5/1/12-->
+					<TD><?php print e($row['capt']);?>:&nbsp;</TD>
+					<TD><INPUT TYPE = "text" NAME = "frm_repl" VALUE="<?php print e($row['repl']);?>" size = 64></TD>	<!-- 8/30/10 , 5/1/12-->
 					</TR>
 				<TR CLASS='odd'>
 					<TD COLSPAN='2'>&nbsp;</TD>
@@ -167,17 +169,17 @@ $func = (empty($_POST))? "l":$_POST['func'];
 					</TD>
 				</TR>
 			</TABLE>
-			<INPUT TYPE ='hidden' NAME = 'frm_id' VALUE='<?php print $_POST['frm_id'];?>' />
+			<INPUT TYPE ='hidden' NAME = 'frm_id' VALUE='<?php print e(sanitize_int($_POST['frm_id']));?>' />
 			<INPUT TYPE ='hidden' NAME = 'func' VALUE='u' />
 			</FORM>
 <?php
 			break;
 
 		case "r" :			// restore defaults
-			$the_table = "$GLOBALS[mysql_prefix]captions";
+			$the_table = "{$GLOBALS['mysql_prefix']}captions";
  			$query = "UPDATE `{$the_table}` SET `repl` = `capt`;";			// 6/26/11
 
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 			$outstr = urlencode( "Entries restored to original values");
 			header("Location:capts.php?caption={$outstr}");
 			break;

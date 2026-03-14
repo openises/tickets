@@ -24,6 +24,7 @@ if($istest) {
 	}
 $disposition = get_text("Disposition");				// 12/1/10
 $mode = (array_key_exists ("mode", $_GET)) ? array_key_exists ("mode", $_GET) : 0;
+$ticket_id = isset($_GET['ticket_id']) ? sanitize_int($_GET['ticket_id']) : 0;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -48,9 +49,9 @@ if (empty($_POST)) { 		// pass # 1
 ?>
 <BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
 <?php
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . quote_smart($_GET['ticket_id'])  ." LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$row = mysql_fetch_assoc($result);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [$ticket_id]);
+		$row = $result->fetch_assoc();
 		if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
 			do_is_closed();
 			} else {
@@ -205,10 +206,10 @@ function do_is_start($in_row) {				// 3/22/10
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-							while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-								print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+							$result = db_query($query);
+							while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
+								print "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</OPTION>\n";		// pipe separator
 								}
 ?>
 						</SELECT>
@@ -219,19 +220,19 @@ function do_is_start($in_row) {				// 3/22/10
 						<?php print $disposition;?>:&nbsp;
 					</TD>
 					<TD CLASS='td_data text'>
-						<TEXTAREA NAME='frm_disp' COLS=56 ROWS = 2><?php print str_replace("<BR />", "\n", $in_row['comments']);?></TEXTAREA>
+						<TEXTAREA NAME='frm_disp' COLS=56 ROWS = 2><?php print str_replace("<BR />", "\n", e($in_row['comments']));?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
 					<TD CLASS='td_label text text_right'>Signal &raquo;</TD>
-					<TD CLASS="td_data text"> 
+					<TD CLASS="td_data text">
 						<SELECT NAME='signals2' onChange = 'set_signal2(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-							while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-								print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+							$result = db_query($query);
+							while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
+								print "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</OPTION>\n";		// pipe separator
 								}
 ?>
 						</SELECT>
@@ -240,8 +241,8 @@ function do_is_start($in_row) {				// 3/22/10
 <?php										// 8/10/10
 				$query = "SELECT *,
 				UNIX_TIMESTAMP(as_of) AS as_of,
-				`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` ,
-				`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
+				`{$GLOBALS['mysql_prefix']}assigns`.`id` AS `assign_id` ,
+				`{$GLOBALS['mysql_prefix']}assigns`.`comments` AS `assign_comments`,
 				`u`.`user` AS `theuser`,
 				`t`.`scope` AS `theticket`,
 				`t`.`description` AS `thetickdescr`,
@@ -254,34 +255,34 @@ function do_is_start($in_row) {				// 3/22/10
 				`r`.`name` AS `theunit` ,
 				`f`.`name` AS `thefacility`,
 				`g`.`name` AS `the_rec_facility`,
-				`$GLOBALS[mysql_prefix]assigns`.`as_of` AS `assign_as_of`
-				FROM `$GLOBALS[mysql_prefix]assigns` 
-				LEFT JOIN `$GLOBALS[mysql_prefix]ticket`	 `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]user`		 `u` ON (`$GLOBALS[mysql_prefix]assigns`.`user_id` = `u`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`$GLOBALS[mysql_prefix]assigns`.`responder_id` = `r`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `f` ON (`$GLOBALS[mysql_prefix]assigns`.`facility_id` = `f`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `g` ON (`$GLOBALS[mysql_prefix]assigns`.`rec_facility_id` = `g`.`id`)
-				LEFT JOIN `$GLOBALS[mysql_prefix]un_status`  `s` ON ( `r`.`un_status_id` = s.id ) 
-				WHERE `$GLOBALS[mysql_prefix]assigns`.`ticket_id` = {$_GET['ticket_id']} GROUP BY `r`.`id`";
+				`{$GLOBALS['mysql_prefix']}assigns`.`as_of` AS `assign_as_of`
+				FROM `{$GLOBALS['mysql_prefix']}assigns` 
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket`	 `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}user`		 `u` ON (`{$GLOBALS['mysql_prefix']}assigns`.`user_id` = `u`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	 `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f` ON (`{$GLOBALS['mysql_prefix']}assigns`.`facility_id` = `f`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `g` ON (`{$GLOBALS['mysql_prefix']}assigns`.`rec_facility_id` = `g`.`id`)
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status`  `s` ON ( `r`.`un_status_id` = s.id ) 
+				WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = ? GROUP BY `r`.`id`";
 
-				$asgn_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-				if (mysql_affected_rows()>0) {
+				$asgn_result = db_query($query, [$ticket_id]);
+				if (db()->affected_rows>0) {
 					$evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 					$i=1;
 					$clear_capt = "Clear: ";
-					while ( $asgn_row = stripslashes_deep(mysql_fetch_array($asgn_result))){
+					while ( $asgn_row = stripslashes_deep($asgn_result->fetch_array())){
 						print "<TR CLASS='{$evenodd[($i)%2]}' VALIGN = 'baseline'><TD CLASS='td_label text text_right'>{$clear_capt}</TD><TD CLASS='td_data text'>";			
 						$clear_capt = "";					// 1st only
 						print "<INPUT TYPE='checkbox' NAME= 'frm_ckbx_{$asgn_row['assign_id']}' VALUE= {$asgn_row['assign_id']} CHECKED>{$asgn_row['theunit']}";
 						print "</TD></TR>\n";
 						$i++;
 						}				// end while ()
-					}				// end if (mysql_affected_rows()>0)
+					}				// end if (db()->affected_rows>0)
 
 				$evenodd = array ("even", "odd");	// CLASS names for alternating table row colors
 ?>			
 			</TABLE>
-		<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print $_GET['ticket_id']; ?>' />
+		<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print e($ticket_id); ?>' />
 		<INPUT TYPE = 'hidden' NAME = 'frm_scope' VALUE='<?php print $short_descr;?>' />
 		<INPUT TYPE = 'hidden' NAME = 'frm_mode' VALUE='<?php print $mode; ?>' />
 		</FORM>
@@ -335,35 +336,35 @@ function do_is_start($in_row) {				// 3/22/10
 		$by = $_SESSION['user_id'];
 		$counter = 0;
 		
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET
 			`problemend`= {$the_problemend},
-			`comments`= 	concat(`comments`, {$comments}), 
-			`description`=	concat(`description`, {$description}), 
+			`comments`= 	concat(`comments`, {$comments}),
+			`description`=	concat(`description`, {$description}),
 			`updated`='$now',
 			`_by` = $by,
-			`status` = {$GLOBALS['STATUS_CLOSED']} 
+			`status` = {$GLOBALS['STATUS_CLOSED']}
 			WHERE `id` = {$the_id} LIMIT 1";
-			
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+
+		$result = db_query($query);
 		if($result) { $counter++;}
 		
-		$query  = "UPDATE `$GLOBALS[mysql_prefix]allocates` SET `al_status` = 0, `al_as_of` = '{$now}' WHERE `type` = 1 AND `resource_id` = {$the_id}";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query  = "UPDATE `{$GLOBALS['mysql_prefix']}allocates` SET `al_status` = 0, `al_as_of` = '{$now}' WHERE `type` = 1 AND `resource_id` = {$the_id}";
+		$result = db_query($query);
 		if($result) { $counter++;}
 		
 		foreach ($_POST as $VarName=>$VarValue) {			// set clear time each assign record - 8/10/10
 			if (substr($VarName, 0, 8) == "frm_ckbx" ) {		
 				//	Get Responder ID for auto dispatch status
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `id` = {$VarValue} LIMIT 1";	//	10/24/13
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	//	10/24/13
-				$row = mysql_fetch_assoc($result);	//	10/24/13
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";	//	10/24/13
+				$result = db_query($query, [sanitize_int($VarValue)]);	//	10/24/13
+				$row = $result->fetch_assoc();	//	10/24/13
 				$un_id = $row['responder_id'];	//	10/24/13
 				//	Clear assigns entry
-				$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET 
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET
 					`clear` = '{$now}',
 					`as_of` = '{$now}'
-					WHERE `id` = {$VarValue} LIMIT 1;";
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+					WHERE `id` = ? LIMIT 1;";
+				$result = db_query($query, [sanitize_int($VarValue)]);
 				$work_ary = explode("_", $VarName);			// see checkbox name construct above
 				$assign_id = $work_ary[2];	
 				//	Do auto dispatch status if switched on.
@@ -374,9 +375,9 @@ function do_is_start($in_row) {				// 3/22/10
 				}
 			}		// end foreach () ...
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . quote_smart($_POST['frm_ticket_id'])  ." LIMIT 1";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-		$row = mysql_fetch_assoc($result);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+		$result = db_query($query, [sanitize_int($_POST['frm_ticket_id'])]);
+		$row = $result->fetch_assoc();
 
 		if($counter > 1) {
 			do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])	;

@@ -9,7 +9,8 @@ error_reporting(E_ALL);
 session_write_close();
 require_once('./incs/functions.inc.php');	
 $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
-if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
+$func = isset($_GET['func']) ? sanitize_string($_GET['func']) : '';
+if($func=='clean') {
 ?>
 	<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -72,41 +73,41 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 	// end of array declaration
 
 	// get region ids.
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]region`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$region_ids[] = $row['id'];
 		}
 	// end of region ids
 
 	// get ticket ids.
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$ticket_ids[] = $row['id'];
 		}
 	// end of ticket ids
 		
 	// get user ids	
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$user_ids[] = $row['id'];
 		}
 	// end of user ids
 
 	// get responder / unit ids
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$unit_ids[] = $row['id'];
 		}	
 	// end of responder ids		
 
 	// get facility ids
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$facility_ids[] = $row['id'];
 		}
 	// end of facility ids
@@ -120,14 +121,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		$counter1 = 0;
 		foreach ($region_ids as $value) {
 			foreach ($user_ids as $value2) {
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 4;";
-				$result = mysql_query($query);
-				$num_entries = mysql_num_rows($result);
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 4;";
+				$result = db_query($query);
+				$num_entries = $result->num_rows;
 				if ($num_entries > 1) {
 					$counter1++;
 					for ($i = 1; $i < $num_entries; $i++) {
-						$query_d  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 4 LIMIT 1;";
-						$result_d = mysql_query($query_d);				
+						$query_d  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 4 LIMIT 1;";
+						$result_d = db_query($query_d);				
 						}
 					$users_text .= "Duplicated region " . $value . " . entries removed for user " . $value2 . "<BR />";
 					}
@@ -135,14 +136,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			}
 
 		foreach ($user_ids as $value2) {		
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `type` = 4;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);	
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `type` = 4;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;	
 			if($num_entries ==0) {
 				$counter1++;
-				$query3  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+				$query3  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 				(1 , 4, '$now', 0, $value2, 'Inserted by list and cleanse regions routine' , 0)";
-				$result3 = mysql_query($query3);
+				$result3 = db_query($query3);
 				$users_text .= "Region entry for user " . $value2 . " . added in region 1<BR />";			
 				}
 			}
@@ -152,14 +153,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		$counter2 = 0;	
 		foreach ($region_ids as $value) {
 			foreach ($ticket_ids as $value2) {
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 1;";
-				$result = mysql_query($query);
-				$num_entries = mysql_num_rows($result);
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 1;";
+				$result = db_query($query);
+				$num_entries = $result->num_rows;
 				if ($num_entries > 1) {
 					$counter2++;				
 					for ($i = 1; $i < $num_entries; $i++) {
-						$query_d  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 1 LIMIT 1;";
-						$result_d = mysql_query($query_d);
+						$query_d  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 1 LIMIT 1;";
+						$result_d = db_query($query_d);
 						}
 					$tickets_text .= "Duplicated region " . $value . " . entries removed for ticket " . $value2 . "<BR />";
 					}
@@ -167,14 +168,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			}
 
 		foreach ($ticket_ids as $value2) {		
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `type` = 1;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);	
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `type` = 1;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;	
 			if($num_entries ==0) {
 				$counter2++;
-				$query3  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+				$query3  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 					(1 , 1, '$now', 0, $value2, 'Inserted by list and cleanse regions routine' , 0)";
-				$result3 = mysql_query($query3);
+				$result3 = db_query($query3);
 				$tickets_text .= "Region entry for ticket " . $value2 . " . added in region 1<BR />";	
 				}
 			}	
@@ -184,14 +185,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		$counter3 = 0;
 		foreach ($region_ids as $value) {
 			foreach ($unit_ids as $value2) {
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 2;";
-				$result = mysql_query($query);
-				$num_entries = mysql_num_rows($result);
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 2;";
+				$result = db_query($query);
+				$num_entries = $result->num_rows;
 				if ($num_entries > 1) {
 					$counter3++;					
 					for ($i = 1; $i < $num_entries; $i++) {
-						$query_d  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 2 LIMIT 1;";
-						$result_d = mysql_query($query_d);				
+						$query_d  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 2 LIMIT 1;";
+						$result_d = db_query($query_d);				
 						}
 					$units_text .= "Duplicated region " . $value . " . entries removed for responder " . $value2 . "<BR />";
 					}
@@ -199,14 +200,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			}
 
 		foreach ($unit_ids as $value2) {		
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `type` = 2;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);	
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `type` = 2;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;	
 			if($num_entries ==0) {
 				$counter3++;
-				$query3  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+				$query3  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 					(1 , 2, '$now', 0, $value2, 'Inserted by list and cleanse regions routine' , 0)";
-				$result3 = mysql_query($query3);
+				$result3 = db_query($query3);
 				$units_text .= "Region entry for responder " . $value2 . " . added in region 1<BR />";	
 				}
 			}					
@@ -216,14 +217,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		$counter4 = 0;
 		foreach ($region_ids as $value) {
 			foreach ($facility_ids as $value2) {
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 3;";
-				$result = mysql_query($query);
-				$num_entries = mysql_num_rows($result);
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 3;";
+				$result = db_query($query);
+				$num_entries = $result->num_rows;
 				if ($num_entries > 1) {
 					$counter4++;
 					for ($i = 1; $i < $num_entries; $i++) {
-						$query_d  = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 3 LIMIT 1;";
-						$result_d = mysql_query($query_d);	
+						$query_d  = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 3 LIMIT 1;";
+						$result_d = db_query($query_d);	
 						}
 					$facilities_text .= "Duplicated region " . $value . " . entries removed for facility " . $value2 . "<BR />";
 					}
@@ -231,14 +232,14 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			}
 
 		foreach ($facility_ids as $value2) {		
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `type` = 3;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);	
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `type` = 3;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;	
 			if($num_entries ==0) {
 				$counter4++;
-				$query3  = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
+				$query3  = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
 					(1 , 3, '$now', 0, $value2, 'Inserted by list and cleanse regions routine' , 0)";
-				$result3 = mysql_query($query3);
+				$result3 = db_query($query3);
 				$facilities_text .= "Region entry for facility " . $value2 . " . added in region 1<BR />";
 				}
 			}			
@@ -260,7 +261,7 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 	</BODY>
 	</HTML>
 <?php
-	} elseif((isset($_GET['func'])) && ($_GET['func']=='list')) {
+	} elseif($func=='list') {
 ?>
 	<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -335,41 +336,41 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 	// end of array declaration
 
 	// get region ids.
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]region`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$region_ids[] = $row['id'];
 		}
 	// end of region ids
 
 	// get ticket ids.
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$ticket_ids[] = $row['id'];
 		}
 	// end of ticket ids
 		
 	// get user ids	
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$user_ids[] = $row['id'];
 		}
 	// end of user ids
 
 	// get responder / unit ids
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$unit_ids[] = $row['id'];
 		}	
 	// end of responder ids		
 
 	// get facility ids
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`;";
-		$result = mysql_query($query);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities`;";
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$facility_ids[] = $row['id'];
 		}
 	// end of facility ids
@@ -398,9 +399,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			print "<TD class='table_cell'>";
 			if(count($user_ids) > 0) {			
 				foreach ($user_ids as $value2) {
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 4;";
-					$result = mysql_query($query);
-					$num_entries = mysql_num_rows($result);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 4;";
+					$result = db_query($query);
+					$num_entries = $result->num_rows;
 					if($num_entries == 1) {
 						print "Ticket ID: " . $value2 . "<br />";
 						} elseif($num_entries >=2) {
@@ -418,9 +419,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			print "<TD class='table_cell'>";
 			if(count($ticket_ids) > 0) {			
 				foreach ($ticket_ids as $value2) {
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 1;";
-					$result = mysql_query($query);
-					$num_entries = mysql_num_rows($result);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 1;";
+					$result = db_query($query);
+					$num_entries = $result->num_rows;
 					if($num_entries == 1) {
 						print "Ticket ID: " . $value2 . "<br />";
 						} elseif($num_entries >=2) {
@@ -438,9 +439,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			print "<TD class='table_cell'>";			
 			if(count($unit_ids) > 0) {
 				foreach ($unit_ids as $value2) {
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 2;";
-					$result = mysql_query($query);
-					$num_entries = mysql_num_rows($result);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 2;";
+					$result = db_query($query);
+					$num_entries = $result->num_rows;
 					if($num_entries == 1) {				
 						print "Responder ID: " . $value2 . "<br />";
 						} elseif($num_entries >=2) {
@@ -458,9 +459,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 			print "<TD class='table_cell'>";
 			if(count($facility_ids) > 0) {
 				foreach ($facility_ids as $value2) {
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 3;";
-					$result = mysql_query($query);
-					$num_entries = mysql_num_rows($result);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value2}' AND `group` = '{$value}' AND `type` = 3;";
+					$result = db_query($query);
+					$num_entries = $result->num_rows;
 					if($num_entries == 1) {		
 						print "Facility ID: " . $value2 . "<br />";
 						} elseif($num_entries >=2) {
@@ -479,9 +480,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 
 	if(count($unit_ids) >= 1) {
 		foreach($user_ids as $value3) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value3}' AND `type` = 4;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value3}' AND `type` = 4;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;
 			if($num_entries == 0) {
 				$counter++;	
 				$the_errors	.= "User ID: " . $value3 . "&nbsp;&nbsp;&nbsp;No Region Entry<BR />";					
@@ -490,9 +491,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		}
 	if(count($ticket_ids) >= 1) {
 		foreach($ticket_ids as $value3) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value3}' AND `type` = 1;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value3}' AND `type` = 1;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;
 			if($num_entries == 0) {
 				$counter++;	
 				$the_errors	.= "Ticket ID: " . $value3 . "&nbsp;&nbsp;&nbsp;No Region Entry<BR />";					
@@ -501,9 +502,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		}
 	if(count($unit_ids) >= 1) {
 		foreach ($unit_ids as $value3) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value3}' AND `type` = 2;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value3}' AND `type` = 2;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;
 			if($num_entries == 0) {
 				$counter++;	
 				$the_errors	.= "Unit ID: " . $value3 . "&nbsp;&nbsp;&nbsp;No Region Entry<BR />";					
@@ -512,9 +513,9 @@ if((isset($_GET['func'])) && ($_GET['func']=='clean')) {
 		}
 	if(count($facility_ids) >= 1) {
 		foreach ($facility_ids as $value3) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '{$value3}' AND `type` = 3;";
-			$result = mysql_query($query);
-			$num_entries = mysql_num_rows($result);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `resource_id` = '{$value3}' AND `type` = 3;";
+			$result = db_query($query);
+			$num_entries = $result->num_rows;
 			if($num_entries == 0) {
 				$counter++;	
 				$the_errors	.= "Facility ID: " . $value3 . "&nbsp;&nbsp;&nbsp;No Region Entry<BR />";					

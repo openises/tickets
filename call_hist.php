@@ -23,7 +23,7 @@ session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 require_once($_SESSION['fmp']);					// 9/30/10
 
-$the_phone = $_GET['frm_phone'];
+$the_phone = sanitize_string($_GET['frm_phone']);
 $the_width = '100%';
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -67,28 +67,28 @@ colheight = outerheight;
 	<DIV ID='outer'>
 <?php				// 7/16/2013
 		$query = "SELECT *,
-			`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`, 
-			`$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`, 
-			`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
-			`$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
-			`$GLOBALS[mysql_prefix]ticket`.`street` AS `tick_street`,
-			`$GLOBALS[mysql_prefix]ticket`.`city` AS `tick_city`,
-			`$GLOBALS[mysql_prefix]ticket`.`state` AS `tick_state`,		
-			`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`, 
+			`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`, 
+			`{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
+			`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,		
+			`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,
 			`rf`.`name` AS `rec_fac_name`, `rf`.`lat` AS `rf_lat`,
 			`rf`.`lng` AS `rf_lng`, 
-			`$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`, 
-			`$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng`
-			FROM `$GLOBALS[mysql_prefix]ticket`  
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)		
-			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` ON (`$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]ticket`.`facility`)
-			LEFT JOIN `$GLOBALS[mysql_prefix]facilities` `rf` ON (`rf`.`id` = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-			WHERE `$GLOBALS[mysql_prefix]ticket`.`phone`='{$the_phone}' 
-			ORDER BY `$GLOBALS[mysql_prefix]ticket`.`problemstart` ASC";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
+			`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`, 
+			`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`
+			FROM `{$GLOBALS['mysql_prefix']}ticket`  
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)		
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` ON (`{$GLOBALS['mysql_prefix']}facilities`.`id` = `{$GLOBALS['mysql_prefix']}ticket`.`facility`)
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`) 
+			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`phone`=?
+			ORDER BY `{$GLOBALS['mysql_prefix']}ticket`.`problemstart` ASC";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
 //dump ($query);
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$count = (mysql_num_rows($result)==0)? "": " <I>(" .mysql_affected_rows() . ")</I>";
+		$result = db_query($query, [$the_phone]);
+		$count = ($result->num_rows==0)? "": " <I>(" .$result->num_rows . ")</I>";
 ?>
 		<DIV id='button_bar' class='but_container'>
 			<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>Calls for Phone <?php print format_phone ($the_phone) . $count; ?>
@@ -97,7 +97,7 @@ colheight = outerheight;
 		<DIV ID='inner' STYLE="position: relative; top: 70px;">
 			<TABLE ID='theTable' ALIGN='center' ID = 'outer'>
 <?php
-					if (mysql_affected_rows()==0) {						// 7/16/2013
+					if ($result->num_rows==0) {						// 7/16/2013
 ?>
 						<TR CLASS='even' STYLE='width: 100%;'><TH ALIGN='center'>None</TH></TR>
 
@@ -108,7 +108,7 @@ colheight = outerheight;
 							<TD>
 							<CENTER>
 <?php
-								while ($row_ticket = stripslashes_deep(mysql_fetch_array($result))) {
+								while ($row_ticket = stripslashes_deep($result->fetch_array())) {
 									print do_ticket($row_ticket, $the_width, FALSE, FALSE); 
 									}
 ?>

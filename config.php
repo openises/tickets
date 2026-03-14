@@ -116,20 +116,20 @@ if (!isset($func)) {
 }
 $reload_top = FALSE;
 
-$query = "SELECT `user` FROM `$GLOBALS[mysql_prefix]user` WHERE `id` <> '{$_SESSION['user_id']}'";        // 12/2/08
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$query = "SELECT `user` FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` <> ?";        // 12/2/08
+$result = db_query($query, [$_SESSION['user_id']]);
 $users = "";
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+while ($row = stripslashes_deep($result->fetch_assoc())) {
     $users .= trim($row['user']) . "\t";
 }
 
 function get_org_control($the_userid, $currOrg)
 {
     $sel1 = ($the_userid == 0) ? "SELECTED" : "";
-    $query = "SELECT * FROM `$GLOBALS[mysql_prefix]organisations`";        // 12/2/08
-    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}organisations`";        // 12/2/08
+    $result = db_query($query);
     $org_cntl = "<SELECT NAME='frm_org_cntl'><OPTION value=0 " . $sel1 . ">SELECT ONE</OPTION>";
-    while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+    while ($row = stripslashes_deep($result->fetch_assoc())) {
         $sel2 = ($currOrg == $row['id']) ? "SELECTED" : "";
         $org_cntl .= "<OPTION value=" . $row['id'] . " " . $sel2 . ">" . $row['name'] . "</OPTION>";
     }
@@ -918,10 +918,11 @@ function dump_db()
         print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
         exit();
     }
-    if ($_GET['id'] != 0) {
-        $query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_GET['id']} LIMIT 1";
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        $row = stripslashes_deep(mysql_fetch_assoc($result));
+    $get_id = isset($_GET['id']) ? sanitize_int($_GET['id']) : 0;
+    if ($get_id != 0) {
+        $query = "SELECT `id`, `scope` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+        $result = db_query($query, [$get_id]);
+        $row = stripslashes_deep($result->fetch_assoc());
         $the_ticket_name = $row['scope'];
         unset($result);
     } else {
@@ -929,23 +930,23 @@ function dump_db()
     }
     //  5/22/11
 
-    $query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify`";
-    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}notify`";
+    $result = db_query($query);
 
-    if (mysql_num_rows($result) > 0) {
+    if ($result->num_rows > 0) {
         print "<FONT CLASS='header'>Current Notifies<BR /><BR />";
         print "<TABLE BORDER='0'>";
         print "<TR CLASS='even'><TD CLASS='td_label text'>Ticket</TD><TD CLASS='td_label'>&nbsp;Email</TD>";
         print "<TD CLASS='td_label text'>&nbsp;Execute</B></TD><TD CLASS='td_label'>&nbsp;On Action&nbsp;</TD><TD CLASS='td_label text'>&nbsp;On {$patient}&nbsp;</TD><TD CLASS='td_label text'>&nbsp;On Ticket Change&nbsp;</TD><TD CLASS='td_label text'>Delete</TD></TR>\n";
 
         $i = 0;
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        while ($row = stripslashes_deep($result->fetch_array())) {
 
             $mg_select = "<SELECT NAME='frm_mailgroup[$i]'>";
             $mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";
-            $query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
-            $result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-            while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
+            $query_mg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` ORDER BY `id` ASC";
+            $result_mg = db_query($query_mg);
+            while ($row_mg = stripslashes_deep($result_mg->fetch_assoc())) {
                 $sel = ($row['mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
                 $mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
             }
@@ -971,7 +972,7 @@ function dump_db()
         }
         print "</TABLE><BR />";
 
-    }                // end if (mysql_num_rows($result)>0)
+    }                // end if ($result->num_rows>0)
     // _________________________________________
 
 
@@ -1011,9 +1012,9 @@ function dump_db()
                     }
                     $mg_select2 = "<SELECT NAME='frm_mailgroup'>";
                     $mg_select2 .= "<OPTION VALUE=0>Select Mail List</OPTION>";
-                    $query_mg2 = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup`";        // 12/18/10
-                    $result_mg2 = mysql_query($query_mg2) or do_error($query_mg2, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-                    while ($row_mg2 = stripslashes_deep(mysql_fetch_assoc($result_mg2))) {
+                    $query_mg2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup`";        // 12/18/10
+                    $result_mg2 = db_query($query_mg2);
+                    while ($row_mg2 = stripslashes_deep($result_mg2->fetch_assoc())) {
                         $mg_select2 .= "<OPTION VALUE=" . $row_mg2['id'] . ">" . $row_mg2['name'] . "</OPTION>";
                     }
                     $mg_select2 .= "</SELECT>";
@@ -1143,8 +1144,8 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
 
         if (isset($_POST['frm_delete'][$i])) {
             $msg = "Notify deletion complete!";                    // pre-set
-            $query = "DELETE from $GLOBALS[mysql_prefix]notify WHERE id='" . $_POST['frm_id'][$i] . "' LIMIT 1";
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+            $query = "DELETE from {$GLOBALS['mysql_prefix']}notify WHERE id='" . sanitize_int($_POST['frm_id'][$i]) . "' LIMIT 1";
+            $result = db_query($query);
         } else {                    //email validation check
             $msg = "Notify update complete.";            // pre-set
 
@@ -1161,7 +1162,7 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
 
             $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));
             // 1/27/09 - 1/22/11
-            $query = "UPDATE `$GLOBALS[mysql_prefix]notify` SET
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}notify` SET
 							`execute_path`=" . quote_smart($_POST['frm_execute'][$i]) . ",
 							`email_address`=" . quote_smart($_POST['frm_email'][$i]) . ",
 							`mailgroup`=" . quote_smart($mailGroup) . ",
@@ -1174,7 +1175,7 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
 						
 							WHERE `id`='" . $_POST['frm_id'][$i] . "'";
 
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+            $result = db_query($query);
         }
     }
 
@@ -1194,7 +1195,7 @@ else if ((array_key_exists('add', ($_GET))) && ($_GET['add'] == 'true')) {    //
     $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));                // 1/22/11
     $mailGroup = ($_POST['frm_mailgroup']) ? $_POST['frm_mailgroup'] : 0;
 
-    $query = "INSERT INTO `$GLOBALS[mysql_prefix]notify` SET 
+    $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}notify` SET 
 					`ticket_id`=		'$_POST[frm_id]',
 					`user`=				'$_SESSION[user_id]',
 					`email_address`=	'$_POST[frm_email]',
@@ -1208,16 +1209,16 @@ else if ((array_key_exists('add', ($_GET))) && ($_GET['add'] == 'true')) {    //
 					`from`=" . quote_smart($_SERVER['REMOTE_ADDR']) . ",
 					`on`=" . quote_smart($now) . ";";
 
-    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+    $result = db_query($query);
     if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
     print "<FONT SIZE='3'><B>Notify update complete.</B></FONT><BR /><BR />";
 }            // end array_key_exists('add')
 
 else {
-    $query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify`";
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}notify`";
 
-    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-    if (mysql_num_rows($result)) {
+    $result = db_query($query);
+    if ($result->num_rows) {
         print "<FONT CLASS='header'>Update Notifies<BR /><BR />\n";
         if (!get_variable('allow_notify')) print "<FONT CLASS=\"warn\">Warning: Notification is disabled by administrator</FONT><BR /><BR />";
         print '<TABLE BORDER="0"><FORM NAME = "frm_update" METHOD="post" ACTION="config.php?func=notify&save=true">';
@@ -1225,13 +1226,13 @@ else {
         print "<TD CLASS='td_label'>&nbsp;Execute</B></TD><TD CLASS='td_label'>&nbsp;On Action&nbsp;</TD><TD CLASS='td_label'>&nbsp;On {$patient}&nbsp;</TD><TD CLASS='td_label'>&nbsp;On Ticket Change&nbsp;</TD><TD CLASS='td_label'>Delete</TD></TR>\n";
 
         $i = 0;
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        while ($row = stripslashes_deep($result->fetch_array())) {
 
             $mg_select = "<SELECT NAME='frm_mailgroup[$i]'>";
             $mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";
-            $query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
-            $result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-            while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
+            $query_mg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` ORDER BY `id` ASC";
+            $result_mg = db_query($query_mg);
+            while ($row_mg = stripslashes_deep($result_mg->fetch_assoc())) {
                 $sel = ($row['mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
                 $mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
             }
@@ -1303,20 +1304,24 @@ case 'profile' :                    //update profile
     $get_go = (array_key_exists('go', ($_GET))) ? $_GET['go'] : "";
     if ($get_go == 'true') {            //check passwords
         $frm_sort_desc = array_key_exists('frm_sort_desc', ($_POST)) ? 1 : 0;    // checkbox handling
-        extract($_POST);
-        $query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `passwd`='$frm_hash',info='$frm_info',email='$frm_email',sortorder='$frm_sortorder',sort_desc='$frm_sort_desc',ticket_per_page='$frm_ticket_per_page' WHERE id='$_SESSION[user_id]'";
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+        $frm_hash = sanitize_string($_POST['frm_hash']);
+        $frm_info = sanitize_string($_POST['frm_info']);
+        $frm_email = sanitize_string($_POST['frm_email']);
+        $frm_sortorder = sanitize_string($_POST['frm_sortorder']);
+        $frm_ticket_per_page = sanitize_int($_POST['frm_ticket_per_page']);
+        $query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd`=?,info=?,email=?,sortorder=?,sort_desc=?,ticket_per_page=? WHERE id=?";
+        $result = db_query($query, [$frm_hash, $frm_info, $frm_email, $frm_sortorder, $frm_sort_desc, $frm_ticket_per_page, $_SESSION['user_id']]);
         print '<B>Your profile has been updated.</B><BR /><BR />';
     } else {
-        $query = "SELECT id FROM `$GLOBALS[mysql_prefix]user` WHERE id='" . $_SESSION['user_id'] . "'";
+        $query = "SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id='" . $_SESSION['user_id'] . "'";
         if ($_SESSION['user_id'] < 0 or check_for_rows($query) == 0) {
-            print __LINE__ . " Invalid user id '$_SESSION[user_id]'.";
+            print __LINE__ . " Invalid user id '" . e($_SESSION['user_id']) . "'.";
             exit();
         }
 
-        $query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`='$_SESSION[user_id]'";
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        $row = mysql_fetch_array($result);
+        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`='{$_SESSION['user_id']}'";
+        $result = db_query($query);
+        $row = $result->fetch_array();
         ?>
         <BR/>
         <BR/>
@@ -1582,8 +1587,8 @@ case 'settings' :
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";        // 1/23/10
         foreach ($_POST as $VarName => $VarValue) {
-            $query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
+            $result = db_query($query);
         }
         print '<FONT CLASS="update_conf">Settings saved - will take effect at <font color="red"> next Tickets re-start</FONT>.</FONT><BR /><BR />';
     } else {
@@ -1599,8 +1604,8 @@ case 'settings' :
 				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
 				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=settings&go=true'>";
         $counter = 0;
-        $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` ORDER BY name");
+        while ($row = stripslashes_deep($result->fetch_array())) {
             if ($row['name'][0] <> "_") {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_setting_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
@@ -1666,13 +1671,13 @@ case 'msg_settings' :    //	10/23/12
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";        // 1/23/10
         foreach ($_POST as $VarName => $VarValue) {
             if ($VarName != "columns") {
-                $query = "UPDATE `$GLOBALS[mysql_prefix]msg_settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
+                $result = db_query($query);
             }
             if ($VarName == "columns") {
                 $the_val = implode(",", $_POST['columns']);
-                $query = "UPDATE `$GLOBALS[mysql_prefix]msg_settings` SET `value`=" . quote_smart($the_val) . " WHERE `name`='columns'";
-                $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value`=" . quote_smart($the_val) . " WHERE `name`='columns'";
+                $result = db_query($query);
             }
         }
         print '<FONT CLASS="update_conf">Messaging Settings saved.</FONT><BR /><BR />';
@@ -1689,8 +1694,8 @@ case 'msg_settings' :    //	10/23/12
 				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
 				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=msg_settings&go=true'>";
         $counter = 0;
-        $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}msg_settings` ORDER BY name");
+        while ($row = stripslashes_deep($result->fetch_array())) {
             if (($row['name'][0] <> "_") && (($row['name'] <> "columns") && ($row['name'] <> "smsg_provider") && ($row['name'] <> "email_password"))) {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_msg_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
@@ -1808,11 +1813,11 @@ case 'mdb_settings' :
                 $var_arr = array();
                 $count = count($_POST['date_tracking']);
                 $var_str = implode(",", $_POST['date_tracking']);
-                $query = "UPDATE `$GLOBALS[mysql_prefix]mdb_settings` SET `value`=" . quote_smart($var_str) . " WHERE `name`='" . $VarName . "'";
-                $result = mysql_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_settings` SET `value`=" . quote_smart($var_str) . " WHERE `name`='" . $VarName . "'";
+                $result = db_query($query);
             } else {
-                $query = "UPDATE `$GLOBALS[mysql_prefix]mdb_settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                $result = mysql_query($query);
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_settings` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
+                $result = db_query($query);
             }
         }
         print '<FONT CLASS="update_conf">Membership Database Settings saved.<BR /><BR />';
@@ -1829,8 +1834,8 @@ case 'mdb_settings' :
 				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
 				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=mdb_settings&go=true'>";
         $counter = 0;
-        $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]mdb_settings` ORDER BY name") or do_error('config.php::list_settings', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}mdb_settings` ORDER BY name");
+        while ($row = stripslashes_deep($result->fetch_array())) {
             if (($row['name'][0] <> "_") && (($row['name'] <> "date_tracking") && ($row['name'] <> "mdb_contact_via_field") && ($row['name'] <> "mdb_cellphone_field") && ($row['name'] <> "mdb_homephone_field") && ($row['name'] <> "mdb_workphone_field") && ($row['name'] <> "mdb_phone_field") && ($row['name'] <> "mdb_smsg_id_field") && ($row['name'] <> "tickets_status_available") && ($row['name'] <> "tickets_status_unavailable") && ($row['name'] <> "member_status_available") && ($row['name'] <> "enforce_status") && ($row['name'] <> "no_status_select") && ($row['name'] <> "use_mdb_contact") && ($row['name'] <> "use_mdb_status"))) {                                // hide these
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_mdb_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
@@ -1954,8 +1959,8 @@ case 'wizard_settings' :
         if (array_key_exists('frm_delete', $_POST)) {
             foreach ($_POST['frm_delete'] as $key => $val) {
                 if ($val == "1") {
-                    $query = "DELETE FROM `$GLOBALS[mysql_prefix]wizard_settings` WHERE id='" . $key . "' LIMIT 1";
-                    $result = mysql_query($query);
+                    $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}wizard_settings` WHERE id='" . $key . "' LIMIT 1";
+                    $result = db_query($query);
                     $delcounter++;
                 }
             }
@@ -1988,9 +1993,9 @@ case 'wizard_settings' :
             } else {
                 $maxlength = $fieldsize;
             }
-            $query = "INSERT INTO `$GLOBALS[mysql_prefix]wizard_settings` (`fieldname` , `label`, `screen`, `display_order` , `maxlength` , `fieldtype` , `size`, `default_text`, `helptext` ) VALUES 
+            $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}wizard_settings` (`fieldname` , `label`, `screen`, `display_order` , `maxlength` , `fieldtype` , `size`, `default_text`, `helptext` ) VALUES 
 					('" . $fieldname . "', '" . $_POST['frm_label'][0] . "', " . $_POST['frm_screen'][0] . ", " . $_POST['frm_display_order'][0] . ", " . $maxlength . ", '" . $fieldtype . "', " . $fieldsize . ", '" . $_POST['frm_default_text'][0] . "', '" . $_POST['frm_helptext'][0] . "')";
-            $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+            $result = db_query($query);
             print "New Setting Submitted<BR />";
         } else {
             $output_arr = array();
@@ -2000,7 +2005,7 @@ case 'wizard_settings' :
                 }
             }
             foreach ($output_arr as $key => $val) {
-                $query = "UPDATE `$GLOBALS[mysql_prefix]wizard_settings` SET 
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}wizard_settings` SET 
 						`fieldname` = " . quote_smart($val['frm_fieldname']) . ",
 						`label` = " . quote_smart($val['frm_label']) . ",
 						`screen` = " . quote_smart($val['frm_screen']) . ",
@@ -2011,7 +2016,7 @@ case 'wizard_settings' :
 						`default_text` = " . quote_smart($val['frm_default_text']) . ",
 						`size` = " . quote_smart($val['frm_fieldsize']) . " 
 						WHERE `id`='" . $key . "'";
-                $result = mysql_query($query);
+                $result = db_query($query);
             }
             print '<FONT CLASS="update_conf">Wizard Settings saved.<BR /><BR />';
         }
@@ -2083,8 +2088,8 @@ case 'wizard_settings' :
 				<TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto;'>";
         print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>Field</TH><TH CLASS='header text text_left'>Label</TH><TH CLASS='header text text_left'>Screen</TH><TH CLASS='header text text_left'>Display Order</TH><TH CLASS='header text text_left'>Default Text</TH><TH CLASS='header text text_left'>Help Text</TH><TH CLASS='header text text_left'>Field Display Length</TH><TH CLASS='header text text_left'>Field Type</TH><TH CLASS='header text text_left'>Field Size</TH><TH CLASS='header text text_left'>&nbsp;&nbsp;&nbsp;</TH></TR>\n";
         $counter = 0;
-        $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]wizard_settings` ORDER BY screen, display_order");
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}wizard_settings` ORDER BY screen, display_order");
+        while ($row = stripslashes_deep($result->fetch_array())) {
             $counter++;
             print "<TR id='settingRow_" . $row['id'] . "' CLASS='" . $evenodd[$counter % 2] . "' STYLE='width: 100%;'>\n";
             $id = $row['id'];
@@ -2248,8 +2253,8 @@ case 'sound_settings' :
         if (array_key_exists('frm_delete', $_POST)) {
             foreach ($_POST['frm_delete'] as $key => $val) {
                 if ($val == "1") {
-                    $query = "DELETE FROM `$GLOBALS[mysql_prefix]sound_settings` WHERE id='" . $key . "' LIMIT 1";
-                    $result = mysql_query($query);
+                    $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}sound_settings` WHERE id='" . $key . "' LIMIT 1";
+                    $result = db_query($query);
                     $delcounter++;
                 }
             }
@@ -2273,13 +2278,13 @@ case 'sound_settings' :
             }
         }
         foreach ($output_arr as $key => $val) {
-            $query = "UPDATE `$GLOBALS[mysql_prefix]sound_settings` SET 
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}sound_settings` SET 
 					`name` = " . quote_smart($val['frm_name']) . ",
 					`filename` = " . quote_smart($val['frm_filename']) . ",
 					`mp3_filename` = " . quote_smart($val['frm_mp3_filename']) . ",
 					`ison` = " . quote_smart($val['frm_ison']) . " 
 					WHERE `id`='" . $key . "'";
-            $result = mysql_query($query);
+            $result = db_query($query);
         }
         print '<FONT CLASS="update_conf">Sound Settings saved.<BR /><BR />';
     } else {
@@ -2311,8 +2316,8 @@ case 'sound_settings' :
 				<TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto; padding: 2px;'>";
         print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>&nbsp;</TH><TH CLASS='header text text_left'>Name</TH><TH CLASS='header text text_left'>WAV File Name</TH><TH CLASS='header text text_left'>MP3 File Name</TH><TH CLASS='header text text_left'>Sound Used</TH></TR>\n";
         $counter = 0;
-        $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]sound_settings` ORDER BY id");
-        while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+        $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}sound_settings` ORDER BY id");
+        while ($row = stripslashes_deep($result->fetch_array())) {
             $counter++;
             print "<TR id='settingRow_" . $row['id'] . "' CLASS='" . $evenodd[$counter % 2] . "' STYLE='width: 100%; padding: 2px;'>\n";
             $id = $row['id'];
@@ -2398,15 +2403,15 @@ case 'user' :
     if ((array_key_exists('id', ($_GET))) && ($_GET['id'] != '')) {
         if (is_administrator()) {                // admin or super
 
-            $id = $_GET['id'];
-            if ($id < 0 or check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]user` WHERE id='$id'") == 0) {
-                print __LINE__ . " Invalid user id '$id'.";
+            $id = sanitize_int($_GET['id']);
+            if ($id < 0 or check_for_rows("SELECT id FROM `{$GLOBALS['mysql_prefix']}user` WHERE id='$id'") == 0) {
+                print __LINE__ . " Invalid user id '" . e($id) . "'.";
                 exit();
             }
 
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE id='$id' LIMIT 1";
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-            $row = mysql_fetch_assoc($result);
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE id=? LIMIT 1";
+            $result = db_query($query, [$id]);
+            $row = $result->fetch_assoc();
             // ============================						10/28/10
             switch ($_SESSION['level']) {
                 case $GLOBALS['LEVEL_SUPER']:
@@ -2430,11 +2435,11 @@ case 'user' :
             }        // end outer switch()
             // =======================
             $do_unit = ($row['level'] == $GLOBALS['LEVEL_SUPER'] || $row['level'] == $GLOBALS['LEVEL_ADMINISTRATOR'] || $row['level'] == $GLOBALS['LEVEL_UNIT']) ? "inline" : "none";
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";        // 7/11/10
-            $result_sel = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name` ASC";        // 7/11/10
+            $result_sel = db_query($query);
             $sel_str = "<SELECT ID='frm_responder_sel' NAME='sel_responder_id' STYLE = 'display: " . $do_unit . ";' onChange='do_set_unit(this.options[selectedIndex].value.trim())' {$disabled}><\n\t<OPTION VALUE=0 SELECTED>NA</OPTION>\n";
 
-            while ($row_sel = stripslashes_deep(mysql_fetch_assoc($result_sel))) {
+            while ($row_sel = stripslashes_deep($result_sel->fetch_assoc())) {
                 $sel_bool = ($row['responder_id'] == $row_sel['id']) ? "SELECTED" : "";                // this unit?
                 $sel_str .= "\t<OPTION VALUE='{$row_sel['id']}' {$sel_bool}>{$row_sel['name']}</OPTION>\n";
             }
@@ -2442,11 +2447,11 @@ case 'user' :
 
             $do_fac = (intval($row['facility_id']) > 0) ? "inline" : "none";
 
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";        // 7/11/10
-            $result_sel = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";        // 7/11/10
+            $result_sel = db_query($query);
             $sel_str2 = "<SELECT ID='frm_facility_sel' NAME='sel_facility_id' STYLE = 'display: " . $do_fac . ";' onChange='do_set_facility(this.options[selectedIndex].value.trim())' {$disabled}><\n\t<OPTION VALUE=0 SELECTED>NA</OPTION>\n";
 
-            while ($row_sel = stripslashes_deep(mysql_fetch_assoc($result_sel))) {
+            while ($row_sel = stripslashes_deep($result_sel->fetch_assoc())) {
                 $sel_bool = ($row['facility_id'] == $row_sel['id']) ? "SELECTED" : "";                // this unit?
                 $sel_str2 .= "\t<OPTION VALUE='{$row_sel['id']}' {$sel_bool}>{$row_sel['name']}</OPTION>\n";
             }
@@ -2743,29 +2748,30 @@ case 'user' :
 
         if ((array_key_exists('frm_remove', $_POST)) && ($_POST['frm_remove'] == 'yes')) {
             $ctr = 0;
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE owner=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-            $ctr += mysql_affected_rows();
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE user=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-            $ctr += mysql_affected_rows();
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE user=" . quote_smart($_POST['frm_id']) . " LIMIT 1";
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-            $ctr += mysql_affected_rows();
+            $frm_id = sanitize_int($_POST['frm_id']);
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE owner=? LIMIT 1";
+            $result = db_query($query, [$frm_id]);
+            $ctr += db()->affected_rows;
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE user=? LIMIT 1";
+            $result = db_query($query, [$frm_id]);
+            $ctr += db()->affected_rows;
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE user=? LIMIT 1";
+            $result = db_query($query, [$frm_id]);
+            $ctr += db()->affected_rows;
             if ($ctr > 0) {
                 print '<B>DENIED! - User has active database records.</B><BR /><BR />';
             } else {        // OK - delete user
-                $query = "DELETE FROM `$GLOBALS[mysql_prefix]user` WHERE id='$_POST[frm_id]' LIMIT 1";
-                $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}user` WHERE id=? LIMIT 1";
+                $result = db_query($query, [$frm_id]);
 
                 //delete notifies belonging to user
-                $query = "DELETE FROM `$GLOBALS[mysql_prefix]notify` WHERE user='$_POST[frm_id]'";
-                $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}notify` WHERE user=?";
+                $result = db_query($query, [$frm_id]);
 
-                print "<B>User <i>" . $_POST['frm_user'] . "</i> has been deleted from database.</B><BR /><BR />";
+                print "<B>User <i>" . e($_POST['frm_user']) . "</i> has been deleted from database.</B><BR /><BR />";
             }
         } else {                                                                            // 7/12/10
-            $pass = empty($_POST['frm_hash']) ? "" : "`passwd`='$_POST[frm_hash]',";        // note trailing comma
+            $pass = empty($_POST['frm_hash']) ? "" : "`passwd`='" . sanitize_string($_POST['frm_hash']) . "',";        // note trailing comma
             $dob = empty($_POST['frm_dob']) ? "NULL" : quote_smart(trim($_POST['frm_dob']));        // 6/25/10
             $fields = " `addr_city` = " . quote_smart(trim($_POST['frm_addr_city'])) . ",	
 								`addr_st` = " . quote_smart(trim($_POST['frm_addr_st'])) . ",	
@@ -2790,8 +2796,8 @@ case 'user' :
 
             $where = " WHERE `id`=" . quote_smart($_POST['frm_id']);
 
-            $query = "UPDATE `$GLOBALS[mysql_prefix]user` SET " . $pass . $fields . $where;
-            $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET " . $pass . $fields . $where;
+            $result = db_query($query);
 
             $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //	6/10/11
             $by = $_SESSION['user_id'];    //	6/10/11
@@ -2802,15 +2808,16 @@ case 'user' :
             if ($curr_groups != $groups) {    //	6/10/11
                 foreach ($_POST['frm_group'] as $posted_grp) {    //	6/10/11
                     if (!in_array($posted_grp, $ex_grps)) {
-                        $query = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-										($posted_grp, 4, '$now', 0, " . $_POST['frm_id'] . ", 'Allocated to Group' , $by)";
-                        $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+                        $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+										(?, 4, '$now', 0, ?, 'Allocated to Group' , $by)";
+                        $result = db_query($query, [sanitize_int($posted_grp), sanitize_int($_POST['frm_id'])]);
                     }
                 }
                 foreach ($ex_grps as $existing_grps) {    //	6/10/11
                     if (!in_array($existing_grps, $_POST['frm_group'])) {
-                        $query = "DELETE FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 4 AND `group` = $existing_grps AND `resource_id` = {$_POST['frm_id']}";
-                        $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+                        $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 4 AND `group` = ? AND `resource_id` = ?";
+                        $result = db_query($query, [sanitize_int($existing_grps), sanitize_int($_POST['frm_id'])]);
+                        $result = db_query($query);
                     }
                 }
             }
@@ -2824,7 +2831,7 @@ case 'user' :
                 if ($_POST['frm_passwd'] == $_POST['frm_passwd_confirm']) {                        // 11/30/08
                     $dob = empty($_POST['frm_dob']) ? "NULL" : quote_smart(trim($_POST['frm_dob']));        // 6/25/10
 
-                    $query = sprintf("INSERT INTO`$GLOBALS[mysql_prefix]user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`facility_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`org`,`user`)
+                    $query = sprintf("INSERT INTO`{$GLOBALS['mysql_prefix']}user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`facility_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`org`,`user`)
 							 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
 
                         quote_smart(trim($_POST['frm_addr_city'])),
@@ -2849,17 +2856,17 @@ case 'user' :
                         quote_smart(trim($_POST['frm_org_cntl'])),
                         quote_smart(trim($_POST['frm_user'])));
 
-                    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                    $result = db_query($query);
                     $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //	6/10/11
                     $by = $_SESSION['user_id'];    //	6/10/11
-                    $new_id = mysql_insert_id();    //	6/10/11
+                    $new_id = db()->insert_id;    //	6/10/11
                     foreach ($_POST['frm_group'] as $grp_val) {    // 6/10/11
-                        $query_a = "INSERT INTO `$GLOBALS[mysql_prefix]allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES 
-									($grp_val, 4, '$now', 0, $new_id, 'Allocated to Group' , $by)";
-                        $result_a = mysql_query($query_a) or do_error($query_a, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+                        $query_a = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group` , `type`, `al_as_of` , `al_status` , `resource_id` , `sys_comments` , `user_id`) VALUES
+									(?, 4, '$now', 0, ?, 'Allocated to Group' , ?)";
+                        $result_a = db_query($query_a, [sanitize_int($grp_val), $new_id, $by]);
                     }
 
-                    print "<B>User <i>'$_POST[frm_user]'</i> has been added.</B><BR /><BR />";
+                    print "<B>User <i>'" . e($_POST['frm_user']) . "'</i> has been added.</B><BR /><BR />";
                 } else {
                     print "Passwords don't match. Please try again.<BR />";
                     ?>
@@ -2957,18 +2964,18 @@ case 'user' :
                     exit();
                 }
             } else {
-                $query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";        // 7/11/10
-                $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+                $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name` ASC";        // 7/11/10
+                $result = db_query($query);
                 $sel_str = "\n<SELECT ID='frm_responder_sel' NAME='frm_responder_sel' STYLE = 'display: none;' onChange='do_set_unit(this.options[selectedIndex].value.trim())'>\n\t<OPTION VALUE=0 SELECTED>Select one</OPTION>\n";
-                while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+                while ($row = stripslashes_deep($result->fetch_assoc())) {
                     $sel_str .= "\t<OPTION VALUE='{$row['id']}'>{$row['name']}</OPTION>\n";
                 }
                 $sel_str .= "\n</SELECT>\n";
 
-                $query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";        // 7/11/10
-                $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+                $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";        // 7/11/10
+                $result = db_query($query);
                 $sel_str2 = "\n<SELECT ID='frm_facility_sel' NAME='frm_facility_sel' STYLE = 'display: none;' onChange='do_set_facility(this.options[selectedIndex].value.trim())'>\n\t<OPTION VALUE=0 SELECTED>Select one</OPTION>\n";
-                while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+                while ($row = stripslashes_deep($result->fetch_assoc())) {
                     $sel_str2 .= "\t<OPTION VALUE='{$row['id']}'>{$row['name']}</OPTION>\n";
                 }
                 $sel_str2 .= "\n</SELECT>\n";
@@ -3206,8 +3213,8 @@ case 'center' :                    // 3/29/2013
 
 case 'api_key' :
     if ((isset($_GET)) && (isset($_GET['update'])) && ($_GET['update'] == 'true')) {
-        $query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`='$_POST[frm_value]' WHERE `name`='gmaps_api_key';";
-        $result = mysql_query($query) or die("do_insert_settings($name,$value) failed, execution halted");
+        $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='gmaps_api_key';";
+        $result = db_query($query, [sanitize_string($_POST['frm_value'])]);
 
         $top_notice = "GMaps API Key saved to database.";
     } else {
@@ -3348,10 +3355,10 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         ?>
         <FORM METHOD="POST" NAME="del_Form" ACTION="config.php?func=delete&subfunc=confirm">
         <?php
-        $query = "SELECT *,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = " . $GLOBALS['STATUS_CLOSED'] . " ORDER BY `scope`";
+        $query = "SELECT *,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = " . $GLOBALS['STATUS_CLOSED'] . " ORDER BY `scope`";
 
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        if (mysql_affected_rows() > 0) {                    // inventory affected rows
+        $result = db_query($query);
+        if (db()->affected_rows > 0) {                    // inventory affected rows
             ?>
             <SPAN CLASS='heading text'
                   style=' position: relative; left: 200px; top: 50px; width: 700px; display: block;'>Select Closed Tickets for Permanent Deletion</SPAN>
@@ -3368,16 +3375,16 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     </TR>
                     <?php
                     $i = 0;
-                    while ($row = stripslashes_deep(mysql_fetch_array($result))) {
-                        $query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = " . $row['id'];
-                        $res_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-                        $no_acts = mysql_affected_rows();
-                        $query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id` = " . $row['id'];
-                        $res_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-                        $no_pers = mysql_affected_rows();
-                        $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $row['id'];
-                        $res_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-                        $no_assns = mysql_affected_rows();
+                    while ($row = stripslashes_deep($result->fetch_array())) {
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = " . $row['id'];
+                        $res_temp = db_query($query);
+                        $no_acts = db()->affected_rows;
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = " . $row['id'];
+                        $res_temp = db_query($query);
+                        $no_pers = db()->affected_rows;
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . $row['id'];
+                        $res_temp = db_query($query);
+                        $no_assns = db()->affected_rows;
                         ?>
                         <TR CLASS='<?php print $evenodd[$i % 2]; ?>'>
                             <TD CLASS='td_label'><?php print shorten($row['scope'], 50); ?></TD>
@@ -3433,7 +3440,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             <INPUT TYPE='hidden' NAME='delcount' VALUE=0>
             </FORM>
             <?php
-        }                // end if (mysql_affected_rows()>0)
+        }                // end if (db()->affected_rows>0)
         else {
             ?>
             </FORM>
@@ -3488,16 +3495,16 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
     case 'do_del':
     $temp = explode(",", $_POST['idstr']);
     for ($i = 0; $i < count($temp); $i++) {
-        $query = "DELETE from `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $temp[$i] . " LIMIT 1";
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);    // 6/4/08 - corrected table names
-        $query = "DELETE from `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = " . $temp[$i];
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        $query = "DELETE from `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id` = " . $temp[$i];
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        $query = "DELETE from `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . $temp[$i];
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-        $query = "DELETE from `$GLOBALS[mysql_prefix]allocates` WHERE `type` = 1 AND `resource_id` = " . $temp[$i];
-        $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+        $query = "DELETE from `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = " . $temp[$i] . " LIMIT 1";
+        $result = db_query($query);    // 6/4/08 - corrected table names
+        $query = "DELETE from `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = " . $temp[$i];
+        $result = db_query($query);
+        $query = "DELETE from `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = " . $temp[$i];
+        $result = db_query($query);
+        $query = "DELETE from `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . $temp[$i];
+        $result = db_query($query);
+        $query = "DELETE from `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 1 AND `resource_id` = " . $temp[$i];
+        $result = db_query($query);
         do_log($GLOBALS['LOG_INCIDENT_DELETE'], $temp[$i]);                                                                // added 6/4/08
 
         //				dump ($query);
@@ -3549,8 +3556,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             $in_nums_ary[5] = date("y");
             $the_val = base64_encode(serialize($in_nums_ary));
             $the_field = "_inc_num";    //	3/15/11
-            $query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value` = '$the_val' WHERE `name` = '$the_field'";    //	3/15/11
-            $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = '$the_val' WHERE `name` = '$the_field'";    //	3/15/11
+            $result = db_query($query);
 
             $top_notice = "Incident number update applied";
         } else {                // do edit
@@ -3764,8 +3771,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             <A NAME="top"/>
             <?php
 
-            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]hints`";
-            $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}hints`";
+            $result = db_query($query);
             $i = 1;
             print "\n<FORM NAME='hints' METHOD = 'post' ACTION = '" . basename(__FILE__) . "'>
 					<table border=0 STYLE = 'MARGIN-LEFT:100PX'>\n";
@@ -3773,7 +3780,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             print "\n<TR><TH COLSPAN=2>Incident Add/Edit hints - enter revisions</TH></TR>\n";
             $dis = ((is_super()) || (is_super())) ? "" : "DISABLED";                // 3/19/11
 
-            while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+            while ($row = stripslashes_deep($result->fetch_array())) {
                 print "<TR CLASS = {$colors[$i%2]} VALIGN='middle'><TD><BR />" . substr($row['tag'], 1) . "</TD>
 						<TD><TEXTAREA COLS = 120 ROWS=1 NAME = '{$row['tag']}' {$dis}>" . trim($row['hint']) . "</TEXTAREA></TD></TR>\n";
                 $i++;
@@ -3797,8 +3804,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             foreach ($_POST as $VarName => $VarValue) {
                 if ($VarName != 'func') {
                     shorten($VarValue, 511);
-                    $query = "UPDATE `$GLOBALS[mysql_prefix]hints` SET `hint`=" . quote_smart($VarValue) . " WHERE `tag`='" . $VarName . "'";
-                    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}hints` SET `hint`=" . quote_smart($VarValue) . " WHERE `tag`='" . $VarName . "'";
+                    $result = db_query($query);
                 }
             }
             ?>
@@ -3817,8 +3824,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
                 foreach ($_POST as $VarName => $VarValue) {
-                    $query = "UPDATE `$GLOBALS[mysql_prefix]css_day` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_day` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
+                    $result = db_query($query);
                 }
                 print '<FONT CLASS="update_conf">CSS Day Settings saved</FONT>.</FONT><BR /><BR />';
             } else {
@@ -3834,8 +3841,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'css_day_Form'  
 				onSubmit='return validate_css_day(document.css_day_Form);' ACTION='config.php?func=css_day&go=true'>";
             $counter = 0;
-            $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]css_day` ORDER BY id") or do_error('config.php::list_css_day', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-            while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}css_day` ORDER BY id");
+            while ($row = stripslashes_deep($result->fetch_array())) {
                 if ($row['name'][0] <> "_") {
                     $capt = str_replace("_", " ", $row['name']);
                     print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='" . get_css_day_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
@@ -3903,8 +3910,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
                 foreach ($_POST as $VarName => $VarValue) {
-                    $query = "UPDATE `$GLOBALS[mysql_prefix]css_night` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
-                    $result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+                    $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_night` SET `value`=" . quote_smart($VarValue) . " WHERE `name`='" . $VarName . "'";
+                    $result = db_query($query);
                 }
                 print '<FONT CLASS="update_conf">CSS Night Settings saved</FONT>.</FONT><BR /><BR />';
             } else {
@@ -3920,8 +3927,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'css_night_Form'  
 				onSubmit='return validate_css_night(document.css_night_Form);' ACTION='config.php?func=css_night&go=true'>";
             $counter = 0;
-            $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]css_night` ORDER BY id") or do_error('config.php::list_css_day', 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-            while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}css_night` ORDER BY id");
+            while ($row = stripslashes_deep($result->fetch_array())) {
                 if ($row['name'][0] <> "_") {                                // hide these
                     $capt = str_replace("_", " ", $row['name']);
                     print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='" . get_css_night_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
@@ -4057,28 +4064,28 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                            onClick="window.open('ics.php', 'ics');">ICS FORMS</A>            <!-- 3/22/12 -->
                         <?php
                     }        // end if ( ... ics_top ...)
-                    if (mysql_table_exists("$GLOBALS[mysql_prefix]constituents")) {        // 6/4/09
+                    if (mysql_table_exists("{$GLOBALS['mysql_prefix']}constituents")) {        // 6/4/09
                         ?>
                         <A id='const' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                            onClick="do_Post('constituents');"><?php echo get_text("Constituents"); ?></A>     <!-- 6/18/2013 -->
                         <?php
                     }
-                    if (mysql_table_exists("$GLOBALS[mysql_prefix]insurance")) {        // 6/4/09
+                    if (mysql_table_exists("{$GLOBALS['mysql_prefix']}insurance")) {        // 6/4/09
                         ?>
                         <A id='insurance' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                            onClick="do_Post('insurance');"><?php echo get_text("Insurance"); ?></A>     <!-- 6/18/2013 -->
                         <?php
                     }
-                    if (mysql_table_exists("$GLOBALS[mysql_prefix]personnel")) {        // 9/10/13
+                    if (mysql_table_exists("{$GLOBALS['mysql_prefix']}personnel")) {        // 9/10/13
                         ?>
                         <A id='personnel' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                            onClick="do_Post('personnel');"><?php echo get_text("Personnel"); ?></A>     <!-- 6/18/2013 -->
                         <?php
                     }
-                    if (($asterisk) && mysql_table_exists("$GLOBALS[mysql_prefix]pin_ctrl")) {        // 7/16
+                    if (($asterisk) && mysql_table_exists("{$GLOBALS['mysql_prefix']}pin_ctrl")) {        // 7/16
                         ?>
                         <A id='pin_cont' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
@@ -4097,7 +4104,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                        onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="getinfo.php">PHP
                         Information</A>     <!-- 1/23/17 -->
                     <?php
-                    if (mysql_table_exists("$GLOBALS[mysql_prefix]organisations")) {
+                    if (mysql_table_exists("{$GLOBALS['mysql_prefix']}organisations")) {
                         ?>
                         <A id='orgs' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
@@ -4424,8 +4431,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                        HREF="reset_responder_status.php">Reset <?php print get_text("Unit"); ?> status</A>
                 </DIV>
                 <?php
-                $has_fac_status = mysql_table_exists("$GLOBALS[mysql_prefix]fac_status");
-                $has_fac_types = mysql_table_exists("$GLOBALS[mysql_prefix]fac_types");
+                $has_fac_status = mysql_table_exists("{$GLOBALS['mysql_prefix']}fac_status");
+                $has_fac_types = mysql_table_exists("{$GLOBALS['mysql_prefix']}fac_types");
                 if ($has_fac_status || $has_fac_types) {
                     ?>
                     <DIV class='config_heading text' id='facs_cfg'
@@ -4499,9 +4506,9 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 </DIV>
                 <?php
             }
-            $query_update = "SELECT * FROM  `$GLOBALS[mysql_prefix]user` WHERE `user`= '_cloud' LIMIT 1;";
-            $result = mysql_query($query_update) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);        //	5/4/11
-            if ((mysql_num_rows($result) > 0) && (is_super())) {
+            $query_update = "SELECT * FROM  `{$GLOBALS['mysql_prefix']}user` WHERE `user`= '_cloud' LIMIT 1;";
+            $result = db_query($query_update);        //	5/4/11
+            if (($result->num_rows > 0) && (is_super())) {
                 ?>
                 <DIV class='config_heading text' id='cloud_cfg'
                      style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
@@ -4519,7 +4526,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                      style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
                     <DIV class='config_heading text' style='display: block; clear: both;'>Modules</DIV>
                     <?php
-                    if (mysql_table_exists("$GLOBALS[mysql_prefix]modules")) {
+                    if (mysql_table_exists("{$GLOBALS['mysql_prefix']}modules")) {
                         ?>
                         <A id='mods_cfg' class='plain text' style='width: 150px; float: left;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'

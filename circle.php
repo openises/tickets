@@ -15,18 +15,18 @@ $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";		// 7/30/11
 @session_start();
 session_write_close();
 do_login(basename(__FILE__));
-extract ($_POST);
 $_type = "c";
 $by = empty($_SESSION)? 0: $_SESSION['user_id'];
 $from = $_SERVER['REMOTE_ADDR'];
 $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
 
 if (array_key_exists("id", $_POST) && (!(empty($_POST['id'])))) {
-	$query 	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$tablename}` WHERE `id` = {$_POST['id']}";				// 1/27/09
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$post_id = sanitize_int($_POST['id']);
+	$query 	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$tablename}` WHERE `id` = ?";				// 1/27/09
+	$result = db_query($query, [$post_id]);
 
-	if (mysql_num_rows ($result) > 0) {	
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	if ($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		extract ($row);
 		$points_ary = array();
 		$points = explode (";", $line_data);
@@ -499,10 +499,10 @@ function buildMap_l() {				// 'list' version
 	var points = new Array();
 <?php
 	$query = "SELECT * FROM `{$tablename}` WHERE `line_type` = 'c'";
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+	$result = db_query($query);
 	$empty = TRUE;
 //
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$empty = FALSE;
 		extract ($row);
 		$name = $row['line_name'];
@@ -632,11 +632,11 @@ switch ($_POST["_func"]) {
 <?php
 	$line_types =  array("p" => "Poly", "c" =>"Circle", "t" =>"Banner");
 	$query 	= "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$tablename}` WHERE `line_type` = 'c'";				// 1/27/09
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result)==0) {		
+	$result = db_query($query);
+	if ($result->num_rows==0) {
 		print "<TR CLASS = 'odd'><TH COLSPAN=99>No data</TH></TR>\n";
 		}
-	else {	
+	else {
 		print "<TR STYLE = 'height:8px;'><TD COLSPAN=99 ALIGN='center'><I>Click to view/edit</I></TD></TR>";
 		print "<TR CLASS = 'odd'  STYLE = 'height:16px;'><TD ALIGN='left'><B>&nbsp;Name</B></TD>
 			<TD><B>Type&nbsp;</B></TD>
@@ -645,12 +645,12 @@ switch ($_POST["_func"]) {
 			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to regions');\"><B>&nbsp;R&nbsp;</B></TD>
 			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to facilities');\"><B>&nbsp;F&nbsp;</B></TD>
 			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to units - Exclusion zone');\"><B>&nbsp;EX&nbsp;</B></TD>
-			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to units - Ringfence');\"><B>&nbsp;RF&nbsp;</B></TD>		
+			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to units - Ringfence');\"><B>&nbsp;RF&nbsp;</B></TD>
 			<TD><B>&nbsp;&nbsp;As of</B></TD></TR>\n";
 
 		$i = 0;
 		$targets = array( "p" =>"to_p",	"c" => "to_c", "t" => "to_t",  "k" => "to_k");
-		while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		while($row = stripslashes_deep($result->fetch_assoc())) {
 			extract ($row);
 			$visible = (intval($row['line_status'])==0)? "<IMG SRC = './markers/checked.png' BORDER=0 />" : "";
 
@@ -741,11 +741,11 @@ function buildMap_c() {															// 'create' version
 	$capt_ary = array( "p" =>"click map - drag icons",	"c" => "Click map and enter form values", "t" => "Click map and enter form values",  "k" => "kml");
 	$line_ary = array( "p" =>"Line", 					"c" =>"Circle", "t" =>"Text", "k" => "kml");
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` ORDER BY `category` ASC";
+	$result = db_query($query);
 	$cats_sel = "<SELECT NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;'>\n";
 	$cats_sel .= "<OPTION VALUE=0 SELECTED >Select</OPTION>\n";
-	while ($row = mysql_fetch_assoc($result)) {
+	while ($row = $result->fetch_assoc()) {
 		$cats_sel .= "<OPTION VALUE=\"{$row['id']}\">" . shorten($row['category'], 30) . "</OPTION>\n";
 		}
    $cats_sel .= "</SELECT>\n";
@@ -872,8 +872,8 @@ function buildMap_c() {															// 'create' version
 			 quote_smart($from) ."," .
 			 quote_smart(trim($now)) . ")" ;
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$insert_id = mysql_insert_id();
+		$result = db_query($query);
+		$insert_id = db()->insert_id;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML><HEAD><TITLE><?php echo basename(__FILE__);?></TITLE></HEAD>
@@ -960,9 +960,10 @@ function buildMap_c() {															// 'create' version
 		var points = new Array();
 		
 <?php
-			$query = "SELECT * FROM `{$tablename}` WHERE `id`='{$_POST['id']}' LIMIT 1";
-			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$post_id = sanitize_int($_POST['id']);
+			$query = "SELECT * FROM `{$tablename}` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$post_id]);
+			$row = stripslashes_deep($result->fetch_assoc());
 			extract ($row);
 			$name = $row['line_name'];
 
@@ -1150,10 +1151,10 @@ else {
 	}
 	$visible_true = (intval($row['line_status'])==0)? "CHECKED" : "";
 	$visible_false = ($visible_true)? "" : "CHECKED";
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` ORDER BY `category` ASC";		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` ORDER BY `category` ASC";
+	$result = db_query($query);
 	$cats_sel = "<SELECT NAME = 'frm_cat_list' onChange = 'this.form.frm_line_cat_id.value = this.options[this.selectedIndex].value;' {$dis}>\n";
-	while ($row_cat = mysql_fetch_assoc($result)) {
+	while ($row_cat = $result->fetch_assoc()) {
 		$sel = ($row_cat['id']== $line_cat_id)? "SELECTED": "";
 		$cats_sel .= "<OPTION VALUE=\"{$row_cat['id']}\" {$sel}>" . shorten($row_cat['category'], 30) . "</OPTION>\n";
 		}
@@ -1308,7 +1309,7 @@ else {
 			`_from` =	 			'{$from}' ,
 			`_on` =   				'{$now}'
 			WHERE `id` = 			{$_POST['frm_id']}";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+		$result = db_query($query);
 //		snap(__LINE__, $query);
 // _______________________________________________
 ?>
@@ -1326,12 +1327,13 @@ else {
 	    
 	case "dp":
 	
-		$query = "SELECT `line_name` FROM `{$tablename}` WHERE `id` = {$_POST['id']} LIMIT 1" ;
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$row = mysql_fetch_assoc($result);
-	
-		$query = "DELETE FROM `{$tablename}` WHERE `id` = {$_POST['id']} LIMIT 1" ;
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$post_id = sanitize_int($_POST['id']);
+		$query = "SELECT `line_name` FROM `{$tablename}` WHERE `id` = ? LIMIT 1" ;
+		$result = db_query($query, [$post_id]);
+		$row = $result->fetch_assoc();
+
+		$query = "DELETE FROM `{$tablename}` WHERE `id` = ? LIMIT 1" ;
+		$result = db_query($query, [$post_id]);
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML><HEAD><TITLE><?php print basename(__FILE__);?></TITLE>
 <SCRIPT>
