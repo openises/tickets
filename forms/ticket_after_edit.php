@@ -268,7 +268,7 @@ do_kml();
 					if ($mobile == 1) {
 ?>				
 <SCRIPT>
-						var unitmarker = createUnitMarker(<?php print $row_unit['lat'];?>, <?php print $row_unit['lng'];?>, "<?php print quote_smart($theTabs);?>", 0, 0, <?php print $unit_id;?>, '<?php print $index;?>', '<?php print $resp_cat;?>', 0, '<?php print $handle;?>', '<?php print $theType;?>');
+						var unitmarker = createUnitMarker(<?php print $row_unit['lat'];?>, <?php print $row_unit['lng'];?>, <?php print json_encode($theTabs);?>, 0, 0, <?php print $unit_id;?>, '<?php print $index;?>', '<?php print $resp_cat;?>', 0, '<?php print $handle;?>', '<?php print $theType;?>');
 						unitmarker.addTo(map);
 						bounds.extend([<?php print $row_unit['lat'];?>, <?php print $row_unit['lng'];?>]);
 						i++
@@ -277,7 +277,7 @@ do_kml();
 						} else {
 ?>
 <SCRIPT>
-						var unitmarker = createUnitMarker(<?php print $row_unit['lat'];?>, <?php print $row_unit['lng'];?>, "<?php print quote_smart($theTabs);?>", 4, 0, <?php print $unit_id;?>, '<?php print $index;?>', '<?php print $resp_cat;?>', 0, '<?php print $handle;?>', '<?php print $theType;?>');
+						var unitmarker = createUnitMarker(<?php print $row_unit['lat'];?>, <?php print $row_unit['lng'];?>, <?php print json_encode($theTabs);?>, 4, 0, <?php print $unit_id;?>, '<?php print $index;?>', '<?php print $resp_cat;?>', 0, '<?php print $handle;?>', '<?php print $theType;?>');
 						unitmarker.addTo(map);
 						bounds.extend([<?php print $row_unit['lat'];?>, <?php print $row_unit['lng'];?>]);
 						i++

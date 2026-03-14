@@ -1166,14 +1166,15 @@ function get_tickets_allocated($group) {	//	6/10/11
 	$x=0;
 	$cwi = get_variable('closed_interval');			// closed window interval in hours
 	$time_back = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60) - ($cwi*3600));
-	$where = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type`= 1 AND (`{$GLOBALS['mysql_prefix']}ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR (`{$GLOBALS['mysql_prefix']}ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `{$GLOBALS['mysql_prefix']}ticket`.`booked_date` <= (NOW() + INTERVAL 2 DAY)) OR
-				(`{$GLOBALS['mysql_prefix']}ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}'  AND `{$GLOBALS['mysql_prefix']}ticket`.`problemend` >= '{$time_back}')) AND (";
+	$params = [$GLOBALS['STATUS_OPEN'], $GLOBALS['STATUS_SCHEDULED'], $GLOBALS['STATUS_CLOSED'], $time_back];
+	$where = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type`= 1 AND (`{$GLOBALS['mysql_prefix']}ticket`.`status`= ? OR (`{$GLOBALS['mysql_prefix']}ticket`.`status`= ? AND `{$GLOBALS['mysql_prefix']}ticket`.`booked_date` <= (NOW() + INTERVAL 2 DAY)) OR
+				(`{$GLOBALS['mysql_prefix']}ticket`.`status`= ?  AND `{$GLOBALS['mysql_prefix']}ticket`.`problemend` >= ?)) AND (";
+	$grp_placeholders = [];
 	foreach($group as $grp) {
-		$where2 = (count($group) > ($x+1)) ? " OR " : ")";
-		$where .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
-		$where .= $where2;
-		$x++;
+		$grp_placeholders[] = "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+		$params[] = $grp;
 		}
+	$where .= implode(" OR ", $grp_placeholders) . ")";
 	$query = "SELECT *,`{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`
 		FROM `{$GLOBALS['mysql_prefix']}ticket`
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates`
@@ -1181,7 +1182,7 @@ function get_tickets_allocated($group) {	//	6/10/11
 		LEFT JOIN `{$GLOBALS['mysql_prefix']}region`
 			ON `{$GLOBALS['mysql_prefix']}allocates`.group=`{$GLOBALS['mysql_prefix']}region`.`id`
 		$where GROUP BY tick_id ORDER BY `{$GLOBALS['mysql_prefix']}allocates`.`group`;";		//	6/10/11
-	$result = db_query($query);	// 4/13/11
+	$result = db_query($query, $params);	// 4/13/11
 	$tickets = array();
 	while ($row = stripslashes_deep($result->fetch_assoc())) 	{		//	6/10/11
 		$tickets[] = $row['tick_id'];
@@ -2155,8 +2156,8 @@ function toUTM($coordsIn, $from = "") {							// UTM converter - assume comma se
 
 function get_type($id) {				// returns incident type given its id
 	if ($id == 0) {return "TBD";}		// 1/11/09
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` WHERE `id`= $id LIMIT 1";
-	$result_type = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` WHERE `id`= ? LIMIT 1";
+	$result_type = db_query($query, [$id]);
 	$row_type = stripslashes_deep($result_type->fetch_assoc());
 //	unset ($result_type);
 	return (isset($row_type['type']))? $row_type['type']: "?";		// 8/12/09
@@ -2306,7 +2307,8 @@ function get_ext($filename) {				// return extension in lower-case
 function get_field_index($table, $name) {
 	$table_arr = array();
 	$i = 0;
-	$query = "DESCRIBE `{$GLOBALS['mysql_prefix']}$table`";
+	$safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+	$query = "DESCRIBE `{$GLOBALS['mysql_prefix']}{$safe_table}`";
 	$result = db_query($query);
 	while($row = $result->fetch_array()) {
 		if($row[0] == $name) {
@@ -2318,7 +2320,8 @@ function get_field_index($table, $name) {
 
 function get_field_type($table, $field) {
 	$enum = "enum";
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}$table`";
+	$safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$safe_table}`";
 	$result = db_query($query);
 	$finfo = mysqli_fetch_field_direct($result, $field);
 	$field_type = $finfo->type;
@@ -2358,7 +2361,8 @@ function get_field_type($table, $field) {
 	}
 
 function get_field_name($table, $field) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}$table`";
+	$safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$safe_table}`";
 	$result = db_query($query);
 	$finfo = mysqli_fetch_field_direct($result, $field);
 	$field_name = $finfo->name;
@@ -2366,7 +2370,8 @@ function get_field_name($table, $field) {
 	}
 
 function get_field_size($table, $field) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}$table`";
+	$safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$safe_table}`";
 	$result = db_query($query);
 	$finfo = mysqli_fetch_field_direct($result, $field);
 	$field_size = $finfo->length;
@@ -2374,7 +2379,8 @@ function get_field_size($table, $field) {
 	}
 
 function get_display_field_size($table, $field) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}$table`";
+	$safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$safe_table}`";
 	$result = db_query($query);
 	$row = $result->fetch_array();
 	$field_size  = $row['size'];
@@ -2382,8 +2388,8 @@ function get_display_field_size($table, $field) {
 	}
 
 function wizard_field_exists($field) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}wizard_settings` WHERE `fieldname` = '" . $field . "'";
-	$result = db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}wizard_settings` WHERE `fieldname` = ?";
+	$result = db_query($query, [$field]);
 	if($result->num_rows > 0) {
 		return true;
 		} else {
@@ -3167,8 +3173,8 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 	$notify_assigns = get_variable('notify_assigns');
 	$defaultSMS = get_msg_variable('default_sms');
 	// notify assigns options - 0 is off, 1 notify assigns on close, 2  notify on close and inc change, 3 notify on close, inc change and action or patient change, 4 notify changes only not close
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = " . strip_tags($ticket_id);
-	$result	= db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ?";
+	$result	= db_query($query, [strip_tags($ticket_id)]);
 	while($row = stripslashes_deep($result->fetch_assoc())) {		//	Assignments this Ticket
 		$responderID = $row['responder_id'];
 		$tick_id = $row['ticket_id'];
@@ -4180,8 +4186,8 @@ function get_handle(){									//			returns unit index string - 3/19/11
 
 function get_respondername($id) {
 	if(!$id) {return "N/A";}
-	$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`=" . $id . " LIMIT 1";
-	$result = db_query($query);
+	$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
 	if (($result->num_rows)==0)  {
 		$ret_val = "NA";
 		} else {
@@ -4196,8 +4202,8 @@ function like_ify($instr) {			// 3/6/2015	-- converts non-alphanumerics to under
 	}
 
 function get_facilityname($id) {
-	$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`=" . $id . " LIMIT 1";
-	$result = db_query($query);
+	$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
 	if (($result->num_rows)==0)  {
 		$ret_val = "NA";
 		} else {
@@ -4209,8 +4215,8 @@ function get_facilityname($id) {
 	}
 
 function get_facilityhandle($id) {
-	$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`=" . $id . " LIMIT 1";
-	$result = db_query($query);
+	$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
 	if (($result->num_rows)==0)  {
 		$ret_val = "NA";
 		} else {
@@ -4222,8 +4228,8 @@ function get_facilityhandle($id) {
 	}
 
 function get_state_abb($name) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator` WHERE `name` = '" . $name . "'";
-	$result	= db_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator` WHERE `name` = ?";
+	$result	= db_query($query, [$name]);
 	if($result->num_rows > 0) {
 		$row = stripslashes_deep($result->fetch_array());
 		return $row['code'];
@@ -4771,7 +4777,9 @@ function recalculate_tile_bounds ($repository) {
 	}		// end function recalculate_tile_bounds
 
 function  checkColExists($table, $col) {
-	$query = "SHOW COLUMNS FROM `{$GLOBALS['mysql_prefix']}" . $table . "` LIKE '" . $col . "'";
+	$safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+	$safe_col = preg_replace('/[^a-zA-Z0-9_]/', '', $col);
+	$query = "SHOW COLUMNS FROM `{$GLOBALS['mysql_prefix']}{$safe_table}` LIKE '{$safe_col}'";
 	$result = db_query($query);
 	if($result) {
 		return true;
