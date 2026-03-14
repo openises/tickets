@@ -54,23 +54,20 @@ function return_provider_name($val) {
 	}
 
 function update_msg_setting ($which, $what) {		//	3/15/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` WHERE `name`= '$which' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_affected_rows()!=0) {
-		$query = "UPDATE `$GLOBALS[mysql_prefix]msg_settings` SET `value`= '$what' WHERE `name` = '$which'";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT * FROM `{$p}msg_settings` WHERE `name` = ? LIMIT 1", [$which], 's');
+	if ($row) {
+		db_query("UPDATE `{$p}msg_settings` SET `value` = ? WHERE `name` = ?", [$what, $which], 'ss');
 		}
-	unset ($result);
 	return TRUE;
 	}				// end function update_setting ()
 	
 function update_delivered($who, $what) {
+	$p = $GLOBALS['mysql_prefix'];
 	$deliveredto = array();
 	$thetemp = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `message_id` = '" . $what . "' AND `msg_type` = '3' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = db_fetch_one("SELECT * FROM `{$p}messages` WHERE `message_id` = ? AND `msg_type` = '3' LIMIT 1", [$what], 's');
+	if($row) {
 		$thetemp = ($row['delivered'] != NULL) ? explode("," , $row['delivered']) : NULL;
 		foreach($thetemp as $val) {
 			$deliveredto[] = intval($val);
@@ -81,23 +78,20 @@ function update_delivered($who, $what) {
 				} else {
 				$the_string = $row['delivered'] . "," . $who;
 				}
-			$query_new = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `delivered` = '" . $the_string . "' WHERE `message_id` = '$what'";
-			$result_new = mysql_query($query_new) or do_error($query_new, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-			if($result_new) {
-				unset($thetemp);
-				unset($deliveredto);
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `message_id` = '" . $what . "' AND `msg_type` = '3' LIMIT 1";
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
+			db_query("UPDATE `{$p}messages` SET `delivered` = ? WHERE `message_id` = ?", [$the_string, $what], 'ss');
+			unset($thetemp);
+			unset($deliveredto);
+			$row = db_fetch_one("SELECT * FROM `{$p}messages` WHERE `message_id` = ? AND `msg_type` = '3' LIMIT 1", [$what], 's');
+			if($row) {
 				$thetemp = ($row['delivered'] != NULL) ? explode("," , $row['delivered']) : NULL;
 				foreach($thetemp as $val) {
 					$deliveredto[] = intval($val);
-					}				
+					}
 				}
 			}
 		$the_d_count = ($deliveredto != NULL) ? count($deliveredto) : 0;
 		$sentto = ($row['recipients'] != NULL) ? explode("," , $row['recipients']) : NULL ;
-		$the_s_count = ($sentto != NULL) ? count($sentto) : 0;	
+		$the_s_count = ($sentto != NULL) ? count($sentto) : 0;
 		if($the_d_count == 0) {
 			$del_stat = 0;
 			} elseif(($the_d_count > 0) && ($the_d_count != $the_s_count)) {
@@ -107,7 +101,7 @@ function update_delivered($who, $what) {
 			} else {
 			$del_stat = 99;
 			}
-			
+
 		$delivered = $row['delivered'];
 		if(strpos($delivered, ",")) {
 			$the_sep = ",";
@@ -116,8 +110,8 @@ function update_delivered($who, $what) {
 			}
 
 		$the_string = $the_sep . $sentto;
-		$query2 = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `delivery_status` = " . $del_stat . " WHERE `message_id`='$what'";
-		$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+		$del_stat = sanitize_int($del_stat, 0);
+		db_query("UPDATE `{$p}messages` SET `delivery_status` = ? WHERE `message_id` = ?", [$del_stat, $what], 'is');
 		return true;
 		} else {
 		return false;
@@ -230,16 +224,16 @@ function check_server($url) {
 	}
 
 function get_reader_name($id){								/* get owner name from id */
-	$result	= mysql_query("SELECT user FROM `$GLOBALS[mysql_prefix]user` WHERE `id`='$id' LIMIT 1") or do_error("get_owner(i:$id)::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row	= stripslashes_deep(mysql_fetch_assoc($result));
-	return (mysql_affected_rows()==0 )? "None" : $row['user'];
+	$p = $GLOBALS['mysql_prefix'];
+	$id = sanitize_int($id, 0);
+	$row = db_fetch_one("SELECT `user` FROM `{$p}user` WHERE `id` = ? LIMIT 1", [$id], 'i');
+	return ($row === null) ? "None" : $row['user'];
 	}
 	
 function get_cellphone($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `smsg_id` = '" . $id . "'";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `smsg_id` = ?", [$id], 's');
+	if($row) {
 		$ret = $row['cellphone'];
 		} else {
 		$ret = 0;
@@ -266,9 +260,9 @@ function GetBetween($content,$start,$end){	//	Function to check for presence of 
 	}
 	
 function isTag($val) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]replacetext` WHERE `in_text` = '" . $val . "'";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT * FROM `{$p}replacetext` WHERE `in_text` = ?", [$val], 's');
+	if($row) {
 		return true;
 		} else {
 		return false;
@@ -298,23 +292,19 @@ function strip_ticket($message) {
 	}
 
 function auto_status($message, $responder, $datestring) {	//	6/21/13
+	$p = $GLOBALS['mysql_prefix'];
 	$time = strtotime($datestring);
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	$start_tag = get_msg_variable('start_tag');
 	$end_tag = get_msg_variable('end_tag');
 	$string = strtoupper(GetBetween($message, "$start_tag", "$end_tag"));
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_status` WHERE `text` = '" . $string . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) >= 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$row = db_fetch_one("SELECT * FROM `{$p}auto_status` WHERE `text` = ? LIMIT 1", [$string], 's');
+	if($row) {
 		$the_val = intval($row['status_val']);
-		$query_time = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `smsg_id`='" . $responder . "'";
-		$result_time = mysql_query($query_time) or do_error($query_time, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row_time = stripslashes_deep(mysql_fetch_assoc($result_time));
-		if(strtotime($row_time['status_updated']) < $time) {
-			$query2 = "UPDATE `$GLOBALS[mysql_prefix]responder` SET `un_status_id`=" . $the_val . ", `user_id`='999999', `status_updated`= '" . $datestring . "', `updated`= '" . $datestring . "' WHERE `smsg_id`='" . $responder . "'";	//	6/21/13
-			$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-			if($result2) {
+		$row_time = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `smsg_id` = ?", [$responder], 's');
+		if($row_time && strtotime($row_time['status_updated']) < $time) {
+			db_query("UPDATE `{$p}responder` SET `un_status_id` = ?, `user_id` = '999999', `status_updated` = ?, `updated` = ? WHERE `smsg_id` = ?", [$the_val, $datestring, $datestring, $responder], 'isss');	//	6/21/13
+			if(db_affected_rows() >= 0) {
 				$the_ret = $the_val;
 				} else {
 				$the_ret = 0;
@@ -501,6 +491,7 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=30 ) {	//	C
 	}	
 	
 function store_email($msg_type, $recipients, $messageid, $subject, $message, $ticket_id, $resp_id, $time, $from_address, $fromname) {	//	stores incoming and outgoing emails in messages table
+	$p = $GLOBALS['mysql_prefix'];
 	$counter = 0;
 	if(empty($ticket_id)) {
 		$ticket_id = 0;
@@ -508,19 +499,18 @@ function store_email($msg_type, $recipients, $messageid, $subject, $message, $ti
 	if(empty($resp_id)) {
 		$resp_id = 0;
 	}
-	$message = addslashes($message);
-	$subject = addslashes($subject);
 	$resp_id =(($resp_id == "") || ($resp_id == 0) || ($resp_id == "")) ? '0' : $resp_id;
-	$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 1;		// 11/14/10
+	$who = (array_key_exists('user_id', $_SESSION))? sanitize_int($_SESSION['user_id'], 1) : 1;		// 11/14/10
 	$from = $_SERVER['REMOTE_ADDR'];
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-	$message = mysql_real_escape_string($message);
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `msg_type` = '2' AND `message_id` = '{$messageid}' AND `subject` = '{$subject}' AND `message` = '{$message}' AND `date` = '" . $time . "'";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (msg_type, message_id, ticket_id, resp_id, recipients, from_address, fromname, subject, message, date, _by, _from, _on) VALUES({$msg_type},'{$messageid}',{$ticket_id},'{$resp_id}','{$recipients}','{$from_address}','{$fromname}','{$subject}','" . $message . "','{$time}',{$who},'{$from}','{$now}')";	//	11/18/13
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-		if($result) {
+	$msg_type = sanitize_int($msg_type, 2);
+	$ticket_id = sanitize_int($ticket_id, 0);
+	$row = db_fetch_one("SELECT * FROM `{$p}messages` WHERE `msg_type` = 2 AND `message_id` = ? AND `subject` = ? AND `message` = ? AND `date` = ?", [$messageid, $subject, $message, $time], 'ssss');
+	if(!$row) {
+		db_query("INSERT INTO `{$p}messages` (msg_type, message_id, ticket_id, resp_id, recipients, from_address, fromname, subject, message, date, _by, _from, _on) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			[$msg_type, $messageid, $ticket_id, $resp_id, $recipients, $from_address, $fromname, $subject, $message, $time, $who, $from, $now],
+			'isisssssssiss');	//	11/18/13
+		if(db_affected_rows() > 0) {
 			$counter = 1;
 			}
 		}
@@ -528,22 +518,20 @@ function store_email($msg_type, $recipients, $messageid, $subject, $message, $ti
 	}
 
 function white_list() {	//	function to check sender is in allowed list - allowed list determines which incoming emails will be stored and viewable.
+	$p = $GLOBALS['mysql_prefix'];
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]known_sources`";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+	$rows = db_fetch_all("SELECT * FROM `{$p}known_sources`");
+	foreach($rows as $row) {
 		$the_ret[] = $row['email'];
 		}
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+	$rows = db_fetch_all("SELECT * FROM `{$p}responder`");
+	foreach($rows as $row) {
 		if($row['contact_via'] != "") {
 			$the_ret[] = $row['contact_via'];
 			}
 		}
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts`";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+	$rows = db_fetch_all("SELECT * FROM `{$p}contacts`");
+	foreach($rows as $row) {
 		if($row['email'] != "") {
 			$the_ret[] = $row['email'];
 			}
@@ -552,20 +540,19 @@ function white_list() {	//	function to check sender is in allowed list - allowed
 	}
 	
 function black_list() {	//	function to check sender is in disallowed list.
+	$p = $GLOBALS['mysql_prefix'];
 	$the_ret = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]email_blacklist`";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+	$rows = db_fetch_all("SELECT * FROM `{$p}email_blacklist`");
+	foreach($rows as $row) {
 		$the_ret[] = $row['email'];
 		}
 	return $the_ret;
 	}
 
 function get_resp_id($resp_handle) {	//	Gets responder ID from SMS Gateway ID
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `smsg_id` = '" . $resp_handle . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `smsg_id` = ? LIMIT 1", [$resp_handle], 's');
+	if($row) {
 		$the_id = $row['id'];
 		} else {
 		$the_id=NULL;
@@ -574,10 +561,10 @@ function get_resp_id($resp_handle) {	//	Gets responder ID from SMS Gateway ID
 	}
 	
 function get_resp_id_from_number($cell) {	//	Gets responder ID from SMS Gateway ID
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `cellphone` LIKE '%{$cell}%'";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$p = $GLOBALS['mysql_prefix'];
+	$cell_like = '%' . $cell . '%';
+	$row = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `cellphone` LIKE ?", [$cell_like], 's');
+	if($row) {
 		$the_id = $row['id'];
 		} else {
 		$the_id=NULL;
@@ -586,10 +573,9 @@ function get_resp_id_from_number($cell) {	//	Gets responder ID from SMS Gateway 
 	}
 
 function get_resp_id2($theEmail) {	//	Gets responder ID from email
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `contact_via` = '" . $theEmail . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `contact_via` = ? LIMIT 1", [$theEmail], 's');
+	if($row) {
 		$the_id = $row['id'];
 		} else {
 		$the_id=NULL;
@@ -598,10 +584,9 @@ function get_resp_id2($theEmail) {	//	Gets responder ID from email
 	}
 	
 function get_resp_name($resp_handle) {	//	Gets responder ID from SMS Gateway ID
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `smsg_id` = '" . $resp_handle . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$p = $GLOBALS['mysql_prefix'];
+	$row = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `smsg_id` = ? LIMIT 1", [$resp_handle], 's');
+	if($row) {
 		$the_name = $row['name'];
 		} else {
 		$the_name="No Name";
@@ -1255,10 +1240,10 @@ function do_smsg_retrieve($orgcode,$apipin,$mode) {	// retrieves responses from 
 	$rtn_msg = "";
 	$stat_up = array();
 	if(return_provider_name(get_msg_variable('smsg_provider')) == "SMS Responder") {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `msg_type` = '3' AND `date` >= (NOW() - INTERVAL 2 DAY)";	//	Select messages to query for updates - only ones where the OG message has been sent by Tickets
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
+		$p = $GLOBALS['mysql_prefix'];
+		$rows = db_fetch_all("SELECT * FROM `{$p}messages` WHERE `msg_type` = '3' AND `date` >= (NOW() - INTERVAL 2 DAY)");	//	Select messages to query for updates - only ones where the OG message has been sent by Tickets
 		$the_response=array();
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		foreach ($rows as $row) {
 			$ticket_id = $row['ticket_id'];
 			$messageid = $row['message_id'];
 			$server = ($row['server_number'] != NULL) ? $row['server_number'] : NULL;
@@ -1407,8 +1392,7 @@ function do_smsg_retrieve($orgcode,$apipin,$mode) {	// retrieves responses from 
 
 function store_msg($recipients, $messageid, $subject, $message, $fromname, $ticket_id, $time, $ogtime, $type, $server) {	//	Stores incoming and outgoing SMS Messages from or to Gateway in Messages table
 //	print $recipients . ", " . $messageid . ", " . $subject . ", " . $message . ", " . $fromname . ", " . $ticket_id . ", " . $time . ", " . $ogtime . ", " . $type . ", " . $server . "<BR />";
-	$message = addslashes($message);
-	$subject = addslashes($subject);
+	$p = $GLOBALS['mysql_prefix'];
 	$stored = 0;
 	$the_responders = array();
 	if($recipients != "Tickets") {
@@ -1418,42 +1402,45 @@ function store_msg($recipients, $messageid, $subject, $message, $fromname, $tick
 			}
 		$the_resp_list = implode(",", $the_responders);
 		}
-	$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 1;
-	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));	
+	$who = (array_key_exists('user_id', $_SESSION))? sanitize_int($_SESSION['user_id'], 1) : 1;
+	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	$resp_id = ((isset($recipients)) && ($recipients != "Tickets")) ? $the_resp_list : $recipients;
 	$datestring = $now;
-	if(($ogtime != "") && ($ogtime != 0)) {	
+	if(($ogtime != "") && ($ogtime != 0)) {
 		$datestring = $ogtime;
 		}
 	$from = "127.0.0.0";
+	$ticket_id = sanitize_int($ticket_id, 0);
+	$server = sanitize_int($server, 0);
 	if($type == 4) {
 		if(($messageid != "") && ($recipients != "") && ($datestring != "")) {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `message_id` = '{$messageid}' AND `ticket_id` = {$ticket_id} AND `from_address` = '{$recipients}' AND `message` = '{$message}' AND `msg_type` = 4";
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-			if(mysql_num_rows($result) == 0) {
-				$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `message_id` = '" . $messageid . "' AND `msg_type` = '3'";
-				$result1 = mysql_query($query1) or do_error($query1, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-				if(mysql_num_rows($result1) != 0) {
-					while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) 	{
-						$query2 = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (msg_type, message_id, server_number, ticket_id, resp_id, recipients, subject, message, from_address, fromname, date, `read_status`, _by, _from, _on) VALUES(4,'{$messageid}', {$server}, {$ticket_id},'{$resp_id}','{$recipients}','{$subject}','{$message}','{$recipients}','{$fromname}','{$datestring}',0,{$who},'{$from}','{$now}')";
-						$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-						if($result2) {
+			$check_row = db_fetch_one("SELECT * FROM `{$p}messages` WHERE `message_id` = ? AND `ticket_id` = ? AND `from_address` = ? AND `message` = ? AND `msg_type` = 4", [$messageid, $ticket_id, $recipients, $message], 'siss');
+			if(!$check_row) {
+				$rows1 = db_fetch_all("SELECT * FROM `{$p}messages` WHERE `message_id` = ? AND `msg_type` = '3'", [$messageid], 's');
+				if(count($rows1) > 0) {
+					foreach ($rows1 as $row1) {
+						db_query("INSERT INTO `{$p}messages` (msg_type, message_id, server_number, ticket_id, resp_id, recipients, subject, message, from_address, fromname, date, `read_status`, _by, _from, _on) VALUES(4, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
+							[$messageid, $server, $ticket_id, $resp_id, $recipients, $subject, $message, $recipients, $fromname, $datestring, $who, $from, $now],
+							'siisssssssiss');
+						if(db_affected_rows() > 0) {
 							$stored = 1;
 							}
 						}
 					} else {
-					$query2 = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (msg_type, message_id, server_number, ticket_id, resp_id, recipients, subject, message, from_address, fromname, date, `read_status`, _by, _from, _on) VALUES(4,'{$messageid}', {$server},{$ticket_id},'{$resp_id}','{$recipients}','{$subject}','{$message}','{$recipients}','{$fromname}','{$datestring}',0,{$who},'{$from}','{$now}')";
-					$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-					if($result2) {
+					db_query("INSERT INTO `{$p}messages` (msg_type, message_id, server_number, ticket_id, resp_id, recipients, subject, message, from_address, fromname, date, `read_status`, _by, _from, _on) VALUES(4, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
+						[$messageid, $server, $ticket_id, $resp_id, $recipients, $subject, $message, $recipients, $fromname, $datestring, $who, $from, $now],
+						'siisssssssiss');
+					if(db_affected_rows() > 0) {
 						$stored = 1;
 						}
 					}
 				}
 			}
 		} elseif($type == 3) {
-		$query2 = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (msg_type, message_id, server_number, ticket_id, resp_id, recipients, subject, message, from_address, fromname, date, `read_status`, _by, _from, _on) VALUES(3,'{$messageid}', {$server},{$ticket_id},'{$resp_id}','{$recipients}','{$subject}','{$message}','{$recipients}','{$fromname}','{$datestring}',0,{$who},'{$from}','{$now}')";
-		$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-		if($result2) {
+		db_query("INSERT INTO `{$p}messages` (msg_type, message_id, server_number, ticket_id, resp_id, recipients, subject, message, from_address, fromname, date, `read_status`, _by, _from, _on) VALUES(3, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
+			[$messageid, $server, $ticket_id, $resp_id, $recipients, $subject, $message, $recipients, $fromname, $datestring, $who, $from, $now],
+			'siisssssssiss');
+		if(db_affected_rows() > 0) {
 			$stored = 1;
 			}
 		} else {

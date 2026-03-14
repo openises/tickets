@@ -456,21 +456,15 @@ $useMdbStatus = (get_mdb_variable('use_mdb_status')) ? get_mdb_variable('use_mdb
 $validStatuses = array();
 $validFacStatuses = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status`";
-$result = mysql_query($query);
-if($result) {
-	while($row = mysql_fetch_assoc($result)) {
-		$validStatuses[$row['id']] = $row['status_val'];
-		}
-	}
+$rows = db_fetch_all("SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status`");
+foreach ($rows as $row) {
+	$validStatuses[$row['id']] = $row['status_val'];
+}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status`";
-$result = mysql_query($query);
-if($result) {
-	while($row = mysql_fetch_assoc($result)) {
-		$validFacStatuses[$row['id']] = $row['status_val'];
-		}
-	}
+$rows = db_fetch_all("SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status`");
+foreach ($rows as $row) {
+	$validFacStatuses[$row['id']] = $row['status_val'];
+}
 
 function remove_nls($instr) {                // 10/20/09
 	$nls = array("\r\n", "\n", "\r");        // note order
@@ -478,22 +472,19 @@ function remove_nls($instr) {                // 10/20/09
 	}        // end function
 
 function mysql_table_exists($name) {
-	return boolVal ( mysql_num_rows(mysql_query("SHOW TABLES LIKE '{$name}'") )  > 0 );
+	$result = db_query("SHOW TABLES LIKE ?", [$name]);
+	return boolVal($result->num_rows > 0);
 	}
 
 function get_issue_date($id){
-	$result = mysql_query("SELECT date FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
-	$row = mysql_fetch_assoc($result);
-	print $row[date];
+	$row = db_fetch_one("SELECT `date` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?", [intval($id)]);
+	if ($row) { print $row['date']; }
 	}
 
 function check_for_rows($query) {		/* check sql query for returning rows, courtesy of Micah Snyder */
-	if($sql = mysql_query($query)) {
-		if(mysql_num_rows($sql) !== 0)
-			return mysql_num_rows($sql);
-		else
-			return false;
-		}
+	$sql = db_query($query);
+	if($sql && $sql->num_rows !== 0)
+		return $sql->num_rows;
 	else
 		return false;
 	}
@@ -503,11 +494,11 @@ function check_for_rows($query) {		/* check sql query for returning rows, courte
 function get_disp_closure_summary($tick_id) {
 	$eol = PHP_EOL;
 	$string = "";
-	$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
-		WHERE `ticket_id`='$tick_id' AND ((`clear` IS NOT NULL) AND (DATE_FORMAT(`clear`,'%y') != '00'))
-		ORDER BY `id` ASC");		// 6/25/10
-	if (mysql_affected_rows()>0) {
-		while($row = mysql_fetch_assoc($result)) {
+	$rows = db_fetch_all("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+		WHERE `ticket_id` = ? AND ((`clear` IS NOT NULL) AND (DATE_FORMAT(`clear`,'%y') != '00'))
+		ORDER BY `id` ASC", [intval($tick_id)]);		// 6/25/10
+	if (count($rows) > 0) {
+		foreach($rows as $row) {
 			$string .= "Unit: " . get_responder($row['responder_id']) . chr(0x0D).chr(0x0A);
 			$string .= "D: " . format_sb_date_2($row['dispatched']) . chr(0x0D).chr(0x0A);
 			$string .= "R: " . format_sb_date_2($row['responding']) . chr(0x0D).chr(0x0A);
@@ -2618,9 +2609,9 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 	$match_str = preg_replace("/[^a-zA-Z]+/", "", $match_str);					// drop ash/trash - 5/31/2013
 
 	if (empty($match_str)) {$match_str = " " . implode ("", range("A", "W"));}		// empty get all - force non-zero hit
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id . " LIMIT 1";
-	$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+	$t_row = db_fetch_one($query, [intval($ticket_id)], 'i');
+	if (!$t_row) { return; }
 	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
 	$eol = PHP_EOL;
 	$locale = get_variable('locale');
@@ -2729,29 +2720,26 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
 				case "P":
 					$gt = get_text("Patient");
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]patient` WHERE `ticket_id` = " . $ticket_id;
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-					if (mysql_affected_rows()>0) {
+					$query_p = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = ?";
+					$pat_rows = db_fetch_all($query_p, [intval($ticket_id)], 'i');
+					if (count($pat_rows) > 0) {
 						$message .= "\n{$gt}:\n";
-						while($pat_row = stripslashes_deep(mysql_fetch_array($result))){
+						foreach ($pat_rows as $pat_row) {
 							$message .= $pat_row['name'] . ", " . $pat_row['updated']  . "- ". wordwrap($pat_row['description'], 70)."\n";
 							}
 						}
-					unset ($result);
 				    break;
 
 				case "O":
 					$gt = get_text("Actions");
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = " . $ticket_id;		// 10/16/08
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
-					if (mysql_affected_rows()>0) {
+					$query_o = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = ?";		// 10/16/08
+					$act_rows = db_fetch_all($query_o, [intval($ticket_id)], 'i');
+					if (count($act_rows) > 0) {
 						$message .= "\n{$gt}:\n";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-						while($act_row = stripslashes_deep(mysql_fetch_array($result))) {
+						foreach ($act_rows as $act_row) {
 							$message .= $act_row['updated'] . " - ".wordwrap($act_row['description'], 70)."\n";
 							}
 						}
-					unset ($result);
 				    break;
 
 				case "Q":
@@ -2777,31 +2765,29 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 					$gt = get_text("Facility");
 					if ((intval($t_row['rec_facility'])>0) || (intval($t_row['facility'])>0)) {
 						$the_facility = (intval($t_row['rec_facility'])>0)? intval($t_row['rec_facility']) : intval($t_row['facility']);
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`={$the_facility} LIMIT 1";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
-						if (mysql_num_rows ($result)>0) {
-							$f_row = stripslashes_deep(mysql_fetch_array($result));
+						$query_f = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
+						$f_row = db_fetch_one($query_f, [$the_facility], 'i');
+						if ($f_row) {
 							$message .= "{$gt}: {$f_row['handle']}\n";
 							$message .= "{$gt}: {$f_row['beds_info']}\n";
 							}
 						}
 				    break;
 				case "U":		// 11/13/2012
-					$query_u = "SELECT  `handle` FROM `$GLOBALS[mysql_prefix]assigns` `a`
-						LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` ON (`a`.`responder_id` = `r`.`id`)
-						WHERE `a`.`ticket_id` = $ticket_id AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00'
-						ORDER BY `handle` ASC ";																// 5/25/09, 1/16/08
-					$result_u = mysql_query($query_u) or do_error($query_u, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	// 3/22/09
-					if (mysql_num_rows($result_u)>0) {
+					$query_u = "SELECT `handle` FROM `{$GLOBALS['mysql_prefix']}assigns` `a`
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON (`a`.`responder_id` = `r`.`id`)
+						WHERE `a`.`ticket_id` = ? AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
+						ORDER BY `handle` ASC";																// 5/25/09, 1/16/08
+					$u_rows = db_fetch_all($query_u, [intval($ticket_id)], 'i');
+					if (count($u_rows) > 0) {
 						$gt = get_text("Units");
 						$units_resp = "";
-						while($u_row = stripslashes_deep(mysql_fetch_assoc($result_u))) {
+						foreach ($u_rows as $u_row) {
 							if($units_resp != "") $units_resp .= " ";
 							$units_resp .= "[{$u_row['handle']}]";
 							}
 						$message .= $units_resp . $eol;		// 4/1/2013
 						}
-					unset ($result_u);
 					break;
 				case "V":
 					if (is_date($t_row['booked_date'])) {
@@ -2992,12 +2978,11 @@ function is_twitter($address) {
 	}
 
 function get_scope($id) {
-	$query = "SELECT `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $id;
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	if(!$result || mysql_num_rows($result) == 0) {
+	$query = "SELECT `scope` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+	$row = db_fetch_one($query, [intval($id)], 'i');
+	if (!$row) {
 		return "";
 		} else {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
 		return $row['scope'];
 		}
 	}
@@ -3005,10 +2990,9 @@ function get_scope($id) {
 function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28/13
 	if (get_variable('allow_notify') != '1') return FALSE;						//should we notify?
 	$actionText = "";
-	$query = "SELECT `scope`, `severity`, `facility`, `rec_facility`, `in_types_id` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id;
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	if(!$result || mysql_num_rows($result) == 0) {return;}
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT `scope`, `severity`, `facility`, `rec_facility`, `in_types_id` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+	$row = db_fetch_one($query, [intval($ticket_id)], 'i');
+	if (!$row) {return;}
 	$scope = $row['scope'];
 	$facility = $row['facility'];
 	$rec_facility = $row['rec_facility'];
@@ -3024,34 +3008,32 @@ function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28
 	$assignsaddrs = array();
 	$assignssmsaddrs = array();
 	$intypeaddrs = array();
-	$severity_filter = (intval($row['severity']) == $GLOBALS['SEVERITY_NORMAL'])? "(`severities` = 1 )" : "(`severities`= 3) OR (`severities`= 1)";		// 5/22/11
+	$severity_filter = (intval($row['severity']) == $GLOBALS['SEVERITY_NORMAL'])? "(`severities` = 1 )" : "((`severities`= 3) OR (`severities`= 1))";		// 5/22/11
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify` WHERE (
+	// $fields[$action_id] is from a hardcoded whitelist (on_ticket, on_action, on_patient) - safe for db_escape
+	$notify_field = db_escape($fields[$action_id]);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}notify` WHERE (
 		{$severity_filter} AND
-		(`ticket_id`={$ticket_id} OR `ticket_id`=0)  AND
-		`{$fields[$action_id]}` = '1')";			// all notifies for given ticket - or any ticket 10/22/08
+		(`ticket_id` = ? OR `ticket_id` = 0) AND
+		`{$notify_field}` = '1')";			// all notifies for given ticket - or any ticket 10/22/08
 
-	$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {		//is it the right action?
+	$notify_rows = db_fetch_all($query, [intval($ticket_id)], 'i');
+	foreach ($notify_rows as $row) {		//is it the right action?
 		if (is_email($row['email_address'])) {
 			array_push($addrs, $row['email_address']); // save for emailing
 			}
 		if($row['mailgroup'] != 0) {	//	8/28/13	Checks for maillist notifies
-			$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup_x` WHERE `mailgroup` = " . $row['mailgroup'];
-			$result_mg	= mysql_query($query_mg) or do_error($query_mg,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-			while($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {
+			$query_mg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup_x` WHERE `mailgroup` = ?";
+			$mg_rows = db_fetch_all($query_mg, [intval($row['mailgroup'])], 'i');
+			foreach ($mg_rows as $row_mg) {
 				if($row_mg['contacts'] != 0) {
-					$query_c = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` WHERE `id` = " . $row_mg['contacts'] . " LIMIT 1";
-					$result_c	= mysql_query($query_c) or do_error($query_c,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-					$row_c = stripslashes_deep(mysql_fetch_assoc($result_c));
-					if (is_email($row_c['email'])) {
+					$query_c = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` WHERE `id` = ? LIMIT 1";
+					$row_c = db_fetch_one($query_c, [intval($row_mg['contacts'])], 'i');
+					if ($row_c && is_email($row_c['email'])) {
 						array_push($addrs, $row_c['email']); // save for emailing
 						}
 					} elseif($row_mg['responder'] != 0) {
 					$addrs_arr = get_contact_via($row_mg['responder']);
-//					$query_r = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $row_mg['responder'] . " LIMIT 1";
-//					$result_r	= mysql_query($query_r) or do_error($query_r,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-//					$row_r = stripslashes_deep(mysql_fetch_assoc($result_r));
 					foreach($addrs_arr as $val) {
 						if (is_email($val)) {
 							array_push($addrs, $val); // save for emailing
