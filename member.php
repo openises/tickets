@@ -22,17 +22,17 @@ $left_col_width = $scr_width * 0.58;
 $right_col_width = $scr_width * 0.33; 
 
 $u_types = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name']);		// name, index
 	}
 unset($result);
 
 $st_types = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_status` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$st_types [$row['id']] = array ($row['status_val']);		// name, index
 	}
 unset($result);
@@ -410,9 +410,9 @@ function linkFromSumm(table, index) {
 		$old_clothing = array();
 		$old_files = array();
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocations` WHERE `member_id` = " . mysql_real_escape_string($_POST['frm_id']);
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = " . intval($_POST['frm_id']);
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			if($row['skill_type'] ==1) {
 				$old_training[] = $row['skill_id'];
 				}
@@ -477,7 +477,7 @@ function linkFromSumm(table, index) {
 			$filename = "";
 			}
 		
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]waste_basket_m` 
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}waste_basket_m` 
 				(`field1`,
 				`field2`, 
 				`field3`, 
@@ -628,13 +628,13 @@ function linkFromSumm(table, index) {
 				quote_smart(trim($from)) . "," .
 				quote_smart(trim($_POST['frm_id'])) . ");";
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	
+		$result = db_query($query);	
 		
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]member WHERE `id`=" . mysql_real_escape_string($_POST['frm_id']);
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}member WHERE `id`=" . intval($_POST['frm_id']);
+		$result = db_query($query);
 		
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `member_id`=" . mysql_real_escape_string($_POST['frm_id']);
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `member_id`=" . intval($_POST['frm_id']);
+		$result = db_query($query);
 		
 		$files_directory = "./mdb_files/" . $_POST['frm_id'];
 		$files_wastebasket = "./mdb_file_waste/" . $_POST['frm_id'];
@@ -649,12 +649,12 @@ function linkFromSumm(table, index) {
 			rename ($pictures_directory, $pictures_wastebasket);
 			}
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mdb_files` WHERE `member_id` = " . mysql_real_escape_string($_POST['frm_id']);
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mdb_files` WHERE `member_id` = " . intval($_POST['frm_id']);
+		$result = db_query($query);
+		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$oldname = explode("/",$row['name']);
 			$filename = "./file_waste/" . $_POST['frm_id'] . "/" . $oldname[3];
-			$query2 = "INSERT INTO `$GLOBALS[mysql_prefix]waste_basket_f` 
+			$query2 = "INSERT INTO `{$GLOBALS['mysql_prefix']}waste_basket_f` 
 					(`member_id`, 
 					`name`, 
 					`shortname`, 
@@ -666,11 +666,11 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($row['shortname'])) . "," .	
 					quote_smart(trim($row['description'])) . "," .			
 					quote_smart(trim($now)) . ");";		
-			$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		
+			$result2 = db_query($query2);		
 			}
 			
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]mdb_files WHERE `member_id`=" . mysql_real_escape_string($_POST['frm_id']);
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `member_id`=" . intval($_POST['frm_id']);
+		$result = db_query($query);
 		
 		$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been Deleted by user " . get_owner($who) . " on " . $now;
 		$addrs = mdb_notify_user();
@@ -727,7 +727,7 @@ function linkFromSumm(table, index) {
 			$frm_field6 = $_POST['frm_field6'];
 			$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 			$from = $_SERVER['REMOTE_ADDR'];			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]member` SET
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
 				`field1`= " . 		quote_smart(trim($_POST['frm_field1'])) . ",
 				`field2`= " . 		quote_smart(trim($_POST['frm_field2'])) . ",
 				`field3`= " . 		quote_smart(trim($frm_field3)) . ",
@@ -796,9 +796,9 @@ function linkFromSumm(table, index) {
 				`_by`= " . 			quote_smart(trim($who)) . ",				
 				`_on`= " . 			quote_smart(trim($now)) . ",
 				`_from`= " . 		quote_smart(trim($from)) . "					
-				WHERE `id`= " . 	quote_smart(trim(mysql_real_escape_string($_POST['frm_id']))) . ";";
+				WHERE `id`= " . 	quote_smart(trim(intval($_POST['frm_id']))) . ";";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 			do_log($GLOBALS['LOG_MEMBER_CHANGE'], $_POST['frm_id'], $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);
 
 			$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been Changed by user " . get_owner($who) . " on " . $now . "\n\n";
@@ -860,7 +860,7 @@ function linkFromSumm(table, index) {
 			$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 			$from = $_SERVER['REMOTE_ADDR'];			
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]member` 
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}member` 
 					(`field1`,
 					`field2`, 
 					`field3`, 
@@ -999,9 +999,9 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($now)) . "," .					
 					quote_smart(trim($from)) . ");";								// 8/23/08
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$new_id = mysql_insert_id();	
-			do_log($GLOBALS['LOG_MEMBER_ADD'], mysql_insert_id(), $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);			
+			$result = db_query($query);
+			$new_id = db()->insert_id;	
+			do_log($GLOBALS['LOG_MEMBER_ADD'], db()->insert_id, $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);			
 			
 			if (isset($_FILES['frm_image'])) {
 				$upload_directory = "./mdb_pictures/" . $new_id . "/";
@@ -1027,10 +1027,10 @@ function linkFromSumm(table, index) {
 			
 			$image = $filename;
 			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]member` SET
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
 				`field5`= " . quote_smart(trim($filename)) . "				
 				WHERE `id`= '{$new_id}';";
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 
 			$caption = "<B>Member  <i>" . stripslashes_deep($_POST['frm_field2']) . " " . stripslashes_deep($_POST['frm_field1']) . "</i> data has been added.</B>";
 
@@ -1054,7 +1054,7 @@ function linkFromSumm(table, index) {
 			$expires = $_POST['frm_expires'];
 			$frm_completed = "$_POST[frm_year_completed]-$_POST[frm_month_completed]-$_POST[frm_day_completed]";
 			$frm_refresh = ($expires == "Yes") ? "$_POST[frm_year_refresh]-$_POST[frm_month_refresh]-$_POST[frm_day_refresh]" : "";
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `frequency`, `completed`, `refresh_due`, `_on` )
 				VALUES (" .
 					quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1065,7 +1065,7 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($frm_refresh)) . "," .
 					quote_smart(trim($now)) . ");";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query);
 			
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been added.";	
@@ -1086,7 +1086,7 @@ function linkFromSumm(table, index) {
 			$start = "$_POST[frm_year_start]-$_POST[frm_month_start]-$_POST[frm_day_start]";
 			$end = "$_POST[frm_year_end]-$_POST[frm_month_end]-$_POST[frm_day_end]";
 			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `start`, `end`, `_on` )
 				VALUES (" .
 					quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1096,7 +1096,7 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($end)) . "," .
 					quote_smart(trim($now)) . ");";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query);
 			
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been added.";	
@@ -1114,7 +1114,7 @@ function linkFromSumm(table, index) {
 		if ($_get_addcloth  == 'true') {	
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `completed`, `_on` )
 				VALUES (" .
 					quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1123,7 +1123,7 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($now)) . "," .	
 					quote_smart(trim($now)) . ");";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query);
 			
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been added.";	
@@ -1141,7 +1141,7 @@ function linkFromSumm(table, index) {
 		if ($_get_addcapab  == 'true') {	
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `_on` )
 				VALUES (" .
 					quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1149,7 +1149,7 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($_POST['frm_skill'])) . "," .	
 					quote_smart(trim($now)) . ");";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query);
 
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been added.";	
@@ -1167,7 +1167,7 @@ function linkFromSumm(table, index) {
 		if ($_get_addequip  == 'true') {	
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `_on` )
 				VALUES (" .
 					quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1175,7 +1175,7 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($_POST['frm_skill'])) . "," .	
 					quote_smart(trim($now)) . ");";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query);
 
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been added.";	
@@ -1199,7 +1199,7 @@ function linkFromSumm(table, index) {
 			$end = (isset($_POST['frm_end'])) ? $_POST['frm_end'] : "";		
 			$days = (isset($_POST['frm_days'])) ? $_POST['frm_days'] : "";	
 			
-			$query = "INSERT INTO `$GLOBALS[mysql_prefix]allocations` (
+			$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocations` (
 				`member_id`, `skill_type`, `skill_id`, `frequency`, `start`, `end`, `days`, `_on` )
 				VALUES (" .
 					quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1211,7 +1211,7 @@ function linkFromSumm(table, index) {
 					quote_smart(trim($days)) . "," .					
 					quote_smart(trim($now)) . ");";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query($query);
 
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been added.";	
@@ -1245,7 +1245,7 @@ function linkFromSumm(table, index) {
 				if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 					if (strlen(filesize($file)) < 40000000) {
 						$filename = $file;
-						$query = "INSERT INTO `$GLOBALS[mysql_prefix]mdb_files` (
+						$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}mdb_files` (
 							`member_id`, `name`, `shortname`, `description`, `filesize`, `_on` )
 							VALUES (" .
 								quote_smart(trim($_POST['frm_id'])) . "," .
@@ -1255,7 +1255,7 @@ function linkFromSumm(table, index) {
 								quote_smart(trim($_FILES['frm_file']['size'])) . "," .	
 								quote_smart(trim($now)) . ");";
 
-						$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+						$result = db_query($query);
 						$caption = "<B>File \"" . $shortname . "\" has been added to the member file store.</B>";
 						} else {
 						$flag = "No update done";
@@ -1288,8 +1288,8 @@ function linkFromSumm(table, index) {
 		
 		if ($_get_edittpack  == 'true') {
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `id`=" . mysql_real_escape_string($_POST['frm_all_id']);
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been removed.";					
@@ -1301,16 +1301,16 @@ function linkFromSumm(table, index) {
 				$frm_completed = "$_POST[frm_year_completed]-$_POST[frm_month_completed]-$_POST[frm_day_completed]";
 				$frm_refresh = ($expires == "Yes") ? "$_POST[frm_year_refresh]-$_POST[frm_month_refresh]-$_POST[frm_day_refresh]" : "";
 
-				$query = "UPDATE `$GLOBALS[mysql_prefix]allocations` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
 					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
 					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
 					`frequency`= " . 		quote_smart(trim($expires)) . ",		
 					`completed`= " . 		quote_smart(trim($frm_completed)) . ",				
 					`refresh_due`= " . 		quote_smart(trim($frm_refresh)) . ",
 					`_on`= " . 				quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_all_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been changed.";	
@@ -1329,8 +1329,8 @@ function linkFromSumm(table, index) {
 			
 		if ($_get_editevent  == 'true') {
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `id`=" . mysql_real_escape_string($_POST['frm_all_id']);
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been removed.";					
@@ -1340,15 +1340,15 @@ function linkFromSumm(table, index) {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				$start = "$_POST[frm_year_start]-$_POST[frm_month_start]-$_POST[frm_day_start]";
 				$end = "$_POST[frm_year_end]-$_POST[frm_month_end]-$_POST[frm_day_end]";
-				$query = "UPDATE `$GLOBALS[mysql_prefix]allocations` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
 					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
 					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
 					`start`= " . 		quote_smart(trim($start)) . ",
 					`end`= " . 		quote_smart(trim($end)) . ",
 					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_all_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been changed.";	
@@ -1367,8 +1367,8 @@ function linkFromSumm(table, index) {
 		
 		if ($_get_editcloth  == 'true') {	
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `id`=" . mysql_real_escape_string($_POST['frm_all_id']);
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
+				$result = db_query($query);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been removed.";					
@@ -1377,13 +1377,13 @@ function linkFromSumm(table, index) {
 				} else {		
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				
-				$query = "UPDATE `$GLOBALS[mysql_prefix]allocations` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
 					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
 					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
 					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_all_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been changed.";	
@@ -1402,8 +1402,8 @@ function linkFromSumm(table, index) {
 
 		if ($_get_editcapab  == 'true') {	
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `id`=" . mysql_real_escape_string($_POST['frm_all_id']);
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
+				$result = db_query($query);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been removed.";					
@@ -1412,13 +1412,13 @@ function linkFromSumm(table, index) {
 				} else {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				
-				$query = "UPDATE `$GLOBALS[mysql_prefix]allocations` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
 					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
 					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
 					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_all_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been changed.";	
@@ -1437,8 +1437,8 @@ function linkFromSumm(table, index) {
 
 		if ($_get_editequip  == 'true') {
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `id`=" . mysql_real_escape_string($_POST['frm_all_id']);
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
+				$result = db_query($query);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been removed.";					
@@ -1447,13 +1447,13 @@ function linkFromSumm(table, index) {
 				} else {		
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 				
-				$query = "UPDATE `$GLOBALS[mysql_prefix]allocations` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
 					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
 					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
 					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_all_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been changed.";		
@@ -1472,8 +1472,8 @@ function linkFromSumm(table, index) {
 
 		if ($_get_editveh  == 'true') {	
 			if ((isset($_POST['frm_all_remove'])) && ($_POST['frm_all_remove'] != "")) {
-				$query = "DELETE FROM $GLOBALS[mysql_prefix]allocations WHERE `id`=" . mysql_real_escape_string($_POST['frm_all_id']);
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$query = "DELETE FROM {$GLOBALS['mysql_prefix']}allocations WHERE `id`=" . intval($_POST['frm_all_id']);
+				$result = db_query($query);
 				
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been removed.";					
@@ -1486,7 +1486,7 @@ function linkFromSumm(table, index) {
 				$start = (isset($_POST['frm_start'])) ? $_POST['frm_start'] : "";
 				$end = (isset($_POST['frm_end'])) ? $_POST['frm_end'] : "";		
 				$days = (isset($_POST['frm_days'])) ? $_POST['frm_days'] : "";				
-				$query = "UPDATE `$GLOBALS[mysql_prefix]allocations` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}allocations` SET
 					`member_id`= " . 		quote_smart(trim($_POST['frm_id'])) . ",
 					`skill_id`= " . 		quote_smart(trim($_POST['frm_skill'])) . ",
 					`frequency`= " . 		quote_smart(trim($frequency)) . ",
@@ -1494,9 +1494,9 @@ function linkFromSumm(table, index) {
 					`end`= " . 		quote_smart(trim($end)) . ",
 					`days`= " . 		quote_smart(trim($days)) . ",					
 					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_all_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_all_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been changed.";
@@ -1518,8 +1518,8 @@ function linkFromSumm(table, index) {
 				$base_dir = getcwd();
 				$file = $base_dir . "/" . substr($_POST['frm_file_name'], 2);
 				if(unlink($file)) {
-					$query = "DELETE FROM $GLOBALS[mysql_prefix]mdb_files WHERE `id`=" . mysql_real_escape_string($_POST['frm_file_id']);
-					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+					$query = "DELETE FROM {$GLOBALS['mysql_prefix']}mdb_files WHERE `id`=" . intval($_POST['frm_file_id']);
+					$result = db_query($query);
 					
 					$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 					$text_str .= ". \n\nFile - " . $_POST['frm_file'] . " " . $_POST['frm_file_name'] . ") has been removed.";						
@@ -1531,12 +1531,12 @@ function linkFromSumm(table, index) {
 				} else {
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-				$query = "UPDATE `$GLOBALS[mysql_prefix]mdb_files` SET
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_files` SET
 					`description`= " . 		quote_smart(trim($_POST['frm_description'])) . ",
 					`_on`= " . 			quote_smart(trim($now)) . "
-					WHERE `id`= " . 		quote_smart(trim(mysql_real_escape_string($_POST['frm_id']))) . ";";
+					WHERE `id`= " . 		quote_smart(trim(intval($_POST['frm_id']))) . ";";
 
-				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+				$result = db_query($query);
 
 				$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 				$text_str .= ". \n\nFile - " . get_its_name($_POST['frm_skill'], 'shortname', 'files') . " has been changed.";		
@@ -1700,7 +1700,7 @@ function linkFromSumm(table, index) {
 // edit member =================================================================================================================
 
 	if (($_getedit == 'true') || ($_getextra == 'edit')) {
-		$id = mysql_real_escape_string($_REQUEST['id']);	
+		$id = sanitize_int($_REQUEST['id']);	
 		if((can_edit()) || (is_team_manager($id)) || (is_curr_member($id))) {
 			$query	= "SELECT *, `field17` AS `joindate`,
 				`field18` AS `dob`,
@@ -1708,9 +1708,9 @@ function linkFromSumm(table, index) {
 				`field12` AS `lat`, 
 				`field13` AS `lng`, 
 				`_on` AS `updated`
-				FROM `$GLOBALS[mysql_prefix]member` WHERE `id`={$id}";
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row	= mysql_fetch_array($result);
+				FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id`={$id}";
+			$result	= db_query($query);
+			$row	= $result->fetch_array();
 			$row['duedate'] = strtotime($row['duedate']);
 			$row['joindate'] = strtotime($row['joindate']);
 			$row['dob'] = strtotime($row['dob']);
@@ -1743,7 +1743,7 @@ function linkFromSumm(table, index) {
 </HEAD>
 <?php
 	if (($_getview == 'true') || ($_getextra == 'view')) {
-		$id = mysql_real_escape_string($_GET['id']);
+		$id = sanitize_int($_GET['id']);
 		if((can_view()) || (is_team_manager($id)) || (is_curr_member($id))) {		
 
 			$query	= "SELECT *, `_on` AS `updated`,
@@ -1752,10 +1752,10 @@ function linkFromSumm(table, index) {
 				`field18` AS `dob`,
 				`field17` AS `joindate`, 
 				`field16` AS `duedate` 
-				FROM `$GLOBALS[mysql_prefix]member` `m` 
+				FROM `{$GLOBALS['mysql_prefix']}member` `m` 
 				WHERE `m`.`id`={$id} LIMIT 1";
-			$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$row	= stripslashes_deep(mysql_fetch_assoc($result));
+			$result	= db_query($query);
+			$row	= stripslashes_deep($result->fetch_assoc());
 			$row['duedate'] = strtotime($row['duedate']);
 			$row['joindate'] = strtotime($row['joindate']);
 			$row['dob'] = strtotime($row['dob']);
@@ -1763,9 +1763,9 @@ function linkFromSumm(table, index) {
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 			if (isset($row['field21'])) {
-				$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]member_status` WHERE `id`=" . $row['field21'];	// status value
-				$result_st	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-				$row_st	= mysql_fetch_assoc($result_st);
+				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id`=" . $row['field21'];	// status value
+				$result_st	= db_query($query);
+				$row_st	= $result_st->fetch_assoc();
 				unset($result_st);
 				}
 			$un_st_val = (isset($row['field21']))? $row_st['status_val'] : "?";

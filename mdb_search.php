@@ -98,41 +98,48 @@ function validate(theForm) {
 		<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Tickets - MDB Search</SPAN>
 	</DIV>
 <?php 
-	$post_frm_query = (array_key_exists('frm_query', ($_POST))) ? $_POST['frm_query']  : "" ;
+	$post_frm_query = (array_key_exists('frm_query', ($_POST))) ? sanitize_string($_POST['frm_query'])  : "" ;
 
 	if ($post_frm_query) {
 ?>
 		<DIV id='rightcol' style='display: inline-block; position: relative; left: 50px;'>
 <?php
-		print "<FONT CLASS='header text_large'>Search results for '$_POST[frm_query]'</FONT><BR /><BR />\n";
-		$patterns = 
-		$_POST['frm_query'] = str_replace(' ', '|', $_POST['frm_query']);
-		if($_POST['frm_search_in'])	{	//what field are we searching?
-			$search_fields = "$_POST[frm_search_in] REGEXP '$_POST[frm_query]'";
+		print "<FONT CLASS='header text_large'>Search results for '" . e($post_frm_query) . "'</FONT><BR /><BR />\n";
+		$patterns =
+		$_POST['frm_query'] = str_replace(' ', '|', $post_frm_query);
+		$safe_query = db()->real_escape_string($_POST['frm_query']);
+		if(!empty($_POST['frm_search_in']))	{	//what field are we searching?
+			$safe_field = db()->real_escape_string($_POST['frm_search_in']);
+			$search_fields = "`{$safe_field}` REGEXP '{$safe_query}'";
 			} else {
 			//list fields and form the query to search all of them
-			$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]member`");
+			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}member`");
 			$search_fields = "";
-			for ($i = 0; $i < mysql_num_fields($result); $i++)
-    			$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
+			$field_count = $result->field_count;
+			for ($i = 0; $i < $field_count; $i++) {
+				$finfo = $result->fetch_field_direct($i);
+    			$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
+				}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
 			}
 		
 		$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";		// 9/19/08
+		$safe_ordertype = db()->real_escape_string($_POST['frm_ordertype']);
+		$safe_desc = ($desc === 'DESC') ? 'DESC' : '';
 
 		$query = "SELECT *,`field16` AS `duedate`,
 		`field17` AS `joindate`,
 		`field18` AS `dob` ,
 		`field21` AS `member_status`,
-		`_on` AS `updated` 
-		FROM `$GLOBALS[mysql_prefix]member` 
-		WHERE " . $search_fields . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;		// 9/19/08
-		$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-		if (mysql_num_rows($result)) {
+		`_on` AS `updated`
+		FROM `{$GLOBALS['mysql_prefix']}member`
+		WHERE " . $search_fields . " ORDER BY `" . $safe_ordertype . "` " . $safe_desc;		// 9/19/08
+		$result = db_query($query);
+		if ($result->num_rows) {
 			$member_found = $counter = 1;
 			print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Member Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
-				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='text' ><A CLASS='text' HREF='member.php?view=true&id={$row['id']}'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD CLASS='text' >".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD CLASS='text' ><A CLASS='text'  HREF='member.php?view=true&id={$row['id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD><TD CLASS='text' >".get_status_name($row['member_status'])."</TD></TR>\n";				// 2/25/09
+			while($row = stripslashes_deep($result->fetch_assoc())){				// 8/28/08
+				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='text' ><A CLASS='text' HREF='member.php?view=true&id=" . intval($row['id']) . "'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD CLASS='text' >".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD CLASS='text' ><A CLASS='text'  HREF='member.php?view=true&id=" . intval($row['id']) . "'>" . e($row['field2']) . " " . e($row['field1']) . "</A></TD><TD CLASS='text' >".get_status_name($row['member_status'])."</TD></TR>\n";				// 2/25/09
 				$counter++;
 				}
 			
@@ -141,26 +148,29 @@ function validate(theForm) {
 			print 'No matching member data found.  <BR /><BR />';
 			}
 
-			$query = "SELECT 
+			$query = "SELECT
 				`a`.`completed` AS `completed`,
 				`a`.`refresh_due` AS `refresh_due`,
 				`a`.`member_id` AS `member_id`,
 				`tp`.`package_name` AS `package_name`,
-				`tp`.`description` AS `description`	 
-				FROM `$GLOBALS[mysql_prefix]allocations` `a`
-				LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = tp.id AND `a`.`skill_type`= '1' )";
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-			
+				`tp`.`description` AS `description`
+				FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}training_packages` `tp` ON ( `a`.`skill_id` = tp.id AND `a`.`skill_type`= '1' )";
+			$result = db_query($query);
+
 			$search_fields = "";
-			for ($i = 0; $i < mysql_num_fields($result); $i++)
-				if((mysql_field_name($result, $i) != 'id')) {
-					$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
+			$field_count = $result->field_count;
+			for ($i = 0; $i < $field_count; $i++) {
+				$finfo = $result->fetch_field_direct($i);
+				if(($finfo->name != 'id')) {
+					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 				}
+			}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
 			
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
-			$query = "SELECT 
+			$query = "SELECT
 			`a`.`completed` AS `completed`,
 			`a`.`refresh_due` AS `refresh_due`,
 			`a`.`_on` AS `_on`,
@@ -170,16 +180,16 @@ function validate(theForm) {
 			`tp`.`package_name` AS `package_name`,
 			`tp`.`description` AS `description`,
 			`m`.`field1` AS `field1`,
-			`m`.`field2` AS `field2`				
-			FROM `$GLOBALS[mysql_prefix]allocations` `a`
-			LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` `tp` ON ( `a`.`skill_id` = tp.id AND `a`.`skill_type`= '1' )
-			LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `a`.`member_id` = `m`.`id` )					
-			WHERE " . $search_fields . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-			if (mysql_num_rows($result)) {
+			`m`.`field2` AS `field2`
+			FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}training_packages` `tp` ON ( `a`.`skill_id` = tp.id AND `a`.`skill_type`= '1' )
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}member` `m` ON ( `a`.`member_id` = `m`.`id` )
+			WHERE " . $search_fields . " ORDER BY `" . $safe_ordertype . "` " . $safe_desc;
+			$result = db_query($query);
+			if ($result->num_rows) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Training</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))){
+				while($row = stripslashes_deep($result->fetch_assoc())){
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['id']}'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
@@ -195,21 +205,23 @@ function validate(theForm) {
 				`a`.`member_id` AS `member_id`,
 				`ca`.`name` AS `name`,
 				`ca`.`description` AS `description`	 
-				FROM `$GLOBALS[mysql_prefix]allocations` `a`
-				LEFT JOIN `$GLOBALS[mysql_prefix]capability_types` `ca` ON ( `a`.`skill_id` = ca.id AND `a`.`skill_type`= '2' )";
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+				FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}capability_types` `ca` ON ( `a`.`skill_id` = ca.id AND `a`.`skill_type`= '2' )";
+			$result = db_query($query);
 			
 			$search_fields = "";
-			for ($i = 0; $i < mysql_num_fields($result); $i++) {
-				if((mysql_field_name($result, $i) != 'id')) {
-					$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
+			$field_count = $result->field_count;
+			for ($i = 0; $i < $field_count; $i++) {
+				$finfo = $result->fetch_field_direct($i);
+				if(($finfo->name != 'id')) {
+					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
-			
+
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
-			$query = "SELECT 
+			$query = "SELECT
 			`a`.`member_id` AS `member_id`,
 			`ca`.`name` AS `equipment_name`,
 			`ca`.`description` AS `description`, 
@@ -217,15 +229,15 @@ function validate(theForm) {
 			`m`.`_on` AS `member_updated`,		
 			`m`.`field1` AS `field1`,
 			`m`.`field2` AS `field2`			
-			FROM `$GLOBALS[mysql_prefix]allocations` `a`
-			LEFT JOIN `$GLOBALS[mysql_prefix]capability_types` `ca` ON ( `a`.`skill_id` = `ca`.`id` AND `a`.`skill_type`= '2' )	
-			LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `a`.`member_id` = `m`.`id` )				
-			WHERE " . $search_fields . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-			if (mysql_num_rows($result)) {
+			FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}capability_types` `ca` ON ( `a`.`skill_id` = `ca`.`id` AND `a`.`skill_type`= '2' )	
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}member` `m` ON ( `a`.`member_id` = `m`.`id` )				
+			WHERE " . $search_fields . " ORDER BY `" . $safe_ordertype . "` " . $safe_desc;
+			$result = db_query($query);
+			if ($result->num_rows) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Capabilities Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))){
+				while($row = stripslashes_deep($result->fetch_assoc())){
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
@@ -241,22 +253,24 @@ function validate(theForm) {
 				`a`.`member_id` AS `member_id`,
 				`eq`.`equipment_name` AS `equipment_name`,
 				`eq`.`description` AS `description`	 
-				FROM `$GLOBALS[mysql_prefix]allocations` `a`
-				LEFT JOIN `$GLOBALS[mysql_prefix]equipment_types` `eq` ON ( `a`.`skill_id` = `eq`.`id` AND `a`.`skill_type`= '2' )";
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+				FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}equipment_types` `eq` ON ( `a`.`skill_id` = `eq`.`id` AND `a`.`skill_type`= '2' )";
+			$result = db_query($query);
 			
 			$search_fields = "";
-			for ($i = 0; $i < mysql_num_fields($result); $i++) {
-				if((mysql_field_name($result, $i) != 'id')) {
-					$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
+			$field_count = $result->field_count;
+			for ($i = 0; $i < $field_count; $i++) {
+				$finfo = $result->fetch_field_direct($i);
+				if(($finfo->name != 'id')) {
+					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
 
-			
+
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
-			$query = "SELECT 
+			$query = "SELECT
 			`a`.`member_id` AS `member_id`,
 			`eq`.`equipment_name` AS `name`,
 			`eq`.`description` AS `description`,	 
@@ -264,17 +278,17 @@ function validate(theForm) {
 			`m`.`_on` AS `member_updated`,			
 			`m`.`field1` AS `field1`,
 			`m`.`field2` AS `field2`			
-			FROM `$GLOBALS[mysql_prefix]allocations` `a`
-			LEFT JOIN `$GLOBALS[mysql_prefix]equipment_types` `eq` ON ( `a`.`skill_id` = `eq`.`id` AND `a`.`skill_type`= '3' )	
-			LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `a`.`member_id` = `m`.`id` )				
-			WHERE " . $search_fields . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;
+			FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}equipment_types` `eq` ON ( `a`.`skill_id` = `eq`.`id` AND `a`.`skill_type`= '3' )	
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}member` `m` ON ( `a`.`member_id` = `m`.`id` )				
+			WHERE " . $search_fields . " ORDER BY `" . $safe_ordertype . "` " . $safe_desc;
 
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 
-			if (mysql_num_rows($result)) {
+			if ($result->num_rows) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Equipment Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))){
+				while($row = stripslashes_deep($result->fetch_assoc())){
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
@@ -290,21 +304,23 @@ function validate(theForm) {
 				`a`.`member_id` AS `member_id`,
 				`cl`.`clothing_item` AS `clothing_item`,
 				`cl`.`description` AS `description`	 
-				FROM `$GLOBALS[mysql_prefix]allocations` `a`
-				LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` AND `a`.`skill_type`= '2' )";
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+				FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` AND `a`.`skill_type`= '2' )";
+			$result = db_query($query);
 			
 			$search_fields = "";
-			for ($i = 0; $i < mysql_num_fields($result); $i++) {
-				if((mysql_field_name($result, $i) != 'id')) {
-					$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
+			$field_count = $result->field_count;
+			for ($i = 0; $i < $field_count; $i++) {
+				$finfo = $result->fetch_field_direct($i);
+				if(($finfo->name != 'id')) {
+					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
-			
+
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
-			$query = "SELECT 
+			$query = "SELECT
 			`a`.`member_id` AS `member_id`,
 			`cl`.`clothing_item` AS `clothing_item`,
 			`cl`.`description` AS `description`,	 
@@ -312,16 +328,16 @@ function validate(theForm) {
 			`m`.`_on` AS `member_updated`,		
 			`m`.`field1` AS `field1`,
 			`m`.`field2` AS `field2`			
-			FROM `$GLOBALS[mysql_prefix]allocations` `a`
-			LEFT JOIN `$GLOBALS[mysql_prefix]clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` AND `a`.`skill_type`= '3' )	
-			LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `a`.`member_id` = `m`.`id` )				
-			WHERE " . $search_fields . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;
+			FROM `{$GLOBALS['mysql_prefix']}allocations` `a`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}clothing_types` `cl` ON ( `a`.`skill_id` = `cl`.`id` AND `a`.`skill_type`= '3' )	
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}member` `m` ON ( `a`.`member_id` = `m`.`id` )				
+			WHERE " . $search_fields . " ORDER BY `" . $safe_ordertype . "` " . $safe_desc;
 
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
-			if (mysql_num_rows($result)) {
+			$result = db_query($query);
+			if ($result->num_rows) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Clothing Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))){
+				while($row = stripslashes_deep($result->fetch_assoc())){
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
@@ -336,17 +352,19 @@ function validate(theForm) {
 			$query = "SELECT 
 			`f`.`name` AS `name`,			
 			`f`.`shortname` AS `shortname`
-			FROM `$GLOBALS[mysql_prefix]mdb_files` `f`";
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+			FROM `{$GLOBALS['mysql_prefix']}mdb_files` `f`";
+			$result = db_query($query);
 			
 			$search_fields = "";
-			for ($i = 0; $i < mysql_num_fields($result); $i++) {
-				if((mysql_field_name($result, $i) != 'id')) {
-					$search_fields .= mysql_field_name($result, $i) ." REGEXP '" . $_POST['frm_query'] . "' OR ";
+			$field_count = $result->field_count;
+			for ($i = 0; $i < $field_count; $i++) {
+				$finfo = $result->fetch_field_direct($i);
+				if(($finfo->name != 'id')) {
+					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
 			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
-			
+
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
 			$query = "SELECT `f`.`member_id` AS `member_id`,
@@ -356,16 +374,16 @@ function validate(theForm) {
 			`m`.`_on` AS `member_updated`,				
 			`m`.`field1` AS `field1`,
 			`m`.`field2` AS `field2`			
-			FROM `$GLOBALS[mysql_prefix]mdb_files` `f`
-			LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `f`.`member_id` = `m`.`id` )				
-			WHERE " . $search_fields . " ORDER BY `" . $_POST['frm_ordertype'] . "` " . $desc;
+			FROM `{$GLOBALS['mysql_prefix']}mdb_files` `f`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}member` `m` ON ( `f`.`member_id` = `m`.`id` )				
+			WHERE " . $search_fields . " ORDER BY `" . $safe_ordertype . "` " . $safe_desc;
 
-			$result = mysql_query($query) or do_error($query,'', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 
-			if (mysql_num_rows($result)) {
+			if ($result->num_rows) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Files</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
-				while($row = stripslashes_deep(mysql_fetch_assoc($result))){
+				while($row = stripslashes_deep($result->fetch_assoc())){
 					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
@@ -393,7 +411,7 @@ function validate(theForm) {
 						<TR CLASS = "even">
 							<TD VALIGN="top" CLASS="td_label text">Query: &nbsp;</TD>
 							<TD>
-								<INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print $post_frm_query;?>" NAME="frm_query">
+								<INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print e($post_frm_query);?>" NAME="frm_query">
 							</TD>
 						</TR>
 						<TR CLASS = "odd">

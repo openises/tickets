@@ -12,17 +12,17 @@ $incidents = get_text("Incidents");
 $gt_status = get_text("Status");
 $mode = (array_key_exists('mode', $_REQUEST)) ? $_REQUEST['mode'] : 0;
 $the_messages = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$the_messages[] = $row['id'];
 	}
 
 $the_contacts = array();
 $i = 1;
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$the_contacts[$i][0] = $row['name'];
 	$the_contacts[$i][1] = $row['organization'];	
 	$the_contacts[$i][2] = $row['phone'];
@@ -31,9 +31,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 	$i++;
 	}
 	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	if($row['contact_via'] != "") {
 		$the_contacts[$i][0] = $row['name'];
 		$the_contacts[$i][1] = "responder";	
@@ -44,9 +44,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 		}
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	if($row['email'] != "") {
 		$the_contacts[$i][0] = $row['name_f'] . " " . $row['name_l'];
 		$the_contacts[$i][1] = "user";	
@@ -58,9 +58,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 	}
 
 $the_users = array();	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$the_users[] = $row['id'];
 	}	
 
@@ -149,10 +149,10 @@ function the_ticket($theRow, $theWidth=500, $search=FALSE, $dist=TRUE) {						//
 	}		// end function do ticket(
 
 function get_respname($theid) {	//	Gets responder ID from SMS Gateway ID
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = '" . $theid . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [intval($theid)]);
+	if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_name = $row['name'];
 		} else {
 		$the_name="No Name";
@@ -161,10 +161,10 @@ function get_respname($theid) {	//	Gets responder ID from SMS Gateway ID
 	}
 
 function get_tickname($theid) {	//	Gets responder ID from SMS Gateway ID
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = '" . $theid . "' LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [intval($theid)]);
+	if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_name = $row['scope'];
 		} else {
 		$the_name="No Name";
@@ -329,9 +329,9 @@ if(!empty($_POST)) {
 		$facility = (array_key_exists('facility_id', $_POST)) ? $_POST['facility_id'] : 0;
 		$rec_facility = (array_key_exists('rec_facility_id', $_POST)) ? $_POST['rec_facility_id'] : 0;	
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 		
-		$query  = "INSERT INTO `$GLOBALS[mysql_prefix]assigns` (`as_of` , `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`, `facility_id`, `rec_facility_id`) VALUES 
-				('$now', 1, $tick_id, $resp_id, 'Dispatched from Messages', $user_id, '$now')";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}assigns` (`as_of` , `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`, `facility_id`, `rec_facility_id`) VALUES
+				(?, 1, ?, ?, 'Dispatched from Messages', ?, ?)";
+		$result = db_query($query, [$now, intval($tick_id), intval($resp_id), intval($user_id), $now]);
 		$the_flag = "Responder " . $respname . " dispatched to " . $tickname;
 ?>
 		<BODY>
@@ -373,7 +373,7 @@ if(!empty($_POST)) {
 	}
 	
 	
-$uid = strip_tags($_GET['id']); 
+$uid = sanitize_int($_GET['id']);
 
 $this_msg = array_search($uid, $the_messages);
 $next_msg = (array_key_exists(($this_msg + 1), $the_messages)) ? $the_messages[($this_msg + 1)] : "Last";
@@ -386,13 +386,13 @@ function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
 	}
 if(isset($_GET['wastebasket'])) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages_bin` `m` WHERE `id` = '" . $uid . "'";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages_bin` `m` WHERE `id` = ?";
+	$result = db_query($query, [$uid]);
 	} else {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` `m` WHERE `id` = '" . $uid . "'";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` `m` WHERE `id` = ?";
+	$result = db_query($query, [$uid]);
 	}
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$row = stripslashes_deep($result->fetch_assoc());
 $readby = $row['readby'];
 $message = $row['message'];
 $recipients = $row['recipients'];
@@ -423,8 +423,8 @@ if(($the_readers[0] != "") && (in_array($the_user, $the_readers, true))) {
 		}
 	$the_readstatus = ($count_users == $count_readers) ? 2 : 1;
 	$the_readby_str = $readby . $the_sep . $_SESSION['user_id'];
-	$query2 = "UPDATE `$GLOBALS[mysql_prefix]messages` SET `readby`='$the_readby_str', `read_status` = " . $the_readstatus . " WHERE `id`='$uid'";
-	$result2 = mysql_query($query2) or do_error($query2, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);			
+	$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `readby`=?, `read_status` = ? WHERE `id`=?";
+	$result2 = db_query($query2, [$the_readby_str, $the_readstatus, $uid]);			
 	}
 
 if(($row['msg_type'] == 4) || ($row['msg_type'] == 5) || ($row['msg_type'] == 6)) {
@@ -432,9 +432,9 @@ if(($row['msg_type'] == 4) || ($row['msg_type'] == 5) || ($row['msg_type'] == 6)
 	$theFrom = explode(",", $fromAddress);
 	$theOthers = array();	
 	foreach($theFrom AS $val) {
-		$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` `m` WHERE `smsg_id` = '" . $val . "'";
-		$result1 = mysql_query($query1) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+		$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
+		$result1 = db_query($query1, [$val]);
+		while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 			$theOthers[] = $row1['contact_via'];
 			}
 		}
@@ -447,9 +447,9 @@ if($row['msg_type'] == 3) {
 	$theRecipients = explode(",", $row['recipients']);
 	$theOthers = array();	
 	foreach($theRecipients AS $val) {
-		$query1 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` `m` WHERE `smsg_id` = '" . $val . "'";
-		$result1 = mysql_query($query1) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row1 = stripslashes_deep(mysql_fetch_assoc($result1))) {
+		$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
+		$result1 = db_query($query1, [$val]);
+		while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 			$theOthers[] = $row1['contact_via'];
 			}
 		}
@@ -487,43 +487,43 @@ if ($row['msg_type'] == 1) {
 	}
 
 if(empty($_POST)) {
-	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
+	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=" . intval($_SESSION['user_id']) : "";
 	$tick_query = "SELECT *,
 		`problemstart` AS `my_start`,
 		`problemstart` AS `problemstart`,
 		`problemend` AS `problemend`,
 		`date` AS `date`,
 		`booked_date` AS `booked_date`,		
-		`$GLOBALS[mysql_prefix]ticket`.`updated` AS `updated`,		
-		`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`,
-		`$GLOBALS[mysql_prefix]ticket`.`street` AS `tick_street`,
-		`$GLOBALS[mysql_prefix]ticket`.`city` AS `tick_city`,
-		`$GLOBALS[mysql_prefix]ticket`.`state` AS `tick_state`,		
-		`$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,		
-		`$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,
-		`$GLOBALS[mysql_prefix]ticket`.`_by` AS `call_taker`,
-		`$GLOBALS[mysql_prefix]ticket`.`facility` AS `facility`,
-		`$GLOBALS[mysql_prefix]ticket`.`rec_facility` AS `rec_facility`,		
-		`$GLOBALS[mysql_prefix]facilities`.`name` AS `fac_name`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`updated` AS `updated`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,		
+		`{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`facility` AS `facility`,
+		`{$GLOBALS['mysql_prefix']}ticket`.`rec_facility` AS `rec_facility`,		
+		`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,		
 		`rf`.`name` AS `rec_fac_name`,
-		`$GLOBALS[mysql_prefix]facilities`.`lat` AS `fac_lat`,		
-		`$GLOBALS[mysql_prefix]facilities`.`lng` AS `fac_lng`,		 
-		`$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
-		FROM `$GLOBALS[mysql_prefix]ticket` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` 	ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)	
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 		ON (`$GLOBALS[mysql_prefix]facilities`.id = `$GLOBALS[mysql_prefix]ticket`.`facility`) 
-		LEFT JOIN `$GLOBALS[mysql_prefix]facilities` rf 	ON (`rf`.id = `$GLOBALS[mysql_prefix]ticket`.`rec_facility`) 
-		WHERE `$GLOBALS[mysql_prefix]ticket`.`id`= " . $tick_id . " " . $restrict_ticket;			// 7/16/09, 8/12/09
+		`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,		
+		`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`,		 
+		`{$GLOBALS['mysql_prefix']}ticket`.`id` AS `tick_id`
+		FROM `{$GLOBALS['mysql_prefix']}ticket` 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` 	ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)	
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` 		ON (`{$GLOBALS['mysql_prefix']}facilities`.id = `{$GLOBALS['mysql_prefix']}ticket`.`facility`) 
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` rf 	ON (`rf`.id = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`) 
+		WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id`= " . $tick_id . " " . $restrict_ticket;			// 7/16/09, 8/12/09
 	
-	$tick_result = mysql_query($tick_query) or do_error($tick_query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$tick_result = db_query($tick_query);
 	$facility_id = 0;
 	$rec_facility_id = 0;
-	if (!mysql_num_rows($tick_result)){	//no tickets? print "error" or "restricted user rights"
+	if (!$tick_result->num_rows){	//no tickets? print "error" or "restricted user rights"
 		$num_tkts = 0;
 		$error_msg = "No Ticket details for this message";
 		} else {
-		$num_tkts = mysql_num_rows($tick_result);
-		$tick_row = stripslashes_deep(mysql_fetch_array($tick_result));
+		$num_tkts = $tick_result->num_rows;
+		$tick_row = stripslashes_deep($tick_result->fetch_array());
 		$facility_id = ($tick_row['facility'] != 0) ? $tick_row['facility'] : 0;
 		$rec_facility_id = ($tick_row['rec_facility'] != 0) ? $tick_row['rec_facility'] : 0;
 		$error_msg = "";

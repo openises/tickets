@@ -111,7 +111,7 @@ function do_glat_test($user) {				// given user id,  returns Google Latitude id,
 	}			// end function do_glat_test();
 
 //	$user = "-681721551039318347";				// known good value
-	$user = $_POST['frm_badge'];
+	$user = sanitize_string($_POST['frm_badge']);
 	$results = do_glat_test($user);
 	
 	$caption = ($results)? "Successful": "Fails";
@@ -160,7 +160,7 @@ function do_glat_test($user) {				// given user id,  returns Google Latitude id,
   <body onload="initialize()" onunload="GUnload()">
   <CENTER>
   <H3>Google Latitude Test <?php print $caption; ?><br />
-	with public location badge: <?php print $_POST['frm_badge']; ?></H3>
+	with public location badge: <?php print e($_POST['frm_badge']); ?></H3>
 	<input type='button' value="Again" onClick = 'location.href="<?php print basename(__FILE__); ?>"' />&nbsp;&nbsp;&nbsp;&nbsp;
   </body><input type='button' value="Finished" onClick = "self.close()" /><br /><br />
 <?php	if ($results) { ?>	

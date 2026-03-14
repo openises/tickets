@@ -18,19 +18,19 @@ if ($handle = opendir('./message_archives')) {
     closedir($handle);
 	}
 	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` ORDER by `date` ASC LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) != 0) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` ORDER by `date` ASC LIMIT 1";
+$result = db_query($query);
+if($result->num_rows != 0) {
+	$row = stripslashes_deep($result->fetch_assoc());
 	$oldest_date = $row['date'];
 	} else {
 	$oldest_date = 0;
 	}
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` ORDER by `date` DESC LIMIT 1";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-if(mysql_num_rows($result) != 0) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` ORDER by `date` DESC LIMIT 1";
+$result = db_query($query);
+if($result->num_rows != 0) {
+	$row = stripslashes_deep($result->fetch_assoc());
 	$newest_date = $row['date'];
 	} else {
 	$newest_date = 0;
@@ -105,9 +105,9 @@ function submit_archive() {
 <FORM NAME="go" action="#" TARGET = "main"></FORM>
 <?php
 if(empty($_POST)) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$num_messages = mysql_num_rows($result);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages`";
+	$result = db_query($query);
+	$num_messages = $result->num_rows;
 ?>
 	<DIV id='outer' style='position: absolute; width: 95%; text-align: center; margin: 10px;'>
 		<DIV id='banner' class='heading' style='font-size: 28px; position: relative: top: 5%; width: 100%; border: 1px outset #000000;'>MESSAGE ARCHIVING</DIV><BR /><BR />

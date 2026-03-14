@@ -33,10 +33,10 @@ if ($istest) {
 
 $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
-$id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
+$id =	(array_key_exists('id', ($_GET)))?	sanitize_int($_GET['id'])  :	NULL;
 
-$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
-$row = mysql_fetch_assoc($result);
+$result = db_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id]);
+$row = $result->fetch_assoc();
 if(!is_array($row)) { $row = array(); }
 $title = array_key_exists('scope', $row) ? $row['scope'] : '';
 $ticket_addr = trim((array_key_exists('street', $row)?$row['street']:'') . ', ' . (array_key_exists('city', $row)?$row['city']:'') . ' ' . (array_key_exists('state', $row)?$row['state']:''));
@@ -56,17 +56,17 @@ $incident = get_text("Incident");
 $incidents = get_text("Incidents");
 $gt_status = get_text("Status");
 $u_types = array();												// 1/1/09
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
 	}
 unset($result);
 
 $f_types = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$f_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 unset($result);	
@@ -76,9 +76,9 @@ $eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	$status_hide[$temp] = $row_st['hide'];
@@ -89,9 +89,9 @@ unset($result_st);
 $fac_status_vals = array();											// build array of $status_vals
 $fac_status_vals[''] = $fac_status_vals['0']="TBD";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `id`";
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$fac_status_vals[$temp] = $row_st['status_val'];
 	}
@@ -99,13 +99,13 @@ while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 $assigns = array();					// 8/3/08
 $tickets = array();					// ticket id's
 
-$query = "SELECT `$GLOBALS[mysql_prefix]assigns`.`ticket_id`, 
-	`$GLOBALS[mysql_prefix]assigns`.`responder_id`, 
-	`$GLOBALS[mysql_prefix]ticket`.`scope` AS `ticket` 
-	FROM `$GLOBALS[mysql_prefix]assigns` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]assigns`.`ticket_id`=`$GLOBALS[mysql_prefix]ticket`.`id`";
-$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_as = stripslashes_deep(mysql_fetch_array($result_as))) {
+$query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
+	`{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
+	`{$GLOBALS['mysql_prefix']}ticket`.`scope` AS `ticket`
+	FROM `{$GLOBALS['mysql_prefix']}assigns`
+	LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`";
+$result_as = db_query($query);
+while ($row_as = stripslashes_deep($result_as->fetch_array())) {
 	$assigns[$row_as['responder_id']] = $row_as['ticket'];
 	$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
 	}
@@ -116,9 +116,10 @@ function isempty($arg) {
 	}
 	
 function fac_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = " . $id;	// all dispatches this unit
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$id = intval($id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";	// all dispatches this unit
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
 	
@@ -130,7 +131,7 @@ function get_day() {
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<HEAD><TITLE>Incident Popup - Incident <?php print $title;?> <?php print $ticket_updated;?></TITLE>
+	<HEAD><TITLE>Incident Popup - Incident <?php print e($title);?> <?php print e($ticket_updated);?></TITLE>
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
 	<META HTTP-EQUIV="Expires" CONTENT="0" />
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
@@ -311,7 +312,7 @@ function do_tab(tabid, suffix, lat, lng) {
 			<SPAN ID='print_but' class='plain text' style='float: right; width: 100px; display: inline-block' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'><SPAN STYLE='float: left;'><?php print get_text("Print");?></SPAN><IMG STYLE='float: right;' SRC='./images/print_small.png' BORDER=0></SPAN>
 		</DIV>
 <?php
-		$get_id = (array_key_exists('id', ($_GET)))? $_GET['id'] : NULL;
+		$get_id = (array_key_exists('id', ($_GET)))? sanitize_int($_GET['id']) : NULL;
 
 		if ($get_id) {
 			if($_SESSION['internet']) {
@@ -325,7 +326,7 @@ function do_tab(tabid, suffix, lat, lng) {
 		<BR />
 		<BR clear=all/>
 		<BR />
-		<SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;<?php print $ticket_addr;?>&nbsp;</SPAN>
+		<SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;<?php print e($ticket_addr);?>&nbsp;</SPAN>
 		</CENTER>
 	</DIV>
 </DIV>

@@ -31,8 +31,8 @@ require_once($_SESSION['fip']);		//7/28/10
 
 if (!(empty($_POST))) {
 
-$user = $_POST['dev_key'];
-$url = $_POST['frm_locatea_url'];
+$user = sanitize_string($_POST['dev_key']);
+$url = sanitize_string($_POST['frm_locatea_url']);
 
 
 function do_gt($user, $url) {
@@ -84,7 +84,7 @@ function do_gt($user, $url) {
 <BR />
 <FORM NAME= 'frm_locatea' METHOD='get' ACTION = '<?php print basename(__FILE__);?>'>
 <TABLE ALIGN='center'>
-<TR CLASS  = 'even'><TH COLSPAN=2>LocateA Test Fails for key: <?php print $_POST['dev_key'];?></TH></TR>
+<TR CLASS  = 'even'><TH COLSPAN=2>LocateA Test Fails for key: <?php print e($_POST['dev_key']);?></TH></TR>
 
 <TR CLASS  = 'odd'><TD COLSPAN=2 ALIGN='center'><BR /><BR />
 	<INPUT TYPE='button' VALUE = 'Another' onClick = 'this.form.submit();' />&nbsp;&nbsp;&nbsp;&nbsp;
@@ -97,7 +97,7 @@ function do_gt($user, $url) {
 ?>
 <FORM NAME= 'frm_locatea' METHOD='get' ACTION = '<?php print basename(__FILE__);?>'>
 <TABLE ALIGN='center'>
-<TR CLASS  = 'even'><TH COLSPAN=2>LocateA Test Succeeds for key: <?php print $_POST['dev_key'];?></TH></TR>
+<TR CLASS  = 'even'><TH COLSPAN=2>LocateA Test Succeeds for key: <?php print e($_POST['dev_key']);?></TH></TR>
 <TR><TD>&nbsp;</TD></TR>
 
 <TR CLASS='odd'><TD>Device license:</TD><TD><?php print $user_id;?></TD></TR>

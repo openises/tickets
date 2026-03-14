@@ -36,12 +36,12 @@ $query = "CREATE TABLE IF NOT EXISTS `{$tablename}` (
 	  PRIMARY KEY (`id`),
 	  UNIQUE KEY `ID` (`id`)
 	) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COMMENT='Lines and borders'" ;
-$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+$result = db_query($query);
 
 
 do_login(basename(__FILE__));
 
-$mmarkup_id = (isset($_GET['id'])) ? $_GET['id'] : 0;	
+$mmarkup_id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : 0;
 extract($_GET);
 extract($_POST);
 ?>
@@ -415,8 +415,8 @@ extract($_POST);
 	$caption = "";
 
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
-		$query = "DELETE FROM `{$tablename}` WHERE `id`=" . $_POST['frm_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM `{$tablename}` WHERE `id`= ?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
 		$caption = "<B>Map Markup <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		}
 	else {
@@ -444,8 +444,8 @@ extract($_POST);
 				`_by` =   				'{$by}' ,
 				`_from` =	 			'{$from}' ,
 				`_on` =   				'{$now}'
-				WHERE `id` = 			{$_POST['frm_id']}";
-			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+				WHERE `id` = 			" . intval($_POST['frm_id']);
+			$result = db_query($query);
 			$caption = "<B>Map Markup <i> " . stripslashes_deep($_POST['frm_name']) . "</i>' data has been updated </B><BR /><BR />";
 			}
 		}				// end else {}
@@ -479,8 +479,8 @@ extract($_POST);
 			 quote_smart($from) ."," .
 			 quote_smart(trim($now)) . ")" ;
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$insert_id = mysql_insert_id();
+		$result = db_query($query);
+		$insert_id = db()->insert_id;
 		$caption = "<B>Map Markup <i>" . stripslashes_deep($_POST['frm_name']) . "</i> data has been applied </B><BR /><BR />";
 		}							// end if ($_getgoadd == 'true')
 

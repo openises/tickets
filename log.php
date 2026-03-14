@@ -153,10 +153,10 @@ if (empty($_POST)) {
 					<SELECT CLASS='text' NAME="frm_responder">
 						<OPTION CLASS='text' VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `handle` ASC";           // 12/18/10
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row_responder = stripslashes_deep(mysql_fetch_assoc($result))) {
-								print "\t<OPTION CLASS='text' VALUE='{$row_responder['id']}'>{$row_responder['handle']} ({$row_responder['name']}) </OPTION>\n";
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `handle` ASC";           // 12/18/10
+						$result = db_query($query);
+						while ($row_responder = stripslashes_deep($result->fetch_assoc())) {
+								print "\t<OPTION CLASS='text' VALUE='" . e($row_responder['id']) . "'>" . e($row_responder['handle']) . " (" . e($row_responder['name']) . ") </OPTION>\n";
 								}
 ?>
 					</SELECT>
@@ -184,15 +184,15 @@ if (empty($_POST)) {
 		
 		$query = "
 			SELECT *,  `u`.`user` AS `thename`,
-			`$GLOBALS[mysql_prefix]log`.`info` AS `theinfo`,
+			`{$GLOBALS['mysql_prefix']}log`.`info` AS `theinfo`,
 			`r`.`name` AS `resp_name`,
-			`t`.`scope` AS `tick_scope`			
-			FROM `$GLOBALS[mysql_prefix]log`
-			LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON `$GLOBALS[mysql_prefix]log`.`who` = `u`.`id`
-			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON `$GLOBALS[mysql_prefix]log`.`responder_id` = `r`.`id`
-			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON `$GLOBALS[mysql_prefix]log`.`ticket_id` = `t`.`id`
-			ORDER BY `$GLOBALS[mysql_prefix]log`.`when` DESC LIMIT 5000;";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+			`t`.`scope` AS `tick_scope`
+			FROM `{$GLOBALS['mysql_prefix']}log`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}user` u ON `{$GLOBALS['mysql_prefix']}log`.`who` = `u`.`id`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` r ON `{$GLOBALS['mysql_prefix']}log`.`responder_id` = `r`.`id`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON `{$GLOBALS['mysql_prefix']}log`.`ticket_id` = `t`.`id`
+			ORDER BY `{$GLOBALS['mysql_prefix']}log`.`when` DESC LIMIT 5000;";
+		$result = db_query($query);
 		$i = 1;
 ?>
 		<DIV id='button_bar' class='but_container'>
@@ -208,7 +208,7 @@ if (empty($_POST)) {
 		$print = "<TABLE id='logtable' class='fixedheadscrolling scrollable' STYLE='width: 100%;'>";
 		$do_hdr = TRUE; 
 		$day_part="";
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			if ($do_hdr) {
 				$print .= "<thead><TR style='width: 100%;'>";
 				$print .= "<TH class='plain_listheader text text_left'>When</TH>";
@@ -315,7 +315,8 @@ if (empty($_POST)) {
 <?php
 		switch ($_POST['func']) {
 			case "add":
-				do_log($GLOBALS['LOG_COMMENT'], $ticket_id=0, $_POST['frm_responder'], strip_tags(trim($_POST['frm_comment'])));
+				$frm_responder = sanitize_int($_POST['frm_responder']);
+				do_log($GLOBALS['LOG_COMMENT'], $ticket_id=0, $frm_responder, strip_tags(trim($_POST['frm_comment'])));
 				print "<script>window.close();</script>";			
 				break;
 			case "view":
@@ -344,9 +345,10 @@ if (empty($_POST)) {
 			break;
 			case "del_db": 		// 2/30/09
 				$the_date = mysql_format_date(time() - (get_variable('delta_mins')*60));
-				$query = "DELETE from `$GLOBALS[mysql_prefix]log` WHERE `when` < ('{$the_date}' - INTERVAL {$_POST['frm_del']} DAY)";
-				$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	// 
-				print "<BR /> <BR /> " . mysql_affected_rows() . " Log entries deleted<BR /> <BR /> <BR /> ";
+				$frm_del = sanitize_int($_POST['frm_del']);
+				$query = "DELETE from `{$GLOBALS['mysql_prefix']}log` WHERE `when` < (? - INTERVAL ? DAY)";
+				$result	= db_query($query, [$the_date, $frm_del]);
+				print "<BR /> <BR /> " . db()->affected_rows . " Log entries deleted<BR /> <BR /> <BR /> ";
 			break;
 	
 			default:

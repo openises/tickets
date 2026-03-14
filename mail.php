@@ -50,10 +50,10 @@ var colheight;
 <?php
 
 if (empty ($_POST)) {
-		$ticket_id = $_GET['ticket_id'];
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id`='$ticket_id' LIMIT 1";
-		$ticket_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$t_row = stripslashes_deep(mysql_fetch_array($ticket_result));
+		$ticket_id = sanitize_int($_GET['ticket_id']);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=? LIMIT 1";
+		$ticket_result = db_query($query, [$ticket_id]);
+		$t_row = stripslashes_deep($ticket_result->fetch_array());
 		$text = mail_it ("", "", "", $ticket_id, 2, TRUE) ;		// returns msg text **ONLY**
 		$temp = explode("\n", $text);
 		$nr_lines = intval(count($temp) + 2);
@@ -122,26 +122,26 @@ if (empty ($_POST)) {
 				</TD>
 			</TR>
 <?php														//			generate dropdown menu of contacts
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `name` ASC";
-			$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			if (mysql_affected_rows()>0) {
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` ORDER BY `name` ASC";
+			$result = db_query($query);
+			if ($result->num_rows>0) {
 				$got_addr = TRUE;
-				$height = (mysql_affected_rows() + 1) * 16;
+				$height = ($result->num_rows + 1) * 16;
 ?>
 				<TR CLASS='odd'>
 					<TD CLASS='td_label text'>To:</TD>
 					<TD CLASS='td_data text'>
 						<SELECT NAME='frm_to[]' style='width: 100%; height: " . $height ."px;' multiple />
 <?php
-							while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+							while ($row = stripslashes_deep($result->fetch_array())) {
 								if ((!((trim($row['email']))) == "") && (is_email(trim($row['email'])))) {
-									print "\t<OPTION VALUE='" . $row['email'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(email)</I></OPTION>\n";
+									print "\t<OPTION VALUE='" . e($row['email']) . "'>" . e($row['name']) . "/" . e($row['organization']) . " <I>(email)</I></OPTION>\n";
 									}
 								if ((!((trim($row['mobile']))) == "") && (is_email(trim($row['mobile'])))) {
-									print "\t<OPTION VALUE='" . $row['mobile'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(mobile)</I></OPTION>\n";
+									print "\t<OPTION VALUE='" . e($row['mobile']) . "'>" . e($row['name']) . "/" . e($row['organization']) . " <I>(mobile)</I></OPTION>\n";
 									}
 								if ((!((trim($row['other']))) == "") && (is_email(trim($row['other'])))) {
-									print "\t<OPTION VALUE='" . $row['other'] . "'>" . $row['name'] . "/" .$row['organization'] . " <I>(other)</I></OPTION>\n";
+									print "\t<OPTION VALUE='" . e($row['other']) . "'>" . e($row['name']) . "/" . e($row['organization']) . " <I>(other)</I></OPTION>\n";
 									}
 								}
 ?>

@@ -14,11 +14,11 @@ error_reporting(E_ALL);
 session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 require_once('./incs/messaging.inc.php');
-$tick_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != "")) ? $_GET['ticket_id'] : 0;
+$tick_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != "")) ? sanitize_int($_GET['ticket_id']) : 0;
 if (empty($_POST)) {
-	$query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$_GET['ticket_id']} LIMIT 1";	
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = mysql_fetch_array($result);
+	$query = "SELECT `id`, `scope` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$tick_id]);
+	$row = $result->fetch_array();
 	$title = substr(stripslashes($row['scope']), 0, 60);
 	unset($result);
 	}
@@ -29,7 +29,7 @@ $using_smsg = ((get_variable('use_messaging') == 2) || (get_variable('use_messag
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<TITLE>Email re:  <?php print $title; ?></TITLE>
+<TITLE>Email re:  <?php print e($title); ?></TITLE>
 <META NAME="Description" CONTENT="">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <META HTTP-EQUIV="Expires" CONTENT="0">
@@ -178,7 +178,7 @@ $heading = "Dispatch message";
 			Email Addresses: 
 		</TD>
 		<TD CLASS="td_data text text_left">
-			<INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print $_GET['addrs'];?>'>
+			<INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='<?php print e($_GET['addrs']);?>'>
 		</TD>
 	</TR>
 <?php
@@ -191,7 +191,7 @@ $heading = "Dispatch message";
 				<?php get_provider_name(get_msg_variable('smsg_provider'));?> Addresses: 
 			</TD>
 			<TD CLASS="td_data text text_left">
-				<INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print $smsgaddrs;?>' />
+				<INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='<?php print e($smsgaddrs);?>' />
 			</TD>
 		</TR>	
 		<TR CLASS='even'>
@@ -202,20 +202,20 @@ $heading = "Dispatch message";
 				<INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE="1" <?php if(($_GET['addrs'] == "" && $smsgaddrs != "") || ($smsgaddrs != "" && get_msg_variable('default_sms') == "1")) { print "checked"; } ?> />
 			</TD>
 		</TR>			
-		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $the_other;?>"/> <!-- 10/23/12 -->
+		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print e($the_other);?>"/> <!-- 10/23/12 -->
 <?php
 	} else {
 ?>
 		<INPUT TYPE="hidden" NAME = 'frm_smsgaddrs' VALUE=""/> <!-- 10/23/12 -->
 		<INPUT TYPE='hidden' NAME = 'frm_use_smsg' VALUE = "0"> <!-- 10/23/12 -->
-		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print $the_other;?>"/>
+		<INPUT TYPE="hidden" NAME = 'frm_theothers' VALUE="<?php print e($the_other);?>"/>
 <?php
 	}
 ?>
 	<TR CLASS='odd'>
 		<TD COLSPAN=2 ALIGN = 'center'>
-			<INPUT TYPE="hidden" NAME = 'ticket_id' VALUE="<?php print $_GET['ticket_id'];?>"/>
-			<INPUT TYPE="hidden" NAME = 'frm_title' VALUE="<?php print $row['scope'];?>"/>
+			<INPUT TYPE="hidden" NAME = 'ticket_id' VALUE="<?php print intval($_GET['ticket_id']);?>"/>
+			<INPUT TYPE="hidden" NAME = 'frm_title' VALUE="<?php print e($row['scope']);?>"/>
 		</TD>
 	</TR>
 </TABLE>

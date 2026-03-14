@@ -40,11 +40,11 @@ if (empty($_POST)) {
 	$colors[$GLOBALS['LEVEL_MEMBER'] ] = 			"#FFCC00";		// orange
 	$colors[$GLOBALS['LEVEL_UNIT'] 	] = 			"#00CCCC";		// lt. blue	
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `email` IS NOT NULL
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `email` IS NOT NULL
 		ORDER BY `level` ASC,`user` ASC" ;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$result = db_query($query);
 	$rows = array();
-	while($row = stripslashes_deep(mysql_fetch_assoc($result), MYSQL_ASSOC)){
+	while($row = stripslashes_deep($result->fetch_assoc())){
 		if (is_email($row['email'])) {
 			$rows[] = $row;
 			}
@@ -143,10 +143,10 @@ if (empty($_POST)) {
 		for ($i=0; $i < count($rows); $i++) {
 			$row = stripslashes_deep($rows[$i]);
 			print "\t<TR CLASS= '{$evenodd[($i)%2]}'>
-				<TD ALIGN='right'><INPUT TYPE='checkbox' CHECKED NAME='cb{($i+1)}'VALUE='{$row['email']}'> </TD>
-				<TD><SPAN style = \"background-color:{$colors[$row['level']]}\"> &nbsp;{$row['user']}&nbsp;</SPAN>
-					(<I>{$row['email']}</I>) </TD>
-				<TD ALIGN='left'>{$row['name_f']} {$row['name_mi']} {$row['name_l']}</TD>
+				<TD ALIGN='right'><INPUT TYPE='checkbox' CHECKED NAME='cb{($i+1)}'VALUE='" . e($row['email']) . "'> </TD>
+				<TD><SPAN style = \"background-color:{$colors[$row['level']]}\"> &nbsp;" . e($row['user']) . "&nbsp;</SPAN>
+					(<I>" . e($row['email']) . "</I>) </TD>
+				<TD ALIGN='left'>" . e($row['name_f']) . " " . e($row['name_mi']) . " " . e($row['name_l']) . "</TD>
 				</TR>\n";
 			}		// end for()
 

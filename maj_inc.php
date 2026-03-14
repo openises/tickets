@@ -60,9 +60,9 @@ function get_inc_icon_legend (){			// returns legend string - 1/1/09
 	}			// end function get_icon_legend ()
 	
 $comm_arr = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` ORDER BY `id` ASC";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` ORDER BY `id` ASC";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$comm_arr[$row['id']][0] = $row['id'];
 	$comm_arr[$row['id']][1] = $row['user'];	
 	$comm_arr[$row['id']][2] = $row['name_f'];	
@@ -75,10 +75,10 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	
 function get_building_details($id) {
 	$ret_arr = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `id` = " . $id;		// types in use
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = " . $id;		// types in use
+	$result = db_query($query);
 	if($result) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr[0] = $row['name'];
 		$ret_arr[1] = $row['street'];
 		$ret_arr[2] = $row['city'];
@@ -92,12 +92,12 @@ function get_building_details($id) {
 	}
 
 function get_building($theName, $id = NULL) {
-	$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
-	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result_bldg) > 0) {
+	$query_bldg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
+	$result_bldg = db_query($query_bldg);
+	if ($result_bldg->num_rows > 0) {
 		$sel_str = "<SELECT name='" . $theName . "' onChange='clear_data(document.mi_add_Form, \"" . $theName . "\", this.options[selectedIndex].value);'>\n";
 		$sel_str .= "\t<OPTION value = 0 selected>Select building</OPTION>\n";
-		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
+		while ($row_bldg = stripslashes_deep($result_bldg->fetch_assoc())) {
 			if($id) {
 				$sel = ($row_bldg['id'] == $id) ? "SELECTED" : "";
 				} else {
@@ -292,12 +292,12 @@ function get_building_edit($theName, $id = NULL) {
 		$theDiv = "level6_address_data";
 		$theButton = "level6_loc_button";
 		}
-	$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
-	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result_bldg) > 0) {
+	$query_bldg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
+	$result_bldg = db_query($query_bldg);
+	if ($result_bldg->num_rows > 0) {
 		$sel_str = "<select name='" . $theName . "' onChange='get_building(this.options[selectedIndex].value, \"" . $theType . "\", document.mi_edit_Form); tidyDiv(\"" . $theDiv . "\", this.options[selectedIndex].value, \"" . $theButton . "\");'>";
 		$sel_str .= "<option value = 0 selected>Select building</option>";
-		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
+		while ($row_bldg = stripslashes_deep($result_bldg->fetch_assoc())) {
 			if($id) {
 				$sel = ($row_bldg['id'] == $id) ? "SELECTED" : "";
 				} else {
@@ -344,12 +344,12 @@ function get_building_edit($theName, $id = NULL) {
 	}
 	
 function get_building_only($theName) {
-	$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
-	$result_bldg = mysql_query($query_bldg) or do_error($query_bldg, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result_bldg) > 0) {
+	$query_bldg = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
+	$result_bldg = db_query($query_bldg);
+	if ($result_bldg->num_rows > 0) {
 		$sel_str = "<select name='" . $theName . "' onChange='clear_data(document.mi_edit_Form, \"" . $theName . "\", this.options[selectedIndex].value);'>\n";
 		$sel_str .= "\t<option value = 0 selected>Select building</option>\n";
-		while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
+		while ($row_bldg = stripslashes_deep($result_bldg->fetch_assoc())) {
 			$sel_str .= "\t<option value = " . $row_bldg['id'] . ">" . $row_bldg['name'] . "</option>\n";
 			}		// end while ()
 
@@ -364,10 +364,10 @@ function get_loc_name($id) {
 	if($id == 0) {
 		return "";
 		}
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' AND `id` = " . $id . " ORDER BY `name` ASC";		// types in use
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' AND `id` = " . $id . " ORDER BY `name` ASC";		// types in use
+	$result = db_query($query);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['name'];
 		}
 	}
@@ -1399,14 +1399,14 @@ require_once('./incs/all_forms_js_variables.inc.php');
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]major_incidents WHERE `id`=" . $_POST['frm_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `id`= ?";
+		$result = db_query($query, [intval($_POST['frm_id'])]);
 		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		} else {
 		if ($_getgoedit == 'true') {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id` = " . $_POST['frm_id'];
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `id` = ?";
+			$result = db_query($query, [intval($_POST['frm_id'])]);
+			$row = stripslashes_deep($result->fetch_assoc());
 			$current_status = $row['mi_status'];
 			$current_end = $row['inc_endtime'];
 			if(!array_key_exists('frm_year_inc_endtime', $_POST) && $current_status == "Closed") {
@@ -1460,7 +1460,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			if($_POST['frm_level6_street'] == "") {
 				$_POST['frm_level6_city'] = $_POST['frm_level6_state'] = $_POST['frm_level6_lat'] = $_POST['frm_level6_lng'] = "";
 				}
-			$query = "UPDATE `$GLOBALS[mysql_prefix]major_incidents` SET
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}major_incidents` SET
 				`name`= " . 			quote_smart(trim($_POST['frm_name'])) . ",
 				`description`= " . 		quote_smart(trim($_POST['frm_descr'])) . ",
 				`type`= " . 			quote_smart(trim($_POST['frm_type'])) . ",
@@ -1515,27 +1515,27 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				`_on`= '" . 	$now . "',
 				`_from`= '" . $from . "'
 				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 			
 			$existing_incs = array();
-			$query_x = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = " . $mi_id . " ORDER BY `id`;";
-			$result_x = mysql_query($query_x) or do_error($query_x, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-			while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
+			$query_x = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = " . $mi_id . " ORDER BY `id`;";
+			$result_x = db_query($query_x);
+			while ($row_x = stripslashes_deep($result_x->fetch_assoc())) {
 				$existing_incs[] = $row_x['ticket_id'];
 				}
 				
 			if(isset($_POST['frm_inc'])) {
 				foreach($_POST['frm_inc'] AS $val) {
 					if(!in_array($val, $existing_incs, TRUE)) {
-						$query  = "INSERT INTO `$GLOBALS[mysql_prefix]mi_x` (`mi_id`, `ticket_id`) VALUES ($mi_id, $val)";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+						$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (`mi_id`, `ticket_id`) VALUES ($mi_id, $val)";
+						$result = db_query($query);	
 						}
 					}
 				}
 			foreach($existing_incs AS $val) {
 				if(!in_array($val, $incs_arr, TRUE)) {
-					$query  = "DELETE FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = $mi_id AND `ticket_id` = $val";
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+					$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `mi_id` = $mi_id AND `ticket_id` = $val";
+					$result = db_query($query);	
 					}
 				}
 
@@ -1563,9 +1563,9 @@ require_once('./incs/all_forms_js_variables.inc.php');
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
-				if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
+				$result = db_query($query);	
+				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
 							$print .= "";
@@ -1576,14 +1576,14 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						$print .= "Error uploading file";
 						}
 					} else {
-					$row = stripslashes_deep(mysql_fetch_assoc($result));			
+					$row = stripslashes_deep($result->fetch_assoc());			
 					$exists = true;
 					$existing_file = $row['filename'];	//	get existing file name
 					}
 					
 				$from = $_SERVER['REMOTE_ADDR'];	
 				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
-				$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` ,
 						`filename` ,
 						`orig_filename`,
@@ -1609,7 +1609,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						$by,
 						'" . $now . "',
 						'" . $from . "')";
-				$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1687,7 +1687,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			$level6City = $level6State = $level6Lat = $level6Lng = "";
 			}
 		
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]major_incidents` 
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}major_incidents` 
 				(`name`, 
 				`description`, 
 				`type`,
@@ -1796,8 +1796,8 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				quote_smart(trim($now)) . "," .
 				quote_smart(trim($from)) . ");";
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();
+		$result = db_query($query);
+		$new_id=db()->insert_id;
 		
 //	9/10/13 File Upload support
 		$print = "";
@@ -1823,9 +1823,9 @@ require_once('./incs/all_forms_js_variables.inc.php');
 					
 //	Does the file already exist in the files table		
 
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
-				$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
-				if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = '" . $realfilename . "'";
+				$result = db_query($query);	
+				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 						if (strlen(filesize($file)) < 20000000) {
 							$print .= "";
@@ -1836,14 +1836,14 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						$print .= "Error uploading file";
 						}
 					} else {
-					$row = stripslashes_deep(mysql_fetch_assoc($result));			
+					$row = stripslashes_deep($result->fetch_assoc());			
 					$exists = true;
 					$existing_file = $row['filename'];	//	get existing file name
 					}
 					
 				$from = $_SERVER['REMOTE_ADDR'];	
 				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
-				$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+				$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 						`title` ,
 						`filename` ,
 						`orig_filename`,
@@ -1869,7 +1869,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 						$by,
 						'" . $now . "',
 						'" . $from . "')";
-				$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1883,8 +1883,8 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // End of file upload
 		
 		foreach($incs_arr AS $val) {
-			$query  = "INSERT INTO `$GLOBALS[mysql_prefix]mi_x` (`mi_id`, `ticket_id`) VALUES ($new_id, $val)";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	
+			$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}mi_x` (`mi_id`, `ticket_id`) VALUES ($new_id, $val)";
+			$result = db_query($query);	
 			}
 
 		$caption = "<B>Major Incident<i> " . stripslashes_deep($_POST['frm_name']) . "</i>' has been created </B><BR /><BR />";

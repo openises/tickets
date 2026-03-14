@@ -174,10 +174,10 @@ function run_report(id, name) {
 				<OPTION STYLE='font-size: 100%;' VALUE=0 SELECTED>Select a team</OPTION>
 				<OPTION STYLE='font-size: 100%;' VALUE=-1>All Teams</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]team`";
-				$result = mysql_query($query);	
-				while ($row = mysql_fetch_assoc($result)) {
-					print "<OPTION STYLE='font-size: 100%;' VALUE=" . $row['id'] . ">" . $row['name'] . "</OPTION>";
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}team`";
+				$result = db_query($query);
+				while ($row = $result->fetch_assoc()) {
+					print "<OPTION STYLE='font-size: 100%;' VALUE=" . intval($row['id']) . ">" . e($row['name']) . "</OPTION>";
 					}
 ?>
 			</SELECT>
@@ -187,10 +187,10 @@ function run_report(id, name) {
 				<OPTION STYLE='font-size: 100%;' VALUE=0 SELECTED>Select a person</OPTION>
 				<OPTION STYLE='font-size: 100%;' VALUE=-1>All Members</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]member`";
-				$result = mysql_query($query);	
-				while ($row = mysql_fetch_assoc($result)) {
-					print "<OPTION STYLE='font-size: 100%;' VALUE=" . $row['id'] . ">" . $row['field2'] . " " . $row['field1'] . "</OPTION>";
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member`";
+				$result = db_query($query);
+				while ($row = $result->fetch_assoc()) {
+					print "<OPTION STYLE='font-size: 100%;' VALUE=" . intval($row['id']) . ">" . e($row['field2']) . " " . e($row['field1']) . "</OPTION>";
 					}
 ?>
 			</SELECT>

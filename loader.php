@@ -219,15 +219,15 @@ $user = 'tickets';
 $pass = 'lucky123';
 $db = 'tickets_jody';
 
-mysql_connect($host,$user,$pass) or die('error connection');
-mysql_select_db($db) or die('error database selection');
+$mysqli = new mysqli($host, $user, $pass, $db);
+if ($mysqli->connect_errno) { die('error connection'); }
 
 $i=1;
 foreach($sql_query as $sql){
 echo $i++;
 echo "
 ";
-mysql_query($sql) or die('error in query');
+$mysqli->query($sql) or die('error in query');
 }
 
 ?>

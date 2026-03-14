@@ -10,9 +10,9 @@ require_once('./incs/functions.inc.php');
 $the_tickets = array();
 $columns_arr = explode(',', get_msg_variable('columns'));
 $the_level = $_SESSION['level'];
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket`";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$the_tickets[] = $row['id'];
 	}
 
