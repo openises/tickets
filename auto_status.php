@@ -16,9 +16,9 @@ $current = array();
 // end of array declaration
 
 // get status ids
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status`;";
-	$result = mysql_query($query);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status`;";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		$i = $row['id'];
 		$status_ids[$i][] = $row['id'];
 		$status_ids[$i][] = $row['status_val'];
@@ -28,10 +28,10 @@ $current = array();
 // end of status ids
 
 // get signals
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes`;";
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes`;";
+	$result = db_query($query);
 	$z=0;
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		$signals[$z][] = $row['code'];
 		$signals[$z][] = $row['text'];
 		$z++;
@@ -40,9 +40,9 @@ $current = array();
 // end of Signals
 
 // get current settings
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_status`;";
-	$result = mysql_query($query);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status`;";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		$current[$row['status_val']][0] = $row['id'];
 		$current[$row['status_val']][1] = $row['text'];
 		$current[$row['status_val']][2] = $row['status_val'];
@@ -60,25 +60,25 @@ if(!empty($_POST)) {
 		$i++;
 		}
 	foreach($the_data as $val) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_status` WHERE `status_val` = '" . $val[2] . "'";	
-		$result = mysql_query($query);	
-		if(mysql_num_rows($result) > 0) {	//	Entry exists for the status value			
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_status` WHERE `status_val` = '" . $val[2] . "' AND `text` = '" . $val[1] . "'";	
-			$result = mysql_query($query);			
-			if(mysql_num_rows($result) > 0) {	//	Entry exists for the status value and the submitted text - don't insert but check if that entry has the same ID	
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_status` WHERE `id` = '" . $val[0] . "' AND `status_val` = '" . $val[2] . "' AND `text` = '" . $val[1] . "'";	
-				$result = mysql_query($query);	
-				if(mysql_num_rows($result) == 0) { // entry exists for status and text but different ID - do nothing
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `status_val` = '" . $val[2] . "'";	
+		$result = db_query($query);	
+		if($result->num_rows > 0) {	//	Entry exists for the status value			
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `status_val` = '" . $val[2] . "' AND `text` = '" . $val[1] . "'";	
+			$result = db_query($query);			
+			if($result->num_rows > 0) {	//	Entry exists for the status value and the submitted text - don't insert but check if that entry has the same ID	
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_status` WHERE `id` = '" . $val[0] . "' AND `status_val` = '" . $val[2] . "' AND `text` = '" . $val[1] . "'";	
+				$result = db_query($query);	
+				if($result->num_rows == 0) { // entry exists for status and text but different ID - do nothing
 					} else { // entry exists for status and text and same id - do nothing
 					}
 				} else {	// current entry for the status value has different text - update
-					$query = "UPDATE `$GLOBALS[mysql_prefix]auto_status` SET `text`= " . 		quote_smart(trim($val[1])) . ", `status_val`= " . quote_smart(trim($val[2])) . " WHERE `status_val`=" . $val[2];			
-					$result = mysql_query($query);	
+					$query = "UPDATE `{$GLOBALS['mysql_prefix']}auto_status` SET `text`= " . 		quote_smart(trim($val[1])) . ", `status_val`= " . quote_smart(trim($val[2])) . " WHERE `status_val`=" . $val[2];			
+					$result = db_query($query);	
 				}
 			} else {	//	entry doesn't exist for the status value - insert a new one	
 				if($val[1] != "Not Set") {	//	Ignore empty settings
-					$query  = "INSERT INTO `$GLOBALS[mysql_prefix]auto_status` (`text` , `status_val`) VALUES ('" . $val[1] . "', '" . $val[2] . "')"; 
-					$result = mysql_query($query);	
+					$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}auto_status` (`text` , `status_val`) VALUES ('" . $val[1] . "', '" . $val[2] . "')"; 
+					$result = db_query($query);	
 					}
 			}
 		}

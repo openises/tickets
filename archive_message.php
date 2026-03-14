@@ -10,9 +10,9 @@ require_once('./incs/messaging.inc.php');
 
 $the_contacts = array();
 $i = 1;
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$the_contacts[$i][0] = $row['name'];
 	$the_contacts[$i][1] = $row['organization'];	
 	$the_contacts[$i][2] = $row['phone'];
@@ -22,9 +22,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 	}
 
 $the_users = array();	
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result = mysql_query($query);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$the_users[] = $row['id'];
 	}	
 

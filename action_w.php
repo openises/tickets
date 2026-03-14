@@ -34,7 +34,7 @@ $istest = FALSE;
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
-$get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
+$get_action = (empty($_GET['action']))? "form" : sanitize_string($_GET['action']);		// 10/21/08
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -206,9 +206,9 @@ $do_yr_asof = false;		// js year housekeeping
 
 $optstyles = array ();		// see css
 
-$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";				// 1/27/09
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query 	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`";				// 1/27/09
+$result = db_query($query);
+while($row = stripslashes_deep($result->fetch_assoc())) {
 	$optstyles[$row['name']] = $row['name'];
 	}
 unset($result);
@@ -216,8 +216,9 @@ unset($result);
 if ($get_action == 'add') {
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-	if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]'")) {
-		print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
+	$safe_ticket_id = sanitize_int($_GET['ticket_id']);
+	if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='" . $safe_ticket_id . "'")) {
+		print "<FONT CLASS='warn'>Invalid Ticket ID: '" . e($safe_ticket_id) . "'</FONT>";
 		} elseif ($_POST['frm_description'] == '') {
 		print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
 		} else {
@@ -229,27 +230,26 @@ if ($get_action == 'add') {
 				$sep = " ";
 				}
 			}
-		$_POST['frm_description'] = addslashes(strip_html($_POST['frm_description'])); //fix formatting, custom tags etc.
+		$_POST['frm_description'] = strip_html($_POST['frm_description']); //fix formatting, custom tags etc.
 
-		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST['frm_meridiem_asof'] : "" ;
+		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? sanitize_string($_POST['frm_meridiem_asof']) : "" ;
+		$frm_year = sanitize_string($_POST['frm_year_asof']);
+		$frm_month = sanitize_string($_POST['frm_month_asof']);
+		$frm_day = sanitize_string($_POST['frm_day_asof']);
+		$frm_hour = sanitize_string($_POST['frm_hour_asof']);
+		$frm_minute = sanitize_string($_POST['frm_minute_asof']);
 
-		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
+		$frm_asof = "{$frm_year}-{$frm_month}-{$frm_day} {$frm_hour}:{$frm_minute}:00{$frm_meridiem_asof}";
 																			// 8/15/10
-		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]action`
+		$query 	= "INSERT INTO `{$GLOBALS['mysql_prefix']}action`
 			(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES (
-				" . quote_smart($_POST['frm_description']) . ",
-				'{$_GET['ticket_id']}',
-				'{$now}',
-				{$_SESSION['user_id']},
-				{$GLOBALS['ACTION_COMMENT']},
-				'{$frm_asof}',
-				'{$responder}')";		// 8/24/08
-		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
+				?, ?, ?, ?, ?, ?, ?)";		// 8/24/08
+		$result	= db_query($query, [$_POST['frm_description'], $safe_ticket_id, $now, $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $frm_asof, $responder]);
 
-		$ticket_id = mysql_insert_id();								// just inserted action id
-		do_log($GLOBALS['LOG_ACTION_ADD'], $_GET['ticket_id'], 0,  mysql_insert_id());		// 3/18/10
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE `id`='" . $_GET['ticket_id'] . "' LIMIT 1";
-		$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+		$ticket_id = db()->insert_id;								// just inserted action id
+		do_log($GLOBALS['LOG_ACTION_ADD'], $safe_ticket_id, 0,  db()->insert_id);		// 3/18/10
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE `id`= ? LIMIT 1";
+		$result = db_query($query, [$frm_asof, $safe_ticket_id]);
 
 		print "<br /><CENTER><FONT CLASS='header text_large'>Action record has been added</FONT><BR /><BR />";
 		print "<BR /><BR /><SPAN ID='fin_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='opener.location.reload(true); opener.parent.frames[\"upper\"].show_msg(\"Action added!\"); window.close();'><SPAN STYLE='float: left;'>" . get_text('Finished') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN><BR /><BR /><BR /></CENTER>";
@@ -269,28 +269,30 @@ if ($get_action == 'add') {
 	exit();
 
 	} else if ($get_action == 'delete') {
+		$safe_del_id = sanitize_int($_GET['id']);
+		$safe_del_ticket_id = sanitize_int($_GET['ticket_id']);
 		if (array_key_exists('confirm', ($_GET))) {
 			$mode=$_POST['mode'];
-			do_log($GLOBALS['LOG_ACTION_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 8/7/08
+			do_log($GLOBALS['LOG_ACTION_DELETE'], $safe_del_ticket_id, 0, $safe_del_id);		// 8/7/08
 //			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
 
-			$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") or do_error('','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
+			$result = db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1", [$safe_del_id]);
 			print '<CENTER><FONT CLASS="header text_large">Action deleted</FONT><BR /><BR />';
 			if($mode == 1) {
 ?>
 				<SPAN ID='fin_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='opener.location.reload(true); window.close();'><SPAN STYLE='float: left;'><?php print get_text('Finished');?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0 /></SPAN></CENTER>
 <?php
 				} else {
-				add_header($_GET['ticket_id']);
-				show_ticket($_GET['ticket_id']);
+				add_header($safe_del_ticket_id);
+				show_ticket($safe_del_ticket_id);
 				}
 			} else {
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
-			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$safe_del_id]);
+			$row = stripslashes_deep($result->fetch_assoc());
 			print "<CENTER>";
-			print "<FONT CLASS='header text_large'>Really delete action record '" . shorten($row['description'], 24) . "' ? </FONT><BR /><BR />";
-			print "<FORM NAME='delfrm' METHOD='post' ACTION='action_w.php?action=delete&id=$_GET[id]&ticket_id=" . $_GET['ticket_id'] . "&confirm=1'>";
+			print "<FONT CLASS='header text_large'>Really delete action record '" . e(shorten($row['description'], 24)) . "' ? </FONT><BR /><BR />";
+			print "<FORM NAME='delfrm' METHOD='post' ACTION='action_w.php?action=delete&id=" . e($safe_del_id) . "&ticket_id=" . e($safe_del_ticket_id) . "&confirm=1'>";
 ?>
 			<SPAN ID='sub_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.delfrm.submit();'><SPAN STYLE='float: left;'><?php print get_text('Yes');?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0 /></SPAN>
 <?php
@@ -307,6 +309,8 @@ if ($get_action == 'add') {
 			print "</CENTER></FORM>";
 			}
 		} else if ($get_action == 'update') {		//update action and show ticket
+		$safe_upd_id = sanitize_int($_GET['id']);
+		$safe_upd_ticket_id = sanitize_int($_GET['ticket_id']);
 		$responder = $sep = "";
 		foreach ($_POST as $VarName=>$VarValue) {			// 3/20/10
 			$temp = explode("_", $VarName);
@@ -315,17 +319,22 @@ if ($get_action == 'add') {
 				$sep = " ";
 				}
 			}
-		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
-
-		$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
-		$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]action` SET `description`='$_POST[frm_description]', `responder` = '$responder', `updated` = '$frm_asof' WHERE `id`='$_GET[id]' LIMIT 1") or do_error('action_w.php::update action','mysql_query',mysql_error(),basename( __FILE__), __LINE__);
-		$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` =	'$frm_asof' WHERE id='$_GET[ticket_id]' LIMIT 1") 	or do_error('action_w.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-		$result = mysql_query("SELECT ticket_id FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") 			or do_error('action_w.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_array($result));
+		$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? sanitize_string($_POST['frm_meridiem_asof']) : "" ;
+		$frm_year = sanitize_string($_POST['frm_year_asof']);
+		$frm_month = sanitize_string($_POST['frm_month_asof']);
+		$frm_day = sanitize_string($_POST['frm_day_asof']);
+		$frm_hour = sanitize_string($_POST['frm_hour_asof']);
+		$frm_minute = sanitize_string($_POST['frm_minute_asof']);
+		$frm_asof = "{$frm_year}-{$frm_month}-{$frm_day} {$frm_hour}:{$frm_minute}:00{$frm_meridiem_asof}";
+		$frm_description = sanitize_string($_POST['frm_description']);
+		$result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}action` SET `description`=?, `responder` = ?, `updated` = ? WHERE `id`=? LIMIT 1", [$frm_description, $responder, $frm_asof, $safe_upd_id]);
+		$result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=? LIMIT 1", [$frm_asof, $safe_upd_ticket_id]);
+		$result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1", [$safe_upd_id]);
+		$row = stripslashes_deep($result->fetch_array());
 		print "<br /><CENTER><FONT CLASS='header text_large'>Action record has been updated</FONT><BR /><BR />";
 		print "<BR /><BR /><SPAN ID='fin_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='opener.location.reload(true); opener.parent.frames[\"upper\"].show_msg(\"Action added!\"); window.close();'><SPAN STYLE='float: left;'>" . get_text('Finished') . "</SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN><BR /><BR /><BR /></CENTER>";
 //		print "</BODY>";				// 10/19/08
-		$id = $_GET['ticket_id'];
+		$id = $safe_upd_ticket_id;
 		$addrs = notify_user($id,$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
 
 		if ($addrs) {
@@ -337,9 +346,10 @@ if ($get_action == 'add') {
 		print "</HTML>";				// 10/19/08
 		exit();
 		} else if ($get_action == 'edit') {		//get and show action to update
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
-		$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_array($result));
+		$safe_edit_id = sanitize_int($_GET['id']);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
+		$result = db_query($query, [$safe_edit_id]);
+		$row = stripslashes_deep($result->fetch_array());
 		$responders = explode(" ", $row['responder']);				// to array
 		$do_yr_asof = true;
 		$ticket_id = $row['ticket_id'];
@@ -352,7 +362,7 @@ if ($get_action == 'add') {
 				<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.ed_frm.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 				<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='return validate(document.ed_frm);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 			</DIV>
-			<FORM METHOD="post" NAME='ed_frm' ACTION="action_w.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $ticket_id;?>&action=update">
+			<FORM METHOD="post" NAME='ed_frm' ACTION="action_w.php?id=<?php print e($safe_edit_id);?>&ticket_id=<?php print e($ticket_id);?>&action=update">
 			<TABLE BORDER="0" STYLE='margin-left: 100px; position: relative; top: 50px;'>
 				<TR CLASS='even'>
 					<TD CLASS='td_label text'>Description: <font color='red' size='-1'>*</font></TD>
@@ -366,11 +376,11 @@ if ($get_action == 'add') {
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-							while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+							$result = db_query($query);
+							while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 								$short = shorten ($row_sig['text'], 40);
-								print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$short}</OPTION>\n";		// pipe separator
+								print "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($short) . "</OPTION>\n";		// pipe separator
 								}
 ?>
 						</SELECT>
@@ -389,14 +399,14 @@ if ($get_action == 'add') {
 
 				$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated`, `y`.`id` AS `type_id`, `r`.`id` AS `unit_id`, `r`.`name` AS `unit_name`,
 					`s`.`description` AS `stat_descr`,  `r`.`description` AS `unit_descr`,
-					(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) AS `nr_assigned`
-					FROM `$GLOBALS[mysql_prefix]responder` `r`
-					LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `y` ON ( `r`.`type` = y.id )
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id )
+					(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) AS `nr_assigned`
+					FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `y` ON ( `r`.`type` = y.id )
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
 					ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";
-				$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+				$result = db_query($query);
 				$max = 24;
-				$height =  (mysql_affected_rows()>$max) ? ($max * 30 ) : (mysql_affected_rows() + 1) * 30;
+				$height =  (db()->affected_rows>$max) ? ($max * 30 ) : (db()->affected_rows + 1) * 30;
 				print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
 				print "<TR><TD COLSPAN=2 style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
 				print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
@@ -405,17 +415,17 @@ if ($get_action == 'add') {
 				print "<TD CLASS='odd td_data text'><DIV style='width: 100%; padding: 5px; height:{$height}PX; overflow-y: auto; overflow-x: hidden;' >
 					<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0'>NA<BR />\n";
 
-				while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+				while ($row = stripslashes_deep($result->fetch_assoc())) {
 					$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
 					$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		//
-					$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
+					$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;(" . e($row['nr_assigned']) . ")" ;
 					$checked = (in_array($row['unit_id'], $responders))? "CHECKED" : "";
 					$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
-					print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" $checked />
-						<SPAN class='text' STYLE='width: 55%; display: inline-block; background-color: {$the_bg_color}; color: {$the_text_color};'>" .
-						stripslashes ($row['unit_name']) . "</SPAN> &nbsp; {$ct_str}";
-					print " - <SPAN class='text' STYLE='width: 35%; display: inline-block; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
-						{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
+					print "\t<INPUT TYPE = 'checkbox' VALUE='" . e($row['unit_id']) . "' NAME = \"" . e($the_name) . "\" $checked />
+						<SPAN class='text' STYLE='width: 55%; display: inline-block; background-color: " . e($the_bg_color) . "; color: " . e($the_text_color) . ";'>" .
+						e(stripslashes ($row['unit_name'])) . "</SPAN> &nbsp; {$ct_str}";
+					print " - <SPAN class='text' STYLE='width: 35%; display: inline-block; background-color:" . e($row['bg_color']) . "; color:" . e($row['text_color']) . ";'>
+						" . e($row['stat_descr']) . "</SPAN><BR />\n";		// 7/20/10
 					}
 				unset ($row);
 				print "\t</DIV></TD>\n";
@@ -456,7 +466,7 @@ if ($get_action == 'add') {
 				<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.add_frm.reset(); init();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 				<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='return validate(document.add_frm);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 			</DIV>
-			<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="<?php echo basename(__FILE__);?>?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
+			<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="<?php echo basename(__FILE__);?>?ticket_id=<?php print e(sanitize_int($_GET['ticket_id']));?>&action=add">
 			<TABLE BORDER="0" STYLE='margin-left: 100px; position: relative; top: 50px;'>
 			<TR CLASS='even'>
 				<TD CLASS='td_label text'>Description: <font color='red' size='-1'>*</font></TD>
@@ -471,9 +481,9 @@ if ($get_action == 'add') {
 					<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 						<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+						$result = db_query($query);
+						while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 							$short = shorten ($row_sig['text'], 40);
 							print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$short}</OPTION>\n";		// pipe separator
 							}
@@ -523,19 +533,19 @@ if ($get_action == 'add') {
 
 			$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated`, `t`.`id` AS `type_id`, `r`.`id` AS `unit_id`, `r`.`name` AS `unit_name`,
 				`s`.`description` AS `stat_descr`,  `r`.`description` AS `unit_descr`, `a`.`id` AS `assigns_id`,
-				(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns`
-					WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
+				(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns`
+					WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
 					AS `nr_assigned`
-				FROM `$GLOBALS[mysql_prefix]responder` `r`
-				LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )
-				LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )
-				LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id )
+				FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = a.resource_id )
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON ( `r`.`type` = t.id )
+				LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
 				$where GROUP BY unit_id ORDER BY `nr_assigned` DESC, `handle` ASC, `r`.`name` ASC";
-				
-			$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
+
+			$result = db_query($query);
 			$max = 24;
 
-			$height =  (mysql_affected_rows()>$max) ? ($max * 22 ) : (mysql_affected_rows() + 1) * 22;
+			$height =  (db()->affected_rows>$max) ? ($max * 22 ) : (db()->affected_rows + 1) * 22;
 			print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
 			print "<TR><TD COLSPAN=2 style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
 			print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
@@ -543,17 +553,17 @@ if ($get_action == 'add') {
 			print "<TD CLASS='odd td_data text'><DIV style='width: 100%; padding: 5px; height:{$height}PX; overflow-y: auto; overflow-x: hidden;' >
 				<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0'>NA<BR />\n";
 
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$type_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
 				$type_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		//
 
-				$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
+				$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;(" . e($row['nr_assigned']) . ")" ;
 				$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
-				print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" />
-					<SPAN class='text' STYLE='width: 55%; display: inline-block; background-color: {$type_bg_color}; color: {$type_text_color};'>" .
-					stripslashes ($row['unit_name']) . "</SPAN> &nbsp; {$ct_str}";
-				print " - <SPAN class='text' STYLE='width: 35%; display: inline-block; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
-					{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
+				print "\t<INPUT TYPE = 'checkbox' VALUE='" . e($row['unit_id']) . "' NAME = \"" . e($the_name) . "\" />
+					<SPAN class='text' STYLE='width: 55%; display: inline-block; background-color: " . e($type_bg_color) . "; color: " . e($type_text_color) . ";'>" .
+					e(stripslashes ($row['unit_name'])) . "</SPAN> &nbsp; {$ct_str}";
+				print " - <SPAN class='text' STYLE='width: 35%; display: inline-block; background-color:" . e($row['bg_color']) . "; color:" . e($row['text_color']) . ";'>
+					" . e($row['stat_descr']) . "</SPAN><BR />\n";		// 7/20/10
 				}
 			print "</DIV></TD>";
 ?>
@@ -566,7 +576,7 @@ if ($get_action == 'add') {
 //				 common to all
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
-<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
+<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print e(sanitize_int($_GET['ticket_id']));?>">
 </FORM>
 <SCRIPT>set_size();</SCRIPT>
 </BODY>

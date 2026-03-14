@@ -63,13 +63,13 @@ if (empty($_POST)) {
 	$type = "";
 	$eta = "";
 	$notes = "";
-	$ticket_id = $_GET['ticket_id'];
+	$ticket_id = sanitize_int($_GET['ticket_id']);
 	$existing = 0;
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facnotes` WHERE `ticket_id` = " . $ticket_id . " LIMIT 1";		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facnotes` WHERE `ticket_id` = ? LIMIT 1";
+	$result = db_query($query, [$ticket_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ticket_id = $row['ticket_id'];
 		$origin = $row['origin'];
 		$destination = $row['destination'];
@@ -118,9 +118,9 @@ if (empty($_POST)) {
 									<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
 									}
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_case_cat` ORDER BY `category` ASC";
-								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-								while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+								$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_case_cat` ORDER BY `category` ASC";
+								$result = db_query($query);
+								while ($row = stripslashes_deep($result->fetch_assoc())) {
 									$sel = ($type == $row['id']) ? "SELECTED" : "";
 									print "\t<OPTION VALUE='{$row['id']}' {$sel}>{$row['category']}</OPTION>\n";
 									}
@@ -144,25 +144,27 @@ if (empty($_POST)) {
 		</DIV>
 <?php
 	} else {
+	$frm_ticket_id = sanitize_int($_POST['frm_ticket_id']);
 	if(intval($_POST['frm_existing']) == 1) {
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]facnotes WHERE `ticket_id`=" . $_POST['frm_ticket_id'];
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+		$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}facnotes` WHERE `ticket_id`=?";
+		$result = db_query($query, [$frm_ticket_id]);
 		}
-		
+
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 6/4/2013
-	$query  = "INSERT INTO `$GLOBALS[mysql_prefix]facnotes` (
+	$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}facnotes` (
 			`ticket_id`, `origin`, `destination`, `type`, `ETA`, `notes`, `_by`, `_on`, `_from`
-			) VALUES (" .
-			quote_smart(trim($_POST['frm_ticket_id'])) . "," .
-			quote_smart(trim($_POST['frm_origin'])) . "," .
-			quote_smart(trim($_POST['frm_destination'])) . "," .
-			quote_smart(trim($_POST['frm_type'])) . "," .
-			quote_smart(trim($_POST['frm_eta'])) . "," .
-			quote_smart(trim($_POST['frm_notes'])) . "," .				
-			quote_smart(trim($_SESSION['user_id'])) . "," .
-			quote_smart(trim($now)) . "," .
-			quote_smart(trim($_SERVER['REMOTE_ADDR'])) . ");";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	$result = db_query($query, [
+			$frm_ticket_id,
+			trim($_POST['frm_origin']),
+			trim($_POST['frm_destination']),
+			trim($_POST['frm_type']),
+			trim($_POST['frm_eta']),
+			trim($_POST['frm_notes']),
+			$_SESSION['user_id'],
+			$now,
+			$_SERVER['REMOTE_ADDR']
+	]);
 	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
 	if ($quick) {
 ?>

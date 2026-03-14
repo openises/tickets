@@ -16,9 +16,9 @@ $current = array();
 // end of array declaration
 
 // get status ids
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status`;";
-	$result = mysql_query($query);
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status`;";
+	$result = db_query($query);
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		$i = $row['id'];
 		$status_ids[$i][0] = $row['id'];
 		$status_ids[$i][1] = $row['status_val'];
@@ -38,10 +38,10 @@ $current = array();
 // end of dispatch status values
 
 // get current settings
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_disp_status` ORDER BY `id` ASC;";
-	$result = mysql_query($query);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_disp_status` ORDER BY `id` ASC;";
+	$result = db_query($query);
 	$z=1;
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 		$current[$z][0] = $row['id'];
 		$current[$z][1] = $row['name'];
 		$current[$z][2] = intval($row['status_val']);
@@ -59,14 +59,14 @@ if(!empty($_POST)) {
 		$i++;
 		}
 	foreach($the_data as $val) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]auto_disp_status` WHERE `id` = '" . $val[0] . "'";	
-		$result = mysql_query($query);	
-		if(mysql_num_rows($result) > 0) {	//	Entry exists for the status value			
-			$query = "UPDATE `$GLOBALS[mysql_prefix]auto_disp_status` SET `name` = '" . $val[2] . "', `status_val` = " . $val[1] . " WHERE `id`=" . $val[0];		
-			$result = mysql_query($query);	
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_disp_status` WHERE `id` = '" . $val[0] . "'";	
+		$result = db_query($query);	
+		if($result->num_rows > 0) {	//	Entry exists for the status value			
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}auto_disp_status` SET `name` = '" . $val[2] . "', `status_val` = " . $val[1] . " WHERE `id`=" . $val[0];		
+			$result = db_query($query);	
 			} else {	//	entry doesn't exist for the status value - insert a new one	
-			$query  = "INSERT INTO `$GLOBALS[mysql_prefix]auto_disp_status` (`id`, `name`, `status_val`) VALUES ('" . $val[0] . "', '" . $val[2] . "', '" . $val[1] . "')"; 
-			$result = mysql_query($query);	
+			$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}auto_disp_status` (`id`, `name`, `status_val`) VALUES ('" . $val[0] . "', '" . $val[2] . "', '" . $val[1] . "')"; 
+			$result = db_query($query);	
 			}
 		}
 

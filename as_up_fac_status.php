@@ -9,18 +9,12 @@ error_reporting(E_ALL);
 
 require_once($_SESSION['fip']);
 //snap(basename(__FILE__), __LINE__);
-extract($_GET);
+$frm_status_id = sanitize_int($_GET['frm_status_id']);
+$frm_responder_id = sanitize_int($_GET['frm_responder_id']);
 $now = time() - (get_variable('delta_mins')*60);
 
-$query = "UPDATE `$GLOBALS[mysql_prefix]facilities` SET `status_id`= ";
-$query .= quote_smart($frm_status_id) ;
-$query .= ", `updated` = " . quote_smart(mysql_format_date($now));
-$query .= ", `user_id` = " . $_SESSION['user_id'];
-$query .= " WHERE `id` = ";
-$query .= quote_smart($frm_responder_id);
-$query .=" LIMIT 1";
-
-$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
+$query = "UPDATE `{$GLOBALS['mysql_prefix']}facilities` SET `status_id`= ?, `updated` = ?, `user_id` = ? WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [$frm_status_id, mysql_format_date($now), $_SESSION['user_id'], $frm_responder_id]);
 
 //	dump ($query);
 

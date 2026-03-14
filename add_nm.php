@@ -98,26 +98,26 @@ if($istest) {print "_POST"; dump($_POST);}
 $api_key = get_variable('gmaps_api_key');
 
 $current_facilities = array();												// 9/22/09
-$query_f = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `id`";		// types in use
-$result_f = mysql_query($query_f) or do_error($query_f, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_f = stripslashes_deep(mysql_fetch_assoc($result_f))) {
+$query_f = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `id`";		// types in use
+$result_f = db_query($query_f);
+while ($row_f = stripslashes_deep($result_f->fetch_assoc())) {
 	$current_facilities [$row_f['id']] = array ($row_f['name'], $row_f['lat'], $row_f['lng']);
 	}
-$facilities = mysql_affected_rows();		// 3/24/10
+$facilities = db()->affected_rows;		// 3/24/10
 
 function get_res_row() {				// writes empty ticket if none exists - returns a row - 11/5/10
 	$by = $_SESSION['user_id'];			// 5/27/10
 
-	$query  = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` 
+	$query  = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` 
 		WHERE `status`= '{$GLOBALS['STATUS_RESERVED']}' 
 		AND  `_by` = '{$by}' LIMIT 1";
 
-	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_num_rows($result) == 1) {							// any ?
-		$row = stripslashes_deep(mysql_fetch_array($result));	// yes, return it
+	$result = db_query($query);
+	if ($result->num_rows == 1) {							// any ?
+		$row = stripslashes_deep($result->fetch_array());	// yes, return it
 		}
 	else {				// insert empty STATUS_RESERVED row 
-		$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (
+		$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}ticket` (
 				`id` , `in_types_id` , `contact` , `street` , `city` , `state` , `phone` , `lat` , `lng` , `date` ,
 				`problemstart` , `problemend` , `scope` , `affected` , `description` , `comments` , `status` , `owner` , 
 				`severity` , `updated`, `booked_date`, `_by` 
@@ -126,11 +126,11 @@ function get_res_row() {				// writes empty ticket if none exists - returns a ro
 				NULL , NULL , '', NULL , '', NULL , '" . $GLOBALS['STATUS_RESERVED'] . "', '0', '0', NULL, NULL, $by
 			)";
 			
-		$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+		$result_insert	= db_query($query_insert);
 		}
 		
-	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));			// get the reserved row
+	$result = db_query($query);
+	$row = stripslashes_deep($result->fetch_assoc());			// get the reserved row
 	return $row;													// and return it - 11/5/10
 		
 	}						// end function get_res_row()
@@ -218,9 +218,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 			if ($facility_id > 0) {			// 9/22/09
 
-				$query_g = "SELECT * FROM $GLOBALS[mysql_prefix]facilities WHERE `id`= $facility_id LIMIT 1";	
-				$result_g = mysql_query($query_g) or do_error($query_g, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				$row_g = stripslashes_deep(mysql_fetch_array($result_g));
+				$query_g = "SELECT * FROM {$GLOBALS['mysql_prefix']}facilities WHERE `id`= $facility_id LIMIT 1";	
+				$result_g = db_query($query_g);
+				$row_g = stripslashes_deep($result_g->fetch_array());
 				$the_lat = $row_g['lat'];								// use facility location
 				$the_lng = $row_g['lng'];
 			} else {
@@ -239,7 +239,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 //			$booked_date = empty($frm_booked_date)? "NULL" : quote_smart(trim($frm_booked_date)) ;	// 6/20/10
 			$booked_date = (intval($frm_do_scheduled)==1)?  quote_smart(trim($frm_booked_date)): "NULL" ;	// 1/1/11
 																									// 6/26/10
-			$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET 
 				`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
 				`street`= " . 		quote_smart(trim($_POST['frm_street'])) .",
 				`city`= " . 		quote_smart(trim($_POST['frm_city'])) .",
@@ -264,7 +264,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				`updated`='$now',
 				`_by` = $by
 				WHERE ID=$id";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query);
 
 			do_log($GLOBALS['LOG_INCIDENT_OPEN'], $id);
 			
@@ -286,8 +286,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 					}
 				}			// end if/else - 10/11/2013
 			$out_str = serialize ($inc_num_ary);
-			$query = "UPDATE`$GLOBALS[mysql_prefix]settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+			$query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = '$out_str' WHERE `name` = '_inc_num'";
+			$result = db_query($query);	
 			return $name_rev;
 			}				// end function updt ticket() 
 			
@@ -1380,10 +1380,10 @@ $maptype = get_variable('maptype');	// 08/02/09
 
 <?php
 		// Pulldown menu for use of Incident set at Facility 9/22/09, 3/18/10
-	$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
-	$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query_fc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";		
+	$result_fc = db_query($query_fc);
 	$pulldown = '<option value=0 selected>Incident at Facility</option>\n';	// 3/18/10
-		while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+		while ($row_fc = $result_fc->fetch_assoc()) {
 			$pulldown .= "<option value=\"{$row_fc['id']}\">{$row_fc['name']}</option>\n";
 			print "\tfac_lat[" . $row_fc['id'] . "] = " . $row_fc['lat'] . " ;\n";
 			print "\tfac_lng[" . $row_fc['id'] . "] = " . $row_fc['lng'] . " ;\n";
@@ -1391,10 +1391,10 @@ $maptype = get_variable('maptype');	// 08/02/09
 			}
 
 		// Pulldown menu for use of receiving Facility 10/6/09, 3/18/10
-	$query_rfc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
-	$result_rfc = mysql_query($query_rfc) or do_error($query_rfc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query_rfc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";		
+	$result_rfc = db_query($query_rfc);
 	$pulldown2 = '<option value = 0 selected>Receiving facility</option>\n'; 	// 3/18/10
-		while ($row_rfc = mysql_fetch_array($result_rfc, MYSQL_ASSOC)) {
+		while ($row_rfc = $result_rfc->fetch_assoc()) {
 			$pulldown2 .= "<option value=\"{$row_rfc['id']}\">{$row_rfc['name']}</option>\n";
 			print "\tfac_lat[" . $row_rfc['id'] . "] = " . $row_rfc['lat'] . " ;\n";
 			print "\tfac_lng[" . $row_rfc['id'] . "] = " . $row_rfc['lng'] . " ;\n";
@@ -1402,10 +1402,10 @@ $maptype = get_variable('maptype');	// 08/02/09
 			}
 
 	print "\n\tvar severities = new Array();\n";				// 6/25/10 - builds JS array of severities indexed to incident types 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
+	$result = db_query($query);
 	print "\t severities.push(0);\n";		// the inserted "TBD" dummy
-	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+	while ($row = $result->fetch_assoc()) {
 		print "\t severities.push({$row['set_severity']});\n";
 		}
 ?>
@@ -1495,11 +1495,11 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 		<SELECT NAME="frm_in_types_id"  tabindex=5 onChange="do_set_severity (this.selectedIndex); do_inc_name(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());">	<!--  10/4/08 -->
 		<OPTION VALUE=0 SELECTED>Select</OPTION>				<!-- 1/11/09 -->
 <?php
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
-		$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
+		$temp_result = db_query($query);
 		$the_grp = strval(rand());			//  force initial optgroup value
 		$i = 0;
-		while ($temp_row = stripslashes_deep(mysql_fetch_array($temp_result))) {
+		while ($temp_row = stripslashes_deep($temp_result->fetch_array())) {
 			if ($the_grp != $temp_row['group']) {
 				print ($i == 0)? "": "</OPTGROUP>\n";
 				$the_grp = $temp_row['group'];
@@ -1563,9 +1563,9 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";		// 12/18/10
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";		// 12/18/10
+				$result = db_query($query);
+				while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
 					}
 ?>
@@ -1705,9 +1705,9 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 			<SELECT NAME='signals' onChange = 'set_signal2(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 				<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";		// 12/18/10
-				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";		// 12/18/10
+				$result = db_query($query);
+				while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
 					}
 ?>

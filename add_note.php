@@ -93,9 +93,9 @@ if (empty($_POST)) {
 				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 					<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-					while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+					$result = db_query($query);
+					while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 						print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
 						}
 ?>
@@ -112,10 +112,10 @@ if (empty($_POST)) {
 <?php
 	} else {
 	$field_name = array('description', 'comments');
-	$frm_ticket_id=(int)$_POST['frm_ticket_id'];	//	4/4/14
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = {$frm_ticket_id} LIMIT 1";	//	4/4/14
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$frm_ticket_id = sanitize_int($_POST['frm_ticket_id']);	//	4/4/14
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";	//	4/4/14
+	$result = db_query($query, [$frm_ticket_id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$now = (time() - (get_variable('delta_mins')*60)); 
 	$format = get_variable('date_format');
 	$the_date = date($format, $now);
@@ -124,8 +124,9 @@ if (empty($_POST)) {
 	session_write_close();		
 	$the_text = "{$the_in_str} [{$_SESSION['user']}:{$the_date}]" . strip_tags(trim($_POST['frm_text'])) . "\n";		// 1/7/2013
 
-	$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `{$field_name[$_POST['frm_add_to']]}`= " . quote_smart($the_text) . " WHERE `id` = " . quote_smart($_POST['frm_ticket_id'])  ." LIMIT 1";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+	$safe_field = $field_name[sanitize_int($_POST['frm_add_to'])];
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `{$safe_field}`= ? WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_text, $frm_ticket_id]);
 	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
 	if ($quick) {
 ?>

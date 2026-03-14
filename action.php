@@ -34,10 +34,10 @@ require_once($_SESSION['fmp']);		// 8/27/10
 
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}
-$get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
+$get_action = (empty($_GET['action']))? "form" : sanitize_string($_GET['action']);		// 10/21/08
 $api_key = get_variable('gmaps_api_key');
 $gmaps = $_SESSION['internet'];
-$tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";								// 6/10/11
+$tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']) : "";								// 6/10/11
 // $addrs = notify_user($_REQUEST['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE - 6/12/12
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -344,9 +344,9 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 
 			$optstyles = array ();		// see css
 
-			$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types`";				// 1/27/09
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-			while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$query 	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types`";				// 1/27/09
+			$result = db_query($query);
+			while($row = stripslashes_deep($result->fetch_assoc())) {
 				$optstyles[$row['name']] = $row['name'];	
 				}
 			unset($result);
@@ -354,8 +354,9 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 			if ($get_action == 'add') {
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-			if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$_GET[ticket_id]'")) {
-				print "<FONT CLASS='warn'>Invalid Ticket ID: '$_GET[ticket_id]'</FONT>";
+			$safe_ticket_id = sanitize_int($_GET['ticket_id']);
+		if ($_GET['ticket_id'] == '' OR $_GET['ticket_id'] <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='" . $safe_ticket_id . "'")) {
+				print "<FONT CLASS='warn'>Invalid Ticket ID: '" . e($safe_ticket_id) . "'</FONT>";
 				} elseif ($_POST['frm_description'] == '') {
 				print '<FONT CLASS="warn">Please enter Description.</FONT><BR />';
 				} else {
@@ -369,40 +370,45 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 					}
 				$_POST['frm_description'] = strip_html($_POST['frm_description']); //fix formatting, custom tags etc.
 
-				$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST['frm_meridiem_asof'] : "" ;
+				$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? sanitize_string($_POST['frm_meridiem_asof']) : "" ;
+				$frm_year = sanitize_string($_POST['frm_year_asof']);
+				$frm_month = sanitize_string($_POST['frm_month_asof']);
+				$frm_day = sanitize_string($_POST['frm_day_asof']);
+				$frm_hour = sanitize_string($_POST['frm_hour_asof']);
+				$frm_minute = sanitize_string($_POST['frm_minute_asof']);
 
-				$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
+				$frm_asof = "{$frm_year}-{$frm_month}-{$frm_day} {$frm_hour}:{$frm_minute}:00{$frm_meridiem_asof}";
 																			// 4/22/11
-				$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE
-					`description` = '" . addslashes($_POST['frm_description']) . "' AND
-					`ticket_id` = '{$_GET['ticket_id']}' AND
-					`user` = '{$_SESSION['user_id']}' AND
-					`action_type` = '{$GLOBALS['ACTION_COMMENT']}' AND
-					`updated` = '{$frm_asof}' AND
-					`responder` = '{$responder}' ";
-					
-				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
-				if (mysql_affected_rows()==0) {		// not a duplicate - 8/15/10
-					
-					$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]action` 
+				$query 	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE
+					`description` = ? AND
+					`ticket_id` = ? AND
+					`user` = ? AND
+					`action_type` = ? AND
+					`updated` = ? AND
+					`responder` = ? ";
+
+				$result	= db_query($query, [$_POST['frm_description'], $safe_ticket_id, $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $frm_asof, $responder]);
+				if (db()->affected_rows==0) {		// not a duplicate - 8/15/10
+
+					$query 	= "INSERT INTO `{$GLOBALS['mysql_prefix']}action`
 						(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES
-						('" . addslashes($_POST['frm_description']) . "', '{$_GET['ticket_id']}', '{$now}', {$_SESSION['user_id']}, {$GLOBALS['ACTION_COMMENT']}, '{$frm_asof}', '{$responder}')";		// 8/24/08
-					$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
-		
-					$ticket_id = mysql_insert_id();								// just inserted action id
+						(?, ?, ?, ?, ?, ?, ?)";		// 8/24/08
+					$result	= db_query($query, [$_POST['frm_description'], $safe_ticket_id, $now, $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $frm_asof, $responder]);
+
+					$ticket_id = db()->insert_id;								// just inserted action id
 //						($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
-					do_log($GLOBALS['LOG_ACTION_ADD'], $_GET['ticket_id'], 0,  mysql_insert_id());		// 3/18/10
-					$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE `id`='" . $_GET['ticket_id'] . "' LIMIT 1";
-					$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
+					do_log($GLOBALS['LOG_ACTION_ADD'], $safe_ticket_id, 0,  db()->insert_id);		// 3/18/10
+					$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE `id`= ? LIMIT 1";
+					$result = db_query($query, [$frm_asof, $safe_ticket_id]);
 					}		// end insert process
 					
-				$id = $_GET['ticket_id'];
+				$id = $safe_ticket_id;
 				print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action record has been added.</SPAN><BR /><BR /><BR />';
 				print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
 				print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
-				print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+				print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id=" . e($id) . "'>" . get_text('Incident') . "</A><BR />";
 				print "</DIV>";
-				$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+				$addrs = notify_user($safe_ticket_id,$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
 
 				if ($addrs) {
 					$theTo = implode("|", array_unique($addrs));
@@ -412,35 +418,39 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 				}		// end else ...
 // ____________________________________________________
 			} else if ($get_action == 'delete') {		// 	end if($get_action == 'add')
+			$safe_action_id = sanitize_int($_GET['id']);
+			$safe_ticket_id_del = sanitize_int($_GET['ticket_id']);
 			if (array_key_exists('confirm', ($_GET))) {
-				do_log($GLOBALS['LOG_ACTION_DELETE'], $_GET['ticket_id'], 0, $_GET['id']);		// 8/7/08
+				do_log($GLOBALS['LOG_ACTION_DELETE'], $safe_ticket_id_del, 0, $safe_action_id);		// 8/7/08
 //					($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
-			
-				$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") or do_error('','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-				$id = $_GET['ticket_id'];
+
+				$result = db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1", [$safe_action_id]);
+				$id = $safe_ticket_id_del;
 				print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action deleted.</SPAN><BR /><BR /><BR />';
 				print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
 				print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
-				print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+				print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id=" . e($id) . "'>" . get_text('Incident') . "</A><BR />";
 				print "</DIV>";
-				$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+				$addrs = notify_user($safe_ticket_id_del,$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
 				if ($addrs) {
 					$theTo = implode("|", array_unique($addrs));
 					$theText = "TICKET - ACTION DELETED: ";
 					mail_it ($theTo, "", $theText, $id, 1 );
 					}
 				} else {
-				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
-				$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-				$row = stripslashes_deep(mysql_fetch_assoc($result));
-				print "<FONT CLASS='header'>Really delete action record '" . shorten($row['description'], 24) . "' ? </FONT><BR /><BR />";
-				print "<FORM NAME='delfrm' METHOD='post' ACTION='action.php?action=delete&id=$_GET[id]&ticket_id=" . $_GET['ticket_id'] . "&confirm=1'>";
+				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
+				$result = db_query($query, [$safe_action_id]);
+				$row = stripslashes_deep($result->fetch_assoc());
+				print "<FONT CLASS='header'>Really delete action record '" . e(shorten($row['description'], 24)) . "' ? </FONT><BR /><BR />";
+				print "<FORM NAME='delfrm' METHOD='post' ACTION='action.php?action=delete&id=" . e($safe_action_id) . "&ticket_id=" . e($safe_ticket_id_del) . "&confirm=1'>";
 				
 				print "<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_step_2();'><SPAN STYLE='float: left;'>" . get_text('Yes') . "</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>";
 				print "<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'>" . get_text('Cancel') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
 				print "</FORM>";
 				}
 			} else if ($get_action == 'update') {	// end if ($get_action == 'delete') update action and show ticket
+			$safe_upd_id = sanitize_int($_GET['id']);
+			$safe_upd_ticket_id = sanitize_int($_GET['ticket_id']);
 			$responder = $sep = "";
 			foreach ($_POST as $VarName=>$VarValue) {			// 3/20/10
 				$temp = explode("_", $VarName);
@@ -449,19 +459,25 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 					$sep = " ";
 					}
 				}
-			$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST[frm_meridiem_asof] : "" ;
-			$frm_asof = "$_POST[frm_year_asof]-$_POST[frm_month_asof]-$_POST[frm_day_asof] $_POST[frm_hour_asof]:$_POST[frm_minute_asof]:00$frm_meridiem_asof";
-			$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]action` SET `description`='$_POST[frm_description]', `responder` = '$responder', `updated` = '$frm_asof' WHERE `id`='$_GET[id]' LIMIT 1") or do_error('action.php::update action','mysql_query',mysql_error(),basename( __FILE__), __LINE__);
-			$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` =	'$frm_asof' WHERE id='$_GET[ticket_id]' LIMIT 1") 	or do_error('action.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-			$result = mysql_query("SELECT ticket_id FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1") 			or do_error('action.php::update action','mysql_query',mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_array($result));
-			$id = $_GET['ticket_id'];
+			$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? sanitize_string($_POST['frm_meridiem_asof']) : "" ;
+			$frm_year = sanitize_string($_POST['frm_year_asof']);
+			$frm_month = sanitize_string($_POST['frm_month_asof']);
+			$frm_day = sanitize_string($_POST['frm_day_asof']);
+			$frm_hour = sanitize_string($_POST['frm_hour_asof']);
+			$frm_minute = sanitize_string($_POST['frm_minute_asof']);
+			$frm_asof = "{$frm_year}-{$frm_month}-{$frm_day} {$frm_hour}:{$frm_minute}:00{$frm_meridiem_asof}";
+			$frm_description = sanitize_string($_POST['frm_description']);
+			$result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}action` SET `description`=?, `responder` = ?, `updated` = ? WHERE `id`=? LIMIT 1", [$frm_description, $responder, $frm_asof, $safe_upd_id]);
+			$result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=? LIMIT 1", [$frm_asof, $safe_upd_ticket_id]);
+			$result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1", [$safe_upd_id]);
+			$row = stripslashes_deep($result->fetch_array());
+			$id = $safe_upd_ticket_id;
 			print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action record has been updated.</SPAN><BR /><BR /><BR />';
 			print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
 			print "<A ID='main_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php'>" . get_text('Main') . "</A>";
-			print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id={$id}'>" . get_text('Incident') . "</A><BR />";
+			print "<A ID='inc_but' class='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='main.php?id=" . e($id) . "'>" . get_text('Incident') . "</A><BR />";
 			print "</DIV>";
-			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+			$addrs = notify_user($safe_upd_ticket_id,$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
 			if ($addrs) {
 				$theTo = implode("|", array_unique($addrs));
 				$theText = "TICKET - ACTION UPDATED: ";
@@ -469,14 +485,15 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 				}
 
 			} else if ($get_action == 'edit') {		// end if ($get_action == 'update'), get and show action to update
-			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `id`='$_GET[id]' LIMIT 1";
-			$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-			$row = stripslashes_deep(mysql_fetch_array($result));
+			$safe_edit_id = sanitize_int($_GET['id']);
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
+			$result = db_query($query, [$safe_edit_id]);
+			$row = stripslashes_deep($result->fetch_array());
 			$responders = explode(" ", $row['responder']);				// to array
 			$do_yr_asof = true;
 			$heading = "Edit Action";
 ?>
-			<FORM METHOD="post" NAME='ed_frm' ACTION="action.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update">
+			<FORM METHOD="post" NAME='ed_frm' ACTION="action.php?id=<?php print e($safe_edit_id);?>&ticket_id=<?php print e(sanitize_int($_GET['ticket_id']));?>&action=update">
 			<TABLE BORDER="0">
 				<TR CLASS='header'>
 					<TD COLSPAN='99' ALIGN='center'>
@@ -493,24 +510,24 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 				<TR CLASS='odd' VALIGN='top'>				
 <?php
 //						generate dropdown menu of responders -- if(in_array($rowtemp[id], $row[responder]))
-				$query = "SELECT *, 
+				$query = "SELECT *,
 					`updated` AS `updated`,
 					`y`.`id` AS `type_id`,
 					`r`.`id` AS `unit_id`,
 					`r`.`name` AS `unit_name`,
 					`s`.`description` AS `stat_descr`,
-					`r`.`description` AS `unit_descr`, 
-					(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-						WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
-						AS `nr_assigned` 
-					FROM `$GLOBALS[mysql_prefix]responder` `r` 
-					LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `y` ON ( `r`.`type` = y.id )	
-					LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
+					`r`.`description` AS `unit_descr`,
+					(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns`
+						WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
+						AS `nr_assigned`
+					FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `y` ON ( `r`.`type` = y.id )
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
 					ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10
 //						dump($query);	//
-				$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+				$result = db_query($query);
 				$max = 24;
-				$height =  (mysql_affected_rows()>$max) ? ($max * 30 ) : (mysql_affected_rows() + 1) * 30;
+				$height =  (db()->affected_rows>$max) ? ($max * 30 ) : (db()->affected_rows + 1) * 30;
 				print "<TR VALIGN='top'><TD COLSPAN=3 CLASS='td_label' style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
 				$checked = (in_array("0", $responders))? "CHECKED" : "";	// NA is special case - 8/8/10
 ?>
@@ -519,18 +536,18 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 						<DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >
 							<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0' />NA<BR />
 <?php
-							while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+							while ($row = stripslashes_deep($result->fetch_assoc())) {
 								$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
-								$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		// 
+								$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		//
 
 								$checked = (in_array($row['unit_id'], $responders))? "CHECKED" : "";
-								$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
+								$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;(" . e($row['nr_assigned']) . ")" ;
 								$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
-								print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" $checked />
-									<SPAN STYLE='width:300px; display:inline; background-color:{$the_bg_color}; color:{$the_text_color};'>" .  
-									stripslashes ($row['unit_name']) . "&nbsp;</SPAN>{$ct_str}";
-								print "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;<SPAN STYLE = 'width:200px; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
-									{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
+								print "\t<INPUT TYPE = 'checkbox' VALUE='" . e($row['unit_id']) . "' NAME = \"" . e($the_name) . "\" $checked />
+									<SPAN STYLE='width:300px; display:inline; background-color:" . e($the_bg_color) . "; color:" . e($the_text_color) . ";'>" .
+									e(stripslashes ($row['unit_name'])) . "&nbsp;</SPAN>{$ct_str}";
+								print "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;<SPAN STYLE = 'width:200px; background-color:" . e($row['bg_color']) . "; color:" . e($row['text_color']) . ";'>
+									" . e($row['stat_descr']) . "</SPAN><BR />\n";		// 7/20/10
 
 								}
 							unset ($row);
@@ -614,10 +631,10 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 						<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 							<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-							$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-							$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-							while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
-								print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
+							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+							$result = db_query($query);
+							while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
+								print "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</OPTION>\n";		// pipe separator
 								}
 ?>
 						</SELECT>
@@ -627,73 +644,73 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 <?php
 //				generate dropdown menu of responders
 
-				if(!isset($curr_viewed)) {	
+				if(!isset($curr_viewed)) {
 					if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 						$where = "WHERE `a`.`type` = 2";
 						} else {
 						$x=0;	//	6/10/11
 						$where = "WHERE (";	//	6/10/11
 						foreach($al_groups as $grp) {	//	6/10/11
-							$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+							$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";
 							$where .= "`a`.`group` = '{$grp}'";
 							$where .= $where2;
 							$x++;
 							}
-						$where .= "AND `a`.`type` = 2";	//	6/10/11					
+						$where .= "AND `a`.`type` = 2";	//	6/10/11
 						}
 					} else {
 					if(empty($curr_viewed)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 						$where = "WHERE `a`.`type` = 2";
-						} else {				
+						} else {
 						$x=0;	//	6/10/11
 						$where = "WHERE (";	//	6/10/11
 						foreach($curr_viewed as $grp) {	//	6/10/11
-							$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+							$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
 							$where .= "`a`.`group` = '{$grp}'";
 							$where .= $where2;
 							$x++;
 							}
-						$where .= "AND `a`.`type` = 2";	//	6/10/11						
+						$where .= "AND `a`.`type` = 2";	//	6/10/11
 						}
-					}	
-				
+					}
 
-					$query = "SELECT *, 
+
+					$query = "SELECT *,
 						`updated` AS `updated`,
-						`t`.`id` AS `type_id`, 
-						`r`.`id` AS `unit_id`, 
+						`t`.`id` AS `type_id`,
+						`r`.`id` AS `unit_id`,
 						`r`.`name` AS `unit_name`,
-						`s`.`description` AS `stat_descr`,  
-						`r`.`description` AS `unit_descr`, 
-						(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
-							WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = `unit_id`  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
-							AS `nr_assigned` 
-						FROM `$GLOBALS[mysql_prefix]responder` `r` 
-						LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )					
-						LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
-						LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
+						`s`.`description` AS `stat_descr`,
+						`r`.`description` AS `unit_descr`,
+						(SELECT  COUNT(*) as numfound FROM `{$GLOBALS['mysql_prefix']}assigns`
+							WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `unit_id`  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
+							AS `nr_assigned`
+						FROM `{$GLOBALS['mysql_prefix']}responder` `r`
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = a.resource_id )
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON ( `r`.`type` = t.id )
+						LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
 						$where GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10, 6/10/11
-					$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);
+					$result = db_query($query);
 					$max = 24;
 
-					$height =  (mysql_affected_rows()>$max) ? ($max * 22 ) : (mysql_affected_rows() + 1) * 22;
+					$height =  (db()->affected_rows>$max) ? ($max * 22 ) : (db()->affected_rows + 1) * 22;
 					print "<TR><TD></TD><TD COLSPAN=2>" . get_units_legend(). "</TD></TR>";
 					print "<TR CLASS='odd'><TD CLASS='td_label text'></TD>";		// 8/8/10
 					print "<TD CLASS='td_data text'><DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >
 						<INPUT TYPE = 'checkbox' VALUE=0 NAME = 'frm_cb_0'>NA<BR />\n";
 //    				$the_class = (array_key_exists($row['type'], $optstyles))?  $optstyles[$row['type']] : "";
 
-					while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+					while ($row = stripslashes_deep($result->fetch_assoc())) {
 						$type_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 7/20/10
-						$type_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		// 
+						$type_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		//
 
-						$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;({$row['nr_assigned']})" ;
+						$ct_str = ($row['nr_assigned']==0) ? ""  : "&nbsp;(" . e($row['nr_assigned']) . ")" ;
 						$the_name = "frm_cb_" . stripslashes ($row['unit_name']);
-						print "\t<INPUT TYPE = 'checkbox' VALUE='{$row['unit_id']}' NAME = \"{$the_name}\" />
-							<SPAN STYLE = 'width:300px; display:inline; background-color:{$type_bg_color}; color:{$type_text_color};'>" .  
-							stripslashes ($row['unit_name']) . "</SPAN> &nbsp; {$ct_str}";
-						print " - <SPAN STYLE = 'width:200px; background-color:{$row['bg_color']}; color:{$row['text_color']};'>
-							{$row['stat_descr']}</SPAN><BR />\n";		// 7/20/10
+						print "\t<INPUT TYPE = 'checkbox' VALUE='" . e($row['unit_id']) . "' NAME = \"" . e($the_name) . "\" />
+							<SPAN STYLE = 'width:300px; display:inline; background-color:" . e($type_bg_color) . "; color:" . e($type_text_color) . ";'>" .
+							e(stripslashes ($row['unit_name'])) . "</SPAN> &nbsp; {$ct_str}";
+						print " - <SPAN STYLE = 'width:200px; background-color:" . e($row['bg_color']) . "; color:" . e($row['text_color']) . ";'>
+							" . e($row['stat_descr']) . "</SPAN><BR />\n";		// 7/20/10
 						}
 					print "</DIV></TD>";
 ?>

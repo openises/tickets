@@ -17,9 +17,9 @@ require_once($_SESSION['fip']);		//7/28/10
 
 $vals_ary = explode("%", $_POST['frm_vals']);		// example: "frm_id=17&frm_vals=frm_dispatched%frm_responding%frm_clear"
 
-$frm_id = $_POST['frm_id'];
-$frm_tick = $_POST['frm_tick'];
-$frm_unit = $_POST['frm_unit'];
+$frm_id = sanitize_int($_POST['frm_id']);
+$frm_tick = sanitize_int($_POST['frm_tick']);
+$frm_unit = sanitize_int($_POST['frm_unit']);
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $date_part="";
@@ -59,9 +59,9 @@ if (in_array("frm_clear",$vals_ary))		{
 
 $date_part .= substr($date_part, 0, -2);							//drop terminal separator pair
 
-$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) .", " . $date_part ;
-$query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
+$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET `as_of`= " . quote_smart($now) .", " . $date_part ;
+$query .=  " WHERE `id` = ? LIMIT 1";
+$result	= db_query($query, [$frm_id]);
 
 set_u_updated ($_POST['frm_id']); 								// set unit 'updated' time - 9/1/10
 $use_status_update = get_variable("use_disp_autostat");

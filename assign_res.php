@@ -19,23 +19,24 @@ USERS: you may replace NULL with $now (EXACTLY THAT!) in the following sql query
 */
 
 // 6/20/12
-$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET 
+$frm_id = sanitize_int($_POST['frm_id']);
+$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET
 	`responding` = NULL,
 	`on_scene` = NULL,
 	`u2fenr` = NULL,
 	`u2farr` = NULL,
 	`clear` = NULL,
 	`as_of` = $now
-	WHERE `id` = {$_POST['frm_id']} LIMIT 1;";
+	WHERE `id` = ? LIMIT 1;";
 
-$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `id` =  {$_POST['frm_id']} LIMIT 1";
-$result = mysql_query($query) or do_error($query, "", mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query, [$frm_id]);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
+$result = db_query($query, [$frm_id]);
 
-$row = mysql_fetch_assoc($result);
+$row = $result->fetch_assoc();
 
 do_log($GLOBALS['LOG_CALL_RESET'], $row['ticket_id'], $row['responder_id'], $row['id']);
-set_u_updated ($_POST['frm_id']); 									// 9/1/10
+set_u_updated ($frm_id); 									// 9/1/10
 
 unset($result);
 ?>
