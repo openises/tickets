@@ -1,6 +1,12 @@
 <?php
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
+// Suppress display of errors in AJAX endpoints to prevent PHP warnings from
+// corrupting JSON responses. Errors are still logged via error_log().
+if (strpos($_SERVER['SCRIPT_NAME'] ?? '', '/ajax/') !== false) {
+	ini_set('display_errors', '0');
+}
+
 $theTimezone = "America/New_York";
 date_default_timezone_set($theTimezone);
 $https = (array_key_exists('HTTPS', $_SERVER)) ? 1 : 0;

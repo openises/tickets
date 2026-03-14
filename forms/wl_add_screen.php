@@ -109,7 +109,7 @@ function set_size() {
 	set_fontsizes(viewportwidth, "fullscreen");	
 	}
 
-var max_zoom = <?php print get_variable('def_zoom');?>;
+var max_zoom = 19;		// Maximum zoom level for map tiles (def_zoom is initial zoom, not max)
 
 function validate(theForm) {						// form contents validation
 	if (theForm.frm_remove) {

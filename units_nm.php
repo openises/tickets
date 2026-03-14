@@ -503,7 +503,7 @@ function get_user_details($rosterID) {	//	9/6/13
 
 <?php
 
-function list_responders($addon = '', $start) {
+function list_responders($addon = '', $start = 0) {
 //	global {$_SESSION['fip']}, $fmp, {$_SESSION['editfile']}, {$_SESSION['addfile']}, {$_SESSION['unitsfile']}, {$_SESSION['facilitiesfile']}, {$_SESSION['routesfile']},	{$_SESSION['facroutesfile']}; 
 	global $iw_width, $u_types, $tolerance;
 

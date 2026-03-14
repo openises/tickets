@@ -457,7 +457,7 @@ function OLD_show_assigns($which, $id) {				// 08/8/5, 4/30/10
 	}			// end function get_assigns()
 
 
-function show_actions ($the_id, $theSort="date", $links, $display, $mode) {			/* list actions and patient data belonging to ticket */
+function show_actions ($the_id, $theSort="date", $links="", $display="", $mode="") {			/* list actions and patient data belonging to ticket */
 	$p = $GLOBALS['mysql_prefix'];
 	$the_id = sanitize_int($the_id);
 	if ($display) {

@@ -9,7 +9,7 @@ $groupname = isset($_SESSION['group_name']) ? $_SESSION['group_name'] : "";	//	4
 $in_win = array_key_exists ("mode", $_GET);             // in
 $from_mi = array_key_exists ("mi", $_GET);
 $gmaps = $_SESSION['internet'];
-$the_resp_id = (isset($_GET['id']))? sanitize_int($_GET['id']): 0;	//	11/18/13
+$the_resp_id = (isset($_GET['id']))? intval($_GET['id']): 0;	//	11/18/13
 /*
 5/23/08	added check for associated assign records before allowing deletions line 843 area
 5/29/08	addded do_kml callsu
@@ -548,7 +548,7 @@ if(file_exists("./incs/modules.inc.php")) {
 				$result = db_query($query) or do_error($query, 'mysql query failed', db()->error,basename( __FILE__), __LINE__);	
 				}
 				
-			$existing_members = explode(",", $_POST['frm_exist_members']);
+			$existing_members = array_filter(explode(",", $_POST['frm_exist_members']), 'strlen');	// filter empty values
 				
 			if(array_key_exists('frm_memname', $_POST)) {
 				foreach($_POST['frm_memname'] AS $key => $val) {

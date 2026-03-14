@@ -52,7 +52,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 		}		// end else
 	}		// end function get_assigned_td()
 
-	function do_list($unit_id ="", $capabilities ="", $searchtype) {		// 12/18/10
+	function do_list($unit_id ="", $capabilities ="", $searchtype ="") {		// 12/18/10
 		global $unav_id_str, $row_ticket, $dispatches_disp, $dispatches_act, $from_top, $eol, $sidebar_width, $sortby_distance ;
 		
 		$conversion = get_dist_factor();			// KM vs mi - 11/23/10

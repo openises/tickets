@@ -56,13 +56,13 @@ function fac_cat($id) {
 function get_day() {
 	$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 	$timestamp = (time() - ($delta*60));
-	return strftime("%A",$timestamp);
+	return date('l',$timestamp);
 	}
-	
+
 function get_currenttime() {
 	$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 	$timestamp = (time() - ($delta*60));
-	return strftime("%R",$timestamp);
+	return date('H:i',$timestamp);
 	}
 	
 function isTimeBetween($lower, $higher) {

@@ -549,7 +549,7 @@ print add_sidebar(TRUE, TRUE, TRUE, FALSE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 		<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>
 
 		<SCRIPT>
-		var max_zoom = <?php print get_variable('def_zoom');?>;
+		var max_zoom = 19;		// Maximum zoom level for map tiles (def_zoom is initial zoom, not max)
 		var thePoly;
 		var theMarker;
 		var map;				// make globally visible

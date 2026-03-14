@@ -1003,7 +1003,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 
 	}			// end if/else !empty($_POST)
 
-function do_list($unit_id ="", $capabilities ="", $searchtype) {
+function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
 	global $row_ticket, $dispatches_disp, $dispatches_act, $from_top, $from_left, $eol, $sidebar_width;
 	
 	switch($row_ticket['severity'])		{		//color tickets by severity

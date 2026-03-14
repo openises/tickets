@@ -1,8 +1,10 @@
 <?php
+ini_set('display_errors', '0');		// Prevent PHP warnings from corrupting JSON output
+error_reporting(E_ALL);				// Still log errors, just don't display them
 require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
-if($_GET['q'] != $_SESSION['id']) {
+if(!isset($_GET['q']) || !isset($_SESSION['id']) || $_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
 $id = sanitize_int($_GET['id']);

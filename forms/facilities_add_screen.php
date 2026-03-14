@@ -158,7 +158,7 @@ fac_icons[5] = 6;
 fac_icons[6] = 7;
 fac_icons[7] = 8;
 
-var max_zoom = <?php print get_variable('def_zoom');?>;
+var max_zoom = 19;		// Maximum zoom level for map tiles (def_zoom is initial zoom, not max)
 
 var map;				// make globally visible
 var myMarker;

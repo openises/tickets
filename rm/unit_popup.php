@@ -4,8 +4,8 @@ require_once('../incs/functions.inc.php');
 session_write_close();
 function get_day() {
 	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return strftime("%A",$timestamp);
+	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	return date('l',$timestamp);
 	}
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
 $alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 

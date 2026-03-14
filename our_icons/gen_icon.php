@@ -5,19 +5,21 @@ generates numbered icon given the icon id and value string
 1/7/09 initial release
 1/9/09 swapped yellow and green
 1/24/09 dark for yellow icon
+3/14/26 PHP 8.x fixes: suppress libpng sRGB warning, cast float to int for imagestring
 */
 header("Content-type: image/png");
 //$img_url = "./icons/gen_icon5.php?blank=7&text=BB";
 
 function do_icon ($icon, $text, $color) {
-	$im = imagecreatefrompng($icon);
+	$im = @imagecreatefrompng($icon);		// suppress libpng sRGB profile warning
+	if ($im === false) { return; }
 	imageAlphaBlending($im, true);
 	imageSaveAlpha($im, true);
-		
+
 	$len = strlen($text);
 	$p1 = ($len <= 2)? 1:2 ;
 	$p2 = ($len <= 2)? 3:2 ;
-	$px = (imagesx($im) - 7 * $len) / 2 + $p1;
+	$px = (int)((imagesx($im) - 7 * $len) / 2 + $p1);		// cast to int for PHP 8.x
 	$font = 'arial.ttf';
 	$contrast = ($color)? imagecolorallocate($im, 255, 255, 255): imagecolorallocate($im, 0, 0, 0); // white on dark?
 

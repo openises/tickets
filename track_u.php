@@ -197,7 +197,7 @@ function ck_frames() {		// ck_frames()
 </SCRIPT>
 
 <?php
-function list_tracks($addon = '', $start) {
+function list_tracks($addon = '', $start = 0) {
 	global $source, $evenodd;
 ?>
 <SCRIPT>

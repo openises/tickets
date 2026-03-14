@@ -36,14 +36,14 @@ function fac_cat($id) {
 
 function get_day() {
 	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-//	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return strftime("%A",$timestamp);
+//	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	return date('l',$timestamp);
 	}
 
 function get_currenttime() {
 	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-//	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return strftime("%R",$timestamp);
+//	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	return date('H:i',$timestamp);
 	}
 
 function isTimeBetween($lower, $higher) {

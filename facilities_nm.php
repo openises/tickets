@@ -395,7 +395,7 @@ function get_mailgroup_name($id) {	//	8/28/13
 
 <?php
 
-function list_facilities($addon = '', $start) {
+function list_facilities($addon = '', $start = 0) {
 	global $iw_width, $u_types, $tolerance;
 //	$assigns = array();
 //	$tickets = array();

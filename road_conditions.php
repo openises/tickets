@@ -584,7 +584,7 @@ unset($result);
 		}
 </SCRIPT>
 <?php
-function list_locations($addon = '', $start) {
+function list_locations($addon = '', $start = 0) {
 	global $iw_width, $c_types, $tolerance;
 
 	$query = "SELECT *,

@@ -138,8 +138,8 @@ function fac_cat($id) {
 	
 function get_day() {
 	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return strftime("%A",$timestamp);
+	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	return date('l',$timestamp);
 	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

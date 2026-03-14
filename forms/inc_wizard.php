@@ -179,7 +179,7 @@ function get_wizard_field_control($theField, $field_name) {
 	return $theControl;
 	}
 
-function generate_date_select($date_suffix, $default_date=0, $theLabel, $disabled=FALSE) {
+function generate_date_select($date_suffix, $default_date=0, $theLabel="", $disabled=FALSE) {
 	global $tabindex;
 	$label = "dateselect_" . $date_suffix;
 	$output = "";

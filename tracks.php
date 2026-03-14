@@ -60,7 +60,7 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 	return $print;
 	}			// end function get_icon_legend ()
 	
-function list_responders($addon = '', $start) {
+function list_responders($addon = '', $start = 0) {
 
 	global $u_types;
 ?>

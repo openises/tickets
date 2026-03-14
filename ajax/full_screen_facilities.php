@@ -53,8 +53,8 @@ function fac_cat($id) {
 	
 function get_day() {
 	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-	if(strftime("%w",$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return strftime("%A",$timestamp);
+	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+	return date('l',$timestamp);
 	}
 
 if (array_key_exists ('forder' , $_POST))	{$_SESSION['fac_flag_2'] =  $_POST['forder'];}		// 3/15/11

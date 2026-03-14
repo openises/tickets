@@ -1467,7 +1467,7 @@ function set_size() {
 							LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = a.resource_id )		
 							$where2 GROUP BY `fac_id` ORDER BY `name` ASC";	
 							$result_rfc = db_query($query_rfc);
-							$$recfacSel .= '<option>Receiving Facility?</option>';
+							$recfacSel .= '<option>Receiving Facility?</option>';
 							while ($row_rfc = $result_rfc->fetch_assoc()) {
 								$recfacSel .= "<option value=" . $row_rfc['fac_id'] . ">" . shorten($row_rfc['name'], 20) . "</option>\n";
 								}
@@ -1594,7 +1594,7 @@ function set_size() {
 						$selP = ($row['in_status']==$GLOBALS['STATUS_SCHEDULED'])? "SELECTED" :"" ;
 
 						$end_date = (intval($row['problemend'])> 1)? $row['problemend']:  (time() - (get_variable('delta_mins')*60));
-						$elapsed = my_date_diff(strftime('%Y-%m-%d %H:%M:%S',$row['problemstart']), strftime('%Y-%m-%d %H:%M:%S',$end_date));
+						$elapsed = my_date_diff(date('Y-m-d H:i:s',$row['problemstart']), date('Y-m-d H:i:s',$end_date));
 ?>
 						<LABEL for="sel_status" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_status'];?>');"><?php print get_text("Status");?>: </LABEL>
 						<SELECT ID='sel_status' NAME='frm_status' <?php print $dis;?>>
