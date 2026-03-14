@@ -10,25 +10,25 @@ function br2nl($input) {
 	}
 
 if($_GET['user_id'] != 0) {
-	$the_user = $_GET['user_id'];
+	$the_user = sanitize_int($_GET['user_id']);
 	} else {
 	exit;
 	}
 $ret_arr = array();	
-$responder_id = (isset($_GET['responder_id'])) ? clean_string($_GET['responder_id']) : NULL;
+$responder_id = (isset($_GET['responder_id'])) ? sanitize_int($_GET['responder_id']) : NULL;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = '" . $the_user . "' AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))"; 
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ? AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))";
 $bgcolor = "#EEEEEE";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
-if (mysql_num_rows($result) == 0) { 				// 8/6/08
+$result = db_query($query, [$the_user]);
+$num=$result->num_rows;
+if ($result->num_rows == 0) { 				// 8/6/08
 	$ret_arr[0] = "No Assignments Currently";
 	} else {
 	$i = 0;
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = '" . $row['ticket_id'] . "' AND `status` = " . $GLOBALS['STATUS_OPEN']; 		
-		$result2 = mysql_query($query2) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		$row2 = stripslashes_deep(mysql_fetch_assoc($result2));
+	while ($row = stripslashes_deep($result->fetch_assoc())){
+		$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? AND `status` = ?";
+		$result2 = db_query($query2, [$row['ticket_id'], $GLOBALS['STATUS_OPEN']]);
+		$row2 = stripslashes_deep($result2->fetch_assoc());
 		$ret_arr[$i][0] = $row2['id'];
 		$ret_arr[$i][1] = $row2['scope'];
 		$ret_arr[$i][2] = $row2['lat'];

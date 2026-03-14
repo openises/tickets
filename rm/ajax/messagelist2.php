@@ -32,12 +32,12 @@ $order = (isset($sort)) ? "ORDER BY `read_status`, " . $sort : "ORDER BY `date`"
 $order2 = (isset($way)) ? $way : "DESC";
 $actr=0;
 
-$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]responder`";
-$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+$query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}responder`";
+$result = db_query($query);
 $responderlist = array();
 $responderlist[0] = "NA";	
 $caption = "Messages: ";	
-while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
+while ($act_row = stripslashes_deep($result->fetch_assoc())){
 	$responderlist[$act_row['id']] = $act_row['handle'];
 	}	
 	
@@ -52,17 +52,17 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`recipients` AS `recipients`,	
 		`m`.`readby` AS `readby`,		
 		`m`.`subject` AS `subject`	
-		FROM `$GLOBALS[mysql_prefix]messages` `m` 
+		FROM `{$GLOBALS['mysql_prefix']}messages` `m`
 		{$where} {$order} {$order2}";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$result = db_query($query);
 $bgcolor = "#EEEEEE";
-$num=mysql_num_rows($result);
-if (mysql_num_rows($result) == 0) { 				// 8/6/08
+$num=$result->num_rows;
+if ($result->num_rows == 0) { 				// 8/6/08
 	$print = "<TABLE style='width: 100%;'><TR style='width: 100%;'><TD style='width: 100%;'>No Messages</TD></TR></TABLE>";	
 	} else {
 	$print = "<TABLE style='width: 100%;'>";	
 	$print .= "<TR style='width: 100%; font-weight: bold; color: #FFFFFF; background-color: #707070;'><TD style='width: 10%;'>TYPE</TD><TD style='width: 30%;'>FROM</TD><TD style='width: 40%;'>SUBJECT</TD><TD style='width: 20%;'>DATE</TD></TR>";
-	while ($msg_row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($msg_row = stripslashes_deep($result->fetch_assoc())){
 		$the_readers = array();
 		$the_readers = explode("," , $msg_row['readby']);
 		if(($the_readers[0] == "") || (!in_array($the_user, $the_readers, true))) {

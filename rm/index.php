@@ -15,9 +15,9 @@ $cycle = 5000;			// user reviseable delay between chat polls, in milliseconds
 $list_length = 99;		// chat list length maximum
 $browser = trim(checkBrowser(FALSE));						// 6/12/10
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions`";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions`";
+$result = db_query($query);
+while($row = $result->fetch_array(MYSQLI_ASSOC)) {
 	$c_types[$row['id']]['id'] = $row['id'];
 	$c_types[$row['id']]['title'] = $row['title'];
 	$c_types[$row['id']]['description'] = $row['description'];	
@@ -39,9 +39,9 @@ $chat_user = 0;
 $status_vals = array();
 $status_vals[''] = $status_vals['0']="TBD";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	}
@@ -49,17 +49,17 @@ unset($result_st);
 
 $users_arr = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users = stripslashes_deep(mysql_fetch_assoc($result_users))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users = db_query($query);
+while ($row_users = stripslashes_deep($result_users->fetch_assoc())) {
 	$users_arr[$row_users['id']] = $row_users['responder_id'];
 	}
 
 $user_names = array();
 
-$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]user`";
-$result_users2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_users2 = stripslashes_deep(mysql_fetch_assoc($result_users2))) 	{
+$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user`";
+$result_users2 = db_query($query2);
+while ($row_users2 = stripslashes_deep($result_users2->fetch_assoc())) 	{
 	$user_names[$row_users2['id']] = $row_users2['user'];
 	}
 
@@ -81,29 +81,29 @@ function get_status_selector($unit_in, $status_val_in, $tbl_in) {
 			print "ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ";	
 			}
 
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]{$tablename}`, `$GLOBALS[mysql_prefix]{$status_table}` WHERE `$GLOBALS[mysql_prefix]{$tablename}`.`id` = $unit_in 
-		AND `$GLOBALS[mysql_prefix]{$status_table}`.`id` = `$GLOBALS[mysql_prefix]{$tablename}`.`{$link_field}` LIMIT 1" ;	
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$tablename}`, `{$GLOBALS['mysql_prefix']}{$status_table}` WHERE `{$GLOBALS['mysql_prefix']}{$tablename}`.`id` = $unit_in 
+		AND `{$GLOBALS['mysql_prefix']}{$status_table}`.`id` = `{$GLOBALS['mysql_prefix']}{$tablename}`.`{$link_field}` LIMIT 1" ;	
 
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if (mysql_affected_rows()==0) {				// 2/7/10
+	$result = db_query($query);
+	if (db()->affected_rows==0) {				// 2/7/10
 		$init_bg_color = "transparent";
-		$init_txt_color = "black";	
+		$init_txt_color = "black";
 		}
 	else {
-		$row = stripslashes_deep(mysql_fetch_assoc($result)); 
+		$row = stripslashes_deep($result->fetch_assoc());
 		$init_bg_color = $row['bg_color'];
 		$init_txt_color = $row['text_color'];
 		}
 
 	$guest = is_guest();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]{$status_table}` ORDER BY `group` ASC, `sort` ASC, `{$status_field}` ASC";	
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$status_table}` ORDER BY `group` ASC, `sort` ASC, `{$status_field}` ASC";	
+	$result_st = db_query($query);
 	$dis = ($guest)? " DISABLED": "";								// 9/17/08
 	$the_grp = strval(rand());			//  force initial OPTGROUP value
 	$i = 0;
 	$outstr = ($tbl_in == "u") ? "\t\t<SELECT CLASS='text' id='frm_status_id_u_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color}; width: 100%;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; update_status({$unit_in}, this.value)' >" :
 	"\t\t<SELECT CLASS='text' id='frm_status_id_f_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color}; width: 100%;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update_fac({$unit_in}, this.value)' >";
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_st))) {
+	while ($row = stripslashes_deep($result_st->fetch_assoc())) {
 		if ($the_grp != $row['group']) {
 			$outstr .= ($i == 0)? "": "\t</OPTGROUP>";
 			$the_grp = $row['group'];
@@ -118,48 +118,48 @@ function get_status_selector($unit_in, $status_val_in, $tbl_in) {
 	}
 
 function get_responder_details($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`= " . $id;
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$ret = $row['contact_via'];
 	return $ret;
 	}
-	
+
 function get_responder_status($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id`= " . $id;
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$ret = $row['un_status_id'];
 	return $ret;
 	}
-	
+
 function get_responder_name($id) {
 	if(($id == 0) && (isset($_SESSION['user_id']))) {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = " . $_SESSION['user_id'];
-		$result = mysql_query($query);	
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ?";
+		$result = db_query($query, [$_SESSION['user_id']]);
+		$row = stripslashes_deep($result->fetch_assoc());
 		return $row['name_f'] . " " . $row['name_l'];
 		} elseif(($id == 0) && (!isset($_SESSION['user_id']))) {
 		return "NA";
 		} else {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
-		$result = mysql_query($query);	
-		if(mysql_num_rows($result) != 0) {
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
-			$ret = $row['name'];	
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+		$result = db_query($query, [$id]);
+		if($result->num_rows != 0) {
+			$row = stripslashes_deep($result->fetch_assoc());
+			$ret = $row['name'];
 			return $ret;
 			} else {
 			return "NA";
 			}
 		}
 	}
-	
+
 function get_responder_handle($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
-	$result = mysql_query($query);	
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
-		$ret = $row['handle'];	
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
+		$ret = $row['handle'];
 		return $ret;
 		} else {
 		return "NA";
@@ -167,9 +167,9 @@ function get_responder_handle($id) {
 	}
 
 if (isset($_SESSION['user_id'])) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id`= '" . $_SESSION['user_id'] . "'";
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ?";
+	$result = db_query($query, [$_SESSION['user_id']]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$the_responder = (($row['responder_id'] != 0) && ($row['responder_id'] != NULL) && ($row['responder_id'] != "")) ? $row['responder_id']: 0;
 	$chat_user = $_SESSION['user_id'];
 	$the_user = ($the_responder != 0) ? $the_responder : $_SESSION['user_id'];
@@ -177,13 +177,13 @@ if (isset($_SESSION['user_id'])) {
 	}
 
 if($the_user != 0) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$the_user' ORDER BY `id` ASC;";
-	$result = mysql_query($query);	//	6/10/11
-	$al_names = "Showing " . get_text("Region") . "(s): ";	
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
-		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";
-		$result2 = mysql_query($query2);	// 4/18/11
-		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 4 AND `resource_id` = ? ORDER BY `id` ASC";
+	$result = db_query($query, [$the_user]);
+	$al_names = "Showing " . get_text("Region") . "(s): ";
+	while ($row = stripslashes_deep($result->fetch_assoc())) 	{
+		$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ?";
+		$result2 = db_query($query2, [$row['group']]);
+		while ($row2 = stripslashes_deep($result2->fetch_assoc())) 	{
 				$al_names .= $row2['group_name'] . ", ";
 			}
 		}

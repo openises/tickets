@@ -7,49 +7,55 @@ require_once('../../incs/functions.inc.php');
 @session_start();
 $the_session = $_GET['session'];
 $ret_arr = array();
-$from = '127.0.0.1';		
-$now = mysql_format_date(time() - (get_variable('delta_mins')*60));	
-extract($_GET);
+$from = '127.0.0.1';
+$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+$ticket_id = sanitize_int($_GET['ticket_id']);
+$resp_id = sanitize_int($_GET['resp_id']);
+$from_address = sanitize_string($_GET['from_address']);
+$fromname = sanitize_string($_GET['fromname']);
+$subject = sanitize_string($_GET['subject']);
+$message = sanitize_string($_GET['message']);
 $msg_type = 2;
 $message_id = "email";
 $recipients = "Tickets";
 $read_status = 0;
 $delivery_status = 2;
-	
-$query = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (
-	`msg_type`, 
+
+$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}messages` (
+	`msg_type`,
 	`message_id`,
 	`ticket_id`,
 	`resp_id`,
-	`recipients`,		
-	`from_address`,	
+	`recipients`,
+	`from_address`,
 	`fromname`,
 	`subject`,
 	`message`,
-	`date`,		
-	`read_status`,	
-	`delivery_status`,		
-	`_by`,		
-	`_on`,	
+	`date`,
+	`read_status`,
+	`delivery_status`,
+	`_by`,
+	`_on`,
 	`_from` )
-	VALUES (" .
-		quote_smart(trim($msg_type)) . "," .
-		quote_smart(trim($message_id)) . "," .
-		$ticket_id . "," .		
-		$resp_id . "," .	
-		quote_smart(trim($recipients)) . "," .	
-		quote_smart(trim($from_address)) . "," .	
-		quote_smart(trim($fromname)) . "," .	
-		quote_smart(trim($subject)) . "," .	
-		quote_smart(trim($message)) . "," .	
-		quote_smart(trim($now)) . "," .				
-		$read_status . "," .	
-		$delivery_status . "," .			
-		quote_smart(trim($resp_id)) . "," .	
-		quote_smart(trim($now)) . "," .	
-		quote_smart(trim($from)) . ");";
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$result = db_query($query, [
+	trim($msg_type),
+	trim($message_id),
+	$ticket_id,
+	$resp_id,
+	trim($recipients),
+	trim($from_address),
+	trim($fromname),
+	trim($subject),
+	trim($message),
+	trim($now),
+	$read_status,
+	$delivery_status,
+	trim($resp_id),
+	trim($now),
+	trim($from)
+]);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

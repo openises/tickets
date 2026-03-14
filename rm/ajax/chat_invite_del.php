@@ -11,11 +11,11 @@ if((empty($_GET)) || (!isset($_GET['responder_id'])) || ($_GET['responder_id'] =
 	exit();
 	}
 
-$theID = $_GET['responder_id'];
+$theID = sanitize_int($_GET['responder_id']);
 
-$query = "DELETE from `$GLOBALS[mysql_prefix]chat_invites` WHERE `to` = '" . $theID . "'";
-$result	= mysql_query($query);	// 
-if(mysql_affected_rows() > 0) {
+$query = "DELETE from `{$GLOBALS['mysql_prefix']}chat_invites` WHERE `to` = ?";
+$result	= db_query($query, [$theID]);
+if(db()->affected_rows > 0) {
 	$ret_arr[0] = 100;
 	} else {
 	$ret_arr[0] = 99;

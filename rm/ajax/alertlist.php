@@ -15,9 +15,9 @@ if(!isset($_GET)) {
 	exit();
 	}
 
-$curr_lat = $_GET['lat'];
-$curr_lng = $_GET['lng'];
-$unit = (isset($_GET['unit'])) ? $_GET['unit'] : "M";
+$curr_lat = sanitize_string($_GET['lat']);
+$curr_lng = sanitize_string($_GET['lng']);
+$unit = (isset($_GET['unit'])) ? sanitize_string($_GET['unit']) : "M";
 
 function distance($lat1, $lon1, $lat2, $lon2, $unit) { 
 	if(($lat1 == 0 ) || ($lon1 == 0)) { 
@@ -63,16 +63,16 @@ $order = (isset($sort)) ? "ORDER BY `" . $sort . "`": "ORDER BY `_on`" ;
 $order2 = (isset($way)) ? $way : "DESC";
 $actr=0;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]roadinfo` `r` WHERE `r`.`_on` >= (NOW() - INTERVAL 5 DAY) {$order} {$order2}";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
-if (mysql_num_rows($result) == 0) { 				// 8/6/08
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r` WHERE `r`.`_on` >= (NOW() - INTERVAL 5 DAY) {$order} {$order2}";
+$result = db_query($query);
+$num=$result->num_rows;
+if ($result->num_rows == 0) { 				// 8/6/08
 	$print = "<TABLE style='width: 100%;'><TR style='width: 100%;'><TD style='width: 100%;'>No Alerts</TD></TR></TABLE>";
 	} else {
 	$print = "<TABLE style='width: 100%;'>";
 	$print .= "<TR style='width: 100%; font-weight: bold; color: #FFFFFF; background-color: #707070;'><TD style='width: 30%; color: #FFFFFF;'>LOCATION</TD><TD style='width: 60%; color: #FFFFFF;'>SUBJECT</TD><TD style='width: 10%; color: #FFFFFF;'>DIST</TD></TR>";
 	$z=0;
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$the_arr[$z]['id'] = $row['id'];
 		$the_arr[$z]['address'] = stripslashes_deep(shorten($row['address'], 15));
 		$the_arr[$z]['description'] = stripslashes_deep(shorten($row['description'], 30));

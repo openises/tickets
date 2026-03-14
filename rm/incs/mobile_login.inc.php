@@ -8,16 +8,16 @@ function do_mobile_logout($return=FALSE){						/* logout - destroy session data 
 	@session_start();
  	$_SESSION['expires'] = 0;							
 	if (array_key_exists ('user_id', $_SESSION)) {			// 7/27/10 - 8/10/10
-		$query = "DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status` = {$GLOBALS['STATUS_RESERVED']} AND `_by` = {$_SESSION['user_id']};";	//8/10/10
-		$result = mysql_query($query);
+		$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?";
+		$result = db_query($query, [$GLOBALS['STATUS_RESERVED'], $_SESSION['user_id']]);
 		}	
 	$sid = session_id();
 												// 1/8/10
-	$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET 
-		`sid` = NULL, 
-		`expires` = NULL 
-		WHERE `$GLOBALS[mysql_prefix]user`.`sid` = '{$sid}' LIMIT 1 ;";	 // 8/10/10
-	$result = mysql_query($query);				// toss any error
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET
+		`sid` = NULL,
+		`expires` = NULL
+		WHERE `{$GLOBALS['mysql_prefix']}user`.`sid` = ? LIMIT 1";
+	$result = db_query($query, [$sid]);
 
 	$the_id = array_key_exists ('user_id', $_SESSION)? $_SESSION['user_id'] : 0;	// possibly already logged out
 	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $the_id);								// log this logout	
@@ -112,10 +112,10 @@ function set_filenames_mob($internet) {
 
 function mobile_is_expired($id) {		// returns boolean
 	global $now ;
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$id} LIMIT 1;";	
-	$result = mysql_query($query);
-	$row = @stripslashes_deep(mysql_fetch_assoc($result));
-	return ((is_resource($result)) && (mysql_affected_rows()==1) && ($row['expires'] > $now));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	$row = @stripslashes_deep($result->fetch_assoc());
+	return (($result) && (db()->affected_rows==1) && ($row['expires'] > $now));
 	}
 	
 function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09
@@ -131,8 +131,8 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 
 		$the_date = mysql_format_date($expiry) ;
 		$sess_key = session_id();										// not expired
-		$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `expires`= '{$the_date}' WHERE `sid` = '{$sess_key}' LIMIT 1";
-		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `expires`= ? WHERE `sid` = ? LIMIT 1";
+		$result = db_query($query, [$the_date, $sess_key]);
 		$_SESSION['expires'] = $expiry;
 		$warn = "";
 		if($internet==3) {set_filenames_mob($internet);}			// possible change to filenames based on connect status - 8/31/10

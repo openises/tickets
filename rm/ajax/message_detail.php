@@ -10,11 +10,11 @@ function br2nl($input) {
 	}
 
 $the_user = ($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
-$message_id = (isset($_GET['message_id'])) ? $_GET['message_id'] : NULL;
+$message_id = (isset($_GET['message_id'])) ? sanitize_int($_GET['message_id']) : NULL;
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `id` = '" . $message_id . "'"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `id` = ?";
+$result = db_query($query, [$message_id]);
+$row = stripslashes_deep($result->fetch_assoc());
 $reply_address = $row['from_address'];
 $print = "<TABLE style='width: 100%; border: 2px outset #707070;'>";	
 $print .= "<TR style='width: 100%; color: #FFFFFF; background-color: #707070;'><TD COLSPAN=2 style='text-align: center; font-weight: bold;'>MESSAGE DETAIL";
@@ -23,19 +23,19 @@ $print .= "<SPAN id='reply_but' class='plain' style='float: right; display: none
 $print .= "</TD></TR>";
 $print .= "<TR style='width: 100%;'>";
 $print .= "<TD style='width: 30%; border: 1px solid #707070;'>FROM</TD>";		
-$print .= "<TD style='width: 70%; border: 1px solid #707070;'>" . $row['from_address'] . "</TD></TR>";
+$print .= "<TD style='width: 70%; border: 1px solid #707070;'>" . e($row['from_address']) . "</TD></TR>";
 $print .= "<TR style='width: 100%;'>";
-$print .= "<TD style='width: 30%; border: 1px solid #707070;'>TO</TD>";			
-$print .= "<TD style='width: 70%; border: 1px solid #707070;'>" . $row['recipients'] . "</TD></TR>";
+$print .= "<TD style='width: 30%; border: 1px solid #707070;'>TO</TD>";
+$print .= "<TD style='width: 70%; border: 1px solid #707070;'>" . e($row['recipients']) . "</TD></TR>";
 $print .= "<TR style='width: 100%;'>";
 $print .= "<TD style='width: 30%; border: 1px solid #707070;'>DATE</TD>";			
 $print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . format_date_2(strtotime($row['date'])) . "</TD></TR>";		
 $print .= "<TR style='width: 100%;'>";
 $print .= "<TD style='width: 30%; border: 1px solid #707070;'>SUBJECT</TD>";			
-$print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . $row['subject'] . "</TD></TR>";	
+$print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . e($row['subject']) . "</TD></TR>";
 $print .= "<TR style='width: 100%;'>";
-$print .= "<TD style='width: 30%; border: 1px solid #707070;'>MESSAGE</TD>";			
-$print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . $row['message'] . "</TD></TR>";	
+$print .= "<TD style='width: 30%; border: 1px solid #707070;'>MESSAGE</TD>";
+$print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . e($row['message']) . "</TD></TR>";	
 $print .= "</TABLE>";
 
 $ret_arr[0] = $row['from_address'];

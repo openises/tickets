@@ -4,17 +4,15 @@
 */
 @session_start();
 require_once('../../incs/functions.inc.php');
-extract ($_GET);	
+$frm_message = sanitize_string($_GET['frm_message']);
+$frm_room = sanitize_int($_GET['frm_room']);
+$frm_user = sanitize_int($_GET['frm_user']);
+$frm_from = sanitize_string($_GET['frm_from']);
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-$query  = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]chat_messages` (`when`, `message`, `chat_room_id`,  `user_id`,  `from`)
-				VALUES (%s,%s,%s,%s,%s)",
-					quote_smart($now),
-					quote_smart($frm_message),
-					quote_smart($frm_room),
-					quote_smart($frm_user),
-					quote_smart($frm_from));
-$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-print mysql_insert_id();
+$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}chat_messages` (`when`, `message`, `chat_room_id`, `user_id`, `from`)
+				VALUES (?, ?, ?, ?, ?)";
+$result	= db_query($query, [$now, $frm_message, $frm_room, $frm_user, $frm_from]);
+print db()->insert_id;
 exit();
 ?>

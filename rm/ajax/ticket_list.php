@@ -9,28 +9,28 @@ function br2nl($input) {
 	}
 
 if($_GET['user_id'] != 0) {
-	$the_user = $_GET['user_id'];
+	$the_user = sanitize_int($_GET['user_id']);
 	} else{
 	exit;
 	}
-	
-$responder_id = (isset($_GET['responder_id'])) ? clean_string($_GET['responder_id']) : NULL;
+
+$responder_id = (isset($_GET['responder_id'])) ? sanitize_int($_GET['responder_id']) : NULL;
 $sev_colors = array('blue','green','red');
 $sev_names = array('Normal','Medium','High');
 $print = "";
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `responder_id` = '" . $the_user . "' AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num=mysql_num_rows($result);
-if (mysql_num_rows($result) == 0) { 
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ? AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))";
+$result = db_query($query, [$the_user]);
+$num=$result->num_rows;
+if ($result->num_rows == 0) { 
 	$print = "<SPAN style='width: 100%;'>No Current Assignments</SPAN>";
 	} else {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$query2 = "SELECT *, `t`.`id` AS `tick_id`, `i`.`type` AS `type_name`, `i`.`id` AS 'in_type' 
-			FROM `$GLOBALS[mysql_prefix]ticket` `t` 
-			LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `i` ON `t`.`in_types_id` = `i`.`id` 		
-			WHERE `t`.`id` = " . $row['ticket_id'] . " AND `status` = " . $GLOBALS['STATUS_OPEN']; 
-		$result2 = mysql_query($query2) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))){
+	while ($row = stripslashes_deep($result->fetch_assoc())){
+		$query2 = "SELECT *, `t`.`id` AS `tick_id`, `i`.`type` AS `type_name`, `i`.`id` AS 'in_type'
+			FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `i` ON `t`.`in_types_id` = `i`.`id`
+			WHERE `t`.`id` = ? AND `status` = ?";
+		$result2 = db_query($query2, [$row['ticket_id'], $GLOBALS['STATUS_OPEN']]);
+		while ($row2 = stripslashes_deep($result2->fetch_assoc())){
 			$type_color = $row2['color'];
 			$type_name = $row2['type_name'];
 			$sev_color = $sev_colors[$row2['severity']];

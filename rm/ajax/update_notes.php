@@ -11,32 +11,29 @@ function br2nl($input) {
 	}
 
 $ret_arr = array();
-$value = $_GET['notes'];
-$assigns_id = $_GET['assigns_id'];
-$ticket_id = $_GET['ticket_id'];
-$user_id = (isset($_GET['user_id'])) ? $_GET['user_id'] : 0;
+$value = sanitize_string($_GET['notes']);
+$assigns_id = sanitize_int($_GET['assigns_id']);
+$ticket_id = sanitize_int($_GET['ticket_id']);
+$user_id = (isset($_GET['user_id'])) ? sanitize_int($_GET['user_id']) : 0;
 $user_name = ($user_id != 0) ? get_responder($user_id) : "Unknown";
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 if($value != "") {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . $ticket_id . " LIMIT 1";
-	$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
+	$result	= db_query($query, [$ticket_id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$notes = (($row['comments'] != "New") && ($row['comments'] != "")) ? $row['comments'] . "\n\r" : "";
 	$notes .= "Comment Added by " . $user_name . "\nDate" . $now . ": ";
-	$notes .= $value . "\n---\n";	
-	$date_part="";
-	$date_part .= "`comments` = '" . $notes . "'";
-	$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated`= " . quote_smart($now) .", " . $date_part ;
-	$query .=  " WHERE `id` = " . $ticket_id . " LIMIT 1";
-	$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
+	$notes .= $value . "\n---\n";
+	$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated`= ?, `comments` = ? WHERE `id` = ? LIMIT 1";
+	$result	= db_query($query, [$now, $notes, $ticket_id]);
 	if(($result) && ($notes != "")) {
 		$ret_arr[0] = 100;
 		} else {
 		$ret_arr[0] = 999;
-		}	
+		}
 	$notes .= br2nl($value);
 	} else {
-	$ret_arr[0] = 999;	
+	$ret_arr[0] = 999;
 	}
 
 print json_encode($ret_arr);

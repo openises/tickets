@@ -5,10 +5,10 @@ require_once('../../incs/functions.inc.php');
 $the_session = $_GET['session'];
 $ret_arr = array();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]adverts` WHERE `active` = 1 ORDER BY rand() LIMIT 1";
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-if(mysql_num_rows($result) == 1) {
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}adverts` WHERE `active` = 1 ORDER BY rand() LIMIT 1";
+$result = db_query($query);
+if($result->num_rows == 1) {
+	$row = stripslashes_deep($result->fetch_assoc());
 	$ret_arr[0] = $row['name'];
 	$ret_arr[1] = $row['url'];
 	$ret_arr[2] = $row['picture'];

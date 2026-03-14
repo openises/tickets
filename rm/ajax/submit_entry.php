@@ -9,57 +9,62 @@ $the_session = $_GET['session'];
 
 
 function get_user_name($the_id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` `u` WHERE `id` = " . $the_id . " LIMIT 1";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	if(mysql_num_rows($result) == 1) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
+	$result = db_query($query, [$the_id]);
+	if($result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
 		}
 	return $the_ret;
-	}	
+	}
 $ret_arr = array();
-$from = $_SERVER['REMOTE_ADDR'];		
+$from = $_SERVER['REMOTE_ADDR'];
 $who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;
 $whom = (array_key_exists('user_id', $_SESSION))? get_user_name($_SESSION['user_id']): "Public";
-$now = mysql_format_date(time() - (get_variable('delta_mins')*60));	
-extract($_GET);
+$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+$title = sanitize_string($_GET['title']);
+$type = sanitize_int($_GET['type']);
+$address = sanitize_string($_GET['address']);
+$lat = sanitize_string($_GET['lat']);
+$lng = sanitize_string($_GET['lng']);
 
-$query_cond = "SELECT * FROM `$GLOBALS[mysql_prefix]conditions` WHERE `id` = " . $type . " LIMIT 1";
-$result_cond = mysql_query($query_cond) or do_error($query_cond, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$row_cond = stripslashes_deep(mysql_fetch_assoc($result_cond));	
+$query_cond = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` WHERE `id` = ? LIMIT 1";
+$result_cond = db_query($query_cond, [$type]);
+$row_cond = stripslashes_deep($result_cond->fetch_assoc());
 $the_description = $row_cond['description'];
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]roadinfo` WHERE `lat` = '" . $lat . "' AND `lng` = '" . $lng . "'";
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-if(mysql_num_rows($result) > 0) {
-	$query_del = "DELETE FROM $GLOBALS[mysql_prefix]roadinfo WHERE `lat` = '" . $lat . "' AND `lng` = '" . $lng . "'";
-	$result_del = mysql_query($query_del) or do_error($query_del, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `lat` = ? AND `lng` = ?";
+$result = db_query($query, [$lat, $lng]);
+if($result->num_rows > 0) {
+	$query_del = "DELETE FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `lat` = ? AND `lng` = ?";
+	$result_del = db_query($query_del, [$lat, $lng]);
 	}
 
-$query = "INSERT INTO `$GLOBALS[mysql_prefix]roadinfo` (
-	`title`, 
+$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}roadinfo` (
+	`title`,
 	`description`,
 	`address`,
 	`conditions`,
-	`lat`,		
-	`lng`,	
-	`username`,	
-	`_by`,		
-	`_on`,	
+	`lat`,
+	`lng`,
+	`username`,
+	`_by`,
+	`_on`,
 	`_from` )
-	VALUES (" .
-		quote_smart(trim($title)) . "," .
-		quote_smart(trim($the_description)) . "," .
-		quote_smart(trim($address)) . "," .		
-		quote_smart(trim($type)) . "," .	
-		quote_smart(trim($lat)) . "," .	
-		quote_smart(trim($lng)) . "," .				
-		quote_smart(trim($whom)) . "," .		
-		quote_smart(trim($who)) . "," .	
-		quote_smart(trim($now)) . "," .	
-		quote_smart(trim($from)) . ");";
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+$result = db_query($query, [
+	trim($title),
+	trim($the_description),
+	trim($address),
+	trim($type),
+	trim($lat),
+	trim($lng),
+	trim($whom),
+	trim($who),
+	trim($now),
+	trim($from)
+]);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

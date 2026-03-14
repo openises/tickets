@@ -6,14 +6,13 @@ error_reporting(E_ALL);
 @session_start();	
 require_once('../incs/functions.inc.php');		//7/28/10
 //do_login(basename(__FILE__));
-extract ($_GET);
 
 $hours = (intval(get_variable('chat_time'))>0)? intval(get_variable('chat_time')) : 4;	// force to default
 
 $old = mysql_format_date(time() - (get_variable('delta_mins')*60) - ($hours*60*60)); // n hours ago
 
-$query  = "DELETE FROM `$GLOBALS[mysql_prefix]chat_messages` WHERE `when`< '" . $old . "'";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+$query  = "DELETE FROM `{$GLOBALS['mysql_prefix']}chat_messages` WHERE `when`< ?";
+$result = db_query($query, [$old]);
 				// 11/15/11
 $sig_script = "<SCRIPT>
 		function set_signal(inval) {
@@ -26,9 +25,9 @@ $sig_script = "<SCRIPT>
 $signals_list = $sig_script ."<SELECT class='text_medium' style='width: 200px;' NAME='signals' onFocus = 'clear_to();' onBlur = 'set_to();' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>";
 $signals_list .= "<OPTION class='text_medium' VALUE='0' SELECTED>Select signal/code</OPTION>";
 
-$query  = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY 'text' ASC";
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_array($result))) {
+$query  = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY 'text' ASC";
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_array())) {
 	$signals_list .=  "\t<OPTION class='text_medium'  VALUE='{$row['code']}'>{$row['code']}|{$row['text']}</OPTION>\n";		// pipe separator
 
 	}				
@@ -74,11 +73,11 @@ $signals_list .= "</SELECT>\n";
 						<OPTION class='text_medium'  VALUE=0>All</OPTION>	
 
 <?php
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` != {$_SESSION['user_id']} ";
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` != ?";
+						$result = db_query($query, [$_SESSION['user_id']]);
 
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-							print "\t\t\t<OPTION class='text_medium'  VALUE={$row['id']}>{$row['user']}</OPTION>\n";	
+						while ($row = stripslashes_deep($result->fetch_assoc())) {
+							print "\t\t\t<OPTION class='text_medium'  VALUE=" . intval($row['id']) . ">" . e($row['user']) . "</OPTION>\n";
 							}
 						print "\t\t</SELECT>\n";
 ?>

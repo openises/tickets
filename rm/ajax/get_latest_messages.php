@@ -11,9 +11,10 @@ if(empty($_GET)) {
 
 @session_start();
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `read_status` = 0 AND `resp_id` = '" . clean_string($_GET['responder_id']) . "'";
-$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
-$num_new_msgs = mysql_num_rows($result);
+$responder_id = sanitize_string($_GET['responder_id']);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `read_status` = 0 AND `resp_id` = ?";
+$result = db_query($query, [$responder_id]);
+$num_new_msgs = $result->num_rows;
 if($num_new_msgs != 0) {
 	$the_return = array (1);
 	} else {
