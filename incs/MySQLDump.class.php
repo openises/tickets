@@ -10,6 +10,8 @@ class MySQLDump {
 	var $output;
 	var $droptableifexists = false;
 	var $mysql_error;
+	var $conn = null;
+	var $fields = array();
 	
 	function connect($host,$user,$pass,$db) {
 		$return = true;
@@ -43,7 +45,7 @@ class MySQLDump {
 				if (!is_integer($vrednost)) { $vrednost = "'".addslashes($vrednost)."'"; 	} 
 				$buffer .= $vrednost.', ';
 				}
-			$buffer = substr($buffer,0,count($buffer)-3);
+			$buffer = substr($buffer,0,strlen($buffer)-2);
 			$this->output .= $buffer . ");\n";
 			}	
 		}
