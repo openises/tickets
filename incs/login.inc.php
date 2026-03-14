@@ -262,13 +262,8 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			// 2026-02-24 Vulnerability reported here SQL INJECTION RISK reported by Dominick Walenczak <d.walenczak@gmail.com> 
 			$login_user = strip_tags($_POST['frm_user']);
 			$login_passwd = $_POST['frm_passwd'];
-			$stmt = mysql_prepare("SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "user` WHERE `user` = ? LIMIT 1");
-			if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
-			mysql_stmt_bind_param($stmt, "s", $login_user);
-			if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
-			$result = mysql_stmt_get_result($stmt);
-			$row = mysql_fetch_assoc($result);
-			mysql_stmt_close($stmt);
+			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1", [$login_user]);
+			$row = $result->fetch_assoc();
 			$auth_result = $row ? verify_password($login_passwd, $row['passwd']) : ['valid' => false, 'needs_rehash' => false];
 			$authenticated = $auth_result['valid'];
 
@@ -293,29 +288,21 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				// 2/28/26 prepared statement ahrdening
 				$user_id = intval($row['id']);
 				$remote_addr = $_SERVER['REMOTE_ADDR'];
-				$stmt = mysql_prepare("UPDATE `" . $GLOBALS['mysql_prefix'] . "user` SET
+				db_query("UPDATE `{$GLOBALS['mysql_prefix']}user` SET
 					`sid` = ?,
 					`expires` = ?,
 					`login` = ?,
 					`_from` = ?,
 					`browser` = ?
-					WHERE `id` = ? LIMIT 1");
-				if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
-				mysql_stmt_bind_param($stmt, "sssssi", $sid, $the_date, $now, $remote_addr, $browser, $user_id);
-				if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
-				mysql_stmt_close($stmt);
+					WHERE `id` = ? LIMIT 1",
+				[$sid, $the_date, $now, $remote_addr, $browser, $user_id]);
 
 				$type = 4;
-				$stmt = mysql_prepare("SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "allocates` WHERE `type` = ? AND `resource_id` = ? ORDER BY `id` ASC");
-				if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
-				mysql_stmt_bind_param($stmt, "ii", $type, $user_id);
-				if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
-				$result_gp = mysql_stmt_get_result($stmt);
+				$result_gp = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = ? AND `resource_id` = ? ORDER BY `id` ASC", [$type, $user_id]);
 				$al_groups = array();
-				while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
+				while ($row_gp = stripslashes_deep($result_gp->fetch_assoc())) 	{	//	6/10/11
 					$al_groups[] = $row_gp['group'];
 					}
-				mysql_stmt_close($stmt);
 				
 				$_SESSION['user_groups'] = $al_groups;
 				$_SESSION['noautoforward'] = ($_POST['no_autoforward']==1) ? TRUE : FALSE;	//	1/30/14
@@ -377,14 +364,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");		// log it - 12/1/2012
 
 				// 2/28/26 - Prepared statement hardening
-				$stmt = mysql_prepare("DELETE FROM `" . $GLOBALS['mysql_prefix'] . "ticket` WHERE `status` = ? AND `_by` = ?");
-				if($stmt) {
-					$reserved_status = intval($GLOBALS['STATUS_RESERVED']);
-					$user_id = intval($_SESSION['user_id']);
-					mysql_stmt_bind_param($stmt, "ii", $reserved_status, $user_id);
-					mysql_stmt_execute($stmt);
-					mysql_stmt_close($stmt);
-				}
+				$reserved_status = intval($GLOBALS['STATUS_RESERVED']);
+				$user_id = intval($_SESSION['user_id']);
+				db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?", [$reserved_status, $user_id]);
 				
 				$to = "";
 				$subject = "Tickets Login";
