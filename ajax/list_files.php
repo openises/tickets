@@ -6,19 +6,19 @@ require_once('../incs/functions.inc.php');
 function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
 	}
-$sortby = (!(array_key_exists('sort', $_GET))) ? "name" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
-$ticket_id = (isset($_GET['ticket_id'])) ? intval($_GET['ticket_id']) : 0;
-$responder_id = (isset($_GET['responder_id'])) ? intval($_GET['responder_id']) : 0;
-$facility_id = (isset($_GET['facility_id'])) ? intval($_GET['facility_id']) : 0;
-$mi_id = (isset($_GET['mi_id'])) ? intval($_GET['mi_id']) : 0;
-$type = (isset($_GET['type'])) ? intval($_GET['type']) : 0;
-$portaluser = (isset($_GET['portaluser'])) ? $_GET['portaluser'] : 0;
+$sortby = (!(array_key_exists('sort', $_GET))) ? "name" : sanitize_string($_GET['sort']);
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
+$ticket_id = (isset($_GET['ticket_id'])) ? sanitize_int($_GET['ticket_id']) : 0;
+$responder_id = (isset($_GET['responder_id'])) ? sanitize_int($_GET['responder_id']) : 0;
+$facility_id = (isset($_GET['facility_id'])) ? sanitize_int($_GET['facility_id']) : 0;
+$mi_id = (isset($_GET['mi_id'])) ? sanitize_int($_GET['mi_id']) : 0;
+$type = (isset($_GET['type'])) ? sanitize_int($_GET['type']) : 0;
+$portaluser = (isset($_GET['portaluser'])) ? sanitize_int($_GET['portaluser']) : 0;
 
 function get_mi($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id` = " . $id;	
-	$result = mysql_query($query);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	return $row['name'];
 	}
 
@@ -26,7 +26,7 @@ function subval_sort($a,$subkey, $dd) {
 	foreach($a as $k=>$v) {
 		$b[$k] = strtolower($v[$subkey]);
 		}
-	if($dd == 1) {	
+	if($dd == 1) {
 		asort($b);
 		} else {
 		arsort($b);
@@ -37,42 +37,53 @@ function subval_sort($a,$subkey, $dd) {
 	return $c;
 	}
 
-if($ticket_id != 0) {
-	$where = " WHERE `ticket_id` = " . $ticket_id . " OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = " . $type . ")";
-	} elseif($responder_id != 0) {
-	$where = " WHERE `responder_id` = " . $responder_id . " OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = " . $type . ")";
-	} elseif($facility_id != 0) {
-	$where = " WHERE `facility_id` = " . $facility_id . " OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = " . $type . ")";
-	} elseif($mi_id != 0) {
-	$where = " WHERE `mi_id` = " . $mi_id . " OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = " . $type . ")";
-	} elseif($type != 2) {
-	$where = " WHERE `type` = " . $type . " OR `type` = 0";
-	} elseif($type == 2) {
-	$where = " WHERE `type` = " . $type;
-	} else {
-	$where = "";
-	}
-
 if($portaluser!=0) {
-	$query = "SELECT *, 
-		`fx`.`id` AS fx_id, 
+	$query = "SELECT *,
+		`fx`.`id` AS fx_id,
 		`f`.`id` AS file_id
-		FROM `$GLOBALS[mysql_prefix]files_x` `fx`  
+		FROM `$GLOBALS[mysql_prefix]files_x` `fx`
 		LEFT JOIN `$GLOBALS[mysql_prefix]files` `f`	ON (`f`.`id` = `fx`.`file_id`)
-		WHERE `fx`.`user_id` = " . $portaluser . " ORDER BY `f`.`id` ASC"; 
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+		WHERE `fx`.`user_id` = ? ORDER BY `f`.`id` ASC";
+	$result = db_query($query, [$portaluser]);
 	} else {
-	$query = "SELECT *, 
-		`id` AS `file_id`			
+	$params = [];
+	if($ticket_id != 0) {
+		$where = " WHERE `ticket_id` = ? OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = ?)";
+		$params[] = $ticket_id;
+		$params[] = $type;
+		} elseif($responder_id != 0) {
+		$where = " WHERE `responder_id` = ? OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = ?)";
+		$params[] = $responder_id;
+		$params[] = $type;
+		} elseif($facility_id != 0) {
+		$where = " WHERE `facility_id` = ? OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = ?)";
+		$params[] = $facility_id;
+		$params[] = $type;
+		} elseif($mi_id != 0) {
+		$where = " WHERE `mi_id` = ? OR (`ticket_id` = 0 AND `responder_id` = 0 AND `facility_id` = 0 AND `mi_id` = 0 AND `type` = ?)";
+		$params[] = $mi_id;
+		$params[] = $type;
+		} elseif($type != 2) {
+		$where = " WHERE `type` = ? OR `type` = 0";
+		$params[] = $type;
+		} elseif($type == 2) {
+		$where = " WHERE `type` = ?";
+		$params[] = $type;
+		} else {
+		$where = "";
+		}
+
+	$query = "SELECT *,
+		`id` AS `file_id`
 		FROM `$GLOBALS[mysql_prefix]files`" . $where . " ORDER BY `id` ASC";
-	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
+	$result = db_query($query, $params);
 	}
 
-$i=1;
-$num_rows = mysql_num_rows($result);
+$num_rows = $result->num_rows;
 
 if (($result) && ($num_rows > 0)) {
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+	$i=1;
+	while ($row = stripslashes_deep($result->fetch_assoc())){
 		if(($row['ticket_id'] ==0 && $row['responder_id'] == 0 && $row['facility_id'] == 0 && $row['mi_id'] == 0) || ($row['filetype'] == 1)) {
 			$theflag = "General";
 			} elseif(($row['ticket_id'] ==0 && $row['responder_id'] == 0 && $row['facility_id'] == 0 && $row['mi_id'] == 0) || ($row['filetype'] == 2)) {
@@ -102,7 +113,7 @@ if (($result) && ($num_rows > 0)) {
 	$ret_arr[0][0] = 0;
 	}	//	end else
 
-	
+
 $output_arr = $ret_arr;
 if($sortdir == "ASC") {
 	$dd = 1;
@@ -123,7 +134,7 @@ switch($sortby) {
 	default:
 		$sortval = 0;
 	}
-	
+
 if($num_rows > 0) {
 	$the_arr = subval_sort($output_arr, $sortval, $dd);
 	$the_output = array();
@@ -138,5 +149,5 @@ if($num_rows > 0) {
 	print json_encode($output_arr);
 	}
 
-exit();	
+exit();
 ?>

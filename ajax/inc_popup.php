@@ -5,7 +5,7 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
-$id = $_GET['id'];
+$id = sanitize_int($_GET['id']);
 
 $time = microtime(true); // Gets microseconds
 $eols = array ("\r\n", "\n", "\r");		// all flavors of eol
@@ -25,16 +25,16 @@ $ret_arr = array();
 
 $acts_ary = $pats_ary = array();				// 6/2/10
 $query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` GROUP BY `ticket_id`";
-$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+$result_temp = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 	$acts_ary[$row['ticket_id']] = $row['the_count'];
 	}
 
 //	Count number of patients on Ticket
 
 $query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` GROUP BY `ticket_id`";
-$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+$result_temp = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+while ($row = stripslashes_deep($result_temp->fetch_assoc())) 	{
 	$pats_ary[$row['ticket_id']] = $row['the_count'];
 	}	
 	
@@ -67,10 +67,10 @@ $query = "SELECT *,problemstart AS problemstart,
 		ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id` 
 	LEFT JOIN `$GLOBALS[mysql_prefix]facilities` 
 		ON `$GLOBALS[mysql_prefix]ticket`.rec_facility=`$GLOBALS[mysql_prefix]facilities`.`id`
-	WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = " . $id;
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_rows = mysql_num_rows($result);
-$row = stripslashes_deep(mysql_fetch_assoc($result));
+	WHERE `$GLOBALS[mysql_prefix]ticket`.`id` = ?";
+$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+$num_rows = $result->num_rows;
+$row = stripslashes_deep($result->fetch_assoc());
 $problemstart = strtotime($row['problemstart']);
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $now = strtotime($now);

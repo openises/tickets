@@ -27,7 +27,7 @@ if(in_array('8', $columns_arr)) { $the_win_width = $the_win_width + $cols_width[
 function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
 	}
-	
+
 function array_sort_by_column(&$arr, $col, $dir = SORT_ASC) {
     $sort_col = array();
     foreach ($arr as $key=> $row) {
@@ -35,7 +35,7 @@ function array_sort_by_column(&$arr, $col, $dir = SORT_ASC) {
 		}
 	array_multisort($sort_col, $dir, $arr);
 	}
-	
+
 function search($array, $key, $value) {
     $results = array();
 	foreach($array AS $subarray) {
@@ -52,13 +52,14 @@ function search($array, $key, $value) {
 	}
 
 $sortdir = ((isset($_GET['way'])) && ($_GET['way'] == "DESC")) ? SORT_DESC : SORT_ASC;
-$thesort = $_GET['sort'];
-$filename = "../message_archives/" . $_GET['filename'];	
-$ticket_id = (isset($_GET['ticket_id'])) ? clean_string($_GET['ticket_id']) : NULL;
-$responder_id = (isset($_GET['responder_id'])) ? clean_string($_GET['responder_id']) : NULL;
-$filter = (isset($_GET['filter'])) ? clean_string($_GET['filter']) : "";
-$sort = (isset($_GET['sort'])) ? clean_string($_GET['sort']) : NULL;
-$columns = (isset($_GET['columns'])) ? explode("," ,clean_string($_GET['columns'])) : explode(",", get_msg_variable('columns')) ;
+$thesort = sanitize_string($_GET['sort']);
+$raw_filename = sanitize_string($_GET['filename']);
+$filename = "../message_archives/" . basename($raw_filename);
+$ticket_id = (isset($_GET['ticket_id'])) ? sanitize_int($_GET['ticket_id']) : NULL;
+$responder_id = (isset($_GET['responder_id'])) ? sanitize_int($_GET['responder_id']) : NULL;
+$filter = (isset($_GET['filter'])) ? sanitize_string($_GET['filter']) : "";
+$sort = (isset($_GET['sort'])) ? sanitize_string($_GET['sort']) : NULL;
+$columns = (isset($_GET['columns'])) ? explode("," ,sanitize_string($_GET['columns'])) : explode(",", get_msg_variable('columns')) ;
 $actr=0;
 
 $the_user =  1;
@@ -67,7 +68,7 @@ $i = 1;
 $row = 0;
 $the_arr = array();
 $col_names = array();
-$titles = "";	
+$titles = "";
 if (($handle = fopen($filename, "r")) !== FALSE) {
 	while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
 		$num = count($data);
@@ -77,25 +78,25 @@ if (($handle = fopen($filename, "r")) !== FALSE) {
 				}
 			$g = $f + 1;
 			$col_names[$g] = "row_num";
-			} else {		
+			} else {
 			for ($c=0; $c < $num; $c++) {
 				$thedata = trim( preg_replace( '/\s+/', ' ', $data[$c] ) );
 				$the_arr[$row-1]["$col_names[$c]"] = $thedata;
 			}
 			$the_arr[$row-1]['row_num'] = $row-1;
 		}
-		$row++;		
+		$row++;
 	}
 	fclose($handle);
 	}
 if($filter != "") {
 	$the_result = search($the_arr, 'message', $filter);
-	array_sort_by_column($the_result, $thesort, $sortdir);	
+	array_sort_by_column($the_result, $thesort, $sortdir);
 	} else {
 	$the_result = $the_arr;
-	array_sort_by_column($the_result, $thesort, $sortdir);	
+	array_sort_by_column($the_result, $thesort, $sortdir);
 	}
-	
+
 foreach($the_result AS $msg_row) {
 	$the_readers = array();
 	$the_readers = explode("," , $msg_row['readby']);
@@ -157,7 +158,7 @@ foreach($the_result AS $msg_row) {
 		$thehour =  $thetime[0];
 		$themin = $thetime[1];
 		$formatted_date =  $daypart . "/" . $monthpart . "/" . $yearpart . " " . $thehour . ":" . $themin;
-		}		
+		}
 
 
 	$the_message_id = $msg_row['message_id'];
@@ -183,7 +184,7 @@ foreach($the_result AS $msg_row) {
 		}
 	$the_message = ($msg_row['message'] != "") ? strip_tags($msg_row['message']) : "";
 	if($msg_row['recipients'] == NULL) {
-		$respstring = $resp_names;		
+		$respstring = $resp_names;
 		} else {
 		$responders = explode (" ", trim($msg_row['recipients']));	// space-separated list to array
 		$sep = $respstring = "";
@@ -191,24 +192,24 @@ foreach($the_result AS $msg_row) {
 			$respstring .= $sep . $responders[$k];
 			}
 		}
-		
+
 	if ($msg_row['msg_type'] == 1) {
 		$type_flag = "OE";
 		$color = "background-color: blue; color: white;";
 		} elseif ($msg_row['msg_type'] ==2) {
 		$type_flag = "IE";
-		$color = "background-color: white; color: blue;";			
+		$color = "background-color: white; color: blue;";
 		} elseif ($msg_row['msg_type'] ==3) {
-		$color = "background-color: orange; color: white;";			
+		$color = "background-color: orange; color: white;";
 		$type_flag = "OS";
 		} elseif (($msg_row['msg_type'] ==4) || ($msg_row['msg_type'] ==5) || ($msg_row['msg_type'] ==6)) {
-		$color = "background-color: white; color: orange;";				
-		$type_flag = "IS";	
+		$color = "background-color: white; color: orange;";
+		$type_flag = "IS";
 		} else {
-		$color = "";				
+		$color = "";
 		$type_flag = "?";
 		}
-		
+
 	$the_readby = array();
 	foreach($the_readers AS $val) {
 		$the_readby[] = get_reader($val);
@@ -216,7 +217,7 @@ foreach($the_result AS $msg_row) {
 	$readers_string = "Message read by: " . implode(",", $the_readby);
 
 	$fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
-	$ret_arr[$i][0] = $the_message_id;		
+	$ret_arr[$i][0] = $the_message_id;
 	$ret_arr[$i][1] = $msg_row['ticket_id'];
 	$ret_arr[$i][2] = $type_flag;
 	$ret_arr[$i][3] = $fromname;
@@ -224,10 +225,10 @@ foreach($the_result AS $msg_row) {
 	$ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
 	$ret_arr[$i][6] = htmlentities(shorten($the_message, 2000));
 	$ret_arr[$i][7] = $formatted_date;
-	$ret_arr[$i][8] = get_owner($msg_row['_by']);	
+	$ret_arr[$i][8] = get_owner($msg_row['_by']);
 	$ret_arr[$i][9] = $the_class;
-	$ret_arr[$i][10] = $msg_row['id'];		
-	$ret_arr[$i][11] = $readers_string;	
+	$ret_arr[$i][10] = $msg_row['id'];
+	$ret_arr[$i][11] = $readers_string;
 	$ret_arr[$i][12] = $msg_row['row_num'];
 	$i++;
 	} // end while

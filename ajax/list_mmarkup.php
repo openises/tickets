@@ -4,18 +4,18 @@ require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
 $user_id = $_SESSION['user_id'];
-$sortby = (!(array_key_exists('sort', $_GET))) ? "id" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
+$sortby = (!(array_key_exists('sort', $_GET))) ? "id" : sanitize_string($_GET['sort']);
+$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
 
 function get_usergroups() {
 	global $user_id;
 	$ret_arr = array();
 	$al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['user_groups'])) ? $_SESSION['user_groups'] : array();
-	
+
 	if(array_key_exists('viewed_groups', $_SESSION) && trim($_SESSION['viewed_groups']) !== '') {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
-	if(count($al_groups) == 0) {	
+	if(count($al_groups) == 0) {
 		return array();
 		} else {
 		if(!isset($curr_viewed)) {
@@ -26,25 +26,25 @@ function get_usergroups() {
 		}
 	return $ret_arr;
 	}
-	
+
 function get_categoryName($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= " . $id . " LIMIT 1";
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) != 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= ? LIMIT 1";
+	$result = db_query($query, [$id]);
+	if($result->num_rows != 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret = $row['category'];
 		} else {
 		$ret = "unk";
 		}
 	return $ret;
 	}
-	
+
 function subval_sort($a,$subkey, $dd) {
 	foreach($a as $k=>$v) {
 		$val = (is_array($v) && array_key_exists($subkey, $v) && !is_null($v[$subkey])) ? (string)$v[$subkey] : '';
 		$b[$k] = strtolower($val);
 		}
-	if($dd == 1) {	
+	if($dd == 1) {
 		asort($b);
 		} else {
 		arsort($b);
@@ -54,14 +54,14 @@ function subval_sort($a,$subkey, $dd) {
 		}
 	return $c;
 	}
-	
+
 function get_markup() {
 	$ret_arr = array();
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup`";
-	$result = mysql_query($query)or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-	if(mysql_num_rows($result) != 0) {
+	$result = db_query($query);
+	if($result->num_rows != 0) {
 		$i=0;
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+		while ($row = stripslashes_deep($result->fetch_assoc())){
 			$ret_arr[$i]['id'] = $row['id'];
 			$ret_arr[$i]['name'] = $row['line_name'];
 			$ret_arr[$i]['type'] = $row['line_type'];
@@ -88,8 +88,7 @@ if($sortdir == "ASC") {
 	$dd = 1;
 	} else {
 	$dd = 0;
-	}	
+	}
 $ret_arr = get_markup();
 $the_arr = subval_sort($ret_arr, $sortby, $dd);
-//dump($ret_arr);
 print json_encode($the_arr);
