@@ -72,6 +72,12 @@ function db(): mysqli
 
     $conn->set_charset('utf8mb4');
 
+    // Share connection with the mysql2i shim so legacy mysql_*() calls
+    // (mysql_num_fields, mysql_field_name, etc.) still work during migration
+    if (class_exists('mysql2i', false)) {
+        mysql2i::$currObj = $conn;
+    }
+
     return $conn;
 }
 
