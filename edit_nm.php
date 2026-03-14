@@ -126,54 +126,85 @@ function edit_ticket($id) {							/* post changes */
 					}
 				}
 			}
-		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  quote_smart("$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00") : "NULL";
-		$frm_booked_date  = (isset($_POST['frm_year_booked_date'])) ?  quote_smart("$_POST[frm_year_booked_date]-$_POST[frm_month_booked_date]-$_POST[frm_day_booked_date] $_POST[frm_hour_booked_date]:$_POST[frm_minute_booked_date]:00") : "NULL";	//10/1/09
+		$frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  sanitize_string("$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00") : NULL;
+		$frm_booked_date  = (isset($_POST['frm_year_booked_date'])) ?  sanitize_string("$_POST[frm_year_booked_date]-$_POST[frm_month_booked_date]-$_POST[frm_day_booked_date] $_POST[frm_hour_booked_date]:$_POST[frm_minute_booked_date]:00") : NULL;	//10/1/09
 	
 		// perform db update
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 		$by = $_SESSION['user_id'];			// 12/7/10
 		if(empty($post_frm_owner)) {$post_frm_owner=0;}
 																					// 8/23/08, 9/20/08, 9/22/09 (Facility), 10/1/09 (receiving facility)
-		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
-			`contact`= " . 		quote_smart(trim($_POST['frm_contact'])) .",
-			`street`= " . 		quote_smart(trim($_POST['frm_street'])) .",
-			`city`= " . 		quote_smart(trim($_POST['frm_city'])) .",
-			`state`= " . 		quote_smart(trim($_POST['frm_state'])) . ",
-			`phone`= " . 		quote_smart(trim($_POST['frm_phone'])) . ",
-			`facility`= " . 		quote_smart(trim($_POST['frm_facility_id'])) . ",
-			`rec_facility`= " . 	quote_smart(trim($_POST['frm_rec_facility_id'])) . ",
-			`lat`= " . 			quote_smart(trim($_POST['frm_lat'])) . ",
-			`lng`= " . 			quote_smart(trim($_POST['frm_lng'])) . ",
-			`scope`= " . 		quote_smart(trim($_POST['frm_scope'])) . ",
-			`owner`= " . 		quote_smart(trim($post_frm_owner)) . ",
-			`severity`= " . 	quote_smart(trim($_POST['frm_severity'])) . ",
-			`in_types_id`= " . 	quote_smart(trim($_POST['frm_in_types_id'])) . ",
-			`status`=" . 		quote_smart(trim($_POST['frm_status'])) . ",
-			`problemstart`=".	quote_smart(trim($frm_problemstart)) . ",
-			`problemend`=".		$frm_problemend . ",
-			`description`= " .	quote_smart(trim($_POST['frm_description'])) .",
-			`comments`= " . 	quote_smart(trim($_POST['frm_comments'])) .",
-			`nine_one_one`= " . quote_smart(trim($_POST['frm_nine_one_one'])) .",
-			`booked_date`= ".	$frm_booked_date . ",
-			`_by` = 			{$by}, 
-			`updated`='$now'
-			WHERE ID='$id'";
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET
+			`contact`= ?,
+			`street`= ?,
+			`city`= ?,
+			`state`= ?,
+			`phone`= ?,
+			`facility`= ?,
+			`rec_facility`= ?,
+			`lat`= ?,
+			`lng`= ?,
+			`scope`= ?,
+			`owner`= ?,
+			`severity`= ?,
+			`in_types_id`= ?,
+			`status`= ?,
+			`problemstart`= ?,
+			`problemend`= ?,
+			`description`= ?,
+			`comments`= ?,
+			`nine_one_one`= ?,
+			`booked_date`= ?,
+			`_by` = ?,
+			`updated`= ?
+			WHERE ID= ?";
 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+		$result = db_query($query, [
+			sanitize_string(trim($_POST['frm_contact'])),
+			sanitize_string(trim($_POST['frm_street'])),
+			sanitize_string(trim($_POST['frm_city'])),
+			sanitize_string(trim($_POST['frm_state'])),
+			sanitize_string(trim($_POST['frm_phone'])),
+			sanitize_int(trim($_POST['frm_facility_id'])),
+			sanitize_int(trim($_POST['frm_rec_facility_id'])),
+			sanitize_string(trim($_POST['frm_lat'])),
+			sanitize_string(trim($_POST['frm_lng'])),
+			sanitize_string(trim($_POST['frm_scope'])),
+			sanitize_int(trim($post_frm_owner)),
+			sanitize_int(trim($_POST['frm_severity'])),
+			sanitize_int(trim($_POST['frm_in_types_id'])),
+			sanitize_int(trim($_POST['frm_status'])),
+			sanitize_string(trim($frm_problemstart)),
+			$frm_problemend,
+			sanitize_string(trim($_POST['frm_description'])),
+			sanitize_string(trim($_POST['frm_comments'])),
+			sanitize_int(trim($_POST['frm_nine_one_one'])),
+			$frm_booked_date,
+			$by,
+			$now,
+			sanitize_int($id)
+		]);
 		
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = '$id' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')"; 
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		$num_assigns = mysql_num_rows($result);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ? AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')";
+		$result = db_query($query, [sanitize_int($id)]);
+		$num_assigns = $result->num_rows;
 
 		if($num_assigns !=0) {	//	4/4/11 - added to update any existing assigns record with any ticket changes.
-		$query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET 
-			`as_of`='{$now}',
-			`status_id`= " . 	quote_smart(trim($_POST['frm_status'])) . ",
-			`user_id`= " . 		quote_smart(trim($post_frm_owner)) . ",
-			`facility_id`= " . 	quote_smart(trim($_POST['frm_facility_id'])) . ",
-			`rec_facility_id`= " . quote_smart(trim($_POST['frm_rec_facility_id'])) . "
-			WHERE ticket_id='$id'";		
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET
+			`as_of`= ?,
+			`status_id`= ?,
+			`user_id`= ?,
+			`facility_id`= ?,
+			`rec_facility_id`= ?
+			WHERE ticket_id= ?";
+		$result = db_query($query, [
+			$now,
+			sanitize_int(trim($_POST['frm_status'])),
+			sanitize_int(trim($post_frm_owner)),
+			sanitize_int(trim($_POST['frm_facility_id'])),
+			sanitize_int(trim($_POST['frm_rec_facility_id'])),
+			sanitize_int($id)
+		]);
 		}		
 		
 	do_log($GLOBALS['LOG_INCIDENT_CHANGE'], $id, 0);	// report change - 3/25/10
@@ -452,9 +483,9 @@ function edit_ticket($id) {							/* post changes */
 <?php
 require_once('./incs/links.inc.php');
  
-	$id = $_GET['id'];
+	$id = sanitize_int($_GET['id']);
 	if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {		/* update ticket */
-		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id' LIMIT 1")) {
+		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='" . intval($id) . "' LIMIT 1")) {
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
 			} else {
 			$the_addrs = edit_ticket($id);	// post updated data	11/18/13
@@ -483,8 +514,8 @@ require_once('./incs/links.inc.php');
 	else if (isset($_GET['delete'])) {							//delete ticket
 		if ($_POST['frm_confirm']) {
 			/* remove ticket and ticket actions */
-			$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]ticket` WHERE ID='$id'") or do_error("{$this_file}::remove_ticket(ticket)", 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-			$result = mysql_query("DELETE FROM `$GLOBALS[mysql_prefix]action` WHERE ticket_id='$id'") or do_error("{$this_file}::remove_ticket(action)", 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$result = db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE ID= ?", [sanitize_int($id)]);
+			$result = db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}action` WHERE ticket_id= ?", [sanitize_int($id)]);
 			print "<FONT CLASS=\"header\">Ticket '$id' has been removed.</FONT><BR /><BR />";
 			list_tickets();
 			}
@@ -492,17 +523,17 @@ require_once('./incs/links.inc.php');
 			print "<FONT CLASS='header'>Confirm ticket deletion</FONT><BR /><BR /><FORM METHOD='post' NAME = 'del_form' ACTION='{$this_file}?id=$id&delete=1&go=1'><INPUT TYPE='checkbox' NAME='frm_confirm' VALUE='1'>Delete ticket #$id &nbsp;<INPUT TYPE='Submit' VALUE='Confirm'></FORM>";	// 8/26/10
 			}
 		} else {				// not ($_GET['delete'])
-		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {		/* sanity check */
-			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT><BR />";
+		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='" . intval($id) . "'")) {		/* sanity check */
+			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '" . intval($id) . "'</FONT><BR />";
 			} else {				// OK, do form - 7/7/09
- 			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend, UNIX_TIMESTAMP(booked_date) AS booked_date, UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated, 
- 				`$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr` FROM `$GLOBALS[mysql_prefix]ticket` 
- 				LEFT JOIN `$GLOBALS[mysql_prefix]in_types` `ty` ON (`$GLOBALS[mysql_prefix]ticket`.`in_types_id` = `ty`.`id`)				
- 				WHERE `$GLOBALS[mysql_prefix]ticket`.`id`='$id' LIMIT 1";
+ 			$query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend, UNIX_TIMESTAMP(booked_date) AS booked_date, UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated,
+ 				`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr` FROM `{$GLOBALS['mysql_prefix']}ticket`
+ 				LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)
+ 				WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id`= ? LIMIT 1";
 
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query, [$id]);
 	
-			$row = stripslashes_deep(mysql_fetch_array($result));
+			$row = stripslashes_deep($result->fetch_array());
 			if (good_date($row['problemend'])) {
 ?>
 				<SCRIPT>
@@ -584,12 +615,12 @@ require_once('./incs/links.inc.php');
 										</SPAN>
 										<SELECT NAME='frm_in_types_id' onChange='do_inc_nature(this.options[selectedIndex].value.trim());'>
 <?php
-											$query = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
-											$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+											$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
+											$result = db_query($query);
 											$the_grp = strval(rand());						// force initial optgroup value
 											$i = 0;
 											$proto = "";
-											while ($row2 = stripslashes_deep(mysql_fetch_array($result))) {
+											while ($row2 = stripslashes_deep($result->fetch_array())) {
 												if ($the_grp != $row2['group']) {
 													print ($i == 0)? "": "</OPTGROUP>\n";
 													$the_grp = $row2['group'];
@@ -663,10 +694,10 @@ require_once('./incs/links.inc.php');
 								</TR>
 <?php
 								if (!(empty($row['phone']))) {					// 3/13/10
-									$query  = "SELECT `miscellaneous` FROM `$GLOBALS[mysql_prefix]constituents` WHERE `phone`= '{$row['phone']}' LIMIT 1";
-									$result_cons = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-									if (mysql_affected_rows() > 0) {
-										$row_cons = stripslashes_deep(mysql_fetch_array($result_cons));
+									$query  = "SELECT `miscellaneous` FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= '{$row['phone']}' LIMIT 1";
+									$result_cons = db_query($query);
+									if (db()->affected_rows > 0) {
+										$row_cons = stripslashes_deep($result_cons->fetch_array());
 ?>
 										<TR CLASS='even'>
 											<TD CLASS='td_label text'>Add'l:</TD>
@@ -713,8 +744,8 @@ require_once('./incs/links.inc.php');
 											<SELECT NAME='frm_facility_id' onChange='document.edit.frm_fac_chng.value = 1; do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());'>
 												<OPTION VALUE=0>Not using facility</OPTION>
 <?php
-												$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
-												$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+												$query_fc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";		
+												$result_fc = db_query($query_fc);
 ?>
 		
 <SCRIPT>
@@ -722,7 +753,7 @@ require_once('./incs/links.inc.php');
 												fac_lng[0] = "<?php print get_variable('def_lng');?>";
 </SCRIPT>
 <?php	
-												while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+												while ($row_fc = $result_fc->fetch_assoc()) {
 													$sel = ($row['facility'] == $row_fc['id']) ? " SELECTED " : "";
 													print "<OPTION VALUE=" . $row_fc['id'] . $sel . ">" . $row_fc['name'] . "</OPTION>";
 													print "\n<SCRIPT>fac_lat[" . $row_fc['id'] . "] = " . $row_fc['lat'] . " ;</SCRIPT>\n";
@@ -745,9 +776,9 @@ require_once('./incs/links.inc.php');
 											<SELECT NAME='frm_facility_id' onChange='document.edit.frm_fac_chng.value = 1; do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim())'>
 												<OPTION>Incident at Facility?</OPTION>
 <?php
-												$query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
-												$result_fc = mysql_query($query_fc) or do_error($query_fc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-												while ($row_fc = mysql_fetch_array($result_fc, MYSQL_ASSOC)) {
+												$query_fc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";		
+												$result_fc = db_query($query_fc);
+												while ($row_fc = $result_fc->fetch_assoc()) {
 													print "<OPTION value=\"{$row_fc['id']}\">{$row_fc['name']}</OPTION>\n";
 													print "\n<SCRIPT>fac_lat[" . $row_fc['id'] . "] = " . $row_fc['lat'] . " ;</SCRIPT>\n";
 													print "\n<SCRIPT>fac_lng[" . $row_fc['id'] . "] = " . $row_fc['lng'] . " ;</SCRIPT>\n";
@@ -772,9 +803,9 @@ require_once('./incs/links.inc.php');
 											<SELECT NAME='frm_rec_facility_id' onChange = 'document.edit.frm_fac_chng.value = parseInt(document.edit.frm_fac_chng.value)+ 2;'>
 												<OPTION VALUE=0>No receiving facility</OPTION>
 <?php
-												$query_rfc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";		
-												$result_rfc = mysql_query($query_rfc) or do_error($query_rfc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-												while ($row_rfc = mysql_fetch_array($result_rfc, MYSQL_ASSOC)) {
+												$query_rfc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";		
+												$result_rfc = db_query($query_rfc);
+												while ($row_rfc = $result_rfc->fetch_assoc()) {
 													$sel2 = ($row['rec_facility'] == $row_rfc['id']) ? " SELECTED " : "";
 													print "<OPTION VALUE=" . $row_rfc['id'] . $sel2 . ">" . $row_rfc['name'] . "</OPTION>";
 													}
@@ -794,9 +825,9 @@ require_once('./incs/links.inc.php');
 											<SELECT NAME='frm_rec_facility_id' onChange = 'document.edit.frm_fac_chng.value = parseInt(document.edit.frm_fac_chng.value)+ 2;'>
 												<OPTION>Receiving Facility?</OPTION>
 <?php
-												$query_rfc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `name` ASC";			//10/1/09
-												$result_rfc = mysql_query($query_rfc) or do_error($query_rfc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-												while ($row_rfc = mysql_fetch_array($result_rfc, MYSQL_ASSOC)) {
+												$query_rfc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `name` ASC";			//10/1/09
+												$result_rfc = db_query($query_rfc);
+												while ($row_rfc = $result_rfc->fetch_assoc()) {
 													print "<option value=\"{$row_rfc['id']}\">{$row_rfc['name']}</option>\n";
 													}
 												unset ($result_rfc);
@@ -834,9 +865,9 @@ require_once('./incs/links.inc.php');
 										<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 											<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-											$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-											$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-											while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+											$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+											$result = db_query($query);
+											while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 												print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
 												}
 ?>
@@ -898,9 +929,9 @@ require_once('./incs/links.inc.php');
 										<SELECT NAME='signals' onChange = 'set_signal2(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
 											<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
-											$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
-											$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-											while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+											$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
+											$result = db_query($query);
+											while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
 												print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$row_sig['text']}</OPTION>\n";		// pipe separator
 												}
 ?>
@@ -1159,7 +1190,7 @@ require_once('./incs/links.inc.php');
 		}
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
-<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
+<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print sanitize_int($_GET['id']);?>">
 </FORM>	
 
 </BODY>

@@ -39,9 +39,10 @@ function isempty($arg) {
 	}
 	
 function fac_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = " . $id;	// all dispatches this unit
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
-	$row = stripslashes_deep(mysql_fetch_array($result));
+	$id = sanitize_int($id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";	// all dispatches this unit
+	$result = db_query($query, [$id]);
+	$row = stripslashes_deep($result->fetch_array());
 	return $row['name'];
 	}
 	
@@ -61,9 +62,9 @@ elseif (empty ($_SESSION['fac_flag_2'])) 	{$_SESSION['fac_flag_2'] = 2;}		// 3/1
 
 $status_vals = array();											// build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
-$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `id`";
+$result_st = db_query($query);
+while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	$temp = $row_st['id'];
 	$status_vals[$temp] = $row_st['status_val'];
 	}
@@ -71,9 +72,9 @@ while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 $fac_order_str = $fac_order_values[$_SESSION['fac_flag_2']];		// 3/15/11	
 
 $f_types = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `id`";		// types in use
-$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `id`";		// types in use
+$result = db_query($query);
+while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$f_types [$row['id']] = array ($row['name'], $row['icon']);
 	}
 unset($result);	
@@ -83,10 +84,11 @@ $sm_icons = $GLOBALS['sm_icons'];
 $fac_icons = $GLOBALS['fac_icons'];
 
 function get_unit_name($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$id = sanitize_int($id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret = $row['name'];
 		} else {
 		$ret = "Unk?";
@@ -95,10 +97,11 @@ function get_unit_name($id) {
 	}
 
 function get_unit_status($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$id = sanitize_int($id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret = $row['un_status_id'];
 		} else {
 		$ret = false;
@@ -107,10 +110,11 @@ function get_unit_status($id) {
 	}
 	
 function get_fac_name($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$id = sanitize_int($id);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret = $row['name'];
 		} else {
 		$ret = "Unk?";
@@ -119,11 +123,12 @@ function get_fac_name($id) {
 	}
 
 function get_unit_coords($id) {
+	$id = sanitize_int($id);
 	$ret_array = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr[0] = $row['lat'];
 		$ret_arr[1] = $row['lng'];
 		} else {
@@ -134,11 +139,12 @@ function get_unit_coords($id) {
 	}
 
 function get_fac_coords($id) {
+	$id = sanitize_int($id);
 	$ret_array = array();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $id;
-	$result = mysql_query($query);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$ret_arr[0] = $row['lat'];
 		$ret_arr[1] = $row['lng'];
 		} else {
@@ -150,10 +156,10 @@ function get_fac_coords($id) {
 
 function get_icon_legend (){
 	global $u_types, $sm_icons;
-	$query = "SELECT DISTINCT `type` FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT DISTINCT `type` FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name`";
+	$result = db_query($query);
 	$print = "";											// output string
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$type_data = $u_types[$row['type']];
 		$print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$type_data[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
 		}
@@ -161,25 +167,26 @@ function get_icon_legend (){
 	}			// end function get_icon_legend ()
 	
 function do_fac($id) {
-	$query = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`, 
-		`$GLOBALS[mysql_prefix]facilities`.`id` 						AS `fac_id`, 
-		`$GLOBALS[mysql_prefix]facilities`.`name` 						AS `fac_name`, 
-		`$GLOBALS[mysql_prefix]fac_types`.`id` 							AS `type_id`,
-		`$GLOBALS[mysql_prefix]facilities`.`description` 				AS `facility_description`,
-		`$GLOBALS[mysql_prefix]facilities`.`boundary` 					AS `boundary`,		
-		`$GLOBALS[mysql_prefix]fac_types`.`name` 						AS `fac_type_name`, 
-		`$GLOBALS[mysql_prefix]fac_types`.`icon` 						AS `icon`, 
-		`$GLOBALS[mysql_prefix]facilities`.`name` 						AS `facility_name`, 
-		`$GLOBALS[mysql_prefix]fac_status`.`status_val` 				AS `fac_status_val`, 
-		`$GLOBALS[mysql_prefix]facilities`.`status_id` 					AS `fac_status_id`
-		FROM `$GLOBALS[mysql_prefix]facilities`
-		LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 	ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = 			`$GLOBALS[mysql_prefix]allocates`.`resource_id` )	
-		LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` 	ON (`$GLOBALS[mysql_prefix]facilities`.`type` = 		`$GLOBALS[mysql_prefix]fac_types`.`id` )
-		LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` 	ON (`$GLOBALS[mysql_prefix]facilities`.`status_id` = 	`$GLOBALS[mysql_prefix]fac_status`.`id` )
-		WHERE `$GLOBALS[mysql_prefix]facilities`.`id` = " . $id;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$id = sanitize_int($id);
+	$query = "SELECT *,`{$GLOBALS['mysql_prefix']}facilities`.`updated` AS `updated`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`id` 						AS `fac_id`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`name` 						AS `fac_name`,
+		`{$GLOBALS['mysql_prefix']}fac_types`.`id` 							AS `type_id`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`description` 				AS `facility_description`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`boundary` 					AS `boundary`,
+		`{$GLOBALS['mysql_prefix']}fac_types`.`name` 						AS `fac_type_name`,
+		`{$GLOBALS['mysql_prefix']}fac_types`.`icon` 						AS `icon`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`name` 						AS `facility_name`,
+		`{$GLOBALS['mysql_prefix']}fac_status`.`status_val` 				AS `fac_status_val`,
+		`{$GLOBALS['mysql_prefix']}facilities`.`status_id` 					AS `fac_status_id`
+		FROM `{$GLOBALS['mysql_prefix']}facilities`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` 	ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` = 			`{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`type` = 		`{$GLOBALS['mysql_prefix']}fac_types`.`id` )
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`status_id` = 	`{$GLOBALS['mysql_prefix']}fac_status`.`id` )
+		WHERE `{$GLOBALS['mysql_prefix']}facilities`.`id` = ?";
+	$result = db_query($query, [$id]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$print = "<TABLE BORDER='0'ID='left' width='60%'>\n";		//
 		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD><TD CLASS='td_data'>" . $row['facility_description'] . "</TD></TR>\n";
 		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Capability:</TD><TD CLASS='td_data'>" . nl2br($row['capab']) . "</TD></TR>\n";
@@ -781,38 +788,38 @@ if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('
 				$al_groups = $_SESSION['user_groups'];
 				
 				if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
-					$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+					$where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";
 					} else {	
 					$x=0;	//	6/10/11
 					$where2 = "WHERE (";	//	6/10/11
 					foreach($al_groups as $grp) {	//	6/10/11
 						$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-						$where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+						$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
 						$where2 .= $where3;
 						$x++;
 						}
-					$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11
+					$where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";	//	6/10/11
 					}
 
-				$query_fac = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`, 
-					`$GLOBALS[mysql_prefix]facilities`.`id` 						AS `fac_id`, 
-					`$GLOBALS[mysql_prefix]fac_types`.`id` 							AS `type_id`,
-					`$GLOBALS[mysql_prefix]facilities`.`description` 				AS `facility_description`,
-					`$GLOBALS[mysql_prefix]facilities`.`boundary` 					AS `boundary`,		
-					`$GLOBALS[mysql_prefix]fac_types`.`name` 						AS `fac_type_name`, 
-					`$GLOBALS[mysql_prefix]fac_types`.`icon` 						AS `icon`, 
-					`$GLOBALS[mysql_prefix]facilities`.`name` 						AS `facility_name`, 
-					`$GLOBALS[mysql_prefix]fac_status`.`status_val` 				AS `fac_status_val`, 
-					`$GLOBALS[mysql_prefix]facilities`.`status_id` 					AS `fac_status_id`
-					FROM `$GLOBALS[mysql_prefix]facilities`
-					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 	ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = 			`$GLOBALS[mysql_prefix]allocates`.`resource_id` )	
-					LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` 	ON (`$GLOBALS[mysql_prefix]facilities`.`type` = 		`$GLOBALS[mysql_prefix]fac_types`.`id` )
-					LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` 	ON (`$GLOBALS[mysql_prefix]facilities`.`status_id` = 	`$GLOBALS[mysql_prefix]fac_status`.`id` )
+				$query_fac = "SELECT *,`{$GLOBALS['mysql_prefix']}facilities`.`updated` AS `updated`, 
+					`{$GLOBALS['mysql_prefix']}facilities`.`id` 						AS `fac_id`, 
+					`{$GLOBALS['mysql_prefix']}fac_types`.`id` 							AS `type_id`,
+					`{$GLOBALS['mysql_prefix']}facilities`.`description` 				AS `facility_description`,
+					`{$GLOBALS['mysql_prefix']}facilities`.`boundary` 					AS `boundary`,		
+					`{$GLOBALS['mysql_prefix']}fac_types`.`name` 						AS `fac_type_name`, 
+					`{$GLOBALS['mysql_prefix']}fac_types`.`icon` 						AS `icon`, 
+					`{$GLOBALS['mysql_prefix']}facilities`.`name` 						AS `facility_name`, 
+					`{$GLOBALS['mysql_prefix']}fac_status`.`status_val` 				AS `fac_status_val`, 
+					`{$GLOBALS['mysql_prefix']}facilities`.`status_id` 					AS `fac_status_id`
+					FROM `{$GLOBALS['mysql_prefix']}facilities`
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` 	ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` = 			`{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )	
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`type` = 		`{$GLOBALS['mysql_prefix']}fac_types`.`id` )
+					LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`status_id` = 	`{$GLOBALS['mysql_prefix']}fac_status`.`id` )
 					{$where2} 
 					GROUP BY fac_id ORDER BY {$fac_order_str} ";											// 3/15/11, 6/10/11
 
-				$result_fac = mysql_query($query_fac) or do_error($query_fac, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-				$facs_ct = mysql_affected_rows();			// 1/4/10
+				$result_fac = db_query($query_fac);
+				$facs_ct = db()->affected_rows;			// 1/4/10
 				if($facs_ct > 0) {
 					$i = 0;
 					$facs_arr = array();
@@ -825,7 +832,7 @@ if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('
 							<TD class='plain_listheader'>Icon</TD><TD class='plain_listheader'>Name</TD><TD class='plain_listheader'>Type</TD><TD class='plain_listheader'>Opening Times (Today)</TD>
 						</TR>
 <?php
-						while($row_fac = mysql_fetch_assoc($result_fac)){		// 7/7/10
+						while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 							$name = htmlentities($row_fac['facility_name'],ENT_QUOTES);
 							$handle = htmlentities($row_fac['handle'],ENT_QUOTES);
 
@@ -967,22 +974,24 @@ var got_points = false;
 	<FORM NAME="to_stage2" METHOD="get" ACTION = "fac_routes.php">
 	<INPUT TYPE="hidden" NAME="stage" 	VALUE=2>
 	<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">
-	<INPUT TYPE="hidden" NAME="unit_id" VALUE=<?php print $_GET['id'];?> />
+	<INPUT TYPE="hidden" NAME="unit_id" VALUE=<?php print sanitize_int($_GET['id']);?> />
 	</FORM>
-<?php	
+<?php
 	} elseif(array_key_exists('stage', $_GET) && $_GET['stage'] == 2 && array_key_exists('fac_id', $_GET) && $_GET['fac_id'] != 0) {		//	Route to Facility
-	$facName = explode("/", get_fac_name($_GET['fac_id']));
-	$respName = explode("/", get_unit_name($_GET['unit_id']));
-	$facCoords = get_fac_coords($_GET['fac_id']);
-	$respCoords = get_unit_coords($_GET['unit_id']);
+	$fac_id = sanitize_int($_GET['fac_id']);
+	$unit_id = sanitize_int($_GET['unit_id']);
+	$facName = explode("/", get_fac_name($fac_id));
+	$respName = explode("/", get_unit_name($unit_id));
+	$facCoords = get_fac_coords($fac_id);
+	$respCoords = get_unit_coords($unit_id);
 ?>
 <SCRIPT>
 	var thelat = <?php print $facCoords[0];?>;
 	var thelng = <?php print $facCoords[1];?>;
 	var resplat = <?php print $respCoords[0];?>;
 	var resplng = <?php print $respCoords[1];?>;
-	var facID = <?php print $_GET['fac_id'];?>;
-	var respID = <?php print $_GET['unit_id'];?>;
+	var facID = <?php print $fac_id;?>;
+	var respID = <?php print $unit_id;?>;
 </SCRIPT>
 	<DIV ID='finished' style='display: none;'>
 	<CENTER>		
@@ -993,7 +1002,7 @@ var got_points = false;
 	<DIV ID='outer' style='position: absolute; left: 0px; top: 0px; width: 100%; height: 98%; display: block;'>
 		<DIV ID='leftcol' style='position: absolute; left: 0px; top: 0px; width: 45%; height: 98%; display: block;'>
 			<SPAN CLASS='heading' style='width: 100%; display: block;'>Dispatching <?php print $respName[0];?> to <?php print $facName[0];?></SPAN>
-			<DIV ID='fac_table'><?php print do_fac($_GET['fac_id']);?></DIV><BR /><BR />
+			<DIV ID='fac_table'><?php print do_fac($fac_id);?></DIV><BR /><BR />
 			<DIV ID='map_canvas' style='height: 500px; width: 500px; display: block;'></DIV>
 		</DIV>
 		<DIV ID='middlecol' style='width: 10%;'>
@@ -1003,7 +1012,7 @@ var got_points = false;
 			<FORM NAME='email_form' METHOD = 'post' ACTION='do_direcs_mail.php' target='_blank' onsubmit='return mail_direcs(this);' />
 				<INPUT TYPE='hidden' NAME='frm_direcs' VALUE='' />
 				<INPUT TYPE='hidden' NAME='frm_u_id' VALUE='' />
-				<INPUT TYPE='hidden' NAME='frm_f_id' VALUE=<?php print $_GET['fac_id'];?> />
+				<INPUT TYPE='hidden' NAME='frm_f_id' VALUE=<?php print $fac_id;?> />
 				<INPUT TYPE='hidden' NAME='frm_f_name' VALUE="<?php print $facName[0];?>" />
 				<INPUT TYPE='hidden' NAME='frm_mail_subject' VALUE='Directions to Facility' />
 				<INPUT TYPE='hidden' NAME='showform' VALUE='true' />
@@ -1014,18 +1023,18 @@ var got_points = false;
 			<SPAN ID = 'un_status' style='display: none;'>
 				<SELECT ID="frm_status_sel" NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; document.email_form.frm_status_update.value=1;">
 <?php
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
-					$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
+					$result_st = db_query($query);
 
 					$the_grp = strval(rand());			//  force initial optgroup value
 					$i = 0;
-					while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
+					while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 					if ($the_grp != $row_st['group']) {
 						print ($i == 0)? "": "</OPTGROUP>\n";
 						$the_grp = $row_st['group'];
 						print "\t\t<OPTGROUP LABEL='$the_grp'>\n";
 						}
-					$sel = (get_unit_status($_GET['unit_id'])== $row_st['id'])? " SELECTED" : "";
+					$sel = (get_unit_status($unit_id)== $row_st['id'])? " SELECTED" : "";
 					print "\t\t<OPTION VALUE=" . $row_st['id'] . $sel ." STYLE='background-color:{$row_st['bg_color']}; color:{$row_st['text_color']};'  >" . $row_st['status_val']. "</OPTION>\n";	// 3/15/10
 					$i++;
 					}
@@ -1042,13 +1051,13 @@ var got_points = false;
 	</DIV>
 	<FORM NAME="can_form" METHOD="get" ACTION = "fac_routes.php">
 	<INPUT TYPE="hidden" NAME="stage" 	VALUE=1>
-	<INPUT TYPE="hidden" NAME="id" VALUE=<?php print $_GET['unit_id'];?> />
+	<INPUT TYPE="hidden" NAME="id" VALUE=<?php print $unit_id;?> />
 	</FORM>
 	<FORM NAME="fin_form" METHOD="get" ACTION = "main.php">
 	</FORM>
 <SCRIPT>
 //	setup map-----------------------------------//
-var unit_id = <?php print $_GET['unit_id'];?>;
+var unit_id = <?php print $unit_id;?>;
 // set widths
 if (typeof window.innerWidth != 'undefined') {
 	viewportwidth = window.innerWidth,

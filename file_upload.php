@@ -12,37 +12,37 @@ require_once('incs/functions.inc.php');
 */
 
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `id` ASC";
+$result = db_query($query);
 $select_r = "<SELECT NAME='frm_responder_id'><OPTION VALUE=0 SELECTED>Select Responder</OPTION>";
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$sel = ((!empty($_GET)) && (isset($_GET['responder_id'])) && ($_GET['responder_id'] != 0) && ($_GET['responder_id'] == $row['id'])) ? "SELECTED" : "";
 	$select_r .= "<OPTION VALUE=" . $row['id'] . " " . $sel . ">" . $row['name'] . " - " . $row['handle'] . "</OPTION>";
 	}
 $select_r .= "</SELECT>";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` ORDER BY `id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` ORDER BY `id` ASC";
+$result = db_query($query);
 $select_t = "<SELECT NAME='frm_ticket_id'><OPTION VALUE=0 SELECTED>Select Ticket</OPTION>";
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$sel = ((!empty($_GET)) && (isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != 0) && ($_GET['ticket_id'] == $row['id'])) ? "SELECTED" : "";
 	$select_t .= "<OPTION VALUE=" . $row['id'] . " " . $sel . ">" . $row['scope'] . "</OPTION>";
 	}
 $select_t .= "</SELECT>";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` ORDER BY `id` ASC";
+$result = db_query($query);
 $select_f = "<SELECT NAME='frm_facility_id'><OPTION VALUE=0 SELECTED>Select Facility</OPTION>";
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$sel = ((!empty($_GET)) && (isset($_GET['facility_id'])) && ($_GET['facility_id'] != 0) && ($_GET['facility_id'] == $row['id'])) ? "SELECTED" : "";
 	$select_f .= "<OPTION VALUE=" . $row['id'] . " " . $sel . ">" . $row['name'] . " - " . $row['handle'] . "</OPTION>";
 	}
 $select_f .= "</SELECT>";
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `level` = 7 ORDER BY `id` ASC"; 
-$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `level` = 7 ORDER BY `id` ASC";
+$result = db_query($query);
 $select_u = "<SELECT NAME='frm_user_id'><OPTION VALUE=0 SELECTED>Select Portal User</OPTION>";
-while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+while ($row = stripslashes_deep($result->fetch_assoc())){
 	$sel = ((!empty($_GET)) && (isset($_GET['portaluser'])) && ($_GET['portaluser'] != 0) && ($_GET['portaluser'] == $row['id'])) ? "SELECTED" : "";
 	$select_u .= "<OPTION VALUE=" . $row['id'] . " " . $sel . ">" . $row['user'] . " - " . $row['name_f'] . " " . $row['name_l'] . "</OPTION>";
 	}
@@ -58,7 +58,7 @@ $select_u .= "</SELECT>";
 	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
-	<meta http-equiv=”X-UA-Compatible” content=”IE=EmulateIE7" />
+	<meta http-equiv=ï¿½X-UA-Compatibleï¿½ content=ï¿½IE=EmulateIE7" />
 	<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 	<STYLE type="text/css">
 	.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: inset; border-color: #FFFFFF;
@@ -232,9 +232,9 @@ if(!empty($_POST)) {	//	$_POST data exists, process the file
 
 //	Does the file already exist in the files table		
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
-		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
-		if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
+		$result = db_query($query, [$realfilename]);
+		if(db()->affected_rows == 0) {	//	file doesn't exist already
 			if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 				if (strlen(filesize($file)) < 20000000) {
 					$print .= "File Size OK<BR />";
@@ -245,7 +245,7 @@ if(!empty($_POST)) {	//	$_POST data exists, process the file
 				$print = "Error uploading file<BR />";
 				}
 			} else {
-			$row = stripslashes_deep(mysql_fetch_assoc($result));			
+			$row = stripslashes_deep($result->fetch_assoc());			
 			$exists = true;
 			$existing_file = $row['filename'];	//	get existing file name
 			}
@@ -258,20 +258,24 @@ if(!empty($_POST)) {	//	$_POST data exists, process the file
 		$from = $_SERVER['REMOTE_ADDR'];	
 		$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
 		$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
-		$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+		$frm_title = sanitize_string($_POST['frm_title']);
+		$frm_ticket_id = sanitize_int($_POST['frm_ticket_id']);
+		$frm_responder_id = sanitize_int($_POST['frm_responder_id']);
+		$frm_facility_id = sanitize_int($_POST['frm_facility_id']);
+		$frm_type = sanitize_int($_POST['frm_type']);
+		$frm_filetype = sanitize_string($_FILES['frm_file']['type']);
+		$query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files` (
 				`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
-			) VALUES (
-				'" . $_POST['frm_title'] . "', '" . $filename . "', '" . $realfilename . "', " . $_POST['frm_ticket_id'] . ", " . $_POST['frm_responder_id'] . ",
-				" . $_POST['frm_facility_id'] . ", " . $_POST['frm_type'] . " , '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
-			)";
-			
-		$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-		$last_id = mysql_insert_id();
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		$result_insert	= db_query($query_insert, [$frm_title, $filename, $realfilename, $frm_ticket_id, $frm_responder_id, $frm_facility_id, $frm_type, $frm_filetype, $by, $now, $from]);
+		$last_id = db()->insert_id;
 		if($result_insert) {	//	is the database insert successful
 			$print .= "Inserted in Database OK<BR />";
 			if($_POST['frm_type'] == 2) {
-				$query_user_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files_x` (`file_id` , `user_id`) VALUES (" . $last_id . ", " . $_POST['frm_user_id'] . ")";
-				$result_user_insert	= mysql_query($query_user_insert) or do_error($query_user_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
+				$frm_user_id = sanitize_int($_POST['frm_user_id']);
+				$query_user_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}files_x` (`file_id` , `user_id`) VALUES (?, ?)";
+				$result_user_insert	= db_query($query_user_insert, [$last_id, $frm_user_id]);	
 				if($result_user_insert) {
 					$print .= "Inserted Portal User details in Database OK<BR />";
 ?>

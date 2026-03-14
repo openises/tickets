@@ -14,18 +14,20 @@ $func = (isset($_GET['func'])) ? $_GET['func'] : 0;
 $id = (isset($_GET['id'])) ? strip_tags($_GET['id']) : 0 ;
 
 function get_mailgroup_name($theid) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` WHERE `id` = " . $theid;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$theid = sanitize_int($theid);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` WHERE `id` = ?";
+	$result = db_query($query, [$theid]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$the_ret = $row['name'];
 	return $the_ret;
 	}
 	
 function get_email_from_contacts($theid) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` WHERE `id` = " . $theid;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$theid = sanitize_int($theid);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` WHERE `id` = ?";
+	$result = db_query($query, [$theid]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = $row['name'] . "(" . $row['email'] . ")";
 		} else {
 		$the_ret = "";
@@ -34,10 +36,11 @@ function get_email_from_contacts($theid) {
 	}
 	
 function get_email_from_responder($theid) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . $theid;
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-	if(mysql_num_rows($result) > 0) {
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$theid = sanitize_int($theid);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+	$result = db_query($query, [$theid]);
+	if($result->num_rows > 0) {
+		$row = stripslashes_deep($result->fetch_assoc());
 		$the_ret = $row['handle'] . "(" . $row['contact_via'] . ")";
 		} else {
 		$the_ret = "";
@@ -49,34 +52,39 @@ if(!empty($_POST)) {
 	if ($_POST['frm_formname'] == 'edit') {
 		if(array_key_exists('frm_remove', $_POST) && $_POST['frm_remove'] == "yes") {
 			$theEmail = (intval($_POST['frm_contacts']) != 0) ? get_email_from_contacts(intval($_POST['frm_contacts'])) : get_email_from_responder(intval($_POST['frm_responder']));
-			$query = "DELETE FROM $GLOBALS[mysql_prefix]mailgroup_x WHERE `id`=" . $_POST['frm_id'];
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+			$frm_id = sanitize_int($_POST['frm_id']);
+			$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}mailgroup_x` WHERE `id`= ?";
+			$result = db_query($query, [$frm_id]);
 			$caption = "Entry  <B><I>" . stripslashes_deep($theEmail) . "</I></B> has been deleted from the mailing list <B><I>" . get_mailgroup_name($_POST['frm_mailgroup']) . "</I></B><BR /><BR />";	
 			} else {
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		
 			$by = $_SESSION['user_id'];
-			$query = "UPDATE `$GLOBALS[mysql_prefix]mailgroup_x` SET
-				`mailgroup`= " . 	quote_smart(trim($_POST['frm_mailgroup'])) . ",
-				`contacts`= " . 	quote_smart(trim($_POST['frm_contacts'])) . ",
-				`responder`= " . 	quote_smart(trim($_POST['frm_responder'])) . "
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
+			$frm_mailgroup = sanitize_int($_POST['frm_mailgroup']);
+			$frm_contacts = sanitize_int($_POST['frm_contacts']);
+			$frm_responder = sanitize_int($_POST['frm_responder']);
+			$frm_id = sanitize_int($_POST['frm_id']);
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}mailgroup_x` SET
+				`mailgroup`= ?,
+				`contacts`= ?,
+				`responder`= ?
+				WHERE `id`= ?;";
 
-			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+			$result = db_query($query, [$frm_mailgroup, $frm_contacts, $frm_responder, $frm_id]);
 			$caption = "<B>The Email List Entry <i> " . get_mailgroup_name($_POST['frm_id']) . "</i>' has been updated </B><BR /><BR />";
 			}
 		} elseif($_POST['frm_formname'] == 'add') {
 		$by = $_SESSION['user_id'];
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]mailgroup_x` (
+		$frm_mailgroup = sanitize_int($_POST['frm_mailgroup']);
+		$frm_contacts = sanitize_int($_POST['frm_contacts']);
+		$frm_responder = sanitize_int($_POST['frm_responder']);
+		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}mailgroup_x` (
 			`mailgroup`, `contacts`, `responder`)
-			VALUES (" .
-				quote_smart(trim($_POST['frm_mailgroup'])) . "," .
-				quote_smart(trim($_POST['frm_contacts'])) . "," .
-				quote_smart(trim($_POST['frm_responder'])) . ");";
+			VALUES (?, ?, ?);";
 
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$new_id=mysql_insert_id();
+		$result = db_query($query, [$frm_mailgroup, $frm_contacts, $frm_responder]);
+		$new_id=db()->insert_id;
 		$theEmail = (intval($_POST['frm_contacts']) != 0) ? get_email_from_contacts(intval($_POST['frm_contacts'])) : get_email_from_responder(intval($_POST['frm_responder']));
 		$caption = "<B><I>" . $theEmail . " </B></I>has been added to Mailing List <B><I>" . get_mailgroup_name($_POST['frm_mailgroup']) . "</I></B><BR /><BR />";
 		}							// end if ($_getgoadd == 'true')
@@ -261,9 +269,10 @@ if(!empty($_POST)) {
 	</HEAD>
 <?php
 	if($func == "edit") {
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup_x` WHERE `id` = " . $id . " LIMIT 1";		// 12/18/10
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$id = sanitize_int($id);
+		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup_x` WHERE `id` = ? LIMIT 1";		// 12/18/10
+		$result = db_query($query, [$id]);
+		$row = stripslashes_deep($result->fetch_assoc());
 ?>
 		<BODY onLoad='ck_frames();'>
 
@@ -280,9 +289,9 @@ if(!empty($_POST)) {
 								<SELECT NAME="frm_mailgroup" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_mailgroup = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` ORDER BY `id` ASC";
+									$result = db_query($query);
+									while ($row_mailgroup = stripslashes_deep($result->fetch_assoc())) {
 										$sel = ($row['mailgroup'] == $row_mailgroup['id']) ? "SELECTED" : "";
 										print "\t<OPTION {$sel} VALUE='{$row_mailgroup['id']}'>{$row_mailgroup['name']} </OPTION>\n";
 										}
@@ -295,9 +304,9 @@ if(!empty($_POST)) {
 								<SELECT NAME="frm_contacts" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `id` ASC";
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_contact = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` ORDER BY `id` ASC";
+									$result = db_query($query);
+									while ($row_contact = stripslashes_deep($result->fetch_assoc())) {
 										$sel = ($row['contacts'] == $row_contact['id']) ? "SELECTED" : "";
 										print "\t<OPTION {$sel} VALUE='{$row_contact['id']}'>{$row_contact['name']} ({$row_contact['email']}) </OPTION>\n";
 										}
@@ -310,9 +319,9 @@ if(!empty($_POST)) {
 								<SELECT NAME="frm_responder" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id` ASC";		// 12/18/10
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_responder = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `id` ASC";		// 12/18/10
+									$result = db_query($query);
+									while ($row_responder = stripslashes_deep($result->fetch_assoc())) {
 										$sel = ($row['responder'] == $row_responder['id']) ? "SELECTED" : "";
 										print "\t<OPTION {$sel} VALUE='{$row_responder['id']}'>{$row_responder['handle']} ({$row_responder['contact_via']}) </OPTION>\n";
 										}
@@ -363,9 +372,9 @@ if(!empty($_POST)) {
 								<SELECT NAME="frm_mailgroup" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_mailgroup = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` ORDER BY `id` ASC";
+									$result = db_query($query);
+									while ($row_mailgroup = stripslashes_deep($result->fetch_assoc())) {
 										print "\t<OPTION VALUE='{$row_mailgroup['id']}'>{$row_mailgroup['name']} </OPTION>\n";
 										}
 ?>
@@ -377,9 +386,9 @@ if(!empty($_POST)) {
 								<SELECT NAME="frm_contacts" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]contacts` ORDER BY `id` ASC";
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_contact = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` ORDER BY `id` ASC";
+									$result = db_query($query);
+									while ($row_contact = stripslashes_deep($result->fetch_assoc())) {
 										print "\t<OPTION VALUE='{$row_contact['id']}'>{$row_contact['name']} {$row_contact['email']} </OPTION>\n";
 										}
 ?>
@@ -391,9 +400,9 @@ if(!empty($_POST)) {
 								<SELECT NAME="frm_responder" onChange = "this.value=JSfnTrim(this.value)">
 									<OPTION VALUE=0>Select</OPTION>
 <?php
-									$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `id` ASC";		// 12/18/10
-									$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-									while ($row_responder = stripslashes_deep(mysql_fetch_assoc($result))) {
+									$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `id` ASC";		// 12/18/10
+									$result = db_query($query);
+									while ($row_responder = stripslashes_deep($result->fetch_assoc())) {
 										print "\t<OPTION VALUE='{$row_responder['id']}'>{$row_responder['handle']} {$row_responder['contact_via']} </OPTION>\n";
 										}
 ?>
@@ -440,9 +449,9 @@ if(!empty($_POST)) {
 						</TR>
 <?php
 						$class='odd';
-						$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup_x` ORDER BY `mailgroup` ASC";		// 12/18/10
-						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
-						while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup_x` ORDER BY `mailgroup` ASC";		// 12/18/10
+						$result = db_query($query);
+						while ($row = stripslashes_deep($result->fetch_assoc())) {
 ?>
 							<TR VALIGN="baseline" CLASS="<?php print $class;?>" onClick="myclick('<?php print $row['id'];?>');">
 								<TD CLASS="td_data"><?php print get_mailgroup_name($row['mailgroup']);?></TD>	

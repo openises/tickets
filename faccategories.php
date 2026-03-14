@@ -89,15 +89,10 @@ if(!empty($_POST)) {
 	$goadd = (array_key_exists('goadd', $_GET) && $_GET['goadd'] == true) ? true : false;
 	$goedit = (array_key_exists('goedit', $_GET) && $_GET['goedit'] == true) ? true : false;
 	if($goadd) {
-		$query  = "INSERT INTO `$GLOBALS[mysql_prefix]fac_case_cat` (
+		$query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}fac_case_cat` (
 				`category`, `description`, `color`, `bgcolor`, `facility`
-				) VALUES (" .
-				quote_smart(trim($_POST['frm_category'])) . "," .
-				quote_smart(trim($_POST['frm_description'])) . "," .
-				quote_smart(trim($_POST['frm_color'])) . "," .
-				quote_smart(trim($_POST['frm_bgcolor'])) . "," .
-				quote_smart(trim($_POST['frm_facility'])) . ");";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
+				) VALUES (?, ?, ?, ?, ?);";
+		$result = db_query($query, [trim($_POST['frm_category']), trim($_POST['frm_description']), trim($_POST['frm_color']), trim($_POST['frm_bgcolor']), sanitize_int($_POST['frm_facility'])]);
 		if($result) {
 			print "Case Category inserted<BR /><BR />";
 ?>
@@ -124,14 +119,14 @@ if(!empty($_POST)) {
 <?php				
 			}
 		} elseif($goedit) {
-		$query = "UPDATE `$GLOBALS[mysql_prefix]fac_case_cat` SET
-			`category`= " . 	quote_smart(trim($_POST['frm_category'])) . ",
-			`description`= " . 	quote_smart(trim($_POST['frm_description'])) . ",
-			`color`= " . 		quote_smart(trim($_POST['frm_color'])) . ",
-			`bgcolor`= " . 		quote_smart(trim($_POST['frm_bgcolor'])) . ",
-			`facility`= " . 	quote_smart(trim($_POST['frm_facility'])) . "
-			WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+		$query = "UPDATE `{$GLOBALS['mysql_prefix']}fac_case_cat` SET
+			`category`= ?,
+			`description`= ?,
+			`color`= ?,
+			`bgcolor`= ?,
+			`facility`= ?
+			WHERE `id`= ?;";
+		$result = db_query($query, [trim($_POST['frm_category']), trim($_POST['frm_description']), trim($_POST['frm_color']), trim($_POST['frm_bgcolor']), sanitize_int($_POST['frm_facility']), sanitize_int($_POST['frm_id'])]);
 		if($result) {
 			print "<CENTER>Case Category updated<BR /><BR />";
 ?>
@@ -173,10 +168,10 @@ if(!empty($_POST)) {
 			<TH class='heading' style='padding: 0px 10px 0px 10px; text-align: left; border: 1px outset #707070;'>Background Color</TH>
 		</TR>
 <?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_case_cat`";		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_case_cat`";
+	$result = db_query($query);
 	$class = "even";
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	while($row = stripslashes_deep($result->fetch_assoc())) {
 		print "<TR class='" . $class . "' onClick='go_view(" . $row['id'] . ");'>";
 		print "<TD class='listEntry' style='color: " . $row['color'] . "; background-color: " . $row['bgcolor'] . ";text-align: left; border: 1px outset #707070;'>" . $row['category'] . "</TD>";
 		print "<TD class='listEntry' style='text-align: left; border: 1px outset #707070;'>" . htmlentities(shorten($row['description'], 30), ENT_QUOTES) . "</TD>";
@@ -229,9 +224,10 @@ if(!empty($_POST)) {
 	</CENTER>
 <?php
 	} elseif((empty($_POST)) && (array_key_exists('edit', $_GET) && $_GET['edit'] == true)) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_case_cat` WHERE `id` = " . $_GET['id'];		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$get_id = sanitize_int($_GET['id']);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_case_cat` WHERE `id` = ?";
+	$result = db_query($query, [$get_id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$id = $_GET['id'];
 	$category = $row['category'];
 	$description = htmlentities($row['description'], ENT_QUOTES);
@@ -272,9 +268,10 @@ if(!empty($_POST)) {
 	</CENTER>
 <?php
 	} elseif((empty($_POST)) && (array_key_exists('view', $_GET) && $_GET['view'] == true)) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_case_cat` WHERE `id` = " . $_GET['id'];		
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$get_id = sanitize_int($_GET['id']);
+	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_case_cat` WHERE `id` = ?";
+	$result = db_query($query, [$get_id]);
+	$row = stripslashes_deep($result->fetch_assoc());
 	$id = $_GET['id'];
 	$category = $row['category'];
 	$description = htmlentities($row['description'], ENT_QUOTES);

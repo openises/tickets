@@ -7,29 +7,29 @@
 error_reporting(E_ALL);
 require_once('incs/functions.inc.php');		//7/28/10
 
-$query_01 = "SELECT `$GLOBALS[mysql_prefix]ticket`.lat AS `lat`,
-		`$GLOBALS[mysql_prefix]ticket`.lng AS `lng`,
-		`$GLOBALS[mysql_prefix]ticket`.problemstart AS `problemstart`,
-		`$GLOBALS[mysql_prefix]ticket`.scope AS `title`,
-		IF (`$GLOBALS[mysql_prefix]ticket`.status = '2', 'Open', 'Scheduled') AS `status`,
-		`$GLOBALS[mysql_prefix]ticket`.severity AS `severity`,
-		`$GLOBALS[mysql_prefix]ticket`.booked_date AS `booked_date`,
-		`$GLOBALS[mysql_prefix]in_types`.type AS `type`
-		FROM `$GLOBALS[mysql_prefix]ticket` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.in_types_id=`$GLOBALS[mysql_prefix]in_types`.`id`  
+$query_01 = "SELECT `{$GLOBALS['mysql_prefix']}ticket`.lat AS `lat`,
+		`{$GLOBALS['mysql_prefix']}ticket`.lng AS `lng`,
+		`{$GLOBALS['mysql_prefix']}ticket`.problemstart AS `problemstart`,
+		`{$GLOBALS['mysql_prefix']}ticket`.scope AS `title`,
+		IF (`{$GLOBALS['mysql_prefix']}ticket`.status = '2', 'Open', 'Scheduled') AS `status`,
+		`{$GLOBALS['mysql_prefix']}ticket`.severity AS `severity`,
+		`{$GLOBALS['mysql_prefix']}ticket`.booked_date AS `booked_date`,
+		`{$GLOBALS['mysql_prefix']}in_types`.type AS `type`
+		FROM `{$GLOBALS['mysql_prefix']}ticket`
+		LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` ON `{$GLOBALS['mysql_prefix']}ticket`.in_types_id=`{$GLOBALS['mysql_prefix']}in_types`.`id`
 		WHERE `status`='{$GLOBALS['STATUS_OPEN']}' OR `status`='{$GLOBALS['STATUS_SCHEDULED']}'";
-$result_01 = mysql_query($query_01) or do_error($query_01, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_rows01 = mysql_num_rows($result_01);
+$result_01 = db_query($query_01);
+$num_rows01 = $result_01->num_rows;
 
-$query_02 = "SELECT * FROM `$GLOBALS[mysql_prefix]responder`";
-$result_02 = mysql_query($query_02) or do_error($query_02, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query_02 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+$result_02 = db_query($query_02);
 
-$query_03 = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`";
-$result_03 = mysql_query($query_03) or do_error($query_03, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+$query_03 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities`";
+$result_03 = db_query($query_03);
 
-$query_04 = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
-$result_04 = mysql_query($query_04) or do_error($query_04, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-$num_rows04 = mysql_num_rows($result_04);
+$query_04 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ";
+$result_04 = db_query($query_04);
+$num_rows04 = $result_04->num_rows;
 
 if(($num_rows01 != 0) && ($num_rows04 != 0)) {
 //	$current_status = "Team Status : On Call - " . $num_rows04 . " members are deployed.";
@@ -63,7 +63,7 @@ $XML .= "<result>\n";
 if((isset($_GET['list']) && (($_GET['list'] == "tickets") || ($_GET['list'] == "all"))) || (!isset($_GET['list'])))  {
 	$i=1;
 	$XML .= "<incidents>\n";
-	while ($row_01 = mysql_fetch_assoc($result_01)) {    
+	while ($row_01 = $result_01->fetch_assoc()) {    
 	  $XML .= "\t<incident id='$i'>\n"; 
 	  foreach ($row_01 as $col_name => $cell) {
 		if($col_name=="severity") {
@@ -92,7 +92,7 @@ if((isset($_GET['list']) && (($_GET['list'] == "tickets") || ($_GET['list'] == "
 if((isset($_GET['list']) && (($_GET['list'] == "responders") || ($_GET['list'] == "all"))) || (!isset($_GET['list'])))  {
 	$XML .= "<responders>\n";
 	$r=1;
-	while ($row_02 = mysql_fetch_assoc($result_02)) {    
+	while ($row_02 = $result_02->fetch_assoc()) {    
 	  $XML .= "\t<responder id='$r'>\n"; 
 	  foreach ($row_02 as $col_name => $cell) {
 		$XML .= "\t\t".output_xml_field($col_name,$cell)."\n";
@@ -105,7 +105,7 @@ if((isset($_GET['list']) && (($_GET['list'] == "responders") || ($_GET['list'] =
 if((isset($_GET['list']) && (($_GET['list'] == "facilities") || ($_GET['list'] == "all"))) || (!isset($_GET['list'])))  {
 	$XML .= "<facilities>\n";
 	$f=1;
-	while ($row_03 = mysql_fetch_assoc($result_03)) {    
+	while ($row_03 = $result_03->fetch_assoc()) {    
 	  $XML .= "\t<facility id='$f'>\n"; 
 	  foreach ($row_03 as $col_name => $cell) {
 		$XML .= "\t\t".output_xml_field($col_name,$cell)."\n";
