@@ -299,10 +299,28 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 								<TD CLASS="spacer" COLSPAN=99></TD>
 							</TR>
 							<TR class='odd' VALIGN='baseline'>
-								<TD CLASS="td_label" ALIGN='right'>Use Network or Local Maps:</TD>
-								<TD ALIGN='center' COLSPAN=2>
-									&nbsp;&nbsp;Network &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick = "swap_source(0);">
-									&nbsp;&nbsp;Local &raquo;<INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' onClick = "swap_source(1);">
+								<TD CLASS="td_label" ALIGN='right'>Tile Source:</TD>
+								<TD ALIGN='left' COLSPAN=2>
+<?php
+									$tile_mode = get_tile_mode();
+									$tile_mode_labels = array('online' => 'Online Direct', 'proxy' => 'Proxy Cache', 'offline' => 'Offline Local');
+									$tile_mode_label = isset($tile_mode_labels[$tile_mode]) ? $tile_mode_labels[$tile_mode] : $tile_mode;
+									$tile_mode_colors = array('online' => '#2266AA', 'proxy' => '#228822', 'offline' => '#886600');
+									$tile_mode_color = isset($tile_mode_colors[$tile_mode]) ? $tile_mode_colors[$tile_mode] : '#333';
+?>
+									&nbsp;&nbsp;<SPAN style='font-weight: bold; color: <?php print $tile_mode_color; ?>;'><?php print e($tile_mode_label); ?></SPAN>
+									&nbsp;&nbsp;&mdash;&nbsp;&nbsp;
+									<A HREF="config.php?func=tiles" style="color: #2266AA; text-decoration: underline; cursor: pointer;">Configure Tile Settings</A>
+									&nbsp;&nbsp;
+									<SPAN style='cursor: help; color: #888;' title='Online Direct: Browser fetches tiles directly from tile server.&#10;Proxy Cache (recommended): Server caches tiles locally for faster loading and reduced external requests.&#10;Offline Local: Uses pre-downloaded tiles only — no internet required.'>&#9432; info</SPAN>
+								</TD>
+							</TR>
+							<TR class='odd' VALIGN='baseline'>
+								<TD CLASS="td_label" ALIGN='right'>Preview source:</TD>
+								<TD ALIGN='left' COLSPAN=2>
+									&nbsp;&nbsp;<label>Network <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick="swap_source(0);"></label>
+									&nbsp;&nbsp;<label>Local <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='1' onClick="swap_source(1);"></label>
+									&nbsp;&nbsp;<SPAN style='font-size: 10px; color: #888;'>(toggles preview map only, does not change saved setting)</SPAN>
 								</TD>
 							</TR>
 							<TR CLASS = "even">
