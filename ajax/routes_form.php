@@ -11,6 +11,8 @@ $status_array = array();
 $sortby = $_GET['sortby'] ?? 'distance';
 $sortdir = $_GET['dir'] ?? 'ASC';
 $capabilities = $_GET['searchstring'] ?? '';
+$ticket_id = isset($_GET['ticket_id']) ? sanitize_int($_GET['ticket_id']) : 0;
+$unit_id = isset($_GET['unit_id']) ? sanitize_int($_GET['unit_id']) : '';
 
 $u_types = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";
