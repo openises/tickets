@@ -385,7 +385,17 @@ function linkFromSumm(table, index) {
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Member - checkbox - 8/12/09
 		$frm_field3 = (array_key_exists('frm_field3', $_POST)) ? $_POST['frm_field3'] : 0;
-		$frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";			
+		$frm_field7 = isset($_POST['frm_field7']) ? intval($_POST['frm_field7']) : 0;		// 3/14/26 - null-safe for bigint column
+		$frm_field12 = (isset($_POST['frm_field12']) && $_POST['frm_field12'] !== '') ? floatval($_POST['frm_field12']) : NULL;	// 3/14/26 - lat (double)
+		$frm_field13 = (isset($_POST['frm_field13']) && $_POST['frm_field13'] !== '') ? floatval($_POST['frm_field13']) : NULL;	// 3/14/26 - lng (double)
+		$frm_field21 = isset($_POST['frm_field21']) ? intval($_POST['frm_field21']) : 0;	// 3/14/26 - null-safe for int column
+		// 3/14/26 - Enum fields (Yes/No) default to schema defaults when empty (MySQL strict mode)
+		$enum_defaults = array(8 => 'Yes', 15 => 'No', 19 => 'No', 46 => 'No', 47 => 'No', 48 => 'No', 49 => 'No', 50 => 'No', 51 => 'No', 52 => 'No', 53 => 'No', 54 => 'No', 55 => 'No');
+		foreach ($enum_defaults as $_ef => $_ed) {
+			$vname = 'frm_field' . $_ef;
+			$$vname = (isset($_POST[$vname]) && in_array($_POST[$vname], array('Yes', 'No'))) ? $_POST[$vname] : $_ed;
+		}
+		$frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";
 		$frm_field17 = "$_POST[frm_year_frm_field17]-$_POST[frm_month_frm_field17]-$_POST[frm_day_frm_field17] 00:00:00";
 		$frm_field16 = "$_POST[frm_year_frm_field16]-$_POST[frm_month_frm_field16]-$_POST[frm_day_frm_field16] 00:00:00";
 		$frm_field56 = (isset($_POST['frm_year_frm_field56'])) ? "$_POST[frm_year_frm_field56]-$_POST[frm_month_frm_field56]-$_POST[frm_day_frm_field56] 00:00:00" : NULL;
@@ -555,71 +565,71 @@ function linkFromSumm(table, index) {
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 		$result = db_query($query, [
-				trim($_POST['frm_field1']),
-				trim($_POST['frm_field2']),
+				trim($_POST['frm_field1'] ?? ''),
+				trim($_POST['frm_field2'] ?? ''),
 				trim($frm_field3),
-				trim($_POST['frm_field4']),
-				trim($filename),
-				trim($_POST['frm_field6']),
-				trim($_POST['frm_field7']),
-				trim($_POST['frm_field8']),
-				trim($_POST['frm_field9']),
-				trim($_POST['frm_field10']),
-				trim($_POST['frm_field11']),
-				trim($_POST['frm_field12']),
-				trim($_POST['frm_field13']),
-				trim($_POST['frm_field14']),
-				trim($_POST['frm_field15']),
-				trim($frm_field16),
-				trim($frm_field17),
-				trim($frm_field18),
-				trim($_POST['frm_field19']),
-				trim($_POST['frm_field20']),
-				trim($_POST['frm_field21']),
-				trim($_POST['frm_field22']),
-				trim($_POST['frm_field23']),
-				trim($_POST['frm_field24']),
-				trim($_POST['frm_field25']),
-				trim($_POST['frm_field26']),
-				trim($_POST['frm_field27']),
-				trim($_POST['frm_field28']),
-				trim($_POST['frm_field29']),
-				trim($_POST['frm_field30']),
-				trim($_POST['frm_field31']),
-				trim($_POST['frm_field32']),
-				trim($_POST['frm_field33']),
-				trim($_POST['frm_field34']),
-				trim($_POST['frm_field35']),
-				trim($_POST['frm_field36']),
-				trim($_POST['frm_field37']),
-				trim($_POST['frm_field38']),
-				trim($_POST['frm_field39']),
-				trim($_POST['frm_field40']),
-				trim($_POST['frm_field41']),
-				trim($_POST['frm_field42']),
-				trim($_POST['frm_field43']),
-				trim($_POST['frm_field44']),
-				trim($_POST['frm_field45']),
-				trim($_POST['frm_field46']),
-				trim($_POST['frm_field47']),
-				trim($_POST['frm_field48']),
-				trim($_POST['frm_field49']),
-				trim($_POST['frm_field50']),
-				trim($_POST['frm_field51']),
-				trim($_POST['frm_field52']),
-				trim($_POST['frm_field53']),
-				trim($_POST['frm_field54']),
-				trim($_POST['frm_field55']),
-				trim($frm_field56),
-				trim($frm_field57),
-				trim($frm_field58),
-				trim($frm_field59),
-				trim($frm_field60),
-				trim($frm_field61),
-				trim($frm_field62),
-				trim($frm_field63),
-				trim($frm_field64),
-				trim($frm_field65),
+				trim($_POST['frm_field4'] ?? ''),
+				trim($filename ?? ''),
+				trim($_POST['frm_field6'] ?? ''),
+				$frm_field7,
+				$frm_field8,
+				trim($_POST['frm_field9'] ?? ''),
+				trim($_POST['frm_field10'] ?? ''),
+				trim($_POST['frm_field11'] ?? ''),
+				$frm_field12,
+				$frm_field13,
+				trim($_POST['frm_field14'] ?? ''),
+				$frm_field15,
+				trim($frm_field16 ?? ''),
+				trim($frm_field17 ?? ''),
+				trim($frm_field18 ?? ''),
+				$frm_field19,
+				trim($_POST['frm_field20'] ?? ''),
+				$frm_field21,
+				trim($_POST['frm_field22'] ?? ''),
+				trim($_POST['frm_field23'] ?? ''),
+				trim($_POST['frm_field24'] ?? ''),
+				trim($_POST['frm_field25'] ?? ''),
+				trim($_POST['frm_field26'] ?? ''),
+				trim($_POST['frm_field27'] ?? ''),
+				trim($_POST['frm_field28'] ?? ''),
+				trim($_POST['frm_field29'] ?? ''),
+				trim($_POST['frm_field30'] ?? ''),
+				trim($_POST['frm_field31'] ?? ''),
+				trim($_POST['frm_field32'] ?? ''),
+				trim($_POST['frm_field33'] ?? ''),
+				trim($_POST['frm_field34'] ?? ''),
+				trim($_POST['frm_field35'] ?? ''),
+				trim($_POST['frm_field36'] ?? ''),
+				trim($_POST['frm_field37'] ?? ''),
+				trim($_POST['frm_field38'] ?? ''),
+				trim($_POST['frm_field39'] ?? ''),
+				trim($_POST['frm_field40'] ?? ''),
+				trim($_POST['frm_field41'] ?? ''),
+				trim($_POST['frm_field42'] ?? ''),
+				trim($_POST['frm_field43'] ?? ''),
+				trim($_POST['frm_field44'] ?? ''),
+				trim($_POST['frm_field45'] ?? ''),
+				$frm_field46,
+				$frm_field47,
+				$frm_field48,
+				$frm_field49,
+				$frm_field50,
+				$frm_field51,
+				$frm_field52,
+				$frm_field53,
+				$frm_field54,
+				$frm_field55,
+				$frm_field56,
+				$frm_field57,
+				$frm_field58,
+				$frm_field59,
+				$frm_field60,
+				$frm_field61,
+				$frm_field62,
+				$frm_field63,
+				$frm_field64,
+				$frm_field65,
 				trim($old_t),
 				trim($old_c),
 				trim($old_e),
@@ -713,7 +723,17 @@ function linkFromSumm(table, index) {
 			
 			$image = $filename;
 			$frm_field3 = (array_key_exists('frm_field3', $_POST)) ? $_POST['frm_field3'] : 0;
-			$frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";			
+			$frm_field7 = isset($_POST['frm_field7']) ? intval($_POST['frm_field7']) : 0;		// 3/14/26 - null-safe for bigint column
+			$frm_field12 = (isset($_POST['frm_field12']) && $_POST['frm_field12'] !== '') ? floatval($_POST['frm_field12']) : NULL;	// 3/14/26 - lat (double)
+			$frm_field13 = (isset($_POST['frm_field13']) && $_POST['frm_field13'] !== '') ? floatval($_POST['frm_field13']) : NULL;	// 3/14/26 - lng (double)
+			$frm_field21 = isset($_POST['frm_field21']) ? intval($_POST['frm_field21']) : 0;	// 3/14/26 - null-safe for int column
+			// 3/14/26 - Enum fields (Yes/No) default to schema defaults when empty (MySQL strict mode)
+			$enum_defaults = array(8 => 'Yes', 15 => 'No', 19 => 'No', 46 => 'No', 47 => 'No', 48 => 'No', 49 => 'No', 50 => 'No', 51 => 'No', 52 => 'No', 53 => 'No', 54 => 'No', 55 => 'No');
+			foreach ($enum_defaults as $_ef => $_ed) {
+				$vname = 'frm_field' . $_ef;
+				$$vname = (isset($_POST[$vname]) && in_array($_POST[$vname], array('Yes', 'No'))) ? $_POST[$vname] : $_ed;
+			}
+			$frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";
 			$frm_field17 = "$_POST[frm_year_frm_field17]-$_POST[frm_month_frm_field17]-$_POST[frm_day_frm_field17] 00:00:00";
 			$frm_field16 = "$_POST[frm_year_frm_field16]-$_POST[frm_month_frm_field16]-$_POST[frm_day_frm_field16] 00:00:00";
 			$frm_field56 = (isset($_POST['frm_year_frm_field56'])) ? "$_POST[frm_year_frm_field56]-$_POST[frm_month_frm_field56]-$_POST[frm_day_frm_field56] 00:00:00": NULL;
@@ -725,10 +745,10 @@ function linkFromSumm(table, index) {
 			$frm_field62 = (isset($_POST['frm_year_frm_field62'])) ? "$_POST[frm_year_frm_field62]-$_POST[frm_month_frm_field62]-$_POST[frm_day_frm_field62] 00:00:00": NULL;
 			$frm_field63 = (isset($_POST['frm_year_frm_field63'])) ? "$_POST[frm_year_frm_field63]-$_POST[frm_month_frm_field63]-$_POST[frm_day_frm_field63] 00:00:00": NULL;
 			$frm_field64 = (isset($_POST['frm_year_frm_field64'])) ? "$_POST[frm_year_frm_field64]-$_POST[frm_month_frm_field64]-$_POST[frm_day_frm_field64] 00:00:00": NULL;
-			$frm_field65 = (isset($_POST['frm_year_frm_field65'])) ? "$_POST[frm_year_frm_field65]-$_POST[frm_month_frm_field65]-$_POST[frm_day_frm_field65] 00:00:00": NULL;			
+			$frm_field65 = (isset($_POST['frm_year_frm_field65'])) ? "$_POST[frm_year_frm_field65]-$_POST[frm_month_frm_field65]-$_POST[frm_day_frm_field65] 00:00:00": NULL;
 			$frm_field6 = $_POST['frm_field6'];
 			$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
-			$from = $_SERVER['REMOTE_ADDR'];			
+			$from = $_SERVER['REMOTE_ADDR'];
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
 				`field1`=?, `field2`=?, `field3`=?, `field4`=?, `field5`=?,
 				`field6`=?, `field7`=?, `field8`=?, `field9`=?, `field10`=?,
@@ -747,77 +767,77 @@ function linkFromSumm(table, index) {
 				WHERE `id`=?";
 
 			$result = db_query($query, [
-				trim($_POST['frm_field1']),
-				trim($_POST['frm_field2']),
+				trim($_POST['frm_field1'] ?? ''),
+				trim($_POST['frm_field2'] ?? ''),
 				trim($frm_field3),
-				trim($_POST['frm_field4']),
-				trim($filename),
-				trim($frm_field6),
-				trim($_POST['frm_field7']),
-				trim($_POST['frm_field8']),
-				trim($_POST['frm_field9']),
-				trim($_POST['frm_field10']),
-				trim($_POST['frm_field11']),
-				trim($_POST['frm_field12']),
-				trim($_POST['frm_field13']),
-				trim($_POST['frm_field14']),
-				trim($_POST['frm_field15']),
-				trim($frm_field16),
-				trim($frm_field17),
-				trim($frm_field18),
-				trim($_POST['frm_field19']),
-				trim($_POST['frm_field20']),
-				trim($_POST['frm_field21']),
-				trim($_POST['frm_field22']),
-				trim($_POST['frm_field23']),
-				trim($_POST['frm_field24']),
-				trim($_POST['frm_field25']),
-				trim($_POST['frm_field26']),
-				trim($_POST['frm_field27']),
-				trim($_POST['frm_field28']),
-				trim($_POST['frm_field29']),
-				trim($_POST['frm_field30']),
-				trim($_POST['frm_field31']),
-				trim($_POST['frm_field32']),
-				trim($_POST['frm_field33']),
-				trim($_POST['frm_field34']),
-				trim($_POST['frm_field35']),
-				trim($_POST['frm_field36']),
-				trim($_POST['frm_field37']),
-				trim($_POST['frm_field38']),
-				trim($_POST['frm_field39']),
-				trim($_POST['frm_field40']),
-				trim($_POST['frm_field41']),
-				trim($_POST['frm_field42']),
-				trim($_POST['frm_field43']),
-				trim($_POST['frm_field44']),
-				trim($_POST['frm_field45']),
-				trim($_POST['frm_field46']),
-				trim($_POST['frm_field47']),
-				trim($_POST['frm_field48']),
-				trim($_POST['frm_field49']),
-				trim($_POST['frm_field50']),
-				trim($_POST['frm_field51']),
-				trim($_POST['frm_field52']),
-				trim($_POST['frm_field53']),
-				trim($_POST['frm_field54']),
-				trim($_POST['frm_field55']),
-				trim($frm_field56),
-				trim($frm_field57),
-				trim($frm_field58),
-				trim($frm_field59),
-				trim($frm_field60),
-				trim($frm_field61),
-				trim($frm_field62),
-				trim($frm_field63),
-				trim($frm_field64),
-				trim($frm_field65),
+				trim($_POST['frm_field4'] ?? ''),
+				trim($filename ?? ''),
+				trim($frm_field6 ?? ''),
+				$frm_field7,
+				$frm_field8,
+				trim($_POST['frm_field9'] ?? ''),
+				trim($_POST['frm_field10'] ?? ''),
+				trim($_POST['frm_field11'] ?? ''),
+				$frm_field12,
+				$frm_field13,
+				trim($_POST['frm_field14'] ?? ''),
+				$frm_field15,
+				trim($frm_field16 ?? ''),
+				trim($frm_field17 ?? ''),
+				trim($frm_field18 ?? ''),
+				$frm_field19,
+				trim($_POST['frm_field20'] ?? ''),
+				$frm_field21,
+				trim($_POST['frm_field22'] ?? ''),
+				trim($_POST['frm_field23'] ?? ''),
+				trim($_POST['frm_field24'] ?? ''),
+				trim($_POST['frm_field25'] ?? ''),
+				trim($_POST['frm_field26'] ?? ''),
+				trim($_POST['frm_field27'] ?? ''),
+				trim($_POST['frm_field28'] ?? ''),
+				trim($_POST['frm_field29'] ?? ''),
+				trim($_POST['frm_field30'] ?? ''),
+				trim($_POST['frm_field31'] ?? ''),
+				trim($_POST['frm_field32'] ?? ''),
+				trim($_POST['frm_field33'] ?? ''),
+				trim($_POST['frm_field34'] ?? ''),
+				trim($_POST['frm_field35'] ?? ''),
+				trim($_POST['frm_field36'] ?? ''),
+				trim($_POST['frm_field37'] ?? ''),
+				trim($_POST['frm_field38'] ?? ''),
+				trim($_POST['frm_field39'] ?? ''),
+				trim($_POST['frm_field40'] ?? ''),
+				trim($_POST['frm_field41'] ?? ''),
+				trim($_POST['frm_field42'] ?? ''),
+				trim($_POST['frm_field43'] ?? ''),
+				trim($_POST['frm_field44'] ?? ''),
+				trim($_POST['frm_field45'] ?? ''),
+				$frm_field46,
+				$frm_field47,
+				$frm_field48,
+				$frm_field49,
+				$frm_field50,
+				$frm_field51,
+				$frm_field52,
+				$frm_field53,
+				$frm_field54,
+				$frm_field55,
+				$frm_field56,
+				$frm_field57,
+				$frm_field58,
+				$frm_field59,
+				$frm_field60,
+				$frm_field61,
+				$frm_field62,
+				$frm_field63,
+				$frm_field64,
+				$frm_field65,
 				trim($who),
 				trim($now),
 				trim($from),
 				intval($_POST['frm_id'])
 			]);
-			do_log($GLOBALS['LOG_MEMBER_CHANGE'], $_POST['frm_id'], $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);
+			do_log($GLOBALS['LOG_MEMBER_CHANGE'], intval($_POST['frm_id']), 0, $_POST['frm_field2'] . " " . $_POST['frm_field1']);
 
 			$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been Changed by user " . get_owner($who) . " on " . $now . "\n\n";
 			
@@ -861,7 +881,17 @@ function linkFromSumm(table, index) {
 			
 			$attachment = $filename;
 			$frm_field3 = (array_key_exists('frm_field3', $_POST)) ? $_POST['frm_field3'] : 0;
-			$frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";			
+			$frm_field7 = isset($_POST['frm_field7']) ? intval($_POST['frm_field7']) : 0;		// 3/14/26 - null-safe for bigint column
+			$frm_field12 = (isset($_POST['frm_field12']) && $_POST['frm_field12'] !== '') ? floatval($_POST['frm_field12']) : NULL;	// 3/14/26 - lat (double)
+			$frm_field13 = (isset($_POST['frm_field13']) && $_POST['frm_field13'] !== '') ? floatval($_POST['frm_field13']) : NULL;	// 3/14/26 - lng (double)
+			$frm_field21 = isset($_POST['frm_field21']) ? intval($_POST['frm_field21']) : 0;	// 3/14/26 - null-safe for int column
+			// 3/14/26 - Enum fields (Yes/No) default to schema defaults when empty (MySQL strict mode)
+			$enum_defaults = array(8 => 'Yes', 15 => 'No', 19 => 'No', 46 => 'No', 47 => 'No', 48 => 'No', 49 => 'No', 50 => 'No', 51 => 'No', 52 => 'No', 53 => 'No', 54 => 'No', 55 => 'No');
+			foreach ($enum_defaults as $_ef => $_ed) {
+				$vname = 'frm_field' . $_ef;
+				$$vname = (isset($_POST[$vname]) && in_array($_POST[$vname], array('Yes', 'No'))) ? $_POST[$vname] : $_ed;
+			}
+			$frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";
 			$frm_field17 = "$_POST[frm_year_frm_field17]-$_POST[frm_month_frm_field17]-$_POST[frm_day_frm_field17] 00:00:00";
 			$frm_field16 = "$_POST[frm_year_frm_field16]-$_POST[frm_month_frm_field16]-$_POST[frm_day_frm_field16] 00:00:00";
 			$frm_field56 = (isset($_POST['frm_year_frm_field56'])) ? "$_POST[frm_year_frm_field56]-$_POST[frm_month_frm_field56]-$_POST[frm_day_frm_field56] 00:00:00": NULL;
@@ -873,8 +903,8 @@ function linkFromSumm(table, index) {
 			$frm_field62 = (isset($_POST['frm_year_frm_field62'])) ? "$_POST[frm_year_frm_field62]-$_POST[frm_month_frm_field62]-$_POST[frm_day_frm_field62] 00:00:00": NULL;
 			$frm_field63 = (isset($_POST['frm_year_frm_field63'])) ? "$_POST[frm_year_frm_field63]-$_POST[frm_month_frm_field63]-$_POST[frm_day_frm_field63] 00:00:00": NULL;
 			$frm_field64 = (isset($_POST['frm_year_frm_field64'])) ? "$_POST[frm_year_frm_field64]-$_POST[frm_month_frm_field64]-$_POST[frm_day_frm_field64] 00:00:00": NULL;
-			$frm_field65 = (isset($_POST['frm_year_frm_field65'])) ? "$_POST[frm_year_frm_field65]-$_POST[frm_month_frm_field65]-$_POST[frm_day_frm_field65] 00:00:00": NULL;			
-			$frm_field6 = $_POST['frm_field6'];			
+			$frm_field65 = (isset($_POST['frm_year_frm_field65'])) ? "$_POST[frm_year_frm_field65]-$_POST[frm_month_frm_field65]-$_POST[frm_day_frm_field65] 00:00:00": NULL;
+			$frm_field6 = $_POST['frm_field6'];
 			$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 			$from = $_SERVER['REMOTE_ADDR'];			
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
@@ -896,77 +926,77 @@ function linkFromSumm(table, index) {
 				VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 			$result = db_query($query, [
-					trim($_POST['frm_field1']),
-					trim($_POST['frm_field2']),
+					trim($_POST['frm_field1'] ?? ''),
+					trim($_POST['frm_field2'] ?? ''),
 					trim($frm_field3),
-					trim($_POST['frm_field4']),
-					trim($filename),
-					trim($frm_field6),
-					trim($_POST['frm_field7']),
-					trim($_POST['frm_field8']),
-					trim($_POST['frm_field9']),
-					trim($_POST['frm_field10']),
-					trim($_POST['frm_field11']),
-					trim($_POST['frm_field12']),
-					trim($_POST['frm_field13']),
-					trim($_POST['frm_field14']),
-					trim($_POST['frm_field15']),
-					trim($frm_field16),
-					trim($frm_field17),
-					trim($frm_field18),
-					trim($_POST['frm_field19']),
-					trim($_POST['frm_field20']),
-					trim($_POST['frm_field21']),
-					trim($_POST['frm_field22']),
-					trim($_POST['frm_field23']),
-					trim($_POST['frm_field24']),
-					trim($_POST['frm_field25']),
-					trim($_POST['frm_field26']),
-					trim($_POST['frm_field27']),
-					trim($_POST['frm_field28']),
-					trim($_POST['frm_field29']),
-					trim($_POST['frm_field30']),
-					trim($_POST['frm_field31']),
-					trim($_POST['frm_field32']),
-					trim($_POST['frm_field33']),
-					trim($_POST['frm_field34']),
-					trim($_POST['frm_field35']),
-					trim($_POST['frm_field36']),
-					trim($_POST['frm_field37']),
-					trim($_POST['frm_field38']),
-					trim($_POST['frm_field39']),
-					trim($_POST['frm_field40']),
-					trim($_POST['frm_field41']),
-					trim($_POST['frm_field42']),
-					trim($_POST['frm_field43']),
-					trim($_POST['frm_field44']),
-					trim($_POST['frm_field45']),
-					trim($_POST['frm_field46']),
-					trim($_POST['frm_field47']),
-					trim($_POST['frm_field48']),
-					trim($_POST['frm_field49']),
-					trim($_POST['frm_field50']),
-					trim($_POST['frm_field51']),
-					trim($_POST['frm_field52']),
-					trim($_POST['frm_field53']),
-					trim($_POST['frm_field54']),
-					trim($_POST['frm_field55']),
-					trim($frm_field56),
-					trim($frm_field57),
-					trim($frm_field58),
-					trim($frm_field59),
-					trim($frm_field60),
-					trim($frm_field61),
-					trim($frm_field62),
-					trim($frm_field63),
-					trim($frm_field64),
-					trim($frm_field65),
+					trim($_POST['frm_field4'] ?? ''),
+					trim($filename ?? ''),
+					trim($frm_field6 ?? ''),
+					$frm_field7,
+					$frm_field8,
+					trim($_POST['frm_field9'] ?? ''),
+					trim($_POST['frm_field10'] ?? ''),
+					trim($_POST['frm_field11'] ?? ''),
+					$frm_field12,
+					$frm_field13,
+					trim($_POST['frm_field14'] ?? ''),
+					$frm_field15,
+					trim($frm_field16 ?? ''),
+					trim($frm_field17 ?? ''),
+					trim($frm_field18 ?? ''),
+					$frm_field19,
+					trim($_POST['frm_field20'] ?? ''),
+					$frm_field21,
+					trim($_POST['frm_field22'] ?? ''),
+					trim($_POST['frm_field23'] ?? ''),
+					trim($_POST['frm_field24'] ?? ''),
+					trim($_POST['frm_field25'] ?? ''),
+					trim($_POST['frm_field26'] ?? ''),
+					trim($_POST['frm_field27'] ?? ''),
+					trim($_POST['frm_field28'] ?? ''),
+					trim($_POST['frm_field29'] ?? ''),
+					trim($_POST['frm_field30'] ?? ''),
+					trim($_POST['frm_field31'] ?? ''),
+					trim($_POST['frm_field32'] ?? ''),
+					trim($_POST['frm_field33'] ?? ''),
+					trim($_POST['frm_field34'] ?? ''),
+					trim($_POST['frm_field35'] ?? ''),
+					trim($_POST['frm_field36'] ?? ''),
+					trim($_POST['frm_field37'] ?? ''),
+					trim($_POST['frm_field38'] ?? ''),
+					trim($_POST['frm_field39'] ?? ''),
+					trim($_POST['frm_field40'] ?? ''),
+					trim($_POST['frm_field41'] ?? ''),
+					trim($_POST['frm_field42'] ?? ''),
+					trim($_POST['frm_field43'] ?? ''),
+					trim($_POST['frm_field44'] ?? ''),
+					trim($_POST['frm_field45'] ?? ''),
+					$frm_field46,
+					$frm_field47,
+					$frm_field48,
+					$frm_field49,
+					$frm_field50,
+					$frm_field51,
+					$frm_field52,
+					$frm_field53,
+					$frm_field54,
+					$frm_field55,
+					$frm_field56,
+					$frm_field57,
+					$frm_field58,
+					$frm_field59,
+					$frm_field60,
+					$frm_field61,
+					$frm_field62,
+					$frm_field63,
+					$frm_field64,
+					$frm_field65,
 					trim($who),
 					trim($now),
 					trim($from)
 				]);
 			$new_id = db()->insert_id;	
-			do_log($GLOBALS['LOG_MEMBER_ADD'], db()->insert_id, $_POST['frm_field2'] . " " . $_POST['frm_field1'],  $facility_id=0, $rec_facility_id=0, $mileage=0);			
+			do_log($GLOBALS['LOG_MEMBER_ADD'], $new_id, 0, $_POST['frm_field2'] . " " . $_POST['frm_field1']);			
 			
 			if (isset($_FILES['frm_image'])) {
 				$upload_directory = "./mdb_pictures/" . $new_id . "/";
@@ -1705,15 +1735,15 @@ function linkFromSumm(table, index) {
 			$result	= db_query($query, [$id]);
 			$row	= $result->fetch_array();
 			$row['duedate'] = strtotime($row['duedate']);
-			$row['joindate'] = strtotime($row['joindate']);
-			$row['dob'] = strtotime($row['dob']);
-			$row['updated'] = strtotime($row['updated']);
-			$lat = $row['lat'];
-			$lng = $row['lng'];
+			$row['joindate'] = !empty($row['joindate']) ? strtotime($row['joindate']) : false;	// 3/14/26 - null-safe
+			$row['dob'] = !empty($row['dob']) ? strtotime($row['dob']) : false;
+			$row['updated'] = !empty($row['updated']) ? strtotime($row['updated']) : false;
+			$lat = (!empty($row['lat'])) ? $row['lat'] : get_variable('def_lat');	// 3/14/26 - fall back to default when NULL
+			$lng = (!empty($row['lng'])) ? $row['lng'] : get_variable('def_lng');
 			$type_checks = array ("", "", "", "", "");
 			$type_checks[$row['field7']] = " checked";
-			$disallow = is_user() ;	
-			$fullname = $row['field2'] . " " . $row['field1'];		
+			$disallow = is_user() ;
+			$fullname = $row['field2'] . " " . $row['field1'];
 ?>
 			</HEAD>
 			<BODY onLoad = "ck_frames();"> <!-- <?php print __LINE__;?> -->
@@ -1750,29 +1780,29 @@ function linkFromSumm(table, index) {
 			$result	= db_query($query, [$id]);
 			$row	= stripslashes_deep($result->fetch_assoc());
 			$row['duedate'] = strtotime($row['duedate']);
-			$row['joindate'] = strtotime($row['joindate']);
-			$row['dob'] = strtotime($row['dob']);
-			$row['updated'] = strtotime($row['updated']);
-			$lat = $row['lat'];
-			$lng = $row['lng'];
+			$row['joindate'] = !empty($row['joindate']) ? strtotime($row['joindate']) : false;	// 3/14/26 - null-safe
+			$row['dob'] = !empty($row['dob']) ? strtotime($row['dob']) : false;
+			$row['updated'] = !empty($row['updated']) ? strtotime($row['updated']) : false;
+			$lat = (!empty($row['lat'])) ? $row['lat'] : get_variable('def_lat');	// 3/14/26 - fall back to default when NULL
+			$lng = (!empty($row['lng'])) ? $row['lng'] : get_variable('def_lng');
 			if (isset($row['field21'])) {
 				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id`=?";	// status value
 				$result_st	= db_query($query, [$row['field21']]);
 				$row_st	= $result_st->fetch_assoc();
 				unset($result_st);
 				}
-			$un_st_val = (isset($row['field21']))? $row_st['status_val'] : "?";
-			$un_st_bg = (isset($row['bg_color']))? $row_st['bg_color'] : "white";		// 3/14/10
-			$un_st_txt = (isset($row['text_color']))? $row_st['text_color'] : "black";
+			$un_st_val = (isset($row_st) && $row_st)? $row_st['status_val'] : "?";				// 3/14/26 - null-safe
+			$un_st_bg = (isset($row_st) && $row_st && isset($row_st['bg_color']))? $row_st['bg_color'] : "white";		// 3/14/10, 3/14/26
+			$un_st_txt = (isset($row_st) && $row_st && isset($row_st['text_color']))? $row_st['text_color'] : "black";	// 3/14/26
 			$type_checks = array ("", "", "", "", "", "");
-			$type_checks[$row['field7']] = " checked";
+			if (isset($row['field7']) && $row['field7'] < count($type_checks)) { $type_checks[$row['field7']] = " checked"; }	// 3/14/26 - bounds check
 
 			$fullname = $row['field2'] . " " . $row['field1'];
 
 			print "\t<BODY onLoad = 'ck_frames();'>\n";
-	
-			$temp = $u_types[$row['field7']];
-			$the_type = $temp[0];			// name of type
+
+			$temp = isset($u_types[$row['field7']]) ? $u_types[$row['field7']] : null;	// 3/14/26 - null-safe when no member types configured
+			$the_type = ($temp !== null) ? $temp[0] : "";			// name of type
 			$fullname = $row['field2'] . " " . $row['field1'];
 			$disallow = true ;
 

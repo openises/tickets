@@ -107,7 +107,11 @@ function validate(theForm) {
 		print "<FONT CLASS='header text_large'>Search results for '" . e($post_frm_query) . "'</FONT><BR /><BR />\n";
 		$patterns =
 		$_POST['frm_query'] = str_replace(' ', '|', $post_frm_query);
-		$safe_query = db()->real_escape_string($_POST['frm_query']);
+		// Escape regex metacharacters so user input is treated as literal text,  3/14/26
+		// but convert user-friendly wildcards: * -> .* and ? -> .
+		$regex_query = preg_quote($_POST['frm_query'], '/');
+		$regex_query = str_replace(array('\\*', '\\?'), array('.*', '.'), $regex_query);
+		$safe_query = db()->real_escape_string($regex_query);
 		if(!empty($_POST['frm_search_in']))	{	//what field are we searching?
 			$safe_field = db()->real_escape_string($_POST['frm_search_in']);
 			$search_fields = "`{$safe_field}` REGEXP '{$safe_query}'";

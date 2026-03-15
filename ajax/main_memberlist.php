@@ -103,8 +103,8 @@ function member_list() {
 			$member_row[$i][5] = htmlentities($row['street'], ENT_QUOTES);
 			$member_row[$i][6] = htmlentities($row['city'], ENT_QUOTES);
 			$member_row[$i][7] = htmlentities($row['postcode'], ENT_QUOTES);
-			$member_row[$i][8] = $row['lat'];
-			$member_row[$i][9] = $row['lng'];
+			$member_row[$i][8] = isset($row['lat']) ? $row['lat'] : "";	// 3/14/26 - NULL-safe for isFloat() JS check
+			$member_row[$i][9] = isset($row['lng']) ? $row['lng'] : "";	// 3/14/26 - NULL-safe for isFloat() JS check
 			$member_row[$i][10] = htmlentities($row['contact'], ENT_QUOTES);
 			$member_row[$i][11] = htmlentities($row['membertype'], ENT_QUOTES);;
 			$member_row[$i][12] = htmlentities($row['type_name'], ENT_QUOTES);

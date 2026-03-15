@@ -209,19 +209,19 @@ function get_field_controls_edit($fieldid, $field_value, $memberid, $disallowed)
 			field65 AS field65
 			FROM `{$p}member`
 			WHERE  `id` = ?", [$memberid], 'i');
-	$row['updated'] = strtotime($row['updated']);
-	$row['joindate'] = strtotime($row['joindate']);
-	$row['duedate'] = strtotime($row['duedate']);
-	$row['field56'] = strtotime($row['field56']);
-	$row['field57'] = strtotime($row['field57']);
-	$row['field58'] = strtotime($row['field58']);
-	$row['field59'] = strtotime($row['field59']);
-	$row['field60'] = strtotime($row['field60']);
-	$row['field61'] = strtotime($row['field61']);
-	$row['field62'] = strtotime($row['field62']);
-	$row['field63'] = strtotime($row['field63']);
-	$row['field64'] = strtotime($row['field64']);
-	$row['field65'] = strtotime($row['field65']);
+	$row['updated'] = !empty($row['updated']) ? strtotime($row['updated']) : false;		// 3/14/26 - null-safe
+	$row['joindate'] = !empty($row['joindate']) ? strtotime($row['joindate']) : false;
+	$row['duedate'] = !empty($row['duedate']) ? strtotime($row['duedate']) : false;
+	$row['field56'] = !empty($row['field56']) ? strtotime($row['field56']) : false;	// 3/14/26 - null-safe
+	$row['field57'] = !empty($row['field57']) ? strtotime($row['field57']) : false;
+	$row['field58'] = !empty($row['field58']) ? strtotime($row['field58']) : false;
+	$row['field59'] = !empty($row['field59']) ? strtotime($row['field59']) : false;
+	$row['field60'] = !empty($row['field60']) ? strtotime($row['field60']) : false;
+	$row['field61'] = !empty($row['field61']) ? strtotime($row['field61']) : false;
+	$row['field62'] = !empty($row['field62']) ? strtotime($row['field62']) : false;
+	$row['field63'] = !empty($row['field63']) ? strtotime($row['field63']) : false;
+	$row['field64'] = !empty($row['field64']) ? strtotime($row['field64']) : false;
+	$row['field65'] = !empty($row['field65']) ? strtotime($row['field65']) : false;
 	$fieldtype = get_field_type('member', $fieldid);
 	$fieldname = "frm_field" . $fieldid;
 	$short_fieldname = "field" . $fieldid;

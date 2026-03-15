@@ -428,11 +428,13 @@ function load_memberlist(sort, dir) {
 					outputtext += "<TD>" + pad(3, " ", "\u00a0") + "</TD>";
 					outputtext += "</TR>";
 					infowindowtext = "";					
-					if($('map_canvas')) {						
-						if((isFloat(memb_arr[key][8])) && (isFloat(memb_arr[key][9])) && (memb_arr[key][8] != 999999) && (memb_arr[key][9] != 999999)) {
-							var marker = createMemMarker(memb_arr[key][8], memb_arr[key][9], infowindowtext, 1, 0, member_no, memb_arr[key][20], memb_arr[key][20], 0, memb_arr[key][19]); // 7/28/10, 3/15/11, 12/23/13
-							marker.addTo(map);
-							} else {
+					if($('map_canvas')) {
+						var lat = parseFloat(memb_arr[key][8]);	// 3/14/26 - safe parse
+						var lng = parseFloat(memb_arr[key][9]);
+						if(!isNaN(lat) && !isNaN(lng) && lat != 999999 && lng != 999999 && lat != 0 && lng != 0) {
+							var marker = createMemMarker(lat, lng, infowindowtext, 1, 0, member_no, memb_arr[key][20], memb_arr[key][20], 0, memb_arr[key][19]); // 7/28/10, 3/15/11, 12/23/13
+							if(marker) {marker.addTo(map);}
+							} else if(!isNaN(parseFloat(window.def_lat)) && !isNaN(parseFloat(window.def_lng))) {
 							var marker = createdummyMemMarker(parseFloat(window.def_lat), parseFloat(window.def_lng), infowindowtext, 1, "./our_icons/question1.png", memb_arr[key][19], member_no);
 							if(marker) {marker.addTo(map);}
 							}
