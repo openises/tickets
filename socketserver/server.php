@@ -76,14 +76,11 @@ function server_report() {
 	}
 
 function checkAdmin($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = " . $id . " LIMIT 1";
-	$result = mysql_query($query);
-	$num_rows = mysql_num_rows($result);
-	if($num_rows) {
-		if($num_rows == 1) {
-			$row = stripslashes_deep(mysql_fetch_assoc($result));
-			$level = $row['level'];
-			}
+	// 3/14/26 - Fixed SQL injection: use prepared statement instead of string concatenation
+	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1", [intval($id)]);
+	if($result && $result->num_rows == 1) {
+		$row = stripslashes_deep($result->fetch_assoc());
+		$level = $row['level'];
 		if($level == $GLOBALS['LEVEL_ADMINISTRATOR'] || $level == $GLOBALS['LEVEL_SUPER']) {
 			return true;
 			} else {

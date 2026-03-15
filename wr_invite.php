@@ -11,12 +11,12 @@ require_once($_SESSION['fip']);		//7/28/10
 //snap (basename(__FILE__), __LINE__);
 
 /*
-//snap (basename(__FILE__), $_GET['frm_to']);
-//snap (basename(__FILE__), $_GET['frm_user']);
-//snap (basename(__FILE__), $_GET['frm_from']);
-
-$query  = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (`to`, `_by`, `_from`) VALUES ('{$_GET['frm_to']}', $_GET['frm_user'], '{$_SERVER['REMOTE_ADDR'];}' );";
-$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
-*/
+ * 3/14/26 - Security review: Dead code below contained SQL injection vulnerability
+ *           (direct $_GET concatenation). Feature appears disabled/incomplete.
+ *           If reactivated, must use db_query() with prepared statements.
+ *
+ * $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}ticket` (`to`, `_by`, `_from`) VALUES (?, ?, ?)";
+ * $result = db_query($query, [$_GET['frm_to'], $_GET['frm_user'], $_SERVER['REMOTE_ADDR']]);
+ */
 print "";
 ?>

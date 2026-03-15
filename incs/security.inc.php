@@ -203,3 +203,32 @@ function set_security_headers(): void
     // Referrer policy - don't leak full URL to external sites
     header('Referrer-Policy: same-origin');
 }
+
+/**
+ * Configure secure session cookie parameters.
+ *
+ * Call this BEFORE session_start() to set HttpOnly, Secure (when HTTPS),
+ * and SameSite flags on the session cookie. Prevents session hijacking
+ * via JavaScript access and cross-site request forgery.
+ *
+ * Safe to call multiple times - returns immediately if session already started.
+ *
+ * @since v3.44.0
+ */
+function configure_secure_session(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return; // Already started, too late to configure
+    }
+
+    $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+
+    session_set_cookie_params([
+        'lifetime' => 0,            // Session cookie (expires when browser closes)
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => $is_https,    // Only send over HTTPS if available
+        'httponly'  => true,         // Not accessible via JavaScript
+        'samesite' => 'Lax'         // Prevents CSRF via cross-site form POST
+    ]);
+}

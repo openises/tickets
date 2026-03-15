@@ -3,12 +3,16 @@
 3/25/2014 - expanded to handle buildings
 -->
 <?php
-	$query = "ALTER TABLE `{$GLOBALS['mysql_prefix']}places` ADD `apply_to` ENUM( 'city', 'bldg' ) NOT NULL DEFAULT 'city' AFTER `name` ,
-	ADD `street` VARCHAR( 96 ) NULL DEFAULT NULL AFTER `apply_to` ,
-	ADD `city` VARCHAR( 32 ) NULL DEFAULT NULL AFTER `street` ,
-	ADD `state` VARCHAR( 4 ) NULL DEFAULT NULL AFTER `city` ,
-	ADD `information` VARCHAR( 1024 ) NULL DEFAULT NULL AFTER `state` ";
-	$result = @db_query($query) ;		// note STFU
+	// 3/14/26 - Only add columns if they don't already exist (prevents duplicate column error)
+	$check = db_query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$GLOBALS['mysql_prefix']}places' AND COLUMN_NAME = 'apply_to'");
+	if (!$check || $check->num_rows == 0) {
+		$query = "ALTER TABLE `{$GLOBALS['mysql_prefix']}places` ADD `apply_to` ENUM( 'city', 'bldg' ) NOT NULL DEFAULT 'city' AFTER `name` ,
+		ADD `street` VARCHAR( 96 ) NULL DEFAULT NULL AFTER `apply_to` ,
+		ADD `city` VARCHAR( 32 ) NULL DEFAULT NULL AFTER `street` ,
+		ADD `state` VARCHAR( 4 ) NULL DEFAULT NULL AFTER `city` ,
+		ADD `information` VARCHAR( 1024 ) NULL DEFAULT NULL AFTER `state` ";
+		db_query($query);
+	}
 	
 ?>
 	<SCRIPT type="text/javascript">
@@ -218,7 +222,7 @@
 			icon = new baseIcon({iconUrl: iconurl});	
 			marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
 			marker.addTo(map);
-			newGetAddress(e.latlng, "c");
+			addrFromClick(e.latlng);		// 3/14/26 - Use form-specific handler (newGetAddress "c" case references wrong field names)
 			};
 
 		map.on('click', onMapClick);

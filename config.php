@@ -108,6 +108,23 @@ if ($istest) {
     echo "<BR/>";
 }
 
+// 3/14/26 - CSRF validation for POST requests that include a token
+// Forms served by this page have tokens auto-injected via JS; cross-page navigation POSTs don't
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+    if (!csrf_verify($_POST['csrf_token'])) {
+        print '<br><br><center><b>Security Error:</b> Your session has expired or the form token is invalid. Please <a href="' . e(basename(__FILE__)) . '">go back</a> and try again.</center>';
+        exit();
+    }
+}
+
+// 3/14/26 - Output buffering to auto-inject CSRF tokens into all forms
+// Appends script at end of output (browsers execute it even after </HTML>)
+ob_start(function($html) {
+    $token = csrf_token();
+    $script = "\n" . '<script>(function(){var t=\'' . addslashes($token) . '\';document.querySelectorAll(\'form\').forEach(function(f){if(!f.querySelector(\'input[name="csrf_token"]\')){var i=document.createElement(\'input\');i.type=\'hidden\';i.name=\'csrf_token\';i.value=t;f.appendChild(i);}});})();</script>';
+    return $html . $script;
+});
+
 $mode = (array_key_exists('mode', $_REQUEST)) ? $_REQUEST['mode'] : 0;        // 9/8/10
 $patient = get_text("Patient");                                                // 12/1/10
 extract($_REQUEST);
@@ -1024,7 +1041,7 @@ function dump_db()
                             <TR CLASS='even'>
                                 <TD CLASS="td_label text">Ticket:</TD>
                                 <TD ALIGN="left"><A
-                                        HREF="main.php?id=<?php print $_GET['id']; ?>"><?php print $the_ticket_name; ?></A>
+                                        HREF="main.php?id=<?php print e($_GET['id']); ?>"><?php print e($the_ticket_name); ?></A>
                                 </TD>
                             </TR>
                             <TR CLASS='odd'>
@@ -1101,7 +1118,7 @@ function dump_db()
                             }
                             ?>
                             <INPUT TYPE="hidden" NAME="mode" VALUE="<?php print $mode; ?>"/>
-                            <INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_GET['id']; ?>"/>
+                            <INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print e($_GET['id']); ?>"/>
                         </FORM>
                     </TABLE>
                     <FORM NAME='can_Form' METHOD="post" ACTION="<?php print basename(__FILE__); ?>"></FORM>
@@ -2901,7 +2918,7 @@ case 'user' :
                             <TABLE BORDER="0">
                                 <TD CLASS="td_label text">User ID:</TD>
                                 <TD><INPUT MAXLENGTH="20" SIZE="20" TYPE="text"
-                                           VALUE="<?php print $_POST['frm_user']; ?>" NAME="frm_user"></TD>
+                                           VALUE="<?php print e($_POST['frm_user']); ?>" NAME="frm_user"></TD>
                         </TR>
                         <TR CLASS="odd">
                             <TD CLASS="td_label text">Password</TD>
@@ -2917,7 +2934,7 @@ case 'user' :
                             <TD CLASS="td_label text">Callsign:</TD>
                             <TD>
                                 <INPUT MAXLENGTH="20" SIZE="20" TYPE="text"
-                                       VALUE="<?php print $_POST['frm_callsign']; ?>" NAME="frm_callsign">
+                                       VALUE="<?php print e($_POST['frm_callsign']); ?>" NAME="frm_callsign">
                             </TD>
                         </TR>
                         <TR CLASS="even">
@@ -2953,7 +2970,7 @@ case 'user' :
                         </TR>
                         <TR CLASS="odd">
                             <TD CLASS="td_label text">Info:</TD>
-                            <TD><INPUT SIZE="40" MAXLENGTH="80" TYPE="text" VALUE="<?php print $_POST['frm_info']; ?>"
+                            <TD><INPUT SIZE="40" MAXLENGTH="80" TYPE="text" VALUE="<?php print e($_POST['frm_info']); ?>"
                                        NAME="frm_info"></TD>
                         </TR>
                         <TR CLASS="even">
@@ -3494,7 +3511,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         <DIV STYLE='margin-top:20px; margin-left:100px'><FONT CLASS='warn' SIZE="+1"><B>Please confirm deletions -
                     cannot be undone!</B></FONT><BR/><BR/>
             <FORM METHOD="POST" NAME="del_Form" ACTION="config.php?func=delete&subfunc=do_del">
-                <INPUT TYPE='hidden' NAME='idstr' VALUE="<?php print $_POST['idstr']; ?>">
+                <INPUT TYPE='hidden' NAME='idstr' VALUE="<?php print e($_POST['idstr']); ?>">
                 <SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;'
                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                       onClick="document.can_Form.submit();"><SPAN
@@ -4133,7 +4150,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                         ?>
                         <A id='orgs' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
-                           onClick="do_Post('organisations');">Organisations</A>     <!-- 4/9/10 -->
+                           onClick="do_Post('organisations');">Organizations</A>     <!-- 4/9/10 -->
                         <?php
                     }
                     ?>
@@ -4154,10 +4171,10 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     ?>
                     <DIV class='config_heading text' id='organisations_settings'
                          style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
-                        <DIV class='config_heading text' style='display: block; clear: both;'>Organisations</DIV>
+                        <DIV class='config_heading text' style='display: block; clear: both;'>Organizations</DIV>
                         <A id='orgs' class='plain text' style='width: 150px; float: left;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
-                           onClick="do_Post('organisations');">Organisations</A>
+                           onClick="do_Post('organisations');">Organizations</A>
                     </DIV>
                     <?php
                 }

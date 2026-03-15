@@ -87,6 +87,13 @@ function do_logout($return=FALSE){						/* logout - destroy session data */
 	$_SESSION = array();
 	@session_destroy();						// 2/18/08
 
+	// 3/14/26 - Start a fresh session after logout so the login form's CSRF token is valid
+	// session_regenerate_id forces PHP to send a new Set-Cookie header, overriding the
+	// cookie deletion above so the browser keeps the session for CSRF token validation
+	configure_secure_session();
+	session_start();
+	session_regenerate_id(true);
+
 	if ($return) return;
 
 	do_login('main.php', TRUE);				// wait for login
@@ -199,6 +206,7 @@ function dupe_user($id, $ip) {
 
 function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09,	1/30/14
 	global $hide_dispatched, $hide_status_groups;
+	configure_secure_session();		// 3/14/26 - Set HttpOnly, Secure, SameSite cookie flags
 	@session_start();
 	global $expiry, $istest;
 	$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
@@ -228,6 +236,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 
 	else { 				// not logged in; now either get form data or db check form entries
 		if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
+			// 3/14/26 - CSRF token verification
+			if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+				$warn = "Security token expired. Please try again.";
+			} else {
 																						// 6/25/10
 			$userchoice = $_POST['frm_maps'];
 			$categories = array();													// 3/15/11
@@ -277,6 +289,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			}
 
             if ( $authenticated ) {
+				session_regenerate_id(true);		// 3/14/26 - Prevent session fixation attacks
 				$row = stripslashes_deep($row);
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
 				$dir = ($row['sort_desc']) ? " DESC " : "";
@@ -399,6 +412,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 					} else if($level == $GLOBALS['LEVEL_MEMBER']){
 					$_SESSION = array();
 					@session_destroy();
+					// 3/14/26 - Start fresh session so login form CSRF token is valid
+					configure_secure_session();
+					session_start();
+					session_regenerate_id(true);
 					$extra = 'main.php?logout=1';
 					} else {
 					$extra = 'main.php?log_in=1';
@@ -411,9 +428,10 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				exit();
 				}			// end if (mysql_affected_rows()==1)
 			}			// end if((!empty($_POST))&&(check_for_rows(...)
+			}			// end CSRF else block
 
 //		if no form data or values fail
-		@session_destroy();				// 4/29/10
+		$_SESSION = array();			// 4/29/10 - Clear session data (keep session alive for CSRF token)
 
 ?>
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -634,7 +652,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form"  onSubmit="return true;">
 		<TABLE BORDER=0>
 <?php
-		if(array_key_exists('frm_passwd', $_POST)) {$warn = "Login failed. Pls enter correct values and try again.";}
+		if(array_key_exists('frm_passwd', $_POST) && empty($warn)) {$warn = "Login failed. Pls enter correct values and try again.";}
 		if(!(empty($warn))) {
 			print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>
 			{$warn}
@@ -759,6 +777,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<INPUT TYPE='hidden' NAME = 'frm_daynight' VALUE=''>
 		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print e($temp); ?>">
 		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE="<?php print e($no_autoforward); ?>">
+		<?php echo csrf_token_field(); ?>
 		</FORM><BR /><BR />
 		</DIV>
 		</CENTER>

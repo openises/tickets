@@ -297,7 +297,8 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			$result = db_query($query, [$_GET['id']]);
 			$row = stripslashes_deep($result->fetch_assoc());
 			print "<FONT CLASS='header'>Really delete " . get_text("Patient") . " record ' " .shorten($row['description'], 24) . "' ?</FONT><BR /><BR />";
-			print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=$_GET[id]&ticket_id=$_GET[ticket_id]&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+			// 3/14/26 - XSS fix: escape $_GET values in HTML output
+			print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=" . e($_GET['id']) . "&ticket_id=" . e($_GET['ticket_id']) . "&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();'></FORM>";
 			}
 		}

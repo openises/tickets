@@ -59,6 +59,24 @@ if ($istest) {
 	dump($_POST);
 	}
 do_login(basename(__FILE__));	// 9/18/08
+
+// 3/14/26 - CSRF validation for POST requests that include a token
+// Forms served by this page have tokens auto-injected via JS; cross-page navigation POSTs don't
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+	if (!csrf_verify($_POST['csrf_token'])) {
+		print '<br><br><center><b>Security Error:</b> Your session has expired or the form token is invalid. Please <a href="' . e(basename(__FILE__)) . '">go back</a> and try again.</center>';
+		exit();
+	}
+}
+
+// 3/14/26 - Output buffering to auto-inject CSRF tokens into all forms
+// Appends script at end of output (browsers execute it even after </HTML>)
+ob_start(function($html) {
+	$token = csrf_token();
+	$script = "\n" . '<script>(function(){var t=\'' . addslashes($token) . '\';document.querySelectorAll(\'form\').forEach(function(f){if(!f.querySelector(\'input[name="csrf_token"]\')){var i=document.createElement(\'input\');i.type=\'hidden\';i.name=\'csrf_token\';i.value=t;f.appendChild(i);}});})();</script>';
+	return $html . $script;
+});
+
 if(is_administrator() || (get_variable('oper_can_edit') == "1")) {
 
 $key_str			= "_id";			// FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier
@@ -94,6 +112,12 @@ if (($mysql_db=="")||($mysql_user=="")) {print "<br><br><br><br>" ; die(" - - - 
 $FK_id = strtolower($key_str);			// set for case independence
 $id_lg = strlen($FK_id);				// lgth of foreign key id string
 $custom	= FALSE;						// custom processor in use
+
+// 3/14/26 - FK overrides for columns that don't follow the _id naming convention
+// display_expr: SQL expression for display value; display_alias: alias for the expression
+$fk_overrides = [
+	'owner' => ['table' => 'member', 'display_expr' => "CONCAT(`id`, ' - ', `field2`, ' ', `field1`)", 'display_alias' => 'display_name'],
+];
 $can_edit = ((is_super()) || (is_administrator()) || (get_variable('oper_can_edit') == "1"));										// 3/19/11
 
 if (!array_key_exists('func', $_POST)) {
@@ -918,10 +942,11 @@ switch ($func) {		// ================================== case "c" ===============
 
 		$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 		$result = db_query($query);
+		$num_fields = mysql_num_fields($result);	// 3/14/26 - Cache field count before loop (db_query calls inside loop change mysqli_field_count)
 		$lineno = 0;
 		$thetemp = get_defined_constants(true);
 //		dump($thetemp);
-		for ($i = 0; $i < mysql_num_fields($result); $i++) {
+		for ($i = 0; $i < $num_fields; $i++) {
 			if ((!is_null($row)) && ($fill_from_last)) 	{$last_data = $row[$i]; $class="clean";}
 			else 										{$last_data = ""; 		$class="dirty";}
 
@@ -1007,6 +1032,25 @@ switch ($func) {		// ================================== case "c" ===============
 									$gotit = TRUE;
 									}											// end if (mysql_table_exists($thetable)) ...
 								}										// end maybe dropdown
+							// 3/14/26 - Check FK overrides for columns without _id suffix
+							if (!$gotit && isset($fk_overrides[mysql_field_name($result, $i)])) {
+								$fk = $fk_overrides[mysql_field_name($result, $i)];
+								$fk_table = $mysql_prefix . $fk['table'];
+								$fk_alias = $fk['display_alias'];
+								$fk_query = "SELECT `id`, {$fk['display_expr']} AS `{$fk_alias}` FROM `{$fk_table}` ORDER BY `{$fk_alias}` ASC";
+								$temp_result = db_query($fk_query);
+								print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
+								print "\t\t<OPTION VALUE='0' selected>None</OPTION>\n";
+								if ($temp_result) {
+									while ($temp_row = $temp_result->fetch_assoc()) {
+										print "\t\t<OPTION VALUE='" . e($temp_row['id']) . "'>" . e($temp_row[$fk_alias]) . "</OPTION>\n";
+									}
+								}
+								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+								print "\t\t</SELECT>{$hint_str}</TD></TR>\n\t";
+								unset($temp_result);
+								$gotit = TRUE;
+							}
 							if (!$gotit) {
 								print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
 //								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
@@ -1019,6 +1063,8 @@ switch ($func) {		// ================================== case "c" ===============
 						case "blob":
 						case "VAR_STRING":
 						case "STRING":
+						case "CHAR":
+						case "char":
 						case "str":
 						case "string":
 						case "text":
@@ -1200,6 +1246,17 @@ switch ($func) {		// ================================== case "c" ===============
 					}						// end while ($temp_row = ...
 				unset ($temp_result);
 				}
+			// 3/14/26 - FK overrides for columns that don't follow the _id convention (e.g. 'owner')
+			$col_name = mysql_field_name($result, $i);
+			if (isset($fk_overrides[$col_name])) {
+				$fko = $fk_overrides[$col_name];
+				$fko_query = "SELECT `id`, {$fko['display_expr']} AS `{$fko['display_alias']}` FROM `{$mysql_prefix}{$fko['table']}` ORDER BY `{$fko['display_alias']}` ASC";
+				$fko_result = db_query($fko_query);
+				while ($fko_row = $fko_result->fetch_array()) {
+					$subst[$col_name][$fko_row[0]] = $fko_row[$fko['display_alias']];
+				}
+				unset($fko_result);
+			}
 
 			$thecolumn = mysql_field_name($result, $links_col);		// column name
 			$arrow = (mysql_field_name($result, $i) == $sortby) ? $arrowdir[$sortdir] : "<IMG SRC='./images/blank.png' HEIGHT='20px' style='vertical-align: text-top; float: right;' />";
@@ -1238,6 +1295,8 @@ switch ($func) {		// ================================== case "c" ===============
 									} else {
 									$thedata = $row[$i];
 									}								// no substitution data
+								} elseif (isset($subst[mysql_field_name($result, $i)][$row[$i]])) {	// 3/14/26 - FK override substitution
+								$thedata = $subst[mysql_field_name($result, $i)][$row[$i]];
 								} else { 									// not substitution or date
 								$thedata = (strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
@@ -1348,7 +1407,7 @@ case "u":	// =======================================  Update 	==================
 	<FORM NAME="u" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF'] ?>"/>
 	<INPUT TYPE="hidden" NAME="tablename"	VALUE="<?php print $tablename ?>"/>
 	<INPUT TYPE="hidden" NAME="indexname" 	VALUE="<?php print $indexname; ?>"/>
-	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print $_POST['id'] ?>"/>
+	<INPUT TYPE="hidden" NAME="id"  		VALUE="<?php print e($_POST['id']); ?>"/>
 	<INPUT TYPE="hidden" NAME="sortby" 		VALUE="<?php print $sortby; ?>"/>
 	<INPUT TYPE="hidden" NAME="sortdir"		VALUE=0 />
 	<INPUT TYPE="hidden" NAME="func" 		VALUE="pu"/>  <!-- process update -->
@@ -1359,7 +1418,8 @@ case "u":	// =======================================  Update 	==================
 	<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Update/Delete Entry</FONT></TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
 <?php
-	for ($i = 0; $i < mysql_num_fields($result); $i++) {
+	$num_fields = mysql_num_fields($result);	// 3/14/26 - Cache field count before loop
+	for ($i = 0; $i < $num_fields; $i++) {
 		$max = get_digs($types[$i]);											// max input lgth per types array - 6/21/10
 		if (substr(mysql_field_name($result, $i), 0, 1 ) =="_") {				// 12/20/08
 			switch (mysql_field_name($result, $i)) {
@@ -1439,6 +1499,28 @@ case "u":	// =======================================  Update 	==================
 							$gotit = TRUE;
 							}											// end if (mysql_table_exists($thetable)) ...
 						}										// end maybe dropdown
+					// 3/14/26 - Check FK overrides for columns without _id suffix
+					if (!$gotit && isset($fk_overrides[mysql_field_name($result, $i)])) {
+						$fk = $fk_overrides[mysql_field_name($result, $i)];
+						$fk_table = $mysql_prefix . $fk['table'];
+						$fk_alias = $fk['display_alias'];
+						$fk_query = "SELECT `id`, {$fk['display_expr']} AS `{$fk_alias}` FROM `{$fk_table}` ORDER BY `{$fk_alias}` ASC";
+						$temp_result = db_query($fk_query);
+						$current_val = $row[mysql_field_name($result, $i)];
+						print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
+						$none_selected = (empty($current_val) || $current_val == '0') ? " selected" : "";
+						print "\t\t<OPTION VALUE='0'{$none_selected}>None</OPTION>\n";
+						if ($temp_result) {
+							while ($sel_row = $temp_result->fetch_assoc()) {
+								$selected = ($sel_row['id'] == $current_val) ? " selected" : "";
+								print "\t\t<OPTION VALUE='" . e($sel_row['id']) . "'{$selected}>" . e($sel_row[$fk_alias]) . "</OPTION>\n";
+							}
+						}
+						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+						print "\t\t</SELECT>{$hint_str}</TD></TR>\n\t";
+						unset($temp_result);
+						$gotit = TRUE;
+					}
 					if (!$gotit) {
 //						dump(__LINE__);
 //						dump($max);
@@ -1453,6 +1535,8 @@ case "u":	// =======================================  Update 	==================
 					case "blob":
 					case "VAR_STRING":
 					case "STRING":
+					case "CHAR":
+					case "char":
 					case "str":
 					case "string":
 					case "text":
@@ -1611,6 +1695,17 @@ case "u":	// =======================================  Update 	==================
 				}
 			unset ($temp_result);
 			unset ($temp_row);
+			} elseif (isset($fk_overrides[mysql_field_name($result, $i)]) && intval($row[$i]) > 0) {	// 3/14/26 - FK override for view
+			$fko = $fk_overrides[mysql_field_name($result, $i)];
+			$fko_query = "SELECT {$fko['display_expr']} AS `{$fko['display_alias']}` FROM `{$mysql_prefix}{$fko['table']}` WHERE `id` = ? LIMIT 1";
+			$fko_result = db_query($fko_query, [intval($row[$i])]);
+			if ($fko_result->num_rows > 0) {
+				$fko_row = $fko_result->fetch_array();
+				print $fko_row[$fko['display_alias']];
+			} else {
+				print $row[$i];
+			}
+			unset($fko_result);
 			} else {
 			$empty = (strlen($row[$i])== 0) ?  " - empty" : $empty = "";
 

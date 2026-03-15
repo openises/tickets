@@ -2,9 +2,10 @@
 
 error_reporting(0);
 require_once('./incs/functions.inc.php');
-dump($_SERVER);
-echo $_SERVER['HTTP_HOST'] . "<BR />";
-echo $_SERVER['SERVER_NAME'] . "<BR />";
+// 3/14/26 - XSS fix: escape server variables in HTML output
+echo "<PRE>" . e(print_r($_SERVER, true)) . "</PRE>";
+echo e($_SERVER['HTTP_HOST']) . "<BR />";
+echo e($_SERVER['SERVER_NAME']) . "<BR />";
 echo gethostname() . "<BR />";
 echo php_uname('n') . "<BR />";
 $serverport = "1337";

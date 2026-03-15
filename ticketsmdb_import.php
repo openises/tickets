@@ -124,8 +124,7 @@ switch($mode) {
 	break;
 	
 	case "go":
-	$connect = mysql_connect($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword']);
-	$db_selected = mysql_select_db($_POST['ticketsdb']);
+	// 3/14/26 - Removed redundant mysql_connect/mysql_close; db_query() handles the connection
 	for($y = 0; $y < $tableCount; $y++) {
 		if($tickets_mdbTables[$y] != "log") {
 			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$y] . "`";
@@ -135,8 +134,6 @@ switch($mode) {
 				}
 			}
 		}
-		
-	$mysqlclosed = mysql_close();
 	
  	if($existingDataCount > 0) {
 ?>
@@ -172,24 +169,24 @@ switch($mode) {
 			$tabledatacount = 0;
 			$tabledata = array();
 			$table_fields = array();
-			$connect = mysql_connect($_POST['mdbhost'], $_POST['mdbuser'], $_POST['mdbpassword']);
-			$db_selected = mysql_select_db($_POST['mdbdb']);
+			// 3/14/26 - Migrated from mysql_* to mysqli for external MDB source DB
+			$mdb_conn = new mysqli($_POST['mdbhost'], $_POST['mdbuser'], $_POST['mdbpassword'], $_POST['mdbdb']);
 
-			$query = "DESCRIBE `{$GLOBALS['mysql_prefix']}" . $mdbTables[$z] . "`";
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+			$table_name_escaped = $mdb_conn->real_escape_string($mdbTables[$z]);
+			$query = "DESCRIBE `{$GLOBALS['mysql_prefix']}" . $table_name_escaped . "`";
+			$result = $mdb_conn->query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$table_fields[] = $row['Field'];
 				}
-				
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $mdbTables[$z] . "`";
-			$result = mysql_query($query);
-			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+
+			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $table_name_escaped . "`";
+			$result = $mdb_conn->query($query);
+			while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$tabledata[] = $row;
-				}	
-			
-			$mysqlclosed = mysql_close();
-			$connect = mysql_connect($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword']);
-			$db_selected = mysql_select_db($_POST['ticketsdb']);
+				}
+
+			$mdb_conn->close();
+			// Tickets DB inserts below use db_query() which manages its own connection
 
 			$dataCount = count($tabledata);
 			$fieldCount = count($table_fields);
@@ -276,10 +273,7 @@ switch($mode) {
 				if($result2) {$output_text .= "Updated file location for member " . $membername . "<BR />";}
 				}
 				
-			$mysqlclosed = mysql_close();
-			if(!$mysqlclosed) {
-				print "Error closing mysql connection<BR />";
-				}
+			// 3/14/26 - Removed mysql_close(); db_query() manages its own connection
 ?>				
 		<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
 			<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">

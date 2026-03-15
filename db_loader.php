@@ -3,6 +3,7 @@ ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 error_reporting(E_ALL);
 require_once('./incs/mysql.inc.php');
+require_once('./incs/db.inc.php');		// 3/14/26 - Use db_query() for local DB operations
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 $dir = getcwd() . "/backups";
 if( !extension_loaded('mysql') ){
@@ -13,12 +14,11 @@ $css = (!empty($_POST) && array_key_exists('css', $_POST)) ? $_POST['css'] : arr
 $css_count = count($css);
 
 if(empty($_POST)) {
-	$connect = mysql_connect($mysql_host, $mysql_user, $mysql_passwd);
-	$db_selected = mysql_select_db($mysql_db);
+	// 3/14/26 - Migrated from mysql_query to db_query() for local DB operations
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}css_day`";
-	$result = mysql_query($query);
+	$result = db_query($query);
 	if($result) {
-		while ($row = mysql_fetch_assoc($result)){
+		while ($row = $result->fetch_assoc()){
 			if($row['name'] == "page_background") {$css[$row['name']] = "#" . $row['value'];}
 			if($row['name'] == "normal_text") {$css[$row['name']] = "#" . $row['value'];}
 			if($row['name'] == "form_input_background") {$css[$row['name']] = "#" . $row['value'];}
@@ -29,7 +29,6 @@ if(empty($_POST)) {
 			if($row['name'] == "select_menu_text") {$css[$row['name']] = "#" . $row['value'];}
 			if($row['name'] == "links") {$css[$row['name']] = "#" . $row['value'];}
 			}
-		$mysqlclosed = mysql_close();
 		} else {
 		$css['page_background'] = "#CECECE";
 		$css['normal_text'] = "#000000";
@@ -77,13 +76,12 @@ function dump($variable) {
 
 $variables = array();
 function get_variable($which){
-	global $variables, $mysql_host, $mysql_user, $mysql_passwd, $mysql_db;
-	$connect = mysql_connect($mysql_host, $mysql_user, $mysql_passwd);
-	$db_selected = mysql_select_db($mysql_db);
+	// 3/14/26 - Migrated from mysql_query to db_query() for local DB operations
+	global $variables;
 	if (empty($variables)) {
-		$result = mysql_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings`");
+		$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings`");
 		if($result) {
-			while ($row = mysql_fetch_assoc($result)) {
+			while ($row = $result->fetch_assoc()) {
 				$name = $row['name']; $value=$row['value'] ;
 				$variables[$name] = $value;
 				}
@@ -91,7 +89,6 @@ function get_variable($which){
 			return FALSE;
 			}
 		}
-	$mysqlclosed = mysql_close();
 	return (array_key_exists($which, $variables))? $variables[$which] : FALSE ;
 	}
 	
@@ -671,22 +668,24 @@ if(empty($_GET)) {
 		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />	
 		</FORM>		
 <?php
-	$connect = mysql_connect($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword']);
-	$db_selected = mysql_select_db('information_schema');
-	if($db_selected) {
+	// 3/14/26 - Migrated from mysql_* to mysqli with prepared statements for external DB
+	$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], 'information_schema');
+	if(!$ext_conn->connect_error) {
 		$tables = array();
-		$query = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" . $_POST['ticketsdb'] . "';";
-		$result = mysql_query($query);
-		while($row = mysql_fetch_assoc($result)) {
+		$stmt = $ext_conn->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?");
+		$stmt->bind_param('s', $_POST['ticketsdb']);
+		$stmt->execute();
+		$result = $stmt->get_result();
+		while($row = $result->fetch_assoc()) {
 			$tables[] = $row['TABLE_NAME'];
 			}
+		$stmt->close();
 		$tableCount = count($tables);
 		$existingDataCount = 0;
-		$db_selected = mysql_select_db($_POST['ticketsdb']);
+		$ext_conn->select_db($_POST['ticketsdb']);
 		for($i = 0; $i < $tableCount; $i++) {
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $tables[$i] . "`";
-			$result = mysql_query($query);
-			if($result && mysql_num_rows($result) > 0) {
+			$result = $ext_conn->query("SELECT 1 FROM `" . $ext_conn->real_escape_string($tables[$i]) . "` LIMIT 1");
+			if($result && $result->num_rows > 0) {
 				$existingDataCount++;
 				}
 			}
@@ -711,7 +710,7 @@ if(empty($_GET)) {
 </SCRIPT>
 <?php			
 			}
-		$mysqlclosed = mysql_close();
+		$ext_conn->close();
 		} else {
 		$output = "Error connecting to database, please check your connection details and try again.<BR />";
 ?>
@@ -775,16 +774,19 @@ if(empty($_GET)) {
 	</FORM>
 <?php
 
-	$connect = mysql_connect($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword']);
-	$db_selected = mysql_select_db('information_schema');
-	if($db_selected) {	//	Connected OK to information Schema
+	// 3/14/26 - Migrated from mysql_* to mysqli with prepared statements for external DB
+	$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], 'information_schema');
+	if(!$ext_conn->connect_error) {	//	Connected OK to information Schema
 		$tables = array();
-		$query = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" . $_POST['ticketsdb'] . "';";
-		$result = mysql_query($query);
-		while($row = mysql_fetch_assoc($result)) {
+		$stmt = $ext_conn->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?");
+		$stmt->bind_param('s', $_POST['ticketsdb']);
+		$stmt->execute();
+		$result = $stmt->get_result();
+		while($row = $result->fetch_assoc()) {
 			$tables[] = $row['TABLE_NAME'];
 			}
-		mysql_close($connect);	
+		$stmt->close();
+		$ext_conn->close();	
 		$tableCount = count($tables);
 		if($tableCount > 0) {	//	Existing data
 ?>
@@ -818,12 +820,11 @@ if(empty($_GET)) {
 </SCRIPT>
 <?php
 			$existingDataCount = 0;
-			$connect = mysql_connect($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword']);
-			$db_selected = mysql_select_db($_POST['ticketsdb']);
-			if($db_selected) {
+			// 3/14/26 - Migrated from mysql_* to mysqli for external DB
+			$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], $_POST['ticketsdb']);
+			if(!$ext_conn->connect_error) {
 				for($i = 0; $i < $tableCount; $i++) {
-					$query = "DROP TABLE `{$GLOBALS['mysql_prefix']}" . $tables[$i] . "`";
-					$result = mysql_query($query);
+					$result = $ext_conn->query("DROP TABLE `" . $ext_conn->real_escape_string($tables[$i]) . "`");
 					if($result) {
 						$output = $_POST['ticketsdb'] . " Database " . $tables[$i] . " Table dropped successfully<BR />";
 ?>
@@ -834,7 +835,7 @@ if(empty($_GET)) {
 <?php
 						}
 					}
-				mysql_close($connect);	
+				$ext_conn->close();
 ?>
 <SCRIPT>
 				$('deletestatus').innerHTML += "<BR /><b>Previous Data erased completely</B><BR />";
@@ -851,13 +852,13 @@ if(empty($_GET)) {
 				$sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
 				$sql_query = remove_remarks($sql_query);
 				$sql_query = split_sql_file($sql_query, ';');
-				$connect = mysql_connect($host,$user,$pass);
-				$db_selected = mysql_select_db($db);
-				if($db_selected) {
+				// 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
+				$ext_conn = new mysqli($host, $user, $pass, $db);
+				if(!$ext_conn->connect_error) {
 					$count = count($sql_query);
 					for($i = 0; $i < $count; $i++) {
 						$query = $sql_query[$i];
-						$result = mysql_query($query);
+						$result = $ext_conn->query($query);
 						if($result) {
 ?>
 <SCRIPT>
@@ -867,7 +868,7 @@ if(empty($_GET)) {
 <?php
 							}
 						}
-					mysql_close($connect);		
+					$ext_conn->close();
 ?>
 <SCRIPT>
 					$('progress_img').style.display = "none";
@@ -909,12 +910,12 @@ if(empty($_GET)) {
 			$sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
 			$sql_query = remove_remarks($sql_query);
 			$sql_query = split_sql_file($sql_query, ';');
-			$connect = mysql_connect($host,$user,$pass);
-			$db_selected = mysql_select_db($db);
+			// 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
+			$ext_conn = new mysqli($host, $user, $pass, $db);
 			$count = count($sql_query);
 			for($i = 0; $i < $count; $i++) {
 				$query = $sql_query[$i];
-				$result = mysql_query($query);
+				$result = $ext_conn->query($query);
 				if($result) {
 ?>
 <SCRIPT>
@@ -930,7 +931,7 @@ if(empty($_GET)) {
 				$('status').scrollTop = $('status').scrollHeight;
 </SCRIPT>
 <?php
-			mysql_close($connect);		
+			$ext_conn->close();
 ?>
 <SCRIPT>
 			$('progress_img').style.display = "none";

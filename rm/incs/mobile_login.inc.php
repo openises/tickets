@@ -122,6 +122,7 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 	global $expiry, $istest;
 	$nocenter = FALSE;
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+	configure_secure_session();		// 3/14/26 - Set HttpOnly, Secure, SameSite cookie flags
 	@session_start();
 	$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
 	$the_sid = (isset($_SESSION['id']))? $_SESSION['id'] : null;
@@ -140,20 +141,27 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 
 // not logged in; now either get form data or db check form entries 		
 	else { if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
+			// 3/14/26 - CSRF token verification
+			if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+				$warn = "Security token expired. Please try again.";
+			} else {
 			$temp = $GLOBALS['LEVEL_USER'];
 			$tmp = $_POST['encoding'];
-			// 2/28/26 - Prepared statement hardening
+			// 3/14/26 - Migrated from mysql_prepare shim to db_query() prepared statements
 			$login_user = strip_tags($_POST['frm_user']);
 			$login_passwd = $_POST['frm_passwd'];
-			$stmt = mysql_prepare("SELECT * FROM `" . $GLOBALS['mysql_prefix'] . "user` WHERE `user` = ? LIMIT 1");
-			if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
-			mysql_stmt_bind_param($stmt, "s", $login_user);
-			if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
-			$result = mysql_stmt_get_result($stmt);
-			$row = mysql_fetch_assoc($result);
-			mysql_stmt_close($stmt);
-			$authenticated = $row && (password_verify($login_passwd, $row['passwd']) || $row['passwd'] === md5(strtolower($login_passwd)) || $row['passwd'] === md5($login_passwd));			
+			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1", [$login_user]);
+			$row = $result ? $result->fetch_assoc() : null;
+			// Use centralized verify_password() for bcrypt + legacy MD5 support
+			$auth_result = $row ? verify_password($login_passwd, $row['passwd']) : ['valid' => false, 'needs_rehash' => false];
+			$authenticated = $auth_result['valid'];			
 			if ($authenticated) {
+				session_regenerate_id(true);		// 3/14/26 - Prevent session fixation attacks
+				// 3/14/26 - Auto-rehash legacy MD5 passwords to bcrypt
+				if ($auth_result['needs_rehash']) {
+					$new_hash = hash_password($login_passwd);
+					db_query("UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd` = ? WHERE `id` = ?", [$new_hash, $row['id']]);
+				}
 				$row = stripslashes_deep($row);
 
 				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
@@ -163,11 +171,9 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				$browser = checkBrowser(FALSE);
 				$the_date = mysql_format_date($expiry) ;				
 				$user_id = intval($row['id']);
-				$stmt = mysql_prepare("UPDATE `" . $GLOBALS['mysql_prefix'] . "user` SET `sid` = ?, `expires` = ?, `login` = ?, `_from` = ?, `browser` = ? WHERE `id` = ? LIMIT 1");
-				if(!$stmt) { do_error("", 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__); }
-				mysql_stmt_bind_param($stmt, "sssssi", $sid, $the_date, $now, $_SERVER['REMOTE_ADDR'], $browser, $user_id);
-				if(!mysql_stmt_execute($stmt)) { do_error("", 'mysql query failed', mysql_stmt_error($stmt), basename(__FILE__), __LINE__); }
-				mysql_stmt_close($stmt);
+				// 3/14/26 - Migrated from mysql_prepare shim to db_query()
+				db_query("UPDATE `{$GLOBALS['mysql_prefix']}user` SET `sid` = ?, `expires` = ?, `login` = ?, `_from` = ?, `browser` = ? WHERE `id` = ? LIMIT 1",
+					[$sid, $the_date, $now, $_SERVER['REMOTE_ADDR'], $browser, $user_id]);
 				
 				$_SESSION['noautoforward'] = FALSE;	//	1/30/14
 				$_SESSION['id'] = 			$sid;
@@ -206,14 +212,9 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				set_filenames_mob($internet);			// 8/31/10
 				do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");		// log it - 12/1/2012											
 																		
-				$stmt = mysql_prepare("DELETE FROM `" . $GLOBALS['mysql_prefix'] . "ticket` WHERE `status` = ? AND `_by` = ?");
-				if($stmt) {
-					$reserved_status = intval($GLOBALS['STATUS_RESERVED']);
-					$user_id = intval($_SESSION['user_id']);
-					mysql_stmt_bind_param($stmt, "ii", $reserved_status, $user_id);
-					mysql_stmt_execute($stmt);
-					mysql_stmt_close($stmt);
-				}
+				// 3/14/26 - Migrated from mysql_prepare shim to db_query()
+				db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?",
+					[intval($GLOBALS['STATUS_RESERVED']), intval($_SESSION['user_id'])]);
 				
 				$to = "";
 				$subject = "Tickets Mobile Page Login";
@@ -239,6 +240,7 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 				exit;				
 				}
 			}			// end if((!empty($_POST))&&(check_for_rows(...)
+			}			// end CSRF else block
 
 //			if no form data or values fail
 
@@ -431,6 +433,7 @@ function do_mobile_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// 
 			<INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
 			<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
 			<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print $temp; ?>">
+			<?php echo csrf_token_field(); ?>
 			</FORM><BR /><BR />
 			<a href="http://www.ticketscad.com/"><SPAN CLASS='text_small'>Tickets CAD Project home</SPAN></a><BR /><BR />
 			<div><IMG BORDER=0 SRC='../open_source_button.png' <?php print $my_click; ?>>&nbsp;&nbsp;<img src="../php.png" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>	
