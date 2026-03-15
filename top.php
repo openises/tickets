@@ -1369,6 +1369,7 @@ function get_daynight() {
 		</TR>
 		<TR ID = 'buttons' STYLE = "display: none;">
 			<TD COLSPAN=99>
+<?php if (!empty($_SESSION) && array_key_exists('user_id', $_SESSION)) { // Only render nav buttons for authenticated users ?>
 			<SPAN ID = 'main' roll='button' tabindex=1 aria-label='Situation Screen' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick ="go_there('main.php', this.id);"><?php print get_text("Situation"); ?></SPAN>
 <!--		<SPAN ID = 'mi'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
@@ -1471,6 +1472,7 @@ function get_daynight() {
 <?php
 	}			// end if (broadcast && internet )
 ?>
+<?php } // end if authenticated user - nav buttons ?>
 			</TD>
 		</TR>
 		<TR ID = 'has_form_row' STYLE = "display:none;">

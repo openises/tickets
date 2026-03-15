@@ -11,6 +11,11 @@
 session_start();
 session_write_close();
 require_once('./incs/functions.inc.php');
+// Auth gate: redirect unauthenticated users
+if (empty($_SESSION) || !array_key_exists('user_id', $_SESSION)) {
+	echo "<script>window.location='main.php';</script>";
+	exit();
+}
 $patient = get_text("Patient");						// 12/1/10
 $disposition = get_text("Disposition");				// 12/1/10
 
