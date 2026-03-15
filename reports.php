@@ -249,14 +249,18 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		
 	function showButs() {
 		$('print_but').style.display = "inline-block";
+		$('downloadcsv_but').style.display = "inline-block";
 		$('downloaddoc_but').style.display = "inline-block";
 		$('downloadxls_but').style.display = "inline-block";
+		$('format_notice').style.display = "inline-block";
 		}
-		
+
 	function hideButs() {
 		$('print_but').style.display = "none";
+		$('downloadcsv_but').style.display = "none";
 		$('downloaddoc_but').style.display = "none";
-		$('downloadxls_but').style.display = "none";		
+		$('downloadxls_but').style.display = "none";
+		$('format_notice').style.display = "none";
 		}
 		
 	function useSpecificdates() {
@@ -320,16 +324,17 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 			enddate = document.sel_form.frm_month_end_date.value + "," + document.sel_form.frm_day_end_date.value + "," + document.sel_form.frm_year_end_date.value;
 			} else {
 			startdate = 0;
-			enddate = 0;				
+			enddate = 0;
 			}
+		var script = (mode == "csv") ? "download_report_csv.php" : "download_report.php";	// 3/14/26
 		if(func == "ugr") {
-			var url = "download_report.php?mode=" + mode + "&report=" + which + "&func=" + what + "&date=" + currDate + "&title=" + title + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=" + theWidth + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
+			var url = script + "?mode=" + mode + "&report=" + which + "&func=" + what + "&date=" + currDate + "&title=" + title + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=" + theWidth + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
 			} else {
-			var url = "download_report.php?mode=" + mode + "&report=" + which + "&func=dr&date=" + what + "&title=" + title + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=" + theWidth + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
+			var url = script + "?mode=" + mode + "&report=" + which + "&func=dr&date=" + what + "&title=" + title + "&ticksel=" + ticksel + "&respsel=" + respsel + "&width=" + theWidth + "&organisation=" + organisation + "&startdate=" + startdate + "&enddate=" + enddate + "&version=" + randomnumber;
 			}
 		hideButs();
 		var downloadWindow = window.open(url, 'downloadWindow', 'resizable=1, scrollbars, height=600, width=1000, left=100,top=100,screenX=100,screenY=100');
-		setTimeout(function() { downloadWindow.focus(); showButs();}, 1);		
+		setTimeout(function() { downloadWindow.focus(); showButs();}, 1);
 		}
 		
 	function setDates() {
@@ -576,8 +581,10 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 	<DIV id='button_bar' class='but_container' style='position: fixed; left: 2%; top: 0%; width: 100%; display: block;'>
 		<SPAN id='showhide_but' class='plain text' style='width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='showhide();'>Hide Menu</SPAN>
 		<SPAN id='print_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='openPrintscreen();'>Print</SPAN>
-		<SPAN id='downloaddoc_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='downloadReport("doc");'>Download .doc</SPAN>
-		<SPAN id='downloadxls_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='downloadReport("xls");'>Download .xls</SPAN>
+		<SPAN id='downloadcsv_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='downloadReport("csv");'>Download .csv</SPAN>
+		<SPAN id='downloaddoc_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='downloadReport("doc");' title='HTML format opened by Microsoft Word'>Download .doc</SPAN>
+		<SPAN id='downloadxls_but' class='plain text' style='width: 100px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='downloadReport("xls");' title='HTML format opened by Microsoft Excel'>Download .xls</SPAN>
+		<SPAN id='format_notice' class='text' style='display: none; font-size: 10px; color: #888; padding: 4px 8px; cursor: help;' title='The .doc and .xls files are HTML-based and may trigger a format warning in modern versions of Microsoft Office. Click &quot;Yes&quot; to open. For maximum compatibility, use the .csv download.'>&#9432; Format note</SPAN>
 	</DIV>
 
 <?php
