@@ -88,11 +88,11 @@ function set_size() {
 <?php
 								if((!isset($row['field5'])) || ($row['field5'] == "")) {	//	ID Picture
 ?>
-									<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="./images/no_image.jpg" alt="ID Picture" width="100px" /></DIV>
+									<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="./ajax/get_member_photo.php?id=<?php print e($id);?>" alt="ID Picture" width="100px" /></DIV>
 <?php
 								} else {
 ?>
-									<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="<?php print e($row['field5']);?>" alt="ID Picture" width="100px" /></DIV>
+									<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="./ajax/get_member_photo.php?id=<?php print e($id);?>" alt="ID Picture" width="100px" /></DIV>
 <?php
 								}
 ?>
