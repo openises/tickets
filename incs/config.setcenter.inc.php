@@ -57,6 +57,36 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 			if($_POST['frm_timezone'] == "") {$_POST['frm_timezone'] = "America/New_York";}
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='timezone'";
 			$result = db_query($query, [sanitize_string($_POST['frm_timezone'])]);
+			// 3/14/26 - Save tile settings (consolidated from config.tiles.inc.php)
+			$new_mode = isset($_POST['frm_tile_mode']) ? sanitize_string($_POST['frm_tile_mode']) : 'online';
+			if (!in_array($new_mode, array('online', 'proxy', 'offline'))) { $new_mode = 'online'; }
+			$existing = get_variable('tile_mode');
+			if ($existing === FALSE) {
+				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_mode', ?)";
+				db_query($query, [$new_mode]);
+			} else {
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='tile_mode'";
+				db_query($query, [$new_mode]);
+			}
+
+			$new_url = isset($_POST['frm_tile_server_url']) ? trim(sanitize_string($_POST['frm_tile_server_url'])) : '';
+			if ($new_url === '') { $new_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'; }
+			$existing_url = get_variable('tile_server_url');
+			if ($existing_url === FALSE) {
+				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_server_url', ?)";
+				db_query($query, [$new_url]);
+			} else {
+				$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='tile_server_url'";
+				db_query($query, [$new_url]);
+			}
+
+			// Sync local_maps for backward compat with 60+ files that read it
+			$local_maps_val = ($new_mode === 'offline') ? '1' : '0';
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='local_maps'";
+			db_query($query, [$local_maps_val]);
+
+			$GLOBALS['variables'] = array();  // clear cached settings so get_variable() re-reads
+
 			$top_notice = "Settings saved to database.";
 			}
 		else {
@@ -245,6 +275,18 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 			}
 		}
 
+	// 3/14/26 - Show/hide OSM policy warning based on tile server URL
+	function updateTileWarning() {
+		var url = document.getElementById('frm_tile_server_url');
+		var warning = document.getElementById('osm_tile_warning');
+		if (url && warning) {
+			if (url.value.toLowerCase().indexOf('openstreetmap.org') !== -1) {
+				warning.style.display = '';
+			} else {
+				warning.style.display = 'none';
+			}
+		}
+	}
 
     </SCRIPT>
 <?php
@@ -256,124 +298,165 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 			$checks_ar[$which] = " CHECKED ";
 ?>
 			<FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
-			<TABLE BORDER=0 ID='outer'>
+			<TABLE BORDER=0 ID='outer' style='width: 100%; table-layout: fixed;'>
 				<TR>
-					<TD style='vertical-align: top;'>
-						<TABLE BORDER="0">
+					<TD style='vertical-align: top; width: 50%;'>
+						<TABLE BORDER="0" style='width: 100%;'>
+							<COL style='width: 25%;' />
+							<COL style='width: 75%;' />
 							<TR CLASS='even'>
-								<TD CLASS='odd' ALIGN='center' COLSPAN='4'>&nbsp;</TD>
-							</TR>
-							<TR CLASS='even'>
-								<TD CLASS='odd' ALIGN='center' COLSPAN='4'>
+								<TD ALIGN='center' COLSPAN=2>
 									<SPAN CLASS='text_green text_biggest'>Select Map Center/Zoom, Caption and Timezone</SPAN>
 									<BR />
 									<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
-									<BR />
-									<BR />
+									<BR /><BR />
 								</TD>
 							</TR>
-							<TR class='even' VALIGN='baseline'>
-								<TD COLSPAN=99></TD>
-							</TR>
-							<TR class='spacer' VALIGN='baseline'>
-								<TD CLASS="spacer" COLSPAN=99></TD>
-							</TR>
+							<TR class='spacer'><TD CLASS="spacer" COLSPAN=2></TD></TR>
 							<TR class='odd' VALIGN='baseline'>
-								<TD CLASS='td_label text text_left'>Timezone:</TD>
-								<TD CLASS='td_data text text_left' COLSPAN=2>
+								<TD CLASS='td_label'>Timezone:</TD>
+								<TD>
 									<SELECT name="frm_timezone" CLASS='text'>
 										<OPTION value="">Select a time zone</OPTION>
 <?php
 										$currentTZ = date_default_timezone_get();
-										foreach($theTimezones as $t) { 
+										foreach($theTimezones as $t) {
 											$sel = ($t['zone'] == $currentTZ) ? "SELECTED" : "";
 ?>
 											<OPTION value="<?php print $t['zone'];?>" <?php print $sel;?>><?php echo $t['zone'];?></OPTION>
-<?php 
-											} 
+<?php
+											}
 ?>
 									</SELECT>
 								</TD>
 							</TR>
-							<TR class='spacer' VALIGN='baseline'>
-								<TD CLASS="spacer" COLSPAN=99></TD>
-							</TR>
-							<TR class='odd' VALIGN='baseline'>
-								<TD CLASS="td_label" ALIGN='right'>Tile Source:</TD>
-								<TD ALIGN='left' COLSPAN=2>
-<?php
-									$tile_mode = get_tile_mode();
-									$tile_mode_labels = array('online' => 'Online Direct', 'proxy' => 'Proxy Cache', 'offline' => 'Offline Local');
-									$tile_mode_label = isset($tile_mode_labels[$tile_mode]) ? $tile_mode_labels[$tile_mode] : $tile_mode;
-									$tile_mode_colors = array('online' => '#2266AA', 'proxy' => '#228822', 'offline' => '#886600');
-									$tile_mode_color = isset($tile_mode_colors[$tile_mode]) ? $tile_mode_colors[$tile_mode] : '#333';
-?>
-									&nbsp;&nbsp;<SPAN style='font-weight: bold; color: <?php print $tile_mode_color; ?>;'><?php print e($tile_mode_label); ?></SPAN>
-									&nbsp;&nbsp;&mdash;&nbsp;&nbsp;
-									<A HREF="config.php?func=tiles" style="color: #2266AA; text-decoration: underline; cursor: pointer;">Configure Tile Settings</A>
-									&nbsp;&nbsp;
-									<SPAN style='cursor: help; color: #888;' title='Online Direct: Browser fetches tiles directly from tile server.&#10;Proxy Cache (recommended): Server caches tiles locally for faster loading and reduced external requests.&#10;Offline Local: Uses pre-downloaded tiles only — no internet required.'>&#9432; info</SPAN>
-								</TD>
-							</TR>
-							<TR class='odd' VALIGN='baseline'>
-								<TD CLASS="td_label" ALIGN='right'>Preview source:</TD>
-								<TD ALIGN='left' COLSPAN=2>
-									&nbsp;&nbsp;<label>Network <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick="swap_source(0);"></label>
-									&nbsp;&nbsp;<label>Local <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='1' onClick="swap_source(1);"></label>
-									&nbsp;&nbsp;<SPAN style='font-size: 10px; color: #888;'>(toggles preview map only, does not change saved setting)</SPAN>
+							<TR class='spacer'><TD CLASS="spacer" COLSPAN=2></TD></TR>
+							<TR CLASS = "even">
+								<TD CLASS="td_label">Lookup:</TD>
+								<TD>
+									<button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;City:&nbsp;
+									<INPUT MAXLENGTH="24" SIZE="16" TYPE="text" NAME="frm_city" VALUE="" />&nbsp;&nbsp;
+									State:&nbsp;<INPUT MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_st" VALUE="" />
 								</TD>
 							</TR>
 							<TR CLASS = "even">
-								<TD CLASS="td_label">Lookup:</TD>
-								<TD COLSPAN=3>
-									<button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;&nbsp;City:&nbsp;
-									<INPUT MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_city" VALUE="" />&nbsp;&nbsp;&nbsp;&nbsp;
-									State:&nbsp;<INPUT MAXLENGTH="2" SIZE="2" TYPE="text" NAME="frm_st" VALUE="" />
-								</TD>
+								<TD CLASS="td_label">Caption:</TD>
+								<TD><INPUT MAXLENGTH="48" SIZE="30" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD>
 							</TR>
-							<TR CLASS = "even"><TD CLASS="td_label">Caption:</TD><TD COLSPAN=3><INPUT MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD></TR>
 							<TR CLASS = "odd" VALIGN='baseline'>
-								<TD CLASS="td_label" ROWSPAN=6>Map:</TD>
-								<TD ALIGN='right'>&nbsp;&nbsp;Lat:&nbsp;</TD>
-								<TD colspan=2><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=12 DISABLED />
-								<SPAN STYLE='margin-left:20px'>Long:</SPAN>&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=12 DISABLED /></TD></TR>
-							<TR>
+								<TD CLASS="td_label">Lat / Long:</TD>
+								<TD><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=10 DISABLED />
+								&nbsp;&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=10 DISABLED /></TD>
+							</TR>
 <?php
 								$coords = "{$lat},{$lng}";
 ?>
-								<TD ALIGN='right' onClick = "usng_to_map()">USNG:&nbsp;</TD>
-								<TD COLSPAN=2>
-									<INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=22 DISABLED />
-								</TD>
-							</TR>
-							<TR>
-								<TD ALIGN='right' onClick = "utm_to_map()">OSGB:&nbsp;</TD>
-								<TD COLSPAN=2>
-									<INPUT TYPE="text" NAME="frm_osgb" VALUE="<?php print LLtoOSGB($lat,$lng);?>" SIZE=22 DISABLED />
-								</TD>
-							</TR>
-							<TR>
-								<TD ALIGN='right' onClick = "utm_to_map()">UTM:&nbsp;</TD>
-								<TD COLSPAN=2>
-									<INPUT TYPE="text" NAME="frm_utm" VALUE="<?php print toUTM($coords);?>" SIZE=22 DISABLED />
-								</TD>
+							<TR CLASS = "odd">
+								<TD CLASS="td_label" onClick="usng_to_map()">USNG:</TD>
+								<TD><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20 DISABLED /></TD>
 							</TR>
 							<TR CLASS = "odd">
-								<TD ALIGN='right'>&nbsp;&nbsp;Zoom:&nbsp;</TD>
+								<TD CLASS="td_label" onClick="utm_to_map()">OSGB:</TD>
+								<TD><INPUT TYPE="text" NAME="frm_osgb" VALUE="<?php print LLtoOSGB($lat,$lng);?>" SIZE=20 DISABLED /></TD>
+							</TR>
+							<TR CLASS = "odd">
+								<TD CLASS="td_label" onClick="utm_to_map()">UTM:</TD>
+								<TD><INPUT TYPE="text" NAME="frm_utm" VALUE="<?php print toUTM($coords);?>" SIZE=20 DISABLED /></TD>
+							</TR>
+							<TR CLASS = "odd">
+								<TD CLASS="td_label">Zoom:</TD>
+								<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4/></TD>
+							</TR>
+							<TR CLASS='even' VALIGN='baseline'>
+								<TD CLASS="td_label">Dynamic zoom:</TD>
 								<TD>
-									<INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4/>
+									Yes&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0">&nbsp;&nbsp;
+									<B>Situation</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1">&nbsp;&nbsp;
+									<B>Units</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2">&nbsp;&nbsp;
+									<B>Both</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3">
 								</TD>
-							</TR>	<!-- 4/5/09 -->
-							<TR VALIGN='baseline'>
-								<TD CLASS="td_label" ALIGN='right'>Dynamic zoom:</TD>
-								<TD ALIGN='center' COLSPAN=2>&nbsp;&nbsp;
-									Yes &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0";> &nbsp;&nbsp;
-									<B>Situation</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1";>&nbsp;&nbsp;
-									<B>Units</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2";>&nbsp;&nbsp;
-									<B>Both</B> fixed &raquo;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3";></TD></TR>
-										
-							<TR><TD>&nbsp;</TD></TR>
-								<TD COLSPAN="99" ALIGN="center">
+							</TR>
+							<!-- 3/14/26 - Tile settings consolidated into this page -->
+							<TR>
+								<TD COLSPAN=2 style="padding: 10px 0 4px 0;">
+									<hr style="border: none; border-top: 1px solid #999; margin: 0;" />
+									<strong style="font-size: 12px; color: #555;">Tile Configuration</strong>
+								</TD>
+							</TR>
+<?php
+									$tile_mode = get_tile_mode();
+									$tile_url = get_variable('tile_server_url');
+									if ($tile_url === FALSE || trim($tile_url) === '') {
+										$tile_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+									}
+									$is_osm_url = (stripos($tile_url, 'openstreetmap.org') !== false);
+?>
+							<TR class='odd' VALIGN='top'>
+								<TD CLASS="td_label">Tile Source:</TD>
+								<TD>
+									<label style="display: block; margin: 2px 0;">
+										<input type="radio" name="frm_tile_mode" value="online"
+											<?php if ($tile_mode == 'online') echo 'checked'; ?>
+											onchange="updateTileWarning();" />
+										<strong>Online Direct</strong>
+										<span style="font-size: 10px; color: #666;">&mdash; Browser fetches tiles directly. Requires internet.</span>
+									</label>
+									<label style="display: block; margin: 2px 0;">
+										<input type="radio" name="frm_tile_mode" value="proxy"
+											<?php if ($tile_mode == 'proxy') echo 'checked'; ?>
+											onchange="updateTileWarning();" />
+										<strong>Proxy Cache</strong> <span style="font-size: 10px; color: #228822;">(recommended)</span>
+										<span style="font-size: 10px; color: #666;">&mdash; Server caches tiles locally.</span>
+									</label>
+									<label style="display: block; margin: 2px 0;">
+										<input type="radio" name="frm_tile_mode" value="offline"
+											<?php if ($tile_mode == 'offline') echo 'checked'; ?>
+											onchange="updateTileWarning();" />
+										<strong>Offline Local</strong>
+										<span style="font-size: 10px; color: #666;">&mdash; Local files only. No internet.</span>
+									</label>
+								</TD>
+							</TR>
+							<TR class='even' VALIGN='baseline'>
+								<TD CLASS="td_label">Tile Server URL:</TD>
+								<TD>
+									<input type="text" name="frm_tile_server_url" id="frm_tile_server_url"
+										value="<?php echo htmlspecialchars($tile_url); ?>"
+										style="width: 90%; font-size: 11px; padding: 3px 5px; font-family: monospace;"
+										oninput="updateTileWarning();" />
+									<br />
+									<span style="font-size: 10px; color: #666;">
+										Use <code>{z}/{x}/{y}</code> for tile coordinates.
+									</span>
+								</TD>
+							</TR>
+							<TR id="osm_tile_warning" style="<?php echo $is_osm_url ? '' : 'display:none;'; ?>">
+								<TD COLSPAN=2 style="padding: 4px 6px;">
+									<div style="background: #FFF3CD; border: 1px solid #FFC107; padding: 6px 10px; font-size: 11px; color: #856404;">
+										<strong>Note:</strong> OSM's
+										<a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" style="color: #533f03;">tile policy</a>
+										prohibits bulk downloading.
+										<strong>Proxy Cache</strong> is recommended.
+										<strong>Offline Local</strong> and
+										<a href="get_tiles.php">Download Maps</a>
+										should only be used with your own tile server.
+										For offline systems, use a self-hosted server
+										(<a href="https://switch2osm.org/" target="_blank" style="color: #533f03;">Switch2OSM</a>,
+										<a href="https://github.com/Overv/openstreetmap-tile-server" target="_blank" style="color: #533f03;">Docker OSM</a>).
+									</div>
+								</TD>
+							</TR>
+							<TR class='odd' VALIGN='baseline'>
+								<TD CLASS="td_label">Preview source:</TD>
+								<TD>
+									<label>Network <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick="swap_source(0);"></label>&nbsp;&nbsp;
+									<label>Local <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='1' onClick="swap_source(1);"></label>
+									&nbsp;<SPAN style='font-size: 10px; color: #888;'>(preview only)</SPAN>
+								</TD>
+							</TR>
+							<TR><TD COLSPAN=2>&nbsp;</TD></TR>
+							<TR>
+								<TD COLSPAN=2 ALIGN="center">
 									<SPAN id='can_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="history.back();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
 									<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="map_cen_reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 									<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.cen_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
@@ -382,10 +465,9 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 						</TABLE>
 
 					</TD>
-					<TD>&nbsp;</TD>
-					<TD>
+					<TD style='vertical-align: top; width: 50%; padding-left: 10px;'>
 						<DIV id='map_outer'>
-							<DIV ID='map_canvas' style='width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
+							<DIV ID='map_canvas' style='width: 100%; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
 						</DIV>
 						<BR />
 						<CENTER>
@@ -480,12 +562,20 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
 				
 			function onMapClick(e) {
 				if(myMarker) {map.removeLayer(myMarker); }
-				icon = new baseIcon({iconUrl: iconurl});	
+				icon = new baseIcon({iconUrl: iconurl});
 				myMarker = new L.marker(e.latlng, {id:1, icon:icon});
 				myMarker.addTo(map);
-				GetAddress(e.latlng);
+				// 3/14/26 - Update lat/lng/zoom directly so they save even if geocoder fails
+				var clickLat = e.latlng.lat.toFixed(6);
+				var clickLng = e.latlng.lng.toFixed(6);
+				document.cen_Form.frm_lat.value = clickLat;
+				document.cen_Form.frm_lng.value = clickLng;
+				document.cen_Form.show_lat.value = do_lat_fmt(clickLat);
+				document.cen_Form.show_lng.value = do_lng_fmt(clickLng);
 				var zoom = map.getZoom();
 				document.cen_Form.frm_zoom.value = zoom;
+				// Reverse geocode for city/state (updates fields in callback if successful)
+				GetAddress(e.latlng);
 				};
 				
 			function getZoomLevel() {

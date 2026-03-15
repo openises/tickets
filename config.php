@@ -3235,10 +3235,6 @@ case 'center' :                    // 3/29/2013
     require_once('./incs/config.setcenter.inc.php');
     break;
 
-case 'tiles' :                     // 3/14/2026 - Tile mode and server configuration
-    require_once('./incs/config.tiles.inc.php');
-    break;
-
 case 'api_key' :
     if ((isset($_GET)) && (isset($_GET['update'])) && ($_GET['update'] == 'true')) {
         $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='gmaps_api_key';";
@@ -4342,9 +4338,6 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     <A id='dl_maps' class='plain text' style='width: 150px; float: left;'
                        onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="./get_tiles.php">Download
                         Maps</A>
-                    <A id='tile_settings' class='plain text' style='width: 150px; float: left;'
-                       onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="config.php?func=tiles">Tile
-                        Settings</A>
                 </DIV>
                 <DIV class='config_heading text' id='db_settings'
                      style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>

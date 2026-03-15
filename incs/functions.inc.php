@@ -1562,18 +1562,22 @@ function get_tile_url() {
  * Format: TicketsCAD/v3.43.0
  */
 function get_tile_user_agent() {
+	// 3/14/26 - Include tile mode so proxy vs bulk-download have different identifiers.
+	// This prevents bulk downloaders from getting the proxy user-agent banned.
+	$mode = get_tile_mode();
+	$mode_tag = ($mode === 'proxy') ? 'proxy' : 'bulk';
 	if (isset($GLOBALS['tickets_current_version'])) {
-		return 'TicketsCAD/' . $GLOBALS['tickets_current_version'];
+		return 'TicketsCAD/' . $GLOBALS['tickets_current_version'] . ' (' . $mode_tag . ')';
 	}
 	// Fallback if versions.inc.php hasn't been loaded
 	$ver_file = __DIR__ . '/versions.inc.php';
 	if (is_readable($ver_file)) {
 		require_once($ver_file);
 		if (isset($GLOBALS['tickets_current_version'])) {
-			return 'TicketsCAD/' . $GLOBALS['tickets_current_version'];
+			return 'TicketsCAD/' . $GLOBALS['tickets_current_version'] . ' (' . $mode_tag . ')';
 		}
 	}
-	return 'TicketsCAD/unknown';
+	return 'TicketsCAD/unknown (' . $mode_tag . ')';
 }
 
 $msg_variables = array();
