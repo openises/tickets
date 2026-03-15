@@ -364,6 +364,19 @@ $('outer').style.height = outerheight + "px";
 $('leftcol').style.width = colwidth + "px";
 $('leftcol').style.height = colheight + "px";
 </SCRIPT>
+<SCRIPT>
+/* Fix Leaflet tile loading on first render: the map initializes before the
+   page layout is finalized, so tiles may not load until a resize/refresh.
+   Calling invalidateSize() after window load forces Leaflet to recalculate
+   the container dimensions and fetch the correct tiles. */
+window.addEventListener('load', function() {
+	if (typeof map !== 'undefined' && map !== null) {
+		setTimeout(function() {
+			map.invalidateSize();
+		}, 100);
+	}
+});
+</SCRIPT>
 <FORM NAME='to_closed' METHOD='get' ACTION = '<?php print basename( __FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='status' VALUE='<?php print $GLOBALS['STATUS_CLOSED'];?>'>
 </FORM>
