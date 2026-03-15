@@ -370,24 +370,33 @@ $('leftcol').style.height = colheight + "px";
    initializes before the popup window has its final layout. This causes:
    1) Blurry tiles — container is small at init, so Leaflet fetches low-zoom tiles
    2) Missing tiles — container may have 0 dimensions, so no tiles are requested
-   The fix: after the window fully loads, recalculate container size and force
-   Leaflet to re-request tiles at the correct zoom level. Multiple attempts
-   handle slow-rendering popup windows. */
+   The fix: after the window fully loads, recalculate container size, force a
+   tile layer refresh, and re-center at the correct zoom. A zoom bounce ensures
+   Leaflet discards stale low-res tiles and fetches fresh ones. */
 window.addEventListener('load', function() {
 	if (typeof map !== 'undefined' && map !== null) {
-		var fixMap = function() {
+		var savedCenter = map.getCenter();
+		var savedZoom = map.getZoom();
+		var fixMap = function(forceRefresh) {
 			set_size();
-			map.invalidateSize({animate: false});
-			var center = map.getCenter();
-			var zoom = map.getZoom();
-			if (center) {
-				map.setView(center, zoom, {animate: false});
+			map.invalidateSize({animate: false, pan: false});
+			if (forceRefresh) {
+				/* Force tile refresh: remove and re-add tile layers so Leaflet
+				   fetches tiles at the correct resolution for the final container size */
+				map.eachLayer(function(layer) {
+					if (layer._url || layer._tiles) {
+						layer.redraw();
+					}
+				});
+				map.setView(savedCenter, savedZoom, {animate: false, reset: true});
 			}
 		};
-		/* Multiple invalidation passes to catch slow popup rendering */
-		setTimeout(fixMap, 50);
-		setTimeout(fixMap, 300);
-		setTimeout(fixMap, 800);
+		/* First pass: resize container early */
+		setTimeout(function() { fixMap(false); }, 50);
+		/* Second pass: full refresh with tile redraw */
+		setTimeout(function() { fixMap(true); }, 400);
+		/* Final pass: catch late-rendering windows */
+		setTimeout(function() { fixMap(true); }, 1200);
 	}
 });
 </SCRIPT>
