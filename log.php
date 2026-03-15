@@ -16,6 +16,13 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
+
+/* Auth gate: require logged-in user */
+if (empty($_SESSION['user_id'])) {
+	print "Not Authorized";
+	exit();
+}
+
 require_once($_SESSION['fip']);		//7/28/10
 
 if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {

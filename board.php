@@ -140,6 +140,13 @@ Sequence numbering: SELECT a.id, @num := @num + 1 seqno from ticket a, (SELECT @
 @session_start();
 session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
+
+/* Auth gate: require logged-in user */
+if (empty($_SESSION['user_id'])) {
+	print "Not Authorized";
+	exit();
+}
+
 $query = "SET @@session.sql_mode= '';";			//10/19/12
 $result = db_query($query) ;
 $from_top = 0;		// position of floating div, pixels from  top of frame
