@@ -124,14 +124,14 @@ function get_data_cb(req) {
 						if((!isset($row['field5'])) || ($row['field5'] == "")) {
 ?>
 							<LABEL for="frm_field5"><?php print get_text(get_field_label('defined_fields', 5));?> (jpg only):</LABEL>
-							<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="./ajax/get_member_photo.php?id=<?php print e($id);?>" alt="ID Picture" width="100" /></DIV>
+							<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="./images/no_image.jpg" alt="ID Picture" width="100" /></DIV>
 							<INPUT TYPE="file" NAME="frm_field5" SIZE="<?php print get_fieldsize('5');?>" VALUE="" style='cursor: pointer;'>
 							<BR />
 <?php
 						} else {
 ?>
 							<LABEL for="frm_field5">Replace <?php print get_text(get_field_label('defined_fields', 5));?> (jpg only):</LABEL>
-							<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="./ajax/get_member_photo.php?id=<?php print e($id);?>" alt="ID Picture" width="100" /></DIV>
+							<DIV style='position: absolute; top: 0px; right: 0px;'><IMG ALIGN="top" src="<?php print e($row['field5']);?>" alt="ID Picture" width="100" /></DIV>
 							<INPUT TYPE="file" NAME="frm_field5" SIZE="<?php print get_fieldsize('5');?>" VALUE="" style='cursor: pointer;'>
 							<INPUT TYPE="hidden" NAME="frm_exist_pic" VALUE="<?php print e($row['field5']);?>">
 							<BR />
