@@ -200,9 +200,9 @@ class CodeHygieneTest extends TestCase
                 continue;
             }
 
-            // Check that a PHPDoc block exists in the 10 lines before the function
+            // Check that a PHPDoc block exists in the 20 lines before the function
             $hasDoc = false;
-            $searchStart = max(0, $funcLine - 10);
+            $searchStart = max(0, $funcLine - 20);
             for ($j = $searchStart; $j < $funcLine; $j++) {
                 if (strpos($lines[$j], '/**') !== false) {
                     $hasDoc = true;

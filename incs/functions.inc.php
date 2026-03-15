@@ -487,7 +487,18 @@ function get_issue_date($id){
 	if ($row) { print $row['date']; }
 	}
 
-function check_for_rows($query, $params = []) {		/* check sql query for returning rows, courtesy of Micah Snyder */
+/**
+ * Check if a SQL query returns any rows.
+ *
+ * Executes the given query and returns the row count if rows exist,
+ * or FALSE if no rows are found. Uses prepared statements via db_query().
+ *
+ * @param string $query  SQL query string with optional ? placeholders.
+ * @param array  $params Values to bind to the placeholders.
+ * @return int|false     Number of rows found, or FALSE if none.
+ * @since v3.0
+ */
+function check_for_rows($query, $params = []) {
 	$sql = db_query($query, $params);
 	if($sql && $sql->num_rows !== 0)
 		return $sql->num_rows;
@@ -1380,7 +1391,17 @@ function test_allocates($resource, $al_group, $type) {	//	6/10/11
 		}
 	}
 
-function format_date($date){							/* format date to defined type 8/27/10 */
+/**
+ * Format a Unix timestamp according to the system's configured date format.
+ *
+ * Uses the 'date_format' setting from the database, or UK format (j/n/y H:i)
+ * when locale is set to 1. Returns "TBD" for invalid or empty dates.
+ *
+ * @param string $date Unix timestamp as a string (10 digits).
+ * @return string Formatted date string, or "TBD" if the date is invalid.
+ * @since v3.0
+ */
+function format_date($date){
 	if (good_date($date)) {
 		if (get_variable('locale')==1) {
 			return date("j/n/y H:i",$date);		// 08/27/10 - Revised to show UK format for locale = 1
@@ -1422,7 +1443,14 @@ function format_date_time($date){		// mySql format to settings spec - 2/15/09 - 
 	return format_date_2 ($date);
 	}				// end function format_date_time()
 
-function get_status($status){							/* return status text from code */
+/**
+ * Convert a numeric status code to its display text.
+ *
+ * @param int $status Status code (1=Closed, 2=Open, 3=Scheduled).
+ * @return string Human-readable status label, or "Status error" for unknown codes.
+ * @since v3.0
+ */
+function get_status($status){
 	switch($status)	{
 		case 1: 	return 'Closed';	break;
 		case 2: 	return 'Open';		break;
@@ -1431,7 +1459,17 @@ function get_status($status){							/* return status text from code */
 		}
 	}
 
-function get_owner($id){								/* get owner name from id */
+/**
+ * Look up a user's login name by their numeric ID.
+ *
+ * Queries the user table and returns the 'user' field. Returns "unk?" if
+ * the ID is not found, or "unk" on query failure.
+ *
+ * @param int $id User ID to look up.
+ * @return string Username string, or "unk?"/"unk" if not found.
+ * @since v3.0
+ */
+function get_owner($id){
 	$query = "SELECT user FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ? LIMIT 1";
 	$result	= db_query($query, [$id]);
 	if($result) {
@@ -1456,7 +1494,17 @@ function get_reader($id){								/* Add in for Messaging 10/23/12 */
 	return ($result->num_rows==0 )? "None" : $row['user'];
 	}
 
-function get_severity($severity){			/* return severity string from value */
+/**
+ * Convert a numeric severity code to its display text.
+ *
+ * Uses global severity constants and the captions table for localized
+ * labels (Normal, Medium, High). Returns "Severity error" for unknown codes.
+ *
+ * @param int $severity Severity code matching SEVERITY_NORMAL/MEDIUM/HIGH globals.
+ * @return string Human-readable severity label.
+ * @since v3.0
+ */
+function get_severity($severity){
 	switch($severity) {
 		case $GLOBALS['SEVERITY_NORMAL']: 	return get_text("Normal"); break;
 		case $GLOBALS['SEVERITY_MEDIUM']: 	return get_text("Medium"); break;
@@ -1510,7 +1558,17 @@ function strip_html($html_string) {						/* strip HTML tags/special characters a
 	}
 
 $variables = array();
-function get_variable($which){								/* get variable from db settings table, returns FALSE if absent  */
+/**
+ * Retrieve a configuration value from the database settings table.
+ *
+ * Lazy-loads all settings into a static cache on the first call to avoid
+ * repeated database queries. Subsequent calls read from the cache.
+ *
+ * @param string $which Setting name to look up (e.g. 'locale', 'date_format').
+ * @return string|false The setting value, or FALSE if the setting does not exist.
+ * @since v3.0
+ */
+function get_variable($which){
 	global $variables;
 	if (empty($variables)) {
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}settings`";
@@ -1695,10 +1753,25 @@ function is_closed($id){/* is ticket closed? */
 	return check_for_rows("SELECT id,status FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id= ? AND status= ?", [$id, $GLOBALS['STATUS_CLOSED']]);
 	}
 
-function is_super(){				// added 6/9/08, 6/12/14
+/**
+ * Check if the current user has super-administrator privileges.
+ *
+ * @return bool TRUE if the session user's level equals LEVEL_SUPER.
+ * @since v3.0
+ */
+function is_super(){
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']));		// 5/11/10, 4/29/14
 	}
-function is_administrator(){		/* is user admin or super? */
+/**
+ * Check if the current user has administrator or super-admin privileges.
+ *
+ * Returns TRUE for both LEVEL_ADMINISTRATOR and LEVEL_SUPER users,
+ * granting access to configuration and management features.
+ *
+ * @return bool TRUE if the session user is admin or super.
+ * @since v3.0
+ */
+function is_administrator(){
 	return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER'])));		// 5/11/10, 4/29/14
 	}
 function is_admin(){		/* is user admin but not super? */
@@ -2143,6 +2216,16 @@ function replace_quotes($instring) {		//	3/15/11
     	return $value;
        }
 
+/**
+ * Recursively strip backslash escaping from a value or array of values.
+ *
+ * Handles nested arrays by recursively applying stripslashes to all
+ * string elements. Non-string values are returned unchanged.
+ *
+ * @param string|array $value Value or array of values to un-escape.
+ * @return string|array The un-escaped value(s).
+ * @since v3.0
+ */
 function stripslashes_deep($value) {
     if (is_array($value)) {
         return array_map('stripslashes_deep', $value);
@@ -2189,7 +2272,16 @@ function got_gmaps() {								// valid GMaps API key ?
 	return (strlen(get_variable('gmaps_api_key'))==86);
 	}
 
-function mysql_format_date($indate="") {			// returns MySQL-format date given argument timestamp or default now
+/**
+ * Convert a Unix timestamp to MySQL datetime format (Y-m-d H:i:s).
+ *
+ * If no timestamp is provided, uses the current time.
+ *
+ * @param int|string $indate Unix timestamp. Defaults to current time if empty.
+ * @return string Date in "Y-m-d H:i:s" format.
+ * @since v3.0
+ */
+function mysql_format_date($indate="") {
 	if (empty($indate)) {$indate = time();}
 	return @date("Y-m-d H:i:s", $indate);
 	}
@@ -2255,7 +2347,24 @@ function mysql2timestamp($m) {				// 9/29/10
 
 require_once('remotes.inc.php');	// 8/21/10
 
-function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {		// generic log table writer - 5/31/08, 10/6/09
+/**
+ * Write an entry to the system log table.
+ *
+ * Records an event with the current user, remote IP, timestamp (adjusted
+ * by the system's delta_mins offset), and associated ticket/responder/facility info.
+ * The info field is truncated to 2047 characters.
+ *
+ * @param string $code         Log event code (e.g. LOG_LOGIN, LOG_INCIDENT_DELETE).
+ * @param int    $ticket_id    Associated ticket ID, or 0 if not ticket-related.
+ * @param int    $responder_id Associated responder/unit ID, or 0.
+ * @param string $info         Free-text description of the event.
+ * @param int    $facility_id  Associated facility ID, or 0.
+ * @param int    $rec_facility_id Receiving facility ID, or 0.
+ * @param int    $mileage      Mileage value, or 0.
+ * @return void
+ * @since v3.0
+ */
+function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {
 	@session_start();							// 4/4/10
 	$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
 	$info = substr($info, 0, 2047);
@@ -3906,7 +4015,18 @@ function get_cb_height () {		// returns pixel count for cb frame	height based on
 
 
 $text_array = array();
-function get_text($which){		/* get replacement text from db captions table, returns FALSE if absent  */
+/**
+ * Retrieve a display caption/label from the database captions table.
+ *
+ * Lazy-loads all captions into a static cache on the first call. Used for
+ * UI label customization — administrators can rename fields like "Severity"
+ * to "Priority" etc. Returns the original key if no replacement is defined.
+ *
+ * @param string $which Caption key to look up (e.g. "Normal", "Medium", "High").
+ * @return string The replacement text, or the original key if not found.
+ * @since v3.0
+ */
+function get_text($which){
 	global $text_array;
 	if (empty($text_array)) {	// populate it to avoid hammering db
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}captions`";

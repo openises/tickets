@@ -1,4 +1,16 @@
 <?php
+/**
+ * Situation Board (Call Board) — main dispatch/incident overview page.
+ *
+ * Displays active incidents with color-coded time thresholds, unit status,
+ * and real-time updates via AJAX polling. Threshold arrays below control
+ * when elapsed times are highlighted in red for each severity level.
+ *
+ * URL: /tickets/board.php
+ * Auth: Requires active session (any authenticated user level).
+ *
+ * @since v3.0
+ */
 error_reporting(E_ALL);
 // ========== Beginning of user-reviseable values ==========================================================================
 //

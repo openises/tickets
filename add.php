@@ -1,4 +1,16 @@
 <?php
+/**
+ * New Incident page — create a new ticket/incident.
+ *
+ * Provides a form for dispatchers to enter incident details including
+ * location, type, severity, description, and initial unit assignments.
+ * Supports both windowed (popup) and full-page modes.
+ *
+ * URL: /tickets/add.php
+ * Auth: Requires active session; guests and members are restricted.
+ *
+ * @since v3.0
+ */
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);

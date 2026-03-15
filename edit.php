@@ -1,5 +1,18 @@
 <?php
-if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09 
+/**
+ * Edit Incident page — modify an existing ticket/incident.
+ *
+ * Loads an incident by ID and provides a form for editing all fields
+ * including location, type, severity, description, assignments, and
+ * disposition. Supports windowed (popup) and full-page modes with
+ * optional map display.
+ *
+ * URL: /tickets/edit.php?id=123
+ * Auth: Requires active session; guests and members are restricted.
+ *
+ * @since v3.0
+ */
+if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}		// 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
 session_write_close();

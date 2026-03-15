@@ -1,4 +1,16 @@
 <?php
+/**
+ * Main frameset page — primary application layout after login.
+ *
+ * Loads sidebar configuration, session data, and conditional function
+ * libraries (internet vs. non-internet mode). Renders the main dispatch
+ * interface including map, incident list, and unit sidebar.
+ *
+ * URL: /tickets/main.php
+ * Auth: Requires active session (redirects to index.php if no session).
+ *
+ * @since v3.0
+ */
 
 error_reporting(E_ALL);				// 9/13/08
 $units_side_bar_height = .6;		// max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)
