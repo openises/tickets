@@ -94,7 +94,7 @@ $text_type_max		= 128;				// text input fields exceeding this size limit will be
 $text_list_max		= 32;				// text input fields exceeding this size limit will be treated as <textarea>
 $fill_from_last		= FALSE;			// if set to TRUE, new recrods are populated from last created
 $doUTM				= FALSE;			// if set, coord displays UTM
-$istest 			= TRUE;				// TRUE displays form variables for trouble-shooting atop each loaded page
+$istest 			= FALSE;			// TRUE displays form variables for trouble-shooting atop each loaded page
 
 /* maps irv_settings for use IF you are implementing maps */
 
