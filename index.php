@@ -20,7 +20,7 @@ $version = $versions['installer'];
 $installedVersion = $versions['installed'];
 $dispVersion = ($installedVersion !== null && $installedVersion !== '') ? $installedVersion : $version;
 
-if ($installedVersion === null || $installedVersion !== $version) {
+if ($installedVersion === null) {
     header('Location: install.php');
     exit();
 }

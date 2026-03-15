@@ -93,6 +93,27 @@ Many PHP files have `_nm` (non-internet/non-maps) variants that render without e
 
 ---
 
+## Database Abstraction Layer Duplication
+
+The system currently runs **two parallel database abstraction layers**:
+
+1. **mysql2i shim** (`incs/mysql2i.class.php`) — A compatibility layer that wraps `mysqli` calls to emulate the legacy `mysql_*` API. Originally introduced to migrate from PHP's removed `mysql_` extension without rewriting all queries.
+
+2. **db.inc.php** (`incs/db.inc.php`) — A newer abstraction providing `db_query()` with automatic prepared statement support, implicit parameter type detection, and `db_fetch_one()` convenience function.
+
+**Current state:**
+- Phase 1 security work converted high-risk queries to use `db_query()` with prepared statements
+- Many files still use the mysql2i shim via direct `$result->fetch_assoc()` patterns
+- Both layers ultimately call the same underlying `mysqli` connection
+
+**Recommended path forward (Phase 3+):**
+- Consolidate on `db.inc.php` as the single abstraction layer
+- Migrate remaining direct `mysqli` calls to use `db_query()`
+- Deprecate and eventually remove the mysql2i shim
+- The `db_query()` function's automatic type detection for prepared statements is the preferred pattern going forward
+
+---
+
 ## Items Needing Investigation
 
 - [ ] Full audit of all form fields across all modules for required-field indicator accuracy

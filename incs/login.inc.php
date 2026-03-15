@@ -191,8 +191,13 @@ function is_expired($id) {		// returns boolean
 	return ($expires > $now);
 	}
 
-function redir($url, $time = 0) {
-	echo '<meta http-equiv="refresh" content="', $time, ';URL=', $url, '">';
+function redir($url, $time = 0, $top = FALSE) {
+	if ($top) {
+		echo '<script type="text/javascript">top.location.href=' . json_encode($url) . ';</script>';
+		echo '<noscript><meta http-equiv="refresh" content="', $time, ';URL=', $url, '"></noscript>';
+	} else {
+		echo '<meta http-equiv="refresh" content="', $time, ';URL=', $url, '">';
+	}
 	die;
 	}
 
@@ -400,6 +405,20 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 
 				$unit_id = get_unit();				// 3/19/11
 				$level = $row['level'];
+
+				if (!function_exists('tickets_get_versions')) {
+					require_once __DIR__ . '/versions.inc.php';
+				}
+				$versionMeta = tickets_get_versions();
+				$versionMismatch = ($versionMeta['installed'] !== null && $versionMeta['installed'] !== $versionMeta['installer']);
+				$isAdminPlus = ($level <= $GLOBALS['LEVEL_ADMINISTRATOR']);
+				if ($versionMismatch && $isAdminPlus) {
+					$extra = 'install.php';
+					$protocol = ($https) ? "https" : "http";
+					$url = $protocol . "://" . $host . $uri . "/" . $extra;
+					redir($url, 0, TRUE);
+					exit();
+				}
 
 				if($level == $GLOBALS['LEVEL_UNIT']) {	//	3/1/12
 					$extra = 'mobile.php';
