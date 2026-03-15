@@ -1,6 +1,18 @@
 <?php
+/**
+ * Configuration/Administration page — system settings, user management, and data tables.
+ *
+ * Provides administrative functions including: system settings (map defaults,
+ * notification preferences, time zones), user account management (add/edit/delete),
+ * incident type configuration, notification subscriptions, facility management,
+ * unit type configuration, and various system maintenance operations.
+ * Access restricted to administrators and super-admins.
+ *
+ * @package TicketsCAD
+ * @since   v3.0
+ */
 /*
-5/28/08 - revised map center to allow icon drag			
+5/28/08 - revised map center to allow icon drag
 6/4/08 - added do_log($GLOBALS['LOG_INCIDENT_DELETE']				
 6/4/08 - added submit()			
 6/4/08 - corrected table names

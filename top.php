@@ -1,4 +1,15 @@
 <?php
+/**
+ * Top navigation frame — toolbar buttons, polling, and multi-user synchronization.
+ *
+ * Renders the top toolbar row with navigation buttons (New, Situation, Config, etc.),
+ * manages AJAX polling for real-time updates (new tickets, unit status changes,
+ * chat invitations), and handles audible alarm notifications. Supports button
+ * highlight/light-up to indicate activity in multi-user environments.
+ *
+ * @package TicketsCAD
+ * @since   v3.0
+ */
 
 /*
 1/3/10 complete re-write to support button light-up for multi-user operation

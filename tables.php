@@ -1,4 +1,16 @@
 <?php
+/**
+ * Generic database table editor — CRUD interface for auxiliary data tables.
+ *
+ * Provides listing, viewing, adding, editing, and deleting records in any
+ * database table that has a corresponding definition file in the tables/
+ * directory. Handles foreign key relationships (with configurable display
+ * overrides), enumerated types, date/time formatting, file uploads, and
+ * referential integrity checks before deletion.
+ *
+ * @package TicketsCAD
+ * @since   v3.0
+ */
 // Made available under the terms of GNU General Public License (GPL) http://www.gnu.org/copyleft/gpl.html
 /*
 Released Jul 23, 2006
