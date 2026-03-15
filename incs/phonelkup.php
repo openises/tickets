@@ -1,9 +1,9 @@
 <?php
 require_once("../nusoap/lib/nusoap.php");
 define("tab",  "\t");
-if (!empty($_POST)) extract($_POST);
-	    else if (!empty($HTTP_POST_VARS)) extract($HTTP_POST_VARS);
-if (!empty($_GET)) extract($_GET);	    
+// Replaced extract — only $phone needed (Phase 2 cleanup)
+// Also removed legacy $HTTP_POST_VARS reference (deprecated since PHP 5.0)
+$phone = $_POST['phone'] ?? $_GET['phone'] ?? '';	    
 
 function dump($variable) {
 	echo "<PRE>";				// pretty it a bit

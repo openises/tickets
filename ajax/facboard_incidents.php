@@ -5,14 +5,14 @@ session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	} */
-extract($_GET);
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
-$sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : sanitize_string($_GET['sort']);
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : sanitize_string($_GET['dir']);
-$func = (!(array_key_exists('func', $_GET))) ? 0 : sanitize_int($_GET['func']);
-$sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : sanitize_string($_GET['sortbyfield']);
-$sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : sanitize_string($_GET['sort_value']);
-$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : sanitize_int($_GET['my_offset']);
+$sortby = isset($_GET['sort']) ? sanitize_string($_GET['sort']) : 'tick_id';
+$sortdir = isset($_GET['dir']) ? sanitize_string($_GET['dir']) : 'ASC';
+$func = isset($_GET['func']) ? sanitize_int($_GET['func']) : 0;
+$sort_by_field = isset($_GET['sortbyfield']) ? sanitize_string($_GET['sortbyfield']) : '';
+$sort_value = isset($_GET['sort_value']) ? sanitize_string($_GET['sort_value']) : '';
+$my_offset = isset($_GET['my_offset']) ? sanitize_int($_GET['my_offset']) : 0;
 $istest = FALSE;
 $iw_width= "270px";					// map infowindow with
 $nature = get_text("Nature");			// 12/03/10

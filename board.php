@@ -380,8 +380,7 @@ if(empty($_SESSION)) {		// expired?
 	} else {
 	@session_start();
 	set_sess_exp();				// update session time
-	extract($_POST);
-//		$func = (!(array_key_exists('func', $_REQUEST)))? "board" : $_REQUEST['func'];		// array_key_exists ( mixed key, array search )
+	// Replaced extract — only $func needed (Phase 2 cleanup)
 	if (!(array_key_exists('func', $_REQUEST))) {
 		$func = "board";
 		$_SESSION['show_hide_cleared'] = "h";		// set button for flip to 'show closed'
@@ -1846,7 +1845,8 @@ if(empty($_SESSION)) {		// expired?
 			<CENTER>
 <?php
 														// if (!empty($row['clear'])) ??????
-			extract($_POST);
+			// Replaced extract — only $frm_id needed (Phase 2 cleanup)
+			$frm_id = $_POST['frm_id'] ?? 0;
 
 			$query = "SELECT *,
 			`as_of` AS `as_of`,

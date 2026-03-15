@@ -5,7 +5,11 @@
 error_reporting(E_ALL);
 
 require_once('../incs/functions.inc.php');
-extract($_GET);
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
+$bl_lat = sanitize_string($_GET['bl_lat'] ?? '');
+$bl_lon = sanitize_string($_GET['bl_lon'] ?? '');
+$tr_lat = sanitize_string($_GET['tr_lat'] ?? '');
+$tr_lon = sanitize_string($_GET['tr_lon'] ?? '');
 $ret_arr = array();
 
 function update_setting ($which, $what) {		//	3/15/11
@@ -26,10 +30,7 @@ function update_setting ($which, $what) {		//	3/15/11
 	return $success;
 	}				// end function update_setting ()
 
-$bl_lat = isset($bl_lat) ? sanitize_string($bl_lat) : '';
-$bl_lon = isset($bl_lon) ? sanitize_string($bl_lon) : '';
-$tr_lat = isset($tr_lat) ? sanitize_string($tr_lat) : '';
-$tr_lon = isset($tr_lon) ? sanitize_string($tr_lon) : '';
+// Variables already sanitized above during explicit extraction
 $boundsString = $bl_lat . "," . $bl_lon . "," . $tr_lat . "," . $tr_lon;
 
 $theResult = update_setting ('bounds', $boundsString);

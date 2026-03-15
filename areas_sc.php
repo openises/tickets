@@ -6,8 +6,9 @@ session_write_close();
 require_once($_SESSION['fip']);		//7/28/10
 
 $istest=FALSE;
-extract($_POST);
-if(!isset($theTable)) {
+// Replaced extract — explicit variable assignment (Phase 2 cleanup)
+$theTable = $_POST['theTable'] ?? '';
+if(empty($theTable)) {
 	print "-TABLE NAME ERROR";
 	}
 $columns = [];

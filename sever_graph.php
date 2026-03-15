@@ -7,10 +7,9 @@
 */
 
 require_once('./incs/functions.inc.php');		//7/28/10
-extract($_GET);
-
-$p1 = sanitize_string($p1);
-$p2 = sanitize_string($p2);
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
+$p1 = sanitize_string($_GET['p1'] ?? '');
+$p2 = sanitize_string($_GET['p2'] ?? '');
 
 $query = "SELECT `severity`, COUNT(*) AS `nr`
 	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`

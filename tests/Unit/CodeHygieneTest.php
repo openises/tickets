@@ -91,7 +91,6 @@ class CodeHygieneTest extends TestCase
             'tracks_hh.php',
             'tracks.php',
             'track_u.php',
-            'sever_graph.php',
             'routes_nm.php',
             'routes_i.php',
             'routes.php',
@@ -104,15 +103,6 @@ class CodeHygieneTest extends TestCase
             'incs/messaging.inc.php',
             'facilities_nm.php',
             'facilities.php',
-            'download_report.php',
-            'do_day_night_swap.php',
-            'board.php',
-            'areas_sc.php',
-            'ajax/update_localmap_boundary.php',
-            'ajax/routes_form.php',
-            'ajax/facboard_incidents.php',
-            'reports_print.php',
-            'incs/phonelkup.php',
         ];
 
         // Scan all PHP files for extract() usage

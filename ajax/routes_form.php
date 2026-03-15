@@ -3,14 +3,14 @@
 session_write_close();
 require_once('../incs/functions.inc.php');
 $_GET = stripslashes_deep($_GET);
-extract($_GET);
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $sortby_distance = TRUE;
 $return_array = array();
 $unit_array = array();
 $status_array = array();
-$sortby = (array_key_exists('sortby', $_GET)) ? $_GET['sortby'] : "distance";
-$sortdir = (array_key_exists('dir', $_GET)) ? $_GET['dir'] : "ASC";
-$capabilities = (array_key_exists('searchstring', $_GET)) ? $_GET['searchstring'] : "";
+$sortby = $_GET['sortby'] ?? 'distance';
+$sortdir = $_GET['dir'] ?? 'ASC';
+$capabilities = $_GET['searchstring'] ?? '';
 
 $u_types = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";

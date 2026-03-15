@@ -3,17 +3,17 @@ require_once('./incs/functions.inc.php');
 include("./incs/html_to_doc.inc.php");
 $randomnumber = rand(0000000 , 9999999);
 $currDate = date('m,d,Y');
-extract($_GET);
-$report = isset($report) ? sanitize_string($report) : '';
-$func = isset($func) ? sanitize_string($func) : '';
-$date = isset($date) ? sanitize_string($date) : '';
-$ticksel = isset($ticksel) ? sanitize_string($ticksel) : '';
-$respsel = isset($respsel) ? sanitize_string($respsel) : '';
-$organisation = isset($organisation) ? sanitize_string($organisation) : '';
-$startdate = isset($startdate) ? sanitize_string($startdate) : '';
-$enddate = isset($enddate) ? sanitize_string($enddate) : '';
-$title = isset($title) ? sanitize_string($title) : '';
-$mode = isset($mode) ? sanitize_string($mode) : '';
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
+$report       = sanitize_string($_GET['report'] ?? '');
+$func         = sanitize_string($_GET['func'] ?? '');
+$date         = sanitize_string($_GET['date'] ?? '');
+$ticksel      = sanitize_string($_GET['ticksel'] ?? '');
+$respsel      = sanitize_string($_GET['respsel'] ?? '');
+$organisation = sanitize_string($_GET['organisation'] ?? '');
+$startdate    = sanitize_string($_GET['startdate'] ?? '');
+$enddate      = sanitize_string($_GET['enddate'] ?? '');
+$title        = sanitize_string($_GET['title'] ?? '');
+$mode         = sanitize_string($_GET['mode'] ?? '');
 $httpuser = get_variable('httpuser');
 $httppwd = get_variable('httppwd');
 

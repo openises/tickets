@@ -10,12 +10,12 @@ error_reporting(E_ALL);
 
 require_once($_SESSION['fip']);		//7/28/10
 //snap(basename(__FILE__), __LINE__);
-extract($_GET);
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
+$frm_status_id    = sanitize_int($_GET['frm_status_id'] ?? 0);
+$frm_responder_id = sanitize_int($_GET['frm_responder_id'] ?? 0);
+$frm_ticket_id    = sanitize_int($_GET['frm_ticket_id'] ?? 0);
 $now = time() - (get_variable('delta_mins')*60);
-@session_start();							// 4/8/10 
-
-$frm_status_id = sanitize_int($frm_status_id);
-$frm_responder_id = sanitize_int($frm_responder_id);
+@session_start();							// 4/8/10
 $query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id`= ?, `updated` = ?, `user_id` = ? WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$frm_status_id, mysql_format_date($now), $_SESSION['user_id'], $frm_responder_id]);
 
