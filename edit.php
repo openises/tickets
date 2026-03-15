@@ -1477,10 +1477,11 @@ function set_size() {
 							unset ($result_rfc);
 							} else { 				// end if (!($row['rec_facility'] == NULL))
 							$query_rfc = "SELECT *, `f`.`id` AS `fac_id` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
-							LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = a.resource_id )		
-							$where2 GROUP BY `fac_id` ORDER BY `name` ASC";	
+							LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = a.resource_id )
+							$where2 GROUP BY `fac_id` ORDER BY `name` ASC";
 							$result_rfc = db_query($query_rfc);
-							$recfacSel .= '<option>Receiving Facility?</option>';
+							$recfacSel .= "<SELECT id='sel_recfacility' NAME='frm_rec_facility_id' " . $dis . " onChange = 'document.edit.frm_fac_chng.value = parseInt(document.edit.frm_fac_chng.value)+ 2;'>";
+							$recfacSel .= '<option value="0">Receiving Facility?</option>';
 							while ($row_rfc = $result_rfc->fetch_assoc()) {
 								$recfacSel .= "<option value=" . $row_rfc['fac_id'] . ">" . shorten($row_rfc['name'], 20) . "</option>\n";
 								}
