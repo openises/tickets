@@ -366,37 +366,52 @@ $('leftcol').style.height = colheight + "px";
 </SCRIPT>
 <SCRIPT>
 /* Fix Leaflet tile loading on first render in popup windows.
-   When map_popup.php opens in a new window via window.open(), Leaflet
-   initializes before the popup window has its final layout. This causes:
-   1) Blurry tiles — container is small at init, so Leaflet fetches low-zoom tiles
-   2) Missing tiles — container may have 0 dimensions, so no tiles are requested
-   The fix: after the window fully loads, recalculate container size, force a
-   tile layer refresh, and re-center at the correct zoom. A zoom bounce ensures
-   Leaflet discards stale low-res tiles and fetches fresh ones. */
+   When map_popup.php opens via window.open(), Leaflet initializes before the
+   popup has its final dimensions. This causes blurry or missing tiles because
+   Leaflet fetches tiles for a 0-size or small container.
+   Fix: after window load, resize the container, then do a zoom bounce (zoom
+   out by 1, then back) which forces Leaflet to completely rebuild its tile
+   grid at the correct resolution. This is more reliable than layer.redraw()
+   which only re-renders cached tiles. */
 window.addEventListener('load', function() {
 	if (typeof map !== 'undefined' && map !== null) {
 		var savedCenter = map.getCenter();
 		var savedZoom = map.getZoom();
-		var fixMap = function(forceRefresh) {
+
+		/* Phase 1 (immediate): resize container to final window dimensions */
+		set_size();
+		map.invalidateSize({animate: false, pan: false});
+
+		/* Phase 2 (100ms): zoom bounce to force fresh tile grid */
+		setTimeout(function() {
 			set_size();
 			map.invalidateSize({animate: false, pan: false});
-			if (forceRefresh) {
-				/* Force tile refresh: remove and re-add tile layers so Leaflet
-				   fetches tiles at the correct resolution for the final container size */
-				map.eachLayer(function(layer) {
-					if (layer._url || layer._tiles) {
-						layer.redraw();
-					}
-				});
-				map.setView(savedCenter, savedZoom, {animate: false, reset: true});
+			/* Zoom bounce: change zoom then restore forces Leaflet to discard
+			   the old tile grid and request fresh tiles at correct resolution */
+			var bounceZoom = Math.max(1, savedZoom - 1);
+			map.setView(savedCenter, bounceZoom, {animate: false});
+			setTimeout(function() {
+				map.setView(savedCenter, savedZoom, {animate: false});
+			}, 100);
+		}, 100);
+
+		/* Phase 3 (800ms): safety net for slow-rendering windows */
+		setTimeout(function() {
+			set_size();
+			map.invalidateSize({animate: false, pan: false});
+			var currentZoom = map.getZoom();
+			if (currentZoom !== savedZoom) {
+				map.setView(savedCenter, savedZoom, {animate: false});
 			}
-		};
-		/* First pass: resize container early */
-		setTimeout(function() { fixMap(false); }, 50);
-		/* Second pass: full refresh with tile redraw */
-		setTimeout(function() { fixMap(true); }, 400);
-		/* Final pass: catch late-rendering windows */
-		setTimeout(function() { fixMap(true); }, 1200);
+			/* Verify tiles loaded — if not, force another bounce */
+			var tileCount = document.querySelectorAll('.leaflet-tile-loaded').length;
+			if (tileCount < 2) {
+				map.setView(savedCenter, Math.max(1, savedZoom - 1), {animate: false});
+				setTimeout(function() {
+					map.setView(savedCenter, savedZoom, {animate: false});
+				}, 150);
+			}
+		}, 800);
 	}
 });
 </SCRIPT>
