@@ -4,8 +4,12 @@ session_write_close();
 require_once('../incs/functions.inc.php');		//7/28/10
 require_once('../incs/log_codes.inc.php'); 				// 3/25/10
 $func = (array_key_exists('func', $_GET)) ? sanitize_string($_GET['func']) : "";
+$report = (array_key_exists('report', $_GET)) ? sanitize_string($_GET['report']) : "";
 $startdate = (array_key_exists('startdate', $_GET)) ? sanitize_string($_GET['startdate']) : "";
 $enddate = (array_key_exists('enddate', $_GET)) ? sanitize_string($_GET['enddate']) : "";
+$tick_sel = (array_key_exists('tick_sel', $_GET)) ? sanitize_int($_GET['tick_sel']) : 0;
+$resp_sel = (array_key_exists('resp_sel', $_GET)) ? sanitize_int($_GET['resp_sel']) : 0;
+$organisation = (array_key_exists('organisation', $_GET)) ? sanitize_int($_GET['organisation']) : 0;
 $theWidth = "100%";
 $doprint = (array_key_exists('do_print', $_GET) && $_GET['do_print'] == 1) ? true : false;
 $dohtml = (array_key_exists('dohtml', $_GET) && $_GET['dohtml'] == true) ? true : false;

@@ -176,7 +176,9 @@ function db_fetch_all(string $sql, array $params = [], ?string $types = null): a
  * @param string      $sql    SQL query with ? placeholders
  * @param array       $params Values to bind (optional)
  * @param string|null $types  Type string (optional, auto-detected)
- * @return array|null Associative array for the row, or null if no results
+ * @return array|null Array (both numeric and associative keys) for the row, or null if no results.
+ *                    Uses fetch_array() for backward compatibility with legacy code that accesses
+ *                    columns by numeric index (e.g. $row[0] for the first column).
  */
 function db_fetch_one(string $sql, array $params = [], ?string $types = null): ?array
 {
@@ -186,7 +188,7 @@ function db_fetch_one(string $sql, array $params = [], ?string $types = null): ?
         return null;
     }
 
-    $row = $result->fetch_assoc();
+    $row = $result->fetch_array();
     $result->free();
 
     return $row ?: null;
