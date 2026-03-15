@@ -1690,7 +1690,7 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10 - 11/16/10
 //	global $disposition;
 	global $iw_width, $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
-	$theId = $theRow['id'] ?? $theRow[0] ?? 0;
+	$theId = $theRow['id'] ?? 0;
 
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$theRow['id']})</I>" : "";			// 1/25/09
 
@@ -1768,7 +1768,7 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 
 function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10
 	global $iw_width, $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
-	$theId = $theRow['id'] ?? $theRow[0] ?? 0;
+	$theId = $theRow['id'] ?? 0;
 
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";			// 1/25/09
 
@@ -1914,7 +1914,7 @@ function do_ticket_only($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						//
 function do_ticket_extras($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10
 //	dump(__LINE__);
 	global $iw_width, $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
-	$theId = $theRow['id'] ?? $theRow[0] ?? 0;
+	$theId = $theRow['id'] ?? 0;
 	$print = "<TABLE BORDER='0' ID='left' width='" . $theWidth . "'>\n";		//
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
 	$print .= show_log ($theId);				// log
@@ -1933,7 +1933,7 @@ function do_ticket_extras($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						
 function do_ticket_messages($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// returns table - 6/26/10
 //	dump(__LINE__);
 	global $iw_width, $nature, $disposition, $patient, $incident, $incidents;	// 12/3/10
-	$theId = $theRow['id'] ?? $theRow[0] ?? 0;
+	$theId = $theRow['id'] ?? 0;
 	$print = "<TABLE BORDER='0' ID='left' width='" . $theWidth . "'>\n";		//
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= list_messages($theId, "date", FALSE, TRUE);

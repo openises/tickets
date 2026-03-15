@@ -136,13 +136,13 @@ function the_ticket($theRow, $theWidth=500, $search=FALSE, $dist=TRUE) {						//
 		<TD CLASS='td_data text text_left'>" . get_lat($theRow['lat']) . "&nbsp;&nbsp;&nbsp;" . get_lng($theRow['lng']) . $grid_type . "</TD></TR>\n";		// 9/13/08
 
 	$print .= "<TR><TD colspan=2 ALIGN='left'>";
-	$print .= show_log ($theRow[0]);				// log
+	$print .= show_log ($theRow['id']);				// log
 	$print .="</TD></TR>";
 	$print .= "<TR STYLE = 'display:none;'><TD CLASS='td_data text text_left' colspan=2><SPAN ID='oldlat'>" . $theRow['lat'] . "</SPAN><SPAN ID='oldlng'>" . $theRow['lng'] . "</SPAN></TD></TR>";
 	$print .= "<TR><TD COLSPAN=99>";
-	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
+	$print .= show_assigns(0, $theRow['id']);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";
-	$print .= show_actions($theRow[0], "date", FALSE, FALSE, 1);
+	$print .= show_actions($theRow['id'], "date", FALSE, FALSE, 1);
 	$print .= "</TD></TR>";	
 	$print .= "</TABLE>\n";	
 	return $print;
