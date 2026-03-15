@@ -127,10 +127,9 @@ ob_start(function($html) {
 
 $mode = (array_key_exists('mode', $_REQUEST)) ? $_REQUEST['mode'] : 0;        // 9/8/10
 $patient = get_text("Patient");                                                // 12/1/10
-extract($_REQUEST);
-if (!isset($func)) {
-    $func = "summ";
-}
+// Replaced extract — only $func is needed for tab routing (Phase 2 cleanup)
+$func = $_REQUEST['func'] ?? 'summ';
+$id = $_REQUEST['id'] ?? '';
 $reload_top = FALSE;
 
 $query = "SELECT `user` FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` <> ?";        // 12/2/08
