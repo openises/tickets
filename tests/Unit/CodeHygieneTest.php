@@ -84,7 +84,6 @@ class CodeHygieneTest extends TestCase
     {
         // Known files that still use extract() — remove from this list as they are fixed
         $knownExtractFiles = [
-            'tables.php',
             'warn_locations.php',
             'units_nm.php',
             'units.php',

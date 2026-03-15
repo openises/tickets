@@ -120,15 +120,16 @@ $fk_overrides = [
 ];
 $can_edit = ((is_super()) || (is_administrator()) || (get_variable('oper_can_edit') == "1"));										// 3/19/11
 
-if (!array_key_exists('func', $_POST)) {
-	$func = "l";					// Select table, of C R U D or Select
-	$tablename = "";				// set per user selection
-	$indexname = "";				// set per schema
-	}
-
-extract($_POST);
-$sortby = (!(isset($sortby)) || empty($sortby))?		 "id" : $sortby;
-$sortdir = (!(isset($sortdir)) || empty($sortdir))?		 0 : $sortdir;
+// Replaced extract — explicit variable assignments (Phase 2 cleanup)
+$func      = $_POST['func']      ?? 'l';         // CRUD function: l=list, v=view, a=add, e=edit, d=delete, s=select
+$tablename = $_POST['tablename'] ?? '';           // selected table name
+$indexname = $_POST['indexname'] ?? '';            // table index/key column
+$id        = $_POST['id']        ?? '';           // record ID for view/edit/delete
+$page      = $_POST['page']      ?? '';           // pagination: current page number
+$numrows   = $_POST['numrows']   ?? '';           // pagination: total row count
+$srch_str  = $_POST['srch_str']  ?? '';           // search filter string (pipe-delimited)
+$sortby    = (!empty($_POST['sortby']))  ? $_POST['sortby']  : 'id';   // sort column
+$sortdir   = (!empty($_POST['sortdir'])) ? $_POST['sortdir'] : 0;      // sort direction (0=ASC, 1=DESC)
 //$sortby = (!(isset($index)) || empty($index))?			 "id" : $index;
 function get_comments($the_table) {  				// returns array key=> name, value=> comment - 10/31/10
 	$_array = array();								// 12/15/10
