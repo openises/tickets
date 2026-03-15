@@ -537,6 +537,7 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		CngClass('dlog_but', 'plain text');
 		CngClass('slog_but', 'plain text');
 		CngClass('ilog_but', 'plain text');
+		CngClass('irep_but', 'plain text');
 		CngClass('alog_but', 'plain text');
 		CngClass('mlog_but', 'plain text');
 		CngClass('inc_log_btn', 'plain text');
@@ -548,11 +549,12 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 		lit['dlog_but'] = false;
 		lit['slog_but'] = false;
 		lit['ilog_but'] = false;
+		lit['irep_but'] = false;
 		lit['alog_but'] = false;
 		lit['mlog_but'] = false;
 		lit['inc_log_btn'] = false;
 		lit['region_but'] = false;
-		lit['billreport_but'] = false;	
+		lit['billreport_but'] = false;
 		}
 		
 	function do_hover (the_id) {
