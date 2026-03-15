@@ -926,7 +926,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$resp_stat = $_POST['frm_un_status_id'];
 			$by = $_SESSION['user_id'];
 //			if (($_POST['frm_clr_pos'])=='on') {$the_lat = $the_lng = "NULL";}				// 11/15/09
-			if ($_postmap_clear=='on') {$the_lat = $the_lng = "NULL";}				// 11/19/09
+			if ($_postmap_clear=='on') {$the_lat = $the_lng = null;}				// 11/19/09
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
 				`roster_user`= ?,
 				`name`= ?,

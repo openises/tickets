@@ -173,7 +173,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 			$frm_booked_date  = (isset($_POST['frm_year_booked_date'])) ?  sanitize_string("$_POST[frm_year_booked_date]-$_POST[frm_month_booked_date]-$_POST[frm_day_booked_date] $_POST[frm_hour_booked_date]:$_POST[frm_minute_booked_date]:00") : NULL;	//10/1/09
 			$portal_user = 		empty($_POST['frm_portal_user'])?	NULL:  trim($_POST['frm_portal_user']);				// 9/10/13
 			if($_POST['frm_status'] != 1) {
-				$frm_problemend = "NULL";
+				$frm_problemend = null;
 				}
 		
 			// perform db update
@@ -229,7 +229,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 				sanitize_string(trim($_POST['frm_phone'])),
 				sanitize_string(trim($_POST['frm_to_address'])),
 				sanitize_int(trim($_POST['frm_facility_id'])),
-				sanitize_int(trim($_POST['frm_rec_facility_id'])),
+				sanitize_int(trim($_POST['frm_rec_facility_id'] ?? '0')),
 				sanitize_string(trim($_POST['frm_lat'])),
 				sanitize_string(trim($_POST['frm_lng'])),
 				sanitize_string(trim($_POST['frm_scope'])),
@@ -298,7 +298,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 						sanitize_string(trim($_POST['frm_phone'])),
 						sanitize_string(trim($_POST['frm_to_address'])),
 						sanitize_int(trim($_POST['frm_facility_id'])),
-						sanitize_int(trim($_POST['frm_rec_facility_id'])),
+						sanitize_int(trim($_POST['frm_rec_facility_id'] ?? '0')),
 						sanitize_string(trim($_POST['frm_scope'])),
 						sanitize_string(trim($_POST['frm_description'])),
 						sanitize_string(trim($_POST['frm_comments'])),
@@ -451,7 +451,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 				sanitize_int(trim($_POST['frm_status'])),
 				sanitize_int(trim($post_frm_owner)),
 				sanitize_int(trim($_POST['frm_facility_id'])),
-				sanitize_int(trim($_POST['frm_rec_facility_id'])),
+				sanitize_int(trim($_POST['frm_rec_facility_id'] ?? '0')),
 				sanitize_int($id)
 			]);
 			}

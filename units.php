@@ -462,7 +462,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			$by = $_SESSION['user_id'];
 			$theFac = 0;
 			if ($_postmap_clear=='on') {
-				$the_lat = $the_lng = "NULL";
+				$the_lat = $the_lng = null;
 				} else {
 				if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
 					$theFac = $_POST['frm_facility_sel'];

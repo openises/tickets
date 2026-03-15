@@ -166,7 +166,7 @@ function edit_ticket($id) {							/* post changes */
 			sanitize_string(trim($_POST['frm_state'])),
 			sanitize_string(trim($_POST['frm_phone'])),
 			sanitize_int(trim($_POST['frm_facility_id'])),
-			sanitize_int(trim($_POST['frm_rec_facility_id'])),
+			sanitize_int(trim($_POST['frm_rec_facility_id'] ?? '0')),
 			sanitize_string(trim($_POST['frm_lat'])),
 			sanitize_string(trim($_POST['frm_lng'])),
 			sanitize_string(trim($_POST['frm_scope'])),
@@ -202,7 +202,7 @@ function edit_ticket($id) {							/* post changes */
 			sanitize_int(trim($_POST['frm_status'])),
 			sanitize_int(trim($post_frm_owner)),
 			sanitize_int(trim($_POST['frm_facility_id'])),
-			sanitize_int(trim($_POST['frm_rec_facility_id'])),
+			sanitize_int(trim($_POST['frm_rec_facility_id'] ?? '0')),
 			sanitize_int($id)
 		]);
 		}		
