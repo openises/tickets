@@ -44,19 +44,23 @@ $_GET = stripslashes_deep($_GET);
     </style>
 <?php
 if (!empty($_POST)) {
-	extract($_POST);
-	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 
+	// Replaced extract — explicit variable assignments (Phase 2 cleanup)
+	$frm_status_id = sanitize_int($_POST['frm_status_id'] ?? 0);
+	$frm_ticket_id = sanitize_int($_POST['frm_ticket_id'] ?? 0);
+	$frm_comments  = sanitize_string($_POST['frm_comments'] ?? '');
+	$frm_by_id     = sanitize_int($_POST['frm_by_id'] ?? 0);
+	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$assigns = explode (",", $_POST['frm_id_str']);		// comma sep'd
 	for ($i=0;$i<count($assigns); $i++) {
 		$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}assigns` (`as_of`, `status_id`, `ticket_id`, `responder_id`, `comments`, `user_id`, `dispatched`)
 						VALUES (?, ?, ?, ?, ?, ?, ?)";
 		$result	= db_query($query, [
 			$now,
-			sanitize_int($frm_status_id),
-			sanitize_int($frm_ticket_id),
+			$frm_status_id,
+			$frm_ticket_id,
 			sanitize_int($assigns[$i]),
-			sanitize_string($frm_comments),
-			sanitize_int($frm_by_id),
+			$frm_comments,
+			$frm_by_id,
 			$now
 		]);
 //										remove placeholder inserted by 'add'

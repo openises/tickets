@@ -31,7 +31,8 @@ if (array_key_exists('unit_id', $_GET)) {	// 8/19/10
 	$source = $row['callsign'];
 	}
 else {
-	extract($_GET);
+	// Replaced extract — only $source needed (Phase 2 cleanup)
+	$source = $_GET['source'] ?? '';
 	}
 
 $query_callsign	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `callsign`=?";				// 7/29/09
