@@ -2102,6 +2102,7 @@ function dump($variable) {
 	}
 
 function shorten($instring, $limit) {
+	if (is_array($instring)) { $instring = implode(', ', $instring); }	// 3/14/26 - handle array values gracefully
 	$instring = (string)($instring ?? '');
 	return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
 }
