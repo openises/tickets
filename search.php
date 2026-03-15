@@ -179,8 +179,11 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 		}
 
 		$search_params = [];
-		if($_POST['frm_search_in'])	{								//what field are we searching?
-			$search_fields = "CAST(`" . sanitize_string($_POST['frm_search_in']) . "` AS CHAR) REGEXP ?";	//
+		// Whitelist valid search-in column names to prevent SQL injection (Phase 3 security fix)
+		$valid_search_in = ['contact', 'street', 'city', 'state', 'description', 'comments', 'owner', 'date', 'problemstart', 'problemend'];
+		$frm_search_in = isset($_POST['frm_search_in']) ? $_POST['frm_search_in'] : '';
+		if($frm_search_in && in_array($frm_search_in, $valid_search_in))	{
+			$search_fields = "CAST(`" . $frm_search_in . "` AS CHAR) REGEXP ?";
 			$search_params[] = $query_str;
 			} else {							//list fields and form the query to search all of them
 			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` LIMIT 1");
@@ -200,11 +203,15 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 			} else {
 			$restrict_ticket = "";
 			}
-		$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";		// 9/19/08
+		// Whitelist ORDER BY column and direction to prevent SQL injection (Phase 3 security fix)
+		$valid_order_cols = ['date', 'problemstart', 'problemend', 'affected', 'scope', 'owner'];
+		$frm_ordertype = isset($_POST['frm_ordertype']) ? $_POST['frm_ordertype'] : 'date';
+		if (!in_array($frm_ordertype, $valid_order_cols)) { $frm_ordertype = 'date'; }
+		$desc = (isset($_POST['frm_order_desc']) && $_POST['frm_order_desc'] === 'DESC') ? 'DESC' : '';
 
 		$id_stack= array();
 
-		$query = "SELECT `id` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} AND `status` LIKE ? AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . sanitize_string($_POST['frm_ordertype']) . "` " . $desc;		// 9/19/08
+		$query = "SELECT `id` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` <> {$GLOBALS['STATUS_RESERVED']} AND `status` LIKE ? AND " . $search_fields . " " . $restrict_ticket . " ORDER BY `" . $frm_ordertype . "` " . $desc;
 		$tick_params = array_merge([sanitize_string($_POST['frm_querytype'])], $search_params);
 		$result = db_query($query, $tick_params);
 
