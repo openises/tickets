@@ -471,17 +471,44 @@ foreach ($rows as $row) {
 	$validFacStatuses[$row['id']] = $row['status_val'];
 }
 
-function remove_nls($instr) {                // 10/20/09
+/**
+ * Replace all newline characters in a string with spaces.
+ *
+ * Handles \r\n, \n, and \r newline variants. Used for cleaning
+ * database entries for display in JavaScript tooltips.
+ *
+ * @param string $instr The input string potentially containing newlines.
+ * @return string The string with all newlines replaced by spaces.
+ * @since v3.0
+ */
+function remove_nls($instr) {
 	$nls = array("\r\n", "\n", "\r");        // note order
 	return str_replace($nls, " ", $instr);
 	}        // end function
 
+/**
+ * Check whether a MySQL table exists in the current database.
+ *
+ * @param string $name The table name to check for.
+ * @return bool TRUE if the table exists, FALSE otherwise.
+ * @since v3.0
+ */
 function mysql_table_exists($name) {
 	$escaped = mysqli_real_escape_string(db(), $name);
 	$result = db_query("SHOW TABLES LIKE '{$escaped}'");
 	return boolVal($result->num_rows > 0);
 	}
 
+/**
+ * Print the date field of a ticket directly to output.
+ *
+ * Queries the ticket table for the given ID and prints its date value.
+ * Produces no output if the ticket is not found.
+ *
+ * @param int $id The ticket ID.
+ * @return void
+ * @since v3.0
+ */
 function get_issue_date($id){
 	$row = db_fetch_one("SELECT `date` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?", [intval($id)]);
 	if ($row) { print $row['date']; }
@@ -1439,7 +1466,16 @@ function good_date_time($date) {						//  2/15/09
 	return (is_string ($date) && (strlen($date)==19) && (!($date=="0000-00-00 00:00:00")));
 	}
 
-function format_date_time($date){		// mySql format to settings spec - 2/15/09 - 11/30/2012
+/**
+ * Format a MySQL datetime string according to the configured date/time format.
+ *
+ * Delegates to format_date_2() for the actual formatting.
+ *
+ * @param string $date A MySQL-format datetime string (e.g., "2024-01-15 08:30:00").
+ * @return string The formatted date/time string.
+ * @since v3.0
+ */
+function format_date_time($date){
 	return format_date_2 ($date);
 	}				// end function format_date_time()
 
@@ -1703,6 +1739,20 @@ function do_error($err_function,$err,$custom_err='',$file='',$line=''){
 	}
 */
 
+/**
+ * Report a fatal application error, log it, and terminate execution.
+ *
+ * Logs the error to the system log table (once per session to avoid flooding),
+ * writes to the PHP error log, displays an HTML error message, and calls die().
+ *
+ * @param string $err_function The name of the function where the error occurred.
+ * @param string $err          The error message or description.
+ * @param string $custom_err   Optional additional error information. Default ''.
+ * @param string $file         Optional source file where the error occurred. Default ''.
+ * @param string $line         Optional line number where the error occurred. Default ''.
+ * @return void This function terminates execution via die().
+ * @since v3.0
+ */
 function do_error($err_function, $err, $custom_err='', $file='', $line=''){ /* report an error event - revised 5/11/2013 */
 	@session_start();											//
 	$log_message = substr ( "application error: {[$file]@[$line] [$err_function]", 0, 2048) ;
@@ -1774,21 +1824,57 @@ function is_super(){
 function is_administrator(){
 	return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER'])));		// 5/11/10, 4/29/14
 	}
+/**
+ * Check if the current user is an admin (but not super-admin).
+ *
+ * @return bool TRUE if session level equals LEVEL_ADMINISTRATOR only.
+ * @since v3.0
+ */
 function is_admin(){		/* is user admin but not super? */
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']));		// 10/26/11, 4/29/14
 	}
+/**
+ * Check if the current user is a guest or member (lowest access levels).
+ *
+ * @return bool TRUE if session level is LEVEL_GUEST or LEVEL_MEMBER.
+ * @since v3.0
+ */
 function is_guest(){				/* is user guest? */
 	return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_GUEST']) || ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER'])));				// 6/25/10, 4/29/14
 	}
+/**
+ * Check if the current user is a member.
+ *
+ * @return bool TRUE if session level equals LEVEL_MEMBER.
+ * @since v3.0
+ */
 function is_member(){				/* is user member? */
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER']));				// 7/2/10, 4/29/14
 	}
+/**
+ * Check if the current user is an operator/dispatcher.
+ *
+ * @return bool TRUE if session level equals LEVEL_USER.
+ * @since v3.0
+ */
 function is_user(){					/* is user operator/dispatcher? */
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_USER']));		// 5/11/10, 4/29/14
 	}
+/**
+ * Check if the current user is a unit (responder).
+ *
+ * @return bool TRUE if session level equals LEVEL_UNIT.
+ * @since v3.0
+ */
 function is_unit(){					/* is user unit? */
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']));						// 7/12/10, 4/29/14
 	}
+/**
+ * Check if the current user is a facility.
+ *
+ * @return bool TRUE if session level equals LEVEL_FACILITY.
+ * @since v3.0
+ */
 function is_facility(){					/* is user facility? */
 	return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_FACILITY']));						// 5/26/16
 	}
@@ -2163,25 +2249,61 @@ function report_action($action_type,$ticket_id,$value1='',$value2=''){/* insert 
 	$result = db_query($query, [$now, $ticket_id, $action_type, $description, $_SESSION['user_id']]);
 	}
 
+/**
+ * Debug dump a variable with backtrace, wrapped in HTML PRE tags.
+ *
+ * @param mixed $variable The variable to dump.
+ * @return void
+ * @since v3.0
+ */
 function dumpp($variable) {
 	echo "\n<PRE>";				// pretty it a bit
 	var_dump(debug_backtrace());
 	var_dump($variable) ;
 	echo "</PRE>\n";
 	}
+/**
+ * Debug dump a variable using var_dump, wrapped in HTML PRE tags.
+ *
+ * @param mixed $variable The variable to dump.
+ * @return void
+ * @since v3.0
+ */
 function dump($variable) {
 	echo "\n<PRE>\n";				// pretty it a bit - 2/23/2013
 	var_dump($variable) ;
 	echo "</PRE>\n";
 	}
 
+/**
+ * Truncate a string to a maximum length, appending ".." if shortened.
+ *
+ * If the input is an array, it is first imploded with comma separators.
+ * Null values are converted to an empty string.
+ *
+ * @param string|array|null $instring The input string (or array) to shorten.
+ * @param int               $limit    Maximum allowed string length.
+ * @return string The original or truncated string.
+ * @since v3.0
+ */
 function shorten($instring, $limit) {
 	if (is_array($instring)) { $instring = implode(', ', $instring); }	// 3/14/26 - handle array values gracefully
 	$instring = (string)($instring ?? '');
 	return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
 }
 
-function format_phone ($instr) { // 11/16/10 added check for locale for UK phone number format.
+/**
+ * Format a raw phone number string according to the configured locale.
+ *
+ * Locale 0 (US): formats as (xxx) xxx-xxxx.
+ * Locale 1 (UK): formats as xxxxx xxxxxx.
+ * Returns empty string if the input is blank after trimming.
+ *
+ * @param string $instr The raw phone number digits.
+ * @return string The formatted phone number, or empty string if blank.
+ * @since v3.0
+ */
+function format_phone ($instr) {
 	$locale = get_variable('locale');
 	$instr = (string)$instr;
 	$temp = trim($instr);
@@ -2200,7 +2322,19 @@ function format_phone ($instr) { // 11/16/10 added check for locale for UK phone
 		}			// end switch()
 	}
 
-function highlight($term, $string) {		// highlights search term
+/**
+ * Wrap occurrences of a search term with a highlight span.
+ *
+ * Uses case-insensitive replacement when available (str_ireplace),
+ * falling back to case-sensitive str_replace. Matched terms are
+ * wrapped in <SPAN CLASS='found'>.
+ *
+ * @param string $term   The search term to highlight.
+ * @param string $string The text in which to highlight the term.
+ * @return string The string with matching terms wrapped in highlight markup.
+ * @since v3.0
+ */
+function highlight($term, $string) {
 	$replace = "<SPAN CLASS='found'>" .$term . "</SPAN>";
 	if (function_exists('str_ireplace')) {
 		return str_ireplace ((string)$term,  $replace, (string)$string);
@@ -2388,7 +2522,17 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
 
 // =====================================================================================
 
-	function set_sess_exp() {						// updates session-expires time in user record
+	/**
+	 * Update the session expiry timestamp in the current user's database record.
+	 *
+	 * Writes the global $expiry timestamp (formatted as a MySQL datetime)
+	 * to the user's `expires` column.
+	 *
+	 * @global int $expiry The Unix timestamp when the session should expire.
+	 * @return void
+	 * @since v3.0
+	 */
+	function set_sess_exp() {
 		@session_start();							// 4/4/10
 		global $expiry;
 		$the_date = mysql_format_date($expiry) ;
@@ -2397,7 +2541,16 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
 		$result = db_query($query, [$the_date, $_SESSION['user_id']]);
 		}
 
-	function expired() {			// returns TRUE/FALSE state of login time_out
+	/**
+	 * Check whether the current user's session has expired.
+	 *
+	 * Compares the user's stored expiry timestamp in the database against
+	 * the current time (adjusted for the configured delta_mins).
+	 *
+	 * @return bool TRUE if the session has expired or is invalid, FALSE if still active.
+	 * @since v3.0
+	 */
+	function expired() {
 		if(empty($_SESSION)) {return TRUE;}		// $_SESSION = array(); ??
 
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
@@ -2784,7 +2937,23 @@ Handle		U				// 3/25/13
 Scheduled	V				// 3/25/13
 */
 
-function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {	// 10/6/08, 10/15/08,  2/18/09, 3/7/09, 10/23/12, 11/14/2012, 12/14/2012
+/**
+ * Compose and send a notification message for a ticket.
+ *
+ * Builds a message body using a configurable letter-code template string
+ * (msg_text_1/2/3/4 settings) that controls which ticket fields to include.
+ * Either sends the message via do_send() or returns the text if $txt_only is TRUE.
+ *
+ * @param string $to_str      Pipe-delimited email/cell/Twitter addresses.
+ * @param string $smsg_to_str Comma-delimited SMS gateway addresses (or NULL/"").
+ * @param string $text        Subject text override or empty to use ticket scope.
+ * @param int    $ticket_id   The ticket ID to build the message from.
+ * @param int    $text_sel    Message template selector (1-4). Default 1.
+ * @param bool   $txt_only    If TRUE, return message text instead of sending. Default FALSE.
+ * @return string|void The composed message text when $txt_only is TRUE, otherwise void.
+ * @since v3.0
+ */
+function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE) {
 	global $istest;
 //	if (is_null($text_sel)) {$text_sel = 1;}			//
 
@@ -3025,7 +3194,25 @@ function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) {
     real_smtp ($my_to, $my_subject, $my_message, $my_params, $my_from);
     }                         // end function smtp
 
-function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $responder_ids=0, $messageid=NULL, $server=NULL) {					// 7/7/09 - 5/25/2013
+/**
+ * Send a notification message via email, SMS cell gateways, and/or Twitter.
+ *
+ * Parses the pipe-delimited address string into email, cell-carrier, and
+ * Twitter groups, then sends each via the appropriate transport (SMTP/mail
+ * for email, chunked messages for cell, Twitter direct messages).
+ *
+ * @param string      $to_str         Pipe-delimited email/cell/Twitter addresses.
+ * @param string|null $smsg_to_str    Comma-delimited SMS gateway callsign addresses.
+ * @param string      $subject_str    Email subject line.
+ * @param string      $text_str       Message body text.
+ * @param int         $ticket_id      Associated ticket ID.
+ * @param int|string  $responder_ids  Pipe-delimited responder IDs, or 0. Default 0.
+ * @param string|null $messageid      Optional message ID for SMS gateway. Default NULL.
+ * @param string|null $server         Optional server identifier for SMS gateway. Default NULL.
+ * @return string Count of total messages sent (as a string).
+ * @since v3.0
+ */
+function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $responder_ids=0, $messageid=NULL, $server=NULL) {
 //	print $to_str . "," . $smsg_to_str . "," . $subject_str . "," . $text_str . "," . $ticket_id . "," . $responder_ids . "<BR />";
 	$the_resp_ids = "";
 	if($responder_ids != 0) {
@@ -3184,7 +3371,19 @@ function get_scope($id) {
 		}
 	}
 
-function notify_user($ticket_id, $action_id) {								// 10/20/08, 5/22/11. 8/28/13
+/**
+ * Send notifications to subscribed users, facilities, and assigned units for a ticket event.
+ *
+ * Queries the notify table for matching subscriptions based on ticket ID,
+ * action type, and severity. Also notifies facility contacts and
+ * incident-type contacts based on configuration settings.
+ *
+ * @param int $ticket_id The ticket ID that triggered the notification.
+ * @param int $action_id The notification action type constant.
+ * @return array|false Array of subscriber email addresses, or FALSE if none/disabled.
+ * @since v3.0
+ */
+function notify_user($ticket_id, $action_id) {
 	if (get_variable('allow_notify') != '1') return FALSE;						//should we notify?
 	$actionText = "";
 	$query = "SELECT `scope`, `severity`, `facility`, `rec_facility`, `in_types_id` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
@@ -3432,7 +3631,20 @@ function notify_newreq($svceuser_id) {								// 10/23/12
 	return (empty($temp))? FALSE: $temp;
 	}
 
-function snap($source, $stuff = "") {									// 10/18/08 , 3/5/09 - debug tool
+/**
+ * Write a debug snapshot entry to the snap database table.
+ *
+ * Inserts a source label and optional data for debugging purposes.
+ * Automatically purges entries older than 1 day. If the source is
+ * an array, it is converted to a summary string with the element count.
+ * No-op if the snap table does not exist.
+ *
+ * @param string|array $source Identifying label for the snapshot origin.
+ * @param string       $stuff  Optional additional data to record. Default "".
+ * @return void
+ * @since v3.0
+ */
+function snap($source, $stuff = "") {
 	global $snap_table;				// defined in istest.inc.php
 	if (mysql_table_exists($snap_table)) {
 		$query	= "DELETE FROM `$snap_table` WHERE `when`< (NOW() - INTERVAL 1 DAY)"; 		// first remove old
