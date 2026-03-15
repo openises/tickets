@@ -761,19 +761,28 @@ if (($func == "c")||($func == "u")) {			// Create and Update funcs only
 						break;
 					case "blob":
 					case "BLOB":
+					case "mediumblob":
+					case "longblob":
 						if (!ck_blob(myform.elements[i].value))		{JSfnAddError();}
 						break;
 					case "string":
 					case "VAR_STRING":
 					case "STRING":
 					case "text":
+					case "tinytext":
+					case "mediumtext":
 					case "longtext":
 					case "enum":
 						if (!ck_string(myform.elements[i].value))	{JSfnAddError();}
 						break;
 					case "real":
+					case "float":
+					case "decimal":
 						if (!ck_real(myform.elements[i].value))		{JSfnAddError();}
 						break;
+					case "tinyint":
+					case "smallint":
+					case "mediumint":
 					case "int":
 					case "INTEGER":
 					case "bigint":
