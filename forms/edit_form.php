@@ -512,10 +512,27 @@ function get_data_cb(req) {
 	if($('map_canvas')) {$('map_canvas').style.height = mapHeight + "px";}
 	set_fontsizes(viewportwidth, "fullscreen");
 	init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), locale, useOSMAP, "tr");
-	var bounds = map.getBounds();	
+	var bounds = map.getBounds();
 	var zoom = map.getZoom();
 	var infotext = "<?php print e($row['field2']);?> <?php print e($row['field1']);?>";
 	marker.bindPopup(infotext);
+
+	// 3/14/26 - Click map to set member lat/lng location
+	function onMapClick(e) {
+		if(marker) { map.removeLayer(marker); }
+		var iconurl = "./our_icons/yellow.png";
+		icon = new baseIcon({iconUrl: iconurl});
+		marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
+		marker.addTo(map);
+		document.mem_edit_form.frm_field12.value = e.latlng.lat.toFixed(6);
+		document.mem_edit_form.frm_field13.value = e.latlng.lng.toFixed(6);
+		marker.on('dragend', function(ev) {
+			var pos = ev.target.getLatLng();
+			document.mem_edit_form.frm_field12.value = pos.lat.toFixed(6);
+			document.mem_edit_form.frm_field13.value = pos.lng.toFixed(6);
+		});
+	}
+	map.on('click', onMapClick);
 </SCRIPT>			
 	<FORM NAME='can_Form' METHOD="post" ACTION = "member.php?func=member&view=true&id=<?php print e($id);?>"></FORM>			
 	<FORM NAME='go_Form' METHOD="post" ACTION = ""></FORM>
