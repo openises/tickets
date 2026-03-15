@@ -365,15 +365,29 @@ $('leftcol').style.width = colwidth + "px";
 $('leftcol').style.height = colheight + "px";
 </SCRIPT>
 <SCRIPT>
-/* Fix Leaflet tile loading on first render: the map initializes before the
-   page layout is finalized, so tiles may not load until a resize/refresh.
-   Calling invalidateSize() after window load forces Leaflet to recalculate
-   the container dimensions and fetch the correct tiles. */
+/* Fix Leaflet tile loading on first render in popup windows.
+   When map_popup.php opens in a new window via window.open(), Leaflet
+   initializes before the popup window has its final layout. This causes:
+   1) Blurry tiles — container is small at init, so Leaflet fetches low-zoom tiles
+   2) Missing tiles — container may have 0 dimensions, so no tiles are requested
+   The fix: after the window fully loads, recalculate container size and force
+   Leaflet to re-request tiles at the correct zoom level. Multiple attempts
+   handle slow-rendering popup windows. */
 window.addEventListener('load', function() {
 	if (typeof map !== 'undefined' && map !== null) {
-		setTimeout(function() {
-			map.invalidateSize();
-		}, 100);
+		var fixMap = function() {
+			set_size();
+			map.invalidateSize({animate: false});
+			var center = map.getCenter();
+			var zoom = map.getZoom();
+			if (center) {
+				map.setView(center, zoom, {animate: false});
+			}
+		};
+		/* Multiple invalidation passes to catch slow popup rendering */
+		setTimeout(fixMap, 50);
+		setTimeout(fixMap, 300);
+		setTimeout(fixMap, 800);
 	}
 });
 </SCRIPT>
