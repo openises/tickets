@@ -170,7 +170,9 @@ if (empty($_POST)) {
 	</DIV>
 <?php 
 	} else {										// not empty
-	extract($_POST);
+	// Phase 2 security cleanup: replaced extract with explicit variable assignments
+	$ticket = isset($_POST['ticket']) ? sanitize_int($_POST['ticket']) : 0;
+	$responder = isset($_POST['responder']) ? sanitize_int($_POST['responder']) : 0;
 	do_log($GLOBALS['LOG_UNIT_COMMENT'], $ticket, $responder, strip_tags(trim($_POST['frm_comment'])));
 ?>
 	<DIV style='width: 100%; text-align: center;'><BR /><BR /><BR /><BR /><BR /><BR />Log entry inserted

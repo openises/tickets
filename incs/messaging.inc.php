@@ -5,7 +5,7 @@
 11/18/13 - Fixed incorrect saving of messages to multiple recipients
 */
 
-extract($_GET);
+// Phase 2 security cleanup: removed extract — no extracted variables were used
 set_time_limit(0);
 require_once('functions.inc.php');
 $txtlocal_time = "-2 hours";

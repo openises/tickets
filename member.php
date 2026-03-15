@@ -14,8 +14,7 @@ do_login(basename(__FILE__));
 //require_once('./incs/all_forms_js_variables.inc.php');
 $key_field_size = 30;
 $email_text = "";
-extract($_GET);
-extract($_POST);
+// Phase 2 security cleanup: removed extract — all variables already accessed explicitly
 $scr_width = $_SESSION['scr_width'];
 $scr_height = $_SESSION['scr_height'];
 $left_col_width = $scr_width * 0.58;

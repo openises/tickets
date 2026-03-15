@@ -356,7 +356,13 @@ function showDiv(div_area, hide_cont, show_cont) {	//	3/15/11
 //]]></script>
 <?php
 if (!empty($_POST)) {				// 77-200
-	extract($_POST);
+	// Phase 2 security cleanup: replaced extract with explicit variable assignments
+	$frm_status_id = $_POST['frm_status_id'] ?? '';
+	$frm_ticket_id = $_POST['frm_ticket_id'] ?? '';
+	$frm_comments = $_POST['frm_comments'] ?? '';
+	$frm_by_id = $_POST['frm_by_id'] ?? '';
+	$frm_facility_id = $_POST['frm_facility_id'] ?? '';
+	$frm_rec_facility_id = $_POST['frm_rec_facility_id'] ?? '';
 	$addrs = array();													// 10/7/08
 	$smsgaddrs = array();
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60)); 

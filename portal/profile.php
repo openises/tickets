@@ -107,8 +107,8 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
 $get_go = (array_key_exists('go', ($_GET)))? $_GET['go']  : "" ;
 if((!empty($_POST)) && ($get_go == 'true')) {
 	$frm_sort_desc = array_key_exists('frm_sort_desc', ($_POST))? 1: 0 ;	// checkbox handling
-	extract($_POST);
-	$frm_hash = sanitize_string($frm_hash);
+	// Phase 2 security cleanup: replaced extract with explicit variable assignment
+	$frm_hash = sanitize_string($_POST['frm_hash'] ?? '');
 	$query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd`=? WHERE `id`=?";
 	$result = db_query($query, [$frm_hash, $_SESSION['user_id']]);
 ?>

@@ -15,8 +15,7 @@ do_login(basename(__FILE__));
 $key_field_size = 30;
 $st_size = (get_variable("locale") ==0)?  2: 4;		
 
-extract($_GET);
-extract($_POST);
+// Phase 2 security cleanup: removed extract — all variables already accessed explicitly
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 

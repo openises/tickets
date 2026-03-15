@@ -31,7 +31,7 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 $api_key = get_variable('gmaps_api_key');
 
-extract($_GET);
+// Phase 2 security cleanup: removed extract — no extracted variables were used
 
 function is_a_float($n){									// 3/25/09
     return ( $n == strval(floatval($n)) )? true : false;

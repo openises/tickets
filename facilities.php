@@ -52,8 +52,9 @@ $st_size = (get_variable("locale") ==0)?  2: 4;
 
 $FacID = (isset($_GET['id'])) ? $_GET['id'] : 0;	
 
-extract($_GET);
-extract($_POST);
+// Phase 2 security cleanup: replaced extract with explicit variable assignments
+$id = isset($_GET['id']) ? $_GET['id'] : (isset($_POST['id']) ? $_POST['id'] : 0);
+$mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 

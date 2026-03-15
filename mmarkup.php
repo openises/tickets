@@ -42,8 +42,8 @@ $result = db_query($query);
 do_login(basename(__FILE__));
 
 $mmarkup_id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : 0;
-extract($_GET);
-extract($_POST);
+// Phase 2 security cleanup: replaced extract with explicit variable assignments
+$mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

@@ -25,7 +25,7 @@ require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
 $api_key = get_variable('gmaps_api_key');
 
-extract($_GET);
+// Phase 2 security cleanup: removed extract — no extracted variables were used
 
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use

@@ -337,7 +337,13 @@ function get_icon_legend (){			// returns legend string - 1/1/09
 <?php
 if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	// 		new, populate 10/2/08
 
-	extract($_REQUEST);
+	// Phase 2 security cleanup: replaced extract with explicit variable assignments
+	$frm_status_id = $_REQUEST['frm_status_id'] ?? '';
+	$frm_ticket_id = $_REQUEST['frm_ticket_id'] ?? '';
+	$frm_comments = $_REQUEST['frm_comments'] ?? '';
+	$frm_by_id = $_REQUEST['frm_by_id'] ?? '';
+	$frm_facility_id = $_REQUEST['frm_facility_id'] ?? '';
+	$frm_rec_facility_id = $_REQUEST['frm_rec_facility_id'] ?? '';
 	$the_ticket_id = (integer) $_REQUEST["frm_ticket_id"];
 	$addrs = array();		// 10/7/08
 	$smsgaddrs = array();	// 10/23/12

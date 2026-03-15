@@ -6,4 +6,4 @@ backups/**
 vendor/
 composer.phar
 composer.lock
-mdb_pictures/
+mdb_pictures/.phpunit.result.cache

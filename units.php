@@ -178,8 +178,11 @@ $gt_status = get_text("Status");
 
 $RespID = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : 0;	
 
-extract($_GET);
-extract($_POST);
+// Phase 2 security cleanup: replaced extract with explicit variable assignments
+$frm_mobile = $_POST['frm_mobile'] ?? 0;
+$frm_aprs = $_POST['frm_aprs'] ?? 0;
+$frm_instam = $_POST['frm_instam'] ?? 0;
+$mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
 /*
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}

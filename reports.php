@@ -67,8 +67,7 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 //$ionload =  ((isset($_POST) && isset($_POST['frm_group']) && $_POST['frm_group']=='i'))? " inc_onload();": "";
 
-extract($_GET);
-extract($_POST);
+// Phase 2 security cleanup: removed extract — all variables already accessed directly
 
 if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
 	print "Not Authorized";
