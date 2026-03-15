@@ -686,7 +686,7 @@ function linkFromSumm(table, index) {
 		
 		$email_text = "Member " . $_POST['frm_field2'] . " " . $_POST['frm_field1'] . " Has been Deleted by user " . get_owner($who) . " on " . $now;
 		$addrs = mdb_notify_user();
-		if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+		if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 			$addr_arr = implode("|", array_unique($addrs));			
 			do_send($addr_arr, "Member Data Changed", $email_text);
 			}
@@ -699,26 +699,32 @@ function linkFromSumm(table, index) {
 		} else {
 		if ($_getgoedit == 'true') {
 			$errmsg = "";
-			if (isset($_FILES['frm_field5'])) {
+			// 3/14/26 - Improved file upload handling with proper error checking
+			if (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] === UPLOAD_ERR_OK) {
 				$upload_directory = "./mdb_pictures/" . $_POST['frm_id'] . "/";
-				if (!(file_exists($upload_directory))) {				
+				if (!(file_exists($upload_directory))) {
 					mkdir ($upload_directory, 0777);
 					}
-				chmod($upload_directory, 0777);		
+				chmod($upload_directory, 0777);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
-					if (strlen(filesize($file)) < 149000) {
+					if (filesize($file) < 149000) {		// 3/14/26 - was strlen(filesize()) which always passed
 						$filename = $file;
 						$errmsg = "";
 						} else {
 						$filename = NULL;
-						$errmsg = "Attached file is too large!";
+						$errmsg = "Attached file is too large! (max 145KB)";
 						}
 				} else {
-					$filename = $_POST['frm_exist_id_pic'];
+					$filename = isset($_POST['frm_exist_id_pic']) ? $_POST['frm_exist_id_pic'] : '';
+					$errmsg = "File upload failed — could not save file.";
 				}
+			} elseif (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] !== UPLOAD_ERR_NO_FILE) {
+				// File was selected but upload had an error (e.g. too large for PHP limits)
+				$filename = isset($_POST['frm_exist_id_pic']) ? $_POST['frm_exist_id_pic'] : '';
+				$errmsg = "File upload error (code " . $_FILES['frm_field5']['error'] . "). Check PHP upload_max_filesize.";
 			} else {
-				$filename = $_POST['frm_exist_id_pic'];
+				$filename = isset($_POST['frm_exist_id_pic']) ? $_POST['frm_exist_id_pic'] : '';
 			}
 			
 			$image = $filename;
@@ -846,8 +852,8 @@ function linkFromSumm(table, index) {
 				}				
 			
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
-				$addr_arr = implode("|", array_unique($addrs));			
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
+				$addr_arr = implode("|", array_unique($addrs));
 				do_send($addr_arr, "Member Data Changed", $email_text);
 				}
 			$caption = "<B><FONT SIZE = '4px' COLOR = 'blue'>&nbsp;&nbsp;&nbsp;" . htmlspecialchars($_POST['frm_field2']) . " " . htmlspecialchars($_POST['frm_field1']) . " data has been updated.</FONT></B>&nbsp;&nbsp;" . $errmsg;
@@ -856,25 +862,29 @@ function linkFromSumm(table, index) {
 
 		if ($_getgoadd == 'true') {
 			$errmsg = "";
-			
-			if (isset($_FILES['frm_image'])) {
+			// 3/14/26 - was $_FILES['frm_image'] which never matched form field name 'frm_field5'
+			if (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] === UPLOAD_ERR_OK) {
 				$upload_directory = "./mdb_pictures/" . $_POST['frm_id'] . "/";
-				if (!(file_exists($upload_directory))) {				
+				if (!(file_exists($upload_directory))) {
 					mkdir ($upload_directory, 0777);
 					}
-				chmod($upload_directory, 0777);		
+				chmod($upload_directory, 0777);
 				$file = $upload_directory . "id.jpg";
-				if (move_uploaded_file($_FILES['frm_image']['tmp_name'], $file)) {	// If file uploaded OK
-					if (strlen(filesize($file)) < 149000) {
+				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
+					if (filesize($file) < 149000) {		// 3/14/26 - was strlen(filesize())
 						$filename = $file;
 						$errmsg = "";
 						} else {
 						$filename = NULL;
-						$errmsg = "Attached file is too large!";
+						$errmsg = "Attached file is too large! (max 145KB)";
 						}
 				} else {
-					$filename = $_POST['frm_exist_id_pic'];
+					$filename = "";
+					$errmsg = "File upload failed — could not save file.";
 				}
+			} elseif (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] !== UPLOAD_ERR_NO_FILE) {
+				$filename = "";
+				$errmsg = "File upload error (code " . $_FILES['frm_field5']['error'] . "). Check PHP upload_max_filesize.";
 			} else {
 				$filename = "";
 			}
@@ -998,20 +1008,21 @@ function linkFromSumm(table, index) {
 			$new_id = db()->insert_id;	
 			do_log($GLOBALS['LOG_MEMBER_ADD'], $new_id, 0, $_POST['frm_field2'] . " " . $_POST['frm_field1']);			
 			
-			if (isset($_FILES['frm_image'])) {
+			// 3/14/26 - was $_FILES['frm_image'] which never matched form field name 'frm_field5'
+			if (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] === UPLOAD_ERR_OK) {
 				$upload_directory = "./mdb_pictures/" . $new_id . "/";
-				if (!(file_exists($upload_directory))) {				
+				if (!(file_exists($upload_directory))) {
 					mkdir ($upload_directory, 0777);
 					}
-				chmod($upload_directory, 0777);		
+				chmod($upload_directory, 0777);
 				$file = $upload_directory . "id.jpg";
-				if (move_uploaded_file($_FILES['frm_image']['tmp_name'], $file)) {	// If file uploaded OK
-					if (strlen(filesize($file)) < 149000) {
+				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
+					if (filesize($file) < 149000) {		// 3/14/26 - was strlen(filesize())
 						$filename = $file;
 						$errmsg = "";
 						} else {
 						$filename = NULL;
-						$errmsg = "Attached file is too large!";
+						$errmsg = "Attached file is too large! (max 145KB)";
 						}
 					} else {
 					$filename = NULL;
@@ -1019,13 +1030,13 @@ function linkFromSumm(table, index) {
 				} else {
 				$filename = NULL;
 				}
-			
+
 			$image = $filename;
-			
+
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET
 				`field5`=?
 				WHERE `id`=?";
-			$result = db_query($query, [trim($filename), $new_id]);
+			$result = db_query($query, [trim($filename ?? ''), $new_id]);	// 3/14/26 - null-safe trim
 
 			$caption = "<B>Member  <i>" . htmlspecialchars($_POST['frm_field2']) . " " . htmlspecialchars($_POST['frm_field1']) . "</i> data has been added.</B>";
 
@@ -1036,8 +1047,8 @@ function linkFromSumm(table, index) {
 				}			
 			
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
-				$addr_arr = implode("|", array_unique($addrs));			
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
+				$addr_arr = implode("|", array_unique($addrs));
 				do_send($addr_arr, "Member Data Changed", $email_text);
 				}				
 			}							// end if ($_getgoadd == 'true')
@@ -1066,7 +1077,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nTraining Package - " . get_its_name($_POST['frm_skill'], 'package_name', 'training_packages') . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}
@@ -1098,7 +1109,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nEvent - " . get_its_name($_POST['frm_skill'], 'event_name', 'events') . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}
@@ -1126,7 +1137,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nClothing Item - " . get_its_name($_POST['frm_skill'], 'clothing_item', 'clothing_types') . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}
@@ -1153,7 +1164,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nCapability - " . get_its_name($_POST['frm_skill'], 'name', 'capability_types') . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}			
@@ -1180,7 +1191,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nEquipment Item - " . get_its_name($_POST['frm_skill'], 'equipment_name', 'equipment_types') . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}			
@@ -1217,7 +1228,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . get_member_name($_POST['frm_id']) . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nVehicle - " . get_its_name($_POST['frm_skill'], 'regno', 'vehicles') . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}			
@@ -1278,7 +1289,7 @@ function linkFromSumm(table, index) {
 			$text_str = "Member " . $owner . " Has been modified by user " . get_owner($_SESSION['user_id']) . " on " . $now . "\n\n";
 			$text_str .= ". \n\nFile - " . $shortname . " has been added.";	
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}			
@@ -1324,7 +1335,7 @@ function linkFromSumm(table, index) {
 			}
 
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}				
@@ -1365,7 +1376,7 @@ function linkFromSumm(table, index) {
 			}
 
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}				
@@ -1403,7 +1414,7 @@ function linkFromSumm(table, index) {
 			}
 			
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}				
@@ -1441,7 +1452,7 @@ function linkFromSumm(table, index) {
 			}
 
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}				
@@ -1479,7 +1490,7 @@ function linkFromSumm(table, index) {
 			}
 
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}					
@@ -1525,7 +1536,7 @@ function linkFromSumm(table, index) {
 			}
 
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}					
@@ -1568,7 +1579,7 @@ function linkFromSumm(table, index) {
 			}
 			
 			$addrs = mdb_notify_user();
-			if((isset($addrs)) && ((!empty($addrs)) || ($addrs[0] != ""))) {
+			if(is_array($addrs) && !empty($addrs)) {	// 3/14/26 - was $addrs[0] on FALSE
 				$addr_arr = implode("|", array_unique($addrs));			
 				do_send($addr_arr, "Member Data Changed", $text_str);
 				}					
