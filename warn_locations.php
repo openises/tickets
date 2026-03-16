@@ -180,7 +180,7 @@ function get_icon_legend (){			// returns legend string
 	if ($_postfrm_remove == 'yes') {					//delete Location - checkbox
 		$frm_id = sanitize_int($_POST['frm_id']);
 		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}warnings WHERE `id`=?";
-		$result = db_query($query, [$frm_id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result = db_query($query, [$frm_id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$caption = "<B>Location <I>" . e(stripslashes_deep($_POST['frm_name'])) . "</I> has been deleted from database.</B><BR /><BR />";
 		}
 	else {
@@ -207,7 +207,7 @@ function get_icon_legend (){			// returns legend string
 				`_from`= ?
 				WHERE `id`= ?";
 
-			$result = db_query($query, [trim($_POST['frm_name']), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_state']), $the_type, trim($_POST['frm_descr']), $the_lat, $the_lng, trim($by), trim($now), trim($from), $loc_id]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			$result = db_query($query, [trim($_POST['frm_name']), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_state']), $the_type, trim($_POST['frm_descr']), $the_lat, $the_lng, trim($by), trim($now), trim($from), $loc_id]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_WARNLOCATION_CHANGE'], 0, $_POST['frm_id'], $_POST['frm_status_id']);}	//2/17/11
 			$caption = "<i>" . e(stripslashes_deep($_POST['frm_name'])) . "</i><B>' data has been updated.</B><BR /><BR />";
@@ -236,7 +236,7 @@ function get_icon_legend (){			// returns legend string
 			`_from` )
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		$result = db_query($query, [trim($_POST['frm_name']), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_state']), $frm_lat, $frm_lng, $the_type, trim($_POST['frm_descr']), trim($by), trim($now), trim($from)]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result = db_query($query, [trim($_POST['frm_name']), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_state']), $frm_lat, $frm_lng, $the_type, trim($_POST['frm_descr']), trim($by), trim($now), trim($from)]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$new_id=db()->insert_id;
 
 		do_log($GLOBALS['LOG_WARNLOCATION_ADD'], 0, db()->insert_id, 0);	//	2/17/11

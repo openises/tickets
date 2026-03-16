@@ -25,7 +25,7 @@ function ntp_time() {
 			return FALSE;
 			}
 		else {
-			$NTPtime = ord($data{0	})*pow(256, 3) + ord($data{1	})*pow(256, 2) + ord($data{2	})*256 + ord($data{3	});
+			$NTPtime = ord($data[0])*pow(256, 3) + ord($data[1])*pow(256, 2) + ord($data[2])*256 + ord($data[3]);
 			$TimeFrom1990 = $NTPtime - 2840140800;			// convert the seconds to the present date & time
 			$TimeNow = $TimeFrom1990 + 631152000;			// 2840140800 = Thu, 1 Jan 2060 00:00:00 UTC
 			return 	$TimeNow;

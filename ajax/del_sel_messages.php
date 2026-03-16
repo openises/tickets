@@ -58,9 +58,9 @@ foreach($msgs_arr as $id) {
 			trim($by),
 			trim($from),
 			trim($on)
-	]) or do_error($query_ins, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+	]) or do_error($query_ins, 'db_query() failed', db()->error, __FILE__, __LINE__);
 	$query_del = "DELETE FROM `$GLOBALS[mysql_prefix]messages` WHERE `id` = ?";
-	$result_del = db_query($query_del, [$id]) or do_error($query_del, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+	$result_del = db_query($query_del, [$id]) or do_error($query_del, 'db_query() failed', db()->error, __FILE__, __LINE__);
 	if($result_del) {
 		$ret_arr[$i][0] = 100;
 		$ret_arr[$i][1] = $id;

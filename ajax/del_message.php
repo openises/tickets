@@ -52,10 +52,10 @@ $result = db_query($query, [
 		trim($by),
 		trim($from),
 		trim($on)
-]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 
 $query = "DELETE FROM `$GLOBALS[mysql_prefix]messages` WHERE `id` = ?";
-$result = db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+$result = db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

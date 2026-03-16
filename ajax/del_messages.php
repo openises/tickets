@@ -49,10 +49,10 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 			trim($by),
 			trim($from),
 			trim($on)
-	]) or do_error($query_ins, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+	]) or do_error($query_ins, 'db_query() failed', db()->error, __FILE__, __LINE__);
 	}
 $query = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]messages`";
-$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+$result = db_query($query) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

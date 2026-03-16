@@ -2400,14 +2400,14 @@ function safe_strtotime($datetime) {
 function trim_deep($value) {
     	$value = is_array($value) ?
                 array_map('trim_deep', $value) :
-                trim($value);
+                trim($value ?? '');
     	return $value;
 	}
 
 function mysql_real_escape_string_deep($value) {
     $value = is_array($value) ?
                 array_map('mysql_real_escape_string_deep', $value) :
-                mysqli_real_escape_string($GLOBALS['db_handle'], $value);
+                mysqli_real_escape_string($GLOBALS['db_handle'], $value ?? '');
     return $value;
 	}
 

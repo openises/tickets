@@ -75,16 +75,16 @@ if($id == 0 || count($selected_arr) > 1) {	// It's a read or unread all
 				if(!in_array($the_user, $the_readers, true)) {
 					$the_new_readers = ($the_readers != NULL) ? implode(",", $the_readers) . "," . $the_user: $the_user;
 					$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ?, `readby`= ? WHERE `id` = ?" . $msgDirection;
-					$result = db_query($query, [$the_new_status, $the_new_readers, $val[0]]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+					$result = db_query($query, [$the_new_status, $the_new_readers, $val[0]]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 					$result_code++;
 					} else {
 					$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ? WHERE `id` = ?" . $msgDirection;
-					$result = db_query($query, [$the_new_status, $val[0]]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+					$result = db_query($query, [$the_new_status, $val[0]]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 					$result_code++;
 					}
 				} else {
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ?, `readby` = ? WHERE `id` = ?" . $msgDirection;
-				$result = db_query($query, [$the_new_status, $the_user, $val[0]]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+				$result = db_query($query, [$the_new_status, $the_user, $val[0]]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 				$result_code++;				
 			}
 		}
@@ -103,7 +103,7 @@ if($id == 0 || count($selected_arr) > 1) {	// It's a read or unread all
 			$the_new_readers2 = implode(",", $the_new_readers);
 			$the_new_status = (count($the_new_readers) >= 1) ? 1 : 0;
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ?, `readby`= ? WHERE `id` = ?" . $msgDirection;
-			$result = db_query($query, [$the_new_status, $the_new_readers2, $val[0]]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			$result = db_query($query, [$the_new_status, $the_new_readers2, $val[0]]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 			$result_code++;
 			}
 	} else {
@@ -122,11 +122,11 @@ if($id == 0 || count($selected_arr) > 1) {	// It's a read or unread all
 		if(!array_search($the_user, $the_readers, true)) {
 			$the_new_readers = implode(",", $the_readers) . "," . $the_user;
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ?, `readby`= ? WHERE `id` = ?";
-			$result = db_query($query, [$the_new_status, $the_new_readers, $the_message]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			$result = db_query($query, [$the_new_status, $the_new_readers, $the_message]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 			$result_code++;
 			} else {
 			$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ? WHERE `id` = ?";
-			$result = db_query($query, [$the_new_status, $the_message]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			$result = db_query($query, [$the_new_status, $the_message]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 			$result_code++;
 			}
 			
@@ -143,7 +143,7 @@ if($id == 0 || count($selected_arr) > 1) {	// It's a read or unread all
 		$the_new_readers2 = implode(",", $the_new_readers);
 		$the_new_status = (count($the_new_readers) >= 1) ? 1 : 0;
 		$query = "UPDATE `{$GLOBALS['mysql_prefix']}messages` SET `read_status` = ?, `readby`= ? WHERE `id` = ?";
-		$result = db_query($query, [$the_new_status, $the_new_readers2, $the_message]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+		$result = db_query($query, [$the_new_status, $the_new_readers2, $the_message]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 		$result_code++;
 		}
 	}

@@ -6,7 +6,7 @@ empty_wastebasket.php - empties messages wastebasket table - uses truncate to re
 require_once('../incs/functions.inc.php');
 
 $query = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]messages_bin`";
-$result = db_query($query) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+$result = db_query($query) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 if($result) {
 	$ret_arr[0] = 100;
 	} else {

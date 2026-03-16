@@ -885,7 +885,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$print = "\n<SCRIPT >\n";
 		$print .="\t\tvar calls = new Array();\n";
 		$query	= "SELECT `id`, `callsign` FROM `{$GLOBALS['mysql_prefix']}responder` where `id` != ?";
-		$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result	= db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		while($row = stripslashes_deep($result->fetch_array())) {
 			if (!empty($row['callsign'])) {
 				$print .="\t\tcalls.push('" .$row['callsign'] . "');\n";
@@ -909,7 +909,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	$caption = "";
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
 		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}responder WHERE `id`= ?";
-		$result = db_query($query, [$_POST['frm_id']]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result = db_query($query, [$_POST['frm_id']]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$caption = "<B>" . get_text("Units") . "<I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		print $caption;
 		sleep(10);
@@ -1000,7 +1000,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				trim($now),
 				trim($status_updated),
 				trim($_POST['frm_id'])
-			]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
 			$ex_grps = explode(',', $list); 	//	4/14/11 
@@ -1072,7 +1072,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			trim($_SESSION['user_id']),
 			trim($now),
 			trim($now)
-		]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$new_id=db_insert_id();
 		
 //	9/10/13 File Upload support
@@ -1125,7 +1125,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 						?, ?, ?, ?, 0,
 						0, 0, ?, ?, ?, ?
 					)";
-				$result_insert	= db_query($query_insert, [$_POST['frm_file_title'], $filename, $realfilename, $id, $_FILES['frm_file']['type'], $by, $now, $from]) or do_error($query_insert,'mysql_query() failed', db()->error, basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert, [$_POST['frm_file_title'], $filename, $realfilename, $id, $_FILES['frm_file']['type'], $by, $now, $from]) or do_error($query_insert,'db_query() failed', db()->error, basename( __FILE__), __LINE__);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
@@ -1423,7 +1423,7 @@ if(get_num_groups()) {
 	if ($_getedit == 'true') {
 		$id = $_GET['id'];
 		$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
-		$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result	= db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$row	= $result->fetch_array();
 		$is_mobile = (($row['mobile']==1) && (!(empty($row['callsign']))));		// 1/27/09, 3/15/10
 
@@ -1717,7 +1717,7 @@ if(get_num_groups()) {
 				`updated` AS `updated`
 				FROM `{$GLOBALS['mysql_prefix']}responder` `r`
 				WHERE `r`.`id`= ? LIMIT 1";
-			$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+			$result	= db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 			$row	= stripslashes_deep($result->fetch_assoc());
 //			$is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));				// 1/27/09
 			$lat = $row['lat'];
@@ -1725,7 +1725,7 @@ if(get_num_groups()) {
 
 			if (isset($row['un_status_id'])) {
 				$query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`= ?";	// status value
-				$result_st	= db_query($query, [$row['un_status_id']]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+				$result_st	= db_query($query, [$row['un_status_id']]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 				$row_st	= $result_st->fetch_assoc();
 				unset($result_st);
 				}

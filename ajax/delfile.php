@@ -28,12 +28,12 @@ if(db_affected_rows() > 0) {
 
 if(isset($filename)) {
 	$query = "DELETE FROM `$GLOBALS[mysql_prefix]files` WHERE `id` = ?";
-	$result = db_query($query, [$fileid]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+	$result = db_query($query, [$fileid]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 	if(db_affected_rows() > 0) {
 		$num = db_affected_rows();
 		if($num > 0) {
 			$query = "DELETE FROM `$GLOBALS[mysql_prefix]files_x` WHERE `file_id` = ?";
-			$result = db_query($query, [$fileid]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+			$result = db_query($query, [$fileid]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 			if(db_affected_rows() > 0) {
 				$num2 = db_affected_rows();
 				} else {

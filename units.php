@@ -416,7 +416,7 @@ if(file_exists("./incs/modules.inc.php")) {
 		$print = "\n<SCRIPT >\n";
 		$print .="\t\tvar calls = new Array();\n";
 		$query	= "SELECT `id`, `callsign` FROM `{$GLOBALS['mysql_prefix']}responder` where `id` != ?";
-		$result	= db_query($query, [$id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result	= db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		while($row = stripslashes_deep($result->fetch_array())) {
 			if (!empty($row['callsign'])) {
 				$print .="\t\tcalls.push('" .$row['callsign'] . "');\n";
@@ -441,7 +441,7 @@ if(file_exists("./incs/modules.inc.php")) {
 	if ($_postfrm_remove == 'yes') {					//delete Responder - checkbox - 8/12/09
 		$frm_id = sanitize_int($_POST['frm_id']);
 		$query = "DELETE FROM {$GLOBALS['mysql_prefix']}responder WHERE `id`=?";
-		$result = db_query($query, [$frm_id]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		$result = db_query($query, [$frm_id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$caption = "<B>Unit <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		print $caption;
 		sleep(10);
@@ -467,7 +467,7 @@ if(file_exists("./incs/modules.inc.php")) {
 				if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
 					$theFac = $_POST['frm_facility_sel'];
 					$query_fac = "SELECT `lat`, `lng`, `id` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
-					$result_fac = db_query($query_fac, [intval($_POST['frm_facility_sel'])]) or do_error($query_fac, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+					$result_fac = db_query($query_fac, [intval($_POST['frm_facility_sel'])]) or do_error($query_fac, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 					if ($result_fac->num_rows ==1) {
 						$row_fac = stripslashes_deep($result_fac->fetch_assoc());
 						$the_lat = doubleval($row_fac['lat']);							// apply to unit location
@@ -562,7 +562,7 @@ if(file_exists("./incs/modules.inc.php")) {
 					trim($now),
 					$status_updated,
 					trim($resp_id)
-				]) or do_error($query, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+				]) or do_error($query, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
@@ -688,7 +688,7 @@ if(file_exists("./incs/modules.inc.php")) {
 		if ((isset($_POST['frm_facility_sel'])) && (intval($_POST['frm_facility_sel'])> 0 )) {							// obtain facility location - 6/20/12
 			$theFac = $_POST['frm_facility_sel'];
 			$query_fac = "SELECT `lat`, `lng`, `id` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
-			$result_fac = db_query($query_fac, [intval($_POST['frm_facility_sel'])]) or do_error($query_fac, 'mysql_query() failed', db()->error,basename( __FILE__), __LINE__);
+			$result_fac = db_query($query_fac, [intval($_POST['frm_facility_sel'])]) or do_error($query_fac, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
 			if ($result_fac->num_rows ==1) {
 				$row_fac = stripslashes_deep($result_fac->fetch_assoc());
 				$the_lat = doubleval($row_fac['lat']);							// apply to unit location
@@ -742,7 +742,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			$theFac,
 			trim($now),
 			trim($now)
-		]) or do_error($query, 'mysql_query() failed', db()->error, __FILE__, __LINE__);
+		]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 		$new_id=db()->insert_id;
 		
 //	9/10/13 File Upload support
@@ -795,7 +795,7 @@ if(file_exists("./incs/modules.inc.php")) {
 						?, ?, ?, 0, ?,
 						0, 0, ?, ?, ?, ?
 					)";
-				$result_insert	= db_query($query_insert, [$_POST['frm_file_title'], $filename, $realfilename, $id, $_FILES['frm_file']['type'], $by, $now, $from]) or do_error($query_insert,'mysql_query() failed', db()->error, basename( __FILE__), __LINE__);
+				$result_insert	= db_query($query_insert, [$_POST['frm_file_title'], $filename, $realfilename, $id, $_FILES['frm_file']['type'], $by, $now, $from]) or do_error($query_insert,'db_query() failed', db()->error, basename( __FILE__), __LINE__);
 				if($result_insert) {	//	is the database insert successful
 					$dbUpdated = true;
 					} else {	//	problem with the database insert
