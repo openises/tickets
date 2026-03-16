@@ -531,6 +531,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 <SCRIPT SRC="./js/suggest.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
 <SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <script src="./js/proj4js.js"></script>
 <script src="./js/proj4-compressed.js"></script>
 <script src="./js/leaflet/leaflet.js"></script>
@@ -741,17 +742,18 @@ function set_size() {
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08
 
 	function validate(theForm) {
+		if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+			return false;
+		}
+		FormValidator.clearCustomErrors(theForm);
 		var errmsg="";
-		if ((theForm.frm_street.value == "") && (theForm.frm_city.value == "") && (theForm.frm_state.value == ""))	{errmsg+= "\tAddress is required\n";}
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_year_problemend.disabled))
 														{errmsg+= "\tClosed ticket requires run end date\n";}
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_comments==""))
 														{errmsg+= "\tClosed ticket requires <?php print $disposition;?> data\n";}
-		if (theForm.frm_contact.value == "")			{errmsg+= "\tReported-by is required\n";}
-		if (theForm.frm_scope.value == "")				{errmsg+= "\tIncident name is required\n";}		// 10/21/08
 
 		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			FormValidator.showCustomErrors(theForm, errmsg);
 			return false;
 			} else {
 			st_unlk(theForm);
@@ -1198,16 +1200,16 @@ function set_size() {
 
 						if ($result_bldg->num_rows > 0) {			// 4/7/2014
 ?>
-							<LABEL for="sel_bldg" onmouseout="UnTip()" onmouseover="Tip('Buildings stored - select one if required');"><?php print get_text('Buildings');?>: <font color='red' size='-1'>*</font></LABEL>
+							<LABEL for="sel_bldg" onmouseout="UnTip()" onmouseover="Tip('Buildings stored - select one if required');"><?php print get_text('Buildings');?>: <span class="required-mark">*</span></LABEL>
 							<?php echo $sel_str;?>
 <?php
 							}		// end if()
 ?>
-						<LABEL for="street" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_loca'];?>');"><?php print get_text('Location');?>: <font color='red' size='-1'>*</font></LABEL>
-						<INPUT id='street' NAME='frm_street' tabindex=1 SIZE='64' TYPE='text' VALUE="<?php print $row['street'];?>" MAXLENGTH='512'>
-						<LABEL for="address_about" onmouseout="UnTip()" onmouseover="Tip('Extra information about address');"><?php print get_text('About Address');?>: <font color='red' size='-1'>*</font></LABEL>
+						<LABEL for="street" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_loca'];?>');"><?php print get_text('Location');?>: <span class="required-mark">*</span></LABEL>
+						<INPUT id='street' NAME='frm_street' tabindex=1 SIZE='64' TYPE='text' VALUE="<?php print $row['street'];?>" MAXLENGTH='512' data-required="true" data-validate="group:address" data-required-msg="At least one address field is required" aria-required="true">
+						<LABEL for="address_about" onmouseout="UnTip()" onmouseover="Tip('Extra information about address');"><?php print get_text('About Address');?>: <span class="required-mark">*</span></LABEL>
 						<INPUT id='address_about' NAME='frm_address_about' tabindex=1 SIZE='64' TYPE='text' VALUE="<?php print $row['address_about'];?>" MAXLENGTH='512'>
-						<LABEL for="city" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_city"];?>');"><?php print get_text('City');?>: <font color='red' size='-1'>*</font>
+						<LABEL for="city" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_city"];?>');"><?php print get_text('City');?>: <span class="required-mark">*</span>
 <?php
 						if($gmaps || $good_internet) {
 ?>								
@@ -1216,7 +1218,7 @@ function set_size() {
 							}				// end if($gmaps)
 ?>
 						</LABEL>
-						<INPUT SIZE='32' TYPE='text' id='city' NAME='frm_city' VALUE="<?php print $row['city'];?>" MAXLENGTH='32' onChange = 'this.value=capWords(this.value)' <?php print $dis;?>>
+						<INPUT SIZE='32' TYPE='text' id='city' NAME='frm_city' VALUE="<?php print $row['city'];?>" MAXLENGTH='32' onChange='this.value=capWords(this.value)' <?php print $dis;?> data-required="true" data-validate="group:address" data-required-msg="At least one address field is required" aria-required="true">
 <?php
 								if($gmaps) {
 ?>		
@@ -1224,8 +1226,8 @@ function set_size() {
 <?php
 									}				// end if($gmaps)
 ?>
-						<BR /><LABEL for="state" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_state"];?>');"><?php print get_text('St');?>: <font color='red' size='-1'>*</font></LABEL>
-						<INPUT ID='state' SIZE='<?php print $st_size;?>' TYPE='text' NAME='frm_state' VALUE='<?php print $row['state'];?>' MAXLENGTH='<?php print $st_size;?>' <?php print $dis;?>><BR />
+						<BR /><LABEL for="state" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_state"];?>');"><?php print get_text('St');?>: <span class="required-mark">*</span></LABEL>
+						<INPUT ID='state' SIZE='<?php print $st_size;?>' TYPE='text' NAME='frm_state' VALUE='<?php print $row['state'];?>' MAXLENGTH='<?php print $st_size;?>' <?php print $dis;?> data-required="true" data-validate="group:address" data-required-msg="At least one address field is required" aria-required="true"><BR />
 						<LABEL for="toaddress" onmouseout="UnTip()" onmouseover="Tip('To Address, Not plotted on map, for information only');"><?php print get_text('To Address');?>: </LABEL>
 						<INPUT ID='toaddress' NAME='frm_to_address' tabindex=1 SIZE='64' TYPE='text' VALUE="<?php print $row['to_address'];?>" MAXLENGTH='512' /><BR />
 						<DIV id='loc_warnings' CLASS='text' style='z-index: 1000; display: none;'></DIV>
@@ -1263,7 +1265,7 @@ function set_size() {
 						<LEGEND class='text_large text_bold'>General</LEGEND>
 						<DIV style='position: relative;'>
 						<LABEL for="scope" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_name'];?>');"><?php print get_text("Incident name");?>: </LABEL>
-						<INPUT TYPE='text' id='scope' NAME='frm_scope' SIZE='48' VALUE='<?php print $row['scope'];?>' MAXLENGTH='48' <?php print $dis;?> />						
+						<INPUT TYPE='text' id='scope' NAME='frm_scope' SIZE='48' VALUE='<?php print $row['scope'];?>' MAXLENGTH='48' <?php print $dis;?> data-required="true" data-required-msg="Incident name is required" aria-required="true" />						
 						<LABEL for="description" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_synop'];?>');"><?php print get_text("Synopsis");?>: </LABEL>
 						<TEXTAREA id='description' NAME='frm_description' COLS='45' ROWS='8' <?php print $dis;?>><?php print $row['tick_descr'];?></TEXTAREA>						
 						<LABEL for="sel_signals" onmouseout="UnTip()" onmouseover="Tip('Signal');">Signal &raquo; </LABEL>
@@ -1378,7 +1380,7 @@ function set_size() {
 							}
 						if ($num_mi > 0) {
 ?>
-							<LABEL for="sel_maj_inc" onmouseout="UnTip()" onmouseover="Tip('Major Incidents - sel one if appropriate');"><?php print get_text('Major Incident');?>: <font color='red' size='-1'>*</font></LABEL>
+							<LABEL for="sel_maj_inc" onmouseout="UnTip()" onmouseover="Tip('Major Incidents - sel one if appropriate');"><?php print get_text('Major Incident');?>: <span class="required-mark">*</span></LABEL>
 							<SELECT id="sel_maj_inc" NAME='frm_maj_inc'>
 								<OPTION VALUE=0 SELECTED>Select</OPTION>
 <?php
@@ -1519,7 +1521,7 @@ function set_size() {
 							}	
 ?>
 						<LABEL for="contact" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_caller'];?>');"><?php print get_text("Reported by");?>: </LABEL>
-						<INPUT SIZE='48' TYPE='text' id='contact' NAME='frm_contact' VALUE="<?php print $row['contact'];?>" MAXLENGTH='48' <?php print $dis;?>/>
+						<INPUT SIZE='48' TYPE='text' id='contact' NAME='frm_contact' VALUE="<?php print $row['contact'];?>" MAXLENGTH='48' <?php print $dis;?> data-required="true" data-required-msg="Reported-by is required" aria-required="true" />
 <?php
 						$portal_user_control = "<SELECT id='portal_user' NAME='frm_portal_user'>";
 						$query_pu = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `level` = " . $GLOBALS['LEVEL_SERVICE_USER'] . " ORDER BY `name_l` ASC";
@@ -1660,6 +1662,7 @@ function set_size() {
 					<INPUT TYPE="hidden" NAME="frm_fac_chng" VALUE="0">		<!-- 3/25/10 -->
 					<INPUT TYPE="hidden" NAME="frm_notes" VALUE="<?php print $row['comments'];?>">
 					</FORM>
+				<SCRIPT>FormValidator.init(document.edit);</SCRIPT>
 <?php
 			if($in_win == 1) {
 				if($gmaps) {
