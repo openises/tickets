@@ -191,24 +191,9 @@ problem.
 
 ---
 
-## 5. Full Screen View Dropdown Not Fully Working
+## 5. ~~Full Screen View Dropdown Not Fully Working~~ *(Fixed in commit 8e19f88)*
 
-**Source:** Manual testing (2026-03-16)
-**Reporter:** Eric Osterberg
-**Category:** Bug / UI
-**Affected screen:** Full screen view (`full_scr.php`)
-
-### Current behavior
-The dropdown list of views (e.g., "Current situation", "Incidents closed today", "Incidents closed last month", etc.) does not fully work. Selecting certain options from the dropdown does not update the display as expected.
-
-### Expected behavior
-All dropdown options should filter/update the displayed incidents according to the selected time range or view.
-
-### Investigation needed
-- [ ] Identify which dropdown options work and which do not
-- [ ] Check the JavaScript handler for the dropdown change event
-- [ ] Verify the AJAX/form submission that loads the filtered data
-- [ ] Test each option and document which ones fail
+The `set_period()` function in `forms/full_screen.php` referenced `getElementById('period_select')` but the SELECT element had ID `frm_interval`. This ID mismatch (code copied from sit_screen.php which uses `period_select`) caused a silent JS error, preventing the dropdown from updating the heading or syncing selection state.
 
 ---
 
