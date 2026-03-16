@@ -2368,6 +2368,37 @@ function stripslashes_deep($value) {
     }
 }
 
+/**
+ * Null-safe wrappers for PHP 8.2+ compatibility.
+ * Prevent deprecation warnings when DB columns return null.
+ * Compatible with PHP 7.2+.
+ */
+
+/** @return string */
+function safe_addslashes($str) {
+    return addslashes($str ?? '');
+}
+
+/** @return string */
+function safe_htmlentities($str, $flags = ENT_QUOTES, $encoding = 'UTF-8') {
+    return htmlentities($str ?? '', $flags, $encoding);
+}
+
+/** @return int */
+function safe_strlen($str) {
+    return strlen($str ?? '');
+}
+
+/**
+ * @return int|false
+ */
+function safe_strtotime($datetime) {
+    if ($datetime === null || $datetime === '') {
+        return false;
+    }
+    return strtotime($datetime);
+}
+
 function trim_deep($value) {
     	$value = is_array($value) ?
                 array_map('trim_deep', $value) :
