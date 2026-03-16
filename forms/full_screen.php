@@ -217,6 +217,7 @@ var colors = new Array ('odd', 'even');
 var fscolors = new Array ('fs_odd', 'fs_even');
 
 function set_period(period) {
+	if(period == 99 || period == window.inc_period) {return;}
 	window.inc_period = period;
 	thelength = document.getElementById('frm_interval').options.length;
 	for(var f = 0; f < thelength; f++) {
@@ -225,6 +226,9 @@ function set_period(period) {
 			}
 		}
 	$('theHeading').innerHTML = window.captions[window.inc_period];
+	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
+	inc_period_changed = 1;
+	load_fs_incidentlist();
 	}
 
 function submit_period() {
@@ -445,7 +449,7 @@ function do_tab(tabid, suffix, lat, lng) {
 		<TR>
 			<TD>
 				<FORM NAME = 'frm_interval_sel' STYLE = 'display:inline' >
-					<SELECT CLASS='text' ID='frm_interval' NAME = 'frm_interval' onChange = 'show_btns_closed(); set_period(this.value);'>
+					<SELECT CLASS='text' ID='frm_interval' NAME = 'frm_interval' onChange = 'set_period(this.value);'>
 						<OPTION CLASS='text' VALUE='99' SELECTED><?php print get_text("Change display"); ?></OPTION>
 						<OPTION CLASS='text' VALUE='0'><?php print get_text("Current situation"); ?></OPTION>
 						<OPTION CLASS='text' VALUE='1'><?php print $incidents;?> closed today</OPTION>
