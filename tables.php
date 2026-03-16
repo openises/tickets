@@ -249,20 +249,36 @@ function get_file($mystr) {								// returns extracted script name
 	return $temp;
 	}
 
+function mysql_field_type_compat($result, $i) {
+	$field = mysqli_fetch_field_direct($result, $i);
+	$type_map = [
+		MYSQLI_TYPE_TINY => 'int', MYSQLI_TYPE_SHORT => 'int', MYSQLI_TYPE_LONG => 'int',
+		MYSQLI_TYPE_INT24 => 'int', MYSQLI_TYPE_LONGLONG => 'int',
+		MYSQLI_TYPE_FLOAT => 'real', MYSQLI_TYPE_DOUBLE => 'real', MYSQLI_TYPE_DECIMAL => 'real',
+		MYSQLI_TYPE_NEWDECIMAL => 'real',
+		MYSQLI_TYPE_VAR_STRING => 'string', MYSQLI_TYPE_STRING => 'string',
+		MYSQLI_TYPE_BLOB => 'blob', MYSQLI_TYPE_TINY_BLOB => 'blob',
+		MYSQLI_TYPE_MEDIUM_BLOB => 'blob', MYSQLI_TYPE_LONG_BLOB => 'blob',
+		MYSQLI_TYPE_DATE => 'date', MYSQLI_TYPE_DATETIME => 'datetime',
+		MYSQLI_TYPE_TIMESTAMP => 'timestamp', MYSQLI_TYPE_TIME => 'time',
+		MYSQLI_TYPE_YEAR => 'year', MYSQLI_TYPE_ENUM => 'string', MYSQLI_TYPE_SET => 'string',
+	];
+	return $type_map[$field->type] ?? 'unknown';
+}
+
 function fnDatabaseExists($dbName) {					//Verifies existence of a MySQL database
 	global $mysql_host, $mysql_user, $mysql_passwd;
 	$bRetVal = FALSE;
-	if ($oConn = @mysql_connect($mysql_host, $mysql_user, $mysql_passwd )) {
-		$result = mysql_list_dbs($oConn);
-		while ($row=$result->fetch_array(MYSQLI_NUM)) {
-			if ($row[0] ==  $dbName)
-			$bRetVal = TRUE;
-			}
-		mysql_free_result($result);
-//		mysql_close($oConn);
+	if ($oConn = @mysqli_connect($mysql_host, $mysql_user, $mysql_passwd)) {
+		$result = mysqli_query($oConn, 'SHOW DATABASES');
+		while ($row = $result->fetch_array(MYSQLI_NUM)) {
+			if ($row[0] == $dbName)
+				$bRetVal = TRUE;
 		}
-	return ($bRetVal);
+		mysqli_free_result($result);
 	}
+	return ($bRetVal);
+}
 
 function fnSubTableExists($TableName) {					// returns name of substitution table, or FALSE
 	global $id_lg, $primaries, $secondaries ;
@@ -300,8 +316,8 @@ while ($row = $result->fetch_row()) {
 	$result2 = db_query($sql);	// $mysql_db
 	$row2 = $result2->fetch_array();
 	$gotit = FALSE;
-	for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field
-		if (strtolower(substr(mysql_field_name($result2, $i), -$id_lg)) == $FK_id) {	// find any foreign key
+	for ($i = 0; $i < $result2->field_count; $i++) {			// look at each field
+		if (strtolower(substr(mysqli_fetch_field_direct($result2, $i)->name, -$id_lg)) == $FK_id) {	// find any foreign key
 			$primaries[$ctrp] = $row[0];							// a primary
 			$ctrp++;
 			$gotit = TRUE;
@@ -955,7 +971,7 @@ switch ($func) {		// ================================== case "c" ===============
 
 		$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 		$result = db_query($query);
-		$num_fields = mysql_num_fields($result);	// 3/14/26 - Cache field count before loop (db_query calls inside loop change mysqli_field_count)
+		$num_fields = $result->field_count;	// 3/14/26 - Cache field count before loop (db_query calls inside loop change mysqli_field_count)
 		$lineno = 0;
 		$thetemp = get_defined_constants(true);
 //		dump($thetemp);
@@ -963,8 +979,8 @@ switch ($func) {		// ================================== case "c" ===============
 			if ((!is_null($row)) && ($fill_from_last)) 	{$last_data = $row[$i]; $class="clean";}
 			else 										{$last_data = ""; 		$class="dirty";}
 
-			if (substr(mysql_field_name($result, $i), 0, 1 ) =="_") {				// 12/20/08
-				switch (mysql_field_name($result, $i)) {
+			if (substr(mysqli_fetch_field_direct($result, $i)->name, 0, 1 ) =="_") {				// 12/20/08
+				switch (mysqli_fetch_field_direct($result, $i)->name) {
 					case "_by":
 					case "_userid":													// 10/26/10
 						$value = $_SESSION['user_id'];
@@ -987,8 +1003,8 @@ switch ($func) {		// ================================== case "c" ===============
 					$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";						// identifies mandatory vs. optional input
 					$max = get_digs($arrayattr[$i][1]);											// max input lgth per attrib's array - 2/8/10
 					print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
-					print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
-					switch (mysql_field_type($result, $i)) {
+					print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysqli_fetch_field_direct($result, $i)->name)) . ":</TD>";
+					switch (mysql_field_type_compat($result, $i)) {
 						case "DATETIME":
 						case "DATE":
 						case "TIMESTAMP":
@@ -998,10 +1014,10 @@ switch ($func) {		// ================================== case "c" ===============
 							fnDoCal($i);				// generates JS Calendar stuff
 							$max = 16;
 							$value = date($date_out_format);
-							print "<TD><INPUT MAXLENGTH=$max ID=\"fd$i\" SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
+							print "<TD><INPUT MAXLENGTH=$max ID=\"fd$i\" SIZE=$max type=\"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
 							fnCalButt ($i);
-//							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-							$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+//							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+							$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 							print "{$hint_str}</TD></TR>\n\t";
 							break;
 
@@ -1009,9 +1025,9 @@ switch ($func) {		// ================================== case "c" ===============
 						case "time":
 							$value = date ("H:i");
 							$max = 5;
-							print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-//							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-							$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+							print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$value\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+//							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+							$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 							print "{$hint_str}</TD></TR>\n\t";
 							break;
 
@@ -1023,51 +1039,51 @@ switch ($func) {		// ================================== case "c" ===============
 						case "LONGLONG":
 						case "LONG":
 							$gotit = FALSE;
-							if (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id) {			// maybe dropdown
-								$lgth = safe_strlen(mysql_field_name($result, $i));
-								$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
+							if (strtolower(substr(mysqli_fetch_field_direct($result, $i)->name, -$id_lg)) == $FK_id) {			// maybe dropdown
+								$lgth = safe_strlen(mysqli_fetch_field_direct($result, $i)->name);
+								$thetable = substr( mysqli_fetch_field_direct($result, $i)->name,0, $lgth-$id_lg) ;			// extract corresponding table name
 								if (mysql_table_exists($thetable)) {											// does non-empty table exist?
 									$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
 									$temp_result = db_query($query);
-									$thecolumn = mysql_field_name($temp_result, 1)	;							// column 1 field name
+									$thecolumn = mysqli_fetch_field_direct($temp_result, 1)->name	;							// column 1 field name
 
 									$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";
 									$temp_result = db_query($query);
-									print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
+									print "\t\t<TD><SELECT NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "'>\n\t\t<OPTION VALUE='0' selected>Select one</OPTION>\n";
 									while ($temp_row = $temp_result->fetch_array())  {							// each row
 										print "\t\t<OPTION VALUE='" . trim($temp_row[0]) . "'>" . trim($temp_row[1]) . "</OPTION>\n";
 										}
 									print "\t\t</SELECT>";
 //									print ($do_hints)? "<SPAN class='$mand_opt' >(" . mysql_affected_rows() . ")</SPAN>": "";
-									$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+									$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 									print "{$hint_str}</TD></TR>\n\t";
 									unset ($temp_result);
 									$gotit = TRUE;
 									}											// end if (mysql_table_exists($thetable)) ...
 								}										// end maybe dropdown
 							// 3/14/26 - Check FK overrides for columns without _id suffix
-							if (!$gotit && isset($fk_overrides[mysql_field_name($result, $i)])) {
-								$fk = $fk_overrides[mysql_field_name($result, $i)];
+							if (!$gotit && isset($fk_overrides[mysqli_fetch_field_direct($result, $i)->name])) {
+								$fk = $fk_overrides[mysqli_fetch_field_direct($result, $i)->name];
 								$fk_table = $mysql_prefix . $fk['table'];
 								$fk_alias = $fk['display_alias'];
 								$fk_query = "SELECT `id`, {$fk['display_expr']} AS `{$fk_alias}` FROM `{$fk_table}` ORDER BY `{$fk_alias}` ASC";
 								$temp_result = db_query($fk_query);
-								print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
+								print "\t\t<TD><SELECT NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "'>\n";
 								print "\t\t<OPTION VALUE='0' selected>None</OPTION>\n";
 								if ($temp_result) {
 									while ($temp_row = $temp_result->fetch_assoc()) {
 										print "\t\t<OPTION VALUE='" . e($temp_row['id']) . "'>" . e($temp_row[$fk_alias]) . "</OPTION>\n";
 									}
 								}
-								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+								$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 								print "\t\t</SELECT>{$hint_str}</TD></TR>\n\t";
 								unset($temp_result);
 								$gotit = TRUE;
 							}
 							if (!$gotit) {
-								print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-//								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+								print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+//								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+								$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 								print "{$hint_str}</TD></TR>\n\t";
 								}				// end if (!$gotit)
 							break;
@@ -1091,20 +1107,20 @@ switch ($func) {		// ================================== case "c" ===============
 								for ($j = 0; $j < count($temparray); $j++) {
 									$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
 									$checked=($temparray[$j]==$default)? " CHECKED ": "";
-									print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked STYLE='vertical-align:middle;'/>&nbsp;&nbsp;&nbsp;&nbsp;";
+									print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE= \"$temparray[$j]\" $checked STYLE='vertical-align:middle;'/>&nbsp;&nbsp;&nbsp;&nbsp;";
 									}				// end for ($j = 0;
-								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+								$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 								print "</B>{$hint_str}</TD></TR>\n\t";
 								}				// end if ("enum")
 							else	{
-								if (($max> $text_type_max) || (mysql_field_type($result, $i)=="blob")){
-									print "\n\t\t<TD><TEXTAREA ID='ID{$i}' CLASS='{$class}' NAME='frm_" . mysql_field_name($result, $i) . "' COLS='90' ROWS = '3' onFocus=\"JSfnChangeClass(this.id, 'dirty');\" STYLE='vertical-align:text-top;'>{$last_data}</TEXTAREA> ";
+								if (($max> $text_type_max) || (mysql_field_type_compat($result, $i)=="blob")){
+									print "\n\t\t<TD><TEXTAREA ID='ID{$i}' CLASS='{$class}' NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "' COLS='90' ROWS = '3' onFocus=\"JSfnChangeClass(this.id, 'dirty');\" STYLE='vertical-align:text-top;'>{$last_data}</TEXTAREA> ";
 									}
 								else {
-									print "\n\t\t<TD><INPUT  ID=\"ID$i\" CLASS=\"$class\" MAXLENGTH=\"$max\" SIZE=\"$max\" type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"> ";
+									print "\n\t\t<TD><INPUT  ID=\"ID$i\" CLASS=\"$class\" MAXLENGTH=\"$max\" SIZE=\"$max\" type=\"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"> ";
 									}
-//								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-								$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+//								print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+								$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 								print "{$hint_str}</TD></TR>\n\t";
 			 					}				// end else
 							break;
@@ -1113,15 +1129,15 @@ switch ($func) {		// ================================== case "c" ===============
 						case "DOUBLE":
 						case "double":
 							$max = 12;
-							print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-//							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-							$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+							print "<TD><INPUT ID=\"ID$i\" MAXLENGTH=$max SIZE=$max TYPE=text NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$last_data\" onFocus=\"JSfnChangeClass(this.id, 'dirty');\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+//							print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+							$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 							print "{$hint_str}</TD></TR>\n\t";
 							break;
 
 
 						default:
-							print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
+							print __line__ . mysql_field_type_compat($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
 						}					// end switch
 					}		// end if ... != "auto_increment")
 				}		// end else ...
@@ -1241,26 +1257,26 @@ switch ($func) {		// ================================== case "c" ===============
 		$plural = ($row_count==1)? "" : "s";
 		$head1 = "<TR CLASS = 'odd' valign='TOP' style='width: 100%;'><TH CLASS='text' COLSPAN=99 ALIGN='center'>{$row_count} record{$plural} "." <FONT SIZE=\"-2\">&nbsp;&nbsp;(mouseover ";
 		$head2 = "<TR CLASS = 'plain_listheader text' VALIGN='top' style='width: 100%;'>";
-		$cols = mysql_num_fields($result);
+		$cols = $result->field_count;
 		$cols = ($cols > 17) ? 17 : $cols;
 		$subst = array();											// will hold substitution values for colnames like 'what_id'
 
 		for ($i = 0; $i < $cols; $i++) {							// write table header, etc.
-			if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
-						&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))) {							// prepare to replace with indexed values
+			if ((mysqli_fetch_field_direct($result, $i)->name != $indexname) && (strtolower(substr(mysqli_fetch_field_direct($result, $i)->name, -$id_lg)) == $FK_id)
+						&& ($temp = fnSubTableExists(mysqli_fetch_field_direct($result, $i)->name))) {							// prepare to replace with indexed values
 				$query = "SELECT * FROM $mysql_prefix$temp";
 				$temp_result = db_query($query);
 				while ($temp_row = $temp_result->fetch_array())  {											// each row/value => $substitutions array
 					if (($temp == 'user') && (array_key_exists('user', $temp_row))) {							// 12/12/11 - special case table user
-						$subst[fnSubTableExists(mysql_field_name($result, $i))][$temp_row[0]] = $temp_row['user'];		// assign value to column_name[index]  value
+						$subst[fnSubTableExists(mysqli_fetch_field_direct($result, $i)->name)][$temp_row[0]] = $temp_row['user'];		// assign value to column_name[index]  value
 						} else {
-						$subst[fnSubTableExists(mysql_field_name($result, $i))][$temp_row[0]] = $temp_row[1];		// assign value to column_name[index]  value
+						$subst[fnSubTableExists(mysqli_fetch_field_direct($result, $i)->name)][$temp_row[0]] = $temp_row[1];		// assign value to column_name[index]  value
 						}
 					}						// end while ($temp_row = ...
 				unset ($temp_result);
 				}
 			// 3/14/26 - FK overrides for columns that don't follow the _id convention (e.g. 'owner')
-			$col_name = mysql_field_name($result, $i);
+			$col_name = mysqli_fetch_field_direct($result, $i)->name;
 			if (isset($fk_overrides[$col_name])) {
 				$fko = $fk_overrides[$col_name];
 				$fko_query = "SELECT `id`, {$fko['display_expr']} AS `{$fko['display_alias']}` FROM `{$mysql_prefix}{$fko['table']}` ORDER BY `{$fko['display_alias']}` ASC";
@@ -1271,9 +1287,9 @@ switch ($func) {		// ================================== case "c" ===============
 				unset($fko_result);
 			}
 
-			$thecolumn = mysql_field_name($result, $links_col);		// column name
-			$arrow = (mysql_field_name($result, $i) == $sortby) ? $arrowdir[$sortdir] : "<IMG SRC='./images/blank.png' HEIGHT='20px' style='vertical-align: text-top; float: right;' />";
-			$head2 .= "<TH ID='header_" . $i . "' ALIGN='top' CLASS='plain_listheader text' onMouseover='do_hover_listheader(this.id);' onMouseout='do_plain_listheader(this.id);' onClick =\"JSfnToSort('" . mysql_field_name($result, $i) . "')\" >" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . "<BR />$arrow</TH>\n";
+			$thecolumn = mysqli_fetch_field_direct($result, $links_col)->name;		// column name
+			$arrow = (mysqli_fetch_field_direct($result, $i)->name == $sortby) ? $arrowdir[$sortdir] : "<IMG SRC='./images/blank.png' HEIGHT='20px' style='vertical-align: text-top; float: right;' />";
+			$head2 .= "<TH ID='header_" . $i . "' ALIGN='top' CLASS='plain_listheader text' onMouseover='do_hover_listheader(this.id);' onMouseout='do_plain_listheader(this.id);' onClick =\"JSfnToSort('" . mysqli_fetch_field_direct($result, $i)->name . "')\" >" . str_replace( "_", " ", ucfirst(mysqli_fetch_field_direct($result, $i)->name)) . "<BR />$arrow</TH>\n";
 			}
 		$head2 .= "</TR>\n";										// end table heading
 		print $head1 . "<U>" . str_replace( "_", " ", ucfirst($thecolumn)) . "</U> data for functions)</FONT></TH></TR>\n" . $head2;
@@ -1292,34 +1308,34 @@ switch ($func) {		// ================================== case "c" ===============
 					$in_use = is_in_use($row[$i]);								// 11/9/10
 					}
 
-				$lgth = safe_strlen(mysql_field_name($result, $i));								// shortened column name
+				$lgth = safe_strlen(mysqli_fetch_field_direct($result, $i)->name);								// shortened column name
 				if (isset($row[$i])) {														// not empty
 
-					if (mysql_field_type($result, $i)=="time") {
+					if (mysql_field_type_compat($result, $i)=="time") {
 						print "<TD CLASS='mylink text text-center' {$on_click} >" . substr($row[$i],0,5) . "</TD>\n";
 						} else {
 						if ($i == $links_col) {												// 'name' or 'descr' or default
 							print fnLinkTDm ( "mylink" , $row[0] , $row[$i] , $in_use );	// generate JS function link - assume id as column 0
 							} else {
-							if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {	// check terminal 3 chars
-								$thearray = substr(mysql_field_name($result, $i), 0, $lgth-$id_lg);	// extract table name
+							if ((mysqli_fetch_field_direct($result, $i)->name != $indexname) && (strtolower(substr(mysqli_fetch_field_direct($result, $i)->name, -$id_lg)) == $FK_id)) {	// check terminal 3 chars
+								$thearray = substr(mysqli_fetch_field_direct($result, $i)->name, 0, $lgth-$id_lg);	// extract table name
 								if (isset($subst[$thearray][$row[$i]])) {					// defined?
 									$thedata = $subst[$thearray][$row[$i]];					// yes - pull substitution data
 									} else {
 									$thedata = $row[$i];
 									}								// no substitution data
-								} elseif (isset($subst[mysql_field_name($result, $i)][$row[$i]])) {	// 3/14/26 - FK override substitution
-								$thedata = $subst[mysql_field_name($result, $i)][$row[$i]];
+								} elseif (isset($subst[mysqli_fetch_field_direct($result, $i)->name][$row[$i]])) {	// 3/14/26 - FK override substitution
+								$thedata = $subst[mysqli_fetch_field_direct($result, $i)->name][$row[$i]];
 								} else { 									// not substitution or date
 								$thedata = (safe_strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
-							if(($tablename=="unit_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
+							if(($tablename=="unit_types") && (mysqli_fetch_field_direct($result, $i)->name=="icon")) {					// 1/29/09
 								$thedata = "<IMG SRC='./our_icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
 								}
-							if(($tablename=="fac_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
+							if(($tablename=="fac_types") && (mysqli_fetch_field_direct($result, $i)->name=="icon")) {					// 1/29/09
 								$thedata = "<IMG SRC='./our_icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
 								}
-							$out_str = ((isset($ary_srch)) && (in_array ( mysql_field_name($result, $i),$ary_srch )))?
+							$out_str = ((isset($ary_srch)) && (in_array ( mysqli_fetch_field_direct($result, $i)->name,$ary_srch )))?
 								highlight($srch_term, $thedata): $thedata;
 
 							print "<TD CLASS='mylink text'{$on_click} >" . $out_str . "</TD>\n";			// type not "datetime" and name not "descript"
@@ -1431,11 +1447,11 @@ case "u":	// =======================================  Update 	==================
 	<TR CLASS="even" VALIGN="top"><TD COLSPAN="2" ALIGN="CENTER"><FONT SIZE="+1">Table '<?php print $tablename?>' - Update/Delete Entry</FONT></TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
 <?php
-	$num_fields = mysql_num_fields($result);	// 3/14/26 - Cache field count before loop
+	$num_fields = $result->field_count;	// 3/14/26 - Cache field count before loop
 	for ($i = 0; $i < $num_fields; $i++) {
 		$max = get_digs($types[$i]);											// max input lgth per types array - 6/21/10
-		if (substr(mysql_field_name($result, $i), 0, 1 ) =="_") {				// 12/20/08
-			switch (mysql_field_name($result, $i)) {
+		if (substr(mysqli_fetch_field_direct($result, $i)->name, 0, 1 ) =="_") {				// 12/20/08
+			switch (mysqli_fetch_field_direct($result, $i)->name) {
 				case "_by":
 				case "_userid":													// 10/26/10
 					$value = $_SESSION['user_id'];
@@ -1455,8 +1471,8 @@ case "u":	// =======================================  Update 	==================
 			$lineno++;
 			$mand_opt =($arrayattr[$i][2]!= "YES")? "warn" : "opt";
 			print "<TR VALIGN=\"baseline\" CLASS=\"" .$evenodd [$lineno % 2]  . "\">";
-			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD>";
-			switch (mysql_field_type($result, $i)) {
+			print "<TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace ( "_", " ", ucfirst(mysqli_fetch_field_direct($result, $i)->name)) . ":</TD>";
+			switch (mysql_field_type_compat($result, $i)) {
 				case "datetime":
 				case "date":
 				case "timestamp":
@@ -1466,18 +1482,18 @@ case "u":	// =======================================  Update 	==================
 					$max = 16;
 					$value=date($date_out_format);
 //					echo __LINE__ . " " . $max . "<BR />";
-					print "<TD><INPUT MAXLENGTH=$max SIZE=$max type=\"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
-//					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+					print "<TD><INPUT MAXLENGTH=$max SIZE=$max type=\"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/>";
+//					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+					$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 					print "{$hint_str}</TD></TR>\n\t";
 					break;
 
 				case "time":
 				case "TIME":
 					$max = 5;
-					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
-//					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+					print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"/> ";
+//					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+					$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 					print "{$hint_str}</TD></TR>\n\t";
 					break;
 
@@ -1489,23 +1505,23 @@ case "u":	// =======================================  Update 	==================
 				case "LONGLONG":
 				case "LONG":
 					$gotit = FALSE;
-					if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {			// maybe dropdown
-						$lgth = safe_strlen(mysql_field_name($result, $i));
-						$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
+					if ((mysqli_fetch_field_direct($result, $i)->name != $indexname) && (strtolower(substr(mysqli_fetch_field_direct($result, $i)->name, -$id_lg)) == $FK_id)) {			// maybe dropdown
+						$lgth = safe_strlen(mysqli_fetch_field_direct($result, $i)->name);
+						$thetable = substr( mysqli_fetch_field_direct($result, $i)->name,0, $lgth-$id_lg) ;			// extract corresponding table name
 						if (mysql_table_exists($thetable)) {											// does table exist?
 							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
 							$temp_result = db_query($query);
-							$thecolumn = mysql_field_name($temp_result, 1)	;							// field name 2nd column
+							$thecolumn = mysqli_fetch_field_direct($temp_result, 1)->name	;							// field name 2nd column
 
 							$query ="SELECT * FROM `$mysql_prefix$thetable` ORDER BY `$thecolumn` ASC";	// get option values
 							$temp_result = db_query($query);
-							print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
-							if ($row[mysql_field_name($result, $i)]=='0') {print "\t\t<OPTION VALUE='0' selected>Select</OPTION>\n" ;}				// no selection made
+							print "\t\t<TD><SELECT NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "'>\n";
+							if ($row[mysqli_fetch_field_direct($result, $i)->name]=='0') {print "\t\t<OPTION VALUE='0' selected>Select</OPTION>\n" ;}				// no selection made
 							while ($sel_row = $temp_result->fetch_array())  {								// each row - assume 2nd column has values
-								$selected = ($sel_row['id'] == $row[mysql_field_name($result, $i)])? " selected" : "";
+								$selected = ($sel_row['id'] == $row[mysqli_fetch_field_direct($result, $i)->name])? " selected" : "";
 								print "\t\t<OPTION VALUE='" . $sel_row[0] . "'" . $selected  . " >" . $sel_row[1] . "</OPTION>\n";		// *************
 								}
-					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+					$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 							print "\t\t</SELECT>";
 							print "{$hint_str}</TD></TR>\n\t";
 							unset ($temp_result);
@@ -1513,14 +1529,14 @@ case "u":	// =======================================  Update 	==================
 							}											// end if (mysql_table_exists($thetable)) ...
 						}										// end maybe dropdown
 					// 3/14/26 - Check FK overrides for columns without _id suffix
-					if (!$gotit && isset($fk_overrides[mysql_field_name($result, $i)])) {
-						$fk = $fk_overrides[mysql_field_name($result, $i)];
+					if (!$gotit && isset($fk_overrides[mysqli_fetch_field_direct($result, $i)->name])) {
+						$fk = $fk_overrides[mysqli_fetch_field_direct($result, $i)->name];
 						$fk_table = $mysql_prefix . $fk['table'];
 						$fk_alias = $fk['display_alias'];
 						$fk_query = "SELECT `id`, {$fk['display_expr']} AS `{$fk_alias}` FROM `{$fk_table}` ORDER BY `{$fk_alias}` ASC";
 						$temp_result = db_query($fk_query);
-						$current_val = $row[mysql_field_name($result, $i)];
-						print "\t\t<TD><SELECT NAME='frm_" . mysql_field_name($result, $i) . "'>\n";
+						$current_val = $row[mysqli_fetch_field_direct($result, $i)->name];
+						print "\t\t<TD><SELECT NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "'>\n";
 						$none_selected = (empty($current_val) || $current_val == '0') ? " selected" : "";
 						print "\t\t<OPTION VALUE='0'{$none_selected}>None</OPTION>\n";
 						if ($temp_result) {
@@ -1529,7 +1545,7 @@ case "u":	// =======================================  Update 	==================
 								print "\t\t<OPTION VALUE='" . e($sel_row['id']) . "'{$selected}>" . e($sel_row[$fk_alias]) . "</OPTION>\n";
 							}
 						}
-						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+						$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 						print "\t\t</SELECT>{$hint_str}</TD></TR>\n\t";
 						unset($temp_result);
 						$gotit = TRUE;
@@ -1537,9 +1553,9 @@ case "u":	// =======================================  Update 	==================
 					if (!$gotit) {
 //						dump(__LINE__);
 //						dump($max);
-						print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
-//						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+						print "<TD><INPUT MAXLENGTH=$max SIZE=$max TYPE= \"text\" NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE=\"$row[$i]\" onChange = \"this.value=JSfnTrim(this.value)\"$disabled/> ";
+//						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+						$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 						print "{$hint_str}</TD></TR>\n\t";
 						}
 					break;
@@ -1563,23 +1579,23 @@ case "u":	// =======================================  Update 	==================
 						for ($j = 0; $j < count($temparray); $j++) {
 							$temparray[$j] = str_replace($drops, "", $temparray[$j]);		// drop sgl quotes, parens
 							$checked=($row[$i]==$temparray[$j])? " CHECKED": "";
-							print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysql_field_name($result, $i) . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+							print "$temparray[$j]<INPUT TYPE='radio' NAME=\"frm_" . mysqli_fetch_field_direct($result, $i)->name . "\" VALUE= \"$temparray[$j]\" $checked/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 							}				// end for ($j = 0;
-						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+						$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 						print "</B>{$hint_str}</TD></TR>\n\t";
 						}				// end if ("enum")
 					else {
 						if ($max> $text_type_max) {
-							print "\n\t\t<TD><TEXTAREA NAME='frm_" . mysql_field_name($result, $i) . "' COLS='90' ROWS = '1' STYLE='vertical-align:text-top;'>{$row[$i]}</TEXTAREA> ";
+							print "\n\t\t<TD><TEXTAREA NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "' COLS='90' ROWS = '1' STYLE='vertical-align:text-top;'>{$row[$i]}</TEXTAREA> ";
 							}
 						else {
 //							$max = max($max, safe_strlen($row[$i]));				// 9/5/08
 //					echo __LINE__ . " " . $max . "<BR />";
 
-							print "\n\t\t<TD><INPUT MAXLENGTH='{$max}' SIZE='{$max}' type='text' NAME='frm_" . mysql_field_name($result, $i) . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'$disabled/> ";
+							print "\n\t\t<TD><INPUT MAXLENGTH='{$max}' SIZE='{$max}' type='text' NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'$disabled/> ";
 							}
-//						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-						$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+//						print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+						$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 						print "{$hint_str}</TD></TR>\n\t";
 			 			}
 					break;
@@ -1588,14 +1604,14 @@ case "u":	// =======================================  Update 	==================
 				case "DOUBLE":
 				case "double":
 					$max = 12;
-					print "<TD><INPUT MAXLENGTH={$max} SIZE={$max} TYPE=text NAME='frm_" . mysql_field_name($result, $i) . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'/> ";
-//					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type($result, $i)] . "</SPAN>": "";
-					$hint_str = (empty($comments_ar[mysql_field_name($result, $i)]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysql_field_name($result, $i)]}" ;
+					print "<TD><INPUT MAXLENGTH={$max} SIZE={$max} TYPE=text NAME='frm_" . mysqli_fetch_field_direct($result, $i)->name . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'/> ";
+//					print ($do_hints)? "<SPAN class='$mand_opt' >" . $hints[mysql_field_type_compat($result, $i)] . "</SPAN>": "";
+					$hint_str = (empty($comments_ar[mysqli_fetch_field_direct($result, $i)->name]))? "" : "&nbsp;&laquo;&nbsp;<SPAN CLASS='hint'>{$comments_ar[mysqli_fetch_field_direct($result, $i)->name]}" ;
 					print "{$hint_str}</TD></TR>\n\t";
 					break;
 
 				default:
-					print __line__ . mysql_field_type($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
+					print __line__ . mysql_field_type_compat($result, $i)  . ": ERROR - ERROR - ERROR - ERROR - ERROR" ;
 				}					// end switch
 			}				// end else
 		}		// end for ($i = ...
@@ -1688,12 +1704,12 @@ case "u":	// =======================================  Update 	==================
 	if ($func == "pc") 	{print "<TR CLASS=\"even\" VALIGN=\"top\"><TD COLSPAN=\"2\"  ALIGN=\"CENTER\"><FONT SIZE=\"+1\">New '$tablename' entry accepted.</FONT></TD></TR>";}
 	else				{print "<TR CLASS=\"even\" VALIGN=\"top\"><TD COLSPAN=\"2\" ALIGN=\"CENTER\"><FONT SIZE=\"+1\">Table '$tablename' - View Entry</FONT></TD></TR>";}
 	print "<TR><TD>&nbsp;</TD></TR>";
-	for ($i = 0; $i < mysql_num_fields($result); $i++) {
+	for ($i = 0; $i < $result->field_count; $i++) {
 		$lineno++;
-		print "\n\t<TR CLASS=" . $evenodd [$lineno % 2] . " VALIGN=\"top\"><TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysql_field_name($result, $i))) . ":</TD><TD>";
-		if ((mysql_field_name($result, $i) != $indexname)
-				&& (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)
-				&& ($temp = fnSubTableExists(mysql_field_name($result, $i)))
+		print "\n\t<TR CLASS=" . $evenodd [$lineno % 2] . " VALIGN=\"top\"><TD CLASS=\"td_label\" ALIGN=\"right\">" . str_replace( "_", " ", ucfirst(mysqli_fetch_field_direct($result, $i)->name)) . ":</TD><TD>";
+		if ((mysqli_fetch_field_direct($result, $i)->name != $indexname)
+				&& (strtolower(substr(mysqli_fetch_field_direct($result, $i)->name, -$id_lg)) == $FK_id)
+				&& ($temp = fnSubTableExists(mysqli_fetch_field_direct($result, $i)->name))
 				&& (intval ($row[$i]) > 0)) {							// prepare to replace with indexed values - 9/15/10
 
 
@@ -1708,8 +1724,8 @@ case "u":	// =======================================  Update 	==================
 				}
 			unset ($temp_result);
 			unset ($temp_row);
-			} elseif (isset($fk_overrides[mysql_field_name($result, $i)]) && intval($row[$i]) > 0) {	// 3/14/26 - FK override for view
-			$fko = $fk_overrides[mysql_field_name($result, $i)];
+			} elseif (isset($fk_overrides[mysqli_fetch_field_direct($result, $i)->name]) && intval($row[$i]) > 0) {	// 3/14/26 - FK override for view
+			$fko = $fk_overrides[mysqli_fetch_field_direct($result, $i)->name];
 			$fko_query = "SELECT {$fko['display_expr']} AS `{$fko['display_alias']}` FROM `{$mysql_prefix}{$fko['table']}` WHERE `id` = ? LIMIT 1";
 			$fko_result = db_query($fko_query, [intval($row[$i])]);
 			if ($fko_result->num_rows > 0) {
@@ -1722,7 +1738,7 @@ case "u":	// =======================================  Update 	==================
 			} else {
 			$empty = (safe_strlen($row[$i])== 0) ?  " - empty" : $empty = "";
 
-			switch (mysql_field_type($result, $i)) {
+			switch (mysql_field_type_compat($result, $i)) {
 				case "datetime":
 				case "date":
 				case "timestamp":
@@ -2052,9 +2068,9 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 		$result2 = db_query($sql);	// $mysql_db
 		$row2 = $result2->fetch_array();
 		$gotit = FALSE;
-		for ($i = 0; $i < mysql_num_fields($result2); $i++) {			// look at each field - substr ( string, start, 999)
+		for ($i = 0; $i < $result2->field_count; $i++) {			// look at each field - substr ( string, start, 999)
 
-			if (strtolower(substr(mysql_field_name($result2, $i), -$id_lg)) == $FK_id) {	// find any implied key
+			if (strtolower(substr(mysqli_fetch_field_direct($result2, $i)->name, -$id_lg)) == $FK_id) {	// find any implied key
 //				$primaries[$ctrp] = $row[0];							// a primary
 				$primaries[$ctrp] = substr($row[0], $pref_lgth, 999);							// a primary - 8/20/09
 				$ctrp++;
@@ -2068,7 +2084,7 @@ function fnTables () {							/// displays tables comprising db $mysql_db
 			$ctrs++;
 			}
 		}
-	mysql_free_result($result);
+	mysqli_free_result($result);
 	print "<BR /><BR /><BR /><TABLE ALIGN=\"center\" BORDER=0><TR CLASS=\"even\"><TD ALIGN=\"center\" CLASS=\"td_link\" COLSPAN=\"2\"><FONT SIZE=\"+1\">Available '$mysql_db ' tables</FONT></TD></TR>";
 
 	print "<TR VALIGN=\"top\"><TD><B><nobr>Primary Tables:</nobr></B></TD><TD ALIGN='center'>";
