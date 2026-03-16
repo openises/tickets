@@ -137,11 +137,11 @@ $func      = $_POST['func']      ?? 'l';         // CRUD function: l=list, v=vie
 $tablename = $_POST['tablename'] ?? '';           // selected table name
 $indexname = $_POST['indexname'] ?? '';            // table index/key column
 $id        = $_POST['id']        ?? '';           // record ID for view/edit/delete
-$page      = $_POST['page']      ?? '';           // pagination: current page number
-$numrows   = $_POST['numrows']   ?? '';           // pagination: total row count
+$page      = isset($_POST['page'])    ? intval($_POST['page'])    : 0;  // pagination: current page number
+$numrows   = isset($_POST['numrows']) ? intval($_POST['numrows']) : 0;  // pagination: total row count
 $srch_str  = $_POST['srch_str']  ?? '';           // search filter string (pipe-delimited)
 $sortby    = (!empty($_POST['sortby']))  ? $_POST['sortby']  : 'id';   // sort column
-$sortdir   = (!empty($_POST['sortdir'])) ? $_POST['sortdir'] : 0;      // sort direction (0=ASC, 1=DESC)
+$sortdir   = isset($_POST['sortdir']) ? intval($_POST['sortdir']) : 0;  // sort direction (0=ASC, 1=DESC)
 //$sortby = (!(isset($index)) || empty($index))?			 "id" : $index;
 function get_comments($the_table) {  				// returns array key=> name, value=> comment - 10/31/10
 	$_array = array();								// 12/15/10
@@ -1209,14 +1209,14 @@ switch ($func) {		// ================================== case "c" ===============
 	if (!isset($sortby)) {
 		$sortby = $indexname; $sortdir = 0;										// default sort by is in $indexname
 		}
-	if (!isset ($numrows))	{
+	if (empty($numrows))	{
 		$query ="SELECT * FROM `$mysql_prefix$tablename` ";						// get row count only
 		$result = db_query($query);
 		$numrows = $result->num_rows;
 		unset ($result);
 		$pageNum = 1;
 		} else {
-		$pageNum = $page;
+		$pageNum = ($page > 0) ? $page : 1;
 		}
 	$offset = ($pageNum - 1) * $rowsPerPage;									// calculate 0-based offset	from 1-based page no.
 	$special = "`id`, `name`, `office`, `street`, `city`, `state`, `zip`, `phone`, `status`, `contract`, `email`, `website`, `type`, `chief`, `chief_title`, `emergency_contact`, `emergency_phone`, `contact_via`, `contact_via_use`, `admin_contact`, `admin_phone`, `hours`, `contact_date`";
