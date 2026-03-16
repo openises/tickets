@@ -4,7 +4,7 @@
 */
 require_once('../../incs/functions.inc.php');
 require_once('../../incs/messaging.inc.php');
-set_time_limit(0);
+set_time_limit(90);
 if(empty($_GET)) {
 	exit();
 	}

@@ -1,7 +1,7 @@
 <?php
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
-set_time_limit(0);
+set_time_limit(90);
 @session_start();
 
 if ((array_key_exists("chg_hide", $_POST)) && ($_POST['chg_hide']==1)) {			// change persistence value - 2/18/09

@@ -2,7 +2,7 @@
 require_once('../incs/functions.inc.php');
 require_once('../incs/messaging.inc.php');
 
-set_time_limit(0);
+set_time_limit(90);
 
 //Outgoing Email Messages
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `msg_type` = 1 AND `read_status` = 0";

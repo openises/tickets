@@ -8,7 +8,7 @@ require_once('../incs/messaging.inc.php');
 require_once '../lib/xpm/POP3.php';
 require_once '../lib/xpm/MIME.php';
 error_reporting(E_ALL);				// 9/13/08
-set_time_limit(0);
+set_time_limit(90);
 $orgcode = get_msg_variable('smsg_orgcode');
 $apipin = get_msg_variable('smsg_apipin');
 $mode = get_msg_variable('smsg_mode');

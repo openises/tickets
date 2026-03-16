@@ -17,7 +17,7 @@ function ErHdlr($errno, $errstr) {			// error handler function
 set_error_handler("ErHdlr");				// all errors
 
 require_once('../incs/status_cats.inc.php');
-set_time_limit(0);
+set_time_limit(90);
 @session_start();
 session_write_close();
 //if($_GET['q'] != $_SESSION['id']) {

@@ -1,7 +1,7 @@
 <?php
 require_once('../incs/functions.inc.php');
 require_once('../incs/status_cats.inc.php');
-set_time_limit(0);
+set_time_limit(90);
 @session_start();
 session_write_close();
 if(array_key_exists('q', $_GET) && ($_GET['q'] != $_SESSION['id'])) {

@@ -1,6 +1,6 @@
 <?php
 require_once('../incs/functions.inc.php');
-set_time_limit(0);
+set_time_limit(90);
 @session_start();
 session_write_close();
 /* if($_GET['q'] != $_SESSION['id']) {

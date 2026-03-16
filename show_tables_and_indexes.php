@@ -3,7 +3,7 @@
 07/03/14	New file, to remove duplicate indexes in tables
 */
 error_reporting(E_ALL);
-set_time_limit(0);
+set_time_limit(90);
 require_once('./incs/functions.inc.php');
 $tables = array();
 

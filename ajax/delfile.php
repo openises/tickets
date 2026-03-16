@@ -8,7 +8,7 @@ require_once('../incs/functions.inc.php');
 
 do_login(basename(__FILE__));
 error_reporting(E_ALL);
-set_time_limit(0);
+set_time_limit(90);
 $filestore = substr(getcwd(), 0, -5) . "/files/";
 if(empty($_GET)) {
 	exit;

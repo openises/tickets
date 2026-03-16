@@ -20,7 +20,7 @@
 10/24/2014 Completely revised.
 */
 error_reporting(E_ALL);
-set_time_limit(0);
+set_time_limit(90);
 
 @session_start();
 session_write_close();
