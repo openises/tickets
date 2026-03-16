@@ -218,10 +218,10 @@ var fscolors = new Array ('fs_odd', 'fs_even');
 
 function set_period(period) {
 	window.inc_period = period;
-	thelength = document.getElementById('period_select').options.length;
+	thelength = document.getElementById('frm_interval').options.length;
 	for(var f = 0; f < thelength; f++) {
-		if(document.getElementById('period_select').options[f].value == period) {
-			document.getElementById('period_select').options[f].selected = true;
+		if(document.getElementById('frm_interval').options[f].value == period) {
+			document.getElementById('frm_interval').options[f].selected = true;
 			}
 		}
 	$('theHeading').innerHTML = window.captions[window.inc_period];
