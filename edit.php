@@ -876,7 +876,7 @@ function set_size() {
 	function get_files() {										// 9/10/13
 		$('the_file_list').innerHTML = "Please Wait, loading files";
 		randomnumber=Math.floor(Math.random()*99999999);
-		var url ="./ajax/file_list.php?ticket_id=<?php print $_GET['id'];?>&version=" + randomnumber;
+		var url ="./ajax/file_list.php?ticket_id=<?php print isset($_GET['id']) ? sanitize_int($_GET['id']) : sanitize_int($_SESSION['active_ticket'] ?? 0);?>&version=" + randomnumber;
 		theRequest (url, filelist_cb, "");	//	11/14/13
 		function filelist_cb(req) {
 			var theFiles=req.responseText;
@@ -1024,7 +1024,7 @@ function set_size() {
 		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='" . intval($id) . "'")) {		/* sanity check */
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '" . intval($id) . "'</FONT><BR />";
 			} else {				// OK, do form - 7/7/09, 4/1/11
-			$tick_id = sanitize_int($_GET['id']);
+			$tick_id = sanitize_int($id);		// use already-validated $id (may come from session, not always $_GET)
 			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `inc_endtime` IS NULL OR DATE_FORMAT(`inc_endtime`,'%y') = '00'";
 			$result = db_query($query);
 			$num_mi = $result->num_rows;
@@ -1050,6 +1050,10 @@ function set_size() {
 			$result = db_query($query, [$tick_id]);
 			
 			$row = stripslashes_deep($result->fetch_array());
+			if (!$row) {
+				print "<FONT CLASS='warn'>Ticket not found.</FONT><BR />";
+				return;
+			}
 			if($in_win == 1) {
 ?>
 				<BODY onLoad = "load_markup(); find_warnings(<?php print $row['lat'];?>, <?php print $row['lng'];?>);">
@@ -1725,7 +1729,7 @@ function set_size() {
 				}
 ?>
 			<FORM NAME='can_Form' ACTION="main.php">
-			<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
+			<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print e($tick_id);?>">
 			</FORM>
 
 <div id = "bldg_info" class = "even" style = "display: none; position:fixed; left:500px; top:70px; z-index: 998; width:300px; height:auto;"></div> <!-- 4/1/2014  -->
