@@ -49,6 +49,7 @@ echo "<SCRIPT>\n";
 require_once('./js/member.js');
 echo "\n</SCRIPT>";
 ?>
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
@@ -182,18 +183,14 @@ function validate(theForm) {
 		}
 	theForm.frm_mobile.value = (theForm.frm_mob_disp.checked)? 1:0;
 	theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;
-
 	theForm.frm_direcs.value = (theForm.frm_direcs_disp.checked)? 1:0;
-	var errmsg="";
-	if( typeof theForm.frm_name === 'string' ) {
-		if (theForm.frm_name.value.trim()=="") {
-			errmsg+="Unit NAME is required.\n";
-			}
-		}
-	if (theForm.frm_handle.value.trim()=="")												{errmsg+="Unit HANDLE is required.\n";}
-	if (theForm.frm_icon_str.value.trim()=="")												{errmsg+="Unit ICON is required.\n";}
 
-	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)					{errmsg+="Unit TYPE selection is required.\n";}
+	if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+		return false;
+	}
+	FormValidator.clearCustomErrors(theForm);
+	var errmsg="";
+
 	if (any_track(theForm)){	//	9/6/13
 		if (theForm.frm_callsign.value.trim()==""){
 			if(theForm.frm_track_disp.selectedIndex == 8) {
@@ -206,14 +203,10 @@ function validate(theForm) {
 		if (!(theForm.frm_callsign.value.trim()==""))										{errmsg+="License information used ONLY with Tracking.\n";}
 		}
 
-
-	if (theForm.frm_un_status_id.options[theForm.frm_un_status_id.selectedIndex].value==0)	{errmsg+="Unit STATUS selection is required.\n";}
-	
-	if (theForm.frm_descr.value.trim()=="")													{errmsg+="Unit DESCRIPTION is required with Tracking.\n";}
 	if ((!(theForm.frm_mob_disp.checked)) && (theForm.frm_lat.value.trim().length == 0)) 	{errmsg+="Map location is required for non-mobile units.\n";}
-	
+
 	if (errmsg!="") {
-		alert ("Please correct the following and re-submit:\n\n" + errmsg);
+		FormValidator.showCustomErrors(theForm, errmsg);
 		return false;
 		}
 	else {
@@ -382,22 +375,22 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 ?>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<font color='red' size='-1'>*</font>
+						<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<span class="required-mark">*</span>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['name']) ;?>" />
+						<INPUT id='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['name']) ;?>" data-required="true" data-required-msg="Unit name is required" aria-required="true" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Handle - local rules, could be callsign or badge number, generally for radio comms use">Handle</A>: &nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;
+						<A CLASS="td_label text" HREF="#" TITLE="Handle - local rules, could be callsign or badge number, generally for radio comms use">Handle</A>: &nbsp;<span class="required-mark">*</span>&nbsp;
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print e($row['handle']) ;?>" />
-						<SPAN STYLE = 'margin-left:30px' CLASS="td_label text"> Icon: </SPAN>&nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;
-							<INPUT TYPE = 'text' NAME = 'frm_icon_str' SIZE = 3 MAXLENGTH=3 VALUE='<?php print e($row['icon_str']) ;?>' />
+						<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print e($row['handle']) ;?>" data-required="true" data-required-msg="Unit handle is required" aria-required="true" />
+						<SPAN STYLE = 'margin-left:30px' CLASS="td_label text"> Icon: </SPAN>&nbsp;<span class="required-mark">*</span>&nbsp;
+							<INPUT TYPE='text' NAME='frm_icon_str' SIZE=3 MAXLENGTH=3 VALUE='<?php print e($row['icon_str']) ;?>' data-required="true" data-required-msg="Unit icon is required (3 letters)" aria-required="true" />
 					</TD>
 				</TR>
 <?php
@@ -461,11 +454,11 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 				</TR>
 				<TR CLASS = "even" VALIGN='middle'>
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Unit Type - Select from pulldown menu">Type</A>: <font color='red' size='-1'>*</font>
+						<A CLASS="td_label text" HREF="#" TITLE="Unit Type - Select from pulldown menu">Type</A>: <span class="required-mark">*</span>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD CLASS='td_data text'>
-						<SELECT id='type' NAME='frm_type'>
+						<SELECT id='type' NAME='frm_type' data-required="true" data-validate="select" data-required-msg="Unit type selection is required" aria-required="true">
 <?php
 							foreach ($u_types as $key => $value) {								// 1/9/09
 							$temp = $value; 												// 2-element array
@@ -571,7 +564,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<SELECT id='status' NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; document.res_edit_Form.frm_log_it.value='1'; document.res_edit_Form.frm_status_update.value='1';">
+						<SELECT id='status' NAME="frm_un_status_id" onChange="this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; document.res_edit_Form.frm_log_it.value='1'; document.res_edit_Form.frm_status_update.value='1';" data-required="true" data-validate="select" data-required-msg="Unit status is required" aria-required="true">
 <?php
 							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
 							$result_st = db_query($query);
@@ -682,11 +675,11 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<A CLASS="td_label text" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
+						<A CLASS="td_label text" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<span class="required-mark">*</span>
 					</TD>	
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA CLASS='text' id='description' NAME="frm_descr" COLS=56 ROWS=2><?php print e($row['description']);?></TEXTAREA>
+						<TEXTAREA CLASS='text' id='description' NAME="frm_descr" COLS=56 ROWS=2 data-required="true" data-required-msg="Unit description is required" aria-required="true"><?php print e($row['description']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -888,7 +881,8 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 			<INPUT TYPE="hidden" NAME = "frm_status_updated" VALUE="<?php print $row['status_updated'] ;?>" />	
 			<INPUT TYPE="hidden" NAME = "frm_status_update" VALUE=0 />
 			<INPUT TYPE="hidden" NAME = "frm_exist_members" VALUE="<?php print $assigned_members;?>" />
-			</FORM>			
+			</FORM>
+			<SCRIPT>FormValidator.init(document.res_edit_Form);</SCRIPT>
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
 			<DIV style='position: fixed; top: 50px; z-index: 9999;'>

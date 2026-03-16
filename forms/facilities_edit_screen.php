@@ -32,6 +32,7 @@ window.onresize=function(){set_size();}
 <?php
 require_once('./incs/all_forms_js_variables.inc.php');
 ?>
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
@@ -155,50 +156,9 @@ function contains(array, item) {
 	}
 
 function validate(theForm) {
-/* 		if (theForm.frm_remove) {
-		if (theForm.frm_remove.checked) {
-			var str = "Please confirm removing '" + theForm.frm_name.value + "'";
-			if(confirm(str)) 	{
-				theForm.submit();
-				return true;}
-			else 				{return false;}
-			}
-		}
-	theForm.frm_mobile.value = (theForm.frm_mob_disp.checked)? 1:0;
-	theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;
-
-	theForm.frm_direcs.value = (theForm.frm_direcs_disp.checked)? 1:0;
-	var errmsg="";
-	if (theForm.frm_name.value.trim()=="")													{errmsg+="Unit NAME is required.\n";}
-	if (theForm.frm_handle.value.trim()=="")												{errmsg+="Unit HANDLE is required.\n";}
-	if (theForm.frm_icon_str.value.trim()=="")												{errmsg+="Unit ICON is required.\n";}
-
-	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)					{errmsg+="Unit TYPE selection is required.\n";}
-	if (any_track(theForm)){	//	9/6/13
-		if (theForm.frm_callsign.value.trim()==""){
-			if(theForm.frm_track_disp.selectedIndex == 8) {
-				} else {
-				errmsg+="License information is required with Tracking.\n";
-				}
-			}
-		}
-	else {
-		if (!(theForm.frm_callsign.value.trim()==""))										{errmsg+="License information used ONLY with Tracking.\n";}
-		}
-
-
-	if (theForm.frm_un_status_id.options[theForm.frm_un_status_id.selectedIndex].value==0)	{errmsg+="Unit STATUS selection is required.\n";}
-
-	if (theForm.frm_descr.value.trim()=="")													{errmsg+="Unit DESCRIPTION is required with Tracking.\n";}
-	if ((!(theForm.frm_mob_disp.checked)) && (theForm.frm_lat.value.trim().length == 0)) 	{errmsg+="Map location is required for non-mobile units.\n";}
-
-	if (errmsg!="") {
-		alert ("Please correct the following and re-submit:\n\n" + errmsg);
+	if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
 		return false;
-		}
-	else {
-		theForm.submit();
-		} */
+	}
 	theForm.submit();
 	}				// end function validate(theForm)
 
@@ -333,22 +293,22 @@ function check_days(id) {
 				</TR>
 					<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<LABEL for="name" style='width: 100%;' title="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
+						<LABEL for="name" style='width: 100%;' title="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name");?>:&nbsp;<span class="required-mark">*</span></LABEL>
 					</TD>		
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['name']) ;?>" />
+						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="<?php print e($row['name']) ;?>" data-required="true" data-required-msg="Facility name is required" aria-required="true" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label text">
-						<LABEL for="handle" style='width: 100%;' title="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
+						<LABEL for="handle" style='width: 100%;' title="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle");?>:&nbsp;<span class="required-mark">*</span></LABEL>
 					</TD>		
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print e($row['handle']) ;?>" />
-						<SPAN STYLE = "margin-left:40px;" CLASS="td_label text"  TITLE="A 3-letter value to be used in the map icon">Icon:</SPAN>&nbsp;<font color='red' size='-1'>*</font>
-						<INPUT TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="<?php print e($row['icon_str']);?>" />		
+						<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="<?php print e($row['handle']) ;?>" data-required="true" data-required-msg="Handle is required" aria-required="true" />
+						<SPAN STYLE = "margin-left:40px;" CLASS="td_label text"  TITLE="A 3-letter value to be used in the map icon">Icon:</SPAN>&nbsp;<span class="required-mark">*</span>
+						<INPUT TYPE="text" SIZE=3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="<?php print e($row['icon_str']);?>" data-required="true" data-required-msg="Icon is required (3 letters)" aria-required="true" />		
 					</TD>
 				</TR>
 <?php
@@ -442,11 +402,11 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even" VALIGN='middle'>
 					<TD CLASS="td_label text">
-						<LABEL for="type" style='width: 100%;' title="Facility Type - Select from menu"><?php print get_text("Type");?>:&nbsp;<font color='red' size='-1'>*</font>:</LABEL>
+						<LABEL for="type" style='width: 100%;' title="Facility Type - Select from menu"><?php print get_text("Type");?>:&nbsp;<span class="required-mark">*</span>:</LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<SELECT id='type' NAME='frm_type'>
+						<SELECT id='type' NAME='frm_type' data-required="true" data-validate="select" data-required-msg="Facility type is required" aria-required="true">
 <?php
 							foreach ($f_types as $key => $value) {
 								$temp = $value; 												// 2-element array
@@ -525,11 +485,11 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
-						<LABEL for="description" style='width: 100%;' title="Facility Description - additional details about Facility"><?php print get_text("Description");?>:&nbsp;<font color='red' size='-1'>*</font></LABEL>
+						<LABEL for="description" style='width: 100%;' title="Facility Description - additional details about Facility"><?php print get_text("Description");?>:&nbsp;<span class="required-mark">*</span></LABEL>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text'>
-						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2><?php print e($row['description']);?></TEXTAREA>
+						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2 data-required="true" data-required-msg="Description is required" aria-required="true"><?php print e($row['description']);?></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
@@ -850,7 +810,7 @@ function check_days(id) {
 					</TD>
 				</TR>
 				<TR class='even'>
-					<TD COLSPAN='4' ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD>
+					<TD COLSPAN='4' ALIGN='center'><span class="required-mark">*</span> Required</TD>
 				</TR>
 				<TR>
 					<TD>&nbsp;</TD>
@@ -865,6 +825,7 @@ function check_days(id) {
 				<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">		
 			</TABLE>
 			</FORM>
+			<SCRIPT>FormValidator.init(document.res_edit_Form);</SCRIPT>
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
 			<DIV style='position: fixed; top: 50px; z-index: 9999;'>

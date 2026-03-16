@@ -33,6 +33,7 @@ window.onresize=function(){set_size()};
 <?php
 require_once('./incs/all_forms_js_variables.inc.php');
 ?>
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
@@ -215,15 +216,14 @@ function validate(theForm) {						// Responder form contents validation
 		}
 	theForm.frm_mobile.value = (theForm.frm_mob_disp.checked)? 1:0;
 	theForm.frm_multi.value =  (theForm.frm_multi_disp.checked)? 1:0;
-
 	theForm.frm_direcs.value = (theForm.frm_direcs_disp.checked)? 1:0;
+
+	if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+		return false;
+	}
+	FormValidator.clearCustomErrors(theForm);
 	var errmsg="";
 
-	if (theForm.frm_name.value.trim()=="" && !theForm.frm_memname)							{errmsg+="Unit NAME is required.\n";}
-	if (theForm.frm_handle.value.trim()=="")												{errmsg+="Unit HANDLE is required.\n";}
-	if (theForm.frm_icon_str.value.trim()=="")												{errmsg+="Unit ICON is required.\n";}
-
-	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)					{errmsg+="Unit TYPE selection is required.\n";}
 	if (any_track(theForm)){
 		if (theForm.frm_callsign.value.trim()==""){
 			if(theForm.frm_track_disp.selectedIndex == 8) {
@@ -235,10 +235,6 @@ function validate(theForm) {						// Responder form contents validation
 		if (!(theForm.frm_callsign.value.trim()==""))										{errmsg+="License information used ONLY with Tracking.\n";}
 		}
 
-
-	if (theForm.frm_un_status_id.options[theForm.frm_un_status_id.selectedIndex].value==0)	{errmsg+="Unit STATUS selection is required.\n";}
-	
-	if (theForm.frm_descr.value.trim()=="")													{errmsg+="Unit DESCRIPTION is required with Tracking.\n";}
 	if(allow_nogeo == "0") {
 		if (theForm.frm_lat.value.trim().length == 0) 	{
 			errmsg+="Map location is required for non-mobile units.\n";
@@ -248,10 +244,10 @@ function validate(theForm) {						// Responder form contents validation
 			theForm.frm_lat.value = def_lat;
 			theForm.frm_lng.value = def_lng;
 			}
-		}			
-	
+		}
+
 	if (errmsg!="") {
-		alert ("Please correct the following and re-submit:\n\n" + errmsg);
+		FormValidator.showCustomErrors(theForm, errmsg);
 		return false;
 		} else {
 		theForm.submit();
@@ -398,21 +394,21 @@ function do_fac_to_loc(index){			// 9/22/09
 ?>
 			<TR CLASS = "odd">
 				<TD CLASS="td_label text">
-					<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<font color='red' size='-1'>*</font>
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Name - enter, well, the name!">Name</A>:<span class="required-mark">*</span>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
-					<INPUT id='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="" />
+					<INPUT id='name' MAXLENGTH="64" SIZE="64" TYPE="text" NAME="frm_name" VALUE="" data-required="true" data-required-msg="Unit name is required" aria-required="true" />
 				</TD>
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">
-					<A CLASS="td_label text" HREF="#" TITLE="Handle - local rules, could be callsign or badge number, generally for radio comms use">Handle</A>:&nbsp;<font color='red' size='-1'>*</font>
+					<A CLASS="td_label text" HREF="#" TITLE="Handle - local rules, could be callsign or badge number, generally for radio comms use">Handle</A>:&nbsp;<span class="required-mark">*</span>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
-					<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" />
-					<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<FONT COLOR='red' size='-1'>*</FONT>&nbsp;<INPUT TYPE = "text" NAME = "frm_icon_str" SIZE = 3 MAXLENGTH=3 VALUE="" />
+					<INPUT id='handle' MAXLENGTH="24" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" data-required="true" data-required-msg="Unit handle is required" aria-required="true" />
+					<SPAN STYLE = 'margin-left:30px'  CLASS="td_label text"> Icon: </SPAN>&nbsp;<span class="required-mark">*</span>&nbsp;<INPUT TYPE="text" NAME="frm_icon_str" SIZE=3 MAXLENGTH=3 VALUE="" data-required="true" data-required-msg="Unit icon is required (3 letters)" aria-required="true" />
 				</TD>
 			</TR>
 
@@ -537,10 +533,10 @@ function do_fac_to_loc(index){			// 9/22/09
 				<TD class='spacer' COLSPAN=99></TD>
 			</TR>			
 			<TR CLASS = "even" VALIGN='middle'>
-				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Unit Type - Select from pulldown menu">Type</A>: <font color='red' size='-1'>*</font></TD>
+				<TD CLASS="td_label text"><A CLASS="td_label text" HREF="#" TITLE="Unit Type - Select from pulldown menu">Type</A>: <span class="required-mark">*</span></TD>
 				<TD>&nbsp;</TD>
 				<TD CLASS='td_data text'>
-					<SELECT id='unittype' NAME='frm_type'><OPTION VALUE=0>Select one</OPTION>
+					<SELECT id='unittype' NAME='frm_type' data-required="true" data-validate="select" data-required-msg="Unit type selection is required" aria-required="true"><OPTION VALUE=0>Select one</OPTION>
 <?php
 						foreach ($u_types as $key => $value) {
 							$temp = $value;
@@ -588,11 +584,11 @@ function do_fac_to_loc(index){			// 9/22/09
 			</TR>	
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">
-					<A CLASS="td_label text" HREF="#" TITLE="Unit Status - Select from pulldown menu">Status</A>:&nbsp;<font color='red' size='-1'>*</font>
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Status - Select from pulldown menu">Status</A>:&nbsp;<span class="required-mark">*</span>
 				</TD>
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
-					<SELECT id='unitstatus' NAME="frm_un_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
+					<SELECT id='unitstatus' NAME="frm_un_status_id" onChange="document.res_add_Form.frm_log_it.value='1'" data-required="true" data-validate="select" data-required-msg="Unit status is required" aria-required="true">
 						<OPTION VALUE='0' SELECTED>Select one</OPTION>
 <?php
 						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
@@ -689,11 +685,11 @@ function do_fac_to_loc(index){			// 9/22/09
 			</TR>	
 			<TR CLASS = "even">
 				<TD CLASS="td_label text">
-					<A CLASS="td_label text" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
+					<A CLASS="td_label text" HREF="#" TITLE="Unit Description - additional details about unit">Description</A>:&nbsp;<span class="required-mark">*</span>
 				</TD>	
 				<TD>&nbsp;</TD>
 				<TD COLSPAN=2 CLASS='td_data text'>
-					<TEXTAREA CLASS='text' id='description' NAME="frm_descr" COLS=56 ROWS=2></TEXTAREA>
+					<TEXTAREA CLASS='text' id='description' NAME="frm_descr" COLS=56 ROWS=2 data-required="true" data-required-msg="Unit description is required" aria-required="true"></TEXTAREA>
 				</TD>
 			</TR>
 			<TR CLASS = "odd">
@@ -803,7 +799,7 @@ function do_fac_to_loc(index){			// 9/22/09
 				<TD COLSPAN='4' class='spacer'></TD>
 			</TR>
 			<TR>
-				<TD COLSPAN=4 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD>
+				<TD COLSPAN=4 ALIGN='center'><span class="required-mark">*</span> Required</TD>
 			</TR>
 			<TR>
 				<TD>&nbsp;</TD>
@@ -828,6 +824,7 @@ function do_fac_to_loc(index){			// 9/22/09
 			<INPUT TYPE='hidden' NAME = 'frm_javaprssrvr' VALUE=0 />	<!-- 6/29/17 -->
 			<INPUT TYPE='hidden' NAME = 'frm_direcs' VALUE=1 />  <!-- note default -->
 			</FORM>
+			<SCRIPT>FormValidator.init(document.res_add_Form);</SCRIPT>
 		</DIV>
 		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
 			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
