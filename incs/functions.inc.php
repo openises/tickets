@@ -199,9 +199,7 @@ error_reporting(E_ALL);
 
 //	{						-- dummy
 //
-if( !extension_loaded('mysql') ){
-	require_once('mysql2i.class.php');
-	}
+// mysql2i shim removed — all code migrated to db_query() and mysqli
 require_once('istest.inc.php');
 require_once('mysql.inc.php');
 require_once(__DIR__ . '/db.inc.php');          // Secure database abstraction layer

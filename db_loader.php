@@ -6,9 +6,7 @@ require_once('./incs/mysql.inc.php');
 require_once('./incs/db.inc.php');		// 3/14/26 - Use db_query() for local DB operations
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 $dir = getcwd() . "/backups";
-if( !extension_loaded('mysql') ){
-	require_once('./incs/mysql2i.class.php');
-	}
+// mysql2i shim removed — all code migrated to db_query() and mysqli
 
 $css = (!empty($_POST) && array_key_exists('css', $_POST)) ? $_POST['css'] : array();
 $css_count = count($css);

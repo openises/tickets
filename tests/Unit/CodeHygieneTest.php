@@ -252,35 +252,29 @@ class CodeHygieneTest extends TestCase
     }
 
     /**
-     * Verify no mysql_query() calls remain outside the shim files.
+     * Verify no deprecated mysql_*() function calls remain in application code.
      *
-     * All database queries should use db_query() or db_fetch_one()/db_fetch_all()
-     * from incs/db.inc.php instead of the deprecated mysql_query() function.
+     * The mysql2i shim has been removed. All database queries must use db_query()
+     * or db_fetch_one()/db_fetch_all() from incs/db.inc.php.
+     *
+     * String references like 'mysql_query() failed' in error messages are ignored.
+     * Custom functions mysql_format_date(), mysql_table_exists(), and
+     * mysql_real_escape_string_deep() are not deprecated — they use mysqli internally.
      */
-    public function testNoMysqlQueryCalls(): void
+    public function testNoDeprecatedMysqlCalls(): void
     {
-        // Known files that still use mysql_query — remove from list as migrated
-        $knownMysqlFiles = [
-            'ajax/del_message.php',
-            'ajax/del_messages.php',
-            'ajax/del_sel_messages.php',
-            'ajax/delfile.php',
-            'ajax/empty_wastebasket.php',
-            'ajax/get_latest_messages.php',
-            'ajax/get_message_totals.php',
-            'ajax/msg_status.php',
-            'action_w.php',
-            'areas_sc.php',
-            'delete_module.php',
-            'hints_config.php',
-            'instam.php',
-            'persist.php',
-            'persist2.php',
-            'persist3.php',
-            'units.php',
-            'units_nm.php',
-            'warn_locations.php',
+        // Deprecated mysql_* functions from the removed shim.
+        // Excludes custom functions: mysql_format_date, mysql_table_exists,
+        // mysql_real_escape_string_deep, mysql_field_type_compat
+        $deprecated = [
+            'mysql_query', 'mysql_fetch_array', 'mysql_fetch_assoc',
+            'mysql_fetch_row', 'mysql_num_rows', 'mysql_insert_id',
+            'mysql_affected_rows', 'mysql_connect', 'mysql_close',
+            'mysql_select_db', 'mysql_free_result', 'mysql_num_fields',
+            'mysql_field_name', 'mysql_field_type', 'mysql_list_dbs',
+            'mysql_escape_string', 'mysql_real_escape_string',
         ];
+        $pattern = '/\b(' . implode('|', $deprecated) . ')\s*\(/';
 
         $foundFiles = [];
         $iterator = new RecursiveIteratorIterator(
@@ -294,23 +288,31 @@ class CodeHygieneTest extends TestCase
             if (strpos($path, DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR) !== false) continue;
             if (strpos($path, DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR) !== false) continue;
             if (strpos($path, DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR) !== false) continue;
-            // Skip the shim files themselves
-            if (strpos($path, 'mysql2i') !== false) continue;
 
             $content = file_get_contents($path);
-            if (preg_match('/\bmysql_query\s*\(/', $content)) {
-                $relative = str_replace([$this->baseDir . DIRECTORY_SEPARATOR, $this->baseDir . '/'], '', $path);
-                $relative = str_replace('\\', '/', $relative);
-                $foundFiles[] = $relative;
+            // Strip all comments before scanning for deprecated calls
+            $stripped = preg_replace('#/\*.*?\*/#s', '', $content);
+            $stripped = preg_replace('#//.*$#m', '', $stripped);
+            $lines = explode("\n", $stripped);
+            foreach ($lines as $lineNum => $line) {
+                // Skip string references like 'mysql_query() failed'
+                if (preg_match('/[\'"].*mysql_/', $line)) continue;
+                // Skip function definitions (mysql_real_escape_string_deep, etc.)
+                if (strpos($line, 'function ') !== false) continue;
+
+                if (preg_match($pattern, $line)) {
+                    $relative = str_replace([$this->baseDir . DIRECTORY_SEPARATOR, $this->baseDir . '/'], '', $path);
+                    $relative = str_replace('\\', '/', $relative);
+                    $foundFiles[$relative] = ($lineNum + 1);
+                    break;
+                }
             }
         }
 
-        $normalizedKnown = array_map(function($f) { return str_replace('\\', '/', $f); }, $knownMysqlFiles);
-        $newFiles = array_diff($foundFiles, $normalizedKnown);
-
         $this->assertEmpty(
-            $newFiles,
-            "New files using mysql_query() found — use db_query() instead:\n" . implode("\n", $newFiles)
+            $foundFiles,
+            "Deprecated mysql_*() calls found — use db_query()/mysqli instead:\n" .
+            implode("\n", array_map(function($f, $l) { return "$f:$l"; }, array_keys($foundFiles), $foundFiles))
         );
     }
 
