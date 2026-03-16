@@ -11,6 +11,11 @@ require_once('./incs/functions.inc.php');
 session_write_close();
 $sess_id = session_id();
 do_login(basename(__FILE__));
+// Auth-gate: personnel module requires at least user-level access (not guest/unit/stats/service)
+if (is_guest() || !isset($_SESSION['level']) || $_SESSION['level'] > $GLOBALS['LEVEL_USER']) {
+    header('Location: main.php');
+    exit();
+}
 //require_once('./incs/all_forms_js_variables.inc.php');
 $key_field_size = 30;
 $email_text = "";

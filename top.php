@@ -1425,7 +1425,7 @@ function get_daynight() {
 		<SPAN ID = 'full' roll='button' tabindex=13 aria-label='Full Screen Map' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false; do_full_scr()"><?php print get_text("Full scr"); ?></SPAN>
 <?php
-		if(get_variable('use_mdb') == "1") {
+		if(get_variable('use_mdb') == "1" && !is_guest()) {
 ?>
 			<SPAN ID = 'personnel' roll='button' tabindex=14 aria-label='Personnel Screen' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('member.php', this.id);"><?php print get_text("Personnel"); ?></SPAN>
