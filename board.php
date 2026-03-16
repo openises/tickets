@@ -717,7 +717,14 @@ if(empty($_SESSION)) {		// expired?
 			break;				// end case 'add' ==== } ===
 
 		case 'add_b': 					//  ==== { ====
-			extract ($_POST);
+			// Phase 2: replaced extract with explicit POST assignments
+			$frm_ticket_id = $_POST['frm_ticket_id'] ?? 0;
+			$frm_miles_strt = $_POST['frm_miles_strt'] ?? '';
+			$frm_miles_onsc = $_POST['frm_miles_onsc'] ?? '';
+			$frm_miles_end = $_POST['frm_miles_end'] ?? '';
+			$frm_miles_tot = $_POST['frm_miles_tot'] ?? '';
+			$frm_comments = $_POST['frm_comments'] ?? '';
+			$frm_by_id = $_POST['frm_by_id'] ?? 0;
 			$al_groups = $_SESSION['user_groups'];
 			if(empty($al_groups)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 2";
@@ -2364,6 +2371,13 @@ if(empty($_SESSION)) {		// expired?
 				break;			// end 	case 'edit': == } ==
 
 			case 'edit_db':		// ==== {  ================================================
+				// Phase 2: explicit POST assignments (previously relied on extract at top of file)
+				$frm_ticket_id = $_POST['frm_ticket_id'] ?? 0;
+				$frm_unit_id = $_POST['frm_unit_id'] ?? null;
+				$frm_inc_status_id = $_POST['frm_inc_status_id'] ?? null;
+				$frm_unit_status_id = $_POST['frm_unit_status_id'] ?? null;
+				$frm_complete = $_POST['frm_complete'] ?? '';
+				$frm_id = $_POST['frm_id'] ?? 0;
 				$delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
 				$now = mysql_format_date(time() - ($delta*60));
 

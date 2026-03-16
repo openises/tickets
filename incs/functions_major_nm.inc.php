@@ -117,11 +117,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 	
 	$al_groups = $_SESSION['user_groups'];
 	
-	if ((array_key_exists('func', $_GET)) && ($_GET['func'] == 10)) {		//	3/15/11
-		$func = 10;
-	} else {
-		extract ($_GET);
-	}
+	$func = isset($_GET['func']) ? $_GET['func'] : 0;	// Phase 2: replaced extract with explicit GET assignment
 	$cwi = get_variable('closed_interval');			// closed window interval in hours
 
 	if (isset($_SESSION['list_type'])) {$func = $_SESSION['list_type'];}		// 12/02/10	 persistance for the tickets list

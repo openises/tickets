@@ -29,7 +29,7 @@ else {			// NOTE!
 
 session_write_close () ;
 include ( './ics.css.php' ) ;
-extract ( $_POST ) ;
+// Phase 2 security cleanup: removed extract — $func set explicitly below
 //	dump ( $_POST ) ;
 
 $do_blur = ( can_edit () ) ? "" : "onfocus = 'this.blur() ;'" ;		// limit edit access

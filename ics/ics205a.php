@@ -25,7 +25,7 @@ session_write_close () ;
 require_once ( '../incs/functions.inc.php' ) ;		//7/28/10
 include ( './ics.css.php' ) ;
 
-extract ( $_POST ) ;
+// Phase 2 security cleanup: removed extract — $func set explicitly below
 /*
 dump ( $_POST ) ;
 */

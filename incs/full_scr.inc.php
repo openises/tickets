@@ -66,8 +66,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			$shorten_length = 10;
 		}
 				
-		extract ($_GET);
-		$func = (isset($func))? $func : 0; 
+		$func = isset($_GET['func']) ? $_GET['func'] : 0;	// Phase 2: replaced extract with explicit GET assignment
 		global $istest;
 	//	$dzf = get_variable('def_zoom_fixed');			// 4/2/09
 		$cwi = get_variable('closed_interval');			// closed window interval in hours

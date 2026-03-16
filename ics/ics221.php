@@ -19,7 +19,7 @@ session_write_close () ;
 require_once ( '../incs/functions.inc.php' ) ;
 include ( './ics.css.php' ) ;
 $now_ts = now_ts();
-extract ( $_POST ) ;
+// Phase 2 security cleanup: removed extract — $func set explicitly below
 /*
 dump ( $_POST ) ;
 dump ( $_POST ) ;
