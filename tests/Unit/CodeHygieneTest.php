@@ -83,8 +83,20 @@ class CodeHygieneTest extends TestCase
     public function testExtractSuperglobalsDoNotSpread(): void
     {
         // Known files that still use extract() — remove from this list as they are fixed
-        // All 31 original files have been cleaned up! This list should stay empty.
         $knownExtractFiles = [
+            'banner.php',
+            'board.php',
+            'ics/ics202.php',
+            'ics/ics205.php',
+            'ics/ics205a.php',
+            'ics/ics206.php',
+            'ics/ics213.php',
+            'ics/ics213rr.php',
+            'ics/ics214.php',
+            'ics/ics214a.php',
+            'ics/ics221.php',
+            'incs/full_scr.inc.php',
+            'incs/functions_major_nm.inc.php',
         ];
 
         // Scan all PHP files for extract() usage

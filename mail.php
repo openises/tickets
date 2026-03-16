@@ -21,8 +21,7 @@ if($istest) {
 	print "POST";
 	dump ($_POST);
 	}
-extract ($_GET);
-// outgoing.verizon.net/587//ashore4/pug2skim/ashore4@verizon.net
+// Phase 2 security cleanup: removed extract — ticket_id accessed explicitly via $_GET
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

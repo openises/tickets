@@ -7,8 +7,11 @@ error_reporting(E_ALL);
 
 require_once('incs/functions.inc.php');		//7/28/10
 if (empty($_POST)) {$_POST['_func']= "form";}
-
-extract ($_POST);
+// Phase 2 security cleanup: replaced extract with explicit variables
+$_func = $_POST['_func'] ?? 'form';
+$frm_url = $_POST['frm_url'] ?? '';
+$frm_account = $_POST['frm_account'] ?? '';
+$frm_pw = $_POST['frm_pw'] ?? '';
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>

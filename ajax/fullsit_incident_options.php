@@ -7,11 +7,9 @@ if($_GET['q'] != $_SESSION['id']) {
 	}
 if (!(array_key_exists('ticket_id', $_GET))) {		//	3/15/11
 	exit();
-	} else {
-	extract ($_GET);
 	}
-
-$ticket_id = sanitize_int($ticket_id);
+// Phase 2 security cleanup: replaced extract — only ticket_id is needed
+$ticket_id = sanitize_int($_GET['ticket_id']);
 
 $query = "SELECT DISTINCT `ticket_id` , `scope`, `severity`, `ticket_id` AS `incident` FROM `$GLOBALS[mysql_prefix]assigns`
 	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`$GLOBALS[mysql_prefix]assigns`.`ticket_id` = `t`.`id`)

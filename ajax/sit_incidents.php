@@ -5,11 +5,8 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
 	exit();
 	}
-if (!(array_key_exists('func', $_GET))) {		//	3/15/11
-	$func = 0;
-	} else {
-	extract ($_GET);
-	}
+// Phase 2 security cleanup: removed extract — all variables accessed explicitly below
+$func = (!(array_key_exists('func', $_GET))) ? 0 : $_GET['func'];
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
 $sortby = (!(array_key_exists('sort', $_GET))) ? "tick_id" : $_GET['sort'];
 $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
@@ -102,11 +99,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 	$time_back = mysql_format_date(time() - ($deltamins*60) - ($cwi*3600));
 	$sort_by_severity = ($func == 0)? "`severity` DESC ": "";
 
-	if (!(array_key_exists('func', $_GET))) {		//	3/15/11
-		$func = 0;
-	} else {
-		extract ($_GET);
-		}
+	// Phase 2 security cleanup: removed duplicate extract
+	$func = (!(array_key_exists('func', $_GET))) ? 0 : $_GET['func'];
 	if ((array_key_exists('func', $_GET)) && ($_GET['func'] == 10)) {		//	3/15/11
 		$func = 10;
 		}

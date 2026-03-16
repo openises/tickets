@@ -18,7 +18,7 @@ $list_length = 99;		// chat list length maximum
 session_write_close();
 require_once('./incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
-extract ($_GET);
+// Phase 2 security cleanup: removed extract — no GET variables are used
 
 $hours = (intval(get_variable('chat_time'))>0)? intval(get_variable('chat_time')) : 4;	// force to default
 
