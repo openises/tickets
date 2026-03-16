@@ -499,6 +499,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <SCRIPT SRC="./js/usng.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT SRC='./js/jscoord.js' TYPE="application/x-javascript"></SCRIPT>		<!-- coordinate conversion 12/10/10 -->	
 <SCRIPT SRC="./js/misc_function.js" TYPE="application/x-javascript"></SCRIPT> <!-- 7/22/10 -->
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 
 <SCRIPT>
 	var colors = new Array ('odd', 'even');
@@ -1185,32 +1186,30 @@ $maptype = get_variable('maptype');	// 08/02/09
 		return (start.valueOf() <= end.valueOf());	
 		}
 		
-	function validate(theForm) {	// 
+	function validate(theForm) {
 		do_unlock_ps(theForm);								// 8/11/08
-	
+
+		if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+			return false;
+		}
+		FormValidator.clearCustomErrors(theForm);
 		var errmsg="";
-		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_CLOSED'];?>) && (!theForm.re_but.checked)) 
+		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_CLOSED'];?>) && (!theForm.re_but.checked))
 													{errmsg+= "\tRun end-date is required for Status=Closed\n";}
-		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_OPEN'];?>) && (theForm.re_but.checked)) 
-													{errmsg+= "\tRun end-date not allowed for Status=Open\n";}	// 9/30/10													
-		if (theForm.frm_in_types_id.value == 0)		{errmsg+= "\tNature of Incident is required\n";}			// 1/11/09
-		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
-		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
-//		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
-//		theForm.frm_lat.disabled=false;														// 9/9/08
+		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_OPEN'];?>) && (theForm.re_but.checked))
+													{errmsg+= "\tRun end-date not allowed for Status=Open\n";}	// 9/30/10
 <?php
 	if ($gmaps) {
 ?>
 		if ((theForm.frm_lat.value == 0) || (theForm.frm_lng.value == 0))		{errmsg+= "\tMap position is required\n";}
 <?php
 			}
-?>			
+?>
 		if (theForm.frm_status.value==<?php print $GLOBALS['STATUS_SCHEDULED'];?>) {		//10/1/09
 			if (theForm.frm_year_booked_date.value == "NULL") 		{errmsg+= "\tScheduled date time error - Hours\n";}
 			if (theForm.frm_minute_booked_date.value == "NULL") 	{errmsg+= "\tScheduled date time error - Minutes\n";}
 			}
 
-//		theForm.frm_lat.disabled=true;
 		if (!chkval(theForm.frm_hour_problemstart.value, 0,23)) 		{errmsg+= "\tRun start time error - Hours\n";}
 		if (!chkval(theForm.frm_minute_problemstart.value, 0,59)) 		{errmsg+= "\tRun start time error - Minutes\n";}
 		if (!datechk_s(theForm))										{errmsg+= "\tRun start time error - future date\n" ;}
@@ -1220,12 +1219,12 @@ $maptype = get_variable('maptype');	// 08/02/09
 			if (!datechk_e(theForm)){errmsg+= "\tRun start time error - future\n" ;}
 			if (!datechk_e(theForm)){errmsg+= "\tRun start time error - future\n" ;}
 			if (!datechk_r(theForm)){errmsg+= "\tRun start time error - future\n" ;}
-		
+
 			if (!chkval(theForm.frm_hour_problemend.value, 0,23)) 		{errmsg+= "\tRun end time error - Hours\n";}
 			if (!chkval(theForm.frm_minute_problemend.value, 0,59)) 	{errmsg+= "\tRun end time error - Minutes\n";}
 			}
 		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			FormValidator.showCustomErrors(theForm, errmsg);
 			return false;
 			}
 		else {
@@ -1239,7 +1238,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 			broadcast(theMessage ) ;
 <?php
 	}			// end if (broadcast)
-?>				
+?>
 			theForm.submit();
 			}
 		}				// end function validate(theForm)
@@ -1452,7 +1451,7 @@ $maptype = get_variable('maptype');	// 08/02/09
 </SCRIPT>
 </HEAD>
 
-<BODY onLoad="ck_frames();do_lock_pe(document.add); document.add.frm_street.focus(); load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>)" onUnload="GUnload()">  <!-- <?php print __LINE__;?> -->		<!-- // 8/23/08 -->
+<BODY onLoad="ck_frames();do_lock_pe(document.add); FormValidator.init(document.add); document.add.frm_street.focus(); load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>)" onUnload="GUnload()">  <!-- <?php print __LINE__;?> -->		<!-- // 8/23/08 -->
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 
 <?php
@@ -1517,7 +1516,7 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 	<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a5"];?>');"><?php print $nature;?></A>:</TD>	
 	<TD></TD>
 	<TD>
-		<SELECT NAME="frm_in_types_id"  tabindex=5 onChange="do_set_severity (this.selectedIndex); do_inc_name(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());">	<!--  10/4/08 -->
+		<SELECT NAME="frm_in_types_id"  tabindex=5 onChange="do_set_severity (this.selectedIndex); do_inc_name(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());" data-required="true" data-validate="select" data-required-msg="Nature of Incident is required" aria-required="true">	<!--  10/4/08 -->
 		<OPTION VALUE=0 SELECTED>Select</OPTION>				<!-- 1/11/09 -->
 <?php
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
@@ -1606,9 +1605,9 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 	</TR>
 
 <TR CLASS='even'>
-	<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a10"];?>');"><?php print get_text("Reported by");?></A>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD>
+	<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a10"];?>');"><?php print get_text("Reported by");?></A>:&nbsp;<span class="required-mark">*</span></TD>
 	<TD></TD>
-	<TD><INPUT NAME="frm_contact"  tabindex=9 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="48" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}"></TD>
+	<TD><INPUT NAME="frm_contact"  tabindex=9 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="48" onFocus="Javascript: if (this.value.trim()=='TBD') {this.value='';}" data-required="true" data-required-msg="Reported-by is required" aria-required="true"></TD>
 	</TR>
 <TR CLASS='odd' ID = 'tr_misc' STYLE = 'display:none'>
 	<TD CLASS="td_label">Add'l:</TD>
@@ -1639,18 +1638,18 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 ?>
 
 	<TR CLASS='odd'>
-		<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a11"];?>');"><?php print get_text("Incident name");?></A>: <font color='red' size='-1'>*</font></TD>
+		<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["a11"];?>');"><?php print get_text("Incident name");?></A>: <span class="required-mark">*</span></TD>
 		<TD></TD>
 <?php
 		if (!(empty($inc_name))) {				// 11/13/10
 ?>		
-		<TD><INPUT NAME="frm_scope" tabindex=10 SIZE="56" TYPE="text" VALUE="<?php print $inc_name;?>" MAXLENGTH="61" /></TD>
+		<TD><INPUT NAME="frm_scope" tabindex=10 SIZE="56" TYPE="text" VALUE="<?php print $inc_name;?>" MAXLENGTH="61" data-required="true" data-required-msg="Incident name is required" aria-required="true" /></TD>
 	</TR>
 <?php
 			}
 		else {
 ?>
-		<TD><?php print $prepend;?> <INPUT NAME="frm_scope" tabindex=10 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="61" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}" onkeypress='user_inc_name = true;'/><?php print $append;?></TD>
+		<TD><?php print $prepend;?> <INPUT NAME="frm_scope" tabindex=10 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="61" onFocus="Javascript: if (this.value.trim()=='TBD') {this.value='';}" onkeypress='user_inc_name = true;' data-required="true" data-required-msg="Incident name is required" aria-required="true" /><?php print $append;?></TD>
 	</TR>	<!-- 1/11/09 -->
 <?php
 		}										// end else {} 11/13/10
@@ -1747,7 +1746,7 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 		<TD CLASS="td_label">
 			<SPAN ID="pos" onClick = 'javascript: do_coords(document.add.frm_lat.value, document.add.frm_lng.value );'> 
 			<U><A HREF="#" TITLE="<?php print $titles["a18"];?>"><?php print $incident;?> Lat/Lng</A></U></SPAN>: 
-				<font color='red' size='-1'>*</font>
+				<span class="required-mark">*</span>
 		</TD>
 		<TD ALIGN='center' ><img id='lock_p' border=0 src='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.add);'></TD>
 		<TD><INPUT SIZE="11" TYPE="text" NAME="show_lat" VALUE="" >
