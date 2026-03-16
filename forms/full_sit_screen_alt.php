@@ -1419,6 +1419,7 @@ function show_closed() {
 $gunload = "backtoSituation(); clearInterval(i_interval); clearInterval(s_interval);";
 ?>
 <BODY onLoad = "loadData(); location.href = '#top';" onUnload = "<?php print $gunload;?>";>
+<?php include("./incs/links.inc.php"); ?>
 <DIV id='screenname' style='display: none;'>Incidents Screen</DIV>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>

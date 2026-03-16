@@ -161,6 +161,7 @@ function set_size() {
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
+<?php include("./incs/links.inc.php"); ?>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
 	<DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>

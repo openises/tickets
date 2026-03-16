@@ -63,6 +63,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 
 </HEAD>
 <BODY onLoad = "ck_frames()">
+<?php include("./incs/links.inc.php"); ?>
 <DIV ID='outer' style='position: relative; left: 5%; top: 5%; width: 90%;'>
 <FONT CLASS="header text">Tickets Help</FONT><BR /><BR />
 <LI><A CLASS="text" HREF="help.php?q=tickets">Background</A>

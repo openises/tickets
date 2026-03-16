@@ -1723,6 +1723,7 @@ function linkFromSumm(table, index) {
 		</HEAD>
 		<BODY onLoad = "ck_frames();"> <!-- <?php print __LINE__;?> -->
 <?php
+		include("./incs/links.inc.php");
 		include('./forms/add_form.php');
 ?>
 		<!-- 1100 -->
@@ -1763,7 +1764,7 @@ function linkFromSumm(table, index) {
 			</HEAD>
 			<BODY onLoad = "ck_frames();"> <!-- <?php print __LINE__;?> -->
 <?php
-
+			include("./incs/links.inc.php");
 
 			include('./forms/edit_form.php');
 ?>
@@ -1815,6 +1816,7 @@ function linkFromSumm(table, index) {
 			$fullname = $row['field2'] . " " . $row['field1'];
 
 			print "\t<BODY onLoad = 'ck_frames();'>\n";
+			include("./incs/links.inc.php");
 
 			$temp = isset($u_types[$row['field7']]) ? $u_types[$row['field7']] : null;	// 3/14/26 - null-safe when no member types configured
 			$the_type = ($temp !== null) ? $temp[0] : "";			// name of type
@@ -1848,6 +1850,7 @@ function linkFromSumm(table, index) {
 			}
 ?>
 		<BODY>
+		<?php include("./incs/links.inc.php"); ?>
 		<A NAME='top'>
 		<DIV ID='outer' style='position: absolute; left: 1%; width: 100%;'>
 			<DIV CLASS='header' style = "height:32px; width: 100%; float: none; text-align: center;">

@@ -259,6 +259,7 @@ function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 if($mode == 0) {
 ?>
 	<BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
+<?php include("./incs/links.inc.php"); ?>
 	<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <?php
 	} else {

@@ -573,6 +573,7 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 
 	</HEAD>
 <BODY onLoad = "ck_frames();" style='overflow-x: hidden;'>
+<?php include("./incs/links.inc.php"); ?>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT> <!-- 10/2/10 -->
 
 <A NAME="top" />

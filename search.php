@@ -149,6 +149,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 ?>
 <BODY onLoad = "ck_frames(); <?php echo $do_str; ?>">
 <?php
+	include("./incs/links.inc.php");
 	$post_frm_query = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type'] == 'db') ) ? strip_tags($_POST['frm_query']) : FALSE ;		// 1/6/2013
 	if($post_frm_query) {
 		$year_text = ($_POST['frm_year'] == 0) ? " for all years" : " in year " . $_POST['frm_year'];

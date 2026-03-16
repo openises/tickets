@@ -941,6 +941,7 @@ function dump_db()
 
     case 'notify':
     print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
     if (array_key_exists('id', ($_GET))) {            // 0 -> all tickets notify
     if (!get_variable('allow_notify')) {
         print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
@@ -1328,6 +1329,7 @@ break;
 
 case 'profile' :                    //update profile
     print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
     $get_go = (array_key_exists('go', ($_GET))) ? $_GET['go'] : "";
     if ($get_go == 'true') {            //check passwords
         $frm_sort_desc = array_key_exists('frm_sort_desc', ($_POST)) ? 1 : 0;    // checkbox handling
@@ -1502,6 +1504,7 @@ case 'profile' :                    //update profile
 
 case 'optimize' :
     print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
     optimize_db();
     print '<FONT CLASS="header text">Database optimization complete.</FONT><BR /><BR />';
     print "<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'><SPAN STYLE='float: left;'><?php print get_text('Finished');?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>";
@@ -1510,6 +1513,7 @@ case 'optimize' :
 case 'reset' :
     if ((isset($_GET['auth'])) && ($_GET['auth'] == 'true') && ($_POST['frm_confirm'] == 'yes')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
         dump_db();    //	for security, dump db to file;
         print "Database Backed Up<BR />";
         $ticket = ((isset($_POST['frm_ticket'])) && ($_POST['frm_ticket'] == 1)) ? 1 : 0;
@@ -1524,6 +1528,7 @@ case 'reset' :
         ?>
         </HEAD>
         <BODY onLoad='ck_frames()'>
+        <?php include("./incs/links.inc.php"); ?>
         <DIV STYLE='position: relative; left: 100px;'>
             <FONT CLASS="header text">Reset Database</FONT><BR/>This operation requires confirmation by entering "yes"
             into the "Really reset database" box.<BR/>
@@ -1612,14 +1617,16 @@ case 'reset' :
 
 case 'settings' :
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
-        print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";        // 1/23/10
+        print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");        // 1/23/10
         foreach ($_POST as $VarName => $VarValue) {
             $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = ?";
             $result = db_query($query, [$VarValue, $VarName]);
         }
         print '<FONT CLASS="update_conf">Settings saved - will take effect at <font color="red"> next Tickets re-start</FONT>.</FONT><BR /><BR />';
     } else {
-        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";        // 9/21/08
+        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");        // 9/21/08
         $evenodd = array("even", "odd");
         ?>
         <DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;"
@@ -1695,7 +1702,8 @@ case 'settings' :
 
 case 'msg_settings' :    //	10/23/12
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
-        print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";        // 1/23/10
+        print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");        // 1/23/10
         foreach ($_POST as $VarName => $VarValue) {
             if ($VarName != "columns") {
                 $query = "UPDATE `{$GLOBALS['mysql_prefix']}msg_settings` SET `value` = ? WHERE `name` = ?";
@@ -1709,7 +1717,8 @@ case 'msg_settings' :    //	10/23/12
         }
         print '<FONT CLASS="update_conf">Messaging Settings saved.</FONT><BR /><BR />';
     } else {
-        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";        // 9/21/08
+        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");        // 9/21/08
         $evenodd = array("even", "odd");
         ?>
         <DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;"
@@ -1835,6 +1844,7 @@ case 'msg_settings' :    //	10/23/12
 case 'mdb_settings' :
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");
         foreach ($_POST as $VarName => $VarValue) {
             if ($VarName == "date_tracking") {
                 $var_arr = array();
@@ -1849,7 +1859,8 @@ case 'mdb_settings' :
         }
         print '<FONT CLASS="update_conf">Membership Database Settings saved.<BR /><BR />';
     } else {
-        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";        // 9/21/08
+        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");        // 9/21/08
         $evenodd = array("even", "odd");
         ?>
         <DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;"
@@ -1982,6 +1993,7 @@ case 'mdb_settings' :
 case 'wizard_settings' :
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");
         $delcounter = 0;
         if (array_key_exists('frm_delete', $_POST)) {
             foreach ($_POST['frm_delete'] as $key => $val) {
@@ -2092,7 +2104,8 @@ case 'wizard_settings' :
 
         </SCRIPT>
         <?php
-        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";        // 9/21/08
+        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");        // 9/21/08
         $evenodd = array("even", "odd");
         $mandatory = array();
         $mandatory[0] = 'in_types_id';
@@ -2275,6 +2288,7 @@ case 'wizard_settings' :
 case 'sound_settings' :
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");
         $delcounter = 0;
         if (array_key_exists('frm_delete', $_POST)) {
             foreach ($_POST['frm_delete'] as $key => $val) {
@@ -2314,7 +2328,8 @@ case 'sound_settings' :
         }
         print '<FONT CLASS="update_conf">Sound Settings saved.<BR /><BR />';
     } else {
-        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";        // 9/21/08
+        print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");        // 9/21/08
         $evenodd = array("even", "odd");
         ?>
         <DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;"
@@ -2426,6 +2441,7 @@ case 'sound_settings' :
 
 case 'user' :
     print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
     if ((array_key_exists('id', ($_GET))) && ($_GET['id'] != '')) {
         if (is_administrator()) {                // admin or super
 
@@ -3273,6 +3289,7 @@ case 'api_key' :
         $curr_key = get_variable('gmaps_api_key')
         ?>
         <BODY onLoad='ck_frames()'>
+        <?php include("./incs/links.inc.php"); ?>
         <FORM METHOD="POST" NAME="api_Form" onSubmit="return validate_key(document.api_Form);"
               ACTION="config.php?func=api_key&update=true">
             <TABLE BORDER="0" STYLE="margin-left: 100px; margin-top: 40px" ;>
@@ -3401,6 +3418,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
     case 'delete' :
     print "<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
     $subfunc = (array_key_exists('subfunc', $_GET)) ? $_GET['subfunc'] : "list";
     switch ($subfunc) {
     case 'list':
@@ -3594,6 +3612,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
         case 'in_nums' :                // incident numbering - 11/11/10
             print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
+    include("./incs/links.inc.php");
             ?>
             <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
         <?php
@@ -3852,6 +3871,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
         case 'hints_update' :                                    // 2/3/11
             print "</HEAD>\n<BODY onLoad = 'ck_frames();depart();'>\n";
+    include("./incs/links.inc.php");
             print "<FORM NAME='can_Form' METHOD='post' ACTION = '" . basename(__FILE__) . "'></FORM>\n";
 
             foreach ($_POST as $VarName => $VarValue) {
@@ -3876,6 +3896,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         case 'css_day' :    //	3/15/11
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");
                 foreach ($_POST as $VarName => $VarValue) {
                     $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_day` SET `value` = ? WHERE `name` = ?";
                     $result = db_query($query, [$VarValue, $VarName]);
@@ -3883,6 +3904,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 print '<FONT CLASS="update_conf">CSS Day Settings saved</FONT>.</FONT><BR /><BR />';
             } else {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");
                 $evenodd = array("even", "odd");
                 ?>
                 <DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;"
@@ -3962,6 +3984,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         case 'css_night' :    //	3/15/11
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
+    include("./incs/links.inc.php");
                 foreach ($_POST as $VarName => $VarValue) {
                     $query = "UPDATE `{$GLOBALS['mysql_prefix']}css_night` SET `value` = ? WHERE `name` = ?";
                     $result = db_query($query, [$VarValue, $VarName]);
@@ -3969,6 +3992,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 print '<FONT CLASS="update_conf">CSS Night Settings saved</FONT>.</FONT><BR /><BR />';
             } else {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";
+    include("./incs/links.inc.php");
                 $evenodd = array("even", "odd");
                 ?>
                 <DIV ID='to_bottom' style="position:fixed; top:4px; left:20px; height: 12px; width: 10px;"
@@ -4062,6 +4086,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         </STYLE>
         </HEAD>
         <BODY onLoad='ck_frames()'> <!-- 11/13/10 -->
+        <?php include("./incs/links.inc.php"); ?>
         <?php if (isset($top_notice)) print "<SPAN STYLE='margin-left: 100px;' CLASS='header' >{$top_notice}</SPAN><BR /><BR />"; ?>
         <BR/>
         <DIV id='mainmenu' class='odd'

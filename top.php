@@ -1434,7 +1434,7 @@ function get_daynight() {
 		if (!(is_guest())) {
 ?>
 			<SPAN ID = 'links' roll='button' tabindex=15 aria-label='Links' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "light_butt('links'); parent.main.$('links').style.display='inline';"><?php print get_text("Links"); ?></SPAN>
+				onClick = "light_butt('links'); try { parent.main.$('links').style.display='inline'; } catch(e) {}"><?php print get_text("Links"); ?></SPAN>
 <?php
 			}
 		if (!(is_guest())) {
