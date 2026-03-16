@@ -198,8 +198,8 @@ while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 		}
 	$grp_names .= " / ";
 	
-	$name = htmlentities($row_fac['facility_name'],ENT_QUOTES);
-	$handle = htmlentities($row_fac['handle'],ENT_QUOTES);
+	$name = safe_htmlentities($row_fac['facility_name'],ENT_QUOTES);
+	$handle = safe_htmlentities($row_fac['handle'],ENT_QUOTES);
 
 	$fac_id=$row_fac['fac_id'];
 	$fac_type=$row_fac['icon'];
@@ -307,7 +307,7 @@ while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 	$ret_arr[$i][9] = $updated;		
 	$ret_arr[$i][10] = $row_fac['fac_id'];
 	$ret_arr[$i][11] = $fac_type;
-	$ret_arr[$i][15] = htmlentities($fac_type_name, ENT_QUOTES);	
+	$ret_arr[$i][15] = safe_htmlentities($fac_type_name, ENT_QUOTES);	
 	$ret_arr[$i][16] = $openingTimes;	
 	$ret_arr[$i][17] = $the_status;
 	$ret_arr[$i][18] = $calculatedStatusOutput;

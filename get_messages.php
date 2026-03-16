@@ -47,7 +47,7 @@ function get_the_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	
 					if($val['name'] == "Date") { $the_message[$z]['date'] = $val['value']; } 
 					$y++;
 					}
-				$the_message[$z]['text'] = safe_addslashes(htmlentities($body[0]['content']));
+				$the_message[$z]['text'] = safe_addslashes(safe_htmlentities($body[0]['content']));
 				$from = $the_message[$z]['from'];
 				$date = date_parse($the_message[$z]['date']);				
 				$datepart = $date['year'] . "-" . $date['month'] . "-" . $date['day'];

@@ -651,7 +651,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					sidebar_line += "<TD CLASS='text text_center'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
 					sidebar_line += "<?php print get_assigned_td($unit_row['unit_id']); ?>";		// 3/15/11
 <?php
-					$statusTemp = ($unit_row['status_about'] != "") ? htmlentities($unit_row['status_about'],ENT_QUOTES) : "No further status information available";
+					$statusTemp = ($unit_row['status_about'] != "") ? safe_htmlentities($unit_row['status_about'],ENT_QUOTES) : "No further status information available";
 ?>
 					sidebar_line += "<TD CLASS='td_data text text_left' style='background-color: <?php print $status_bgcolor;?>;  opacity: .7; color: <?php print $status_textcolor;?>;' onMouseover=\"Tip('<?php print $statusTemp;?>');\" onMouseout='UnTip();'><?php print $the_style . shorten($unit_row['unitstatus'], 12);?></SPAN></TD>";
 					sidebar_line += "<TD CLASS='td_data text'><?php print $thespeed;?></TD>";

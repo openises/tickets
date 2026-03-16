@@ -174,7 +174,7 @@ if(!empty($_POST)) {
 	while($row = stripslashes_deep($result->fetch_assoc())) {
 		print "<TR class='" . $class . "' onClick='go_view(" . $row['id'] . ");'>";
 		print "<TD class='listEntry' style='color: " . $row['color'] . "; background-color: " . $row['bgcolor'] . ";text-align: left; border: 1px outset #707070;'>" . $row['category'] . "</TD>";
-		print "<TD class='listEntry' style='text-align: left; border: 1px outset #707070;'>" . htmlentities(shorten($row['description'], 30), ENT_QUOTES) . "</TD>";
+		print "<TD class='listEntry' style='text-align: left; border: 1px outset #707070;'>" . safe_htmlentities(shorten($row['description'], 30), ENT_QUOTES) . "</TD>";
 		print "<TD class='listEntry' style='text-align: left; border: 1px outset #707070;'>" . $row['color'] . "</TD>";
 		print "<TD class='listEntry' style='text-align: left; border: 1px outset #707070;'>" . $row['bgcolor'] . "</TD>";
 		print "</TR>";
@@ -230,7 +230,7 @@ if(!empty($_POST)) {
 	$row = stripslashes_deep($result->fetch_assoc());
 	$id = $_GET['id'];
 	$category = $row['category'];
-	$description = htmlentities($row['description'], ENT_QUOTES);
+	$description = safe_htmlentities($row['description'], ENT_QUOTES);
 	$color = $row['color'];
 	$bgcolor = $row['bgcolor'];
 	$facility = $row['facility'];
@@ -274,7 +274,7 @@ if(!empty($_POST)) {
 	$row = stripslashes_deep($result->fetch_assoc());
 	$id = $_GET['id'];
 	$category = $row['category'];
-	$description = htmlentities($row['description'], ENT_QUOTES);
+	$description = safe_htmlentities($row['description'], ENT_QUOTES);
 	$color = $row['color'];
 	$bgcolor = $row['bgcolor'];
 	$facility = $row['facility'];

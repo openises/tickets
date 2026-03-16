@@ -882,8 +882,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$update_error = strtotime('now - 6 hours');							// set the time for silent setting
 // name
 
-		$display_name = $name = shorten(htmlentities($row['title'], ENT_QUOTES), 20);	
-		$display_street = $street = shorten(htmlentities($row['street'], ENT_QUOTES), 40);			
+		$display_name = $name = shorten(safe_htmlentities($row['title'], ENT_QUOTES), 20);	
+		$display_street = $street = shorten(safe_htmlentities($row['street'], ENT_QUOTES), 40);			
 
 		$sidebar_line = "&nbsp;&nbsp;<TD WIDTH='30%' TITLE = '{$row['r_title']}' {$the_on_click}><U><SPAN STYLE='background-color: #FFFFFF;  opacity: .7; color:#000000;'>" . safe_addslashes($name) ."</SPAN></U></TD>";	//	6/10/11
 		$sidebar_line .= "<TD WIDTH='40%' TITLE = '" . safe_addslashes($street) . "' {$the_on_click}><U><SPAN STYLE='background-color: #FFFFFF;  opacity: .7; color:#000000;'><NOBR>" . safe_addslashes($street) ."</NOBR></SPAN></U></TD>";

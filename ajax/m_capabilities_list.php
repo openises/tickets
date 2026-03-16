@@ -42,9 +42,9 @@ function capab_list($member) {
 		$i = 1;
 		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$capab_row[$i][0] = $row['id'];
-			$capab_row[$i][1] = htmlentities($row['name'], ENT_QUOTES);
-			$capab_row[$i][2] = htmlentities($row['description'], ENT_QUOTES);
-			$capab_row[$i][3] = htmlentities($row['updated'], ENT_QUOTES);
+			$capab_row[$i][1] = safe_htmlentities($row['name'], ENT_QUOTES);
+			$capab_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);
+			$capab_row[$i][3] = safe_htmlentities($row['updated'], ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

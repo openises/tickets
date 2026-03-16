@@ -133,8 +133,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 // NAME
 	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];
 	$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
-	$name = htmlentities($row['name'],ENT_QUOTES);
-	$handle = htmlentities($row['handle'],ENT_QUOTES);
+	$name = safe_htmlentities($row['name'],ENT_QUOTES);
+	$handle = safe_htmlentities($row['handle'],ENT_QUOTES);
 
 // DISPATCHES 3/16/09
 
@@ -194,7 +194,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$bull_color = '#000000';
 		}
 
-	$cstip = htmlentities($row['callsign'], ENT_QUOTES); 
+	$cstip = safe_htmlentities($row['callsign'], ENT_QUOTES); 
 	$tip_str = $cstip; 
 
 // as of

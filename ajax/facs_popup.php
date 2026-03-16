@@ -86,8 +86,8 @@ $result_fac = db_query($query_fac, [$id]) or do_error($query_fac, 'mysql query f
 $facs_ct = db_affected_rows();			// 1/4/10
 
 $row_fac = $result_fac->fetch_assoc();
-$name = htmlentities($row_fac['facility_name'],ENT_QUOTES);
-$handle = htmlentities($row_fac['handle'],ENT_QUOTES);
+$name = safe_htmlentities($row_fac['facility_name'],ENT_QUOTES);
+$handle = safe_htmlentities($row_fac['handle'],ENT_QUOTES);
 $address = e($row_fac['street']) . ", " . e($row_fac['city']) . ", " . e($row_fac['state']);
 $description = $row_fac['facility_description'];
 
@@ -134,8 +134,8 @@ $the_type = $temptype[0];
 $line_ctr = 0;
 $temp_array[0] = $row_fac['lat'];
 $temp_array[1] = $row_fac['lng'];
-$temp_array[2] = htmlentities(shorten($facility_display_name, 48), ENT_QUOTES);
-$temp_array[3] = htmlentities(shorten(str_replace($eols, " ", $facility_display_name), 48), ENT_QUOTES);
+$temp_array[2] = safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES);
+$temp_array[3] = safe_htmlentities(shorten(str_replace($eols, " ", $facility_display_name), 48), ENT_QUOTES);
 $theTabs = "<div class='infowin'><BR />";
 $theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
 $theTabs .= '<div class="tabArea">';
@@ -145,8 +145,8 @@ $theTabs .= '</div>';
 $theTabs .= '<div class="contentwrapper">';
 
 $tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";
-$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
-$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data_wrap text' ALIGN='left'>" . safe_htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Status:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($the_status) . " </TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['contact_name']). " Via: " . e($row_fac['contact_email']) . "</TD></TR>";

@@ -102,7 +102,7 @@ function get_theemails($url, $user, $password, $port, $ssl="", $timeout=30 ) {
 					}
 				$the_message[$z]['to'] = ((array_key_exists('to', $the_message[$z])) && ($the_message[$z]['to'] != "")) ? $the_message[$z]['to'] : "Tickets";				
 				$the_message[$z]['subject'] = ((array_key_exists('subject', $the_message[$z])) && ($the_message[$z]['subject'] != "")) ? $the_message[$z]['subject'] : "Email";
-				$the_message[$z]['text'] = clean_hdr_fm_text(safe_addslashes(htmlentities($body[0]['content'])));
+				$the_message[$z]['text'] = clean_hdr_fm_text(safe_addslashes(safe_htmlentities($body[0]['content'])));
 				$the_message[$z]['text'] = ((array_key_exists('text', $the_message[$z])) && ($the_message[$z]['text'] != "")) ? $the_message[$z]['text'] : "No Text";	
 				$from_address = $the_message[$z]['from'];
 				$from_name = (($the_message[$z]['fromname'] == "No Name") && ($from_address != "")) ? $from_address : $the_message[$z]['fromname'];	

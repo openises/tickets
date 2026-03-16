@@ -45,10 +45,10 @@ function equip_list($member) {
 		$i = 1;
 		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$equip_row[$i][0] = $row['id'];
-			$equip_row[$i][1] = htmlentities($row['name'], ENT_QUOTES);
-			$equip_row[$i][2] = htmlentities($row['description'], ENT_QUOTES);
-			$equip_row[$i][3] = htmlentities($row['condition'], ENT_QUOTES);
-			$equip_row[$i][4] = htmlentities($row['issued'], ENT_QUOTES);
+			$equip_row[$i][1] = safe_htmlentities($row['name'], ENT_QUOTES);
+			$equip_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);
+			$equip_row[$i][3] = safe_htmlentities($row['condition'], ENT_QUOTES);
+			$equip_row[$i][4] = safe_htmlentities($row['issued'], ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

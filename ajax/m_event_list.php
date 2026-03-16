@@ -47,10 +47,10 @@ function eve_list($member) {
 			$start = do_datestring(strtotime($start));
 			$end = do_datestring(strtotime($end));
 			$eve_row[$i][0] = $row['id'];
-			$eve_row[$i][1] = htmlentities($row['event_name'], ENT_QUOTES);
-			$eve_row[$i][2] = htmlentities($row['description'], ENT_QUOTES);
-			$eve_row[$i][3] = htmlentities($start, ENT_QUOTES);
-			$eve_row[$i][4] = htmlentities($end, ENT_QUOTES);
+			$eve_row[$i][1] = safe_htmlentities($row['event_name'], ENT_QUOTES);
+			$eve_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);
+			$eve_row[$i][3] = safe_htmlentities($start, ENT_QUOTES);
+			$eve_row[$i][4] = safe_htmlentities($end, ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

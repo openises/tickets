@@ -46,10 +46,10 @@ function cloth_list($member) {
 			$completed = $row['issued'];
 			$completed = do_datestring(strtotime($completed));
 			$cloth_row[$i][0] = $row['id'];
-			$cloth_row[$i][1] = htmlentities($row['name'], ENT_QUOTES);
-			$cloth_row[$i][2] = htmlentities($row['description'], ENT_QUOTES);
-			$cloth_row[$i][3] = htmlentities($row['size'], ENT_QUOTES);
-			$cloth_row[$i][4] = htmlentities($completed, ENT_QUOTES);
+			$cloth_row[$i][1] = safe_htmlentities($row['name'], ENT_QUOTES);
+			$cloth_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);
+			$cloth_row[$i][3] = safe_htmlentities($row['size'], ENT_QUOTES);
+			$cloth_row[$i][4] = safe_htmlentities($completed, ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

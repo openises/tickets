@@ -93,7 +93,7 @@ function assignment_list($id) {
 		$assigns[$assignID][10] = $row['on_scene_miles'];
 		$assigns[$assignID][11] = $row['end_miles'];
 		$assigns[$assignID][12] = $row['miles'];
-		$assigns[$assignID][13] = htmlentities($row['comments'], ENT_QUOTES);
+		$assigns[$assignID][13] = safe_htmlentities($row['comments'], ENT_QUOTES);
 		$assigns[$assignID][14] = adj_time($time_disp);
 		$assigns[$assignID][15] = adj_time($time_resp);
 		$assigns[$assignID][16] = adj_time($time_onsc);

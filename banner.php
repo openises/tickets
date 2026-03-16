@@ -468,7 +468,7 @@ function buildMap_l() {				// 'list' version
 				$banner = $temp[1];
 				$coords = explode (",", $temp[0]);
 				echo "\n var point = new google.maps.LatLng(parseFloat({$coords[0]}) , parseFloat({$coords[1]}));\n";
-				$the_banner = htmlentities($banner, ENT_QUOTES);
+				$the_banner = safe_htmlentities($banner, ENT_QUOTES);
 				$the_width = intval( trim($line_width), 10);		// font size
 				echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width}, add_hash('{$line_color}'));\n";
 				break;
@@ -970,7 +970,7 @@ switch ($_POST["_func"]) {
 					$banner = $temp[1];
 					$coords = explode (",", $temp[0]);
 					echo "\n var point = new google.maps.LatLng(parseFloat({$coords[0]}) , parseFloat({$coords[1]}));\n";
-					$the_banner = htmlentities($banner, ENT_QUOTES);
+					$the_banner = safe_htmlentities($banner, ENT_QUOTES);
 					$the_width = intval( trim($line_width), 10);		// font size
 					echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width}, add_hash('{$line_color}'));\n";
 					break;
@@ -995,7 +995,7 @@ switch ($_POST["_func"]) {
 			$temp = explode (";", $line_data);
 			$banner = $temp[1];
 			$coords = explode (",", $temp[0]);
-			$the_banner = htmlentities($banner, ENT_QUOTES);
+			$the_banner = safe_htmlentities($banner, ENT_QUOTES);
 			$the_width = intval( trim($line_width), 10);		// font size
 ?>
 			var point = new google.maps.LatLng(parseFloat(<?php print $coords[0];?>) , parseFloat(<?php print $coords[1];?>));

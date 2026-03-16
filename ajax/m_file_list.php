@@ -47,10 +47,10 @@ function file_list($member) {
 		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$filesize = formatBytes($row['filesize'], 2);
 			$file_row[$i][0] = $row['file_id'];
-			$file_row[$i][1] = htmlentities($row['shortname'], ENT_QUOTES);
-			$file_row[$i][2] = htmlentities($row['description'], ENT_QUOTES);
-			$file_row[$i][3] = htmlentities($filesize, ENT_QUOTES);
-			$file_row[$i][4] = htmlentities($row['_on'], ENT_QUOTES);
+			$file_row[$i][1] = safe_htmlentities($row['shortname'], ENT_QUOTES);
+			$file_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);
+			$file_row[$i][3] = safe_htmlentities($filesize, ENT_QUOTES);
+			$file_row[$i][4] = safe_htmlentities($row['_on'], ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

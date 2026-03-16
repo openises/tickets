@@ -47,12 +47,12 @@ function veh_list($member) {
 		$i = 1;
 		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 			$veh_row[$i][0] = $row['id'];
-			$veh_row[$i][1] = htmlentities($row['make'], ENT_QUOTES);
-			$veh_row[$i][2] = htmlentities($row['model'], ENT_QUOTES);
-			$veh_row[$i][3] = htmlentities($row['year'], ENT_QUOTES);
-			$veh_row[$i][4] = htmlentities($row['color'], ENT_QUOTES);
-			$veh_row[$i][5] = htmlentities($row['regno'], ENT_QUOTES);
-			$veh_row[$i][6] = htmlentities($row['type_name'], ENT_QUOTES);
+			$veh_row[$i][1] = safe_htmlentities($row['make'], ENT_QUOTES);
+			$veh_row[$i][2] = safe_htmlentities($row['model'], ENT_QUOTES);
+			$veh_row[$i][3] = safe_htmlentities($row['year'], ENT_QUOTES);
+			$veh_row[$i][4] = safe_htmlentities($row['color'], ENT_QUOTES);
+			$veh_row[$i][5] = safe_htmlentities($row['regno'], ENT_QUOTES);
+			$veh_row[$i][6] = safe_htmlentities($row['type_name'], ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

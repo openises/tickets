@@ -175,14 +175,14 @@ function incident_list() {
 			$bgcolor = ($facType == 0) ? $sevs_arr[$row['severity']] : $medBgcolor;
 			$unitName = "<BR />Unit: " . e($row['unit_name']);
 			$updated = format_sb_date_2($row['updated']);
-			$the_scope = htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
-			$address_street=htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 20), ENT_QUOTES);
+			$the_scope = safe_htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
+			$address_street=safe_htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 20), ENT_QUOTES);
 			$num_patients = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: 0;
 			if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 			$locale = get_variable('locale');	// 08/03/09
 
-			$ticket_row[$i][0] = htmlentities($the_scope, ENT_QUOTES);
-			$ticket_row[$i][1] = htmlentities($address_street, ENT_QUOTES);
+			$ticket_row[$i][0] = safe_htmlentities($the_scope, ENT_QUOTES);
+			$ticket_row[$i][1] = safe_htmlentities($address_street, ENT_QUOTES);
 			$ticket_row[$i][2] = $intype;
 			$ticket_row[$i][3] = $num_patients;
 			$ticket_row[$i][4] = $the_id;
@@ -291,18 +291,18 @@ function incident_list() {
 				$color = ($facType == 0) ? $textcol_arr[$row['severity']] : $medColor;
 				$bgcolor = ($facType == 0) ? $sevs_arr[$row['severity']] : $medBgcolor;
 				$updated = format_sb_date_2($row['updated']);
-				$the_scope = htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
-				$address_street=htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 128), ENT_QUOTES);
+				$the_scope = safe_htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
+				$address_street=safe_htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 128), ENT_QUOTES);
 				$num_patients = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: 0;
 				if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 				$locale = get_variable('locale');	// 08/03/09
 
-				$ticket_row[$i][0] = htmlentities($the_scope, ENT_QUOTES);
-				$ticket_row[$i][1] = htmlentities($address_street, ENT_QUOTES);
+				$ticket_row[$i][0] = safe_htmlentities($the_scope, ENT_QUOTES);
+				$ticket_row[$i][1] = safe_htmlentities($address_street, ENT_QUOTES);
 				$ticket_row[$i][2] = $intype;
 				$ticket_row[$i][3] = $num_patients;
 				$ticket_row[$i][4] = $the_id;
-				$ticket_row[$i][5] = htmlentities($the_scope . " " . $address_street, ENT_QUOTES);
+				$ticket_row[$i][5] = safe_htmlentities($the_scope . " " . $address_street, ENT_QUOTES);
 				$ticket_row[$i][6] = $facDest;
 				$ticket_row[$i][7] = $medType;
 				$ticket_row[$i][8] = "TBA";

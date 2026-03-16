@@ -83,7 +83,7 @@ $longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');		// 7/18/10
 
 $got_point = FALSE;
 $tempname = $row['firstname'] . " " . $row['surname'];
-$name = htmlentities($tempname,ENT_QUOTES);
+$name = safe_htmlentities($tempname,ENT_QUOTES);
 
 // MAIL						
 if (is_email($row['contact'])) {		// 2/1/10
@@ -129,7 +129,7 @@ if ((!(is_ok_coord($row['lat']))) || (!(is_ok_coord($row['lng'])))) {
 	$tab_1 .= "<TR CLASS='odd' style='background-color: red; color: #FFFFFF;'><TD COLSPAN=2 ALIGN='center' style='color: #FFFFFF;'><B>Bad Position Data - Pls Check</B></TD></TR>";
 	}
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . $name . "</B> - " . $the_type . "</TD></TR>";
-$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Description:</TD><TD CLASS='td_data_wrap text'>" . htmlentities(str_replace($eols, " ", $row['description']), ENT_QUOTES) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Description:</TD><TD CLASS='td_data_wrap text'>" . safe_htmlentities(str_replace($eols, " ", $row['description']), ENT_QUOTES) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>Status:</TD><TD CLASS='td_data text'>" . $the_status . " </TD></TR>";
 $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Contact:</TD><TD CLASS='td_data text'>" . safe_safe_addslashes($row['contact']) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>As of:</TD><TD CLASS='td_data text'>" . format_date(strtotime($the_time)) . "</TD></TR>";		// 4/11/10

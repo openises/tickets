@@ -215,7 +215,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 		$y++;
 		}
 
-	$tip =  e($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));		// tooltip string - 1/3/10
+	$tip =  e($grp_names . " / " . safe_htmlentities($row['name'],ENT_QUOTES));		// tooltip string - 1/3/10
 		
 	$latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');		// 7/18/10		
 	$longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');		// 7/18/10
@@ -253,8 +253,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 // NAME
 	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 2/1/10
 	$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
-	$name = htmlentities($row['name'],ENT_QUOTES);
-	$handle = htmlentities($row['handle'],ENT_QUOTES);
+	$name = safe_htmlentities($row['name'],ENT_QUOTES);
+	$handle = safe_htmlentities($row['handle'],ENT_QUOTES);
 
 // MAIL						
 	if ((!is_guest()) && is_email($row['contact_via'])) {		// 2/1/10
@@ -305,7 +305,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 // STATUS
 	$status = get_status_sel($row['unit_id'], $row['un_status_id'], "u");		// status
 	$status_name = $status_vals[$row['un_status_id']];
-	$statusTemp = htmlentities($row['status_about'],ENT_QUOTES);
+	$statusTemp = safe_htmlentities($row['status_about'],ENT_QUOTES);
 	$status_about = shorten($statusTemp, 25);
 
 //  MOBILITY
@@ -327,7 +327,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 		$bull_color = '#000000';
 		}
 
-	$cstip = htmlentities($row['callsign'], ENT_QUOTES); 
+	$cstip = safe_htmlentities($row['callsign'], ENT_QUOTES); 
 	$tip_str = $cstip; 
 
 	// as of - 7/2/2013

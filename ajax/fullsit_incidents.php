@@ -238,8 +238,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$the_id = $row['tick_id'];		// 11/27/09
 			$radius = $row['radius'];
 			$updated = format_date_2($row['updated']);
-			$the_scope = htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
-			$address_street=htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 20), ENT_QUOTES);
+			$the_scope = safe_htmlentities(shorten($row['scope'], 30), ENT_QUOTES);
+			$address_street=safe_htmlentities(shorten($row['ticket_street'] . " " . $row['ticket_city'], 20), ENT_QUOTES);
 			$lat = $row['lat'];
 			$lng = $row['lng'];
 			$num_assigned = $row['units_assigned'];
@@ -275,8 +275,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$use_quick = (((integer)$func == 0) || ((integer)$func == 10)) ? FALSE : TRUE ;	//	11/29/10
 			$locale = get_variable('locale');	// 08/03/09			
 			
-			$ticket_row[$i][0] = htmlentities($the_scope, ENT_QUOTES);
-			$ticket_row[$i][1] = htmlentities($address_street, ENT_QUOTES);
+			$ticket_row[$i][0] = safe_htmlentities($the_scope, ENT_QUOTES);
+			$ticket_row[$i][1] = safe_htmlentities($address_street, ENT_QUOTES);
 			$ticket_row[$i][2] = $lat;
 			$ticket_row[$i][3] = $lng;
 			$ticket_row[$i][4] = $type;

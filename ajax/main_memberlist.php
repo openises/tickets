@@ -96,20 +96,20 @@ function member_list() {
 				$typemenu = "<SPAN style='background: " . $row['type_background'] . "; color: " . $row['type_text'] . ";'>" . $row['type_name'] . "</SPAN>";
 				}	
 			$member_row[$i][0] = $row['member_id'];
-			$member_row[$i][1] = htmlentities($row['firstname'], ENT_QUOTES);
-			$member_row[$i][2] = htmlentities($row['middle_name'], ENT_QUOTES);
-			$member_row[$i][3] = htmlentities($row['surname'], ENT_QUOTES);
-			$member_row[$i][4] = htmlentities($row['teamno'], ENT_QUOTES);
-			$member_row[$i][5] = htmlentities($row['street'], ENT_QUOTES);
-			$member_row[$i][6] = htmlentities($row['city'], ENT_QUOTES);
-			$member_row[$i][7] = htmlentities($row['postcode'], ENT_QUOTES);
+			$member_row[$i][1] = safe_htmlentities($row['firstname'], ENT_QUOTES);
+			$member_row[$i][2] = safe_htmlentities($row['middle_name'], ENT_QUOTES);
+			$member_row[$i][3] = safe_htmlentities($row['surname'], ENT_QUOTES);
+			$member_row[$i][4] = safe_htmlentities($row['teamno'], ENT_QUOTES);
+			$member_row[$i][5] = safe_htmlentities($row['street'], ENT_QUOTES);
+			$member_row[$i][6] = safe_htmlentities($row['city'], ENT_QUOTES);
+			$member_row[$i][7] = safe_htmlentities($row['postcode'], ENT_QUOTES);
 			$member_row[$i][8] = isset($row['lat']) ? $row['lat'] : "";	// 3/14/26 - NULL-safe for isFloat() JS check
 			$member_row[$i][9] = isset($row['lng']) ? $row['lng'] : "";	// 3/14/26 - NULL-safe for isFloat() JS check
-			$member_row[$i][10] = htmlentities($row['contact'], ENT_QUOTES);
-			$member_row[$i][11] = htmlentities($row['membertype'], ENT_QUOTES);;
-			$member_row[$i][12] = htmlentities($row['type_name'] ?? '', ENT_QUOTES);
+			$member_row[$i][10] = safe_htmlentities($row['contact'], ENT_QUOTES);
+			$member_row[$i][11] = safe_htmlentities($row['membertype'], ENT_QUOTES);;
+			$member_row[$i][12] = safe_htmlentities($row['type_name'] ?? '', ENT_QUOTES);
 			$member_row[$i][13] = $typemenu;
-			$member_row[$i][14] = htmlentities($row['status_name'] ?? '', ENT_QUOTES);
+			$member_row[$i][14] = safe_htmlentities($row['status_name'] ?? '', ENT_QUOTES);
 			$member_row[$i][15] = $statusmenu;
 			$joindate = ((strtotime($row['joindate']) == NULL) || (date("Y", strtotime($row['joindate'])) == '1970') || (date("Y", strtotime($row['joindate'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['joindate']));
 			$duedate = ((strtotime($row['duedate']) == NULL) || (date("Y", strtotime($row['duedate'])) == '1970') || (date("Y", strtotime($row['duedate'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['duedate']));
@@ -117,8 +117,8 @@ function member_list() {
 			$member_row[$i][16] = $joindate;
 			$member_row[$i][17] = $duedate;
 			$member_row[$i][18] = $updated;
-			$member_row[$i][19] = htmlentities($row['firstname'], ENT_QUOTES) . " " . htmlentities($row['surname'], ENT_QUOTES);
-			$member_row[$i][20] = htmlentities(substr($row['teamno'], 0, 3), ENT_QUOTES);
+			$member_row[$i][19] = safe_htmlentities($row['firstname'], ENT_QUOTES) . " " . safe_htmlentities($row['surname'], ENT_QUOTES);
+			$member_row[$i][20] = safe_htmlentities(substr($row['teamno'], 0, 3), ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		return $member_row;

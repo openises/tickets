@@ -66,8 +66,8 @@ if($num_locations == 0) {
 
 	// name
 		$name = $row['title'];	// 10/8/09		 4/28/11
-		$display_name = $name = shorten(htmlentities($row['title'], ENT_QUOTES), 20);
-		$display_street = $street = shorten(htmlentities($row['street'], ENT_QUOTES), 40);
+		$display_name = $name = shorten(safe_htmlentities($row['title'], ENT_QUOTES), 20);
+		$display_street = $street = shorten(safe_htmlentities($row['street'], ENT_QUOTES), 40);
 
 	// address
 		$address_street=replace_quotes($row['street']) . " " . replace_quotes($row['city']);

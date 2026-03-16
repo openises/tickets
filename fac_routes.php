@@ -833,8 +833,8 @@ if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('
 						</TR>
 <?php
 						while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
-							$name = htmlentities($row_fac['facility_name'],ENT_QUOTES);
-							$handle = htmlentities($row_fac['handle'],ENT_QUOTES);
+							$name = safe_htmlentities($row_fac['facility_name'],ENT_QUOTES);
+							$handle = safe_htmlentities($row_fac['handle'],ENT_QUOTES);
 
 							$fac_id=$row_fac['fac_id'];
 							$fac_type=$row_fac['icon'];

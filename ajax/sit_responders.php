@@ -245,7 +245,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$y++;
 		}
 
-	$tip =  safe_addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));
+	$tip =  safe_addslashes($grp_names . " / " . safe_htmlentities($row['name'],ENT_QUOTES));
 	$latitude = ($row['lat']) ? $row['lat'] : $def_lat;
 	$longitude = ($row['lng']) ? $row['lng'] : $def_lng;
 	$got_point = FALSE;
@@ -280,8 +280,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];
 	$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
 	$tempname = explode("/", $row['name']);
-	$name = htmlentities(shorten($tempname[0], 14),ENT_QUOTES);
-	$handle = htmlentities($row['handle'],ENT_QUOTES);
+	$name = safe_htmlentities(shorten($tempname[0], 14),ENT_QUOTES);
+	$handle = safe_htmlentities($row['handle'],ENT_QUOTES);
 
 // MAIL
 	if ((!is_guest()) && (is_email($row['contact_via']) || $row["smsg_id"] !="" || is_twitter($row['contact_via']))) {
@@ -374,7 +374,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$bull_color = '#000000';
 		}
 
-	$cstip = htmlentities($row['callsign'], ENT_QUOTES);
+	$cstip = safe_htmlentities($row['callsign'], ENT_QUOTES);
 	$tip_str = $cstip;
 
 	// as of - 7/2/2013
@@ -391,7 +391,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$lat = $row['lat'];
 	$lng = $row['lng'];
 	$theName = (is_array(get_mdb_names($row['unit_id']))) ? implode(" | ", get_mdb_names($row['unit_id'])) : get_mdb_names($row['unit_id']);
-	$ret_arr[$i][0] = htmlentities($theName,ENT_QUOTES);
+	$ret_arr[$i][0] = safe_htmlentities($theName,ENT_QUOTES);
 	$ret_arr[$i][1] = $handle;
 	$ret_arr[$i][2] = $index;
 	$ret_arr[$i][3] = $lat;
@@ -414,7 +414,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$ret_arr[$i][23] = $status_name;
 //	$ret_arr[$i][24] = $name;
 	$ret_arr[$i][25] = $type;
-	$ret_arr[$i][26] = htmlentities($status_about, ENT_QUOTES);
+	$ret_arr[$i][26] = safe_htmlentities($status_about, ENT_QUOTES);
 	$ret_arr[$i][27] = $the_flag;
 	$ret_arr[$i][28] = $row['excl_zone'];
 	$ret_arr[$i][29] = $row['ring_fence'];

@@ -47,10 +47,10 @@ function tra_list($member) {
 			$refresh = $row['refresh_due'];
 			$refresh = do_datestring(strtotime($refresh));
 			$tra_row[$i][0] = $row['id'];
-			$tra_row[$i][1] = htmlentities($row['package_name'], ENT_QUOTES);
-			$tra_row[$i][2] = htmlentities($row['description'], ENT_QUOTES);
-			$tra_row[$i][3] = htmlentities($completed, ENT_QUOTES);
-			$tra_row[$i][4] = htmlentities($refresh, ENT_QUOTES);
+			$tra_row[$i][1] = safe_htmlentities($row['package_name'], ENT_QUOTES);
+			$tra_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);
+			$tra_row[$i][3] = safe_htmlentities($completed, ENT_QUOTES);
+			$tra_row[$i][4] = safe_htmlentities($refresh, ENT_QUOTES);
 			$i++;
 			}				// end tickets while ($row = ...)
 		}

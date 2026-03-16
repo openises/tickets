@@ -400,7 +400,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 					$banner = $temp[1];
 					$coords = explode (",", $temp[0]);
 					echo "\n var point = new google.maps.LatLng(parseFloat({$coords[0]}) , parseFloat({$coords[1]}));\n";
-					$the_banner = htmlentities($banner, ENT_QUOTES);
+					$the_banner = safe_htmlentities($banner, ENT_QUOTES);
 					$the_width = intval( trim($line_width), 10);		// font size
 					echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width}, add_hash('{$line_color}'));\n";
 					break;
@@ -2677,7 +2677,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 					$banner = $temp[1];
 					$coords = explode (",", $temp[0]);
 					echo "\n var point = new google.maps.LatLng(parseFloat({$coords[0]}) , parseFloat({$coords[1]}));\n";
-					$the_banner = htmlentities($banner, ENT_QUOTES);
+					$the_banner = safe_htmlentities($banner, ENT_QUOTES);
 					$the_width = intval( trim($line_width), 10);		// font size
 					echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width}, add_hash('{$line_color}'));\n";
 					break;

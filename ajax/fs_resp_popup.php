@@ -150,8 +150,8 @@ $update_error = strtotime('now - 6 hours');				// set the time for silent settin
 $the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 2/1/10
 $the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
 $tempname = explode("/", $row['name']);
-$name = htmlentities($tempname[0],ENT_QUOTES);
-$handle = htmlentities($row['handle'],ENT_QUOTES);
+$name = safe_htmlentities($tempname[0],ENT_QUOTES);
+$handle = safe_htmlentities($row['handle'],ENT_QUOTES);
 
 // MAIL
 if ((!is_guest()) && is_email($row['contact_via'])) {		// 2/1/10
@@ -217,7 +217,7 @@ if 	($row_track){
 	$bull_color = '#000000';
 	}
 
-$cstip = htmlentities($row['callsign'], ENT_QUOTES);
+$cstip = safe_htmlentities($row['callsign'], ENT_QUOTES);
 $tip_str = $cstip;
 
 // as of - 7/2/2013
@@ -266,8 +266,8 @@ if (my_is_float($lat)) {										// position data? 4/29/09
 	$theTabs .= '<div class="contentwrapper">';
 
 	$tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_data text text_center' COLSPAN=2><B>" . htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text text_left'>Description:</TD><TD CLASS='td_data text text_left'>" . htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_data text text_center' COLSPAN=2><B>" . safe_htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text text_left'>Description:</TD><TD CLASS='td_data text text_left'>" . safe_htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text text_left'>Status:</TD><TD CLASS='td_data text text_left'>" . e($the_status) . " </TD></TR>";
 	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text text_left'>Contact:</TD><TD CLASS='td_data text text_left'>" . e($row['contact_name']). " Via: " . e($row['contact_via']) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text text_left'>As of:</TD><TD CLASS='td_data text text_left'>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
