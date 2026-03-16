@@ -15,7 +15,8 @@ $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";		// 7/30/11
 @session_start();
 session_write_close();
 do_login(basename(__FILE__));
-// Phase 2 security cleanup: removed extract — $_POST accessed explicitly throughout
+// Phase 2 security cleanup: replaced extract with explicit assignments
+$_func = $_POST['_func'] ?? '';
 $_type = "t";		// text/banner
 $by = empty($_SESSION)? 0: $_SESSION['user_id'];
 $from = $_SERVER['REMOTE_ADDR'];
