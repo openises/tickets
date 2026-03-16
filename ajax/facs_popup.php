@@ -117,7 +117,7 @@ $updated = format_sb_date_2 ( $row_fac['updated'] );
 if(is_guest() || is_unit()) {
 	$toedit = $tomail = "";
 	} else {
-	$toedit = "<A id='edit_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' HREF='" . e($_SESSION['facilitiesfile']) . "?func=responder&edit=true&id=" . intval($row_fac['fac_id']) . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
+	$toedit = "<A id='edit_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' HREF='" . e($_SESSION['facilitiesfile']) . "?func=responder&edit=true&id=" . intval($row_fac['fac_id']) . "' target='main' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
 	if ((may_email()) && (is_email($row_fac['contact_email']))) {
 		$tomail = "<SPAN id='mail_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = 'do_fac_mail_win(" . intval($row_fac['fac_id']) . ", \"" . e($row_fac['contact_email']) . "\");'>Email</SPAN>";
 		} elseif((may_email()) && (is_email($row_fac['security_email']))){
@@ -211,7 +211,7 @@ $tab_1 .= "</TABLE></TD></TR>";
 $tab_1 .= "<TR><TD COLSPAN=99>&nbsp;</TD></TR>";
 $tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE>";
 $tab_1 .= "<TR style='height: 20px;'><TD COLSPAN=2 ALIGN='center'>" . $toedit . $tomail;
-$tab_1 .= "<A id='view_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;'  HREF='" . e($_SESSION['facilitiesfile']) . "?func=responder&view=true&id=" . intval($row_fac['fac_id']) . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A>";
+$tab_1 .= "<A id='view_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;'  HREF='" . e($_SESSION['facilitiesfile']) . "?func=responder&view=true&id=" . intval($row_fac['fac_id']) . "' target='main' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A>";
 if(($internet) && ($locale == 1)) {
 	$tab_1 .= "<A id='osmap_but' class='plain text' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap(" . floatval($temp_array[0]) . ", " . floatval($temp_array[1]) . ", " . intval($row_fac['fac_id']) . ", &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"facility\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A></TD></TR>";
 		}
