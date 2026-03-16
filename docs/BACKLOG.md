@@ -245,4 +245,45 @@ problem.
 
 ---
 
+## 5. Full Screen View Dropdown Not Fully Working
+
+**Source:** Manual testing (2026-03-16)
+**Reporter:** Eric Osterberg
+**Category:** Bug / UI
+**Affected screen:** Full screen view (`full_scr.php`)
+
+### Current behavior
+The dropdown list of views (e.g., "Current situation", "Incidents closed today", "Incidents closed last month", etc.) does not fully work. Selecting certain options from the dropdown does not update the display as expected.
+
+### Expected behavior
+All dropdown options should filter/update the displayed incidents according to the selected time range or view.
+
+### Investigation needed
+- [ ] Identify which dropdown options work and which do not
+- [ ] Check the JavaScript handler for the dropdown change event
+- [ ] Verify the AJAX/form submission that loads the filtered data
+- [ ] Test each option and document which ones fail
+
+---
+
+## 6. Links Button Inconsistent Across Pages
+
+**Source:** Manual testing (2026-03-16)
+**Reporter:** Eric Osterberg
+**Category:** Bug / UI
+
+### Current behavior
+The "links" button works on some pages (Situation, New, Units, Fac's) but does not load on other pages.
+
+### Expected behavior
+The links button should work consistently across all pages/modules.
+
+### Investigation needed
+- [ ] Identify which pages include the links button and which do not
+- [ ] Compare the working pages (Situation, New, Units, Fac's) with the non-working ones
+- [ ] Check if the links functionality is loaded via an include file that some pages are missing
+- [ ] Determine if it's a missing include, a JavaScript loading issue, or a conditional rendering problem
+
+---
+
 *Add new backlog items below using the same format.*
