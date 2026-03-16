@@ -5,12 +5,13 @@
  * 3/1/2026: Consolidated version source and added legacy detection
  *           for installs where the settings table exists but _version is absent.
  */
-$tickets_current_version = 'v3.44.0';
+define('TICKETS_CURRENT_VERSION', 'v3.44.0');
+$tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {
     function tickets_get_versions() {
         if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
-        $installerVersion = isset($GLOBALS['tickets_current_version']) ? $GLOBALS['tickets_current_version'] : 'unknown';
+        $installerVersion = defined('TICKETS_CURRENT_VERSION') ? TICKETS_CURRENT_VERSION : 'unknown';
         $installedVersion = null;
 
         $mysqlInc = __DIR__ . '/mysql.inc.php';
