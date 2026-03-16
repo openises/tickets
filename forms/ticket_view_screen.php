@@ -570,6 +570,7 @@ $('rightcol').style.width = colwidth + "px";
 $('rightcol').style.height = colheight + "px";	
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
+map.invalidateSize();
 set_fontsizes(viewportwidth, "fullscreen");
 
 function createMarkerInc(lat, lon, info, color, stat, theid, sym, category, region, tip, z) {

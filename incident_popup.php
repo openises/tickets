@@ -504,6 +504,9 @@ init_map(1, <?php print $lat;?>, <?php print $lng;?>, "", parseInt(initZoom), th
 map.setView([<?php print $lat;?>, <?php print $lng;?>], parseInt(initZoom));
 var bounds = map.getBounds();
 var zoom = map.getZoom();
+window.onload = function() {
+	set_size();
+};
 </SCRIPT>
 <?php
 
@@ -954,6 +957,7 @@ $('outer').style.height = outerheight + "px";
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
 $('theTable').style.width = outerwidth + "px";
+map.invalidateSize();
 </SCRIPT>
 </BODY>
 </HTML>
