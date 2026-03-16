@@ -5,7 +5,7 @@
 
 @session_start();
 
-require_once($_SESSION['fip']);
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 error_reporting(E_ALL);				// 2/3/09
 do_login(basename(__FILE__));	// session_start()
 $tickets_dir = getcwd();	

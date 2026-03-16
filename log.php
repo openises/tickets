@@ -23,7 +23,7 @@ if (empty($_SESSION['user_id'])) {
 	exit();
 }
 
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 
 if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
 	print "Not Authorized";

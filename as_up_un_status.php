@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 //	file as_up_un_status.php
 
 @session_start();
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 //snap(basename(__FILE__), __LINE__);
 $frm_status_id = sanitize_int($_GET['frm_status_id']);
 $frm_responder_id = sanitize_int($_GET['frm_responder_id']);

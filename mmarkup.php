@@ -9,7 +9,7 @@ $iw_width= "300px";
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 
 $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";
 

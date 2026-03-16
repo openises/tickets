@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 @session_start();
 
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 //snap(basename(__FILE__), __LINE__);
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $frm_status_id    = sanitize_int($_GET['frm_status_id'] ?? 0);

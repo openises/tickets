@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>

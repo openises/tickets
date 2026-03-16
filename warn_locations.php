@@ -11,7 +11,7 @@ $iw_width= "300px";					// map infowindow with
 @session_start();	
 session_write_close();
 
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 $key_field_size = 30;
 $st_size = (get_variable("locale") ==0)?  2: 4;		

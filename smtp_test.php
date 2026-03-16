@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 
 require './lib/phpmailer/PHPMailerAutoload.php';
 require './lib/phpmailer/class.phpmailer.php';

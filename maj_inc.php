@@ -13,7 +13,7 @@ $the_resp_id = (isset($_GET['id']))? $_GET['id']: 0;	//	11/18/13
 
 @session_start();	
 session_write_close();
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 
 // Phase 2 security cleanup: replaced extract with explicit variable assignments

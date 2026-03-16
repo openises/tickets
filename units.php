@@ -8,7 +8,7 @@ $iw_width= "300px";					// map infowindow with
 $groupname = isset($_SESSION['group_name']) ? $_SESSION['group_name'] : "";	//	4/11/11
 $in_win = array_key_exists ("mode", $_GET);             // in
 $from_mi = array_key_exists ("mi", $_GET);
-$gmaps = $_SESSION['internet'];
+$gmaps = isset($_SESSION['internet']) ? $_SESSION['internet'] : false;
 $the_resp_id = (isset($_GET['id']))? intval($_GET['id']): 0;	//	11/18/13
 /*
 5/23/08	added check for associated assign records before allowing deletions line 843 area
@@ -158,7 +158,7 @@ session_write_close();
 
 $tester = (((isset($_REQUEST['edit'])) && $_REQUEST['edit'] == TRUE) || ((isset($_REQUEST['add'])) && ($_REQUEST['add'] == TRUE)) || ((isset($_REQUEST['view'])) && ($_REQUEST['view'] == TRUE))) ? 0 : 1;
 
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 $column_arr = explode(',', get_msg_variable('columns'));	//	11/18/13
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	require_once('./incs/modules.inc.php');

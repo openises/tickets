@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 
 @session_start();
 
-require_once($_SESSION['fip']);
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 //snap(basename(__FILE__), __LINE__);
 $frm_status_id = sanitize_int($_GET['frm_status_id']);
 $frm_responder_id = sanitize_int($_GET['frm_responder_id']);

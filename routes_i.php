@@ -14,7 +14,7 @@ routes to incident from selected unit
 error_reporting(E_ALL);
 
 @session_start();
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 if($istest) {
 	dump(basename(__FILE__));

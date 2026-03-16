@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);
 $api_key = get_variable('gmaps_api_key');		// empty($_GET)

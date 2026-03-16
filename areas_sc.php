@@ -3,7 +3,7 @@
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 
 $istest=FALSE;
 // Replaced extract — explicit variable assignment (Phase 2 cleanup)

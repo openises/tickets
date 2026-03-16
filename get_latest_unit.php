@@ -8,7 +8,7 @@
 error_reporting(E_ALL);	
 
 @session_start();
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 $me = $_SESSION['user_id'];
 							// position updates?
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE  `callsign` > '' AND (`aprs` = 1 OR  `instam` = 1 OR  `locatea` = 1 OR  `gtrack` = 1 OR  `glat` = 1 ) ORDER BY `updated` DESC LIMIT 1";

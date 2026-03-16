@@ -17,7 +17,7 @@ error_reporting(E_ALL);			// 10/1/08
 
 @session_start();
 session_write_close();
-require_once($_SESSION['fip']);		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);		// 8/27/10
 
