@@ -86,63 +86,9 @@ Provide a template system that lets users load, manage, and share pre-built demo
 
 ---
 
-## 3. Intelligent Map Tile Caching
+## 3. ~~Intelligent Map Tile Caching~~ *(Already Implemented)*
 
-**Source:** Discussion during testing session (2026-03-14)
-**Reporter:** Eric Osterberg
-
-### Overview
-Cache map tiles locally on the server whenever they are loaded from the upstream tile provider (e.g., OpenStreetMap). Serve cached tiles when available, falling back to the upstream source only when a tile is missing or expired. This provides resilience against internet outages — as long as an area has been viewed before, the map remains functional offline.
-
-### Key features
-- **Transparent caching:** When a map tile is requested, the server checks the local cache first. On cache miss, it fetches from upstream, stores locally, and serves to the client.
-- **Configurable TTL (time-to-live):** Admin setting for how long cached tiles remain valid (e.g., 7 days, 30 days, 90 days). Tiles older than the TTL are replaced the next time the same tile is fetched from upstream.
-- **Lazy refresh:** Expired tiles are still served if the upstream source is unreachable (graceful degradation). They are replaced silently when connectivity returns and the tile is next requested.
-- **Enable/disable toggle:** Configurable option in admin settings — some installations may not want or need caching (e.g., cloud-hosted with reliable internet).
-- **Cache size management:** Optional max cache size setting with LRU (least recently used) eviction, or a manual "clear cache" button in admin.
-- **Zoom level limits:** Optionally limit which zoom levels are cached to manage disk usage (e.g., only cache zoom 10-18, skip very high or very low zoom).
-
-### How it works
-1. Client requests a tile via Leaflet (e.g., `/{z}/{x}/{y}.png`)
-2. Instead of hitting the tile provider directly, the request goes through a local PHP proxy endpoint (e.g., `ajax/tile_proxy.php?z=14&x=8192&y=5461`)
-3. The proxy checks `cache/tiles/{z}/{x}/{y}.png` on disk
-4. If the cached file exists and is within TTL → serve it directly with appropriate cache headers
-5. If the cached file is missing or expired → fetch from upstream, store to disk, serve to client
-6. If upstream is unreachable and a stale cached file exists → serve the stale tile (better than nothing)
-7. If upstream is unreachable and no cached file exists → return a placeholder "tile unavailable" image
-
-### Implementation notes
-- Tile cache directory: `cache/tiles/{z}/{x}/{y}.png` — standard slippy map directory structure
-- PHP proxy endpoint handles the fetch/cache/serve logic; Leaflet's tile URL template is pointed at it instead of directly at the tile provider
-- Respect tile provider terms of service (OSM allows caching with proper attribution and `User-Agent`)
-- Store tile metadata (fetch timestamp) either as file modification time or in a lightweight SQLite/JSON index
-- Consider supporting multiple tile providers (OSM, satellite, topo) with separate cache namespaces
-- The proxy should set `Content-Type: image/png` and appropriate browser cache headers
-- For Raspberry Pi deployments with limited SD card space, zoom level limits and max cache size are important
-- A pre-cache / seed feature (future enhancement) could allow admins to pre-download tiles for a bounding box + zoom range before deploying to a field location
-
-### Use cases
-- **Field deployments:** Amateur radio operators at a marathon or disaster exercise may have spotty or no internet. Pre-viewed areas remain available on the map.
-- **Remote stations:** Fire departments or medical ops in rural areas with unreliable connectivity.
-- **Bandwidth conservation:** Reduce repeated tile downloads for the same area across multiple users/sessions.
-- **Training environments:** Load the map once during setup, then run training exercises without depending on internet.
-
-### Admin settings
-- `tile_cache_enabled` — ON/OFF (default: OFF)
-- `tile_cache_ttl` — Days before a cached tile is considered stale (default: 30)
-- `tile_cache_max_size_mb` — Maximum disk usage for tile cache in MB (default: 500, 0 = unlimited)
-- `tile_cache_zoom_min` — Minimum zoom level to cache (default: 1)
-- `tile_cache_zoom_max` — Maximum zoom level to cache (default: 19)
-
-### Acceptance criteria
-- [ ] Tile proxy endpoint serves tiles from cache when available
-- [ ] Cache miss triggers upstream fetch, stores tile, and serves it transparently
-- [ ] Cached tiles are refreshed when older than the configured TTL
-- [ ] Stale cached tiles are served when upstream is unreachable (offline resilience)
-- [ ] Admin can enable/disable caching, set TTL, and set max cache size
-- [ ] Cache respects disk space limits and evicts oldest/least-used tiles when full
-- [ ] Map works normally from the user's perspective — caching is invisible
-- [ ] Tile provider terms of service are respected (User-Agent, attribution)
+The Tile Configuration feature is already built into the Config > Set Map Defaults page with three modes: Online Direct, Proxy Cache (recommended), and Offline Local. This backlog item was written before the feature existed.
 
 ---
 
@@ -266,23 +212,9 @@ All dropdown options should filter/update the displayed incidents according to t
 
 ---
 
-## 6. Links Button Inconsistent Across Pages
+## 6. ~~Links Button Inconsistent Across Pages~~ *(Fixed in commit 223750a)*
 
-**Source:** Manual testing (2026-03-16)
-**Reporter:** Eric Osterberg
-**Category:** Bug / UI
-
-### Current behavior
-The "links" button works on some pages (Situation, New, Units, Fac's) but does not load on other pages.
-
-### Expected behavior
-The links button should work consistently across all pages/modules.
-
-### Investigation needed
-- [ ] Identify which pages include the links button and which do not
-- [ ] Compare the working pages (Situation, New, Units, Fac's) with the non-working ones
-- [ ] Check if the links functionality is loaded via an include file that some pages are missing
-- [ ] Determine if it's a missing include, a JavaScript loading issue, or a conditional rendering problem
+The Links button in top.php calls `parent.main.$('links')` to show a hidden DIV rendered by `incs/links.inc.php`. Many pages loaded in the main frame were missing this include: search.php, reports.php, config.php, help.php, member.php, ticket_view_screen.php, ticket_view_screen_NM.php, full_sit_screen.php, and full_sit_screen_alt.php. Added the include to all missing pages and added try/catch to the button handler for resilience.
 
 ---
 
