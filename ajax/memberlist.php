@@ -165,9 +165,9 @@ while($row = $result->fetch_assoc()) {
     $s .= "<cell><![CDATA[". $typemenu."]]></cell>";
     $s .= "<cell><![CDATA[". $row['status_name']."]]></cell>";
     $s .= "<cell><![CDATA[". $statusmenu."]]></cell>";
-    $s .= ((strtotime($row['joindate']) == NULL) || (date("Y", strtotime($row['joindate'])) == '1970') || (date("Y", strtotime($row['joindate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", strtotime($row['joindate']))."]]></cell>";
-    $s .= ((strtotime($row['duedate']) == NULL) || (date("Y", strtotime($row['duedate'])) == '1970') || (date("Y", strtotime($row['duedate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", strtotime($row['duedate']))."]]></cell>";
-    $s .= ((strtotime($row['updated']) == NULL) || (date("Y", strtotime($row['updated'])) == '1970') || (date("Y", strtotime($row['updated'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", strtotime($row['updated']))."]]></cell>";
+    $s .= ((safe_strtotime($row['joindate']) == NULL) || (date("Y", safe_strtotime($row['joindate'])) == '1970') || (date("Y", safe_strtotime($row['joindate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['joindate']))."]]></cell>";
+    $s .= ((safe_strtotime($row['duedate']) == NULL) || (date("Y", safe_strtotime($row['duedate'])) == '1970') || (date("Y", safe_strtotime($row['duedate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['duedate']))."]]></cell>";
+    $s .= ((safe_strtotime($row['updated']) == NULL) || (date("Y", safe_strtotime($row['updated'])) == '1970') || (date("Y", safe_strtotime($row['updated'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['updated']))."]]></cell>";
     $s .= "</row>";
 }
 $s .= "</rows>"; 

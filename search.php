@@ -196,7 +196,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
     				$search_params[] = $query_str;
     				}
     			}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);		// drop trailing OR
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);		// drop trailing OR
 			}
 		if (get_variable('restrict_user_tickets') && !(is_administrator()))	{	//is user restricted to his/her own tickets?
 			$restrict_ticket = "AND owner='{$_SESSION['user_id']}'";

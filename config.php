@@ -189,7 +189,7 @@ function dump_db()
 {
     require_once('./incs/MySQLDump.class.php');
     include('./incs/mysql.inc.php');
-    $the_now = strtotime(mysql_format_date(time() - (get_variable('delta_mins') * 60)));
+    $the_now = safe_strtotime(mysql_format_date(time() - (get_variable('delta_mins') * 60)));
     $backup = new MySQLDump(); //create new instance of MySQLDump
     $the_db = $mysql_prefix . $mysql_db;
     $backup->connect($mysql_host, $mysql_user, $mysql_passwd, $the_db);        // connect

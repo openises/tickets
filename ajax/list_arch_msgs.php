@@ -107,7 +107,7 @@ foreach($the_result AS $msg_row) {
 		}
 	$date = substr($msg_row['date'], 0, 10);
 	$datepart = explode("-", $date);
-	if((strlen($datepart[0]) == 4) && (get_variable('locale') == 1)) {
+	if((safe_strlen($datepart[0]) == 4) && (get_variable('locale') == 1)) {
 		$yearpart = substr($datepart[0], 2);
 		if(substr($datepart[2], 0, 1) == 0) {
 			$daypart = substr($datepart[2], 1);
@@ -124,7 +124,7 @@ foreach($the_result AS $msg_row) {
 		$thehour =  $thetime[0];
 		$themin = $thetime[1];
 		$formatted_date =  $daypart . "/" . $monthpart . "/" . $yearpart . " " . $thehour . ":" . $themin;
-		} elseif((strlen($datepart[0]) == 4) && (get_variable('locale') == 0)) {
+		} elseif((safe_strlen($datepart[0]) == 4) && (get_variable('locale') == 0)) {
 		$yearpart = substr($datepart[0], 2);
 		if(substr($datepart[2], 0, 1) == "0") {
 			$daypart = substr($datepart[2], 1);

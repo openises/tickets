@@ -76,7 +76,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 		$the_arr[$z]['id'] = $row['id'];
 		$the_arr[$z]['address'] = stripslashes_deep(shorten($row['address'], 15));
 		$the_arr[$z]['description'] = stripslashes_deep(shorten($row['description'], 30));
-		$the_arr[$z]['when'] = format_date_2(strtotime($row['_on']));
+		$the_arr[$z]['when'] = format_date_2(safe_strtotime($row['_on']));
 		$the_arr[$z]['lat'] = $row['lat'];
 		$the_arr[$z]['lng'] = $row['lng'];		
 		$the_arr[$z]['distance'] = distance($curr_lat, $curr_lng, $row['lat'], $row['lng'], $unit);

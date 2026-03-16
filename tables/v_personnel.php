@@ -27,7 +27,7 @@ function validate_form(myform) {	// reject empty form elements
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">State:</TD>
 			<TD><?php print e($row['state']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Date of Birth:</TD>
-			<TD><?php print format_date_2(strtotime($row['date_of_birth']));?></TD></TR>
+			<TD><?php print format_date_2(safe_strtotime($row['date_of_birth']));?></TD></TR>
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Gender:</TD>
 			<TD><?php print e($row['gender']);?></SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Identifier:</TD>

@@ -80,7 +80,7 @@ while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	}
 
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 	
 function fac_cat($id) {
@@ -187,7 +187,7 @@ if($row['status'] == $GLOBALS['STATUS_CLOSED']) {
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -730,7 +730,7 @@ var zoom = map.getZoom();
 				$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . $the_status . " </TD></TR>";
-				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
+				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(safe_strtotime($row_fac['updated'])) . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['contact_name']). " Via: " . htmlspecialchars($row_fac['contact_email']) . "</TD></TR>";
 				if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . htmlspecialchars($row_fac['security_contact']) . " </TD></TR>";}
 				if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . htmlspecialchars($row_fac['security_email']) . " </TD></TR>";}

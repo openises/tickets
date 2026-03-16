@@ -339,7 +339,7 @@ function get_disp_cell($row_element, $form_element, $theClass ) {		// returns td
 	global $jd_today;
 	if (is_date($row_element)) {
 		$ttip_str = " onmouseover=\"Tip(' " . my_to_date($row_element) . "')\" onmouseout=\"UnTip()\" ";
-		$then = strtotime($row_element);
+		$then = safe_strtotime($row_element);
 		$jd_then = my_gregoriantojd (date ("M", $then), date ("j", $then), date ("Y", $then));
 		$this_class = ($jd_then == $jd_today )? $theClass: "my_plain";
 		return "\n\t<TD CLASS='{$this_class}' {$ttip_str}>" . my_to_date_sh($row_element) . "</TD>\n";	// identify as not-today
@@ -1145,7 +1145,7 @@ if(empty($_SESSION)) {		// expired?
 
 		case 'board' :			// ===== { =====
 			function cb_shorten($instring, $limit) {
-				return (strlen($instring) > $limit)? substr($instring, 0, $limit): $instring;	// &#133
+				return (safe_strlen($instring) > $limit)? substr($instring, 0, $limit): $instring;	// &#133
 				}
 			if ((array_key_exists("chg_hide", $_POST)) && ($_POST['chg_hide']==1)) {			// change persistence value - 2/18/09
 				$temp = $_POST['hide_cl'];

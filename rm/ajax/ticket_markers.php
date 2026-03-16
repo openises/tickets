@@ -34,7 +34,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 		$ret_arr[$i][2] = $row2['lat'];
 		$ret_arr[$i][3] = $row2['lng'];			
 		$ret_arr[$i][4] = stripslashes_deep(shorten($row2['description'], 30));
-		$ret_arr[$i][5] = format_date_2(strtotime($row2['problemstart']));		
+		$ret_arr[$i][5] = format_date_2(safe_strtotime($row2['problemstart']));		
 		$i++;
 		}				// end while
 	}	//	end else

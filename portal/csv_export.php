@@ -96,13 +96,13 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
 		$output[$z][] = $row['title'];
 		$output[$z][] = $row['description'];	
 		$output[$z][] = $row['status'];	
-		$output[$z][] = ($row['request_date'] != NULL) ? format_date_2(strtotime($row['request_date'])): "";		
-		$output[$z][] = ($row['accepted_date'] != NULL) ? format_date_2(strtotime($row['accepted_date'])): "";	
-		$output[$z][] = ($row['declined_date'] != NULL) ? format_date_2(strtotime($row['declined_date'])): "";	
-		$output[$z][] = ($row['resourced_date'] != NULL) ? format_date_2(strtotime($row['resourced_date'])): "";	
-		$output[$z][] = ($row['completed_date'] != NULL) ? format_date_2(strtotime($row['completed_date'])): "";
-		$output[$z][] = ($row['closed_date'] != NULL) ? format_date_2(strtotime($row['closed_date'])): "";
-		$output[$z][] = ($row['cancelled_date'] != NULL) ? format_date_2(strtotime($row['cancelled_date'])): "";
+		$output[$z][] = ($row['request_date'] != NULL) ? format_date_2(safe_strtotime($row['request_date'])): "";		
+		$output[$z][] = ($row['accepted_date'] != NULL) ? format_date_2(safe_strtotime($row['accepted_date'])): "";	
+		$output[$z][] = ($row['declined_date'] != NULL) ? format_date_2(safe_strtotime($row['declined_date'])): "";	
+		$output[$z][] = ($row['resourced_date'] != NULL) ? format_date_2(safe_strtotime($row['resourced_date'])): "";	
+		$output[$z][] = ($row['completed_date'] != NULL) ? format_date_2(safe_strtotime($row['completed_date'])): "";
+		$output[$z][] = ($row['closed_date'] != NULL) ? format_date_2(safe_strtotime($row['closed_date'])): "";
+		$output[$z][] = ($row['cancelled_date'] != NULL) ? format_date_2(safe_strtotime($row['cancelled_date'])): "";
 		$output[$z][] = $miles;
 		$z++;
 		}
@@ -155,7 +155,7 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
     } // end for
 	
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Content-Length: " . strlen($out));
+    header("Content-Length: " . safe_strlen($out));
     // Output to browser with appropriate mime type, you choose ;)
 	header("Content-type: application/csv");
     header("Content-Disposition: attachment; filename=$filename");

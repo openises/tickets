@@ -169,7 +169,7 @@ if ($http_code === 304 && $stale_exists) {
     exit;
 }
 
-if ($http_code === 200 && $tile_data !== false && strlen($tile_data) > 0) {
+if ($http_code === 200 && $tile_data !== false && safe_strlen($tile_data) > 0) {
     // Save to cache
     if (!is_dir($tile_root)) {
         @mkdir($tile_root, 0755, true);
@@ -189,7 +189,7 @@ if ($http_code === 200 && $tile_data !== false && strlen($tile_data) > 0) {
     header('Content-Type: image/png');
     header('Cache-Control: public, max-age=' . $tile_cache_seconds);
     header('X-Tile-Source: upstream');
-    header('Content-Length: ' . strlen($tile_data));
+    header('Content-Length: ' . safe_strlen($tile_data));
     echo $tile_data;
     exit;
 }

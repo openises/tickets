@@ -174,7 +174,7 @@ function get_enum_vals($table_name, $column_name) {	//	01/15/13
         [$p . $table_name, $column_name],
         'ss'
     );
-    $enum_list = explode(",", str_replace("'", "", substr($row['COLUMN_TYPE'], 5, (strlen($row['COLUMN_TYPE'])-6))));
+    $enum_list = explode(",", str_replace("'", "", substr($row['COLUMN_TYPE'], 5, (safe_strlen($row['COLUMN_TYPE'])-6))));
     return $enum_list;
 	}
 
@@ -209,19 +209,19 @@ function get_field_controls_edit($fieldid, $field_value, $memberid, $disallowed)
 			field65 AS field65
 			FROM `{$p}member`
 			WHERE  `id` = ?", [$memberid], 'i');
-	$row['updated'] = !empty($row['updated']) ? strtotime($row['updated']) : false;		// 3/14/26 - null-safe
-	$row['joindate'] = !empty($row['joindate']) ? strtotime($row['joindate']) : false;
-	$row['duedate'] = !empty($row['duedate']) ? strtotime($row['duedate']) : false;
-	$row['field56'] = !empty($row['field56']) ? strtotime($row['field56']) : false;	// 3/14/26 - null-safe
-	$row['field57'] = !empty($row['field57']) ? strtotime($row['field57']) : false;
-	$row['field58'] = !empty($row['field58']) ? strtotime($row['field58']) : false;
-	$row['field59'] = !empty($row['field59']) ? strtotime($row['field59']) : false;
-	$row['field60'] = !empty($row['field60']) ? strtotime($row['field60']) : false;
-	$row['field61'] = !empty($row['field61']) ? strtotime($row['field61']) : false;
-	$row['field62'] = !empty($row['field62']) ? strtotime($row['field62']) : false;
-	$row['field63'] = !empty($row['field63']) ? strtotime($row['field63']) : false;
-	$row['field64'] = !empty($row['field64']) ? strtotime($row['field64']) : false;
-	$row['field65'] = !empty($row['field65']) ? strtotime($row['field65']) : false;
+	$row['updated'] = !empty($row['updated']) ? safe_strtotime($row['updated']) : false;		// 3/14/26 - null-safe
+	$row['joindate'] = !empty($row['joindate']) ? safe_strtotime($row['joindate']) : false;
+	$row['duedate'] = !empty($row['duedate']) ? safe_strtotime($row['duedate']) : false;
+	$row['field56'] = !empty($row['field56']) ? safe_strtotime($row['field56']) : false;	// 3/14/26 - null-safe
+	$row['field57'] = !empty($row['field57']) ? safe_strtotime($row['field57']) : false;
+	$row['field58'] = !empty($row['field58']) ? safe_strtotime($row['field58']) : false;
+	$row['field59'] = !empty($row['field59']) ? safe_strtotime($row['field59']) : false;
+	$row['field60'] = !empty($row['field60']) ? safe_strtotime($row['field60']) : false;
+	$row['field61'] = !empty($row['field61']) ? safe_strtotime($row['field61']) : false;
+	$row['field62'] = !empty($row['field62']) ? safe_strtotime($row['field62']) : false;
+	$row['field63'] = !empty($row['field63']) ? safe_strtotime($row['field63']) : false;
+	$row['field64'] = !empty($row['field64']) ? safe_strtotime($row['field64']) : false;
+	$row['field65'] = !empty($row['field65']) ? safe_strtotime($row['field65']) : false;
 	$fieldtype = get_field_type('member', $fieldid);
 	$fieldname = "frm_field" . $fieldid;
 	$short_fieldname = "field" . $fieldid;

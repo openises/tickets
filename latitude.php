@@ -67,7 +67,7 @@ function do_glat_test($user) {				// given user id,  returns Google Latitude id,
 	else {										// not CURL
 		$data = "";
 		if ($fp = @fopen($the_url, "r")) {
-			while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+			while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 			fclose($fp);
 			}		
 		else {
@@ -127,7 +127,7 @@ function do_glat_test($user) {				// given user id,  returns Google Latitude id,
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>

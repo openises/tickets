@@ -22,10 +22,10 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 function loc_format_date($date){
 	if (get_variable('locale')==1)	{return date("j/n/y H:i",$date);}					// 08/27/10 - Revised to show UK format for locale = 1	
-	else 							{return date(get_variable("date_format"),$date);}	// return date(get_variable("date_format"),strtotime($date));
+	else 							{return date(get_variable("date_format"),$date);}	// return date(get_variable("date_format"),safe_strtotime($date));
 	}				// end function fac format date
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 
 $usng = get_text('USNG');
@@ -54,7 +54,7 @@ unset($result);
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -879,7 +879,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$got_point= TRUE;
 			}
 
-		$update_error = strtotime('now - 6 hours');							// set the time for silent setting
+		$update_error = safe_strtotime('now - 6 hours');							// set the time for silent setting
 // name
 
 		$display_name = $name = shorten(safe_htmlentities($row['title'], ENT_QUOTES), 20);	
@@ -902,7 +902,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$tab_1 = "<TABLE CLASS='infowin' width='{$iw_width}'>";
 			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($display_name, 48)) . "</B></TD></TR>";
 			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>Description:&nbsp;</TD><TD ALIGN='left' class='td_data'>" . safe_addslashes(shorten(str_replace($eols, " ", $row['r_description']), 32)) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD class='td_label' ALIGN='left'>As of:&nbsp;</TD><TD ALIGN='left' class='td_data'>" . format_date(strtotime($row['updated'])) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD class='td_label' ALIGN='left'>As of:&nbsp;</TD><TD ALIGN='left' class='td_data'>" . format_date(safe_strtotime($row['updated'])) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='spacer'><TD COLSPAN=2 ALIGN='center'>" . $toedit . "&nbsp;&nbsp;<A HREF='road_conditions.php?func=location&view=true&id=" . $row['cond_id'] . "'><U>View</U></A></TD></TR>";	// 08/8/02
 			$tab_1 .= "</TABLE>";
 ?>
@@ -941,7 +941,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 			$name = $row['title'];		
 			$temp = explode("/", $name );
-			$index = substr($temp[count($temp) -1], -6, strlen($temp[count($temp) -1]));
+			$index = substr($temp[count($temp) -1], -6, safe_strlen($temp[count($temp) -1]));
 
 ?>
 			var loc_id = "<?php print $index;?>";
@@ -1405,7 +1405,7 @@ var buttons_html = "";
 			<TR CLASS = 'odd'><TD CLASS="td_label"><?php print get_text("Location"); ?>: </TD><TD><?php print $row['street'] ;?></TD></TR> <!-- 7/5/10 -->
 			<TR CLASS = 'even'><TD CLASS="td_label"><?php print get_text("City"); ?>: &nbsp;&nbsp;&nbsp;&nbsp;</TD><TD><?php print $row['city'] ;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php print $row['state'] ;?></TD></TR> <!-- 7/5/10 -->
 			<TR CLASS = "even"><TD CLASS="td_label"><?php print get_text("Description"); ?>: </TD>	<TD><?php print $row['description'];?></TD></TR>
-			<TR CLASS = 'odd'><TD CLASS="td_label">As of:</TD>	<TD><?php print loc_format_date(strtotime($row['_on'])); ?></TD></TR>
+			<TR CLASS = 'odd'><TD CLASS="td_label">As of:</TD>	<TD><?php print loc_format_date(safe_strtotime($row['_on'])); ?></TD></TR>
 <?php
 			if (my_is_float($lat)) {
 ?>		

@@ -51,7 +51,7 @@ if (($result) && ($result->num_rows >=1)) {
 		$title = e($row['title']);
 		$print .= "<TD><A HREF='./ajax/download.php?filename=" . $filename . "&origname=" . $origfilename . "&type=" . $filetype . "'>" . $title . "</A></TD>";
 		$print .= "<TD>" . get_owner($row['_by']) . "</TD>";
-		$print .= "<TD>" . format_date_2(strtotime($row['_on'])) . "</TD>";
+		$print .= "<TD>" . format_date_2(safe_strtotime($row['_on'])) . "</TD>";
 		$print .= "</TR>";
 		$bgcolor = ($bgcolor == "#EEEEEE") ? "#FEFEFE" : "#EEEEEE";
 		}				// end while

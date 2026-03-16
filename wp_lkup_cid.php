@@ -75,7 +75,7 @@ $phone = (empty($_POST))? "4108498721": sanitize_string($_POST['phone']);
 				}
 			else {				// not CURL
 				if ($fp = @fopen($url, "r")) {
-					while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+					while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 					fclose($fp);
 					}		
 				else {
@@ -115,7 +115,7 @@ $phone = (empty($_POST))? "4108498721": sanitize_string($_POST['phone']);
 						$arys="";
 						break;
 						}
-					$lhe = $pos+strlen($aryk[$i]);
+					$lhe = $pos+safe_strlen($aryk[$i]);
 					$rhe = strpos ( $data, "<", $lhe);
 					$aryv[$i] = substr ( $data, $lhe , $rhe-$lhe );		// substr ( string, start , length )
 					}		// end for ($i...)

@@ -16,7 +16,7 @@ $requester = get_owner($_SESSION['user_id']);
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 $showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
 $api_key = get_variable('gmaps_api_key');
-$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps_ok = ($key_str) ? 1 : 0;
 ?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -680,7 +680,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 	$searchArray = array("\r\n", "\n", "\r");
 	$theDescription = str_replace($searchArray, "\\r", $_POST['frm_description']);
 	$the_summary .= get_text('Description') . "\\r" . $theDescription . "\\r";	
-	$the_summary .= get_text('Request Date') . ": " . format_date_2(strtotime($request_date)) . "\\r";		
+	$the_summary .= get_text('Request Date') . ": " . format_date_2(safe_strtotime($request_date)) . "\\r";		
 	$addrs = notify_newreq($_SESSION['user_id']);		// returns array of adddr's for notification, or FALSE
 	$to_str1 = "";
 	$smsg_to_str1 = "";
@@ -851,7 +851,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 						<TD class='td_label text' style='text-align: left;'>Requested By</TD><TD class='td_data text' style='text-align: left;'><?php print get_user_name($row['requester']);?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label text' style='text-align: left;'>Request Date and Time</TD><TD class='td_data text' style='text-align: left;'><?php print format_dateonly(strtotime($row['request_date']));?></TD>
+						<TD class='td_label text' style='text-align: left;'>Request Date and Time</TD><TD class='td_data text' style='text-align: left;'><?php print format_dateonly(safe_strtotime($row['request_date']));?></TD>
 					</TR>	
 					<TR class='odd'>	
 						<TD class='td_label text' style='text-align: left;'><?php print get_text('Status');?></TD><TD class='td_data text' style='text-align: left;'><?php print $row['status'];?></TD>
@@ -980,7 +980,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 						<TD class='td_label text' style='text-align: left;'>Requested By</TD><TD class='td_data text' style='text-align: left;'><?php print get_user_name($row['requester']);?></TD>
 					</TR>
 					<TR class='even'>	
-						<TD class='td_label text' style='text-align: left;'>Request Date and Time</TD><TD class='td_data text' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',strtotime($row['request_date']),FALSE);?></TD>
+						<TD class='td_label text' style='text-align: left;'>Request Date and Time</TD><TD class='td_data text' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',safe_strtotime($row['request_date']),FALSE);?></TD>
 					</TR>	
 					<TR class='odd'>	
 						<TD class='td_label text' style='text-align: left;'><?php print get_text('Status');?></TD><TD class='td_data text' style='text-align: left;'><?php print $status_sel;?></TD>

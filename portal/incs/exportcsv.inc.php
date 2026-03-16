@@ -136,7 +136,7 @@ function exportMysqlToCsv($user,$filename = 'requests.csv'){
     } // end for
 
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Content-Length: " . strlen($out));
+    header("Content-Length: " . safe_strlen($out));
     // Output to browser with appropriate mime type, you choose ;)
 	header("Content-type: text/x-csv");
 //	header("Content-type: text/csv");

@@ -73,9 +73,9 @@ $query = "SELECT *,problemstart AS problemstart,
 $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $num_rows = $result->num_rows;
 $row = stripslashes_deep($result->fetch_assoc());
-$problemstart = strtotime($row['problemstart']);
+$problemstart = safe_strtotime($row['problemstart']);
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-$now = strtotime($now);
+$now = safe_strtotime($now);
 $difference = round(abs($now - $problemstart) / 60,2);
 $type = shorten($row['type'], 18);
 $severity = $row['severity'];
@@ -101,12 +101,12 @@ if (intval($row['radius']) > 0) {
 $color = isset($color) ? $color : "blue";
 if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 if (get_variable('abbreviate_description'))	{	//do abbreviations on description, affected if neccesary
-	if (strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
+	if (safe_strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
 		$row['tick_descr'] = substr($row['tick_descr'],0,get_variable('abbreviate_description')).'...';
 		}
 	}
 if (get_variable('abbreviate_affected')) {
-	if (strlen($row['affected']) > get_variable('abbreviate_affected')) {
+	if (safe_strlen($row['affected']) > get_variable('abbreviate_affected')) {
 		$row['affected'] = substr($row['affected'],0,get_variable('abbreviate_affected')).'...';
 		}
 	}

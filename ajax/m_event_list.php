@@ -44,8 +44,8 @@ function eve_list($member) {
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$start = $row['start'];
 			$end = $row['end'];
-			$start = do_datestring(strtotime($start));
-			$end = do_datestring(strtotime($end));
+			$start = do_datestring(safe_strtotime($start));
+			$end = do_datestring(safe_strtotime($end));
 			$eve_row[$i][0] = $row['id'];
 			$eve_row[$i][1] = safe_htmlentities($row['event_name'], ENT_QUOTES);
 			$eve_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);

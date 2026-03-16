@@ -7,7 +7,7 @@ require_once('../incs/functions.inc.php');		// resides in ./ajax -- get_addrs.ph
 
 $js_func = "do_selected_addr";						// client-side js span 'onclick' function
 $q = strtoupper ( trim(sanitize_string($_POST["q"])) );				// keyboard to $_POST['']
-$q_len = strlen($q);
+$q_len = safe_strlen($q);
 $limit = 10;
 $q_like = $q . '%';
 

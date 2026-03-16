@@ -71,8 +71,8 @@ $row_tr = $result_tr->fetch_assoc();
 //snap (basename( __FILE__), __LINE__);
 
 $modulus = 60*60;
-$low = ((strtotime(get_low($row_tr['min'])))/($modulus));	// relative hour in this time range	
-$high = round (strtotime($row_tr['max'])/($modulus))+2;		// note padding
+$low = ((safe_strtotime(get_low($row_tr['min'])))/($modulus));	// relative hour in this time range	
+$high = round (safe_strtotime($row_tr['max'])/($modulus))+2;		// note padding
 
 $nr_hrs = intval($high - $low);								// interval in hours
 for ($i = 0;$i<$nr_hrs; $i++) {								// an entry each hour
@@ -85,7 +85,7 @@ $query = "SELECT  `source`, `altitude` , `packet_date`  FROM `{$GLOBALS['mysql_p
 $result_tr = db_query($query, [$p1]);
 
 while ($row_tr = stripslashes_deep($result_tr->fetch_assoc())) {
-	$the_hr = intval(floor(strtotime($row_tr['packet_date'])/$modulus) - $low);
+	$the_hr = intval(floor(safe_strtotime($row_tr['packet_date'])/$modulus) - $low);
 	$mins[$the_hr]= is_my_null($mins[$the_hr]) ?  $row_tr['altitude'] : min($mins[$the_hr],$row_tr['altitude']);
 	$maxs[$the_hr]= is_my_null($maxs[$the_hr]) ?  $row_tr['altitude'] : max($maxs[$the_hr],$row_tr['altitude']);
 	}				// end while ($row_tr ...)

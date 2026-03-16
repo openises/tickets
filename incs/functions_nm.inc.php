@@ -622,7 +622,7 @@ function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
 			"<TD TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>".
 			"<TD TITLE =\"{$row['theinfo']}\">". 	shorten($row['theinfo'], 16) . "</TD>".
 			"<TD TITLE =\"{$row['comment']}\">". 	shorten($theComment, 24) . "</TD>".
-			"<TD TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_date_2(strtotime($row['when'])) . "</TD>".
+			"<TD TITLE =\"" . format_date_2(safe_strtotime($row['when'])) . "\">". format_date_2(safe_strtotime($row['when'])) . "</TD>".
 			"<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>".
 			"</TR>";
 			$i++;
@@ -642,23 +642,23 @@ function format_date($date){							/* format date to defined type 8/27/10 */
 		if (get_variable('locale')==1) {
 			return date("j/n/y H:i",$date);		// 08/27/10 - Revised to show UK format for locale = 1
 		} else {
-			return date(get_variable("date_format"),$date);	//return date(get_variable("date_format"),strtotime($date));
+			return date(get_variable("date_format"),$date);	//return date(get_variable("date_format"),safe_strtotime($date));
 		}
 	} else {return "TBD";}
 	}				// end function format_date($date)
 
 function good_date($date) {		//
-	return (is_string ($date) && ((strlen($date)==10)));
+	return (is_string ($date) && ((safe_strlen($date)==10)));
 	}
 
 function format_sb_date($date){							/* format sidebar date */
-	if (is_string ($date) && strlen($date)==10) {
-		return date("M-d H:i",$date);}	//return date(get_variable("date_format"),strtotime($date));
+	if (is_string ($date) && safe_strlen($date)==10) {
+		return date("M-d H:i",$date);}	//return date(get_variable("date_format"),safe_strtotime($date));
 	else {return "TBD";}
 	}				// end function format_date($date)
 
 function good_date_time($date) {						//  2/15/09
-	return (is_string ($date) && (strlen($date)==19) && (!($date=="0000-00-00 00:00:00")));
+	return (is_string ($date) && (safe_strlen($date)==19) && (!($date=="0000-00-00 00:00:00")));
 	}
 
 function format_date_time($date){		// mySql format to settings spec - 2/15/09
@@ -931,7 +931,7 @@ function dump($variable) {
 	}
 
 function shorten($instring, $limit) {
-	return (strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
+	return (safe_strlen($instring) > $limit)? substr($instring, 0, $limit-4) . ".." : $instring ;	// &#133
 	}
 
 function format_phone ($instr) {
@@ -984,7 +984,7 @@ function get_level_text ($level) {
 	}		//end function
 
 function got_gmaps() {								// valid GMaps API key ?
-	return (strlen(get_variable('gmaps_api_key'))==86);
+	return (safe_strlen(get_variable('gmaps_api_key'))==86);
 	}
 
 function mysql_format_date($indate="") {			// returns MySQL-format date given argument timestamp or default now
@@ -995,7 +995,7 @@ function mysql_format_date($indate="") {			// returns MySQL-format date given ar
 function is_date($DateEntry) {						// returns true for valid non-zero date
 	$Date_Array = explode('-',$DateEntry);			// "2007-00-00 00:00:00"
 	if (count($Date_Array)!=3) 									return FALSE;
-	if((strlen($Date_Array[0])!=4)|| ($Date_Array[0]=="0000")) 	return FALSE;
+	if((safe_strlen($Date_Array[0])!=4)|| ($Date_Array[0]=="0000")) 	return FALSE;
 	else {return TRUE;}
 	}		// end function Is_Date()
 
@@ -1117,7 +1117,7 @@ function totime($string){			// given a MySQL-format date/time, returns the unix 
 
 function LessExtension($strName) {
 	$ext = strrchr($strName, '.');
-	return ($ext)? substr($strName, 0, -strlen($ext)):$strName  ;
+	return ($ext)? substr($strName, 0, -safe_strlen($ext)):$strName  ;
 	}		// end function LessExtension()
 
 
@@ -1161,7 +1161,7 @@ function get_ext($filename) {				// return extension in lower-case
 	}
 
 function ezDate($d) {
-	$temp = strtotime(str_replace("-","/",$d));
+	$temp = safe_strtotime(str_replace("-","/",$d));
 	$ts = time() - $temp;
 	if (($ts < 0) || ($ts > 315360000)) {return FALSE;}							// sanity check
 
@@ -1289,14 +1289,14 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 	snap(__LINE__, $query );
 	$ticket_result = db_query($query, [$ticket_id]);
 	$t_row = stripslashes_deep($ticket_result->fetch_array());
-	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
+	$the_scope = safe_strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
 	$eol = PHP_EOL;
 	$locale = get_variable('locale');
 
 	$message="";
 	$_end = (good_date_time($t_row['problemend']))?  "  End:" . $t_row['problemend'] : "" ;		//
 
-	for ($i = 0;$i< strlen($match_str); $i++) {
+	for ($i = 0;$i< safe_strlen($match_str); $i++) {
 		if(!($match_str[$i]==" ")) {
 			switch ($match_str[$i]) {
 				case "A":
@@ -1552,8 +1552,8 @@ function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
 
 	$caption="";
 	$smtp = trim(get_variable('smtp_acct'));									// 7/7/09
-	if (strlen($tostr)>0) {
-		if (strlen($smtp)==0) {
+	if (safe_strlen($tostr)>0) {
+		if (safe_strlen($smtp)==0) {
 			@mail($tostr, $subject_str, $text_str, $headers);
 			}
 		else {
@@ -1561,14 +1561,14 @@ function do_send ($to_str, $subject_str, $text_str ) {						// 7/7/09
 			}
 		$caption = "Email sent";
 		}
-	if (strlen($tocellstr)>0) {
+	if (safe_strlen($tocellstr)>0) {
 		$lgth = 140;
 		$ix = 0;
 		$i = 1;
 		$cell_text_str = stripLabels($text_str);								// strip labels 5/10/10
 		while (substr($cell_text_str, $ix , $lgth )) {								// chunk to $lgth-length strings
 			$subject_ex = $subject_str . "/part " . $i . "/";					// 10/21/08
-			if (strlen($smtp)==0) {
+			if (safe_strlen($smtp)==0) {
 				mail($tocellstr, $subject_ex, substr ($cell_text_str, $ix , $lgth ), $headers);
 				}
 			else {
@@ -1844,7 +1844,7 @@ function get_facilities_legend() {		// returns string as centered row - 2/8/10
 
 function is_phone ($instr) {		// 3/13/10
 	if(get_variable("locale")==0){
-		return ((strlen(trim($instr))==9) && (is_numeric($instr))) ;
+		return ((safe_strlen(trim($instr))==9) && (is_numeric($instr))) ;
 		}
 	else {
 		return (is_numeric($instr));
@@ -1884,7 +1884,7 @@ function now() {		// returns date
 	return (time() - intval(get_variable('delta_mins'))*60);
 	}
 function monday() {		// returns date
-	return strtotime("last Monday");
+	return safe_strtotime("last Monday");
 	}
 function day() {		// returns number
 	return date("d", now());

@@ -333,7 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminPass = (string)$_POST['admin_pass'];
     $adminName = trim((string)$_POST['admin_name']);
 
-    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+    if ($mode !== 'write_config' && ($adminUser === '' || safe_strlen($adminPass) < 6 || $adminName === '')) {
         emit_line('ERROR: Super admin user, name, and password (min 6 chars) are required.');
         emit_line('DONE:0');
         exit();
@@ -362,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminName = trim((string)$_POST['admin_name']);
     $step = isset($_POST['step']) ? max(0, (int)$_POST['step']) : 0;
 
-    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+    if ($mode !== 'write_config' && ($adminUser === '' || safe_strlen($adminPass) < 6 || $adminName === '')) {
         echo json_encode(array('ok' => false, 'done' => true, 'step' => $step, 'messages' => array('Super admin user, name, and password (min 6 chars) are required.')));
         exit();
     }
@@ -508,7 +508,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminName = trim((string)$_POST['admin_name']);
 
     if ($mode !== 'write_config') {
-        if ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '') {
+        if ($adminUser === '' || safe_strlen($adminPass) < 6 || $adminName === '') {
             echo json_encode(array('ok' => false, 'logs' => array('Super admin user, name, and password (min 6 chars) are required.')));
             exit();
         }

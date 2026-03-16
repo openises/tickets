@@ -42,7 +42,7 @@ function userlist(){		/* list users */
 	$i=0;
 	while($row = stripslashes_deep($result->fetch_array())) {
 		$level = get_level_text($row['level']);
-		$lastlogintime = format_date_2(mysql_format_date(strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
+		$lastlogintime = format_date_2(mysql_format_date(safe_strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
 		$isonline = ($row['expires'] > $now) ? true: false;
 		if($isonline) {
 			$ary[$i]['user'] = $row['user'];
@@ -136,7 +136,7 @@ function check_conn () {				// returns TRUE/FALSE
 			}
 		} else {				// not CURL
 		if ($fp = @fopen($url, "r")) {
-			while (!feof($fp) && (strlen($response)<9000)) $response .= fgets($fp, 128);
+			while (!feof($fp) && (safe_strlen($response)<9000)) $response .= fgets($fp, 128);
 			fclose($fp);
 			return TRUE;
 			} else {
@@ -187,7 +187,7 @@ function is_expired($id) {		// returns boolean
 	);
 	if (!$row) return false;
 	$row = stripslashes_deep($row);
-	$expires = (array_key_exists('expires', $row) && !is_null($row['expires'])) ? strtotime($row['expires']) : 0;
+	$expires = (array_key_exists('expires', $row) && !is_null($row['expires'])) ? safe_strtotime($row['expires']) : 0;
 	return ($expires > $now);
 	}
 

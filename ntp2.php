@@ -20,7 +20,7 @@ function ntp_time() {
 			}
 		fclose($fp);
 
-		if (strlen($data) != 4) {								// we have a response...is it valid? (4 char string -> 32 bits)
+		if (safe_strlen($data) != 4) {								// we have a response...is it valid? (4 char string -> 32 bits)
 			echo "NTP Server {$time_server	} returned an invalid response.\n";
 			return FALSE;
 			}

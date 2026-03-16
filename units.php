@@ -270,7 +270,7 @@ if(file_exists("./incs/modules.inc.php")) {
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -773,7 +773,7 @@ if(file_exists("./incs/modules.inc.php")) {
 				$result = db_query($query, [$realfilename]) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);	
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-						if (strlen(filesize($file)) < 20000000) {
+						if (safe_strlen(filesize($file)) < 20000000) {
 							$print .= "";
 							} else {
 							$print .= "Attached file is too large!";

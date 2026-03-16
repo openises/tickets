@@ -332,7 +332,7 @@ if($report != 8) {
 		if($report == 6) {
 			$thestring = "";
 			$temp = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-			$datetoday = strtotime($temp);
+			$datetoday = safe_strtotime($temp);
 			$query1 = "SELECT *, `refresh_due` AS `refresh_due`,`$GLOBALS[mysql_prefix]allocations`.`id` AS `all_id`,`$GLOBALS[mysql_prefix]member`.`id` AS `member_id` FROM `$GLOBALS[mysql_prefix]allocations`
 						LEFT JOIN `$GLOBALS[mysql_prefix]member` ON `$GLOBALS[mysql_prefix]allocations`.`member_id`=`$GLOBALS[mysql_prefix]member`.`id`
 						LEFT JOIN `$GLOBALS[mysql_prefix]training_packages` ON `$GLOBALS[mysql_prefix]allocations`.`skill_id`=`$GLOBALS[mysql_prefix]training_packages`.`id`					
@@ -347,7 +347,7 @@ if($report != 8) {
 					while ($row1 = stripslashes_deep($result1->fetch_assoc())) {
 						$print .= "<TR class='" . $class . "'>";
 						$print .= "<TD class='td_data_wrap text'>" . $row1['package_name'] . "</TD>";
-						$numDays = abs($today - strtotime($row1['refresh_due']))/60/60/24;
+						$numDays = abs($today - safe_strtotime($row1['refresh_due']))/60/60/24;
 						if($numDays >= 10) {
 							$theFlag = "style='background-color: red; color: #000000; font-weight: bold;'";
 							} else {
@@ -371,7 +371,7 @@ if($report != 8) {
 		if($report == 7 || $report == 5) {
 			$thestring = "";
 			$temp = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-			$datetoday = strtotime($temp);
+			$datetoday = safe_strtotime($temp);
 			$query1 = "SELECT *, `start` AS `start`, `end` AS `end`, `$GLOBALS[mysql_prefix]allocations`.`id` AS `all_id`,`$GLOBALS[mysql_prefix]member`.`id` AS `member_id` FROM `$GLOBALS[mysql_prefix]allocations`
 						LEFT JOIN `$GLOBALS[mysql_prefix]member` ON `$GLOBALS[mysql_prefix]allocations`.`member_id`=`$GLOBALS[mysql_prefix]member`.`id`
 						LEFT JOIN `$GLOBALS[mysql_prefix]events` ON `$GLOBALS[mysql_prefix]allocations`.`skill_id`=`$GLOBALS[mysql_prefix]events`.`id`					
@@ -393,8 +393,8 @@ if($report != 8) {
 						$print .= "<TR class='" . $class . "'>";
 						$print .= "<TD class='td_data_wrap text'>" . $row1['event_name'] . "</TD>";
 						$print .= "<TD class='td_data_wrap text'>" . $row1['description'] . "</TD>";
-						$print .= "<TD class='td_data_wrap text'>" . do_datestring(strtotime($row1['start'])) . "</TD>";
-						$print .= "<TD class='td_data_wrap text'>" . do_datestring(strtotime($row1['end'])) . "</TD>";
+						$print .= "<TD class='td_data_wrap text'>" . do_datestring(safe_strtotime($row1['start'])) . "</TD>";
+						$print .= "<TD class='td_data_wrap text'>" . do_datestring(safe_strtotime($row1['end'])) . "</TD>";
 						$print .= "</TR>";
 						}
 						$print .= "</TABLE></TD></TR>";			

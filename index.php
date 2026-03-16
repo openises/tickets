@@ -52,7 +52,7 @@ if ((!isset($_POST) || !array_key_exists('noautoforward', $_POST)) &&
 
         foreach ($agents as $agent) {
             $match = stristr($text, $agent);
-            if (strlen($match) > 0 && !stristr($text, 'MSIE')) {
+            if (safe_strlen($match) > 0 && !stristr($text, 'MSIE')) {
                 echo '<meta http-equiv="refresh" content="0;URL=' . $url . '">';
                 exit();
             }

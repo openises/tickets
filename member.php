@@ -83,7 +83,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -712,7 +712,7 @@ function linkFromSumm(table, index) {
 				chmod($upload_directory, 0777);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
-					if (filesize($file) < 149000) {		// 3/14/26 - was strlen(filesize()) which always passed
+					if (filesize($file) < 149000) {		// 3/14/26 - was safe_strlen(filesize()) which always passed
 						$filename = $file;
 						$errmsg = "";
 						} else {
@@ -875,7 +875,7 @@ function linkFromSumm(table, index) {
 				chmod($upload_directory, 0777);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
-					if (filesize($file) < 149000) {		// 3/14/26 - was strlen(filesize())
+					if (filesize($file) < 149000) {		// 3/14/26 - was safe_strlen(filesize())
 						$filename = $file;
 						$errmsg = "";
 						} else {
@@ -1021,7 +1021,7 @@ function linkFromSumm(table, index) {
 				chmod($upload_directory, 0777);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
-					if (filesize($file) < 149000) {		// 3/14/26 - was strlen(filesize())
+					if (filesize($file) < 149000) {		// 3/14/26 - was safe_strlen(filesize())
 						$filename = $file;
 						$errmsg = "";
 						} else {
@@ -1259,7 +1259,7 @@ function linkFromSumm(table, index) {
 				$file = $upload_directory . $_POST['frm_id'] . "_" . rand() . "." . $extension;
 				$shortname = $_POST['frm_shortname'];
 				if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-					if (strlen(filesize($file)) < 40000000) {
+					if (safe_strlen(filesize($file)) < 40000000) {
 						$filename = $file;
 						$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}mdb_files` (
 							`member_id`, `name`, `shortname`, `description`, `filesize`, `_on` )
@@ -1749,10 +1749,10 @@ function linkFromSumm(table, index) {
 				FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id`=?";
 			$result	= db_query($query, [$id]);
 			$row	= $result->fetch_array();
-			$row['duedate'] = strtotime($row['duedate']);
-			$row['joindate'] = !empty($row['joindate']) ? strtotime($row['joindate']) : false;	// 3/14/26 - null-safe
-			$row['dob'] = !empty($row['dob']) ? strtotime($row['dob']) : false;
-			$row['updated'] = !empty($row['updated']) ? strtotime($row['updated']) : false;
+			$row['duedate'] = safe_strtotime($row['duedate']);
+			$row['joindate'] = !empty($row['joindate']) ? safe_strtotime($row['joindate']) : false;	// 3/14/26 - null-safe
+			$row['dob'] = !empty($row['dob']) ? safe_strtotime($row['dob']) : false;
+			$row['updated'] = !empty($row['updated']) ? safe_strtotime($row['updated']) : false;
 			$lat = (!empty($row['lat'])) ? $row['lat'] : get_variable('def_lat');	// 3/14/26 - fall back to default when NULL
 			$lng = (!empty($row['lng'])) ? $row['lng'] : get_variable('def_lng');
 			$type_checks = array ("", "", "", "", "");
@@ -1794,10 +1794,10 @@ function linkFromSumm(table, index) {
 				WHERE `m`.`id`=? LIMIT 1";
 			$result	= db_query($query, [$id]);
 			$row	= stripslashes_deep($result->fetch_assoc());
-			$row['duedate'] = strtotime($row['duedate']);
-			$row['joindate'] = !empty($row['joindate']) ? strtotime($row['joindate']) : false;	// 3/14/26 - null-safe
-			$row['dob'] = !empty($row['dob']) ? strtotime($row['dob']) : false;
-			$row['updated'] = !empty($row['updated']) ? strtotime($row['updated']) : false;
+			$row['duedate'] = safe_strtotime($row['duedate']);
+			$row['joindate'] = !empty($row['joindate']) ? safe_strtotime($row['joindate']) : false;	// 3/14/26 - null-safe
+			$row['dob'] = !empty($row['dob']) ? safe_strtotime($row['dob']) : false;
+			$row['updated'] = !empty($row['updated']) ? safe_strtotime($row['updated']) : false;
 			$lat = (!empty($row['lat'])) ? $row['lat'] : get_variable('def_lat');	// 3/14/26 - fall back to default when NULL
 			$lng = (!empty($row['lng'])) ? $row['lng'] : get_variable('def_lng');
 			if (isset($row['field21'])) {

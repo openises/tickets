@@ -236,7 +236,7 @@ if(!empty($_POST)) {	//	$_POST data exists, process the file
 		$result = db_query($query, [$realfilename]);
 		if(db()->affected_rows == 0) {	//	file doesn't exist already
 			if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-				if (strlen(filesize($file)) < 20000000) {
+				if (safe_strlen(filesize($file)) < 20000000) {
 					$print .= "File Size OK<BR />";
 					} else {
 					$print = "Attached file is too large!<BR />";

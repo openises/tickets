@@ -1311,7 +1311,7 @@ function get_daynight() {
 			if (file_exists ($dir)) {
 				$dh  = opendir($dir);
 				while (false !== ($filename = readdir($dh))) {
-					if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
+					if ((safe_strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
 						$card_file = $filename;						// at least one pdf, use first encountered
 						break;
 						}
@@ -1341,7 +1341,7 @@ function get_daynight() {
 				if (file_exists ($dir)) {
 					$dh  = opendir($dir);
 					while (false !== ($filename = readdir($dh))) {
-						if ((strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
+						if ((safe_strlen($filename)>2) && (get_ext($filename)=="pdf"))  {
 							$manual_file = $filename;						// at least one pdf, use first encountered
 							break;
 							}

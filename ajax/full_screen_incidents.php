@@ -268,12 +268,12 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$color = isset($color) ? $color : "blue";
 			if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 			if (get_variable('abbreviate_description'))	{	//do abbreviations on description, affected if neccesary
-				if (strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
+				if (safe_strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
 					$row['tick_descr'] = substr($row['tick_descr'],0,get_variable('abbreviate_description')).'...';
 					}
 				}
 			if (get_variable('abbreviate_affected')) {
-				if (strlen($row['affected']) > get_variable('abbreviate_affected')) {
+				if (safe_strlen($row['affected']) > get_variable('abbreviate_affected')) {
 					$row['affected'] = substr($row['affected'],0,get_variable('abbreviate_affected')).'...';
 					}
 				}

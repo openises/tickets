@@ -34,7 +34,7 @@ if (db()->affected_rows == 0) {
 		$filename = $row['filename'];
 		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . $row['title'] . "</TD>";
 		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . get_owner($row['_by']) . "</TD>";
-		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . format_date_2(strtotime($row['_on'])) . "</TD>";		
+		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . format_date_2(safe_strtotime($row['_on'])) . "</TD>";		
 		$return .= "</TR>";
 		$bgcolor = ($bgcolor == '#EEEEEE') ? '#FEFEFE' : '#EEEEEE';
 		}				// end while

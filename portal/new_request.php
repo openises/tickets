@@ -21,7 +21,7 @@ $requester = get_owner($_SESSION['user_id']);
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 $showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
 $api_key = get_variable('gmaps_api_key');
-$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps_ok = ($key_str) ? 1 : 0;
 /*$mandatoryFields = array(
 					"Approver",
@@ -113,7 +113,7 @@ function generate_time_dropdown($fieldname, $hour=00, $minute=00, $disabled = FA
 
 $now = time() - (intval(get_variable('delta_mins')*60));
 $api_key = trim(get_variable('gmaps_api_key'));
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

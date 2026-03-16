@@ -178,7 +178,7 @@ do_kml();
 
 		$fac_name = $row_fac['facility_name'];			//	10/8/09
 		$fac_temp = explode("/", $fac_name );
-		$fac_index = substr($fac_temp[count($fac_temp) -1] , -6, strlen($fac_temp[count($fac_temp) -1]));	// 3/19/11
+		$fac_index = substr($fac_temp[count($fac_temp) -1] , -6, safe_strlen($fac_temp[count($fac_temp) -1]));	// 3/19/11
 		$icon_str = $row_fac['icon_str'];
 		$fac_id=($row_fac['id']);
 		$fac_type=($row_fac['type_icon']);

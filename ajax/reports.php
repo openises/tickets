@@ -425,7 +425,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				
 				$table .= (array_key_exists($curr_facility, $fac_names))? "<TD CLASS='plain_list text text_left' onClick = 'viewU(" .$curr_facility . ")'>" . $theFacName . "</TD>":	"<TD>[#" . $curr_facility . "]</TD>";
 				if (!empty($do_date)) {
-					$table .= "<TD CLASS='plain_list text text_left'>" . date ('D, M j', strtotime($do_date)) . "</TD>";
+					$table .= "<TD CLASS='plain_list text text_left'>" . date ('D, M j', safe_strtotime($do_date)) . "</TD>";
 					$do_date = "";
 					} else {
 					$table .= "<TD CLASS='plain_list text text_left'></TD>";
@@ -433,7 +433,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$theFacName = (array_key_exists($row["facility"], $fac_names))? shorten($fac_names[$row["facility"]], 16): "#" . $row["facility"] ;
 				foreach($statuses as $key => $val) {
 					if($row['status'] == $key) {
-						$val = date("H:i:s", strtotime($row['when_num']));
+						$val = date("H:i:s", safe_strtotime($row['when_num']));
 					}
 					$table .= "<TD CLASS='plain_list text text_left'>$val</TD>";
 					}
@@ -574,10 +574,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				if (empty($curr_unit)) {
 					$curr_unit = $row['unit'];
 					$curr_inc = $row['incident'];
-					$curr_date_test = date ('z', strtotime($row['when_num']));			// day of year as test value
+					$curr_date_test = date ('z', safe_strtotime($row['when_num']));			// day of year as test value
 					$do_date=$row['when_num'];
 					}								// populate break item
-				if (($row['unit'] == $curr_unit) && ($row['incident'] == $curr_inc ) && (date ('z', strtotime($row['when_num'])) == $curr_date_test )) {	// same unit and incident, date?
+				if (($row['unit'] == $curr_unit) && ($row['incident'] == $curr_inc ) && (date ('z', safe_strtotime($row['when_num'])) == $curr_date_test )) {	// same unit and incident, date?
 					if(array_key_exists($row['status'], $statuses)) {
 						$statuses[$row['status']] = time_part($row['when']);		// yes, populate the row
 						}
@@ -592,14 +592,14 @@ $htmlfooter = "</DIV></BODY></HTML>";
 						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
 						$table .= (array_key_exists($curr_unit, $unit_names))? "<TD CLASS='plain_list text text_normal text_left' onClick = 'viewU(" .$curr_unit . ")'>" . $theUnitName . "</TD>":	"<TD CLASS='plain_list text text_normal text_left'>[#" . $curr_unit . "]</TD>";	//	Unit column
 						if (!empty($do_date)) {		//	The Date column
-							$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', strtotime($do_date)) . "</TD>";
+							$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', safe_strtotime($do_date)) . "</TD>";
 							$do_date = "";
 							} else {
 							$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>";
 							}
-						if(((date ('z', strtotime($row['when_num']))) != $curr_date_test)) {		// date change?
+						if(((date ('z', safe_strtotime($row['when_num']))) != $curr_date_test)) {		// date change?
 							$do_date=$row['when_num'];
-							$curr_date_test = date ('z', strtotime($row['when_num']));
+							$curr_date_test = date ('z', safe_strtotime($row['when_num']));
 							}
 						foreach($statuses as $val) {
 							if($val != "") {
@@ -626,7 +626,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
 						$table .= (array_key_exists($curr_unit, $unit_names))? "<TD CLASS='plain_list text text_normal text_left' onClick = 'viewU(" .$curr_unit . ")'>" . $theUnitName . "</TD>":	"<TD CLASS='plain_list text text_normal text_left'>[#" . $curr_unit . "]</TD>";	//	Unit column
 						if (!empty($do_date)) {		//	The Date column
-							$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', strtotime($do_date)) . "</TD>";
+							$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', safe_strtotime($do_date)) . "</TD>";
 							$do_date = "";
 							} else {
 							$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";
@@ -644,7 +644,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
 						$table .= (array_key_exists($curr_unit, $unit_names))? "<TD CLASS='plain_list text text_normal text_left' onClick = 'viewU(" .$curr_unit . ")'>" . $theUnitName . "</TD>":	"<TD CLASS='plain_list text text_normal text_left'>[#" . $curr_unit . "]</TD>";	//	Unit column
 						if (!empty($do_date)) {		//	The Date column
-							$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', strtotime($do_date)) . "</TD>";
+							$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', safe_strtotime($do_date)) . "</TD>";
 							$do_date = "";
 							} else {
 							$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";
@@ -663,7 +663,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			$table .= "\n<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
 			$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16):  "#" . $curr_unit ;
 			$table .= "<TD CLASS='plain_list text text_normal text_left' onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>";		// flush tail-end Charlie, Unit Column
-			$work_date = (!empty($do_date))? date ('D, M j', strtotime($do_date)) : "" ; // 1/7/2013
+			$work_date = (!empty($do_date))? date ('D, M j', safe_strtotime($do_date)) : "" ; // 1/7/2013
 			$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $work_date . "</TD>";	//	Date column
 			foreach($statuses as $val) {
 				if($val != "") {
@@ -778,10 +778,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			while($row = stripslashes_deep($result->fetch_assoc())) {
 				if (empty($curr_unit)) {
 					$who = $row['unit'];
-					$curr_date_test = date ('z', strtotime($row['when_num']));
-					$curr_time_test = date ("H:i:s", strtotime($row['when_num']));
+					$curr_date_test = date ('z', safe_strtotime($row['when_num']));
+					$curr_time_test = date ("H:i:s", safe_strtotime($row['when_num']));
 					}								// populate break item
-				if (($row['unit'] == $curr_unit) && ($row['unit'] > 0) && (date ('z', strtotime($row['when_num'])) == $curr_date_test ) && (date ('H:i:s', strtotime($row['when_num'])) == $curr_time_test )) {	// same unit and date and time?
+				if (($row['unit'] == $curr_unit) && ($row['unit'] > 0) && (date ('z', safe_strtotime($row['when_num'])) == $curr_date_test ) && (date ('H:i:s', safe_strtotime($row['when_num'])) == $curr_time_test )) {	// same unit and date and time?
 					$table .= "<TR CLASS='" . $evenodd[$i%2] . "' STYLE='width: 100%;'>";
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";	//	Blank Unit field
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";	//	Blank Unit field
@@ -790,16 +790,16 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $types[$row['code']] . "</TD>";	//	populate new time
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $row['info'] . "</TD>";	//	The Info Column
 					$i++;
-					} elseif(($row['unit'] == $curr_unit) && ($row['unit'] > 0) && (date ('z', strtotime($row['when_num'])) == $curr_date_test ) && (date ('H:i:s', strtotime($row['when_num'])) != $curr_time_test )) {	// same unit and date, different time?
+					} elseif(($row['unit'] == $curr_unit) && ($row['unit'] > 0) && (date ('z', safe_strtotime($row['when_num'])) == $curr_date_test ) && (date ('H:i:s', safe_strtotime($row['when_num'])) != $curr_time_test )) {	// same unit and date, different time?
 					$table .= "<TR CLASS='" . $evenodd[$i%2] . "' STYLE='width: 100%;'>";
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";	//	Blank Unit field
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";	//	Blank Unit field
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>&nbsp;</TD>";	//	blank date field
-					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date("H:i:s", strtotime($row['when_num'])) . "</TD>";	//	populate new time
+					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date("H:i:s", safe_strtotime($row['when_num'])) . "</TD>";	//	populate new time
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $types[$row['code']] . "</TD>";	//	populate new time
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $row['info'] . "</TD>";	//	The Info Column
 					$curr_unit = $row['unit'];
-					$curr_time_test = date ("H:i:s", strtotime($row['when_num']));
+					$curr_time_test = date ("H:i:s", safe_strtotime($row['when_num']));
 					$i++;
 					} else {	//	different everything
 					$table .= "<TR CLASS='" . $evenodd[$i%2] . "' STYLE='width: 100%;'>";
@@ -808,13 +808,13 @@ $htmlfooter = "</DIV></BODY></HTML>";
 					$theWho = ($row['unit'] != 0) ? $responder : "N/A";
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $user . "</TD>";	//	The Unit
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $theWho . "</TD>";	//	The Unit
-					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', strtotime($row['when_num'])) . "</TD>";	//	populate new date
-					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date("H:i:s", strtotime($row['when_num'])) . "</TD>";	//	populate new time
+					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', safe_strtotime($row['when_num'])) . "</TD>";	//	populate new date
+					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date("H:i:s", safe_strtotime($row['when_num'])) . "</TD>";	//	populate new time
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $types[$row['code']] . "</TD>";	//	populate new time
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $row['info'] . "</TD>";	//	The Info Column
 					$curr_unit = $row['unit'];
-					$curr_date_test = date ('z', strtotime($row['when_num']));
-					$curr_time_test = date ("H:i:s", strtotime($row['when_num']));
+					$curr_date_test = date ('z', safe_strtotime($row['when_num']));
+					$curr_time_test = date ("H:i:s", safe_strtotime($row['when_num']));
 					$i++;						
 					}
 				$table .= "</TR>";
@@ -1060,13 +1060,13 @@ $htmlfooter = "</DIV></BODY></HTML>";
 						$inc_types[$row['in_types_id']] = 1;
 						}
 					$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
-					if(!(date("z", strtotime($row['when'])) == $curr_date))  {								// date change?
-						$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', strtotime($row['when'])) ."</TD>";
-						$curr_date = date("z", strtotime($row['when']));
+					if(!(date("z", safe_strtotime($row['when'])) == $curr_date))  {								// date change?
+						$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', safe_strtotime($row['when'])) ."</TD>";
+						$curr_date = date("z", safe_strtotime($row['when']));
 						} else {
 						$table .= "<TD CLASS='plain_list text text_normal text_left'></TD>";
 						}
-					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date('H:i',strtotime($row['when'])) . "</TD>";
+					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date('H:i',safe_strtotime($row['when'])) . "</TD>";
 					$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $types[$row['code']] . "</TD>";
 					if ($row['ticket_id']>0) {
 						$the_ticket = (empty($row['tick_name']))? "[#" . $row['ticket_id'] . "]" : $row['tick_name'];	// 8/15/08 -1
@@ -1152,7 +1152,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00') order by responding";
 			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 			while ($row_01 = $result_01->fetch_assoc()) {
-				$disptime = strtotime($row['problemstart']);
+				$disptime = safe_strtotime($row['problemstart']);
 				$resptime = $row_01['responding'];		
 				$resp_list[$row_01['id']] = datediff($resptime, $disptime);
 				break;
@@ -1256,8 +1256,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$tot_onscene_time = 0;
 		$row_cnt = $result->num_rows;
 		while ($row = $result->fetch_assoc()) {
-			$onscene_time = strtotime($row['on_scene']);
-			$clear_time = strtotime($row['clear']);
+			$onscene_time = safe_strtotime($row['on_scene']);
+			$clear_time = safe_strtotime($row['clear']);
 			$tot_onscene_time += datediff($clear_time, $onscene_time);
 			$unit_cnt++;
 		}
@@ -1392,8 +1392,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$controller = ($temp == " " || $temp == "") ? str_pad($row['user_name'], 20, " ", STR_PAD_RIGHT) : str_pad($temp, 20, " ", STR_PAD_RIGHT);
 				$organisation = ($row['org'] != 0) ? str_pad($row['organisation'], 20, " ", STR_PAD_RIGHT) : str_pad(" ", 20, " ", STR_PAD_RIGHT);
 				$address = $row['ticket_street'] . " " . $row['ticket_city'] . " " . $row['ticket_state'];
-				$problemstart = date ('D, M j', strtotime($row['problemstart'] ?? 'now'));
-				$problemend = date ('D, M j', strtotime($row['problemend'] ?? 'now'));
+				$problemstart = date ('D, M j', safe_strtotime($row['problemstart'] ?? 'now'));
+				$problemend = date ('D, M j', safe_strtotime($row['problemend'] ?? 'now'));
 				$inctype = $row['inc_type'];
 				$comments = ($row['comments'] != "") ? str_pad($row['comments'], 10, " ", STR_PAD_RIGHT) : str_pad(" ", 10, " ", STR_PAD_RIGHT);
 				$class = 'plain_list text text_normal text_left';
@@ -1810,12 +1810,12 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$theReturn = "";
 //																			5/31/2013
 					if (empty($today)) {
-						$today_ref = date("z", strtotime($row_in['problemstart']));
+						$today_ref = date("z", safe_strtotime($row_in['problemstart']));
 						$today = substr( format_date_2($row_in['problemstart']), 0, 7);
 						$today_full = format_date_2($row_in['problemstart']);
 						} else {
-						if (!($today_ref == (date("z", strtotime($row_in['problemstart']))))) {				// date change?
-							$today_ref = date("z", strtotime($row_in['problemstart']));
+						if (!($today_ref == (date("z", safe_strtotime($row_in['problemstart']))))) {				// date change?
+							$today_ref = date("z", safe_strtotime($row_in['problemstart']));
 							$today = substr( format_date_2($row_in['problemstart']), 0, 7);
 							$today_full = format_date_2($row_in['problemstart']);
 							} else {
@@ -1876,9 +1876,9 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
 			function do_stats($in_row) {		//
 				global $deltas, $counts;
-				if ((intval( strtotime($in_row['problemstart']))>0) && (intval (strtotime($in_row['problemend']))>0)) {
-					$deltas[$in_row['severity']]+= (strtotime($in_row['problemend']) - strtotime($in_row['problemstart']));
-					$deltas[3] 					+= (strtotime($in_row['problemend']) - strtotime($in_row['problemstart']));
+				if ((intval( safe_strtotime($in_row['problemstart']))>0) && (intval (safe_strtotime($in_row['problemend']))>0)) {
+					$deltas[$in_row['severity']]+= (safe_strtotime($in_row['problemend']) - safe_strtotime($in_row['problemstart']));
+					$deltas[3] 					+= (safe_strtotime($in_row['problemend']) - safe_strtotime($in_row['problemstart']));
 					}
 				$counts[$in_row['severity']]++;
 				$counts[3]++;
@@ -2230,7 +2230,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $organisation . "</TD>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $requester . "</TD>";
-				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', strtotime($row['request_date'])) . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . date ('D, M j', safe_strtotime($row['request_date'])) . "</TD>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $scope . "</TD>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . $responder . "</TD>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 20%;'>" . $description . "</TD>";
@@ -2359,10 +2359,10 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $region . "</TD>";
 				$table .= "<TD CLASS='plain_list text text_normal text_left'>" . $ticketscope . "</TD>";
 				$table .= "<TD CLASS='plain_list text text_normal text_center' style='width: 3%;'>" . get_assignscount($row['tick_id']) . "</TD>";
-				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', strtotime($row['problemend'])) . "</TD>";
-				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', strtotime($row['dispatched'])) . "</TD>";
-				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', strtotime($row['on_scene'])) . "</TD>";
-				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', strtotime($row['clear'])) . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', safe_strtotime($row['problemend'])) . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', safe_strtotime($row['dispatched'])) . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', safe_strtotime($row['on_scene'])) . "</TD>";
+				$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . date ('D, M j', safe_strtotime($row['clear'])) . "</TD>";
 				if($row['resp_id'] != "") {
 					$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . $responder . "</TD>";
 					$table .= "<TD CLASS='plain_list text text_normal text_left' style='width: 5%;'>" . get_responder_regions($row['resp_id']) . "</TD>";

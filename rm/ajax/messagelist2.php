@@ -131,7 +131,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 		$print .= "<TD style='width: 10%; " . $color . ";'>" . $type_flag . "</TD>";		
 		$print .= "<TD style='width: 30%;'>" . $fromname . "</TD>";
 		$print .= "<TD style='width: 40%;'>" . stripslashes_deep(shorten($msg_row['subject'], 18)) . "</TD>";
-		$print .= "<TD style='width: 20%;'>" . format_date_2(strtotime($msg_row['date'])) . "</TD>";		
+		$print .= "<TD style='width: 20%;'>" . format_date_2(safe_strtotime($msg_row['date'])) . "</TD>";		
 		$print .= "</TR>";
 		$bgcolor = ($bgcolor == "#EEEEEE") ? "#FEFEFE" : "#EEEEEE";				
 		} // end while	

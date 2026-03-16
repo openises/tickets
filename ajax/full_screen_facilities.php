@@ -41,7 +41,7 @@ function subval_sort($a, $subkey, $dd) {
 	}
 	
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 	
 function fac_cat($id) {
@@ -205,7 +205,7 @@ while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . e(shorten($facility_display_name, 48)) . "</B> - " . e($the_type) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . e(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32)) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . $the_status . " </TD></TR>";
-		$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
+		$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(safe_strtotime($row_fac['updated'])) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['contact_name']). " Via: " . e($row_fac['contact_email']) . "</TD></TR>";
 		if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . e($row_fac['security_contact']) . " </TD></TR>";}
 		if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . e($row_fac['security_email']) . " </TD></TR>";}

@@ -41,11 +41,11 @@ while ($row = stripslashes_deep($result->fetch_assoc())){
 			$tab_1 .= "<TR CLASS='odd'><TD class='td_label'>Description:</TD><TD>" . e($row['type_title']) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>Status:</TD><TD>" . e(stripslashes_deep($row['address'])) . " </TD></TR>";
 			$tab_1 .= "<TR CLASS='odd'><TD class='td_label'>Contact:</TD><TD>" . e(stripslashes_deep($row['r_description'])) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>As of:</TD><TD>" . e(format_date_2(strtotime($row['updated']))) . "</TD></TR>";		// 4/11/10
+			$tab_1 .= "<TR CLASS='even'><TD class='td_label'>As of:</TD><TD>" . e(format_date_2(safe_strtotime($row['updated']))) . "</TD></TR>";		// 4/11/10
 			$tab_1 .= "<TR CLASS='spacer'><TD COLSPAN='2' class='spacer'></TD></TR>";
 			if(($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']) || ($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR'])) {
 				if ($use_twitter) {							//7/23/15
-					$theInformation = stripslashes_deep($row['r_title']) . " at " . stripslashes_deep($row['address']) . " <small>as of " . format_date_2(strtotime($row['updated'])) . ". Latitude: " . $row['lat'] . ", Longitude: " . $row['lng'] . "</small>";
+					$theInformation = stripslashes_deep($row['r_title']) . " at " . stripslashes_deep($row['address']) . " <small>as of " . format_date_2(safe_strtotime($row['updated'])) . ". Latitude: " . $row['lat'] . ", Longitude: " . $row['lng'] . "</small>";
 					$tab_1 .= 	"<TR style='height: 25px;'><TD COLSPAN=99 style='text-align: center;'><SPAN id='twit_" . e($the_id) . "' CLASS='plain' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick=\"tweetInfo('" . e($theInformation) . "')\">Tweet</A>";	// 7/23/15
 					}
 				}
@@ -63,7 +63,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())){
 	$ret_arr[$z][3] = stripslashes_deep($row['address']);
 	$ret_arr[$z][4] = stripslashes_deep($row['r_description']);
 	$ret_arr[$z][5] = stripslashes_deep($row['icon_url']);
-	$ret_arr[$z][6] = format_date_2(strtotime($row['updated']));
+	$ret_arr[$z][6] = format_date_2(safe_strtotime($row['updated']));
 	$ret_arr[$z][7] = $row['lat'];
 	$ret_arr[$z][8] = $row['lng'];
 	$ret_arr[$z][9] = $theTabs;

@@ -122,7 +122,7 @@ $do_hints			= TRUE;				// if true, print data hints at input fields
 if (($mysql_db=="")||($mysql_user=="")) {print "<br><br><br><br>" ; die(" - - - - - - - - - -  - - - - - - - - - - Please set values for both \$mysql_db and \$mysql_user in settings.inc.php! - - - - - - - - - - ");}
 
 $FK_id = strtolower($key_str);			// set for case independence
-$id_lg = strlen($FK_id);				// lgth of foreign key id string
+$id_lg = safe_strlen($FK_id);				// lgth of foreign key id string
 $custom	= FALSE;						// custom processor in use
 
 // 3/14/26 - FK overrides for columns that don't follow the _id naming convention
@@ -266,7 +266,7 @@ function fnDatabaseExists($dbName) {					//Verifies existence of a MySQL databas
 
 function fnSubTableExists($TableName) {					// returns name of substitution table, or FALSE
 	global $id_lg, $primaries, $secondaries ;
-	$thename = substr( $TableName, 0, strlen($TableName)-$id_lg);				// high-order portion possible base name?
+	$thename = substr( $TableName, 0, safe_strlen($TableName)-$id_lg);				// high-order portion possible base name?
 	if ((in_array($thename, $primaries)) || (in_array ($thename, $secondaries))) {
 		return $thename;
 		}
@@ -370,7 +370,7 @@ if (($func == "c")||($func == "u")) {			// not required for all functions
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -884,7 +884,7 @@ if(array_key_exists('srch_str', $_POST)) {		//	3/18/11
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 
 <BODY onLoad = "do_onload()">	<!-- 9/21/08 -->
-<?php $the_table = (strlen($tablename)>0)? $tablename : "tbd"; ?>
+<?php $the_table = (safe_strlen($tablename)>0)? $tablename : "tbd"; ?>
 <BR />
 <CENTER>
 	<SPAN CLASS='header text_biggest text_center' style='padding-top: 10px; padding-bottom: 10px; width: 100%; display: block;'>Table:
@@ -1024,7 +1024,7 @@ switch ($func) {		// ================================== case "c" ===============
 						case "LONG":
 							$gotit = FALSE;
 							if (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id) {			// maybe dropdown
-								$lgth = strlen(mysql_field_name($result, $i));
+								$lgth = safe_strlen(mysql_field_name($result, $i));
 								$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
 								if (mysql_table_exists($thetable)) {											// does non-empty table exist?
 									$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by column 1, name unk
@@ -1155,7 +1155,7 @@ switch ($func) {		// ================================== case "c" ===============
 			}
 
 		$breakat = 24;
-		if (strlen($thestring) > $breakat) {
+		if (safe_strlen($thestring) > $breakat) {
 			$return = " CLASS='" . $theclass . " text text_center' onmouseover =\"document.getElementById('b" . $theid . "').style.visibility='hidden' ; document.getElementById('c" . $theid . "').style.visibility='visible';\" onmouseout = \"document.getElementById('c" . $theid . "').style.visibility='hidden'; document.getElementById('b" . $theid . "').style.visibility='visible' ; \" >\n";
 			$return .= substr($thestring, 0, $breakat) . "<SPAN id=\"b" . $theid . "\" style=\"visibility:visible\">" ;
 			$return .= substr($thestring, $breakat) . "</SPAN><SPAN id=\"c" . $theid . "\" style=\"visibility: hidden\">\n";
@@ -1292,7 +1292,7 @@ switch ($func) {		// ================================== case "c" ===============
 					$in_use = is_in_use($row[$i]);								// 11/9/10
 					}
 
-				$lgth = strlen(mysql_field_name($result, $i));								// shortened column name
+				$lgth = safe_strlen(mysql_field_name($result, $i));								// shortened column name
 				if (isset($row[$i])) {														// not empty
 
 					if (mysql_field_type($result, $i)=="time") {
@@ -1311,7 +1311,7 @@ switch ($func) {		// ================================== case "c" ===============
 								} elseif (isset($subst[mysql_field_name($result, $i)][$row[$i]])) {	// 3/14/26 - FK override substitution
 								$thedata = $subst[mysql_field_name($result, $i)][$row[$i]];
 								} else { 									// not substitution or date
-								$thedata = (strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
+								$thedata = (safe_strlen($row[$i])>$text_list_max)? substr($row[$i], 0,$text_list_max) . "&hellip;" : $row[$i];
 								}
 							if(($tablename=="unit_types") && (mysql_field_name($result, $i)=="icon")) {					// 1/29/09
 								$thedata = "<IMG SRC='./our_icons/" . $sm_icons[$row[$i]] . "'>";				// display icon image
@@ -1490,7 +1490,7 @@ case "u":	// =======================================  Update 	==================
 				case "LONG":
 					$gotit = FALSE;
 					if ((mysql_field_name($result, $i) != $indexname) && (strtolower(substr(mysql_field_name($result, $i), -$id_lg)) == $FK_id)) {			// maybe dropdown
-						$lgth = strlen(mysql_field_name($result, $i));
+						$lgth = safe_strlen(mysql_field_name($result, $i));
 						$thetable = substr( mysql_field_name($result, $i),0, $lgth-$id_lg) ;			// extract corresponding table name
 						if (mysql_table_exists($thetable)) {											// does table exist?
 							$query ="SELECT * FROM `$mysql_prefix$thetable` LIMIT 1";					// order will be by 2nd column
@@ -1573,7 +1573,7 @@ case "u":	// =======================================  Update 	==================
 							print "\n\t\t<TD><TEXTAREA NAME='frm_" . mysql_field_name($result, $i) . "' COLS='90' ROWS = '1' STYLE='vertical-align:text-top;'>{$row[$i]}</TEXTAREA> ";
 							}
 						else {
-//							$max = max($max, strlen($row[$i]));				// 9/5/08
+//							$max = max($max, safe_strlen($row[$i]));				// 9/5/08
 //					echo __LINE__ . " " . $max . "<BR />";
 
 							print "\n\t\t<TD><INPUT MAXLENGTH='{$max}' SIZE='{$max}' type='text' NAME='frm_" . mysql_field_name($result, $i) . "' VALUE='{$row[$i]}' onChange = 'this.value=JSfnTrim(this.value)'$disabled/> ";
@@ -1634,7 +1634,7 @@ case "u":	// =======================================  Update 	==================
 			}
 		}		// end foreach () ...
 																// now drop trailing comma
-	$query  = "INSERT INTO $mysql_prefix$tablename (" . substr($temp1, 0, (strlen($temp1) - 1)) . ") VALUES (" . substr($temp2, 0, (strlen($temp2) - 1)) . ")";
+	$query  = "INSERT INTO $mysql_prefix$tablename (" . substr($temp1, 0, (safe_strlen($temp1) - 1)) . ") VALUES (" . substr($temp2, 0, (safe_strlen($temp2) - 1)) . ")";
 	$result = db_query($query);
 	unset ($result);
 ?>
@@ -1720,7 +1720,7 @@ case "u":	// =======================================  Update 	==================
 			}
 			unset($fko_result);
 			} else {
-			$empty = (strlen($row[$i])== 0) ?  " - empty" : $empty = "";
+			$empty = (safe_strlen($row[$i])== 0) ?  " - empty" : $empty = "";
 
 			switch (mysql_field_type($result, $i)) {
 				case "datetime":
@@ -1800,7 +1800,7 @@ case "u":	// =======================================  Update 	==================
 			}		// field names - note tic's
 		}
 	$pu_id = sanitize_int($_POST['id']);
-	$query = substr($query, 0, (strlen($query) - 1)) . " WHERE `" .$indexname . "` = " . $pu_id . " LIMIT 1";
+	$query = substr($query, 0, (safe_strlen($query) - 1)) . " WHERE `" .$indexname . "` = " . $pu_id . " LIMIT 1";
 	$result = db_query($query);
 	unset ($result);
 //	dump ($query);
@@ -2043,7 +2043,7 @@ function do_check(the_bool) {
 function fnTables () {							/// displays tables comprising db $mysql_db
 	global $mysql_db, $mysql_prefix, $FK_id, $id_lg, $primaries, $secondaries;
 	$ctrp=$ctrs=0;
-	$pref_lgth = strlen($mysql_prefix);
+	$pref_lgth = safe_strlen($mysql_prefix);
 
 	$sql = "SHOW TABLES ";
 	$result = db_query($sql);	// $mysql_db

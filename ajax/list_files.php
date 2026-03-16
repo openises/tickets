@@ -104,7 +104,7 @@ if (($result) && ($num_rows > 0)) {
 		$ret_arr[$i][2] = $row['filetype'];
 		$ret_arr[$i][3] = $row['title'];
 		$ret_arr[$i][4] = get_owner($row['_by']);
-		$ret_arr[$i][5] = format_date_2(strtotime($row['_on']));
+		$ret_arr[$i][5] = format_date_2(safe_strtotime($row['_on']));
 		$ret_arr[$i][6] = $row['file_id'];
 		$ret_arr[$i][7] = $theflag;
 		$i++;

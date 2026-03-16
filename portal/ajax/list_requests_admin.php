@@ -132,7 +132,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 		$lat = (($row['r_lat'] != "") && ($row['r_lat'] != NULL) && ($row['r_lat'] != 0.999999)) ? $row['r_lat'] : 0.999999;
 		$lng = (($row['r_lng'] != "") && ($row['r_lng'] != NULL) && ($row['r_lng'] != 0.999999)) ? $row['r_lng'] : 0.999999;
 		$status = (!is_service_user()) ? get_status_selection($request_id, $row['req_status']) : $row['req_status'];	
-		$request_date = format_dateonly(strtotime($row['request_date']));		//	12/3/13
+		$request_date = format_dateonly(safe_strtotime($row['request_date']));		//	12/3/13
 		$tentative_date = $row['tentative_date'];
 	
 		if(($tentative_date != "") && ($row['accepted_date'] == "") && ($row['resourced_date'] == "") && ($row['completed_date'] == "") && ($row['closed'] == "") && ($row['req_status'] != "Tentative")) {
@@ -165,7 +165,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 			$result = db_query($update, [$row['problemend'], $request_id]);
 			}				
 		$updated_by = get_owner($row['r_by']);
-		$updated = format_date_2(strtotime($row['_on']));		
+		$updated = format_date_2(safe_strtotime($row['_on']));		
 		if ($row['req_status'] == 'Open') {
 			$color = "background-color: #FFFF00; color: #000000;";
 			} elseif ($row['req_status'] == 'Tentative') {

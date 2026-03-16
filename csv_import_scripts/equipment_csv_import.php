@@ -172,7 +172,7 @@ if(empty($_POST)) {	//	Upload a file for import
 		chmod($upload_directory, 0777);		
 		$file = $upload_directory . "import.csv";
 		if (move_uploaded_file($_FILES['the_file']['tmp_name'], $file)) {	// If file uploaded OK
-			if (strlen(filesize($file)) < 2000000) {
+			if (safe_strlen(filesize($file)) < 2000000) {
 				$filename = $file;
 				$errmsg = "";
 				} else {

@@ -24,7 +24,7 @@ while ($row_st = stripslashes_deep($result_st->fetch_array())) {
 	}
 
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 
 function fac_cat($id) {
@@ -48,9 +48,9 @@ function get_currenttime() {
 
 function isTimeBetween($lower, $higher) {
 	$current_time = get_currenttime();
-	$timecurrent = strtotime($current_time);
-	$timelower = strtotime($lower);
-	$timehigher = strtotime($higher);
+	$timecurrent = safe_strtotime($current_time);
+	$timelower = safe_strtotime($lower);
+	$timehigher = safe_strtotime($higher);
 //	print $current_time . " -- " . $timecurrent . " -- " . $timelower . " -- " . $timehigher . "<BR />";
 //	print date("Y-m-d H:i:s", $timecurrent) . " -- " . date("Y-m-d H:i:s", $timelower) . " -- " . date("Y-m-d H:i:s", $timehigher) . "<BR />";
 	if($timecurrent >= $timelower && $timecurrent <= $timehigher) {
@@ -153,7 +153,7 @@ if (my_is_float($row_fac['lat'])) {										// position data of any type?
 	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . safe_htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Status:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($the_status) . " </TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(safe_strtotime($row_fac['updated'])) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['contact_name']). " Via: " . e($row_fac['contact_email']) . "</TD></TR>";
 	if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left' STYLE= 'width:50%'>" . e($row_fac['security_contact']) . " </TD></TR>";}
 	if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Security email:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['security_email']) . " </TD></TR>";}

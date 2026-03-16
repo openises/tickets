@@ -353,7 +353,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				$the_lng = trim($_POST['frm_lng']);
 			}
 
-			if ((strlen($the_lat) < 3 ) && (strlen($the_lng) < 3)) {	// 1/29/11
+			if ((safe_strlen($the_lat) < 3 ) && (safe_strlen($the_lng) < 3)) {	// 1/29/11
 				$the_lat = $the_lng = 0.999999;
 				}
 
@@ -515,7 +515,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 					$result = db_query($query, [$realfilename]);
 					if(db()->affected_rows == 0) {	//	file doesn't exist already
 						if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-							if (strlen(filesize($file)) < 20000000) {
+							if (safe_strlen(filesize($file)) < 20000000) {
 								$print .= "";
 								} else {
 								$print .= "Attached file is too large!";
@@ -722,7 +722,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>

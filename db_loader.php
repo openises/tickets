@@ -147,7 +147,7 @@ function remove_remarks($sql) {
 	$linecount = count($lines);
 	$output = "";
 	for ($i = 0; $i < $linecount; $i++)	{
-		if(($i != ($linecount - 1)) || (strlen($lines[$i]) > 0)) {
+		if(($i != ($linecount - 1)) || (safe_strlen($lines[$i]) > 0)) {
 			if (isset($lines[$i][0]) && $lines[$i][0] != "#") {
 				$output .= $lines[$i] . "\n";
 				} else {
@@ -166,7 +166,7 @@ function split_sql_file($sql, $delimiter) {
 	$matches = array();
 	$token_count = count($tokens);
 	for ($i = 0; $i < $token_count; $i++) {
-		if (($i != ($token_count - 1)) || (strlen($tokens[$i] > 0))) {
+		if (($i != ($token_count - 1)) || (safe_strlen($tokens[$i] > 0))) {
 			$total_quotes = preg_match_all("/'/", $tokens[$i], $matches);
 			$escaped_quotes = preg_match_all("/(?<!\\\\)(\\\\\\\\)*\\\\'/", $tokens[$i], $matches);
 			$unescaped_quotes = $total_quotes - $escaped_quotes;

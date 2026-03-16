@@ -65,7 +65,7 @@ $ret_arr[2] = get_messagetype($msg_row['msg_type']);
 $ret_arr[3] = $fromname;
 $ret_arr[4] = stripslashes_deep($msg_row['subject']);
 $ret_arr[5] = stripslashes_deep($msg_row['message']);
-$ret_arr[6] = format_date_2(strtotime($msg_row['date']));
+$ret_arr[6] = format_date_2(safe_strtotime($msg_row['date']));
 $ret_arr[7] = get_owner($msg_row['_by']);
 $ret_arr[8] = get_messagecolor($msg_row['msg_type']);
 

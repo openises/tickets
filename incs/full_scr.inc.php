@@ -1449,12 +1449,12 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				$the_id = $row[0];
 				if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 				if (get_variable('abbreviate_description'))	{	//do abbreviations on description, affected if neccesary
-					if (strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
+					if (safe_strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
 						$row['tick_descr'] = substr($row['tick_descr'],0,get_variable('abbreviate_description')).'...';
 						}
 					}
 				if (get_variable('abbreviate_affected')) {
-					if (strlen($row['affected']) > get_variable('abbreviate_affected')) {
+					if (safe_strlen($row['affected']) > get_variable('abbreviate_affected')) {
 						$row['affected'] = substr($row['affected'],0,get_variable('abbreviate_affected')).'...';
 						}
 					}
@@ -1510,10 +1510,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 					$tab_1 .= "<TR CLASS='even'><TD>UTM grid:</TD><TD>" . toUTM($coords) . "</TD></TR>";
 					}
 				$tab_1 .= "<TR CLASS='even'>	<TD ALIGN='left'>Description:</TD><TD ALIGN='left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";	// str_replace("\r\n", " ", $my_string)
-				if (strlen(trim($row['comments']))>0) {
+				if (safe_strlen(trim($row['comments']))>0) {
 					$tab_1 .= "<TR CLASS='odd'>		<TD ALIGN='left'>" . get_text('Disposition') . ":</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['comments'], 48)) . "</TD></TR>";		// 8/13/09, 3/15/11
 					}
-				if (strlen(trim($row['nine_one_one']))>0) {
+				if (safe_strlen(trim($row['nine_one_one']))>0) {
 					$tab_1 .= "<TR CLASS='even'>	<TD ALIGN='left'>911 contact:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['nine_one_one'], 48)) . "</TD></TR>";	// 6/26/10
 					}
 				$tab_1 .= 	"</TABLE>";			// 11/6/08
@@ -2105,7 +2105,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				}
 	
 			$the_bull = "";											// define the bullet
-			$update_error = strtotime('now - 6 hours');								// set the time for silent setting
+			$update_error = safe_strtotime('now - 6 hours');								// set the time for silent setting
 	//		echo $update_error;
 			if ($row['aprs']==1) {
 				if ($row_aprs) {

@@ -14,9 +14,9 @@ $st_arr = array();
 $ret_arr = array();
 $today = time();
 $temp = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-$datetoday = strtotime($temp);
+$datetoday = safe_strtotime($temp);
 $daytoday = $temp;
-$plusonemonth = date('Y-m-d H:i:s', strtotime("+1 month", $datetoday));
+$plusonemonth = date('Y-m-d H:i:s', safe_strtotime("+1 month", $datetoday));
 $theClass = 'even';
 
 function output_report($table, $field, $title, $noneflag) {
@@ -41,13 +41,13 @@ function output_report($table, $field, $title, $noneflag) {
 				$thestring .= "<TD class='text' style='text-align: left; font-size: 0.8em; vertical-align: middle;'>" . e($row['regno']) . " " . e($row['make']) . " " . e($row['model']) . "</TD>";
 				}
 			$thestring .= "<TD class='text' style='text-align: left; font-size: 0.8em; vertical-align: middle;'>" . e($title) . "</TD>";
-			$numDays = abs($today - strtotime($row[$field]))/60/60/24;
+			$numDays = abs($today - safe_strtotime($row[$field]))/60/60/24;
 			if($numDays >= 10) {
 				$theFlag = "TITLE='10 days or more overdue' style='text-align: left; font-weight: bold; background-color: red; color: #000000; font-size: 0.8em; vertical-align: middle;'";
 				} else {
 				$theFlag = "TITLE='Less than 10 days overdue' style='text-align: left; font-size: 0.8em; vertical-align: middle;'";
 				}
-			$thestring .= "<TD class='text' " . $theFlag . ">Due: &nbsp;" . date('d/m/Y', strtotime($row[$field])) . "</TD>";
+			$thestring .= "<TD class='text' " . $theFlag . ">Due: &nbsp;" . date('d/m/Y', safe_strtotime($row[$field])) . "</TD>";
 			$thestring .= "<TD class='text' style='text-align: left; vertical-align: middle;'>&nbsp;</TD>";
 			$thestring .= "<TD class='text'>&nbsp;</TD>";
 			$thestring .= "<TD class='text' style='text-align: left; vertical-align: middle;'><SPAN id = \"view_but_" . e($field) . "_" . intval($row['id']) . "\" class='plain text_medium' style='width: 80px; display: block; cursor: pointer;' onMouseOver='do_hover_medium(this.id);' onMouseOut='do_plain_medium(this.id);' " . $toview . ">View</SPAN></TD>";
@@ -151,13 +151,13 @@ if($result->num_rows > 0) {
 		$thestring .= "<TR class='" . e($theClass) . "' style='height: 1.3em; width: 100%;'>";
 		$thestring .= "<TD class='text_medium' style='text-align: left; vertical-align: middle;'>" . e($row['field2']) . " " . e($row['field1']) . "</TD>";
 		$thestring .= "<TD class='text_medium' style='text-align: left; vertical-align: middle;'>" . e($row['package_name']) . "</TD>";
-		$numDays = abs($today - strtotime($row['refresh_due']))/60/60/24;
+		$numDays = abs($today - safe_strtotime($row['refresh_due']))/60/60/24;
 		if($numDays >= 10) {
 			$theFlag = "TITLE='10 days or more overdue' style='text-align: left; font-weight: bold; background-color: red; color: #000000; vertical-align: middle;'";
 			} else {
 			$theFlag = "TITLE='Less than 10 days overdue' style='text-align: left; vertical-align: middle;'";
 			}
-		$thestring .= "<TD class='text_medium' " . $theFlag . ">Due: &nbsp;" . date('d/m/Y', strtotime($row['refresh_due'])) . "</TD>";
+		$thestring .= "<TD class='text_medium' " . $theFlag . ">Due: &nbsp;" . date('d/m/Y', safe_strtotime($row['refresh_due'])) . "</TD>";
 		$thestring .= "<TD class='text' style='text-align: left; vertical-align: middle;'>&nbsp;</TD>";
 		$thestring .= "<TD class='text_medium' style='text-align: left; vertical-align: middle;'><SPAN id = \"edit_but_training_" . intval($row['all_id']) . "\" class='plain text_medium' style='width: 80px; display: block; cursor: pointer;' onMouseOver='do_hover_medium(this.id);' onMouseOut='do_plain_medium(this.id);' " . $toedit . ">Edit</SPAN></TD>";
 		$thestring .= "<TD class='text_medium' style='text-align: left; vertical-align: middle;'><SPAN id = \"view_but_training_" . intval($row['all_id']) . "\" class='plain text_medium' style='width: 80px; display: block; cursor: pointer;' onMouseOver='do_hover_medium(this.id);' onMouseOut='do_plain_medium(this.id);' " . $toview . ">View</SPAN></TD>";

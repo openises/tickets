@@ -62,8 +62,8 @@ function check_training_allocation($id, $type, $skill_id) {
 	$result	= db_query($query, [$id, $type, $skill_id]);
 	if($result->num_rows != 0) {
 		$row = $result->fetch_assoc();
-		$ret[0] = strtotime($row['completed']);
-		$ret[1] = strtotime($row['refresh_due']);
+		$ret[0] = safe_strtotime($row['completed']);
+		$ret[1] = safe_strtotime($row['refresh_due']);
 		} else {
 		$ret = false;
 		}

@@ -102,7 +102,7 @@ if (is_guest()) {
 	<TR CLASS = 'odd'><TD CLASS='td_label text'>Unit Name:</TD><TD CLASS='td_data text'><?php print $row['unitname'];?></TD></TR>
 	<TR CLASS = 'even'><TD CLASS='td_label text'>Status Val:</TD><TD CLASS='td_data text'><?php print $row['theinfo'];?></TD></TR>
 	<TR CLASS = 'odd'><TD CLASS='td_label text'>By Who:</TD><TD CLASS='td_data text'><?php print $row['thename'];?></TD></TR>
-	<TR CLASS = 'even'><TD CLASS='td_label text'>When:</TD><TD CLASS='td_data text'><?php print format_date_2(strtotime($row['logwhen']));?></TD></TR>
+	<TR CLASS = 'even'><TD CLASS='td_label text'>When:</TD><TD CLASS='td_data text'><?php print format_date_2(safe_strtotime($row['logwhen']));?></TD></TR>
 	<TR CLASS = 'odd'><TD CLASS='td_label text'>Comment:</TD><TD CLASS='td_data text'><?php print $theComment;?></TD></TR>
 	<TR CLASS = 'even'><TD COLSPAN=2 ALIGN='center'>
 	</TD></TR>

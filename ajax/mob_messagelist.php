@@ -104,7 +104,7 @@ if ($result->num_rows == 0) {
 		$ret_arr[$i][3] = $fromname;
 		$ret_arr[$i][4] = stripslashes_deep(shorten($msg_row['subject'], 18));
 		$ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['message'], 70));
-		$ret_arr[$i][6] = format_date_2(strtotime($msg_row['date']));
+		$ret_arr[$i][6] = format_date_2(safe_strtotime($msg_row['date']));
 		$ret_arr[$i][7] = get_owner($msg_row['_by']);
 		$ret_arr[$i][8] = get_messagecolor($msg_row['msg_type']);
 		$i++;

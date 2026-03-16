@@ -230,7 +230,7 @@ if(!$bronze_command) {
 					<TD CLASS="td_label text">
 						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Start Time / Date">Start Date/Time</A>:&nbsp;
 					</TD>
-					<TD CLASS="td_data text"><?php print format_date_2(strtotime($row['inc_startime']));?></TD>
+					<TD CLASS="td_data text"><?php print format_date_2(safe_strtotime($row['inc_startime']));?></TD>
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label text">
@@ -239,7 +239,7 @@ if(!$bronze_command) {
 					<TD CLASS="td_data text">
 <?php 
 						if(is_date($row['inc_endtime'])) {
-							print format_date_2(strtotime($row['inc_endtime']));
+							print format_date_2(safe_strtotime($row['inc_endtime']));
 							} else {
 							print "N/A";
 							}

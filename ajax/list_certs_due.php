@@ -15,11 +15,11 @@ while ($row = stripslashes_deep($result->fetch_assoc())) 	{
 	$thestring .= "<TR>";
 	$thestring .= "<TD>" . e($row['field1']) . " " . e($row['field2']) . "</TD>";
 	$thestring .= "<TD>" . e($row['package_name']) . "</TD>";
-	$numDays = abs($today - strtotime($row['refresh_due']))/60/60/24;
+	$numDays = abs($today - safe_strtotime($row['refresh_due']))/60/60/24;
 	if($numDays >= 500) {
 		$theFlag="style='font-weight: bold; background-color: red; color: #000000;'";
 		}
-	$thestring .= "<TD " . $theFlag . ">" . date('d/m/Y', strtotime($row['refresh_due'])) . "</TD>";
+	$thestring .= "<TD " . $theFlag . ">" . date('d/m/Y', safe_strtotime($row['refresh_due'])) . "</TD>";
 	$thestring .= "</TR>";
 	}
 

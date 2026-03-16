@@ -43,7 +43,7 @@ function subval_sort($a, $subkey, $dd) {
 	}
 	
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 	
 function fac_cat($id) {
@@ -67,9 +67,9 @@ function get_currenttime() {
 	
 function isTimeBetween($lower, $higher) {
 	$current_time = get_currenttime();
-	$timecurrent = strtotime($current_time);
-	$timelower = strtotime($lower);
-	$timehigher = strtotime($higher);
+	$timecurrent = safe_strtotime($current_time);
+	$timelower = safe_strtotime($lower);
+	$timehigher = safe_strtotime($higher);
 	if($timecurrent >= $timelower && $timecurrent <= $timehigher) {
 		return true;
 		} else {

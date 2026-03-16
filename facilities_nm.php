@@ -627,7 +627,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$temp_type = $row['type_id'] ;	
 		$the_type = (array_key_exists($temp_type, $type_vals))? $type_vals[$temp_type] : "??";
 
-		$update_error = strtotime('now - 6 hours');							// set the time for silent setting
+		$update_error = safe_strtotime('now - 6 hours');							// set the time for silent setting
 // Icon
 		$sidebar_line = "<TD>{$row['icon_str']}</TD>";			// 10/8/09		
 // Type
@@ -656,7 +656,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$name = $row['name'];	// 10/8/09	
 		$fac_index = $row['id'];		//	10/8/09
 		$temp = explode("/", $name );
-		$index = substr($temp[count($temp) -1], -6 , strlen($temp[count($temp) -1]));		// 3/19/11			
+		$index = substr($temp[count($temp) -1], -6 , safe_strlen($temp[count($temp) -1]));		// 3/19/11			
 ?>
 		var fac_id = "<?php print $index;?>";	//	10/8/09
 		var fac_index = "<?php print $fac_index;?>";	//	10/8/09		
@@ -819,7 +819,7 @@ var buttons_html = "";
 				$result = db_query($query, [$realfilename]);	
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-						if (strlen(filesize($file)) < 20000000) {
+						if (safe_strlen(filesize($file)) < 20000000) {
 							$print .= "";
 							} else {
 							$print .= "Attached file is too large!";

@@ -31,7 +31,7 @@ function validate_form(myform) {	// reject empty form elements
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">State:</TD>
 			<TD><INPUT ID="ID4" CLASS="dirty" MAXLENGTH="24" SIZE="4" type="text" NAME="frm_state" VALUE="<?php print e($row['state']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Date of Birth:</TD>
-			<TD><?php print generate_dateonly_dropdown('date_of_birth',strtotime($row['date_of_birth']),FALSE);?></TD></TR>
+			<TD><?php print generate_dateonly_dropdown('date_of_birth',safe_strtotime($row['date_of_birth']),FALSE);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Gender:</TD>
 			<TD><INPUT ID="ID5" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_gender" VALUE="<?php print e($row['gender']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Identifier:</TD>

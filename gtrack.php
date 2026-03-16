@@ -71,7 +71,7 @@ function do_gt($user, $url) {
 			}
 		else {				// not CURL
 			if ($fp = @fopen($request_url, "r")) {
-				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 				fclose($fp);
 				}		
 			else {
@@ -108,7 +108,7 @@ function do_gt($user, $url) {
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>

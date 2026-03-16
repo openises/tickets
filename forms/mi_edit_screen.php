@@ -301,7 +301,7 @@ if(!$bronze_command) {
 						<A CLASS="td_label text" HREF="#" TITLE="Major Incident Start Time / Date">Start Date/Time</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;
 					</TD>
 					<TD CLASS="td_data text" COLSPAN=3 >
-						<?php print generate_date_dropdown('inc_startime', strtotime($row['inc_startime']), FALSE);?>
+						<?php print generate_date_dropdown('inc_startime', safe_strtotime($row['inc_startime']), FALSE);?>
 					</TD>
 				</TR>
 				<TR CLASS = "even">
@@ -312,7 +312,7 @@ if(!$bronze_command) {
 <?php
 					if(is_date($row['inc_endtime'])) {
 ?>
-						<SPAN style = "visibility:visible" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', strtotime($row['inc_endtime']), FALSE);?></SPAN></TD>
+						<SPAN style = "visibility:visible" ID = "enddate1"><?php print generate_date_dropdown('inc_endtime', safe_strtotime($row['inc_endtime']), FALSE);?></SPAN></TD>
 <?php
 						} else {
 ?>

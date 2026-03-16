@@ -275,7 +275,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		}
 
 	$the_bull = "";
-	$update_error = strtotime('now - 6 hours');
+	$update_error = safe_strtotime('now - 6 hours');
 // NAME
 	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];
 	$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
@@ -310,8 +310,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
 		$result_updated = db_query($query_updated, [intval($memberID)]);
 		$row_updated = stripslashes_deep($result_updated->fetch_assoc());
-		$memUpdated = strtotime($row_updated['_on']);
-		$responderStatusUpdated = strtotime($row['status_updated']);
+		$memUpdated = safe_strtotime($row_updated['_on']);
+		$responderStatusUpdated = safe_strtotime($row['status_updated']);
 		$member_status = (($useMdb == "1" && $useMdbStatus && "1") && (get_member_count($row['unit_id']) == 1) && ($memberID != 0)) ? get_member_status($memberID) : 0;
 		if($member_status == $memberStatusAvailVal) {
 			$doChange = false;

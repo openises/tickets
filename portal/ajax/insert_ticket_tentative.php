@@ -69,8 +69,8 @@ if(($theArrival != "") && ($thePickup == "")) {
 $theLat = ($row['lat'] == NULL) ? 0.999999 : $row['lat'];
 $theLng = ($row['lng'] == NULL) ? 0.999999 : $row['lng'];
 $theDetails = get_requester_details($row['requester']);
-$requestDate = strtotime($row['request_date']);
-$nowplustwo = strtotime("+2 days",$nowTimestamp);
+$requestDate = safe_strtotime($row['request_date']);
+$nowplustwo = safe_strtotime("+2 days",$nowTimestamp);
 $theStatus = ($requestDate > $nowplustwo) ? 3 : 2;
 if($theStatus == 3) {
 	$tempDate = explode(" ", $row['request_date']);
@@ -177,7 +177,7 @@ if($last_id != 0) {
 	$the_summary .= ((is_array($rec_Fac)) && ($rec_Fac[0] != "")) ? "Receiving Facility " . $rec_Fac[0] . "\nAddress: " . $rec_Fac[1] . "\nPhone " . $rec_Fac[2] . "\r\n" : "";
 	$the_summary .= get_text('Description') . "\r\n" . $description . "\r\n";	
 	$the_summary .= get_text('Comments') . "\r\n" . $row['comments'] . "\r\n";	
-	$the_summary .= get_text('Request Date') . ": " . format_date_2(strtotime($row['request_date'])) . "\r\n";			
+	$the_summary .= get_text('Request Date') . ": " . format_date_2(safe_strtotime($row['request_date'])) . "\r\n";			
 
 	if ($the_email != "") {				// any addresses?
 		$to_str1 = $the_email;

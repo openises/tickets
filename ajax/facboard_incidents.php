@@ -128,9 +128,9 @@ function incident_list() {
 		} else {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
-			$problemstart = strtotime($row['problemstart']);
+			$problemstart = safe_strtotime($row['problemstart']);
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-			$now = strtotime($now);
+			$now = safe_strtotime($now);
 			$difference = round(abs($now - $problemstart) / 60,2);
 			$by_severity[$row['severity']] ++;
 			$sevs_arr = array();
@@ -160,13 +160,13 @@ function incident_list() {
 			$facArr = "";
 			$facClr = "";
 			if($row['u2farr'] != "") {
-				$temp1 = strtotime($row['u2farr']);
+				$temp1 = safe_strtotime($row['u2farr']);
 				$temp1_hour = date('H', $temp1);
 				$temp1_mins = date('i', $temp1);
 				$facArr = $temp1_hour . ":" . $temp1_mins;
 				}
 			if($row['clear'] != "") {
-				$temp2	= strtotime($row['clear']);
+				$temp2	= safe_strtotime($row['clear']);
 				$temp2_hour = date('H', $temp2);
 				$temp2_mins = date('i', $temp2);
 				$facClr = $temp2_hour . ":" . $temp2_mins;
@@ -264,9 +264,9 @@ function incident_list() {
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			if(intval($row['units_assigned']) == 0) {
-				$problemstart = strtotime($row['problemstart']);
+				$problemstart = safe_strtotime($row['problemstart']);
 				$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-				$now = strtotime($now);
+				$now = safe_strtotime($now);
 				$difference = round(abs($now - $problemstart) / 60,2);
 				$by_severity[$row['severity']] ++;
 				$sevs_arr = array();

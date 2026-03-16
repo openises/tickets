@@ -29,7 +29,7 @@ $print .= "<TD style='width: 30%; border: 1px solid #707070;'>TO</TD>";
 $print .= "<TD style='width: 70%; border: 1px solid #707070;'>" . e($row['recipients']) . "</TD></TR>";
 $print .= "<TR style='width: 100%;'>";
 $print .= "<TD style='width: 30%; border: 1px solid #707070;'>DATE</TD>";			
-$print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . format_date_2(strtotime($row['date'])) . "</TD></TR>";		
+$print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . format_date_2(safe_strtotime($row['date'])) . "</TD></TR>";		
 $print .= "<TR style='width: 100%;'>";
 $print .= "<TD style='width: 30%; border: 1px solid #707070;'>SUBJECT</TD>";			
 $print .= "<TD style='width: 20%; border: 1px solid #707070;'>" . e($row['subject']) . "</TD></TR>";

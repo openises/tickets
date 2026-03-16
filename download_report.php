@@ -47,7 +47,7 @@ if (function_exists("curl_init")) {
 	curl_close($ch);
 	} else {				// no CURL
 	if ($fp = @fopen($url, "r")) {
-		while (!feof($fp) && (strlen($thePage)<9000)) $thePage .= fgets($fp, 128);
+		while (!feof($fp) && (safe_strlen($thePage)<9000)) $thePage .= fgets($fp, 128);
 		fclose($fp);
 		}
 	}

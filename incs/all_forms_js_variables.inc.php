@@ -39,7 +39,7 @@ $columns_arr = explode(',', get_msg_variable('columns'));
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 $showmaps = (array_key_exists('internet', $_SESSION) && $_SESSION['internet']) ? 1 : 0;
 $api_key = get_variable('gmaps_api_key');
-$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps = (array_key_exists('internet', $_SESSION) && $_SESSION['internet']) ? 1 : 0;
 $gmaps_ok = ($key_str) ? 1 : 0;
 $temp = get_variable('auto_poll');				// 1/28/09

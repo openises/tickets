@@ -24,10 +24,10 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 function loc_format_date($date){
 	if (get_variable('locale')==1)	{return date("j/n/y H:i",$date);}					// 08/27/10 - Revised to show UK format for locale = 1	
-	else 							{return date(get_variable("date_format"),$date);}	// return date(get_variable("date_format"),strtotime($date));
+	else 							{return date(get_variable("date_format"),$date);}	// return date(get_variable("date_format"),safe_strtotime($date));
 	}				// end function fac format date
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 
 $usng = get_text('USNG');
@@ -89,7 +89,7 @@ function get_icon_legend (){			// returns legend string
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>

@@ -44,7 +44,7 @@ function cloth_list($member) {
 		$i = 1;
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$completed = $row['issued'];
-			$completed = do_datestring(strtotime($completed));
+			$completed = do_datestring(safe_strtotime($completed));
 			$cloth_row[$i][0] = $row['id'];
 			$cloth_row[$i][1] = safe_htmlentities($row['name'], ENT_QUOTES);
 			$cloth_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);

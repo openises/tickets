@@ -7,7 +7,7 @@ require_once('../incs/functions.inc.php');
 $ret_arr = array();
 $addr = urlencode(sanitize_string($_GET['addr']));
 $api_key = get_variable('gmaps_api_key');
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 if($https) {
 	$the_url = "https://maps.googleapis.com/maps/api/geocode/json?" . $key_str . "&address={$addr}&sensor=false";
 	} else {

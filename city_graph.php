@@ -28,7 +28,7 @@ if($result->num_rows > 0) {
 	$mygraph->setTitle("{$incidents_capt} by City","");
 	
 	while($row = stripslashes_deep($result->fetch_assoc())) {			//
-		$row ['city']  = ( @strlen( @trim ( $row ['city'] ) )> 0 ) ? $row ['city'] : " ? " ;	// possible null/empty
+		$row ['city']  = ( @safe_strlen( @trim ( $row ['city'] ) )> 0 ) ? $row ['city'] : " ? " ;	// possible null/empty
 		$mygraph->addDataSeries('P',PIE_CHART_PCENT + PIE_LEGEND_VALUE, $row ['nr'] , $row ['city'] );
 		}
 	$mygraph->setBgColor(0,0,0,1);  //transparent background

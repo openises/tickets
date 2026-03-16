@@ -10,7 +10,7 @@ function get_updated($id) {
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?";
 	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 	$row = stripslashes_deep($result->fetch_assoc());
-	return strtotime($row['updated']);
+	return safe_strtotime($row['updated']);
 	}
 
 function log_details($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/14
@@ -58,7 +58,7 @@ function log_details($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/
 			} else {
 			$print .= "<TD>&nbsp;</TD>";
 			}
-		$print .= "<TD TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_sb_date_2($row['when']) . "</TD>";
+		$print .= "<TD TITLE =\"" . format_date_2(safe_strtotime($row['when'])) . "\">". format_sb_date_2($row['when']) . "</TD>";
 		$print .= "<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>";
 		$print .= "<TD TITLE =\"{$row['from']}\">". 		substr($row['from'], -4) . "</TD>";
 			"</TR>";
@@ -160,7 +160,7 @@ function ticket_details($id, $theWidth, $search=FALSE, $dist=TRUE) {						// ret
 	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD ALIGN='left'>Receiving Facility:</TD>		<TD ALIGN='left'>" . highlight($search, $rec_fac_details) . "</TD></TR>\n";	// 10/6/09
 	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD ALIGN='left'>{$disposition}:</TD>	<TD ALIGN='left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Run Start") . ":</TD> <TD ALIGN='left'>" . format_date_2($theRow['problemstart']);
-	$end_str = (good_date_time($theRow['problemend']))? format_date_2(strtotime($theRow['problemend'])) : "";
+	$end_str = (good_date_time($theRow['problemend']))? format_date_2(safe_strtotime($theRow['problemend'])) : "";
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;{$end_str}&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$locale = get_variable('locale');	// 08/03/09
 	switch($locale) { 

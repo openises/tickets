@@ -47,7 +47,7 @@ $query = "SELECT
 $result = db_query($query, array($theID)) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $row = $result->fetch_array(MYSQLI_ASSOC);
 extract($row);
-$submitted = strtotime($as_of);
+$submitted = safe_strtotime($as_of);
 $iconurl = $icons_dir . $type_icon;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"

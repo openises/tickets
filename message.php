@@ -103,15 +103,15 @@ function the_ticket($theRow, $theWidth=500, $search=FALSE, $dist=TRUE) {						//
 	$elapsed_str = get_elapsed_time ($theRow);			
 	$print .= "<TR CLASS='odd'><TD CLASS='td_label text text_left'>" . get_text("Status") . ":</TD><TD CLASS='td_data text text_left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
-	$print .= "<TR CLASS='even'><TD CLASS='td_label text text_left'>" . get_text("Written") . ":</TD><TD CLASS='td_data text text_left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
-	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2(strtotime($theRow['updated'])) . "</TD></TR>\n";
-	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD CLASS='td_label text text_left'>Scheduled date:</TD><TD CLASS='td_data text text_left'>" . format_date_2(strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
+	$print .= "<TR CLASS='even'><TD CLASS='td_label text text_left'>" . get_text("Written") . ":</TD><TD CLASS='td_data text text_left'>" . format_date_2(safe_strtotime($theRow['date'])) . $by_str;
+	$print .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Updated:&nbsp;&nbsp;" . format_date_2(safe_strtotime($theRow['updated'])) . "</TD></TR>\n";
+	$print .=  empty($theRow['booked_date']) ? "" : "<TR CLASS='odd'><TD CLASS='td_label text text_left'>Scheduled date:</TD><TD CLASS='td_data text text_left'>" . format_date_2(safe_strtotime($theRow['booked_date'])) . "</TD></TR>\n";	// 10/6/09
 	$print .= "<TR CLASS='even' ><TD CLASS='td_label text text_left' COLSPAN='2'>&nbsp;</TD></TR>\n";			// separator
 	$print .= empty($theRow['fac_name']) ? "" : "<TR CLASS='odd' ><TD CLASS='td_label text text_left'>{$incident} at Facility:</TD>		<TD CLASS='td_data text text_left'>" . highlight($search, $theRow['fac_name']) . "</TD></TR>\n";	// 8/1/09
 	$print .= empty($theRow['rec_fac_name']) ? "" : "<TR CLASS='even' ><TD CLASS='td_label text text_left'>Receiving Facility:</TD>		<TD CLASS='td_data text text_left'>" . highlight($search, $theRow['rec_fac_name']) . "</TD></TR>\n";	// 10/6/09
 	$print .= empty($theRow['comments'])? "" : "<TR CLASS='odd'  VALIGN='top'><TD CLASS='td_label text text_left'>{$disposition}:</TD>	<TD CLASS='td_data text text_left'>" . replace_quotes(highlight($search, nl2br($theRow['comments']))) . "</TD></TR>\n";
-	$print .= "<TR CLASS='even' ><TD CLASS='td_label text text_left'>" . get_text("Run Start") . ":</TD><TD CLASS='td_data text text_left'>" . format_date_2(strtotime($theRow['problemstart']));
-	$end_str = (good_date_time($theRow['problemend']))? format_date_2(strtotime($theRow['problemend'])) : "";
+	$print .= "<TR CLASS='even' ><TD CLASS='td_label text text_left'>" . get_text("Run Start") . ":</TD><TD CLASS='td_data text text_left'>" . format_date_2(safe_strtotime($theRow['problemstart']));
+	$end_str = (good_date_time($theRow['problemend']))? format_date_2(safe_strtotime($theRow['problemend'])) : "";
 	$print .= 	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;{$end_str}&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$locale = get_variable('locale');	// 08/03/09
 	switch($locale) { 

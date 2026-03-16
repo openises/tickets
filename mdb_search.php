@@ -124,7 +124,7 @@ function validate(theForm) {
 				$finfo = $result->fetch_field_direct($i);
     			$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 				}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
 			}
 		
 		$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";		// 9/19/08
@@ -143,7 +143,7 @@ function validate(theForm) {
 			$member_found = $counter = 1;
 			print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Member Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
 			while($row = stripslashes_deep($result->fetch_assoc())){				// 8/28/08
-				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='text' ><A CLASS='text' HREF='member.php?view=true&id=" . intval($row['id']) . "'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD CLASS='text' >".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD CLASS='text' ><A CLASS='text'  HREF='member.php?view=true&id=" . intval($row['id']) . "'>" . e($row['field2']) . " " . e($row['field1']) . "</A></TD><TD CLASS='text' >".get_status_name($row['member_status'])."</TD></TR>\n";				// 2/25/09
+				print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD CLASS='text' ><A CLASS='text' HREF='member.php?view=true&id=" . intval($row['id']) . "'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD CLASS='text' >".format_date(safe_strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD CLASS='text' ><A CLASS='text'  HREF='member.php?view=true&id=" . intval($row['id']) . "'>" . e($row['field2']) . " " . e($row['field1']) . "</A></TD><TD CLASS='text' >".get_status_name($row['member_status'])."</TD></TR>\n";				// 2/25/09
 				$counter++;
 				}
 			
@@ -170,7 +170,7 @@ function validate(theForm) {
 					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 				}
 			}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
 			
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
@@ -194,7 +194,7 @@ function validate(theForm) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Training</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
 				while($row = stripslashes_deep($result->fetch_assoc())){
-					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['id']}'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['id']}'>#{$row['id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(safe_strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
 				
@@ -221,7 +221,7 @@ function validate(theForm) {
 					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
 
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
@@ -242,7 +242,7 @@ function validate(theForm) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Capabilities Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
 				while($row = stripslashes_deep($result->fetch_assoc())){
-					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(safe_strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
 				
@@ -269,7 +269,7 @@ function validate(theForm) {
 					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
 
 
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
@@ -293,7 +293,7 @@ function validate(theForm) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Equipment Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
 				while($row = stripslashes_deep($result->fetch_assoc())){
-					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(safe_strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
 				
@@ -320,7 +320,7 @@ function validate(theForm) {
 					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
 
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
@@ -342,7 +342,7 @@ function validate(theForm) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Clothing Data</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
 				while($row = stripslashes_deep($result->fetch_assoc())){
-					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(safe_strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
 				
@@ -367,7 +367,7 @@ function validate(theForm) {
 					$search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
 					}
 				}
-			$search_fields = substr($search_fields,0,strlen($search_fields) - 4);
+			$search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
 
 			$desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";
 
@@ -388,7 +388,7 @@ function validate(theForm) {
 				$member_found = $counter = 1;
 				print "<TABLE BORDER='0' CELLPADDING='5'><TR CLASS='odd'><TH class='header text_large'>In Files</TH></TR><TR CLASS='even'><TD CLASS='td_header text'>Member</TD><TD CLASS='td_header text'>Date</TD><TD CLASS='td_header text'>Description</TD><TD CLASS='td_header text'>Status</TD></TR>";
 				while($row = stripslashes_deep($result->fetch_assoc())){
-					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
+					print "<TR CLASS='" . $evenodd[$counter%2] . "'><TD><A HREF='member.php?view=true&id={$row['member_id']}'>#{$row['member_id']}</A>&nbsp;&nbsp;</TD><TD>".format_date(safe_strtotime($row['_on']))."&nbsp;&nbsp;&nbsp;</TD><TD><A HREF='member.php?view=true&id={$row['member_id']}'>" . $row['field2'] . " " . $row['field1'] . "</A></TD></TR>\n";				// 2/25/09
 					$counter++;
 					}
 				

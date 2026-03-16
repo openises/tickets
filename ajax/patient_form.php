@@ -14,7 +14,7 @@ if(!array_key_exists('q', $_GET) || $_GET['q'] != $_SESSION['id']) {
 	print json_encode($ret_arr);
 	exit();
 	}
-if ((isset($_REQUEST['ticket_id'])) && 	(strlen(trim($_REQUEST['ticket_id']))>6)) {	shut_down();}
+if ((isset($_REQUEST['ticket_id'])) && 	(safe_strlen(trim($_REQUEST['ticket_id']))>6)) {	shut_down();}
 if($istest) {
 	print "GET<br />\n";
 	dump($_GET);

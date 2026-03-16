@@ -143,7 +143,7 @@ if ($track_type > 0 ) {				// get most recent mobile track data
 	}
 
 $the_bull = "";											// define the bullet
-$update_error = strtotime('now - 6 hours');				// set the time for silent setting
+$update_error = safe_strtotime('now - 6 hours');				// set the time for silent setting
 // NAME
 $the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 2/1/10
 $the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
@@ -274,7 +274,7 @@ if (my_is_float($lat)) {										// position data? 4/29/09
 	$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . safe_htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
 	$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . safe_safe_addslashes($row['contact_name']). " Via: " . safe_safe_addslashes($row['contact_via']) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
+	$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(safe_strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 	if ($units_assigned > 0) {
 		$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . $ass_td . "</A></TD></TR>";
 		}

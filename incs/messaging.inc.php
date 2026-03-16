@@ -283,7 +283,7 @@ function strip_ticket($message) {
 	if (strpos($message, '#') !== false) {
 		$startpos = strpos($message, '#');
 		$string = strtoupper(GetBetween($message, "#", "#"));
-		$theLength = strlen($string) + 2;
+		$theLength = safe_strlen($string) + 2;
 		$message = str_replace("#" . $string . "#", "", $message);
 		} else {
 		$message = $message;
@@ -293,7 +293,7 @@ function strip_ticket($message) {
 
 function auto_status($message, $responder, $datestring) {	//	6/21/13
 	$p = $GLOBALS['mysql_prefix'];
-	$time = strtotime($datestring);
+	$time = safe_strtotime($datestring);
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	$start_tag = get_msg_variable('start_tag');
 	$end_tag = get_msg_variable('end_tag');
@@ -302,7 +302,7 @@ function auto_status($message, $responder, $datestring) {	//	6/21/13
 	if($row) {
 		$the_val = intval($row['status_val']);
 		$row_time = db_fetch_one("SELECT * FROM `{$p}responder` WHERE `smsg_id` = ?", [$responder], 's');
-		if($row_time && strtotime($row_time['status_updated']) < $time) {
+		if($row_time && safe_strtotime($row_time['status_updated']) < $time) {
 			db_query("UPDATE `{$p}responder` SET `un_status_id` = ?, `user_id` = '999999', `status_updated` = ?, `updated` = ? WHERE `smsg_id` = ?", [$the_val, $datestring, $datestring, $responder], 'isss');	//	6/21/13
 			if(db_affected_rows() >= 0) {
 				$the_ret = $the_val;
@@ -760,7 +760,7 @@ function get_responses_txtlocal($id) {	//	Polls SMS Gateway for responses - call
 	$server2 = get_msg_variable('txtlocal_inserver');
 	$username = get_msg_variable('txtlocal_username');
 	$hash = get_msg_variable('txtlocal_hash');
-	$time = strtotime($txtlocal_time, time() - (intval(intval(get_variable('delta_mins')))*60));
+	$time = safe_strtotime($txtlocal_time, time() - (intval(intval(get_variable('delta_mins')))*60));
 	$fields = array('username'=>urlencode($username),'hash'=>urlencode($hash),'min_time'=>$time,'inbox_id'=>$id,'format'=>'xml');
 	if (function_exists("curl_init")) {
 		// Send the POST request with cURL
@@ -796,7 +796,7 @@ function get_responses_txtlocal($id) {	//	Polls SMS Gateway for responses - call
 	
 function get_txtlocal_inboxes() {	//	Polls SMS Gateway for responses - called function do_smsg_retrieve(..
 	global $txtlocal_time;
-	$time = strtotime($txtlocal_time, time() - (intval(intval(get_variable('delta_mins')))*60));
+	$time = safe_strtotime($txtlocal_time, time() - (intval(intval(get_variable('delta_mins')))*60));
 	$server = get_msg_variable('txtlocal_icserver');
 	$server2 = get_msg_variable('txtlocal_inserver');
 	$username = get_msg_variable('txtlocal_username');

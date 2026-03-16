@@ -226,7 +226,7 @@ function show_stats(){			/* 6/9/08 show database/user stats */
 				}
 			fclose($fp);
 
-			if (strlen($data) != 4) {								// we have a response...is it valid? (4 char string -> 32 bits)
+			if (safe_strlen($data) != 4) {								// we have a response...is it valid? (4 char string -> 32 bits)
 				echo "NTP Server {$time_server	} returned an invalid response.\n";
 				return FALSE;
 				}
@@ -367,7 +367,7 @@ function list_users(){		/* list users */
 		$onclick = (has_admin())? " onClick = \"self.location.href = 'config.php?func=user&id={$safe_userid}' \"": "";
 
 		$level = get_level_text($row['level']);
-		$login_ts = (!empty($row['login'])) ? strtotime((string)$row['login']) : false;
+		$login_ts = (!empty($row['login'])) ? safe_strtotime((string)$row['login']) : false;
 		if ($login_ts !== false) {
 			$login = format_sb_date_2(mysql_format_date($login_ts + (intval(get_variable('delta_mins'))*60)));
 		} else {

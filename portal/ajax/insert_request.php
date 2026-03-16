@@ -62,7 +62,7 @@ if($_GET['frm_patient'] == "") {
 	$lng = ($_GET['frm_lng'] != "") ? sanitize_string($_GET['frm_lng']) : '0';
 	$description = sanitize_string($_GET['frm_description']);
 	$request_date = sanitize_string($_GET['frm_request_date']);
-	$request_date = mysql_format_date(strtotime($request_date));
+	$request_date = mysql_format_date(safe_strtotime($request_date));
 	$userName = sanitize_string($_GET['frm_username']);
 	$comments = sanitize_string($_GET['frm_comments']);
 	$phone = sanitize_string($_GET['frm_phone']);
@@ -141,7 +141,7 @@ if($_GET['frm_patient'] == "") {
 		$the_summary .= ((is_array($rec_Fac)) && ($rec_Fac[0] != "")) ? "Receiving Facility " . $rec_Fac[0] . "\nAddress: " . $rec_Fac[1] . "\nPhone " . $rec_Fac[2] . "\r\n" : "";
 		$the_summary .= get_text('Description') . "\r\n" . $description . "\r\n";	
 		$the_summary .= get_text('Comments') . "\r\n" . $_GET['frm_comments'] . "\r\n";	
-		$the_summary .= get_text('Request Date') . ": " . format_date_2(strtotime($request_date)) . "\r\n";		
+		$the_summary .= get_text('Request Date') . ": " . format_date_2(safe_strtotime($request_date)) . "\r\n";		
 		$addrs = notify_newreq($_SESSION['user_id']);		// returns array of adddr's for notification, or FALSE
 		if ($addrs) {				// any addresses?
 			$to_str1 = implode("|", $addrs);

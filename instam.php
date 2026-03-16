@@ -30,7 +30,7 @@ function do_my_instam($key) {				// 3/17/09
 		else {				// not CURL
 			print __LINE__ ;
 			if ($fp = @fopen($url, "r")) {
-				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 				fclose($fp);
 				}		
 			else {

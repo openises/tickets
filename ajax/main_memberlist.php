@@ -111,9 +111,9 @@ function member_list() {
 			$member_row[$i][13] = $typemenu;
 			$member_row[$i][14] = safe_htmlentities($row['status_name'] ?? '', ENT_QUOTES);
 			$member_row[$i][15] = $statusmenu;
-			$joindate = ((strtotime($row['joindate']) == NULL) || (date("Y", strtotime($row['joindate'])) == '1970') || (date("Y", strtotime($row['joindate'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['joindate']));
-			$duedate = ((strtotime($row['duedate']) == NULL) || (date("Y", strtotime($row['duedate'])) == '1970') || (date("Y", strtotime($row['duedate'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['duedate']));
-			$updated = ((strtotime($row['updated']) == NULL) || (date("Y", strtotime($row['updated'])) == '1970') || (date("Y", strtotime($row['updated'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['updated']));
+			$joindate = ((safe_strtotime($row['joindate']) == NULL) || (date("Y", safe_strtotime($row['joindate'])) == '1970') || (date("Y", safe_strtotime($row['joindate'])) == '0000')) ? "TBA" : date("d-m-Y", safe_strtotime($row['joindate']));
+			$duedate = ((safe_strtotime($row['duedate']) == NULL) || (date("Y", safe_strtotime($row['duedate'])) == '1970') || (date("Y", safe_strtotime($row['duedate'])) == '0000')) ? "TBA" : date("d-m-Y", safe_strtotime($row['duedate']));
+			$updated = ((safe_strtotime($row['updated']) == NULL) || (date("Y", safe_strtotime($row['updated'])) == '1970') || (date("Y", safe_strtotime($row['updated'])) == '0000')) ? "TBA" : date("d-m-Y", safe_strtotime($row['updated']));
 			$member_row[$i][16] = $joindate;
 			$member_row[$i][17] = $duedate;
 			$member_row[$i][18] = $updated;

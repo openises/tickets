@@ -189,7 +189,7 @@ if (db()->affected_rows==0) {
 		$print .= "</TR>\n";
 		$ret_arr[$i][0] = $assigns_stack[$i]['tick_id'];
 		$ret_arr[$i][1] = $assigns_stack[$i]['assign_id'];
-		$ret_arr[$i][2] = strtotime($assigns_stack[$i]['tick_updated']);	
+		$ret_arr[$i][2] = safe_strtotime($assigns_stack[$i]['tick_updated']);	
 		$ret_arr[$i][3] = $print;
 		}			// end for ($i ...)
 	}

@@ -95,7 +95,7 @@ function get_warnlocs($id) {
 			$the_dist = distance($in_lat, $in_lng, $row['lat'], $row['lng'], $unit);
 			$ret_arr[$i][8] = round($the_dist,1);
 			$ret_arr[$i][9] = get_owner($row['_by']);
-			$ret_arr[$i][10] = format_date_2(strtotime($row['_on']));
+			$ret_arr[$i][10] = format_date_2(safe_strtotime($row['_on']));
 			$i++;
 			}
 		}

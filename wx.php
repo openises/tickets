@@ -11,7 +11,7 @@ require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.
 function between ($in_str, $start_str, $end_str, $begin = 0) {		// returns string between two given values
 	$temp1 = stripos ( $in_str, $start_str , $begin);				// position of start_str
 	$temp2 = stripos ($in_str, $end_str, $temp1);					// position of end_str
- 	return (!$temp1 || !$temp2)? FALSE: substr ($in_str, ($temp1 + strlen($start_str)), $temp2 - $temp1 - strlen($start_str));
+ 	return (!$temp1 || !$temp2)? FALSE: substr ($in_str, ($temp1 + safe_strlen($start_str)), $temp2 - $temp1 - safe_strlen($start_str));
 	}
 
 $note_lhe = "<note>";

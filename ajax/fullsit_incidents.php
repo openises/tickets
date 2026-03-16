@@ -211,9 +211,9 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 		$temp  = (string) ( round((microtime(true) - $time), 3));
 		$i = 1;
 		while ($row = stripslashes_deep($result->fetch_assoc())) 	{
-			$problemstart = strtotime($row['problemstart']);
+			$problemstart = safe_strtotime($row['problemstart']);
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-			$now = strtotime($now);
+			$now = safe_strtotime($now);
 			$difference = round(abs($now - $problemstart) / 60,2);
 			$tick_gps = get_allocates(1, $row['tick_id']);	//	6/10/11
 			$grp_names = "Groups Assigned: ";	//	6/10/11
@@ -256,12 +256,12 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$color = isset($color) ? $color : "blue";
 			if ($row['tick_descr'] == '') $row['tick_descr'] = '[no description]';	// 8/12/09
 			if (get_variable('abbreviate_description'))	{	//do abbreviations on description, affected if neccesary
-				if (strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
+				if (safe_strlen($row['tick_descr']) > get_variable('abbreviate_description')) {
 					$row['tick_descr'] = substr($row['tick_descr'],0,get_variable('abbreviate_description')).'...';
 					}
 				}
 			if (get_variable('abbreviate_affected')) {
-				if (strlen($row['affected']) > get_variable('abbreviate_affected')) {
+				if (safe_strlen($row['affected']) > get_variable('abbreviate_affected')) {
 					$row['affected'] = substr($row['affected'],0,get_variable('abbreviate_affected')).'...';
 					}
 				}

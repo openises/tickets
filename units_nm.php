@@ -767,7 +767,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	
 		$aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $mob_tracker = $xastir_tracker = FALSE;			// all trackers off, 5/11/11 added internal Tickets Tracker
 		$temp = explode("/", $row['name'] );
-		$index = substr($temp[count($temp) -1], -6, strlen($temp[count($temp) -1]));	// 3/19/11
+		$index = substr($temp[count($temp) -1], -6, safe_strlen($temp[count($temp) -1]));	// 3/19/11
 
 		$the_on_click = (my_is_float($row['lat']))? " onClick = myclick({$row['unit_id']}); " : " onClick = myclick_nm({$row['unit_id']}); ";
 		$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 2/1/10
@@ -785,7 +785,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
 
 		$the_bull = "";											// define the bullet
-		$update_error = strtotime('now - 6 hours');							// set the time for silent setting
+		$update_error = safe_strtotime('now - 6 hours');							// set the time for silent setting
 		if ($track_type> 0) {				// get most recent position data
 			$do_legend = TRUE;	
 			}
@@ -1103,7 +1103,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				$result = db_query($query, [$realfilename]) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);	
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-						if (strlen(filesize($file)) < 20000000) {
+						if (safe_strlen(filesize($file)) < 20000000) {
 							$print .= "";
 							} else {
 							$print .= "Attached file is too large!";

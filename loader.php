@@ -80,7 +80,7 @@ function remove_remarks($sql)
 
    for ($i = 0; $i < $linecount; $i++)
    {
-      if (($i != ($linecount - 1)) || (strlen($lines[$i]) > 0))
+      if (($i != ($linecount - 1)) || (safe_strlen($lines[$i]) > 0))
       {
          if (isset($lines[$i][0]) && $lines[$i][0] != "#")
          {
@@ -120,7 +120,7 @@ function split_sql_file($sql, $delimiter)
    for ($i = 0; $i < $token_count; $i++)
    {
       // Don't wanna add an empty string as the last thing in the array.
-      if (($i != ($token_count - 1)) || (strlen($tokens[$i] > 0)))
+      if (($i != ($token_count - 1)) || (safe_strlen($tokens[$i] > 0)))
       {
          // This is the total number of single quotes in the token.
          $total_quotes = preg_match_all("/'/", $tokens[$i], $matches);

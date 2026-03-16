@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 7/6/11 -  do_ogts() added
 9/25/11 - do_ogts() revised to accommodate 3-element 'ogts_info' setting
 11/15/11 - fixes to GLat(), LocateA(), do_gtrack() - correct $result => $temp_result
-2/22/12 - applied corrections to sane(), incl revised threshold logic to avoid strtotime()
+2/22/12 - applied corrections to sane(), incl revised threshold logic to avoid safe_strtotime()
 3/24/12 - OGTS fixes to accommodate UK  addrresses.
 4/2/12 - accommodate absence of OGTS address data
 4/18/12 - APRS SQL  and data type corrections applied
@@ -77,7 +77,7 @@ function get_current() {		// 3/16/09, 6/10/11, 7/25/09  2/14/2014
 		}
 
 	$aprs = $instam = $locatea = $gtrack = $glat = $ogts = $t_tracker = $mob_tracker = $xastir_tracker = $followmee_tracker = $traccar = $javaprssrvr = FALSE;		// 6/10/11, 7/6/11, 1/30/14
-	$ts_threshold = strtotime('now - 24 hour');				// discard inputs older than this - 4/25/11
+	$ts_threshold = safe_strtotime('now - 24 hour');				// discard inputs older than this - 4/25/11
 
 	$query = "SELECT `id`, `aprs`, `instam`, `locatea`, `gtrack`, `glat`, `ogts`, `t_tracker`, `mob_tracker`, `xastir_tracker`, `followmee_tracker`, `traccar`, `javaprssrvr` 
 		FROM `{$GLOBALS['mysql_prefix']}responder` 
@@ -167,7 +167,7 @@ function do_gtrack() {			//7/29/09
 		$db_lat = ($row['lat']);
 		$db_lng = ($row['lng']);
 		$db_updated = ($row['updated']);
-		$update_error = strtotime('now - 1 hour');
+		$update_error = safe_strtotime('now - 1 hour');
 
 		$request_url = $gtrack_url . "/data.php?userid=$tracking_id";		//gtrack_url set by entry in settings table
 		$data="";
@@ -182,7 +182,7 @@ function do_gtrack() {			//7/29/09
 			}
 		else {				// not CURL
 			if ($fp = @fopen($request_url, "r")) {
-				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 				fclose($fp);
 				}
 			else {
@@ -201,7 +201,7 @@ function do_gtrack() {			//7/29/09
 			list($day, $month, $year) = explode("/", $date); // expand date string to year, month and day 8/3/09
 			$date = $year . "-" . $month . "-" . $day;  // format date as mySQL date
 			$time = $xml->marker['local_time'];
-			$time = date("H:i:s", strtotime($time));	// format as mySQL time
+			$time = date("H:i:s", safe_strtotime($time));	// format as mySQL time
 			$updated = $date . " " . $time;	// create updated datetime
 			}
 		$mph = $xml->marker['mph'];
@@ -249,7 +249,7 @@ function do_locatea() {				//7/29/09
 		$db_lat = ($row['lat']);
 		$db_lng = ($row['lng']);
 		$db_updated = ($row['updated']);
-		$update_error = strtotime('now - 4 hours');
+		$update_error = safe_strtotime('now - 4 hours');
 
 		$request_url = "http://www.locatea.net/data.php?userid=$tracking_id";
 		$data="";
@@ -264,7 +264,7 @@ function do_locatea() {				//7/29/09
 			}
 		else {				// not CURL
 			if ($fp = @fopen($request_url, "r")) {
-				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 				fclose($fp);
 				}
 			else {
@@ -282,7 +282,7 @@ function do_locatea() {				//7/29/09
 			list($day, $month, $year) = explode("/", $date); // expand date string to year, month and day	8/3/09
 			$date = $year . "-" . $month . "-" . $day;  // format date as mySQL date
 			$time = $xml->marker['local_time'];
-			$time = date("H:i:s", strtotime($time));	// format as mySQL time
+			$time = date("H:i:s", safe_strtotime($time));	// format as mySQL time
 			$updated = $date . " " . $time;				// updated datetime, e.g., 2009-09-22 13:40:20
 			}
 
@@ -469,7 +469,7 @@ function do_ogts() {			// 3/24/12
 		}
 	else {				// no CURL
 		if ($fp = @fopen($url, "r")) {
-			while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+			while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 			fclose($fp);
 			}
 		else {			// @fopen fails
@@ -584,7 +584,7 @@ function do_t_tracker() {		//	6/10/11
 		$db_lat = ($row['lat']);
 		$db_lng = ($row['lng']);
 		$db_updated = ($row['updated']);
-		$update_error = strtotime('now - 4 hours');
+		$update_error = safe_strtotime('now - 4 hours');
 
 		$query2	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}remote_devices` WHERE `user` = '$tracking_id'";	//	read location data from incoming table
 		$result2 = db_query($query2);
@@ -723,7 +723,7 @@ function do_followmee() {
 		}		// end function
 
 	function is_recent($time_val) {
-		return ( strtotime($time_val) > (now() - (6+2)*60*60) );
+		return ( safe_strtotime($time_val) > (now() - (6+2)*60*60) );
 		}
 
 	global $ts_threshold;					// 4/25/11
@@ -772,8 +772,8 @@ function do_followmee() {
 				$kph = $entry->{'Speed(km/h)'};
 				$alt = $entry->{'Altitude(m)'};
 				$packet_date = $entry->Date;
-				if ( sane ( floatval ($lat), floatval ($lng), intval (strtotime($updated)) ) && ( is_recent($packet_date) ) ) {
-					$the_time = mysql_format_date(strtotime($packet_date) - $time_offset);
+				if ( sane ( floatval ($lat), floatval ($lng), intval (safe_strtotime($updated)) ) && ( is_recent($packet_date) ) ) {
+					$the_time = mysql_format_date(safe_strtotime($packet_date) - $time_offset);
 					$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder`
 						SET `lat` = '{$lat}', `lng` = '{$lng}'
 						WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument

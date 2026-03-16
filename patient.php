@@ -31,7 +31,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 session_write_close();
 require_once('incs/functions.inc.php');	
 do_login(basename(__FILE__));
-if ((isset($_REQUEST['ticket_id'])) && 	(strlen(trim($_REQUEST['ticket_id']))>6)) {	shut_down();}			// 6/10/11
+if ((isset($_REQUEST['ticket_id'])) && 	(safe_strlen(trim($_REQUEST['ticket_id']))>6)) {	shut_down();}			// 6/10/11
 require_once($_SESSION['fmp']);		// 8/27/10
 if($istest) {
 	print "GET<br />\n";

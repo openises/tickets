@@ -21,7 +21,7 @@ $query	= "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=?";
 $result	= db_query($query, [$_SESSION['user_id']]);
 $row	= $result->fetch_array();
 $api_key = trim(get_variable('gmaps_api_key'));
-$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml">

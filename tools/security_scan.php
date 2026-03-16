@@ -166,7 +166,7 @@ if ($jsonOutput) {
         if ($verbose && $count > 0) {
             echo "  " . str_repeat('-', 75) . "\n";
             foreach ($findings[$key] as $item) {
-                $code = strlen($item['code']) > 80 ? substr($item['code'], 0, 77) . '...' : $item['code'];
+                $code = safe_strlen($item['code']) > 80 ? substr($item['code'], 0, 77) . '...' : $item['code'];
                 echo "    {$item['file']}:{$item['line']}\n";
                 echo "      {$code}\n";
             }

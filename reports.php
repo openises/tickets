@@ -49,7 +49,7 @@
 12/1/2012 - re-do re unix SQL time replacement
 1/7/2013 - date correction, use setting disp_stat for column headings
 2/4/2013 - Change to after action report to add associated messages to ticket detail.
-5/31/2013 - strtotime() applied for date arithnetic/conversion
+5/31/2013 - safe_strtotime() applied for date arithnetic/conversion
 1/2/2015 - shortened scope string, per JB site
 */
 error_reporting(E_ALL);									// 10/1/08

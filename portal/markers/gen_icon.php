@@ -15,7 +15,7 @@ function do_icon ($icon, $text, $color) {
 	imageAlphaBlending($im, true);
 	imageSaveAlpha($im, true);
 		
-	$len = strlen($text);
+	$len = safe_strlen($text);
 	$p1 = ($len <= 2)? 1:2 ;
 	$p2 = ($len <= 2)? 3:2 ;
 	$px = (imagesx($im) - 7 * $len) / 2 + $p1;

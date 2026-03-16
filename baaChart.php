@@ -284,14 +284,14 @@ class baaChart  {
         $fw = imagefontwidth(2);
         switch (($this->stacked[$i]>>2) & 0x3) {
         case 1: //plot value
-            $tw = strlen($val)*$fw;
+            $tw = safe_strlen($val)*$fw;
             $tx -= $tw/2;
             imagefilledrectangle($this->image,$tx-2,$ty-6,$tx + $tw + 2,$ty+6,$this->white);
             imagestring($this->image,2,$tx,$ty-5,$val,$this->txtcol);
             break;
         case 2: // plot %
         case 3:
-            $tw = strlen($pc)*$fw;
+            $tw = safe_strlen($pc)*$fw;
             $tx -= $tw/2;
             imagefilledrectangle($this->image,$tx-2,$ty-6,$tx + $tw + 2,$ty+6,$this->white);
             imagestring($this->image,2,$tx,$ty-5,$pc,$this->txtcol);
@@ -308,9 +308,9 @@ class baaChart  {
         $maxt = $maxv = 0;
         foreach ($a as $pie) {
             $val = array_sum($this->data[$pie]);
-            $maxv = max($maxv, strlen($val));
+            $maxv = max($maxv, safe_strlen($val));
             $txt = $this->legends[$pie];
-            $maxt = max($maxt, strlen($txt));
+            $maxt = max($maxt, safe_strlen($txt));
         }
         foreach ($a as $pie) {
             $val = array_sum($this->data[$pie]);
@@ -329,7 +329,7 @@ class baaChart  {
         }
         $leglen = array();
         foreach($this->legends as $leg) {
-            $leglen[] = strlen($leg);
+            $leglen[] = safe_strlen($leg);
         }
         $maxleglen = max($leglen);
         if ($maxleglen==0) return;
@@ -492,7 +492,7 @@ class baaChart  {
              $marray = array();
              foreach ($this->data as $i => $parray) {
                       foreach ($parray as $v) {
-                               $marray[] = strlen($v) * imagefontwidth(1);
+                               $marray[] = safe_strlen($v) * imagefontwidth(1);
                       }
              }
              $maxwidth = max($marray);
@@ -506,7 +506,7 @@ class baaChart  {
              foreach ($this->data as $i => $parray) {
                       if (!$this->showvals[$i+1]) continue;
                       foreach ($parray as $p => $v) {
-                               $boxwidth = strlen($v) * imagefontwidth(2) + 2;
+                               $boxwidth = safe_strlen($v) * imagefontwidth(2) + 2;
                                $boxheight = imagefontheight(2);
                                $posdata = $posArray[$i][$p];
                                $posx = $posdata[0];
@@ -541,12 +541,12 @@ class baaChart  {
 
     function _drawtitles() {
         $cw = imagefontwidth(5);
-        $l = strlen($this->title);
+        $l = safe_strlen($this->title);
         $tw = $cw*$l;
         $x = $this->lm + ($this->cwidth - $tw)/2;
         imagestring ($this->image,5,$x, 5, $this->title, $this->txtcol);
         $cw = imagefontwidth(4);
-        $l = strlen($this->subtitle);
+        $l = safe_strlen($this->subtitle);
         $tw = $cw*$l;
         $x = $this->lm + ($this->cwidth - $tw)/2;
         imagestring ($this->image,4,$x, 25, $this->subtitle, $this->txtcol);
@@ -592,14 +592,14 @@ class baaChart  {
                 imagefilledrectangle($this->image,$x0,$y,$this->lm + $this->cwidth,$y+$div,$col);
             }
             imageline($this->image,$x0,$y,$grx,$y,$this->gridcol);
-            $tw = strlen("$v")*imagefontwidth(2);
+            $tw = safe_strlen("$v")*imagefontwidth(2);
             imagestring($this->image,2,$x0 - $tw  - 5, $y - 5, $v, $this->txtcol);
         }
-        $tw = strlen("$this->ymin")*imagefontwidth(2);
+        $tw = safe_strlen("$this->ymin")*imagefontwidth(2);
         $y = $this->tm + $this->cheight;
         imagestring($this->image,2,$x0 - $tw  - 5, $y - 6, $this->ymin, $this->txtcol);
         imageline($this->image,$x0,$y0,$x1,$y1,$this->gridcol);
-        $tw = strlen($this->ytitle) * imagefontwidth(3);
+        $tw = safe_strlen($this->ytitle) * imagefontwidth(3);
         $y = ($this->tm + $this->height - $this->bm + $tw)/2;
         $x = 10;
         imagestringup($this->image,3,$x,$y,$this->ytitle,$this->txtcol);
@@ -609,7 +609,7 @@ class baaChart  {
         $max = 0;
         for ($i=0; $i < $this->xcount; $i++) {
             $v = $this->xlabels[$i];
-            $tw = strlen("$v")*imagefontwidth(2);
+            $tw = safe_strlen("$v")*imagefontwidth(2);
             $max = max ($max, $tw);
         }
         return $max;
@@ -627,7 +627,7 @@ class baaChart  {
         for ($x=$x1,$i=$this->xcount-1; $x>$x0+3; $x -= $div, $i--) {
             imageline($this->image,$x,$gry,$x,$y0,$this->gridcol);
             $v = $this->xlabels[$i];
-            $tw = strlen("$v")*imagefontwidth(2);
+            $tw = safe_strlen("$v")*imagefontwidth(2);
             $th = imagefontheight(2);
             if ($maxlabwid < $div) {
                 imagestring($this->image,2,$x - ($div+$tw)/2, $y0 + 5, $v, $this->txtcol);
@@ -637,7 +637,7 @@ class baaChart  {
             }
         }
         $y = $this->height - 30;
-        $tw = strlen($this->xtitle)*imagefontwidth(3);
+        $tw = safe_strlen($this->xtitle)*imagefontwidth(3);
         $x = ($this->lm + $this->cwidth + $this->lm - $tw)/2;
         imagestring($this->image,3,$x,$y,$this->xtitle,$this->txtcol);
     }

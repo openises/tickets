@@ -80,7 +80,7 @@ $id=0;
 echo "<div id=\"sitemap\"><ul id=\"list$id\">\n";
 $id++;
 $divs="";
-if(substr($startin,strlen($startin)-1,1)=="/")
+if(substr($startin,safe_strlen($startin)-1,1)=="/")
 	$startin=trim($startin,"/");
 foreach($types as $type){
 	if (file_exists($_SERVER['DOCUMENT_ROOT']."$startin/index$type")){
@@ -133,7 +133,7 @@ function showlist($path){
 					} else {
 						if (preg_match('/' . $types . '$/', $file)){
 							$files[$file]=getTitle("$path/$file");
-							if (strlen($files[$file])==0)
+							if (safe_strlen($files[$file])==0)
 								$files[$file]=$file;
 						}
 					}

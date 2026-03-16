@@ -43,9 +43,9 @@ function tra_list($member) {
 		$i = 1;
 		while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$completed = $row['completed'];
-			$completed = do_datestring(strtotime($completed));
+			$completed = do_datestring(safe_strtotime($completed));
 			$refresh = $row['refresh_due'];
-			$refresh = do_datestring(strtotime($refresh));
+			$refresh = do_datestring(safe_strtotime($refresh));
 			$tra_row[$i][0] = $row['id'];
 			$tra_row[$i][1] = safe_htmlentities($row['package_name'], ENT_QUOTES);
 			$tra_row[$i][2] = safe_htmlentities($row['description'], ENT_QUOTES);

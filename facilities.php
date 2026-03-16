@@ -65,10 +65,10 @@ if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restr
 
 function fac_format_date($date){							/* 1/20/2013 */ 
 	if (get_variable('locale')==1)	{return date("j/n/y H:i",$date);}					// 08/27/10 - Revised to show UK format for locale = 1	
-	else 							{return date(get_variable("date_format"),$date);}	// return date(get_variable("date_format"),strtotime($date));
+	else 							{return date(get_variable("date_format"),$date);}	// return date(get_variable("date_format"),safe_strtotime($date));
 	}				// end function fac format date
 function isempty($arg) {
-	return (bool) (strlen($arg) == 0) ;
+	return (bool) (safe_strlen($arg) == 0) ;
 	}
 
 $usng = get_text('USNG');
@@ -157,7 +157,7 @@ if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 <?php
 	if ($_SESSION['internet'] || $_SESSION['good_internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -390,7 +390,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 				$result = db_query($query, [$realfilename]);
 				if(db()->affected_rows == 0) {	//	file doesn't exist already
 					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-						if (strlen(filesize($file)) < 20000000) {
+						if (safe_strlen(filesize($file)) < 20000000) {
 							$print .= "";
 							} else {
 							$print .= "Attached file is too large!";

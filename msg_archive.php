@@ -124,10 +124,10 @@ if(empty($_POST)) {
 					<TD COLSPAN=99 class='spacer'>&nbsp;</TD>
 				</TR>			
 				<TR class='odd'>	
-					<TD class='td_label text' style='text-align: left;'>&nbsp;&nbsp;Start Date</TD><TD class='td_data text'><?php print generate_dateonly_dropdown('start',strtotime($oldest_date),FALSE);?></TD>
+					<TD class='td_label text' style='text-align: left;'>&nbsp;&nbsp;Start Date</TD><TD class='td_data text'><?php print generate_dateonly_dropdown('start',safe_strtotime($oldest_date),FALSE);?></TD>
 				</TR>
 				<TR class='even'>	
-					<TD class='td_label text' style='text-align: left;'>&nbsp;&nbsp;End Date</TD><TD class='td_data text'><?php print generate_dateonly_dropdown('end',strtotime($newest_date),FALSE);?></TD>
+					<TD class='td_label text' style='text-align: left;'>&nbsp;&nbsp;End Date</TD><TD class='td_data text'><?php print generate_dateonly_dropdown('end',safe_strtotime($newest_date),FALSE);?></TD>
 				</TR>
 				<TR class='odd'>	
 					<TD class='td_label text' COLSPAN=99>DELETE MESSAGES<input type="checkbox" name="del_messages" value="yes"></TD>
@@ -187,10 +187,10 @@ if(empty($_POST)) {
 <?php
 } else {
 	if(isset($_POST['frm_year_start'])) {
-		$month_start = (strlen($_POST['frm_month_start']) == 1) ? "0" . $_POST['frm_month_start'] : $_POST['frm_month_start'];
-		$day_start = (strlen($_POST['frm_day_start']) == 1) ? "0" . $_POST['frm_day_start'] : $_POST['frm_day_start'];
-		$month_end = (strlen($_POST['frm_month_end']) == 1) ? "0" . $_POST['frm_month_end'] : $_POST['frm_month_end'];
-		$day_end = (strlen($_POST['frm_day_end']) == 1) ? "0" . $_POST['frm_day_end'] : $_POST['frm_day_end'];
+		$month_start = (safe_strlen($_POST['frm_month_start']) == 1) ? "0" . $_POST['frm_month_start'] : $_POST['frm_month_start'];
+		$day_start = (safe_strlen($_POST['frm_day_start']) == 1) ? "0" . $_POST['frm_day_start'] : $_POST['frm_day_start'];
+		$month_end = (safe_strlen($_POST['frm_month_end']) == 1) ? "0" . $_POST['frm_month_end'] : $_POST['frm_month_end'];
+		$day_end = (safe_strlen($_POST['frm_day_end']) == 1) ? "0" . $_POST['frm_day_end'] : $_POST['frm_day_end'];
 		$start = $_POST['frm_year_start'] . "-" . $_POST['frm_month_start'] . "-" . $_POST['frm_day_start'] . " 00:00:00";
 		$end = $_POST['frm_year_end'] . "-" . $_POST['frm_month_end'] . "-" . $_POST['frm_day_end'] . " 23:59:00";	
 		$starttag = "$_POST[frm_year_start]$month_start$day_start";

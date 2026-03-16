@@ -120,7 +120,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 			$color = "";
 			$type_flag = "?";
 			}
-		$long = (strlen($the_message) > 100) ? "&#9660" : "";
+		$long = (safe_strlen($the_message) > 100) ? "&#9660" : "";
 
 		$fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
 		$ret_arr[$counter][0] = $the_message_id;
@@ -130,7 +130,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 		$ret_arr[$counter][4] = $respstring;
 		$ret_arr[$counter][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
 		$ret_arr[$counter][6] = htmlentities(shorten($the_message, 2000));
-		$ret_arr[$counter][7] = format_date_2(strtotime($msg_row['date']));
+		$ret_arr[$counter][7] = format_date_2(safe_strtotime($msg_row['date']));
 		$ret_arr[$counter][8] = get_owner($msg_row['_by']);
 		$ret_arr[$counter][9] = $the_class;
 		$ret_arr[$counter][10] = $msg_row['id'];

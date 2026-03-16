@@ -28,7 +28,7 @@ $hidden = find_hidden($curr_cats);
 $shown = find_showing($curr_cats);
 $un_stat_cats = get_all_categories();
 $api_key = get_variable('gmaps_api_key');
-$key_str = (strlen($api_key) == 39) ? "key={$api_key}&" : false;
+$key_str = (safe_strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps_ok = ($key_str) ? 1 : 0;
 $showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";

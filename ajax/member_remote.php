@@ -34,9 +34,9 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 	$ret .= "<td>" . $row['teamno'] . "</td>";
 	$ret .= "<td>" . $row['street'] . "</td>";
 	$ret .= "<td>" . $row['postcode'] . "</td>";
-	$ret .= ((strtotime($row['joindate']) == NULL) || (date("Y", strtotime($row['joindate'])) == '1970') || (date("Y", strtotime($row['joindate'])) == '0000')) ? "<td>TBA</td>" : "<td>" . date("d-m-Y", strtotime($row['joindate'])) . "</td>";
-	$ret .= ((strtotime($row['duedate']) == NULL) || (date("Y", strtotime($row['duedate'])) == '1970') || (date("Y", strtotime($row['duedate'])) == '0000')) ? "<td>TBA</td>" : "<td>" . date("d-m-Y", strtotime($row['duedate'])) . "</td>";	
-	$ret .= ((strtotime($row['updated']) == NULL) || (date("Y", strtotime($row['updated'])) == '1970') || (date("Y", strtotime($row['updated'])) == '0000')) ? "<td>TBA</td>" : "<td>" . date("d-m-Y", strtotime($row['updated'])) . "</td>";
+	$ret .= ((safe_strtotime($row['joindate']) == NULL) || (date("Y", safe_strtotime($row['joindate'])) == '1970') || (date("Y", safe_strtotime($row['joindate'])) == '0000')) ? "<td>TBA</td>" : "<td>" . date("d-m-Y", safe_strtotime($row['joindate'])) . "</td>";
+	$ret .= ((safe_strtotime($row['duedate']) == NULL) || (date("Y", safe_strtotime($row['duedate'])) == '1970') || (date("Y", safe_strtotime($row['duedate'])) == '0000')) ? "<td>TBA</td>" : "<td>" . date("d-m-Y", safe_strtotime($row['duedate'])) . "</td>";	
+	$ret .= ((safe_strtotime($row['updated']) == NULL) || (date("Y", safe_strtotime($row['updated'])) == '1970') || (date("Y", safe_strtotime($row['updated'])) == '0000')) ? "<td>TBA</td>" : "<td>" . date("d-m-Y", safe_strtotime($row['updated'])) . "</td>";
 	$ret .= "</tr>";
 	}
 $ret .= "</tbody></table>";

@@ -108,7 +108,7 @@ $coords =  $row['lat'] . "," . $row['lng'];		// for UTM
 				</TR>
 				<TR CLASS = 'even'>
 					<TD CLASS="td_label text">As of:</TD>	
-					<TD CLASS='td_data text'><?php print loc_format_date(strtotime($row['_on'])); ?></TD>
+					<TD CLASS='td_data text'><?php print loc_format_date(safe_strtotime($row['_on'])); ?></TD>
 				</TR>
 <?php
 				if (my_is_float($lat)) {

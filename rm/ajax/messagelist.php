@@ -131,7 +131,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 		$print .= "<TR CLASS = '{$evenodd[$i%2]}' style='width: 100%; height: 30px; cursor: pointer; " . $read_class . "' onClick='get_message(" . $the_message_id . ");'>";		
 		$print .= "<TD class='text_medium' style='width: 20%;'>" . $fromname . "</TD>";
 		$print .= "<TD class='text_medium' style='width: 40%;'>" . stripslashes_deep(shorten($msg_row['subject'], 18)) . "</TD>";
-		$print .= "<TD class='text_medium' style='width: 40%;'>" . format_date_2(strtotime($msg_row['date'])) . "</TD>";		
+		$print .= "<TD class='text_medium' style='width: 40%;'>" . format_date_2(safe_strtotime($msg_row['date'])) . "</TD>";		
 		$print .= "</TR>";
 		$i++;
 		} // end while	

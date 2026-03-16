@@ -27,14 +27,14 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 	snap(__LINE__, $query );
 	$ticket_result = db_query($query, [intval($ticket_id)]);
 	$t_row = stripslashes_deep($ticket_result->fetch_array());
-	$the_scope = strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
+	$the_scope = safe_strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;	// possibly empty
 	$eol = PHP_EOL;
 	$locale = get_variable('locale');	
 
 	$message="";
 	$_end = (good_date_time($t_row['problemend']))?  "  End:" . $t_row['problemend'] : "" ;		// 
 	
-	for ($i = 0;$i< strlen($match_str); $i++) {
+	for ($i = 0;$i< safe_strlen($match_str); $i++) {
 		if(!($match_str[$i]==" ")) {
 			switch ($match_str[$i]) {
 				case "A":

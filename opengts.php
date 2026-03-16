@@ -50,7 +50,7 @@ set_error_handler("customError");
 				}
 			else {				// not CURL
 				if ($fp = @fopen($url, "r")) {
-					while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+					while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 					fclose($fp);
 					}		
 				else {

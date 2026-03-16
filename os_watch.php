@@ -189,8 +189,8 @@ switch ($mode) {
 			$the_addr = safe_addslashes(shorten($row['tickaddr'], 24) );
 			if ( $row ['mode'] == 0) {										// responder on-scene
 				$sev_cls = $severities[$row['severity']];					// severity class
-				$date = date(get_variable("date_format"), strtotime($row['on_scene']) );
-				$the_asof = date(get_variable("date_format"), strtotime($row['the_asof']) );
+				$date = date(get_variable("date_format"), safe_strtotime($row['on_scene']) );
+				$the_asof = date(get_variable("date_format"), safe_strtotime($row['the_asof']) );
 				$the_status = shorten ($row['unit_status'], 10);
 				$mail_onclick = (is_email($row['contact_via'])) ? "onclick = 'do_mail({$row['unitid']});'" : "" ;
 				$online = ($row['expires'] > $now)? "<IMG SRC = './markers/checked.png' BORDER=0>" : "";
@@ -208,7 +208,7 @@ switch ($mode) {
  				if ( ! ( in_array (  $row['tickid'] ,  $incs_shown ) ) ) {  		// show incident exactly once
 					array_push ( $incs_shown , $row['tickid'] );
 					$sev_cls = $severities[$row['severity']];					// severity class
-					$the_asof = date(get_variable("date_format"), strtotime($row['the_asof']) );
+					$the_asof = date(get_variable("date_format"), safe_strtotime($row['the_asof']) );
 					$the_scope = shorten ("{$row['scope']}/{$row['tickaddr']}", 48);
 
 					echo "<tr class = '{$evenodd[($i%2)]}'>

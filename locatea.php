@@ -50,7 +50,7 @@ function do_gt($user, $url) {
 			}
 		else {				// not CURL
 			if ($fp = @fopen($request_url, "r")) {
-				while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
+				while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
 				fclose($fp);
 				}		
 			else {

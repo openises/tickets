@@ -79,7 +79,7 @@ function check_conn_mob () {				// returns TRUE/FALSE
 		}		
 	} else {				// not CURL
 		if ($fp = @fopen($url, "r")) {
-			while (!feof($fp) && (strlen($response)<9000)) $response .= fgets($fp, 128);
+			while (!feof($fp) && (safe_strlen($response)<9000)) $response .= fgets($fp, 128);
 			fclose($fp);
 			return TRUE;
 			}		

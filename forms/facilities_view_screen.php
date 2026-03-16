@@ -355,7 +355,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 			</TR>
 			<TR CLASS = 'even'>
 				<TD CLASS="td_label text">As of:</TD>
-				<TD CLASS="td_data text"><?php print fac_format_date(strtotime($row['updated'])); ?></TD>
+				<TD CLASS="td_data text"><?php print fac_format_date(safe_strtotime($row['updated'])); ?></TD>
 			</TR>
 <?php
 			if (my_is_float($lat)) {

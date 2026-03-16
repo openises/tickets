@@ -463,8 +463,8 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$unit_array[$i][9] = $row['lng'];
 		$unit_array[$i][10] = round($row['distance'],2);
 		$unit_array[$i][11] = $row['mobile'];
-		$unit_array[$i][12] = format_sb_date_3(strtotime($row['unit_updated']));
-		$unit_array[$i][13] = format_sb_date_3(strtotime($row['status_updated']));
+		$unit_array[$i][12] = format_sb_date_3(safe_strtotime($row['unit_updated']));
+		$unit_array[$i][13] = format_sb_date_3(safe_strtotime($row['status_updated']));
 		$unit_array[$i][14] = get_assigned_td($row['unit_id']);
 		$i++;
 		}

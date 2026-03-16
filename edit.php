@@ -178,7 +178,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 		
 			// perform db update
 			$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-			$datetime = format_date_2(strtotime($now));
+			$datetime = format_date_2(safe_strtotime($now));
 			$by = $_SESSION['user_id'];			// 12/7/10
 			if(empty($post_frm_owner)) {$post_frm_owner=0;}
 			if(!empty($_POST['frm_comments'])) {
@@ -345,7 +345,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 					$result = db_query($query, [sanitize_string($realfilename)]);	
 					if(db()->affected_rows == 0) {	//	file doesn't exist already
 						if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
-							if (strlen(filesize($file)) < 20000000) {
+							if (safe_strlen(filesize($file)) < 20000000) {
 								$print .= "";
 								} else {
 								$print .= "Attached file is too large!";
@@ -544,7 +544,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>

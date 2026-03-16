@@ -23,7 +23,7 @@ $result = db_query($query);
 function genRandomString() {
 	$length = 8;
 	$characters = '0123456789abcdefghijklmnopqrstuvwxyz';
-	$strLength = strlen($characters)-1;
+	$strLength = safe_strlen($characters)-1;
 	$string = '';
 	for ($p = 0; $p < $length; $p++) {
 		$string .= $characters[mt_rand(0, $strLength)];

@@ -249,7 +249,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 		}
 
 	$the_bull = "";											// define the bullet
-	$update_error = strtotime('now - 6 hours');				// set the time for silent setting
+	$update_error = safe_strtotime('now - 6 hours');				// set the time for silent setting
 // NAME
 	$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];		// 2/1/10
 	$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];
@@ -381,7 +381,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
 			$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . e(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
 			$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . e($row['contact_name']). " Via: " . e($row['contact_via']) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
+			$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(safe_strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 			if (array_key_exists($row['unit_id'], $assigns)) {
 				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . e(shorten($assigns[$row['unit_id']], 20)) . "</A></TD></TR>";
 				}

@@ -97,9 +97,9 @@ $status_name = $status_vals[$row['member_status_id']];
 $status_id = $row['member_status_id'];
 
 // as of - 7/2/2013
-$updated = format_sb_date(strtotime($row['updated']));
+$updated = format_sb_date(safe_strtotime($row['updated']));
 
-$the_time = strtotime($row['updated']);
+$the_time = safe_strtotime($row['updated']);
 $toedit = (!(can_edit()))?				 								"" : "<A id='edit_" . $row['member_id'] . "' CLASS='plain text' style='float: none; color: #000000;' HREF='member.php?func=responder&edit=true&id=" . $row['member_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
 $temp = $row['member_status_id'] ;
 $the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
@@ -132,7 +132,7 @@ $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><
 $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Description:</TD><TD CLASS='td_data_wrap text'>" . safe_htmlentities(str_replace($eols, " ", $row['description']), ENT_QUOTES) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>Status:</TD><TD CLASS='td_data text'>" . $the_status . " </TD></TR>";
 $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Contact:</TD><TD CLASS='td_data text'>" . safe_safe_addslashes($row['contact']) . "</TD></TR>";
-$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>As of:</TD><TD CLASS='td_data text'>" . format_date(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
+$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>As of:</TD><TD CLASS='td_data text'>" . format_date(safe_strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 $tab_1 .= "</TABLE></TD></TR><TR><TD COLSPAN=99>&nbsp;</TD></TR>";
 $tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE style='width: 100%; background-color: #707070;'>";
 $tab_1 .= "<TR style='height: 25px; vertical-align: middle;'><TD COLSPAN=2 style='vertical-align: middle; text-align: center;'>" . $toedit . "<A id='view_" . $row['member_id'] . "' CLASS='plain text' style='float: none; color: #000000;' HREF='member.php?func=responder&view=true&id=" . $row['member_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A>";

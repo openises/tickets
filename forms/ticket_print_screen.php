@@ -108,7 +108,7 @@ unset($result_as);
 <?php
 	if ($_SESSION['internet']) {
 		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : false;
+		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 		if($key_str) {
 			if($https) {
 ?>
@@ -418,7 +418,7 @@ do_kml();
 
 		$fac_name = $row_fac['facility_name'];			//	10/8/09
 		$fac_temp = explode("/", $fac_name );
-		$fac_index = substr($fac_temp[count($fac_temp) -1] , -6, strlen($fac_temp[count($fac_temp) -1]));	// 3/19/11
+		$fac_index = substr($fac_temp[count($fac_temp) -1] , -6, safe_strlen($fac_temp[count($fac_temp) -1]));	// 3/19/11
 		$icon_str = $row_fac['icon_str'];
 		$fac_id=($row_fac['id']);
 		$fac_type=($row_fac['type_icon']);
