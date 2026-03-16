@@ -31,6 +31,7 @@ error_reporting(E_ALL);
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 	<SCRIPT SRC="./js/usng.js" TYPE="application/x-javascript"></SCRIPT>		<!-- 8/23/08 -->
+	<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <?php
 	
 @session_start();
@@ -328,22 +329,21 @@ function edit_ticket($id) {							/* post changes */
 		} 
 
 	function validate(theForm) {
-//		alert (theForm);
+		if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+			return false;
+		}
+		FormValidator.clearCustomErrors(theForm);
 		var errmsg="";
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_year_problemend.disabled))
 														{errmsg+= "\tClosed ticket requires run end date\n";}
 		if ((document.edit.frm_status.value == <?php print $GLOBALS['STATUS_CLOSED'];?>) && (document.edit.frm_comments==""))
 														{errmsg+= "\tClosed ticket requires <?php print $disposition;?> data\n";}
-		if (theForm.frm_contact.value == "")			{errmsg+= "\tReported-by is required\n";}
-		if (theForm.frm_scope.value == "")				{errmsg+= "\tIncident name is required\n";}		// 10/21/08
-//		if (theForm.frm_description.value == "")		{errmsg+= "\tSynopsis is required\n";}
 		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			FormValidator.showCustomErrors(theForm, errmsg);
 			return false;
 			}
 		else {
 			st_unlk(theForm);
-//			theForm.frm_ngs.disabled=false;													// 9/13/08
 			theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
 <?php		/* 6/4/2013  */
 		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 		// 7/2/2013
@@ -352,7 +352,7 @@ function edit_ticket($id) {							/* post changes */
 			broadcast(theMessage ) ;
 <?php
 	}			// end if (broadcast)
-?>				
+?>
 
 			return true;
 			}
@@ -478,7 +478,7 @@ function edit_ticket($id) {							/* post changes */
 		}
 		
 ?>		
-<BODY onLoad = "ck_frames()" >
+<BODY onLoad = "ck_frames(); FormValidator.init(document.edit);" >
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <?php
 require_once('./incs/links.inc.php');
@@ -591,7 +591,7 @@ require_once('./incs/links.inc.php');
 										<A CLASS='td_label text' HREF="#" TITLE=" Incident Name - Use an easily identifiable name." ><?php print $incident_name;?></A>:
 									</TD>
 									<TD CLASS='td_data text'>
-										<INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE="<?php print $row['scope'];?>" MAXLENGTH='48' />
+										<INPUT TYPE='text' NAME='frm_scope' SIZE='48' VALUE="<?php print $row['scope'];?>" MAXLENGTH='48' data-required="true" data-required-msg="Incident name is required" aria-required="true" />
 									</TD>
 								</TR>
 								<TR CLASS='odd'>
@@ -681,7 +681,7 @@ require_once('./incs/links.inc.php');
 										<A CLASS='td_label text' HREF="#" TITLE="Caller reporting the incident"><?php print get_text("Reported by");?></A>:
 									</TD>
 									<TD CLASS='td_data text'>
-										<INPUT SIZE='48' TYPE='text' NAME='frm_contact' VALUE="<?php print $row['contact'];?>" MAXLENGTH='48' />
+										<INPUT SIZE='48' TYPE='text' NAME='frm_contact' VALUE="<?php print $row['contact'];?>" MAXLENGTH='48' data-required="true" data-required-msg="Reported-by is required" aria-required="true" />
 									</TD>
 								</TR>
 								<TR CLASS='even'>
