@@ -107,9 +107,9 @@ function member_list() {
 			$member_row[$i][9] = isset($row['lng']) ? $row['lng'] : "";	// 3/14/26 - NULL-safe for isFloat() JS check
 			$member_row[$i][10] = htmlentities($row['contact'], ENT_QUOTES);
 			$member_row[$i][11] = htmlentities($row['membertype'], ENT_QUOTES);;
-			$member_row[$i][12] = htmlentities($row['type_name'], ENT_QUOTES);
+			$member_row[$i][12] = htmlentities($row['type_name'] ?? '', ENT_QUOTES);
 			$member_row[$i][13] = $typemenu;
-			$member_row[$i][14] = htmlentities($row['status_name'], ENT_QUOTES);
+			$member_row[$i][14] = htmlentities($row['status_name'] ?? '', ENT_QUOTES);
 			$member_row[$i][15] = $statusmenu;
 			$joindate = ((strtotime($row['joindate']) == NULL) || (date("Y", strtotime($row['joindate'])) == '1970') || (date("Y", strtotime($row['joindate'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['joindate']));
 			$duedate = ((strtotime($row['duedate']) == NULL) || (date("Y", strtotime($row['duedate'])) == '1970') || (date("Y", strtotime($row['duedate'])) == '0000')) ? "TBA" : date("d-m-Y", strtotime($row['duedate']));
