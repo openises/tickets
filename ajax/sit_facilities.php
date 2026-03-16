@@ -107,6 +107,7 @@ function setStatus($statval, $id) {
 		`updated`= ?
 		WHERE `id`= ?";
 	$result = db_query($query, [intval(trim($statval)), trim($now), intval(trim($id))]);
+	do_log($GLOBALS['LOG_FACILITY_STATUS'], 0, 0, intval(trim($statval)), intval(trim($id)));
 	}
 
 if (array_key_exists ('forder' , $_POST))	{$_SESSION['fac_flag_2'] =  $_POST['forder'];}
@@ -284,13 +285,13 @@ while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
 	if($calculatedStatus == 1) {
 		$calculatedStatusOutput = "<SPAN style='width: 100%; display: inline-block; background-color: green; color: white;'>Open</SPAN>";
 		$openStatus = openStatus();
-		if($openStatus != 0 && $openStatus != $row_fac['fac_status_id'] && $fac_auto_stat = "1") {
+		if($openStatus != 0 && $openStatus != $row_fac['fac_status_id'] && $fac_auto_stat == "1") {
 			setStatus($openStatus, $fac_id);
 			}
 		} else {
 		$calculatedStatusOutput = "<SPAN style='width: 100%; display: inline-block; background-color: red; color: white;'>Closed</SPAN>";
 		$closedStatus = closedStatus();
-		if($closedStatus != 0 && $closedStatus != $row_fac['fac_status_id'] && $fac_auto_stat = "1") {
+		if($closedStatus != 0 && $closedStatus != $row_fac['fac_status_id'] && $fac_auto_stat == "1") {
 			setStatus($closedStatus, $fac_id);
 			}		
 		}
