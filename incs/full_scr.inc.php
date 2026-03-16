@@ -1716,11 +1716,11 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 						$the_name = addslashes ($row['tick_scope']);															// 9/12/09
 						$the_short_name = shorten($row['tick_scope'], $shorten_length);
 
-						$the_descr = (empty($row['tick_descr'])) ? "&nbsp;" : addslashes(str_replace($eols, " ", $row['tick_descr']));
-						$the_short_one = (empty($row['tick_descr'])) ? "&nbsp; " : shorten(addslashes(str_replace($eols, " ", $row['tick_descr'])), $shorten_length);
+						$the_descr = (empty($row['tick_descr'])) ? "&nbsp;" : safe_addslashes(str_replace($eols, " ", $row['tick_descr']));
+						$the_short_one = (empty($row['tick_descr'])) ? "&nbsp; " : shorten(safe_safe_addslashes(str_replace($eols, " ", $row['tick_descr'] ?? '')), $shorten_length);
 							
 						$address = (empty($row['tick_street']))? "&nbsp;" : $row['tick_street'] . ", ";		// 8/10/10
-						$address = addslashes($address . $row['tick_city']. "&nbsp;". $row['tick_state']);
+						$address = safe_safe_addslashes($address . ($row['tick_city'] ?? ''). "&nbsp;". ($row['tick_state'] ?? ''));
 						$short_addr = shorten($address, $shorten_length);
 						
 ?>
@@ -1754,7 +1754,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 							$the_text_color = empty($row_type)? "black" :		$GLOBALS['UNIT_TYPES_TEXT'][$row_type['icon']];		// 
 							unset ($row_type);
 
-							$unit_name = empty($row['unit_id']) ? "[#{$row['unit_id']}]" : addslashes($row['unit_name']) ;			// id only if absent
+							$unit_name = empty($row['unit_id']) ? "[#{$row['unit_id']}]" : safe_safe_addslashes($row['unit_name']) ;			// id only if absent
 							$short_name = shorten($unit_name, 10);
 	?>							
 							sidebar_line += "<DIV CLASS='unit_n <?php print $bg_color_class;?>' STYLE='background-color:<?php print $the_bg_color;?>;  opacity: .7; color:<?php print $the_text_color;?>;'><DIV class='incs' onmouseover=\"Tip('#<?php print $row['unit_id'];?> <?php print $unit_name;?>')\" onmouseout=\"UnTip()\"><B><?php print $short_name;?></B></DIV></DIV>";								
@@ -2243,7 +2243,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 ?>
 /*				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['unit_name'], 10));?>", "<?php print $tab_1;?>"),
-					new GInfoWindowTab("APRS <?php print addslashes(substr($row_aprs['source'], -3)); ?>", "<?php print $tab_2;?>"),
+					new GInfoWindowTab("APRS <?php print safe_addslashes(substr($row_aprs['source'], -3)); ?>", "<?php print $tab_2;?>"),
 					new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>")
 					];
 */
@@ -2262,7 +2262,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 ?>
 /*				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['unit_name'], 10));?>", "<?php print $tab_1;?>"),
-					new GInfoWindowTab("Instam <?php print addslashes(substr($row_instam['source'], -3)); ?>", "<?php print $tab_2;?>"),
+					new GInfoWindowTab("Instam <?php print safe_addslashes(substr($row_instam['source'], -3)); ?>", "<?php print $tab_2;?>"),
 					new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>") // 830
 					];
 */
@@ -2282,7 +2282,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 ?>
 /*				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['unit_name'], 10));?>", "<?php print $tab_1;?>"),
-					new GInfoWindowTab("LocateA <?php print addslashes(substr($row_locatea['source'], -3)); ?>", "<?php print $tab_2;?>"),
+					new GInfoWindowTab("LocateA <?php print safe_addslashes(substr($row_locatea['source'], -3)); ?>", "<?php print $tab_2;?>"),
 					new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>") // 830
 					];
 */
@@ -2301,7 +2301,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 ?>
 /*				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['unit_name'], 10));?>", "<?php print $tab_1;?>"),
-					new GInfoWindowTab("Gtrack <?php print addslashes(substr($row_gtrack['source'], -3)); ?>", "<?php print $tab_2;?>"),
+					new GInfoWindowTab("Gtrack <?php print safe_addslashes(substr($row_gtrack['source'], -3)); ?>", "<?php print $tab_2;?>"),
 					new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>") // 830
 					];
 */
@@ -2318,7 +2318,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 ?>
 /*				var myinfoTabs = [
 					new GInfoWindowTab("<?php print nl2brr(shorten($row['unit_name'], 10));?>", "<?php print $tab_1;?>"),
-					new GInfoWindowTab("G Lat <?php print addslashes(substr($row_glat['source'], -3)); ?>", "<?php print $tab_2;?>"),
+					new GInfoWindowTab("G Lat <?php print safe_addslashes(substr($row_glat['source'], -3)); ?>", "<?php print $tab_2;?>"),
 					new GInfoWindowTab("Zoom", "<div id='detailmap' class='detailmap'></div>") // 830
 					];
 */
@@ -2522,30 +2522,30 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			$facility_display_name = $f_disp_temp[0];
 	
 				$fac_tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
-				$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
-				$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
-				$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
-				$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['status_val']) . " </TD></TR>";
-				$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
-				$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_phone']) . " </TD></TR>";
+				$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
+				$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
+				$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
+				$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['status_val']) . " </TD></TR>";
+				$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . safe_safe_addslashes($row_fac['contact_email']) . "</TD></TR>";
+				$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['contact_phone']) . " </TD></TR>";
 				$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'> " . format_date($row_fac['updated']) . "</TD></TR>";
 				$fac_tab_1 .= "</TABLE>";
 	
 				$fac_tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
-				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";
-				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_contact']) . " </TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_email']) . " </TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_phone']) . " </TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['pager_p']) . " </TD></TR>";
+				$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['pager_s']) . " </TD></TR>";
 				$fac_tab_2 .= "</TABLE>";
 				
 				?>
 	//			var fac_sym = (g + 1).toString();
 /*				var myfacinfoTabs = [
-					new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
+					new GInfoWindowTab("<?php print nl2brr(safe_addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
 					new GInfoWindowTab("More ...", "<?php print str_replace($eols, " ", $fac_tab_2);?>")
 					];
 */

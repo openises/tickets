@@ -224,13 +224,13 @@ do_kml();
 					$theTabs .= '<div class="contentwrapper">';
 					
 					$tab_1 = "<TABLE width='{$iw_width}' style='height: 280px;'><TR><TD><TABLE>";			
-					$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_unit['name'], 48)) . "</B></TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . addslashes(shorten(str_replace($eols, " ", $row_unit['description']), 32)) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($row_unit['name'], 48)) . "</B></TD></TR>";
+					$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . safe_addslashes(shorten(str_replace($eols, " ", $row_unit['description']), 32)) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row_unit['contact_name']). " Via: " . addslashes($row_unit['contact_via']) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . safe_addslashes($row_unit['contact_name']). " Via: " . safe_addslashes($row_unit['contact_via']) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($the_time) . "</TD></TR>";		// 4/11/10
 					if (array_key_exists($unit_id, $assigns)) {
-						$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$unit_id] . "'>" . addslashes(shorten($assigns[$unit_id], 20)) . "</A></TD></TR>";
+						$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$unit_id] . "'>" . safe_addslashes(shorten($assigns[$unit_id], 20)) . "</A></TD></TR>";
 						}
 					$tab_1 .= "</TABLE></TD></TR></TABLE>";
 				

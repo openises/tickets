@@ -628,7 +628,7 @@ require_once('./incs/links.inc.php');
 													}
 												if ($row['in_types_id'] == $row2['id']) {		// 7/16/09
 													$sel = " SELECTED";
-													$proto = addslashes($row2['protocol']);
+													$proto = safe_addslashes($row2['protocol']);
 													} else {
 													$sel = "";
 													}			

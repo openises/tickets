@@ -245,7 +245,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$y++;
 		}
 
-	$tip =  addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));
+	$tip =  safe_addslashes($grp_names . " / " . htmlentities($row['name'],ENT_QUOTES));
 	$latitude = ($row['lat']) ? $row['lat'] : $def_lat;
 	$longitude = ($row['lng']) ? $row['lng'] : $def_lng;
 	$got_point = FALSE;
@@ -336,7 +336,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$status = (array_key_exists($row['un_status_id'], $validStatuses)) ? get_status_sel($row['unit_id'], $row['un_status_id'], "u") : "Status Error";
 		$status_name = (array_key_exists($row['un_status_id'], $validStatuses)) ? $status_vals[$row['un_status_id']] : "Status Error" ;
 		$status_id = $row['un_status_id'];
-		$statusTemp = ($row['status_about'] != "") ? addslashes($row['status_about']): "";
+		$statusTemp = ($row['status_about'] != "") ? safe_safe_addslashes($row['status_about']): "";
 		$status_about = $statusTemp;
 		$noSel = 0;
 		} else {

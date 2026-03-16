@@ -1345,7 +1345,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
 
 				var i = <?php print $i;?>;						// top of loop
 				
-				unit_names[i] = "<?php print addslashes($unit_row['name']);?>";	// unit name 8/25/08, 4/27/09
+				unit_names[i] = "<?php print safe_addslashes($unit_row['name']);?>";	// unit name 8/25/08, 4/27/09
 				unit_sets[i] = false;								// pre-set checkbox settings				
 				unit_preselected = "<?php print $unit_id;?>";
 				if (unit_preselected != "") {
@@ -1373,10 +1373,10 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
 				$str_dist = ($have_position)? number_format(round($unit_row['distance'], 1), 1): "" ;		// 3/5/11				
 ?>					
 				sidebar_line = "<TD ALIGN='center'><INPUT TYPE='checkbox' <?php print get_cd_str($unit_row); ?> NAME = 'unit_" + <?php print $unit_row['unit_id'];?> + "' onClick='unit_sets[<?php print $i; ?>]=this.checked;'></TD>";
-				sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>; opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($unit_row['unit_name']);?>\">";
+				sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>; opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print safe_addslashes($unit_row['unit_name']);?>\">";
 				sidebar_line += "<NOBR><?php print shorten($unit_row['unit_name'], 20);?></NOBR></TD>";
 				sidebar_line += "<TD CLASS='text text_center'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
-				sidebar_line += "<TD><NOBR><?php print shorten(addslashes($dispatched_to), 20); ?></NOBR></TD>";
+				sidebar_line += "<TD><NOBR><?php print shorten(safe_addslashes($dispatched_to), 20); ?></NOBR></TD>";
 				sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $status_bgcolor;?>; opacity: .7; color: <?php print $status_textcolor;?>;' TITLE = \"<?php print $unit_row['unitstatus'];?>\" CLASS='td_data'><?php print shorten($unit_row['unitstatus'], 12);?></TD>";
 				sidebar_line += "<TD CLASS='td_data'><?php print substr(format_sb_date($unit_row['updated']), 4);?></TD>";
 <?php

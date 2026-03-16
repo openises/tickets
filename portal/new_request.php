@@ -468,7 +468,7 @@ function sub_request() {
 	if(dest_address_array[0] == "") {
 		ToAddress = "";
 		}
-	var theUserName = "<?php print addslashes(get_user_name($_SESSION['user_id']));?>";
+	var theUserName = "<?php print safe_addslashes(get_user_name($_SESSION['user_id']));?>";
 	var origFac = theForm.frm_orig_fac.value;
 	var recFac = theForm.frm_rec_fac.value;	
 	var theScope = theForm.frm_patient.value + " " + requestDate;
@@ -645,7 +645,7 @@ function sub_retrequest() {
 	if(dest_address_array[0] == "") {
 		ToAddress = "";
 		}
-	var theUserName = "<?php print addslashes(get_user_name($_SESSION['user_id']));?>";
+	var theUserName = "<?php print safe_addslashes(get_user_name($_SESSION['user_id']));?>";
 	var origFac = theForm.frm_orig_fac.value;
 	var recFac = theForm.frm_rec_fac.value;	
 	var theScope = theForm.frm_patient.value + " " + requestDate + " - Return Journey";

@@ -535,9 +535,9 @@ function do_ogts() {			// 3/24/12
 					$state_work_val = 	substr (trim($state_arr[1]), 0 ,  4);
 					}				// end else
 
-				$street_work_val = addslashes($street_work_val);
-				$city_work_val = addslashes($city_work_val);
-				$state_work_val = addslashes($state_work_val);
+				$street_work_val = safe_addslashes($street_work_val);
+				$city_work_val = safe_addslashes($city_work_val);
+				$state_work_val = safe_addslashes($state_work_val);
 				$addr_sql = (!((count($addr_arr)>1) && (count($addr_arr)<7)))? "" : ", `street` = '{$street_work_val}',  `city` = '{$city_work_val}',  `state` = '{$state_work_val}'";
 				}				// end if  (array_key_exists('Address', $device["EventData"][0])
 			else {

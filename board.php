@@ -1652,7 +1652,7 @@ if(empty($_SESSION)) {		// expired?
 									onmouseover=\"Tip('$the_descr')\" onmouseout=\"UnTip()\">{$in_strike} {$the_short_one}{$in_strikend}</TD>\n";		// call 8/24/08, 4/26/09
 
 								$address = (empty($row['tick_street']))? "" : $row['tick_street'] . ", ";		// 8/10/10
-								$address = addslashes($address . $row['tick_city']. " ". $row['tick_state']);
+								$address = safe_addslashes($address . $row['tick_city']. " ". $row['tick_state']);
 								$short_addr = cb_shorten($address, $COLS_ADDR);
 								print "\t<TD onClick = {$doTick}(" . $row['ticket_id'] . ") CLASS='{$theClass}'
 									onmouseover=\"Tip('{$address}')\" ALIGN='left' onmouseout=\"UnTip()\">{$in_strike}{$short_addr}{$in_strikend}</TD>\n";		// address 8/24/08, 1/17/09
@@ -1741,7 +1741,7 @@ if(empty($_SESSION)) {		// expired?
 							print "\t<TD TITLE = 'Click to RESET R O FE FA C times' CLASS='mylink' ALIGN='center'>
 								<INPUT TYPE='radio' NAME = 'res_times' {$dis} onClick = \"do_assgn_reset({$row['assign_id']}, this.form)\" /></TD>\n";
 
-							print "\t<INPUT TYPE='hidden' NAME='frm_the_unit' VALUE='" . addslashes($row['unit_name']) . "'>\n";
+							print "\t<INPUT TYPE='hidden' NAME='frm_the_unit' VALUE='" . safe_safe_addslashes($row['unit_name']) . "'>\n";
 							print "\t<INPUT TYPE='hidden' NAME='frm_contact_via' VALUE='" . $row['contact_via'] . "'>\n";
 							print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['unit_id'] . "'>\n";
 							print "\t<INPUT TYPE='hidden' NAME='frm_ticket_id' VALUE='" . $row['ticket_id'] . "'>\n";
@@ -2738,7 +2738,7 @@ if(empty($_SESSION)) {		// expired?
 								onmouseover=\"Tip('$the_descr')\" onmouseout=\"UnTip()\">{$in_strike} {$the_short_one}{$in_strikend}</TD>\n";		// call 8/24/08, 4/26/09
 
 							$address = (empty($row['tick_street']))? "" : $row['tick_street'] . ", ";
-							$address = addslashes($address . $row['tick_city']. " ". $row['tick_state']);
+							$address = safe_addslashes($address . $row['tick_city']. " ". $row['tick_state']);
 							$short_addr = shorten($address, $COLS_ADDR);
 							print "\t<TD ALIGN='left' onClick = \"ignore('{$row['ticket_id']}')\" CLASS='{$theClass}'
 								onmouseover=\"Tip('{$address}')\" ALIGN='left' onmouseout=\"UnTip()\">{$in_strike}{$short_addr}{$in_strikend}</TD>\n";		// address 8/24/08, 1/17/09
@@ -2775,8 +2775,8 @@ if(empty($_SESSION)) {		// expired?
 							}
 
 						if (!($row['theunitid']==0)) {	// theunitid
-	//						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : addslashes($row['theunit']) ;			// id only if absent
-							$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : addslashes($row['thehandle']) ;			// id only if absent
+	//						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : safe_safe_addslashes($row['theunit']) ;			// id only if absent
+							$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : safe_safe_addslashes($row['thehandle']) ;			// id only if absent
 							$short_name = shorten($unit_name, $COLS_UNIT);
 							print "\t<TD ALIGN='left' CLASS='$theClass' onClick = \"ignore('{$row['responder_id']}')\"
 								 onmouseover=\"Tip('{$unit_name}')\" ALIGN='left' onmouseout=\"UnTip()\"><B>{$short_name}</B></TD>\n";							// unit 8/24/08, 1/17/09

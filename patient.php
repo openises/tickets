@@ -17,7 +17,7 @@ ALTER TABLE `pre_patient` CHANGE `insurance_id` `insurance_id` INT( 3 ) NULL DEF
 11/30/10 get_text('patient') added
 12/15/10 Patient ID added as patient identifier
 3/15/11 changed stylesheet.php to stylesheet.php
-4/22/11 addslashes() added for embedded apostrophes
+4/22/11 safe_addslashes() added for embedded apostrophes
 6/10/11 added intrusion detection, accommodate window operation
 7/27/11 fixed, per kb email
 8/4/11 added call to google maps script

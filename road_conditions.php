@@ -885,8 +885,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$display_name = $name = shorten(htmlentities($row['title'], ENT_QUOTES), 20);	
 		$display_street = $street = shorten(htmlentities($row['street'], ENT_QUOTES), 40);			
 
-		$sidebar_line = "&nbsp;&nbsp;<TD WIDTH='30%' TITLE = '{$row['r_title']}' {$the_on_click}><U><SPAN STYLE='background-color: #FFFFFF;  opacity: .7; color:#000000;'>" . addslashes($name) ."</SPAN></U></TD>";	//	6/10/11
-		$sidebar_line .= "<TD WIDTH='40%' TITLE = '" . addslashes($street) . "' {$the_on_click}><U><SPAN STYLE='background-color: #FFFFFF;  opacity: .7; color:#000000;'><NOBR>" . addslashes($street) ."</NOBR></SPAN></U></TD>";
+		$sidebar_line = "&nbsp;&nbsp;<TD WIDTH='30%' TITLE = '{$row['r_title']}' {$the_on_click}><U><SPAN STYLE='background-color: #FFFFFF;  opacity: .7; color:#000000;'>" . safe_addslashes($name) ."</SPAN></U></TD>";	//	6/10/11
+		$sidebar_line .= "<TD WIDTH='40%' TITLE = '" . safe_addslashes($street) . "' {$the_on_click}><U><SPAN STYLE='background-color: #FFFFFF;  opacity: .7; color:#000000;'><NOBR>" . safe_addslashes($street) ."</NOBR></SPAN></U></TD>";
 
 // as of
 		$strike = $strike_end = "";
@@ -900,8 +900,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		
 			$line_ctr = 0;
 			$tab_1 = "<TABLE CLASS='infowin' width='{$iw_width}'>";
-			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($display_name, 48)) . "</B></TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>Description:&nbsp;</TD><TD ALIGN='left' class='td_data'>" . addslashes(shorten(str_replace($eols, " ", $row['r_description']), 32)) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($display_name, 48)) . "</B></TD></TR>";
+			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>Description:&nbsp;</TD><TD ALIGN='left' class='td_data'>" . safe_addslashes(shorten(str_replace($eols, " ", $row['r_description']), 32)) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD class='td_label' ALIGN='left'>As of:&nbsp;</TD><TD ALIGN='left' class='td_data'>" . format_date(strtotime($row['updated'])) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='spacer'><TD COLSPAN=2 ALIGN='center'>" . $toedit . "&nbsp;&nbsp;<A HREF='road_conditions.php?func=location&view=true&id=" . $row['cond_id'] . "'><U>View</U></A></TD></TR>";	// 08/8/02
 			$tab_1 .= "</TABLE>";

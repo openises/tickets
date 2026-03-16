@@ -930,7 +930,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 	
 		print "\t\tvar scheduled = '$sp';\n";
 ?>
-		var sym = (<?php print addslashes($sb_indx); ?>+1).toString();						// for sidebar
+		var sym = (<?php print safe_addslashes($sb_indx); ?>+1).toString();						// for sidebar
 		var sym2= scheduled + (<?php print $sb_indx; ?>+1).toString();			// for icon
 	
 <?php
@@ -1178,7 +1178,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 		$got_point = FALSE;
 
 		$name = $row['handle'];			//	10/8/09
-		$index =  addslashes($row['icon_str']);	// 3/19/11
+		$index =  safe_safe_addslashes($row['icon_str']);	// 3/19/11
 		
 		print "\t\tvar sym = '$index';\n";				// for sidebar and icon 10/8/09		
 												// 2/13/09
@@ -1400,12 +1400,12 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 		$fac_type=($row_fac['icon']);	
 		$fac_type_name = ($row_fac['fac_type_name']);
 		$fac_region = get_first_group(3, $fac_id);		
-		$fac_name = addslashes($row_fac['facility_name']);			//		10/8/09
-		$fac_handle = addslashes($row_fac['handle']);				//		10/8/09
-		$fac_index =  addslashes($row_fac['icon_str']);
+		$fac_name = safe_addslashes($row_fac['facility_name']);			//		10/8/09
+		$fac_handle = safe_addslashes($row_fac['handle']);				//		10/8/09
+		$fac_index =  safe_addslashes($row_fac['icon_str']);
 		$on_click =  ($can_edit)? "fac_click_ed({$fac_id})" : "fac_click_vw({$fac_id})";		// 8/24/10		
 
-		print "\t\tvar fac_sym = '" . addslashes($fac_index) . "';\n";			//	 for sidebar and icon 10/8/09 - 4/27/11
+		print "\t\tvar fac_sym = '" . safe_addslashes($fac_index) . "';\n";			//	 for sidebar and icon 10/8/09 - 4/27/11
 
 		$facility_display_name = $f_disp_name = $row_fac['handle'];	
 
@@ -1413,7 +1413,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 		$the_text_color = 	$GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']];		// 2/8/10			
 
 // Type
-		$sidebar_fac_line = "<TD ALIGN='left'  onClick = '{$on_click};' >" . addslashes(shorten($row_fac['fac_type_name'],$col_width)) . "</TD>";
+		$sidebar_fac_line = "<TD ALIGN='left'  onClick = '{$on_click};' >" . safe_addslashes(shorten($row_fac['fac_type_name'],$col_width)) . "</TD>";
 // Handle
 		$sidebar_fac_line .= "<TD onClick = '{$on_click}' TITLE = '{$fac_name}' ALIGN='left'><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};' >{$fac_handle}</SPAN></TD>";
 // MAIL					
@@ -1431,7 +1431,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 			$sidebar_fac_line .= "<TD ALIGN='right'>{$row_fac['beds_a']}/{$row_fac['beds_o']}</TD>";
 			$sidebar_fac_line .= "<TD ALIGN='left'><NOBR>" . shorten($row_fac['beds_info'], 10) . "</NOBR></TD>";
 // Status
-		$sidebar_fac_line .= "<TD ALIGN='left'  onClick = '{$on_click};' >" . addslashes($row_fac['status_val']) . "</TD>";
+		$sidebar_fac_line .= "<TD ALIGN='left'  onClick = '{$on_click};' >" . safe_addslashes($row_fac['status_val']) . "</TD>";
 // As-of - 11/3/2012
 		$sidebar_fac_line .= "<TD onClick = '{$on_click};' TITLE = '{$row_fac['updated']}' >" . do_updated($row_fac['updated']) . "</TD>";	// 11/3/2012
 ?>

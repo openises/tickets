@@ -193,7 +193,7 @@ switch ($units_assigned) {
 $status = get_status_sel($row['unit_id'], $row['un_status_id'], "u");		// status
 $status_name = $status_vals[$row['un_status_id']];
 $status_id = $row['un_status_id'];
-$statusTemp = ($row['status_about'] != "") ? addslashes($row['status_about']): "";
+$statusTemp = ($row['status_about'] != "") ? safe_safe_addslashes($row['status_about']): "";
 $status_about = $statusTemp;
 
 //  MOBILITY
@@ -253,8 +253,8 @@ if (my_is_float($lat)) {										// position data? 4/29/09
 	$temptype = $u_types[$row['type_id']];
 	$temp_array[0] = $lat;
 	$temp_array[1] = $lng;
-	$temp_array[2] = addslashes(shorten($name, 48));
-	$temp_array[3] = addslashes(shorten(str_replace($eols, " ", $row['unit_descr']), 256));
+	$temp_array[2] = safe_addslashes(shorten($name, 48));
+	$temp_array[3] = safe_addslashes(shorten(str_replace($eols, " ", $row['unit_descr']), 256));
 	$the_type = $temptype[0];																			// 1/1/09
 	$toosmap = ((!($internet)) || ($locale != 1))? "" : "<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row['unit_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"responder\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>";
 
@@ -273,7 +273,7 @@ if (my_is_float($lat)) {										// position data? 4/29/09
 	$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row['contact_name']). " Via: " . addslashes($row['contact_via']) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . safe_safe_addslashes($row['contact_name']). " Via: " . safe_safe_addslashes($row['contact_via']) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 	if ($units_assigned > 0) {
 		$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . $ass_td . "</A></TD></TR>";

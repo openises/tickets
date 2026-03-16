@@ -186,7 +186,7 @@ switch ($mode) {
 		function do_row($row) {
 			global $severities, $now, $i, $incs_shown, $evenodd ;
 			$closed = ($row['tickstatus'] == $GLOBALS['STATUS_CLOSED'] ) ? " closed" : "";				// line-through 4/9/2015
-			$the_addr = addslashes(shorten($row['tickaddr'], 24) );
+			$the_addr = safe_addslashes(shorten($row['tickaddr'], 24) );
 			if ( $row ['mode'] == 0) {										// responder on-scene
 				$sev_cls = $severities[$row['severity']];					// severity class
 				$date = date(get_variable("date_format"), strtotime($row['on_scene']) );

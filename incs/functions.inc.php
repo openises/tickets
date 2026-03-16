@@ -886,7 +886,7 @@ function show_actions_orig ($the_id, $theSort, $links, $display) {			/* list act
 		$caption = "Actions: &nbsp;&nbsp;";
 		$pctr=0;
 		while ($act_row = stripslashes_deep($result->fetch_assoc())){
-		$tipstr = addslashes($act_row['description']);
+		$tipstr = safe_addslashes($act_row['description']);
 			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' WIDTH='100%' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\" >
 				<TD VALIGN='top' NOWRAP CLASS='td_label'>$caption</TD>";
 			$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array

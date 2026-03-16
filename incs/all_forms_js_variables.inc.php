@@ -63,7 +63,7 @@ $protocols = array();
 $query_in = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 $result_in = db_query($query_in);
 while ($row_in = stripslashes_deep($result_in->fetch_assoc())) {
-	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = addslashes($row_in['protocol']);}
+	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = safe_addslashes($row_in['protocol']);}
 	}
 $mapzooms = array();
 $dir = (is_dir('./_osm/tiles')) ? './_osm/tiles' : '../_osm/tiles';

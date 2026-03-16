@@ -1533,7 +1533,7 @@ print "\n<SCRIPT>\n\t var do_inc_nature={$do_inc_nature};\n</SCRIPT>\n";
 
 			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' title='{$temp_row['description']}'> {$temp_row['type']} </OPTION>\n";
 			if (!(empty($temp_row['protocol']))) {				// 7/7/09 - note string key
-				$temp = addslashes($temp_row['protocol']);
+				$temp = safe_addslashes($temp_row['protocol']);
 				print "\n<SCRIPT>protocols[{$temp_row['id']}] = '{$temp}';</SCRIPT>\n";		// 7/16/09, 5/6/10
 				}
 			$i++;

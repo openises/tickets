@@ -166,7 +166,7 @@ if (db()->affected_rows==0) {
 		$the_icon = intval($assigns_stack[$i]['icon']);					// 6/19/11
 		$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$the_icon];		// 8/29/10
 		$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$the_icon];
-		$unit_handle = addslashes($assigns_stack[$i]['handle']);
+		$unit_handle = safe_addslashes($assigns_stack[$i]['handle']);
 		$the_disp_stat = get_disp_status ($assigns_stack[$i]);			// 8/29/10
 		$print .= "\t<TD class='td_data text text_left'><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>{$unit_handle}</SPAN></TD>\n";		// column 2 - handle 
 		$print .= "\t<TD class='td_data text text_left'>&nbsp;{$the_disp_stat}</TD>\n";		// column 3-  disp status

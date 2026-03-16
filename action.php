@@ -18,7 +18,7 @@
 12/17/10 signals handling added
 1/27/11 gmaps call removed
 3/15/11 changed stylesheet.php to stylesheet.php
-4/22/11 addslashes() added for embedded apostrophes
+4/22/11 safe_addslashes() added for embedded apostrophes
 6/10/11 Added regional capability - restrictions to shown responders by groups allocated
 6/11/12 Moved javascript functions do_unlock, do_lock and do_asof from main JS section to line 742, spurious do notify() removed
 7/3/2013 - socket2me conditioned on internet and broadcast settings

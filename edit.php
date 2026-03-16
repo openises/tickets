@@ -1162,7 +1162,7 @@ function set_size() {
 									}
 								if ($row['in_types_id'] == $row2['id']) {		// 7/16/09
 									$sel = " SELECTED";
-									$proto = addslashes($row2['protocol']);
+									$proto = safe_addslashes($row2['protocol']);
 									}
 								else {
 									$sel = "";
@@ -1170,7 +1170,7 @@ function set_size() {
 								print "<OPTION style='color: " . $color . ";' VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
 								if (!(empty($row2['protocol']))) {				// 7/7/09 - note string key
 									$temp = preg_replace("/[\n\r]/"," ",$row2['protocol']); 
-									$temp = addslashes($temp);
+									$temp = safe_addslashes($temp);
 									print "\n<SCRIPT>protocols[{$row2['id']}] = '" . $temp . "';</SCRIPT>\n";		// 5/6/10
 									}
 								$i++;

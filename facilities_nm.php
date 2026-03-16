@@ -633,14 +633,14 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 // Type
 		$sidebar_line .= "<TD>{$the_type}</TD>";	//	6/10/11
 // Handle		
-		$handle = addslashes($row['handle']);		//	5/30/10
+		$handle = safe_safe_addslashes($row['handle']);		//	5/30/10
 		$sidebar_line .= "<TD TITLE = '{$handle}'><B>". shorten($handle, 16) . "</B></TD>";			// 10/8/09		
 // name
 		$name = $row['name'];		//	10/8/09
 		$fac_index = $row['id'];		//	10/8/09
 		$temp = explode("/", $name );
 		$display_name = $temp[0];
-		$sidebar_line .= "<TD TITLE = '" . $grp_names . "Facility Name: " . addslashes($display_name) . "' ><U><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>" . addslashes(shorten($display_name, 40)) ."</SPAN></U></TD>";
+		$sidebar_line .= "<TD TITLE = '" . $grp_names . "Facility Name: " . safe_addslashes($display_name) . "' ><U><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>" . safe_addslashes(shorten($display_name, 40)) ."</SPAN></U></TD>";
 // Beds
 		$sidebar_line .= "<TD WIDTH='15%' TITLE = 'Beds' ALIGN='right'><U><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'><NOBR>{$row['beds_a']}/{$row['beds_o']}</NOBR></SPAN></U></TD>";
 		$sidebar_line .= "<TD WIDTH='15%' TITLE = '{$row['beds_info']}'  ALIGN='left'><U><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'><NOBR>" . shorten($row['beds_info'], 20) . "</NOBR></SPAN></U></TD>";

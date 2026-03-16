@@ -484,7 +484,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					nr_units++;
 					var i = <?php print $i;?>;						// top of loop
 					
-					unit_names[i] = "<?php print addslashes($unit_row['unit_name']);?>";	// unit name 8/25/08, 4/27/09
+					unit_names[i] = "<?php print safe_addslashes($unit_row['unit_name']);?>";	// unit name 8/25/08, 4/27/09
 					unit_preselected = "<?php print $unit_id;?>";
 					if (unit_preselected != "") {
 						unit_sets[i] = true;								// pre-set checkbox settings
@@ -635,7 +635,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 					$status_textcolor = $unit_row['status_text'];
 ?>	
 <!-- 6/17/13 Added Handle to list fields -->
-					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>;  opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($unit_row['unit_handle']);?>\">";
+					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>;  opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print safe_addslashes($unit_row['unit_handle']);?>\">";
 <?php
 					$strike = ($can_dispatch) ? "": "color:red;text-decoration:line-through;" ;	//	6/17/13	Added check for Dispatch disallowed to strikethrough check
 					$the_style = "<SPAN STYLE='" . $strike . "'>";
@@ -646,7 +646,7 @@ function get_assigned_td($unit_id, $on_click = "") {		// returns td string - 3/1
 <?php
 					$str_dist = ($have_position)? number_format(round($unit_row['distance'], 1), 1): "" ;		// 3/5/11
 ?>
-					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>; opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print addslashes($theName);?>\">";
+					sidebar_line += "<TD CLASS='text text_left' style='background-color: <?php print $the_bg_color;?>; opacity: .7; color: <?php print $the_text_color;?>;' TITLE = \"<?php print safe_addslashes($theName);?>\">";
 					sidebar_line += "<NOBR><?php print shorten($theName, 20);?></SPAN></NOBR></TD>";
 					sidebar_line += "<TD CLASS='text text_center'><?php print $str_dist;?></TD>"; // 8/25/08, 4/27/09
 					sidebar_line += "<?php print get_assigned_td($unit_row['unit_id']); ?>";		// 3/15/11

@@ -275,8 +275,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			if (my_is_float($row['lat'])) {		// 6/21/10
 				$temp_array[0] = $row['lat'];
 				$temp_array[1] = $row['lng'];
-				$temp_array[2] = addslashes(shorten($row['scope'], 48));
-				$temp_array[3] = addslashes(shorten(str_replace($eols, " ", $row['tick_descr']), 256));
+				$temp_array[2] = safe_addslashes(shorten($row['scope'], 48));
+				$temp_array[3] = safe_addslashes(shorten(str_replace($eols, " ", $row['tick_descr']), 256));
 				$street = empty($row['ticket_street'])? "" : replace_quotes($row['ticket_street']) . "<BR/>" . replace_quotes($row['ticket_city']) . " " . replace_quotes($row['ticket_state']) ;
 				$todisp = (is_guest()|| is_unit())? "": "<A id='disp_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['routesfile']}?ticket_id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";	// 7/27/10
 			

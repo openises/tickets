@@ -718,7 +718,7 @@ function createMarker(unit_point, number) {		// unit marker
 			echo "var unit_icon_url = \"./our_icons/gen_icon.php?blank=0&text=RU\";\n";
 			echo "unit_icon.image = unit_icon_url;\n";
 			echo "var unit_point = new google.maps.LatLng(" . $row_unit['lat'] . "," . $row_unit['lng'] . ");\n";
-			echo "var unit_marker = createMarker(unit_point, '" . addslashes($row_unit['name']) . "', unit_icon);\n";
+			echo "var unit_marker = createMarker(unit_point, '" . safe_safe_addslashes($row_unit['name']) . "', unit_icon);\n";
 			echo "unit_marker.setMap(map);\n";
 			echo "\n";
 		} else {
@@ -726,7 +726,7 @@ function createMarker(unit_point, number) {		// unit marker
 			echo "var unit_icon_url = \"./our_icons/gen_icon.php?blank=4&text=RU\";\n";
 			echo "unit_icon.image = unit_icon_url;\n";
 			echo "var unit_point = new google.maps.LatLng(" . $row_unit['lat'] . "," . $row_unit['lng'] . ");\n";
-			echo "var unit_marker = createMarker(unit_point, '" . addslashes($row_unit['name']) . "', unit_icon);\n";
+			echo "var unit_marker = createMarker(unit_point, '" . safe_safe_addslashes($row_unit['name']) . "', unit_icon);\n";
 			echo "unit_marker.setMap(map);\n";
 			echo "\n";
 		}	// end inner if
@@ -795,30 +795,30 @@ function createfacMarker(fac_point, fac_name, id, fac_icon) {
 		if ((my_is_float($row_fac['lat'])) && (my_is_float($row_fac['lng']))) {
 	
 			$fac_tab_1 = "<TABLE CLASS='infowin'  width='{$iw_width}' >";
-			$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
-			$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
-			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
-			$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['status_val']) . " </TD></TR>";
-			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
-			$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_phone']) . " </TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($facility_display_name, 48)) . "</B></TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($row_fac['fac_type_name'], 48)) . "</B></TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['facility_description'])) . "</TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['status_val']) . " </TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['contact_name']). "&nbsp;&nbsp;&nbsp;Email: " . safe_safe_addslashes($row_fac['contact_email']) . "</TD></TR>";
+			$fac_tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Phone:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['contact_phone']) . " </TD></TR>";
 			$fac_tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date_2(strtotime($row_fac['updated'])) . "</TD></TR>";
 			$fac_tab_1 .= "</TABLE>";
 	
 			$fac_tab_2 = "<DIV style='max-height: 200px; overflow: auto;'><TABLE CLASS='infowin'  width='{$iw_width}' >";
-			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";
-			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security contact:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_contact']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_email']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_phone']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Access rules:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Opening hours:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['opening_hours'])) . "</TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['pager_p']) . " </TD></TR>";
+			$fac_tab_2 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['pager_s']) . " </TD></TR>";
 			$fac_tab_2 .= "</TABLE></DIV>";
 			
 ?>
 /*
 			var myfacinfoTabs = [
-				new GInfoWindowTab("<?php print nl2brr(addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
+				new GInfoWindowTab("<?php print nl2brr(safe_addslashes(shorten($row_fac['facility_name'], 10)));?>", "<?php print $fac_tab_1;?>"),
 				new GInfoWindowTab("More ...", "<?php print str_replace($eols, " ", $fac_tab_2);?>")
 				];
 */
@@ -1429,12 +1429,12 @@ var zoom = map.getZoom();
 				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Description:&nbsp;</TD><TD ALIGN='left'>" . htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
 				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Status:&nbsp;</TD><TD ALIGN='left'>" . $the_status . " </TD></TR>";
 				$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>As of:&nbsp;</TD><TD ALIGN='left'>" . format_date(strtotime($row_fac['updated'])) . "</TD></TR>";
-				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['contact_name']). " Via: " . addslashes($row_fac['contact_email']) . "</TD></TR>";
-				if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . addslashes($row_fac['security_contact']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_email']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['security_phone']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
-				if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
+				$tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Contact:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['contact_name']). " Via: " . safe_safe_addslashes($row_fac['contact_email']) . "</TD></TR>";
+				if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD ALIGN='left' STYLE= 'width:50%'>" . safe_safe_addslashes($row_fac['security_contact']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Security email:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_email']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security phone:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['security_phone']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
+				if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Security reqs:&nbsp;</TD><TD ALIGN='left'>" . safe_addslashes(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
 				if(!(isempty(trim($row_fac['opening_hours']))))  	{
 					$opening_arr_serial = base64_decode($row_fac['opening_hours']);
 					$opening_arr = unserialize($opening_arr_serial);
@@ -1475,8 +1475,8 @@ var zoom = map.getZoom();
 					$openingTimes = "Opening Times Today (" . $the_day . ")  ---  " . $outputstring;
 					$tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Opening today (" . $the_day . ")&nbsp;</TD><TD ALIGN='left'>" . $outputstring . "</TD></TR>";
 					}
-				if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_p']) . " </TD></TR>";}
-				if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . addslashes($row_fac['pager_s']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD ALIGN='right'>Prim pager:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['pager_p']) . " </TD></TR>";}
+				if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD ALIGN='right'>Sec pager:&nbsp;</TD><TD ALIGN='left'>" . safe_safe_addslashes($row_fac['pager_s']) . " </TD></TR>";}
 				$tab_1 .= "</TABLE></TD></TR>";
 				$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE>";
 				$tab_1 .= "</TABLE></TD></TR></TABLE>";
@@ -1569,13 +1569,13 @@ var zoom = map.getZoom();
 					$theTabs .= '<div class="contentwrapper">';
 					
 					$tab_1 = "<TABLE width='{$iw_width}' style='height: 280px;'><TR><TD><TABLE>";			
-					$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . addslashes(shorten($row_unit['name'], 48)) . "</B></TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . addslashes(shorten(str_replace($eols, " ", $row_unit['description']), 32)) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_addslashes(shorten($row_unit['name'], 48)) . "</B></TD></TR>";
+					$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . safe_addslashes(shorten(str_replace($eols, " ", $row_unit['description']), 32)) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-					$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row_unit['contact_name']). " Via: " . addslashes($row_unit['contact_via']) . "</TD></TR>";
+					$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . safe_safe_addslashes($row_unit['contact_name']). " Via: " . safe_safe_addslashes($row_unit['contact_via']) . "</TD></TR>";
 					$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($the_time) . "</TD></TR>";		// 4/11/10
 					if (array_key_exists($unit_id, $assigns)) {
-						$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$unit_id] . "'>" . addslashes(shorten($assigns[$unit_id], 20)) . "</A></TD></TR>";
+						$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$unit_id] . "'>" . safe_addslashes(shorten($assigns[$unit_id], 20)) . "</A></TD></TR>";
 						}
 					$tab_1 .= "</TABLE></TD></TR></TABLE>";
 				

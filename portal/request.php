@@ -701,7 +701,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 		$subject_str1 = get_text('Service User') . " Request has been edited\\r";
 		$text_str1 = "A request " . get_text('Service User') . " has been edited by " . $userName . " Dated " . $now . "Please log on to Tickets and check\\r"; 
 		$text_str1 .= "Request Summary\\r" . $the_summary;
-		$text_str1 = addslashes($text_str1);
+		$text_str1 = safe_addslashes($text_str1);
 		$theEmailCount++;
 //		do_send ($to_str, $smsg_to_str, $subject_str, $text_str, 0, 0);
 		}				// end if/else ($addrs)	
@@ -711,7 +711,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 		$subject_str2 = "Your request " . $_POST['frm_scope'] . " has been changed\\r";
 		$text_str2 = "Your Request " . $_POST['frm_scope'] . " has been changed\\r"; 
 		$text_str2 .= "Request Summary\\r" . $the_summary;
-		$text_str2 = addslashes($text_str2);
+		$text_str2 = safe_addslashes($text_str2);
 		$theEmailCount++;
 //		do_send ($to_str, $smsg_to_str, $subject_str, $text_str, 0, 0);	
 		}				// end if/else ($the_email)	
@@ -721,7 +721,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 		$subject_str3 = "Your request " . $scope . " has been registered\\r";
 		$text_str3 = "Your Request " . $scope . " has been registered\\r"; 
 		$text_str3 .= "Request Summary\\r" . $the_summary;
-		$text_str3 = addslashes($text_str3);
+		$text_str3 = safe_addslashes($text_str3);
 		$theEmailCount++;
 //		do_send ($to_str, $smsg_to_str, $subject_str, $text_str, 0, 0);	
 		}				// end if/else ($userEmail)	

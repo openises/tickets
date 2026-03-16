@@ -511,5 +511,5 @@ $unit_array = subval_sort($unit_array, $thesort, $dd);
 $return_array[0] = $the_ticket;
 $return_array[1] = $unit_array;
 $return_array[2] = get_icon_legend();
-$return_array[3] = addslashes($scope);
+$return_array[3] = safe_addslashes($scope);
 print json_encode($return_array);

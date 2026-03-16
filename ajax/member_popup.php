@@ -111,8 +111,8 @@ $locale = get_variable('locale');	// 08/03/09
 $temptype = (array_key_exists($row['type_id'], $u_types)) ? $u_types[$row['type_id']] : "Unset";
 $temp_array[0] = $lat;
 $temp_array[1] = $lng;
-$temp_array[2] = addslashes(shorten($name, 48));
-$temp_array[3] = addslashes(shorten(str_replace($eols, " ", $row['description']), 256));
+$temp_array[2] = safe_addslashes(shorten($name, 48));
+$temp_array[3] = safe_addslashes(shorten(str_replace($eols, " ", $row['description']), 256));
 $the_type = $temptype[0];																			// 1/1/09
 $toosmap = ((!($internet)) || ($locale != 1))? "" : "<A id='osmap_but' class='plain text' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row['member_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"member\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>";
 
@@ -131,7 +131,7 @@ if ((!(is_ok_coord($row['lat']))) || (!(is_ok_coord($row['lng'])))) {
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . $name . "</B> - " . $the_type . "</TD></TR>";
 $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Description:</TD><TD CLASS='td_data_wrap text'>" . htmlentities(str_replace($eols, " ", $row['description']), ENT_QUOTES) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>Status:</TD><TD CLASS='td_data text'>" . $the_status . " </TD></TR>";
-$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Contact:</TD><TD CLASS='td_data text'>" . addslashes($row['contact']) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Contact:</TD><TD CLASS='td_data text'>" . safe_safe_addslashes($row['contact']) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>As of:</TD><TD CLASS='td_data text'>" . format_date(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 $tab_1 .= "</TABLE></TD></TR><TR><TD COLSPAN=99>&nbsp;</TD></TR>";
 $tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE style='width: 100%; background-color: #707070;'>";

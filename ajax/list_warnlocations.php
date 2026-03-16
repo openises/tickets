@@ -89,8 +89,8 @@ if($num_locations == 0) {
 			$tab_1 = "<TABLE width='280px' style='width: 280px; height: 97%; background-color: red; border-radius: 0em .5em .5em 0em; padding: .5em;'>";
 			$tab_1 .= "<TR><TD><TABLE width='98%'>";
 			$tab_1 .= "<TR CLASS='even'><TD CLASS='td_data text text_center' COLSPAN=2 style='background-color: red; color: white;'><B>Location Warning</B></TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD CLASS='td_data text text_center' COLSPAN=2><B>" . addslashes(shorten($display_name, 48)) . "</B></TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text text_left'>Description:&nbsp;</TD><TD CLASS='td_data text text_left'>" . addslashes(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD CLASS='td_data text text_center' COLSPAN=2><B>" . safe_addslashes(shorten($display_name, 48)) . "</B></TD></TR>";
+			$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text text_left'>Description:&nbsp;</TD><TD CLASS='td_data text text_left'>" . safe_addslashes(shorten(str_replace($eols, " ", $row['description']), 32)) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text text_left'>As of:&nbsp;</TD><TD CLASS='td_data text text_left'>" . format_date(strtotime($row['_on'])) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even' style='height: 30px;'><TD COLSPAN=99 ALIGN='center'><TABLE style='width: 100%;'>";
 			$tab_1 .= "<TR CLASS='even' style='height: 25px;'><TD ALIGN='center'>&nbsp;</TD></TR>";

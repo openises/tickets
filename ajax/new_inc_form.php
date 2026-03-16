@@ -54,7 +54,7 @@ $protocols = array();
 $query_in = "SELECT * FROM `$GLOBALS[mysql_prefix]in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 $result_in = db_query($query_in);
 while ($row_in = stripslashes_deep($result_in->fetch_assoc())) {
-	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = addslashes($row_in['protocol']);}
+	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = safe_addslashes($row_in['protocol']);}
 	}
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `inc_endtime` IS NULL OR DATE_FORMAT(`inc_endtime`,'%y') = '00'";
@@ -284,7 +284,7 @@ while ($temp_row = stripslashes_deep($temp_result->fetch_array())) {
 		}
 	$color = $temp_row['color'];
 	$bgcolor = "white";
-	$output .= "\t<OPTION VALUE=' {$temp_row['id']}' CLASS='{$temp_row['group']}' style='color: {$color}; background-color: {$bgcolor};' title='" . addslashes($temp_row['description']) . "'> " . addslashes($temp_row['type']) . " </OPTION>\n";
+	$output .= "\t<OPTION VALUE=' {$temp_row['id']}' CLASS='{$temp_row['group']}' style='color: {$color}; background-color: {$bgcolor};' title='" . safe_addslashes($temp_row['description']) . "'> " . safe_addslashes($temp_row['type']) . " </OPTION>\n";
 	$i++;
 	}		// end while()
 $output .= "\n</OPTGROUP>\n";

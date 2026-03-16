@@ -344,7 +344,7 @@ function get_intypes_control() {
 			}
 		$color = $temp_row['color'];
 		$bgcolor = "white";
-		$theControl .= "<OPTION VALUE='" . $temp_row['id'] . "' CLASS='" . $temp_row['group'] . "' style='color: " . $color . "; background-color: " . $bgcolor . ";' title='" . addslashes($temp_row['description']) . "'>" . addslashes($temp_row['type']) . "</OPTION>\n";
+		$theControl .= "<OPTION VALUE='" . $temp_row['id'] . "' CLASS='" . $temp_row['group'] . "' style='color: " . $color . "; background-color: " . $bgcolor . ";' title='" . safe_addslashes($temp_row['description']) . "'>" . safe_addslashes($temp_row['type']) . "</OPTION>\n";
 		$i++;
 		}		// end while()
 	$theControl .= "</OPTGROUP>\n";
@@ -375,7 +375,7 @@ function get_select_fromtable($table, $selectname, $selectid, $label, $valname, 
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $table . "` " . $where . " ORDER BY `id`";
 	$result = db_query($query);
 	while ($row = stripslashes_deep($result->fetch_array())) {
-		$theControl .= "<OPTION VALUE='" . $row['id'] . "' >" . addslashes($row[$valname]) . "</OPTION>\n";
+		$theControl .= "<OPTION VALUE='" . $row['id'] . "' >" . safe_safe_addslashes($row[$valname]) . "</OPTION>\n";
 		}		// end while()
 	$theControl .= "</SELECT>\n";
 	$tabindex++;
