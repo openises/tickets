@@ -34,6 +34,13 @@ TD 		{background-color: inherit; color: #000000; vertical-align: middle; word-wr
 .print_TD {background-color: #FFFFFF; color: #000000;}
 .td_label {background-color: inherit; color: <?php print get_css("label_text", $day_night);?>; font-weight: bold;}
 .td_mand {font-weight: bold; color: #CC0000;}
+.required-mark {color: #CC0000; font-weight: bold; font-size: 0.85em; margin-left: 2px;}
+.field-required {background-color: #FFFFF0 !important;}
+.field-error {border: 2px solid #CC0000 !important; background-color: #FFF0F0 !important;}
+.field-error:focus {background-color: #FFF0F0 !important;}
+.field-valid {border: 2px solid #009000 !important;}
+.error-message {color: #CC0000; font-size: 0.85em; display: block; margin-top: 2px;}
+.error-summary {background: #FFF0F0; border: 1px solid #CC0000; padding: 10px; margin-bottom: 10px; border-radius: 4px;}
 .td_data {white-space:nowrap; background-color: inherit; color: #000000; font-weight: normal;}
 .td_data_wrap {word-wrap: break-all; background-color: inherit; color: #000000; font-weight: normal;}
 #td_header {font-weight: bold; color: <?php print get_css("header_text", $day_night);?>; background-color: <?php print get_css("header_background", $day_night);?>;}

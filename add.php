@@ -746,6 +746,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
 <script type="application/x-javascript" src="./js/L.Graticule.js"></script>
 <script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 	window.onresize=function(){set_size()};
 </SCRIPT>
@@ -1167,20 +1168,17 @@ require_once('./incs/all_forms_js_variables.inc.php');
 
 	function validate(theForm) {
 		do_unlock_ps(theForm);								// 8/11/08
+
+		// Phase 1: Check required fields via FormValidator (inline errors, no alert)
+		if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+			return false;
+			}
+
+		// Phase 2: Custom validation checks (date/time, status, geo)
+		FormValidator.clearCustomErrors(theForm);
 		var errmsg="";
-		if ((theForm.frm_street.value == "") && (theForm.frm_city.value == "") && (theForm.frm_state.value == ""))	{errmsg+= "\tAddress is required\n";}
 		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_CLOSED'];?>) && (!theForm.re_but.checked)) {errmsg+= "\tRun end-date is required for Status=Closed\n";}
 		if ((theForm.frm_status.value==<?php print $GLOBALS['STATUS_OPEN'];?>) && (theForm.re_but.checked))	{errmsg+= "\tRun end-date not allowed for Status=Open\n";}	// 9/30/10
-<?php
-		if (!(intval(get_variable('quick')==1))) {
-?>
-			if (theForm.frm_in_types_id.value == 0)		{errmsg+= "\tNature of Incident is required\n";}			// 1/11/09
-<?php
-			}
-?>
-		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
-		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
-		if (theForm.frm_description.value == "")	{errmsg+= "\t<?php print get_text('synopsis');?> is required\n";}
 		if(allow_nogeo == "0") {
 <?php
 			if($gmaps || $good_internet) {
@@ -1213,7 +1211,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 			if (!chkval(theForm.frm_minute_problemend.value, 0,59)) 	{errmsg+= "\tRun end time error - Minutes\n";}
 			}
 		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
+			FormValidator.showCustomErrors(theForm, errmsg);
 			return false;
 			} else {
 			do_unlock_ps(theForm);								// 8/11/08
@@ -1817,8 +1815,8 @@ if($in_win) {
 		<FIELDSET>
 			<LEGEND class='text_large text_bold'>Start Here</LEGEND>
 			<DIV style='position: relative;'>
-				<LABEL for="sel_in_types_id" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_nature"];?>');"><?php print $nature;?>: <font color='red' size='-1'>*</font></LABEL>
-				<SELECT id='sel_in_types_id' NAME="frm_in_types_id"  tabindex=60 onChange="do_set_severity (this.selectedIndex); do_inc_protocol(this.options[selectedIndex].value.trim());">
+				<LABEL for="sel_in_types_id" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_nature"];?>');"><?php print $nature;?>: <span class="required-mark">*</span></LABEL>
+				<SELECT id='sel_in_types_id' NAME="frm_in_types_id"  tabindex=60 data-required="true" data-required-msg="Nature of Incident is required" data-validate="select" aria-required="true" onChange="do_set_severity (this.selectedIndex); do_inc_protocol(this.options[selectedIndex].value.trim());">
 					<OPTION VALUE=0 SELECTED>TBD</OPTION>				<!-- 1/11/09 -->
 <?php
 					$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
@@ -1840,7 +1838,7 @@ if($in_win) {
 ?>
 				</SELECT>
 				<BR />
-				<LABEL for="severity" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_prio"];?>');"><?php print get_text("Priority");?>: <font color='red' size='-1'>*</font></LABEL>
+				<LABEL for="severity" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_prio"];?>');"><?php print get_text("Priority");?>: <span class="required-mark">*</span></LABEL>
 				<SELECT id='severity' NAME="frm_severity" tabindex=70>
 					<OPTION VALUE="0" SELECTED><?php print get_severity($GLOBALS['SEVERITY_NORMAL']);?></OPTION>
 					<OPTION VALUE="1"><?php print get_severity($GLOBALS['SEVERITY_MEDIUM']);?></OPTION>
@@ -1860,7 +1858,7 @@ if($in_win) {
 					}
 ?>
 				<LABEL for="street" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_loca"];?>');"><?php print get_text("Location"); ?>:</LABEL>
-				<INPUT id='street' NAME="frm_street" tabindex=20 SIZE="64" TYPE="text" VALUE="<?php print $street;?>" MAXLENGTH="96" <?php echo $addr_sugg_str ;?> />
+				<INPUT id='street' NAME="frm_street" tabindex=20 SIZE="64" TYPE="text" VALUE="<?php print $street;?>" MAXLENGTH="96" data-required="true" data-required-msg="At least one address field is required" data-validate="group:address" aria-required="true" <?php echo $addr_sugg_str ;?> />
 				<DIV ID="addr_list" style = "display:inline;"></DIV>
 				<BR />
 				<LABEL for="about" onmouseout="UnTip()" onmouseover="Tip('About Address - for instance, round the back, building number etc.');"><?php print get_text("Address About"); ?>:</LABEL>
@@ -1874,7 +1872,7 @@ if($in_win) {
 <?php
 					}
 ?>
-				<INPUT ID="my_txt" onFocus = "createAutoComplete();$('city_reset').visibility='visible';" NAME="frm_city" autocomplete="off" tabindex=30 SIZE="32" TYPE="text" VALUE="<?php print $city; ?>" MAXLENGTH="32" onChange = " $('city_reset').visibility='visible'; this.value=capWords(this.value)">
+				<INPUT ID="my_txt" onFocus = "createAutoComplete();$('city_reset').visibility='visible';" NAME="frm_city" autocomplete="off" tabindex=30 SIZE="32" TYPE="text" VALUE="<?php print $city; ?>" MAXLENGTH="32" data-required="true" data-required-msg="At least one address field is required" data-validate="group:address" aria-required="true" onChange = " $('city_reset').visibility='visible'; this.value=capWords(this.value)">
 				<span id="suggest" onmousedown="$('suggest').style.display='none'; $('city_reset').style.visibility='visible';" style="visibility:hidden;border:#000000 1px solid;width:150px;right:400px;" /></span>
 				<IMG ID = 'city_reset' SRC="./markers/reset.png" STYLE = "margin-left:20px; visibility:hidden;" onClick = "this.style.visibility='hidden'; document.add.frm_city.value=''; document.add.frm_city.focus(); obj_sugg = null;" />
 <?php
@@ -1884,8 +1882,8 @@ if($in_win) {
 <?php
 					}
 ?>
-				<BR /><LABEL for="state" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_state'];?>');"><?php print get_text("St"); ?> <font color='red' size='-1'>*</font></LABEL>
-				<INPUT ID='state' NAME="frm_state" tabindex=40 SIZE="<?php print $st_size;?>" TYPE="text" VALUE="<?php print $st;?>" MAXLENGTH="<?php print $st_size;?>" />
+				<BR /><LABEL for="state" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles['_state'];?>');"><?php print get_text("St"); ?> <span class="required-mark">*</span></LABEL>
+				<INPUT ID='state' NAME="frm_state" tabindex=40 SIZE="<?php print $st_size;?>" TYPE="text" VALUE="<?php print $st;?>" MAXLENGTH="<?php print $st_size;?>" data-required="true" data-required-msg="At least one address field is required" data-validate="group:address" aria-required="true" />
 				<BR />
 				<LABEL for="toaddress" onmouseout="UnTip()" onmouseover="Tip('To address - Not plotted on map, for information only');"><?php print get_text("To Address"); ?>:</LABEL>
 				<INPUT id='toaddress' NAME="frm_to_address" tabindex=50 SIZE="72" TYPE="text" VALUE=""  MAXLENGTH="1024">
@@ -1895,7 +1893,7 @@ if($in_win) {
 <?php
 				if ($gmaps || $doloc|| $good_internet) {
 ?>
-					<LABEL for="lock_p" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_coords"];?>');"><?php print $incident;?> Lat/Lng: <font color='red' size='-1'>*</font>
+					<LABEL for="lock_p" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_coords"];?>');"><?php print $incident;?> Lat/Lng: <span class="required-mark">*</span>
 						<img id='lock_p' border=0 src='./markers/unlock2.png' STYLE='float: right; vertical-align: middle; margin-left: 20px;' onClick = 'do_unlock_pos(document.add);'>
 					</LABEL>
 					<INPUT ID='show_lat' SIZE="11" TYPE="text" NAME="show_lat" VALUE="" />
@@ -1946,21 +1944,21 @@ if($in_win) {
 				}				// end if (empty($inc_name))
 ?>
 
-				<LABEL for="scope" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_name"];?>');"><?php print get_text("Incident name");?>: <font color='red' size='-1'>*</font></LABEL>
+				<LABEL for="scope" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_name"];?>');"><?php print get_text("Incident name");?>: <span class="required-mark">*</span></LABEL>
 <?php
 				if (!(empty($inc_name))) {				// 11/13/10
 ?>
-					<INPUT id='scope' NAME="frm_scope" tabindex=120 SIZE="56" TYPE="text" VALUE="<?php print $inc_name;?>" MAXLENGTH="61" />
+					<INPUT id='scope' NAME="frm_scope" tabindex=120 SIZE="56" TYPE="text" VALUE="<?php print $inc_name;?>" MAXLENGTH="61" data-required="true" data-required-msg="Incident name is required" aria-required="true" />
 <?php
 					} else {
 ?>
-					<INPUT id='scope' NAME="frm_scope" tabindex=130 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="61" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}" onkeypress='user_inc_name = true;'/><?php print $append;?>
+					<INPUT id='scope' NAME="frm_scope" tabindex=130 SIZE="56" TYPE="text" VALUE="TBD" MAXLENGTH="61" data-required="true" data-required-msg="Incident name is required" aria-required="true" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}" onkeypress='user_inc_name = true;'/><?php print $append;?>
 <?php
 					}										// end else {} 11/13/10
 ?>
 				<BR />
-				<LABEL for="description" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_synop"];?>');"><?php print get_text("Synopsis");?>: <font color='red' size='-1'>*</font></LABEL>
-				<TEXTAREA id='description' NAME="frm_description" tabindex=80 COLS="48" ROWS="2" WRAP="virtual"></TEXTAREA>
+				<LABEL for="description" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_synop"];?>');"><?php print get_text("Synopsis");?>: <span class="required-mark">*</span></LABEL>
+				<TEXTAREA id='description' NAME="frm_description" tabindex=80 COLS="48" ROWS="2" WRAP="virtual" data-required="true" data-required-msg="Synopsis is required" aria-required="true"></TEXTAREA>
 				<BR />
 <?php
 				$query_sigs = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
@@ -2106,7 +2104,7 @@ if($in_win) {
 				<SPAN ID='repeats'></SPAN>
 				<BR />
 				<LABEL for="contact" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_caller"];?>');"><?php print get_text("Reported by");?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></LABEL>
-				<INPUT id='contact' NAME="frm_contact"  tabindex=110 SIZE="56" TYPE="text" VALUE="<?php print $reported_by; ?>" MAXLENGTH="48" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}">
+				<INPUT id='contact' NAME="frm_contact"  tabindex=110 SIZE="56" TYPE="text" VALUE="<?php print $reported_by; ?>" MAXLENGTH="48" data-required="true" data-required-msg="Reported-by is required" aria-required="true" onFocus ="Javascript: if (this.value.trim()=='TBD') {this.value='';}">
 				<BR />
 <?php
 				if($has_portal == 1) {
@@ -2370,6 +2368,7 @@ if ($gmaps || $good_internet) {
 		do_kml();
 		}
 ?>
+	if (document.add) { FormValidator.init(document.add); }
 	</SCRIPT>
 <?php
 	}

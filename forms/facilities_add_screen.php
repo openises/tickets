@@ -30,6 +30,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 require_once($the_inc);
 print do_calls();		// call signs to JS array for validation
 ?>
+<SCRIPT SRC="./js/form_validate.js" TYPE="application/x-javascript"></SCRIPT>
 <SCRIPT>
 window.onresize=function(){set_size()};
 </SCRIPT>
@@ -37,7 +38,7 @@ window.onresize=function(){set_size()};
 require_once('./incs/all_forms_js_variables.inc.php');
 ?>
 <SCRIPT>
-window.onload = function(){set_size();};
+window.onload = function(){set_size(); if(document.res_add_Form){FormValidator.init(document.res_add_Form);}};
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var mapWidth;
 var mapHeight;
@@ -193,13 +194,14 @@ function validate(theForm) {						// Facility form contents validation
 			}
 		}
 
+	// Phase 1: Check required fields via FormValidator (inline errors, no alert)
+	if (!FormValidator.validateForm(theForm, {submitOnSuccess: false})) {
+		return false;
+		}
+
+	// Phase 2: Custom validation (geo location)
+	FormValidator.clearCustomErrors(theForm);
 	var errmsg="";
-	if (theForm.frm_name.value.trim()=="")											{errmsg+="Facility NAME is required.\n";}
-	if (theForm.frm_handle.value.trim()=="")										{errmsg+="Facility HANDLE is required.\n";}
-	if (theForm.frm_icon_str.value.trim()=="")										{errmsg+="Facility ICON is required.\n";}
-	if (theForm.frm_type.options[theForm.frm_type.selectedIndex].value==0)			{errmsg+="Facility TYPE is required.\n";}
-	if (theForm.frm_status_id.options[theForm.frm_status_id.selectedIndex].value==0)	{errmsg+="Facility STATUS is required.\n";}
-	if (theForm.frm_descr.value.trim()=="")											{errmsg+="Facility DESCRIPTION is required.\n";}
 	if(allow_nogeo == "0") {
 		if (theForm.frm_lat.value.trim().length == 0) 	{
 			errmsg+="Facility LOCATION must be set - click map location to set.\n";
@@ -212,13 +214,11 @@ function validate(theForm) {						// Facility form contents validation
 		}
 
 	if (errmsg!="") {
-		alert ("Please correct the following and re-submit:\n\n" + errmsg);
+		FormValidator.showCustomErrors(theForm, errmsg);
 		return false;
 		}
 	else {														// good to go!
-//			top.upper.calls_start();
 		theForm.submit();
-//			return true;
 		}
 	}				// end function validate(theForm)
 
@@ -344,16 +344,16 @@ function check_days(id) {
 					<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Facility Name - fill in with Name/index where index is the label in the list and on the marker"><?php print get_text("Name"); ?></A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 >
-						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" />
+						<INPUT id='name' MAXLENGTH="48" SIZE="48" TYPE="text" NAME="frm_name" VALUE="" data-required="true" data-required-msg="Facility NAME is required" aria-required="true" />
 					</TD>
 				</TR>
 				<TR CLASS = "odd">
 					<TD CLASS="td_label_text"><A CLASS="td_label_text" HREF="#" TITLE="Handle - local rules, local abbreviated name for the facility"><?php print get_text("Handle"); ?></A>:&nbsp;</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 >
-						<INPUT id='handle' MAXLENGTH="48" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" />
+						<INPUT id='handle' MAXLENGTH="48" SIZE="24" TYPE="text" NAME="frm_handle" VALUE="" data-required="true" data-required-msg="Facility HANDLE is required" aria-required="true" />
 						<SPAN STYLE = "margin-left:40px;" CLASS="td_label_text" TITLE="A 3-letter value to be used in the map icon">Icon:</SPAN>&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;
-						<INPUT id='icon' TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="" />		
+						<INPUT id='icon' TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="" data-required="true" data-required-msg="Facility ICON is required" aria-required="true" />		
 					</TD>
 				</TR>
 <?php
@@ -456,11 +456,11 @@ function check_days(id) {
 				</TR>		
 				<TR CLASS = "even" VALIGN='middle'>
 					<TD CLASS="td_label_text">
-						<A CLASS="td_label_text" HREF="#" TITLE="Facility Type - Select from pulldown menu"><?php print get_text("Type"); ?></A>:&nbsp;<font color='red' size='-1'>*</font>
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Type - Select from pulldown menu"><?php print get_text("Type"); ?></A>:&nbsp;<span class="required-mark">*</span>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text text_left'>
-						<SELECT NAME='frm_type'>
+						<SELECT NAME='frm_type' data-required="true" data-required-msg="Facility TYPE is required" data-validate="select" aria-required="true">
 							<OPTION VALUE=0>Select one</OPTION>
 <?php
 							foreach ($f_types as $key => $value) {
@@ -475,11 +475,11 @@ function check_days(id) {
 
 				<TR CLASS = "odd">
 					<TD CLASS="td_label_text">
-						<A CLASS="td_label_text" HREF="#" TITLE="Facility Status - Select from pulldown menu"><?php print get_text("Status"); ?></A>:&nbsp;<font color='red' size='-1'>*</font>
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Status - Select from pulldown menu"><?php print get_text("Status"); ?></A>:&nbsp;<span class="required-mark">*</span>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text text_left'>
-						<SELECT NAME="frm_status_id" onChange = "document.res_add_Form.frm_log_it.value='1'">
+						<SELECT NAME="frm_status_id" data-required="true" data-required-msg="Facility STATUS is required" data-validate="select" aria-required="true" onChange = "document.res_add_Form.frm_log_it.value='1'">
 							<OPTION VALUE=0 SELECTED>Select one</OPTION>
 <?php
 							$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `group` ASC, `sort` ASC, `status_val` ASC";
@@ -536,11 +536,11 @@ function check_days(id) {
 				</TR>
 				<TR CLASS = "even">
 					<TD CLASS="td_label_text">
-						<A CLASS="td_label_text" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font>
+						<A CLASS="td_label_text" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<span class="required-mark">*</span>
 					</TD>
 					<TD>&nbsp;</TD>
 					<TD COLSPAN=2 CLASS='td_data text text_left'>
-						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2></TEXTAREA>
+						<TEXTAREA id='description' NAME="frm_descr" COLS=60 ROWS=2 data-required="true" data-required-msg="Facility DESCRIPTION is required" aria-required="true"></TEXTAREA>
 					</TD>
 				</TR>
 				<TR CLASS = "odd">

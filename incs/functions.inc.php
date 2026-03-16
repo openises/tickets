@@ -2397,6 +2397,32 @@ function safe_strtotime($datetime) {
     return strtotime($datetime);
 }
 
+/**
+ * Server-side required field validation. Returns array of errors (empty = valid).
+ * Each error is ['field' => 'frm_name', 'message' => 'Field X is required'].
+ * $rules: associative array of field_name => error_message.
+ * $post_data: typically $_POST.
+ * $select_fields: optional array of field names that are SELECT elements
+ *   (validated as value !== '0' and value !== '' instead of just non-empty).
+ * Compatible with PHP 7.2+.  3/16/26
+ */
+function validate_required_fields($rules, $post_data, $select_fields = array()) {
+	$errors = array();
+	foreach ($rules as $field => $message) {
+		$value = isset($post_data[$field]) ? trim($post_data[$field] ?? '') : '';
+		if (in_array($field, $select_fields)) {
+			if ($value === '' || $value === '0') {
+				$errors[] = array('field' => $field, 'message' => $message);
+			}
+		} else {
+			if ($value === '') {
+				$errors[] = array('field' => $field, 'message' => $message);
+			}
+		}
+	}
+	return $errors;
+}
+
 function trim_deep($value) {
     	$value = is_array($value) ?
                 array_map('trim_deep', $value) :
