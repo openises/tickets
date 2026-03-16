@@ -67,20 +67,21 @@ function get_field_label($table, $fieldid) {
 	$p = $GLOBALS['mysql_prefix'];
 	$table_escaped = db_escape($table);
 	$row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ? LIMIT 1", [$fieldid]);
-	return $row['label'];
+	return $row ? $row['label'] : '';
 	}
 
 function get_fieldset($table, $fieldid) {
 	$p = $GLOBALS['mysql_prefix'];
 	$table_escaped = db_escape($table);
 	$row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ? LIMIT 1", [$fieldid]);
-	return $row['fieldset'];
+	return $row ? $row['fieldset'] : '';
 	}
 
 function get_fieldset_control($table, $fieldid) {
 	$p = $GLOBALS['mysql_prefix'];
 	$table_escaped = db_escape($table);
 	$row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ? LIMIT 1", [$fieldid]);
+	if (!$row) { return ''; }
 	$curr_fieldset = $row['fieldset'];
 	$noedit = $row['_noedit'];
 	if($noedit ==0) {
@@ -102,14 +103,14 @@ function get_fieldset_label($table, $id) {
 	$p = $GLOBALS['mysql_prefix'];
 	$table_escaped = db_escape($table);
 	$row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `id` = ? LIMIT 1", [$id]);
-	return $row['label'];
+	return $row ? $row['label'] : '';
 	}
 
 function get_fieldset_name($table, $id) {
 	$p = $GLOBALS['mysql_prefix'];
 	$table_escaped = db_escape($table);
 	$row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `id` = ? LIMIT 1", [$id]);
-	return $row['name'];
+	return $row ? $row['name'] : '';
 	}
 
 function get_field_inuse($table, $field, $fieldid) {
@@ -135,7 +136,7 @@ function get_editable($table, $id) {
 	$p = $GLOBALS['mysql_prefix'];
 	$table_escaped = db_escape($table);
 	$row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ?", [$id], 'i');
-	$editable = ($row['_noedit'] == 0) ? true : false;
+	$editable = ($row && $row['_noedit'] == 0) ? true : false;
 	return $editable;
 	}
 

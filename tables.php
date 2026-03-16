@@ -207,7 +207,7 @@ $primaries = array();				// table names
 $secondaries = array();				// table names
 $arDate_formats = array(array ("-",0, 1, 2), array ("/", 2, 0, 1));
 $disallow = FALSE;										// 2/25/10
-if ((isset($tablename)) && (!isset($indexname))) {
+if ((isset($tablename)) && (empty($indexname))) {
 	$query ="SELECT * FROM `$mysql_prefix$tablename` LIMIT 1";
 	$result = db_query($query);
 	$num_fields = $result->field_count;
