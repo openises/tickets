@@ -228,7 +228,20 @@ function set_period(period) {
 	$('theHeading').innerHTML = window.captions[window.inc_period];
 	$('the_list').innerHTML = "<CENTER><IMG src='./images/owmloading.gif'></CENTER>";
 	inc_period_changed = 1;
+	destroy_incmarkers();
+	destroy_facmarkers();
+	destroy_unitmarkers();
+	if(r_interval != null) { clearInterval(r_interval); r_interval = null; }
+	if(i_interval != null) { clearInterval(i_interval); i_interval = null; }
 	load_fs_incidentlist();
+	if(period == 0) {
+		load_fs_responders();
+		load_fs_facilities();
+		} else {
+		$('boxes').innerHTML = "";
+		$('fac_boxes').innerHTML = "";
+		$('assignments_list').innerHTML = "";
+		}
 	}
 
 function submit_period() {
@@ -238,24 +251,24 @@ function submit_period() {
 	}
 
 function destroy_unitmarkers() {
-	for (var i = 1; i < rmarkers.length; i++) {
-		map.removeLayer(rmarkers[i]);
+	for (var key in rmarkers) {
+		if (rmarkers[key]) { map.removeLayer(rmarkers[key]); }
 		}
-	rmarkers.length = 0;
+	rmarkers = [];
 	}
-	
+
 function destroy_incmarkers() {
-	for (var i = 1; i < tmarkers.length; i++) { 
-		map.removeLayer(tmarkers[i]);
+	for (var key in tmarkers) {
+		if (tmarkers[key]) { map.removeLayer(tmarkers[key]); }
 		}
-	tmarkers.length = 0;
+	tmarkers = [];
 	}
-	
+
 function destroy_facmarkers() {
-	for (var i = 1; i < fmarkers.length; i++) { 
-		map.removeLayer(fmarkers[i]);
+	for (var key in fmarkers) {
+		if (fmarkers[key]) { map.removeLayer(fmarkers[key]); }
 		}
-	fmarkers.length = 0;
+	fmarkers = [];
 	}
 
 function set_size() {
