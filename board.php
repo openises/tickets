@@ -1741,7 +1741,7 @@ if(empty($_SESSION)) {		// expired?
 							print "\t<TD TITLE = 'Click to RESET R O FE FA C times' CLASS='mylink' ALIGN='center'>
 								<INPUT TYPE='radio' NAME = 'res_times' {$dis} onClick = \"do_assgn_reset({$row['assign_id']}, this.form)\" /></TD>\n";
 
-							print "\t<INPUT TYPE='hidden' NAME='frm_the_unit' VALUE='" . safe_safe_addslashes($row['unit_name']) . "'>\n";
+							print "\t<INPUT TYPE='hidden' NAME='frm_the_unit' VALUE='" . safe_addslashes($row['unit_name']) . "'>\n";
 							print "\t<INPUT TYPE='hidden' NAME='frm_contact_via' VALUE='" . $row['contact_via'] . "'>\n";
 							print "\t<INPUT TYPE='hidden' NAME='frm_responder_id' VALUE='" . $row['unit_id'] . "'>\n";
 							print "\t<INPUT TYPE='hidden' NAME='frm_ticket_id' VALUE='" . $row['ticket_id'] . "'>\n";
@@ -2775,8 +2775,8 @@ if(empty($_SESSION)) {		// expired?
 							}
 
 						if (!($row['theunitid']==0)) {	// theunitid
-	//						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : safe_safe_addslashes($row['theunit']) ;			// id only if absent
-							$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : safe_safe_addslashes($row['thehandle']) ;			// id only if absent
+	//						$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : safe_addslashes($row['theunit']) ;			// id only if absent
+							$unit_name = empty($row['theunitid']) ? "[#{$row['responder_id']}]" : safe_addslashes($row['thehandle']) ;			// id only if absent
 							$short_name = shorten($unit_name, $COLS_UNIT);
 							print "\t<TD ALIGN='left' CLASS='$theClass' onClick = \"ignore('{$row['responder_id']}')\"
 								 onmouseover=\"Tip('{$unit_name}')\" ALIGN='left' onmouseout=\"UnTip()\"><B>{$short_name}</B></TD>\n";							// unit 8/24/08, 1/17/09

@@ -131,7 +131,7 @@ if ((!(is_ok_coord($row['lat']))) || (!(is_ok_coord($row['lng'])))) {
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . $name . "</B> - " . $the_type . "</TD></TR>";
 $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Description:</TD><TD CLASS='td_data_wrap text'>" . safe_htmlentities(str_replace($eols, " ", $row['description']), ENT_QUOTES) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>Status:</TD><TD CLASS='td_data text'>" . $the_status . " </TD></TR>";
-$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Contact:</TD><TD CLASS='td_data text'>" . safe_safe_addslashes($row['contact']) . "</TD></TR>";
+$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text'>Contact:</TD><TD CLASS='td_data text'>" . safe_addslashes($row['contact']) . "</TD></TR>";
 $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text'>As of:</TD><TD CLASS='td_data text'>" . format_date(safe_strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 $tab_1 .= "</TABLE></TD></TR><TR><TD COLSPAN=99>&nbsp;</TD></TR>";
 $tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE style='width: 100%; background-color: #707070;'>";

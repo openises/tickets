@@ -633,7 +633,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 // Type
 		$sidebar_line .= "<TD>{$the_type}</TD>";	//	6/10/11
 // Handle		
-		$handle = safe_safe_addslashes($row['handle']);		//	5/30/10
+		$handle = safe_addslashes($row['handle']);		//	5/30/10
 		$sidebar_line .= "<TD TITLE = '{$handle}'><B>". shorten($handle, 16) . "</B></TD>";			// 10/8/09		
 // name
 		$name = $row['name'];		//	10/8/09

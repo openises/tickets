@@ -792,9 +792,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 // name, handle
 		$name =  safe_addslashes(shorten($row['name'], 40));		//	10/8/09
-		$handle =  safe_safe_addslashes($row['handle']);
+		$handle =  safe_addslashes($row['handle']);
 		$sidebar_line = "<TD TITLE = '{$handle}' {$the_on_click}><U><SPAN STYLE='background-color:{$the_bg_color};  opacity: .7; color:{$the_text_color};'>{$handle}</SPAN></U></TD>";			// 10/8/09
-		$sidebar_line .= "<TD TITLE = '" . safe_safe_addslashes($row['name']) . "' {$the_on_click}><U>{$name}</TD>";			// 10/8/09
+		$sidebar_line .= "<TD TITLE = '" . safe_addslashes($row['name']) . "' {$the_on_click}><U>{$name}</TD>";			// 10/8/09
 
 // assignments 3/16/09, 3/15/10
 

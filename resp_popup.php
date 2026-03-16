@@ -193,7 +193,7 @@ switch ($units_assigned) {
 $status = get_status_sel($row['unit_id'], $row['un_status_id'], "u");		// status
 $status_name = $status_vals[$row['un_status_id']];
 $status_id = $row['un_status_id'];
-$statusTemp = ($row['status_about'] != "") ? safe_safe_addslashes($row['status_about']): "";
+$statusTemp = ($row['status_about'] != "") ? safe_addslashes($row['status_about']): "";
 $status_about = $statusTemp;
 
 //  MOBILITY
@@ -273,7 +273,7 @@ if (my_is_float($lat)) {										// position data? 4/29/09
 	$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . safe_htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . safe_htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . safe_safe_addslashes($row['contact_name']). " Via: " . safe_safe_addslashes($row['contact_via']) . "</TD></TR>";
+	$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . safe_addslashes($row['contact_name']). " Via: " . safe_addslashes($row['contact_via']) . "</TD></TR>";
 	$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(safe_strtotime($the_time)) . "</TD></TR>";		// 4/11/10
 	if ($units_assigned > 0) {
 		$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . $ass_td . "</A></TD></TR>";

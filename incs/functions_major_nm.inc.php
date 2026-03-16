@@ -1178,7 +1178,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
 		$got_point = FALSE;
 
 		$name = $row['handle'];			//	10/8/09
-		$index =  safe_safe_addslashes($row['icon_str']);	// 3/19/11
+		$index =  safe_addslashes($row['icon_str']);	// 3/19/11
 		
 		print "\t\tvar sym = '$index';\n";				// for sidebar and icon 10/8/09		
 												// 2/13/09

@@ -110,8 +110,8 @@ $func = (empty($_POST))? "l":$_POST['func'];
 				$capt_val = shorten($row['capt'], 16);
 				$repl_val = shorten($row['repl'], 16);												// 1/28/11
 				$out_str .=  "<TR CLASS = '{$colors[$i%2]}' onClick = 'do_edit(" . e($row['id']) . ");'>
-					<TD CLASS='td_label text' onMouseover=\"Tip('" . safe_safe_addslashes($row['capt']) . "');\" onmouseout=\"UnTip();\">" . e($capt_val) . "</TD>
-					<TD CLASS='td_data text' onMouseover=\"Tip('" . safe_safe_addslashes($row['repl']) . "');\" onmouseout=\"UnTip();\">" . e($repl_val) . "</TD>
+					<TD CLASS='td_label text' onMouseover=\"Tip('" . safe_addslashes($row['capt']) . "');\" onmouseout=\"UnTip();\">" . e($capt_val) . "</TD>
+					<TD CLASS='td_data text' onMouseover=\"Tip('" . safe_addslashes($row['repl']) . "');\" onmouseout=\"UnTip();\">" . e($repl_val) . "</TD>
 					</TR>\n";
 				if ($i == $perCol){
 					$i=0;
