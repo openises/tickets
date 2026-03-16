@@ -188,6 +188,133 @@ class CodeHygieneTest extends TestCase
     }
 
     /**
+     * Verify no raw addslashes() calls on DB row values remain.
+     *
+     * All addslashes($row[...]) patterns should use safe_addslashes() instead,
+     * which handles null values without PHP 8.2 deprecation warnings.
+     */
+    public function testNoRawAddslashesOnDbRows(): void
+    {
+        $foundFiles = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->baseDir, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->getExtension() !== 'php') continue;
+            $path = $file->getPathname();
+            if (strpos($path, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR) !== false) continue;
+
+            $content = file_get_contents($path);
+            // Match addslashes($row[ but not safe_addslashes
+            if (preg_match('/[^_]addslashes\(\$row\[/', $content)) {
+                $relative = str_replace([$this->baseDir . DIRECTORY_SEPARATOR, $this->baseDir . '/'], '', $path);
+                $foundFiles[] = str_replace('\\', '/', $relative);
+            }
+        }
+
+        $this->assertEmpty(
+            $foundFiles,
+            "Raw addslashes(\$row[...]) found — use safe_addslashes() instead:\n" . implode("\n", $foundFiles)
+        );
+    }
+
+    /**
+     * Verify no raw htmlentities() calls on DB row values remain.
+     */
+    public function testNoRawHtmlentitiesOnDbRows(): void
+    {
+        $foundFiles = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->baseDir, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->getExtension() !== 'php') continue;
+            $path = $file->getPathname();
+            if (strpos($path, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR) !== false) continue;
+
+            $content = file_get_contents($path);
+            if (preg_match('/[^_]htmlentities\(\$row\[/', $content)) {
+                $relative = str_replace([$this->baseDir . DIRECTORY_SEPARATOR, $this->baseDir . '/'], '', $path);
+                $foundFiles[] = str_replace('\\', '/', $relative);
+            }
+        }
+
+        $this->assertEmpty(
+            $foundFiles,
+            "Raw htmlentities(\$row[...]) found — use safe_htmlentities() instead:\n" . implode("\n", $foundFiles)
+        );
+    }
+
+    /**
+     * Verify no mysql_query() calls remain outside the shim files.
+     *
+     * All database queries should use db_query() or db_fetch_one()/db_fetch_all()
+     * from incs/db.inc.php instead of the deprecated mysql_query() function.
+     */
+    public function testNoMysqlQueryCalls(): void
+    {
+        // Known files that still use mysql_query — remove from list as migrated
+        $knownMysqlFiles = [
+            'ajax/del_message.php',
+            'ajax/del_messages.php',
+            'ajax/del_sel_messages.php',
+            'ajax/delfile.php',
+            'ajax/empty_wastebasket.php',
+            'ajax/get_latest_messages.php',
+            'ajax/get_message_totals.php',
+            'ajax/msg_status.php',
+            'action_w.php',
+            'areas_sc.php',
+            'delete_module.php',
+            'hints_config.php',
+            'instam.php',
+            'persist.php',
+            'persist2.php',
+            'persist3.php',
+            'units.php',
+            'units_nm.php',
+            'warn_locations.php',
+        ];
+
+        $foundFiles = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->baseDir, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->getExtension() !== 'php') continue;
+            $path = $file->getPathname();
+            if (strpos($path, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR) !== false) continue;
+            if (strpos($path, DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR) !== false) continue;
+            // Skip the shim files themselves
+            if (strpos($path, 'mysql2i') !== false) continue;
+
+            $content = file_get_contents($path);
+            if (preg_match('/\bmysql_query\s*\(/', $content)) {
+                $relative = str_replace([$this->baseDir . DIRECTORY_SEPARATOR, $this->baseDir . '/'], '', $path);
+                $relative = str_replace('\\', '/', $relative);
+                $foundFiles[] = $relative;
+            }
+        }
+
+        $normalizedKnown = array_map(function($f) { return str_replace('\\', '/', $f); }, $knownMysqlFiles);
+        $newFiles = array_diff($foundFiles, $normalizedKnown);
+
+        $this->assertEmpty(
+            $newFiles,
+            "New files using mysql_query() found — use db_query() instead:\n" . implode("\n", $newFiles)
+        );
+    }
+
+    /**
      * Verify main entry point files have file-level documentation headers.
      *
      * Each major page should have a /** ... * / block near the top of the file

@@ -36,7 +36,7 @@ $fp = fopen("./alert.txt", "w"); //Open file to write alert text to. We always o
 //data can be altered by changing the zone and county numbers
 //Target data ends up in $targetwarn and $targettext[0]
 
-$html = strip_tags ( implode('', file("http://www.crh.noaa.gov/showsigwx.php?warnzone=${warnzone}&warncounty=${warncounty}")));
+$html = strip_tags ( implode('', file("http://www.crh.noaa.gov/showsigwx.php?warnzone={$warnzone}&warncounty={$warncounty}")));
 dump($html);
 
 //Get the advisory headers and put them in an array

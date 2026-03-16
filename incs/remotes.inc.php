@@ -751,7 +751,7 @@ function do_followmee() {
 		$call_str = $sep = "";
 		while ($row = @$result->fetch_assoc()) {
 			$call_str .= $sep . $row['callsign'];
-			$the_url = "https://www.followmee.com/api/tracks.aspx?key={$the_key}&username={$fmusername}&output=json&function=currentfordevice&deviceid=${call_str}";
+			$the_url = "https://www.followmee.com/api/tracks.aspx?key={$the_key}&username={$fmusername}&output=json&function=currentfordevice&deviceid={$call_str}";
 
 
 			$data=get_remote($the_url);				// returns JSON-decoded values
