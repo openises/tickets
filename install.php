@@ -122,6 +122,44 @@ function apply_prefix($sql, $prefix) {
     return $sql;
 }
 
+function installer_seed_target_table($insertSql) {
+    if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertSql, $matches)) {
+        return $matches[1];
+    }
+    return null;
+}
+
+function installer_seed_sql($insertBase, $prefix, $mode) {
+    $insertSql = apply_prefix($insertBase, $prefix);
+    if ($mode === 'upgrade') {
+        $insertSql = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $insertSql, 1);
+    }
+    return $insertSql;
+}
+
+function installer_apply_seed($mysqli, $insertBase, $prefix, $mode, &$messages) {
+    if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
+        $messages[] = 'Skipping default user seed (installer provisions super admin + guest separately).';
+        return true;
+    }
+
+    $insertSql = installer_seed_sql($insertBase, $prefix, $mode);
+    $targetTable = installer_seed_target_table($insertSql);
+    if ($targetTable !== null) {
+        $messages[] = 'Seeding data: ' . $targetTable . ' ...';
+    }
+
+    if (!$mysqli->query($insertSql)) {
+        $messages[] = 'Seed warning: ' . $mysqli->error;
+        return false;
+    }
+
+    if ($mode === 'upgrade' && $targetTable !== null && $mysqli->affected_rows === 0) {
+        $messages[] = 'Seeding data: ' . $targetTable . ' ... Already present.';
+    }
+    return true;
+}
+
 function installer_ident($name) {
     return '`' . str_replace('`', '``', $name) . '`';
 }
@@ -527,14 +565,9 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
     }
 
     foreach ($INSTALL_SCHEMA_SEED as $insertBase) {
-        if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
-            continue;
-        }
-        if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertBase, $mSeed)) { $push('Seeding data: ' . $mSeed[1] . ' ...'); }
-        $insertSql = apply_prefix($insertBase, $cfg['prefix']);
-        if (!$mysqli->query($insertSql)) {
-            $push('Seed warning: ' . $mysqli->error);
-        }
+        $seedMessages = array();
+        installer_apply_seed($mysqli, $insertBase, $cfg['prefix'], $mode, $seedMessages);
+        foreach ($seedMessages as $message) { $push($message); }
     }
 
     if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
@@ -712,17 +745,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         case 'seed':
             $i = (int)$current['index'];
             $insertBase = $seed[$i];
-            if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
-                $messages[] = 'Skipping default user seed (installer provisions super admin + guest separately).';
-                break;
-            }
-            if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertBase, $mSeed)) {
-                $messages[] = 'Seeding data: ' . $mSeed[1] . ' ...';
-            }
-            $insertSql = apply_prefix($insertBase, $cfg['prefix']);
-            if (!$mysqli->query($insertSql)) {
-                $messages[] = 'Seed warning: ' . $mysqli->error;
-            }
+            installer_apply_seed($mysqli, $insertBase, $cfg['prefix'], $mode, $messages);
             break;
         case 'users':
             if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
@@ -879,8 +902,22 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   var f=document.getElementById('installerForm'),log=document.getElementById('log'),prog=document.getElementById('progress'),btn=document.getElementById('runBtn');
   var pass=document.getElementById('admin_pass'),confirmPass=document.getElementById('admin_pass_confirm'),status=document.getElementById('passStatus');
   var modeInputs=[].slice.call(document.querySelectorAll('input[name="mode"]'));
+  var installerMeta={
+    tables: <?php echo json_encode(array_keys($INSTALL_SCHEMA_TABLES)); ?>,
+    seedCount: <?php echo json_encode(count($INSTALL_SCHEMA_SEED)); ?>
+  };
   function getMode(){ var c=modeInputs.find(function(i){return i.checked;}); return c?c.value:'install_clean'; }
   function updateModeCards(){ modeInputs.forEach(function(i){ var c=i.closest('.mode-option'); if(!c){return;} c.classList.toggle('active', i.checked); }); }
+  function previewStepLine(step){
+    var mode=getMode();
+    var offset=(mode==='install_clean')?1:0;
+    if(mode==='install_clean' && step===0){ return 'Clean install selected: dropping existing tables...'; }
+    if(step >= offset && step < offset + installerMeta.tables.length){
+      var prefix=(f.elements.db_prefix && f.elements.db_prefix.value)?f.elements.db_prefix.value:'';
+      return 'Upgrading ' + prefix + installerMeta.tables[step - offset] + '...';
+    }
+    return null;
+  }
 
   function validatePass(){
     if(getMode()==='write_config'){status.textContent='';return true;}
@@ -916,7 +953,11 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
       var pendingMatch = line.match(/^(Upgrading .*\.\.\.)$/);
       if(pendingMatch){
         if(pendingUpgradeLine){
-          renderLogLine(pendingUpgradeLine, pendingUpgradeLine.getAttribute('data-line') || pendingUpgradeLine.textContent || '');
+          var currentPending = pendingUpgradeLine.getAttribute('data-line') || '';
+          if(currentPending === line){
+            return;
+          }
+          renderLogLine(pendingUpgradeLine, currentPending || pendingUpgradeLine.textContent || '');
         }
         var pendingDiv=document.createElement('div');
         pendingDiv.setAttribute('data-line', line);
@@ -944,6 +985,9 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   }
 
   function runStep(step){
+    var previewLine = previewStepLine(step);
+    if(previewLine){ appendLines([previewLine]); }
+
     var data = new FormData(f);
     data.append('action','execute_step');
     data.append('step', String(step));
