@@ -245,14 +245,25 @@ function installer_table_requires_rebuild($mysqli, $tableName, $createSql) {
 
 function installer_build_table_options_alter_sql($tableName, $createSql) {
     $parts = array();
+    $charset = null;
+    $collation = null;
     if (preg_match('/ENGINE=([^\s]+)/i', $createSql, $m)) {
         $parts[] = 'ENGINE=' . $m[1];
     }
     if (preg_match('/DEFAULT CHARSET=([^\s]+)/i', $createSql, $m)) {
-        $parts[] = 'DEFAULT CHARACTER SET ' . $m[1];
+        $charset = $m[1];
     }
     if (preg_match('/COLLATE=([^\s]+)/i', $createSql, $m)) {
-        $parts[] = 'COLLATE=' . $m[1];
+        $collation = $m[1];
+    }
+    if ($charset !== null) {
+        $convert = 'CONVERT TO CHARACTER SET ' . $charset;
+        if ($collation !== null) {
+            $convert .= ' COLLATE ' . $collation;
+        }
+        $parts[] = $convert;
+    } elseif ($collation !== null) {
+        $parts[] = 'COLLATE=' . $collation;
     }
     if (preg_match('/ROW_FORMAT=([^\s]+)/i', $createSql, $m)) {
         $parts[] = 'ROW_FORMAT=' . $m[1];
@@ -331,7 +342,10 @@ function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
 
     if (!installer_table_requires_rebuild($mysqli, $tableName, $createSql)) {
         $logs[] = 'Upgrading ' . $tableName . '...';
-        return installer_convert_table_options($mysqli, $tableName, $createSql, $logs);
+        if (installer_convert_table_options($mysqli, $tableName, $createSql, $logs)) {
+            return true;
+        }
+        $logs[] = 'Upgrading ' . $tableName . '... Falling back to full table migration.';
     }
 
     $tempTable = $tableName . '__upgrade_tmp';
@@ -737,7 +751,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $messages[] = 'Upgrading ' . $tableName . '... ' . ($result ? 'Done!' : 'Failed!');
             }
             foreach ($logs as $line) { $messages[] = $line; }
-            if (!$result || !table_exists_mysqli($mysqli, $tableName)) {
+            if (!$result) {
+                $ok = false;
+            } elseif (!table_exists_mysqli($mysqli, $tableName)) {
                 $ok = false;
                 $messages[] = 'Schema error: expected table missing after create/sync: ' . $baseName;
             }
