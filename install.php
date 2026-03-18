@@ -996,6 +996,22 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
     }
   }
 
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  var pendingUpgradeLine = null;
+
+  function renderLogLine(target, line){
+    if(/<a\s/i.test(line)){
+      target.innerHTML=line;
+    } else {
+      target.innerHTML=escapeHtml(line);
+    }
+  }
+
   function appendLines(lines){
     if(!lines || !lines.length){ return; }
     lines.forEach(function(line){
