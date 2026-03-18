@@ -122,32 +122,348 @@ function apply_prefix($sql, $prefix) {
     return $sql;
 }
 
-function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
-    if ($mode === 'upgrade' && table_exists_mysqli($mysqli, $tableName)) {
-        if (preg_match('/CREATE TABLE\s+`[^`]+`\s*\((.*)\)\s*ENGINE/is', $createSql, $m)) {
-            $lines = preg_split('/,\n/', $m[1]);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '' || $line[0] !== '`') { continue; }
-                if (!preg_match('/^`([^`]+)`\s+(.+)$/', $line, $cm)) { continue; }
-                $column = $cm[1];
-                $def = "`{$column}` {$cm[2]}";
-                $colEsc = $mysqli->real_escape_string($column);
-                $hasRes = $mysqli->query("SHOW COLUMNS FROM `{$tableName}` LIKE '{$colEsc}'");
-                $has = ($hasRes && $hasRes->num_rows > 0);
-                if ($hasRes) { $hasRes->free(); }
-                $alter = $has ? "ALTER TABLE `{$tableName}` MODIFY COLUMN {$def}" : "ALTER TABLE `{$tableName}` ADD COLUMN {$def}";
-                if (!$mysqli->query($alter)) {
-                    $logs[] = "Schema sync warning on {$tableName}.{$column}: " . $mysqli->error;
-                }
-            }
+function installer_seed_target_table($insertSql) {
+    if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertSql, $matches)) {
+        return $matches[1];
+    }
+    return null;
+}
+
+function installer_seed_sql($insertBase, $prefix, $mode) {
+    $insertSql = apply_prefix($insertBase, $prefix);
+    if ($mode === 'upgrade') {
+        $insertSql = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $insertSql, 1);
+    }
+    return $insertSql;
+}
+
+function installer_apply_seed($mysqli, $insertBase, $prefix, $mode, &$messages) {
+    if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
+        $messages[] = 'Skipping default user seed (installer provisions super admin + guest separately).';
+        return true;
+    }
+
+    $insertSql = installer_seed_sql($insertBase, $prefix, $mode);
+    $targetTable = installer_seed_target_table($insertSql);
+    if ($targetTable !== null) {
+        $messages[] = 'Seeding data: ' . $targetTable . ' ...';
+    }
+
+    if (!$mysqli->query($insertSql)) {
+        $messages[] = 'Seed warning: ' . $mysqli->error;
+        return false;
+    }
+
+    if ($mode === 'upgrade' && $targetTable !== null && $mysqli->affected_rows === 0) {
+        $messages[] = 'Seeding data: ' . $targetTable . ' ... Already present.';
+    }
+    return true;
+}
+
+function installer_ident($name) {
+    return '`' . str_replace('`', '``', $name) . '`';
+}
+
+function installer_literal($mysqli, $value) {
+    return ($value === null) ? 'NULL' : "'" . $mysqli->real_escape_string((string)$value) . "'";
+}
+
+function installer_table_row_count($mysqli, $tableName) {
+    $res = $mysqli->query('SELECT COUNT(*) AS `count` FROM ' . installer_ident($tableName));
+    if (!$res) { return 0; }
+    $row = $res->fetch_assoc();
+    $res->free();
+    return isset($row['count']) ? (int)$row['count'] : 0;
+}
+
+function installer_fetch_columns($mysqli, $tableName) {
+    $columns = array();
+    $res = $mysqli->query('SHOW COLUMNS FROM ' . installer_ident($tableName));
+    if (!$res) { return $columns; }
+    while ($row = $res->fetch_assoc()) {
+        $columns[] = $row;
+    }
+    $res->free();
+    return $columns;
+}
+
+function installer_fetch_create_table_sql($mysqli, $tableName) {
+    $res = $mysqli->query('SHOW CREATE TABLE ' . installer_ident($tableName));
+    if (!$res) { return null; }
+    $row = $res->fetch_assoc();
+    $res->free();
+    if (!$row) { return null; }
+    return isset($row['Create Table']) ? $row['Create Table'] : null;
+}
+
+function installer_normalize_create_table_sql($sql) {
+    if (!is_string($sql) || $sql === '') { return ''; }
+    $sql = str_replace(array("
+", "
+"), "
+", $sql);
+    $sql = preg_replace('/CREATE TABLE\s+`[^`]+`/i', 'CREATE TABLE `__TABLE__`', $sql, 1);
+    $sql = preg_replace('/AUTO_INCREMENT=\d+/i', 'AUTO_INCREMENT', $sql);
+    $sql = preg_replace('/\s+/', ' ', trim($sql));
+    return strtolower($sql);
+}
+
+function installer_table_matches_target_schema($mysqli, $tableName, $createSql) {
+    $existingSql = installer_fetch_create_table_sql($mysqli, $tableName);
+    if ($existingSql === null) { return false; }
+    return installer_normalize_create_table_sql($existingSql) === installer_normalize_create_table_sql($createSql);
+}
+
+function installer_extract_create_table_parts($sql) {
+    $parts = array('definition' => '', 'options' => '');
+    if (!is_string($sql) || $sql === '') { return $parts; }
+    if (preg_match('/CREATE TABLE\s+`[^`]+`\s*\((.*)\)\s*(.*)$/is', $sql, $matches)) {
+        $parts['definition'] = $matches[1];
+        $parts['options'] = $matches[2];
+    }
+    return $parts;
+}
+
+function installer_normalize_sql_fragment($sql) {
+    if (!is_string($sql) || $sql === '') { return ''; }
+    $sql = str_replace(array("
+", "
+"), "
+", $sql);
+    $sql = preg_replace('/AUTO_INCREMENT=\d+/i', 'AUTO_INCREMENT', $sql);
+    $sql = preg_replace('/\s+/', ' ', trim($sql));
+    return strtolower($sql);
+}
+
+function installer_table_requires_rebuild($mysqli, $tableName, $createSql) {
+    $existingSql = installer_fetch_create_table_sql($mysqli, $tableName);
+    if ($existingSql === null) { return true; }
+    $existingParts = installer_extract_create_table_parts($existingSql);
+    $targetParts = installer_extract_create_table_parts($createSql);
+    return installer_normalize_sql_fragment($existingParts['definition']) !== installer_normalize_sql_fragment($targetParts['definition']);
+}
+
+function installer_build_table_options_alter_sql($tableName, $createSql) {
+    $parts = array();
+    $charset = null;
+    $collation = null;
+    if (preg_match('/ENGINE=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'ENGINE=' . $m[1];
+    }
+    if (preg_match('/DEFAULT CHARSET=([^\s]+)/i', $createSql, $m)) {
+        $charset = $m[1];
+    }
+    if (preg_match('/COLLATE=([^\s]+)/i', $createSql, $m)) {
+        $collation = $m[1];
+    }
+    if ($charset !== null) {
+        $convert = 'CONVERT TO CHARACTER SET ' . $charset;
+        if ($collation !== null) {
+            $convert .= ' COLLATE ' . $collation;
         }
+        $parts[] = $convert;
+    } elseif ($collation !== null) {
+        $parts[] = 'COLLATE=' . $collation;
+    }
+    if (preg_match('/ROW_FORMAT=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'ROW_FORMAT=' . $m[1];
+    }
+    if (empty($parts)) { return null; }
+    return 'ALTER TABLE ' . installer_ident($tableName) . ' ' . implode(', ', $parts);
+}
+
+function installer_convert_table_options($mysqli, $tableName, $createSql, &$logs) {
+    $alterSql = installer_build_table_options_alter_sql($tableName, $createSql);
+    if ($alterSql === null) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed: unable to determine target table options.';
+        return false;
+    }
+    if (!$mysqli->query($alterSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to update table options: ' . $mysqli->error;
+        return false;
+    }
+    $logs[] = 'Upgrading ' . $tableName . '... Done! Updated table options only.';
+    return true;
+}
+
+function installer_build_csv_download_link($tableName) {
+    $url = 'install.php?download_unmigrated=' . rawurlencode($tableName) . '&format=csv';
+    return '<a href="' . h($url) . '">Download CSV</a>';
+}
+
+function installer_export_table_as_csv($mysqli, $tableName) {
+    if (!table_exists_mysqli($mysqli, $tableName)) {
+        header('HTTP/1.1 404 Not Found');
+        echo 'Table not found.';
         return;
     }
 
-    if (!$mysqli->query($createSql)) {
-        $logs[] = "Create table warning for {$tableName}: " . $mysqli->error;
+    $filename = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $tableName) . '.csv';
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    $out = fopen('php://output', 'w');
+    $res = $mysqli->query('SELECT * FROM ' . installer_ident($tableName));
+    if ($res) {
+        $headers = array();
+        $fields = $res->fetch_fields();
+        foreach ($fields as $field) { $headers[] = $field->name; }
+        fputcsv($out, $headers);
+        while ($row = $res->fetch_assoc()) {
+            fputcsv($out, $row);
+        }
+        $res->free();
     }
+    fclose($out);
+}
+
+function installer_migration_select_expression($tableName, $column) {
+    if ($tableName === 'requests' && ($column === 'lat' || $column === 'lng')) {
+        $ident = installer_ident($column);
+        return "CASE "
+            . "WHEN " . $ident . " IS NULL THEN NULL "
+            . "WHEN TRIM(CAST(" . $ident . " AS CHAR)) = '' THEN NULL "
+            . "WHEN TRIM(CAST(" . $ident . " AS CHAR)) REGEXP '^-?[0-9]+(\.[0-9]+)?$' THEN ROUND(CAST(" . $ident . " AS DECIMAL(10,7)), 7) "
+            . "ELSE NULL END AS " . $ident;
+    }
+    return installer_ident($column);
+}
+
+function installer_delete_single_row($mysqli, $tableName, $row) {
+    $conditions = array();
+    foreach ($row as $column => $value) {
+        $conditions[] = installer_ident($column) . ' <=> ' . installer_literal($mysqli, $value);
+    }
+    $sql = 'DELETE FROM ' . installer_ident($tableName) . ' WHERE ' . implode(' AND ', $conditions) . ' LIMIT 1';
+    return (bool)$mysqli->query($sql);
+}
+
+function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
+    if ($mode !== 'upgrade' || !table_exists_mysqli($mysqli, $tableName)) {
+        if (!$mysqli->query($createSql)) {
+            $logs[] = "Create table warning for {$tableName}: " . $mysqli->error;
+            return false;
+        }
+        return true;
+    }
+
+    if (installer_table_matches_target_schema($mysqli, $tableName, $createSql)) {
+        $logs[] = $tableName . ' already matches current schema.';
+        return true;
+    }
+
+    if (!installer_table_requires_rebuild($mysqli, $tableName, $createSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '...';
+        if (installer_convert_table_options($mysqli, $tableName, $createSql, $logs)) {
+            return true;
+        }
+        $logs[] = 'Upgrading ' . $tableName . '... Falling back to full table migration.';
+    }
+
+    $tempTable = $tableName . '__upgrade_tmp';
+    $unmigratedTable = $tableName . '_unmigrated';
+    $logs[] = 'Upgrading ' . $tableName . '...';
+
+    $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+    $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($unmigratedTable));
+
+    $tempCreateSql = preg_replace('/CREATE TABLE\s+`[^`]+`/i', 'CREATE TABLE ' . installer_ident($tempTable), $createSql, 1);
+    if (!$mysqli->query($tempCreateSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to create temporary table: ' . $mysqli->error;
+        return false;
+    }
+
+    $sourceColumns = installer_fetch_columns($mysqli, $tableName);
+    $targetColumns = installer_fetch_columns($mysqli, $tempTable);
+    $sourceColumnMap = array();
+    $commonColumns = array();
+    foreach ($sourceColumns as $column) {
+        $sourceColumnMap[$column['Field']] = true;
+    }
+    foreach ($targetColumns as $column) {
+        if (isset($sourceColumnMap[$column['Field']])) {
+            $commonColumns[] = $column['Field'];
+        }
+    }
+
+    if (empty($commonColumns)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed: no compatible columns found.';
+        $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+        return false;
+    }
+
+    $insertColumnsList = array();
+    $selectColumns = array();
+    foreach ($commonColumns as $column) {
+        $insertColumnsList[] = installer_ident($column);
+        $selectColumns[] = installer_migration_select_expression($tableName, $column);
+    }
+    $insertColumns = implode(', ', $insertColumnsList);
+    $placeholders = implode(', ', array_fill(0, count($commonColumns), '?'));
+    $insertSql = 'INSERT INTO ' . installer_ident($tempTable) . ' (' . $insertColumns . ') VALUES (' . $placeholders . ')';
+    $insertStmt = $mysqli->prepare($insertSql);
+    if (!$insertStmt) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to prepare insert: ' . $mysqli->error;
+        $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+        return false;
+    }
+
+    $selectSql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM ' . installer_ident($tableName);
+    $res = $mysqli->query($selectSql);
+    if (!$res) {
+        $insertStmt->close();
+        $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to read source rows: ' . $mysqli->error;
+        return false;
+    }
+
+    $mysqli->begin_transaction();
+    $migratedRows = 0;
+    $failedRows = 0;
+    while ($row = $res->fetch_assoc()) {
+        $params = array();
+        $types = '';
+        foreach ($commonColumns as $column) {
+            $types .= 's';
+            $params[] = isset($row[$column]) ? (string)$row[$column] : null;
+        }
+        $bind = array($types);
+        for ($i = 0; $i < count($params); $i++) { $bind[] = &$params[$i]; }
+        call_user_func_array(array($insertStmt, 'bind_param'), $bind);
+        if ($insertStmt->execute()) {
+            if (installer_delete_single_row($mysqli, $tableName, $row)) {
+                $migratedRows++;
+            } else {
+                $failedRows++;
+                $logs[] = 'Row delete warning in ' . $tableName . ': ' . $mysqli->error;
+            }
+        } else {
+            $failedRows++;
+        }
+    }
+    $res->free();
+    $insertStmt->close();
+    $mysqli->commit();
+
+    $remainingRows = installer_table_row_count($mysqli, $tableName);
+    if ($remainingRows > 0) {
+        if (!$mysqli->query('RENAME TABLE ' . installer_ident($tableName) . ' TO ' . installer_ident($unmigratedTable) . ', ' . installer_ident($tempTable) . ' TO ' . installer_ident($tableName))) {
+            $logs[] = 'Upgrading ' . $tableName . '... Failed to rename migrated tables: ' . $mysqli->error;
+            return false;
+        }
+        $logs[] = 'Unmigrated data left in ' . $unmigratedTable . '! ' . installer_build_csv_download_link($unmigratedTable);
+    } else {
+        if (!$mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tableName))) {
+            $logs[] = 'Drop warning for ' . $tableName . ': ' . $mysqli->error;
+        }
+        if (!$mysqli->query('RENAME TABLE ' . installer_ident($tempTable) . ' TO ' . installer_ident($tableName))) {
+            $logs[] = 'Upgrading ' . $tableName . '... Failed to activate migrated table: ' . $mysqli->error;
+            return false;
+        }
+    }
+
+    $logs[] = 'Upgrading ' . $tableName . '... Done! Migrated ' . $migratedRows . ' row(s)' . ($failedRows > 0 ? ', left ' . $failedRows . ' row(s) unmigrated.' : '.');
+    return true;
 }
 
 /**
@@ -259,31 +575,37 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
             }
             $tables->free();
         }
-        return;
     }
 
     foreach ($INSTALL_SCHEMA_TABLES as $baseName => $createBase) {
-        $push('Applying table schema: ' . $baseName . ' ...');
         $tableName = $cfg['prefix'] . $baseName;
         $createSql = apply_prefix($createBase, $cfg['prefix']);
-        create_or_sync_table($mysqli, $tableName, $createSql, $mode, $logs);
+        $tableLogs = array();
+        $okTable = create_or_sync_table($mysqli, $tableName, $createSql, $mode, $tableLogs);
+        if ($mode !== 'upgrade') {
+            $push('Upgrading ' . $tableName . '... ' . ($okTable ? 'Done!' : 'Failed!'));
+        }
+        foreach ($tableLogs as $line) { $push($line); }
+        if (!$okTable) {
+            $mysqli->close();
+            return array(false, $logs);
+        }
     }
 
     foreach ($INSTALL_SCHEMA_SEED as $insertBase) {
-        if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
-            continue;
-        }
-        if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertBase, $mSeed)) { $push('Seeding data: ' . $mSeed[1] . ' ...'); }
-        $insertSql = apply_prefix($insertBase, $cfg['prefix']);
-        if (!$mysqli->query($insertSql)) {
-            $push('Seed warning: ' . $mysqli->error);
-        }
+        $seedMessages = array();
+        installer_apply_seed($mysqli, $insertBase, $cfg['prefix'], $mode, $seedMessages);
+        foreach ($seedMessages as $message) { $push($message); }
     }
 
-    if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
-        $push('Warning: failed to create/update initial users.');
+    if ($mode === 'install_clean') {
+        if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
+            $push('Warning: failed to create/update initial users.');
+        } else {
+            $push('Super admin and guest accounts provisioned.');
+        }
     } else {
-        $push('Super admin and guest accounts provisioned.');
+        $push('Skipping super admin provisioning during upgrade.');
     }
 
     $push('Updating installed version setting...');
@@ -313,6 +635,23 @@ if ($detection['exists'] && !$isInstallerApiCall) {
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['download_unmigrated'])) {
+    $tableName = trim((string)$_GET['download_unmigrated']);
+    if ($tableName === '') {
+        header('HTTP/1.1 400 Bad Request');
+        echo 'Missing table name.';
+        exit();
+    }
+    $mysqli = connect_db($defaults);
+    if (!$mysqli) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo 'Database connection failed.';
+        exit();
+    }
+    installer_export_table_as_csv($mysqli, $tableName);
+    $mysqli->close();
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'execute_stream') {
     @set_time_limit(0);
@@ -333,7 +672,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminPass = (string)$_POST['admin_pass'];
     $adminName = trim((string)$_POST['admin_name']);
 
-    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+    if ($mode === 'install_clean' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
         emit_line('ERROR: Super admin user, name, and password (min 6 chars) are required.');
         emit_line('DONE:0');
         exit();
@@ -362,7 +701,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminName = trim((string)$_POST['admin_name']);
     $step = isset($_POST['step']) ? max(0, (int)$_POST['step']) : 0;
 
-    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+    if ($mode === 'install_clean' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
         echo json_encode(array('ok' => false, 'done' => true, 'step' => $step, 'messages' => array('Super admin user, name, and password (min 6 chars) are required.')));
         exit();
     }
@@ -417,46 +756,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         case 'schema':
             $i = (int)$current['index'];
             $baseName = $tables[$i];
-            $messages[] = 'Applying table schema: ' . $baseName . ' ...';
+            $tableName = $cfg['prefix'] . $baseName;
             $logs = array();
-            create_or_sync_table(
+            $result = create_or_sync_table(
                 $mysqli,
-                $cfg['prefix'] . $baseName,
+                $tableName,
                 apply_prefix($tableSql[$i], $cfg['prefix']),
                 $mode,
                 $logs
             );
+            if ($mode !== 'upgrade') {
+                $messages[] = 'Upgrading ' . $tableName . '... ' . ($result ? 'Done!' : 'Failed!');
+            }
             foreach ($logs as $line) { $messages[] = $line; }
-            if (!table_exists_mysqli($mysqli, $cfg['prefix'] . $baseName)) {
+            if (!$result) {
+                $ok = false;
+            } elseif (!table_exists_mysqli($mysqli, $tableName)) {
                 $ok = false;
                 $messages[] = 'Schema error: expected table missing after create/sync: ' . $baseName;
-            }
-            if (!empty($logs) && $mode === 'install_clean') {
-                $ok = false;
-                $messages[] = 'Schema sync warnings are treated as errors during clean install.';
             }
             break;
         case 'seed':
             $i = (int)$current['index'];
             $insertBase = $seed[$i];
-            if (preg_match('/^INSERT INTO\s+`user`/i', $insertBase)) {
-                $messages[] = 'Skipping default user seed (installer provisions super admin + guest separately).';
-                break;
-            }
-            if (preg_match('/^INSERT INTO\s+`([^`]+)`/i', $insertBase, $mSeed)) {
-                $messages[] = 'Seeding data: ' . $mSeed[1] . ' ...';
-            }
-            $insertSql = apply_prefix($insertBase, $cfg['prefix']);
-            if (!$mysqli->query($insertSql)) {
-                $messages[] = 'Seed warning: ' . $mysqli->error;
-            }
+            installer_apply_seed($mysqli, $insertBase, $cfg['prefix'], $mode, $messages);
             break;
         case 'users':
-            if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
-                $ok = false;
-                $messages[] = 'Failed to create/update initial users (super admin + guest).';
+            if ($mode === 'install_clean') {
+                if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
+                    $ok = false;
+                    $messages[] = 'Failed to create/update initial users (super admin + guest).';
+                } else {
+                    $messages[] = 'Super admin and guest accounts provisioned.';
+                }
             } else {
-                $messages[] = 'Super admin and guest accounts provisioned.';
+                $messages[] = 'Skipping super admin provisioning during upgrade.';
             }
             break;
         case 'version':
@@ -507,7 +841,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminPass = (string)$_POST['admin_pass'];
     $adminName = trim((string)$_POST['admin_name']);
 
-    if ($mode !== 'write_config') {
+    if ($mode === 'install_clean') {
         if ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '') {
             echo json_encode(array('ok' => false, 'logs' => array('Super admin user, name, and password (min 6 chars) are required.')));
             exit();
@@ -587,10 +921,12 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
         <div><label>MySQL username</label><input name="db_user" required value="<?php echo h($defaults['user']); ?>"></div>
         <div><label>MySQL password</label><input type="password" name="db_pass" value="<?php echo h($defaults['pass']); ?>"></div>
 
-        <div><label>Super admin username</label><input id="admin_user" name="admin_user" value="admin"></div>
-        <div><label>Super admin display name</label><input id="admin_name" name="admin_name" value="Super Administrator"></div>
-        <div><label>Super admin password</label><input type="password" id="admin_pass" name="admin_pass"></div>
-        <div><label>Confirm password</label><input type="password" id="admin_pass_confirm"></div>
+        <div id="adminFields" style="display:<?php echo $modeDefault === 'install_clean' ? 'contents' : 'none'; ?>;">
+          <div><label>Super admin username</label><input id="admin_user" name="admin_user" value="admin"></div>
+          <div><label>Super admin display name</label><input id="admin_name" name="admin_name" value="Super Administrator"></div>
+          <div><label>Super admin password</label><input type="password" id="admin_pass" name="admin_pass"></div>
+          <div><label>Confirm password</label><input type="password" id="admin_pass_confirm"></div>
+        </div>
       </div>
       <p id="passStatus" class="muted"></p>
       <button class="btn btn-primary-lg" id="runBtn" type="submit">Do It</button>
@@ -605,12 +941,34 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
 (function(){
   var f=document.getElementById('installerForm'),log=document.getElementById('log'),prog=document.getElementById('progress'),btn=document.getElementById('runBtn');
   var pass=document.getElementById('admin_pass'),confirmPass=document.getElementById('admin_pass_confirm'),status=document.getElementById('passStatus');
+  var adminFields=document.getElementById('adminFields');
+  var adminUser=document.getElementById('admin_user'),adminName=document.getElementById('admin_name');
   var modeInputs=[].slice.call(document.querySelectorAll('input[name="mode"]'));
+  var installerMeta={
+    tables: <?php echo json_encode(array_keys($INSTALL_SCHEMA_TABLES)); ?>,
+    seedCount: <?php echo json_encode(count($INSTALL_SCHEMA_SEED)); ?>
+  };
   function getMode(){ var c=modeInputs.find(function(i){return i.checked;}); return c?c.value:'install_clean'; }
   function updateModeCards(){ modeInputs.forEach(function(i){ var c=i.closest('.mode-option'); if(!c){return;} c.classList.toggle('active', i.checked); }); }
+  function updateAdminFields(){
+    var isInstall=(getMode()==='install_clean');
+    if(adminFields){ adminFields.style.display=isInstall?'contents':'none'; }
+    [adminUser, adminName, pass, confirmPass].forEach(function(el){ if(!el){ return; } el.disabled=!isInstall; });
+    if(!isInstall){ status.textContent=''; }
+  }
+  function previewStepLine(step){
+    var mode=getMode();
+    var offset=(mode==='install_clean')?1:0;
+    if(mode==='install_clean' && step===0){ return 'Clean install selected: dropping existing tables...'; }
+    if(step >= offset && step < offset + installerMeta.tables.length){
+      var prefix=(f.elements.db_prefix && f.elements.db_prefix.value)?f.elements.db_prefix.value:'';
+      return 'Upgrading ' + prefix + installerMeta.tables[step - offset] + '...';
+    }
+    return null;
+  }
 
   function validatePass(){
-    if(getMode()==='write_config'){status.textContent='';return true;}
+    if(getMode()!=='install_clean'){status.textContent='';return true;}
     if(pass.value.length<6){status.textContent='Password must be at least 6 characters.';status.style.color='#b42318';return false;}
     if(pass.value!==confirmPass.value){status.textContent='Passwords do not match.';status.style.color='#b42318';return false;}
     status.textContent='Passwords match.';status.style.color='#027a48';return true;
@@ -618,16 +976,67 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
 
   pass.addEventListener('input',validatePass);
   confirmPass.addEventListener('input',validatePass);
-  modeInputs.forEach(function(i){ i.addEventListener('change', function(){ updateModeCards(); validatePass(); }); });
+  modeInputs.forEach(function(i){ i.addEventListener('change', function(){ updateModeCards(); updateAdminFields(); validatePass(); }); });
   updateModeCards();
+  updateAdminFields();
+
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  var pendingUpgradeLine = null;
+
+  function renderLogLine(target, line){
+    if(/<a\s/i.test(line)){
+      target.innerHTML=line;
+    } else {
+      target.innerHTML=escapeHtml(line);
+    }
+  }
 
   function appendLines(lines){
     if(!lines || !lines.length){ return; }
-    log.textContent += lines.join('\n') + '\n';
+    lines.forEach(function(line){
+      var pendingMatch = line.match(/^(Upgrading .*\.\.\.)$/);
+      if(pendingMatch){
+        if(pendingUpgradeLine){
+          var currentPending = pendingUpgradeLine.getAttribute('data-line') || '';
+          if(currentPending === line){
+            return;
+          }
+          renderLogLine(pendingUpgradeLine, currentPending || pendingUpgradeLine.textContent || '');
+        }
+        var pendingDiv=document.createElement('div');
+        pendingDiv.setAttribute('data-line', line);
+        renderLogLine(pendingDiv, line);
+        log.appendChild(pendingDiv);
+        pendingUpgradeLine = pendingDiv;
+        return;
+      }
+
+      if(pendingUpgradeLine){
+        var pendingText = pendingUpgradeLine.getAttribute('data-line') || '';
+        if(pendingText !== '' && line.indexOf(pendingText) === 0){
+          pendingUpgradeLine.setAttribute('data-line', line);
+          renderLogLine(pendingUpgradeLine, line);
+          pendingUpgradeLine = null;
+          return;
+        }
+      }
+
+      var div=document.createElement('div');
+      renderLogLine(div, line);
+      log.appendChild(div);
+    });
     log.scrollTop = log.scrollHeight;
   }
 
   function runStep(step){
+    var previewLine = previewStepLine(step);
+    if(previewLine){ appendLines([previewLine]); }
+
     var data = new FormData(f);
     data.append('action','execute_step');
     data.append('step', String(step));
