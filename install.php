@@ -317,6 +317,18 @@ function installer_export_table_as_csv($mysqli, $tableName) {
     fclose($out);
 }
 
+function installer_migration_select_expression($tableName, $column) {
+    if ($tableName === 'requests' && ($column === 'lat' || $column === 'lng')) {
+        $ident = installer_ident($column);
+        return "CASE "
+            . "WHEN " . $ident . " IS NULL THEN NULL "
+            . "WHEN TRIM(CAST(" . $ident . " AS CHAR)) = '' THEN NULL "
+            . "WHEN TRIM(CAST(" . $ident . " AS CHAR)) REGEXP '^-?[0-9]+(\.[0-9]+)?$' THEN ROUND(CAST(" . $ident . " AS DECIMAL(10,7)), 7) "
+            . "ELSE NULL END AS " . $ident;
+    }
+    return installer_ident($column);
+}
+
 function installer_delete_single_row($mysqli, $tableName, $row) {
     $conditions = array();
     foreach ($row as $column => $value) {
@@ -380,11 +392,13 @@ function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
         return false;
     }
 
+    $insertColumnsList = array();
     $selectColumns = array();
     foreach ($commonColumns as $column) {
-        $selectColumns[] = installer_ident($column);
+        $insertColumnsList[] = installer_ident($column);
+        $selectColumns[] = installer_migration_select_expression($tableName, $column);
     }
-    $insertColumns = implode(', ', $selectColumns);
+    $insertColumns = implode(', ', $insertColumnsList);
     $placeholders = implode(', ', array_fill(0, count($commonColumns), '?'));
     $insertSql = 'INSERT INTO ' . installer_ident($tempTable) . ' (' . $insertColumns . ') VALUES (' . $placeholders . ')';
     $insertStmt = $mysqli->prepare($insertSql);
@@ -394,7 +408,7 @@ function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
         return false;
     }
 
-    $selectSql = 'SELECT ' . $insertColumns . ' FROM ' . installer_ident($tableName);
+    $selectSql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM ' . installer_ident($tableName);
     $res = $mysqli->query($selectSql);
     if (!$res) {
         $insertStmt->close();
@@ -584,10 +598,14 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
         foreach ($seedMessages as $message) { $push($message); }
     }
 
-    if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
-        $push('Warning: failed to create/update initial users.');
+    if ($mode === 'install_clean') {
+        if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
+            $push('Warning: failed to create/update initial users.');
+        } else {
+            $push('Super admin and guest accounts provisioned.');
+        }
     } else {
-        $push('Super admin and guest accounts provisioned.');
+        $push('Skipping super admin provisioning during upgrade.');
     }
 
     $push('Updating installed version setting...');
@@ -654,7 +672,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminPass = (string)$_POST['admin_pass'];
     $adminName = trim((string)$_POST['admin_name']);
 
-    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+    if ($mode === 'install_clean' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
         emit_line('ERROR: Super admin user, name, and password (min 6 chars) are required.');
         emit_line('DONE:0');
         exit();
@@ -683,7 +701,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminName = trim((string)$_POST['admin_name']);
     $step = isset($_POST['step']) ? max(0, (int)$_POST['step']) : 0;
 
-    if ($mode !== 'write_config' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
+    if ($mode === 'install_clean' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
         echo json_encode(array('ok' => false, 'done' => true, 'step' => $step, 'messages' => array('Super admin user, name, and password (min 6 chars) are required.')));
         exit();
     }
@@ -764,11 +782,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             installer_apply_seed($mysqli, $insertBase, $cfg['prefix'], $mode, $messages);
             break;
         case 'users':
-            if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
-                $ok = false;
-                $messages[] = 'Failed to create/update initial users (super admin + guest).';
+            if ($mode === 'install_clean') {
+                if (!ensure_initial_users($mysqli, $cfg['prefix'], $adminUser, $adminPass, $adminName, $mode)) {
+                    $ok = false;
+                    $messages[] = 'Failed to create/update initial users (super admin + guest).';
+                } else {
+                    $messages[] = 'Super admin and guest accounts provisioned.';
+                }
             } else {
-                $messages[] = 'Super admin and guest accounts provisioned.';
+                $messages[] = 'Skipping super admin provisioning during upgrade.';
             }
             break;
         case 'version':
@@ -819,7 +841,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $adminPass = (string)$_POST['admin_pass'];
     $adminName = trim((string)$_POST['admin_name']);
 
-    if ($mode !== 'write_config') {
+    if ($mode === 'install_clean') {
         if ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '') {
             echo json_encode(array('ok' => false, 'logs' => array('Super admin user, name, and password (min 6 chars) are required.')));
             exit();
@@ -899,10 +921,12 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
         <div><label>MySQL username</label><input name="db_user" required value="<?php echo h($defaults['user']); ?>"></div>
         <div><label>MySQL password</label><input type="password" name="db_pass" value="<?php echo h($defaults['pass']); ?>"></div>
 
-        <div><label>Super admin username</label><input id="admin_user" name="admin_user" value="admin"></div>
-        <div><label>Super admin display name</label><input id="admin_name" name="admin_name" value="Super Administrator"></div>
-        <div><label>Super admin password</label><input type="password" id="admin_pass" name="admin_pass"></div>
-        <div><label>Confirm password</label><input type="password" id="admin_pass_confirm"></div>
+        <div id="adminFields" style="display:<?php echo $modeDefault === 'install_clean' ? 'contents' : 'none'; ?>;">
+          <div><label>Super admin username</label><input id="admin_user" name="admin_user" value="admin"></div>
+          <div><label>Super admin display name</label><input id="admin_name" name="admin_name" value="Super Administrator"></div>
+          <div><label>Super admin password</label><input type="password" id="admin_pass" name="admin_pass"></div>
+          <div><label>Confirm password</label><input type="password" id="admin_pass_confirm"></div>
+        </div>
       </div>
       <p id="passStatus" class="muted"></p>
       <button class="btn btn-primary-lg" id="runBtn" type="submit">Do It</button>
@@ -917,6 +941,8 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
 (function(){
   var f=document.getElementById('installerForm'),log=document.getElementById('log'),prog=document.getElementById('progress'),btn=document.getElementById('runBtn');
   var pass=document.getElementById('admin_pass'),confirmPass=document.getElementById('admin_pass_confirm'),status=document.getElementById('passStatus');
+  var adminFields=document.getElementById('adminFields');
+  var adminUser=document.getElementById('admin_user'),adminName=document.getElementById('admin_name');
   var modeInputs=[].slice.call(document.querySelectorAll('input[name="mode"]'));
   var installerMeta={
     tables: <?php echo json_encode(array_keys($INSTALL_SCHEMA_TABLES)); ?>,
@@ -924,6 +950,12 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   };
   function getMode(){ var c=modeInputs.find(function(i){return i.checked;}); return c?c.value:'install_clean'; }
   function updateModeCards(){ modeInputs.forEach(function(i){ var c=i.closest('.mode-option'); if(!c){return;} c.classList.toggle('active', i.checked); }); }
+  function updateAdminFields(){
+    var isInstall=(getMode()==='install_clean');
+    if(adminFields){ adminFields.style.display=isInstall?'contents':'none'; }
+    [adminUser, adminName, pass, confirmPass].forEach(function(el){ if(!el){ return; } el.disabled=!isInstall; });
+    if(!isInstall){ status.textContent=''; }
+  }
   function previewStepLine(step){
     var mode=getMode();
     var offset=(mode==='install_clean')?1:0;
@@ -936,7 +968,7 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   }
 
   function validatePass(){
-    if(getMode()==='write_config'){status.textContent='';return true;}
+    if(getMode()!=='install_clean'){status.textContent='';return true;}
     if(pass.value.length<6){status.textContent='Password must be at least 6 characters.';status.style.color='#b42318';return false;}
     if(pass.value!==confirmPass.value){status.textContent='Passwords do not match.';status.style.color='#b42318';return false;}
     status.textContent='Passwords match.';status.style.color='#027a48';return true;
@@ -944,8 +976,25 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
 
   pass.addEventListener('input',validatePass);
   confirmPass.addEventListener('input',validatePass);
-  modeInputs.forEach(function(i){ i.addEventListener('change', function(){ updateModeCards(); validatePass(); }); });
+  modeInputs.forEach(function(i){ i.addEventListener('change', function(){ updateModeCards(); updateAdminFields(); validatePass(); }); });
   updateModeCards();
+  updateAdminFields();
+
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  var pendingUpgradeLine = null;
+
+  function renderLogLine(target, line){
+    if(/<a\s/i.test(line)){
+      target.innerHTML=line;
+    } else {
+      target.innerHTML=escapeHtml(line);
+    }
+  }
 
   function escapeHtml(value){
     return String(value).replace(/[&<>"']/g, function(ch){
