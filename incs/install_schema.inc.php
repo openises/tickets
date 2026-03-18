@@ -9,7 +9,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `sec_code` varchar(24) NOT NULL,
   `date` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'action' => 'CREATE TABLE `action` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `ticket_id` int(8) NOT NULL DEFAULT 0,
@@ -21,13 +21,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `updated` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'ajax_log' => 'CREATE TABLE `ajax_log` (
   `id` int(6) NOT NULL AUTO_INCREMENT,
   `info` text NOT NULL,
   `_when` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'allocates' => 'CREATE TABLE `allocates` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `group` int(4) NOT NULL DEFAULT 1,
@@ -38,7 +38,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `sys_comments` varchar(64) DEFAULT NULL,
   `user_id` int(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'allocations' => 'CREATE TABLE `allocations` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `member_id` int(2) NOT NULL DEFAULT 0,
@@ -52,7 +52,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `days` varchar(256) DEFAULT NULL,
   `_on` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'assigns' => 'CREATE TABLE `assigns` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `as_of` datetime DEFAULT NULL,
@@ -75,25 +75,25 @@ $INSTALL_SCHEMA_TABLES = array(
   `u2farr` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'auto_disp_status' => 'CREATE TABLE `auto_disp_status` (
   `id` int(3) NOT NULL AUTO_INCREMENT,
   `name` varchar(128) NOT NULL,
   `status_val` int(3) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'auto_status' => 'CREATE TABLE `auto_status` (
   `id` int(3) NOT NULL AUTO_INCREMENT,
   `text` varchar(24) NOT NULL,
   `status_val` int(3) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'capability_types' => 'CREATE TABLE `capability_types` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) DEFAULT NULL,
   `description` longtext DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'captions' => 'CREATE TABLE `captions` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `capt` varchar(64) NOT NULL,
@@ -102,7 +102,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=175 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=175 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'certs' => 'CREATE TABLE `certs` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `certificate` varchar(48) NOT NULL COMMENT \'certificate description\',
@@ -111,7 +111,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'certs_x_user' => 'CREATE TABLE `certs_x_user` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `certificate_id` int(3) NOT NULL COMMENT \'certification description\',
@@ -122,7 +122,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) DEFAULT NULL COMMENT \'entered from - IP addr\',
   `on` datetime DEFAULT NULL COMMENT \'date last updated\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'chat_invites' => 'CREATE TABLE `chat_invites` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `to` varchar(64) NOT NULL COMMENT \'comma sep\'\'d, 0 = all\',
@@ -130,7 +130,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) NOT NULL,
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'chat_messages' => 'CREATE TABLE `chat_messages` (
   `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,
   `message` varchar(2048) NOT NULL,
@@ -140,13 +140,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'ip addr\',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'chat_rooms' => 'CREATE TABLE `chat_rooms` (
   `id` bigint(7) NOT NULL AUTO_INCREMENT,
   `room` varchar(16) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'cities' => 'CREATE TABLE `cities` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `city_zip` int(5) unsigned zerofill NOT NULL,
@@ -156,7 +156,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `city_lng` double NOT NULL,
   `city_county` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'clones' => 'CREATE TABLE `clones` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(16) DEFAULT NULL,
@@ -164,14 +164,14 @@ $INSTALL_SCHEMA_TABLES = array(
   `date` datetime DEFAULT NULL COMMENT \'last used\',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'clothing_types' => 'CREATE TABLE `clothing_types` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `clothing_item` varchar(48) DEFAULT NULL,
   `description` longtext DEFAULT NULL,
   `size` varchar(48) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'codes' => 'CREATE TABLE `codes` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `code` varchar(20) NOT NULL,
@@ -181,7 +181,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) NOT NULL DEFAULT \'\',
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'conditions' => 'CREATE TABLE `conditions` (
   `id` int(2) NOT NULL AUTO_INCREMENT,
   `title` varchar(128) NOT NULL,
@@ -191,7 +191,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'constituents' => 'CREATE TABLE `constituents` (
   `id` bigint(7) NOT NULL AUTO_INCREMENT,
   `contact` varchar(48) NOT NULL,
@@ -213,7 +213,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `updated` varchar(16) DEFAULT NULL,
   `_by` int(7) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'contacts' => 'CREATE TABLE `contacts` (
   `id` bigint(7) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) NOT NULL,
@@ -225,7 +225,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `as-of` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'courses' => 'CREATE TABLE `courses` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `course` varchar(48) NOT NULL COMMENT \'certificate description\',
@@ -237,7 +237,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'courses_x_user' => 'CREATE TABLE `courses_x_user` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `courses_id` int(4) NOT NULL COMMENT \'certification description\',
@@ -248,21 +248,21 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) DEFAULT NULL COMMENT \'entered from - IP addr\',
   `on` datetime DEFAULT NULL COMMENT \'date last updated\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'css_day' => 'CREATE TABLE `css_day` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `name` tinytext DEFAULT NULL,
   `value` tinytext DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'css_night' => 'CREATE TABLE `css_night` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `name` tinytext DEFAULT NULL,
   `value` tinytext DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'defined_fields' => 'CREATE TABLE `defined_fields` (
   `id` tinyint(2) NOT NULL AUTO_INCREMENT,
   `field_id` int(4) NOT NULL,
@@ -275,7 +275,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(24) NOT NULL,
   `browser` varchar(40) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'documents' => 'CREATE TABLE `documents` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -296,7 +296,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'documents_log' => 'CREATE TABLE `documents_log` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(10) unsigned NOT NULL,
@@ -307,7 +307,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'email_blacklist' => 'CREATE TABLE `email_blacklist` (
   `id` int(4) NOT NULL,
   `email` varchar(64) NOT NULL,
@@ -315,7 +315,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'equipment_types' => 'CREATE TABLE `equipment_types` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `equipment_name` varchar(48) DEFAULT NULL,
@@ -324,19 +324,19 @@ $INSTALL_SCHEMA_TABLES = array(
   `serial` varchar(48) DEFAULT NULL,
   `condition` enum(\'New\',\'Good\',\'Serviceable\',\'Unusable\',\'For Destruction\') NOT NULL DEFAULT \'Good\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'event_types' => 'CREATE TABLE `event_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'events' => 'CREATE TABLE `events` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `event_name` varchar(128) DEFAULT NULL,
   `description` longtext DEFAULT NULL,
   `event_type` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'fac_case_cat' => 'CREATE TABLE `fac_case_cat` (
   `id` int(6) NOT NULL AUTO_INCREMENT,
   `category` varchar(64) NOT NULL,
@@ -345,7 +345,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `bgcolor` varchar(7) DEFAULT NULL,
   `facility` int(7) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'fac_status' => 'CREATE TABLE `fac_status` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `status_val` varchar(20) NOT NULL,
@@ -361,7 +361,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'fac_types' => 'CREATE TABLE `fac_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) NOT NULL,
@@ -371,7 +371,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) NOT NULL COMMENT \'ip\',
   `_on` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Allows for variable facility types\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Allows for variable facility types\'',
     'facilities' => 'CREATE TABLE `facilities` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `name` text DEFAULT NULL,
@@ -416,7 +416,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'facnotes' => 'CREATE TABLE `facnotes` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `ticket_id` int(10) NOT NULL,
@@ -430,13 +430,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'fieldsets' => 'CREATE TABLE `fieldsets` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) NOT NULL,
   `label` varchar(48) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'files' => 'CREATE TABLE `files` (
   `id` mediumint(5) NOT NULL AUTO_INCREMENT,
   `title` varchar(128) NOT NULL,
@@ -452,13 +452,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'files_x' => 'CREATE TABLE `files_x` (
   `id` mediumint(6) NOT NULL AUTO_INCREMENT,
   `file_id` mediumint(6) NOT NULL,
   `user_id` int(4) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'hints' => 'CREATE TABLE `hints` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `tag` varchar(8) NOT NULL,
@@ -467,7 +467,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'ics' => 'CREATE TABLE `ics` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `to` varchar(256) DEFAULT NULL COMMENT \'comma sep\'\'d, 0 = all\',
@@ -482,7 +482,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_sent` timestamp NULL DEFAULT NULL COMMENT \'last sent on - see log\',
   `archived` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'in_types' => 'CREATE TABLE `in_types` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `type` varchar(20) NOT NULL,
@@ -500,7 +500,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `notify_when` int(1) NOT NULL DEFAULT 1 COMMENT \'When Notifies are sent, 1,2 or 3 for all, open or close\',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Incident types\'',
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Incident types\'',
     'insurance' => 'CREATE TABLE `insurance` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `ins_value` varchar(64) NOT NULL,
@@ -509,7 +509,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) DEFAULT NULL,
   `_on` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'known_sources' => 'CREATE TABLE `known_sources` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `contact` varchar(64) NOT NULL,
@@ -519,7 +519,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'log' => 'CREATE TABLE `log` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `who` tinyint(7) DEFAULT NULL,
@@ -535,27 +535,27 @@ $INSTALL_SCHEMA_TABLES = array(
   `mileage` int(8) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Log of station actions\'',
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Log of station actions\'',
     'logins' => 'CREATE TABLE `logins` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `ip` varchar(15) NOT NULL,
   `salt` varchar(36) NOT NULL,
   `intime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'login authentication\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'login authentication\'',
     'mailgroup' => 'CREATE TABLE `mailgroup` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(128) NOT NULL,
   `notes` text DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'mailgroup_x' => 'CREATE TABLE `mailgroup_x` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `mailgroup` int(4) NOT NULL,
   `contacts` int(4) DEFAULT 0,
   `responder` int(4) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'major_incidents' => 'CREATE TABLE `major_incidents` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -612,7 +612,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'mdb_files' => 'CREATE TABLE `mdb_files` (
   `id` smallint(3) NOT NULL AUTO_INCREMENT,
   `member_id` smallint(3) NOT NULL,
@@ -622,13 +622,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `filesize` varchar(12) NOT NULL,
   `_on` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'mdb_settings' => 'CREATE TABLE `mdb_settings` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `name` tinytext DEFAULT NULL,
   `value` varchar(512) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=13 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'member' => 'CREATE TABLE `member` (
   `id` int(8) NOT NULL AUTO_INCREMENT,
   `field1` varchar(28) DEFAULT NULL,
@@ -700,7 +700,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(10) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'member_status' => 'CREATE TABLE `member_status` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `status_val` varchar(48) NOT NULL,
@@ -708,7 +708,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `color` varchar(8) NOT NULL DEFAULT \'#000000\',
   `background` varchar(8) NOT NULL DEFAULT \'#FFFFFF\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'member_types' => 'CREATE TABLE `member_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(16) NOT NULL,
@@ -719,7 +719,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `color` varchar(8) NOT NULL DEFAULT \'#000000\',
   `background` varchar(8) NOT NULL DEFAULT \'#FFFFFF\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'messages' => 'CREATE TABLE `messages` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `msg_type` int(2) NOT NULL,
@@ -742,7 +742,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) DEFAULT NULL,
   `_on` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'messages_bin' => 'CREATE TABLE `messages_bin` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `msg_type` int(2) NOT NULL,
@@ -764,7 +764,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) DEFAULT NULL,
   `_on` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'mi_types' => 'CREATE TABLE `mi_types` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -774,13 +774,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'mi_x' => 'CREATE TABLE `mi_x` (
   `id` int(6) NOT NULL AUTO_INCREMENT,
   `mi_id` int(6) NOT NULL,
   `ticket_id` int(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'mmarkup' => 'CREATE TABLE `mmarkup` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `line_name` varchar(32) NOT NULL,
@@ -805,7 +805,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Lines and borders\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Lines and borders\'',
     'mmarkup_cats' => 'CREATE TABLE `mmarkup_cats` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `category` varchar(24) NOT NULL,
@@ -814,19 +814,19 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci COMMENT=\'Map markup categories\'',
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Map markup categories\'',
     'modules' => 'CREATE TABLE `modules` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `mod_name` varchar(26) NOT NULL,
   `mod_status` varchar(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Optional modules to load\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Optional modules to load\'',
     'msg_settings' => 'CREATE TABLE `msg_settings` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` tinytext DEFAULT NULL,
   `value` varchar(512) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'notify' => 'CREATE TABLE `notify` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `ticket_id` int(8) NOT NULL DEFAULT 0,
@@ -845,7 +845,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `on` datetime NOT NULL COMMENT \'updated\',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'organisations' => 'CREATE TABLE `organisations` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(128) NOT NULL,
@@ -855,7 +855,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `tel` varchar(16) NOT NULL,
   `email` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'patient' => 'CREATE TABLE `patient` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `ticket_id` int(8) NOT NULL DEFAULT 0,
@@ -873,7 +873,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `updated` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'patient_x' => 'CREATE TABLE `patient_x` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `patient_id` int(7) NOT NULL,
@@ -882,7 +882,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'personnel' => 'CREATE TABLE `personnel` (
   `id` int(4) NOT NULL AUTO_INCREMENT COMMENT \'table id\',
   `surname` varchar(48) DEFAULT NULL,
@@ -924,7 +924,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) NOT NULL COMMENT \'IP address\',
   `_by` int(7) DEFAULT NULL COMMENT \'User ID\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'data from membership database\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'data from membership database\'',
     'photos' => 'CREATE TABLE `photos` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `description` varchar(256) NOT NULL,
@@ -935,7 +935,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `on` datetime NOT NULL,
   `from` varchar(16) NOT NULL COMMENT \'ip address\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'pin_ctrl' => 'CREATE TABLE `pin_ctrl` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `responder_id` int(7) NOT NULL DEFAULT 0 COMMENT \'link to responder record\',
@@ -944,7 +944,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(30) DEFAULT NULL COMMENT \'IP address\',
   `_on` timestamp NOT NULL DEFAULT current_timestamp() COMMENT \'when\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'places' => 'CREATE TABLE `places` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) DEFAULT NULL,
@@ -957,7 +957,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `lon` float DEFAULT 0,
   `zoom` int(2) DEFAULT 7,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'region' => 'CREATE TABLE `region` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(60) NOT NULL,
@@ -972,7 +972,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `def_zoom` int(2) NOT NULL DEFAULT 10,
   `boundary` int(4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'region_type' => 'CREATE TABLE `region_type` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(16) NOT NULL,
@@ -981,7 +981,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) NOT NULL,
   `_by` int(7) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'remote_devices' => 'CREATE TABLE `remote_devices` (
   `id` bigint(64) NOT NULL AUTO_INCREMENT,
   `lat` double DEFAULT 0,
@@ -992,7 +992,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `direction` double NOT NULL DEFAULT 0,
   `user` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'replacetext' => 'CREATE TABLE `replacetext` (
   `id` int(3) NOT NULL AUTO_INCREMENT,
   `in_text` varchar(128) NOT NULL,
@@ -1011,13 +1011,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `app_toaddress` enum(\'Yes\',\'No\') NOT NULL DEFAULT \'No\',
   `app_dispnotes` enum(\'Yes\',\'No\') NOT NULL DEFAULT \'No\',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'replacetext_order' => 'CREATE TABLE `replacetext_order` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `displayorder` int(2) NOT NULL,
   `info_name` varchar(24) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'requests' => 'CREATE TABLE `requests` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `org` int(3) NOT NULL DEFAULT 0 COMMENT \'Organisation\',
@@ -1056,7 +1056,7 @@ $INSTALL_SCHEMA_TABLES = array(
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`),
   KEY `requester` (`requester`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'responder' => 'CREATE TABLE `responder` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `roster_user` int(7) NOT NULL DEFAULT 0,
@@ -1106,7 +1106,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `followmee_tracker` tinyint(2) NOT NULL DEFAULT 0 COMMENT \'Tracking using FollowMee\',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'responder_rota' => 'CREATE TABLE `responder_rota` (
   `id` int(8) NOT NULL AUTO_INCREMENT,
   `person_id` int(4) DEFAULT NULL,
@@ -1116,7 +1116,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `rota_status` int(2) DEFAULT NULL,
   `recurring` int(2) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'responder_x_member' => 'CREATE TABLE `responder_x_member` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `responder_id` int(6) NOT NULL,
@@ -1127,7 +1127,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `use_workphone` int(11) NOT NULL DEFAULT 0,
   `use_smsg_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'roadinfo' => 'CREATE TABLE `roadinfo` (
   `id` int(6) NOT NULL AUTO_INCREMENT,
   `title` varchar(128) NOT NULL,
@@ -1141,20 +1141,20 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime NOT NULL,
   `_from` varchar(16) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Main table for roads information\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Main table for roads information\'',
     'settings' => 'CREATE TABLE `settings` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `name` tinytext DEFAULT NULL,
   `value` varchar(512) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=157 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=157 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'showin_contactlist' => 'CREATE TABLE `showin_contactlist` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `fieldid` varchar(48) CHARACTER SET latin1 COLLATE latin1_general_ci NOT NULL,
   `show_contact` int(2) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'skills' => 'CREATE TABLE `skills` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `skill` varchar(48) NOT NULL,
@@ -1162,7 +1162,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'skills_x_user' => 'CREATE TABLE `skills_x_user` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `skills_id` int(3) NOT NULL COMMENT \'certification description\',
@@ -1173,7 +1173,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) DEFAULT NULL COMMENT \'entered from - IP addr\',
   `on` datetime DEFAULT NULL COMMENT \'date last updated\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'sound_settings' => 'CREATE TABLE `sound_settings` (
   `id` int(2) NOT NULL,
   `name` varchar(48) NOT NULL,
@@ -1181,13 +1181,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `mp3_filename` varchar(128) NOT NULL,
   `ison` int(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'states_translator' => 'CREATE TABLE `states_translator` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
   `code` varchar(4) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'stats_settings' => 'CREATE TABLE `stats_settings` (
   `id` int(3) NOT NULL AUTO_INCREMENT,
   `user_id` int(3) NOT NULL,
@@ -1233,13 +1233,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `t_type7` enum(\'Less\',\'Less or Equal\',\'Equal\',\'More or Equal\',\'More\') NOT NULL DEFAULT \'More\',
   `t_type8` enum(\'Less\',\'Less or Equal\',\'Equal\',\'More or Equal\',\'More\') NOT NULL DEFAULT \'More\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'settings for statistics screen\'',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'settings for statistics screen\'',
     'stats_type' => 'CREATE TABLE `stats_type` (
   `st_id` int(2) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
   `stat_type` varchar(3) NOT NULL DEFAULT \'int\',
   PRIMARY KEY (`st_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'std_msgs' => 'CREATE TABLE `std_msgs` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) NOT NULL,
@@ -1251,14 +1251,14 @@ $INSTALL_SCHEMA_TABLES = array(
   `mototrbo` int(2) NOT NULL DEFAULT 0,
   `smsbroadcast` int(2) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'team' => 'CREATE TABLE `team` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) NOT NULL,
   `description` varchar(512) NOT NULL,
   `manager` int(4) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'team_types' => 'CREATE TABLE `team_types` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `type` varchar(48) NOT NULL COMMENT \'team type\',
@@ -1267,7 +1267,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'teams' => 'CREATE TABLE `teams` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `team` varchar(48) NOT NULL COMMENT \'team name- major\',
@@ -1281,7 +1281,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'teams_x_user' => 'CREATE TABLE `teams_x_user` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `teams_id` int(4) NOT NULL COMMENT \'certification description\',
@@ -1294,7 +1294,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) DEFAULT NULL COMMENT \'entered from - IP addr\',
   `on` datetime DEFAULT NULL COMMENT \'date last updated\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'ticket' => 'CREATE TABLE `ticket` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `in_types_id` int(4) NOT NULL,
@@ -1327,7 +1327,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_by` int(7) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'tips' => 'CREATE TABLE `tips` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `title` varchar(24) NOT NULL,
@@ -1336,7 +1336,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
   `_on` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'titles' => 'CREATE TABLE `titles` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `title` varchar(24) NOT NULL,
@@ -1344,7 +1344,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `from` varchar(16) NOT NULL COMMENT \'IP addr\',
   `on` datetime NOT NULL COMMENT \'last update\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'tracks' => 'CREATE TABLE `tracks` (
   `id` bigint(7) NOT NULL AUTO_INCREMENT,
   `packet_id` varchar(48) DEFAULT NULL,
@@ -1364,7 +1364,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `updated` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `packet_id` (`packet_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'tracks_hh' => 'CREATE TABLE `tracks_hh` (
   `id` bigint(7) NOT NULL AUTO_INCREMENT,
   `source` varchar(96) DEFAULT NULL,
@@ -1379,7 +1379,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `updated` datetime NOT NULL,
   `from` varchar(16) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'training_packages' => 'CREATE TABLE `training_packages` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `package_name` varchar(48) DEFAULT NULL,
@@ -1392,7 +1392,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `phone` varchar(48) DEFAULT NULL,
   `cost` int(16) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'un_status' => 'CREATE TABLE `un_status` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `status_val` varchar(20) NOT NULL,
@@ -1407,7 +1407,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `text_color` varchar(16) NOT NULL DEFAULT \'#000000\' COMMENT \'text color\',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ID` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'unit_types' => 'CREATE TABLE `unit_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(16) NOT NULL,
@@ -1417,7 +1417,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(16) NOT NULL COMMENT \'ip\',
   `_by` int(7) NOT NULL COMMENT \'by\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT=\'Allows for variable unit types\'',
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Allows for variable unit types\'',
     'user' => 'CREATE TABLE `user` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `user` text NOT NULL COMMENT \'userid\',
@@ -1460,13 +1460,13 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(24) DEFAULT NULL COMMENT \'IP addr\',
   `browser` varchar(40) DEFAULT NULL COMMENT \'used at last login\',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'vehicle_types' => 'CREATE TABLE `vehicle_types` (
   `id` bigint(4) NOT NULL AUTO_INCREMENT,
   `name` varchar(48) DEFAULT NULL,
   `description` longtext DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'vehicles' => 'CREATE TABLE `vehicles` (
   `id` bigint(8) NOT NULL AUTO_INCREMENT,
   `owner` int(4) DEFAULT NULL,
@@ -1491,7 +1491,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_from` varchar(24) NOT NULL,
   `_on` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'warnings' => 'CREATE TABLE `warnings` (
   `id` int(7) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
@@ -1506,7 +1506,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `_on` datetime DEFAULT NULL,
   `_from` varchar(16) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'waste_basket_f' => 'CREATE TABLE `waste_basket_f` (
   `id` smallint(3) NOT NULL AUTO_INCREMENT,
   `member_id` smallint(3) NOT NULL,
@@ -1515,7 +1515,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `description` varchar(24) NOT NULL,
   `_on` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'waste_basket_m' => 'CREATE TABLE `waste_basket_m` (
   `id` int(8) NOT NULL AUTO_INCREMENT,
   `field1` varchar(28) DEFAULT NULL,
@@ -1594,7 +1594,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `files` varchar(128) DEFAULT NULL,
   `old_id` int(8) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
     'wizard_settings' => 'CREATE TABLE `wizard_settings` (
   `id` int(4) NOT NULL AUTO_INCREMENT,
   `screen` int(11) NOT NULL,
@@ -1607,7 +1607,7 @@ $INSTALL_SCHEMA_TABLES = array(
   `size` int(4) NOT NULL,
   `maxlength` int(4) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci',
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 );
 $INSTALL_SCHEMA_SEED = array(
     'INSERT INTO `allocates` VALUES
