@@ -161,7 +161,8 @@ function installer_fetch_create_table_sql($mysqli, $tableName) {
 function installer_normalize_create_table_sql($sql) {
     if (!is_string($sql) || $sql === '') { return ''; }
     $sql = str_replace(array("
-", ""), "
+", "
+"), "
 ", $sql);
     $sql = preg_replace('/CREATE TABLE\s+`[^`]+`/i', 'CREATE TABLE `__TABLE__`', $sql, 1);
     $sql = preg_replace('/AUTO_INCREMENT=\d+/i', 'AUTO_INCREMENT', $sql);
@@ -173,6 +174,67 @@ function installer_table_matches_target_schema($mysqli, $tableName, $createSql) 
     $existingSql = installer_fetch_create_table_sql($mysqli, $tableName);
     if ($existingSql === null) { return false; }
     return installer_normalize_create_table_sql($existingSql) === installer_normalize_create_table_sql($createSql);
+}
+
+function installer_extract_create_table_parts($sql) {
+    $parts = array('definition' => '', 'options' => '');
+    if (!is_string($sql) || $sql === '') { return $parts; }
+    if (preg_match('/CREATE TABLE\s+`[^`]+`\s*\((.*)\)\s*(.*)$/is', $sql, $matches)) {
+        $parts['definition'] = $matches[1];
+        $parts['options'] = $matches[2];
+    }
+    return $parts;
+}
+
+function installer_normalize_sql_fragment($sql) {
+    if (!is_string($sql) || $sql === '') { return ''; }
+    $sql = str_replace(array("
+", "
+"), "
+", $sql);
+    $sql = preg_replace('/AUTO_INCREMENT=\d+/i', 'AUTO_INCREMENT', $sql);
+    $sql = preg_replace('/\s+/', ' ', trim($sql));
+    return strtolower($sql);
+}
+
+function installer_table_requires_rebuild($mysqli, $tableName, $createSql) {
+    $existingSql = installer_fetch_create_table_sql($mysqli, $tableName);
+    if ($existingSql === null) { return true; }
+    $existingParts = installer_extract_create_table_parts($existingSql);
+    $targetParts = installer_extract_create_table_parts($createSql);
+    return installer_normalize_sql_fragment($existingParts['definition']) !== installer_normalize_sql_fragment($targetParts['definition']);
+}
+
+function installer_build_table_options_alter_sql($tableName, $createSql) {
+    $parts = array();
+    if (preg_match('/ENGINE=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'ENGINE=' . $m[1];
+    }
+    if (preg_match('/DEFAULT CHARSET=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'DEFAULT CHARACTER SET ' . $m[1];
+    }
+    if (preg_match('/COLLATE=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'COLLATE=' . $m[1];
+    }
+    if (preg_match('/ROW_FORMAT=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'ROW_FORMAT=' . $m[1];
+    }
+    if (empty($parts)) { return null; }
+    return 'ALTER TABLE ' . installer_ident($tableName) . ' ' . implode(', ', $parts);
+}
+
+function installer_convert_table_options($mysqli, $tableName, $createSql, &$logs) {
+    $alterSql = installer_build_table_options_alter_sql($tableName, $createSql);
+    if ($alterSql === null) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed: unable to determine target table options.';
+        return false;
+    }
+    if (!$mysqli->query($alterSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to update table options: ' . $mysqli->error;
+        return false;
+    }
+    $logs[] = 'Upgrading ' . $tableName . '... Done! Updated table options only.';
+    return true;
 }
 
 function installer_build_csv_download_link($tableName) {
@@ -227,6 +289,11 @@ function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
     if (installer_table_matches_target_schema($mysqli, $tableName, $createSql)) {
         $logs[] = $tableName . ' already matches current schema.';
         return true;
+    }
+
+    if (!installer_table_requires_rebuild($mysqli, $tableName, $createSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '...';
+        return installer_convert_table_options($mysqli, $tableName, $createSql, $logs);
     }
 
     $tempTable = $tableName . '__upgrade_tmp';
@@ -833,15 +900,44 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
     });
   }
 
+  var pendingUpgradeLine = null;
+
+  function renderLogLine(target, line){
+    if(/<a\s/i.test(line)){
+      target.innerHTML=line;
+    } else {
+      target.innerHTML=escapeHtml(line);
+    }
+  }
+
   function appendLines(lines){
     if(!lines || !lines.length){ return; }
     lines.forEach(function(line){
-      var div=document.createElement('div');
-      if(/<a\s/i.test(line)){
-        div.innerHTML=line;
-      } else {
-        div.innerHTML=escapeHtml(line);
+      var pendingMatch = line.match(/^(Upgrading .*\.\.\.)$/);
+      if(pendingMatch){
+        if(pendingUpgradeLine){
+          renderLogLine(pendingUpgradeLine, pendingUpgradeLine.getAttribute('data-line') || pendingUpgradeLine.textContent || '');
+        }
+        var pendingDiv=document.createElement('div');
+        pendingDiv.setAttribute('data-line', line);
+        renderLogLine(pendingDiv, line);
+        log.appendChild(pendingDiv);
+        pendingUpgradeLine = pendingDiv;
+        return;
       }
+
+      if(pendingUpgradeLine){
+        var pendingText = pendingUpgradeLine.getAttribute('data-line') || '';
+        if(pendingText !== '' && line.indexOf(pendingText) === 0){
+          pendingUpgradeLine.setAttribute('data-line', line);
+          renderLogLine(pendingUpgradeLine, line);
+          pendingUpgradeLine = null;
+          return;
+        }
+      }
+
+      var div=document.createElement('div');
+      renderLogLine(div, line);
       log.appendChild(div);
     });
     log.scrollTop = log.scrollHeight;
