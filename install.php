@@ -122,32 +122,282 @@ function apply_prefix($sql, $prefix) {
     return $sql;
 }
 
-function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
-    if ($mode === 'upgrade' && table_exists_mysqli($mysqli, $tableName)) {
-        if (preg_match('/CREATE TABLE\s+`[^`]+`\s*\((.*)\)\s*ENGINE/is', $createSql, $m)) {
-            $lines = preg_split('/,\n/', $m[1]);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '' || $line[0] !== '`') { continue; }
-                if (!preg_match('/^`([^`]+)`\s+(.+)$/', $line, $cm)) { continue; }
-                $column = $cm[1];
-                $def = "`{$column}` {$cm[2]}";
-                $colEsc = $mysqli->real_escape_string($column);
-                $hasRes = $mysqli->query("SHOW COLUMNS FROM `{$tableName}` LIKE '{$colEsc}'");
-                $has = ($hasRes && $hasRes->num_rows > 0);
-                if ($hasRes) { $hasRes->free(); }
-                $alter = $has ? "ALTER TABLE `{$tableName}` MODIFY COLUMN {$def}" : "ALTER TABLE `{$tableName}` ADD COLUMN {$def}";
-                if (!$mysqli->query($alter)) {
-                    $logs[] = "Schema sync warning on {$tableName}.{$column}: " . $mysqli->error;
-                }
-            }
-        }
+function installer_ident($name) {
+    return '`' . str_replace('`', '``', $name) . '`';
+}
+
+function installer_literal($mysqli, $value) {
+    return ($value === null) ? 'NULL' : "'" . $mysqli->real_escape_string((string)$value) . "'";
+}
+
+function installer_table_row_count($mysqli, $tableName) {
+    $res = $mysqli->query('SELECT COUNT(*) AS `count` FROM ' . installer_ident($tableName));
+    if (!$res) { return 0; }
+    $row = $res->fetch_assoc();
+    $res->free();
+    return isset($row['count']) ? (int)$row['count'] : 0;
+}
+
+function installer_fetch_columns($mysqli, $tableName) {
+    $columns = array();
+    $res = $mysqli->query('SHOW COLUMNS FROM ' . installer_ident($tableName));
+    if (!$res) { return $columns; }
+    while ($row = $res->fetch_assoc()) {
+        $columns[] = $row;
+    }
+    $res->free();
+    return $columns;
+}
+
+function installer_fetch_create_table_sql($mysqli, $tableName) {
+    $res = $mysqli->query('SHOW CREATE TABLE ' . installer_ident($tableName));
+    if (!$res) { return null; }
+    $row = $res->fetch_assoc();
+    $res->free();
+    if (!$row) { return null; }
+    return isset($row['Create Table']) ? $row['Create Table'] : null;
+}
+
+function installer_normalize_create_table_sql($sql) {
+    if (!is_string($sql) || $sql === '') { return ''; }
+    $sql = str_replace(array("
+", "
+"), "
+", $sql);
+    $sql = preg_replace('/CREATE TABLE\s+`[^`]+`/i', 'CREATE TABLE `__TABLE__`', $sql, 1);
+    $sql = preg_replace('/AUTO_INCREMENT=\d+/i', 'AUTO_INCREMENT', $sql);
+    $sql = preg_replace('/\s+/', ' ', trim($sql));
+    return strtolower($sql);
+}
+
+function installer_table_matches_target_schema($mysqli, $tableName, $createSql) {
+    $existingSql = installer_fetch_create_table_sql($mysqli, $tableName);
+    if ($existingSql === null) { return false; }
+    return installer_normalize_create_table_sql($existingSql) === installer_normalize_create_table_sql($createSql);
+}
+
+function installer_extract_create_table_parts($sql) {
+    $parts = array('definition' => '', 'options' => '');
+    if (!is_string($sql) || $sql === '') { return $parts; }
+    if (preg_match('/CREATE TABLE\s+`[^`]+`\s*\((.*)\)\s*(.*)$/is', $sql, $matches)) {
+        $parts['definition'] = $matches[1];
+        $parts['options'] = $matches[2];
+    }
+    return $parts;
+}
+
+function installer_normalize_sql_fragment($sql) {
+    if (!is_string($sql) || $sql === '') { return ''; }
+    $sql = str_replace(array("
+", "
+"), "
+", $sql);
+    $sql = preg_replace('/AUTO_INCREMENT=\d+/i', 'AUTO_INCREMENT', $sql);
+    $sql = preg_replace('/\s+/', ' ', trim($sql));
+    return strtolower($sql);
+}
+
+function installer_table_requires_rebuild($mysqli, $tableName, $createSql) {
+    $existingSql = installer_fetch_create_table_sql($mysqli, $tableName);
+    if ($existingSql === null) { return true; }
+    $existingParts = installer_extract_create_table_parts($existingSql);
+    $targetParts = installer_extract_create_table_parts($createSql);
+    return installer_normalize_sql_fragment($existingParts['definition']) !== installer_normalize_sql_fragment($targetParts['definition']);
+}
+
+function installer_build_table_options_alter_sql($tableName, $createSql) {
+    $parts = array();
+    if (preg_match('/ENGINE=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'ENGINE=' . $m[1];
+    }
+    if (preg_match('/DEFAULT CHARSET=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'DEFAULT CHARACTER SET ' . $m[1];
+    }
+    if (preg_match('/COLLATE=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'COLLATE=' . $m[1];
+    }
+    if (preg_match('/ROW_FORMAT=([^\s]+)/i', $createSql, $m)) {
+        $parts[] = 'ROW_FORMAT=' . $m[1];
+    }
+    if (empty($parts)) { return null; }
+    return 'ALTER TABLE ' . installer_ident($tableName) . ' ' . implode(', ', $parts);
+}
+
+function installer_convert_table_options($mysqli, $tableName, $createSql, &$logs) {
+    $alterSql = installer_build_table_options_alter_sql($tableName, $createSql);
+    if ($alterSql === null) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed: unable to determine target table options.';
+        return false;
+    }
+    if (!$mysqli->query($alterSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to update table options: ' . $mysqli->error;
+        return false;
+    }
+    $logs[] = 'Upgrading ' . $tableName . '... Done! Updated table options only.';
+    return true;
+}
+
+function installer_build_csv_download_link($tableName) {
+    $url = 'install.php?download_unmigrated=' . rawurlencode($tableName) . '&format=csv';
+    return '<a href="' . h($url) . '">Download CSV</a>';
+}
+
+function installer_export_table_as_csv($mysqli, $tableName) {
+    if (!table_exists_mysqli($mysqli, $tableName)) {
+        header('HTTP/1.1 404 Not Found');
+        echo 'Table not found.';
         return;
     }
 
-    if (!$mysqli->query($createSql)) {
-        $logs[] = "Create table warning for {$tableName}: " . $mysqli->error;
+    $filename = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $tableName) . '.csv';
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    $out = fopen('php://output', 'w');
+    $res = $mysqli->query('SELECT * FROM ' . installer_ident($tableName));
+    if ($res) {
+        $headers = array();
+        $fields = $res->fetch_fields();
+        foreach ($fields as $field) { $headers[] = $field->name; }
+        fputcsv($out, $headers);
+        while ($row = $res->fetch_assoc()) {
+            fputcsv($out, $row);
+        }
+        $res->free();
     }
+    fclose($out);
+}
+
+function installer_delete_single_row($mysqli, $tableName, $row) {
+    $conditions = array();
+    foreach ($row as $column => $value) {
+        $conditions[] = installer_ident($column) . ' <=> ' . installer_literal($mysqli, $value);
+    }
+    $sql = 'DELETE FROM ' . installer_ident($tableName) . ' WHERE ' . implode(' AND ', $conditions) . ' LIMIT 1';
+    return (bool)$mysqli->query($sql);
+}
+
+function create_or_sync_table($mysqli, $tableName, $createSql, $mode, &$logs) {
+    if ($mode !== 'upgrade' || !table_exists_mysqli($mysqli, $tableName)) {
+        if (!$mysqli->query($createSql)) {
+            $logs[] = "Create table warning for {$tableName}: " . $mysqli->error;
+            return false;
+        }
+        return true;
+    }
+
+    if (installer_table_matches_target_schema($mysqli, $tableName, $createSql)) {
+        $logs[] = $tableName . ' already matches current schema.';
+        return true;
+    }
+
+    if (!installer_table_requires_rebuild($mysqli, $tableName, $createSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '...';
+        return installer_convert_table_options($mysqli, $tableName, $createSql, $logs);
+    }
+
+    $tempTable = $tableName . '__upgrade_tmp';
+    $unmigratedTable = $tableName . '_unmigrated';
+    $logs[] = 'Upgrading ' . $tableName . '...';
+
+    $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+    $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($unmigratedTable));
+
+    $tempCreateSql = preg_replace('/CREATE TABLE\s+`[^`]+`/i', 'CREATE TABLE ' . installer_ident($tempTable), $createSql, 1);
+    if (!$mysqli->query($tempCreateSql)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to create temporary table: ' . $mysqli->error;
+        return false;
+    }
+
+    $sourceColumns = installer_fetch_columns($mysqli, $tableName);
+    $targetColumns = installer_fetch_columns($mysqli, $tempTable);
+    $sourceColumnMap = array();
+    $commonColumns = array();
+    foreach ($sourceColumns as $column) {
+        $sourceColumnMap[$column['Field']] = true;
+    }
+    foreach ($targetColumns as $column) {
+        if (isset($sourceColumnMap[$column['Field']])) {
+            $commonColumns[] = $column['Field'];
+        }
+    }
+
+    if (empty($commonColumns)) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed: no compatible columns found.';
+        $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+        return false;
+    }
+
+    $selectColumns = array();
+    foreach ($commonColumns as $column) {
+        $selectColumns[] = installer_ident($column);
+    }
+    $insertColumns = implode(', ', $selectColumns);
+    $placeholders = implode(', ', array_fill(0, count($commonColumns), '?'));
+    $insertSql = 'INSERT INTO ' . installer_ident($tempTable) . ' (' . $insertColumns . ') VALUES (' . $placeholders . ')';
+    $insertStmt = $mysqli->prepare($insertSql);
+    if (!$insertStmt) {
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to prepare insert: ' . $mysqli->error;
+        $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+        return false;
+    }
+
+    $selectSql = 'SELECT ' . $insertColumns . ' FROM ' . installer_ident($tableName);
+    $res = $mysqli->query($selectSql);
+    if (!$res) {
+        $insertStmt->close();
+        $mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tempTable));
+        $logs[] = 'Upgrading ' . $tableName . '... Failed to read source rows: ' . $mysqli->error;
+        return false;
+    }
+
+    $mysqli->begin_transaction();
+    $migratedRows = 0;
+    $failedRows = 0;
+    while ($row = $res->fetch_assoc()) {
+        $params = array();
+        $types = '';
+        foreach ($commonColumns as $column) {
+            $types .= 's';
+            $params[] = isset($row[$column]) ? (string)$row[$column] : null;
+        }
+        $bind = array($types);
+        for ($i = 0; $i < count($params); $i++) { $bind[] = &$params[$i]; }
+        call_user_func_array(array($insertStmt, 'bind_param'), $bind);
+        if ($insertStmt->execute()) {
+            if (installer_delete_single_row($mysqli, $tableName, $row)) {
+                $migratedRows++;
+            } else {
+                $failedRows++;
+                $logs[] = 'Row delete warning in ' . $tableName . ': ' . $mysqli->error;
+            }
+        } else {
+            $failedRows++;
+        }
+    }
+    $res->free();
+    $insertStmt->close();
+    $mysqli->commit();
+
+    $remainingRows = installer_table_row_count($mysqli, $tableName);
+    if ($remainingRows > 0) {
+        if (!$mysqli->query('RENAME TABLE ' . installer_ident($tableName) . ' TO ' . installer_ident($unmigratedTable) . ', ' . installer_ident($tempTable) . ' TO ' . installer_ident($tableName))) {
+            $logs[] = 'Upgrading ' . $tableName . '... Failed to rename migrated tables: ' . $mysqli->error;
+            return false;
+        }
+        $logs[] = 'Unmigrated data left in ' . $unmigratedTable . '! ' . installer_build_csv_download_link($unmigratedTable);
+    } else {
+        if (!$mysqli->query('DROP TABLE IF EXISTS ' . installer_ident($tableName))) {
+            $logs[] = 'Drop warning for ' . $tableName . ': ' . $mysqli->error;
+        }
+        if (!$mysqli->query('RENAME TABLE ' . installer_ident($tempTable) . ' TO ' . installer_ident($tableName))) {
+            $logs[] = 'Upgrading ' . $tableName . '... Failed to activate migrated table: ' . $mysqli->error;
+            return false;
+        }
+    }
+
+    $logs[] = 'Upgrading ' . $tableName . '... Done! Migrated ' . $migratedRows . ' row(s)' . ($failedRows > 0 ? ', left ' . $failedRows . ' row(s) unmigrated.' : '.');
+    return true;
 }
 
 /**
@@ -259,14 +509,21 @@ function perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $insta
             }
             $tables->free();
         }
-        return;
     }
 
     foreach ($INSTALL_SCHEMA_TABLES as $baseName => $createBase) {
-        $push('Applying table schema: ' . $baseName . ' ...');
         $tableName = $cfg['prefix'] . $baseName;
         $createSql = apply_prefix($createBase, $cfg['prefix']);
-        create_or_sync_table($mysqli, $tableName, $createSql, $mode, $logs);
+        $tableLogs = array();
+        $okTable = create_or_sync_table($mysqli, $tableName, $createSql, $mode, $tableLogs);
+        if ($mode !== 'upgrade') {
+            $push('Upgrading ' . $tableName . '... ' . ($okTable ? 'Done!' : 'Failed!'));
+        }
+        foreach ($tableLogs as $line) { $push($line); }
+        if (!$okTable) {
+            $mysqli->close();
+            return array(false, $logs);
+        }
     }
 
     foreach ($INSTALL_SCHEMA_SEED as $insertBase) {
@@ -313,6 +570,23 @@ if ($detection['exists'] && !$isInstallerApiCall) {
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['download_unmigrated'])) {
+    $tableName = trim((string)$_GET['download_unmigrated']);
+    if ($tableName === '') {
+        header('HTTP/1.1 400 Bad Request');
+        echo 'Missing table name.';
+        exit();
+    }
+    $mysqli = connect_db($defaults);
+    if (!$mysqli) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo 'Database connection failed.';
+        exit();
+    }
+    installer_export_table_as_csv($mysqli, $tableName);
+    $mysqli->close();
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'execute_stream') {
     @set_time_limit(0);
@@ -417,23 +691,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         case 'schema':
             $i = (int)$current['index'];
             $baseName = $tables[$i];
-            $messages[] = 'Applying table schema: ' . $baseName . ' ...';
+            $tableName = $cfg['prefix'] . $baseName;
             $logs = array();
-            create_or_sync_table(
+            $result = create_or_sync_table(
                 $mysqli,
-                $cfg['prefix'] . $baseName,
+                $tableName,
                 apply_prefix($tableSql[$i], $cfg['prefix']),
                 $mode,
                 $logs
             );
+            if ($mode !== 'upgrade') {
+                $messages[] = 'Upgrading ' . $tableName . '... ' . ($result ? 'Done!' : 'Failed!');
+            }
             foreach ($logs as $line) { $messages[] = $line; }
-            if (!table_exists_mysqli($mysqli, $cfg['prefix'] . $baseName)) {
+            if (!$result || !table_exists_mysqli($mysqli, $tableName)) {
                 $ok = false;
                 $messages[] = 'Schema error: expected table missing after create/sync: ' . $baseName;
-            }
-            if (!empty($logs) && $mode === 'install_clean') {
-                $ok = false;
-                $messages[] = 'Schema sync warnings are treated as errors during clean install.';
             }
             break;
         case 'seed':
@@ -621,9 +894,52 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   modeInputs.forEach(function(i){ i.addEventListener('change', function(){ updateModeCards(); validatePass(); }); });
   updateModeCards();
 
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  var pendingUpgradeLine = null;
+
+  function renderLogLine(target, line){
+    if(/<a\s/i.test(line)){
+      target.innerHTML=line;
+    } else {
+      target.innerHTML=escapeHtml(line);
+    }
+  }
+
   function appendLines(lines){
     if(!lines || !lines.length){ return; }
-    log.textContent += lines.join('\n') + '\n';
+    lines.forEach(function(line){
+      var pendingMatch = line.match(/^(Upgrading .*\.\.\.)$/);
+      if(pendingMatch){
+        if(pendingUpgradeLine){
+          renderLogLine(pendingUpgradeLine, pendingUpgradeLine.getAttribute('data-line') || pendingUpgradeLine.textContent || '');
+        }
+        var pendingDiv=document.createElement('div');
+        pendingDiv.setAttribute('data-line', line);
+        renderLogLine(pendingDiv, line);
+        log.appendChild(pendingDiv);
+        pendingUpgradeLine = pendingDiv;
+        return;
+      }
+
+      if(pendingUpgradeLine){
+        var pendingText = pendingUpgradeLine.getAttribute('data-line') || '';
+        if(pendingText !== '' && line.indexOf(pendingText) === 0){
+          pendingUpgradeLine.setAttribute('data-line', line);
+          renderLogLine(pendingUpgradeLine, line);
+          pendingUpgradeLine = null;
+          return;
+        }
+      }
+
+      var div=document.createElement('div');
+      renderLogLine(div, line);
+      log.appendChild(div);
+    });
     log.scrollTop = log.scrollHeight;
   }
 
