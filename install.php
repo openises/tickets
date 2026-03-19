@@ -642,6 +642,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['download_unmigrated']))
         echo 'Missing table name.';
         exit();
     }
+    // Security: only allow safe table name characters
+    if (!preg_match('/^[A-Za-z0-9_]+$/', $tableName)) {
+        header('HTTP/1.1 400 Bad Request');
+        echo 'Invalid table name.';
+        exit();
+    }
+    // Security: restrict download to *_unmigrated backup tables only
+    if (substr($tableName, -11) !== '_unmigrated') {
+        header('HTTP/1.1 403 Forbidden');
+        echo 'Only _unmigrated backup tables can be downloaded.';
+        exit();
+    }
     $mysqli = connect_db($defaults);
     if (!$mysqli) {
         header('HTTP/1.1 500 Internal Server Error');
@@ -989,26 +1001,21 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   var pendingUpgradeLine = null;
 
   function renderLogLine(target, line){
-    if(/<a\s/i.test(line)){
-      target.innerHTML=line;
+    // Check if line contains a server-generated download link
+    var linkMatch = line.match(/^(.*?)(<a\s+href="[^"]*"[^>]*>[^<]*<\/a>)(.*)$/i);
+    if(linkMatch){
+      // Build link safely via DOM instead of innerHTML
+      target.textContent = linkMatch[1];
+      var tmp = document.createElement('span');
+      tmp.innerHTML = linkMatch[2]; // only the <a> tag from server
+      if(tmp.firstChild && tmp.firstChild.tagName === 'A') {
+        target.appendChild(tmp.firstChild);
+      }
+      if(linkMatch[3]) {
+        target.appendChild(document.createTextNode(linkMatch[3]));
+      }
     } else {
-      target.innerHTML=escapeHtml(line);
-    }
-  }
-
-  function escapeHtml(value){
-    return String(value).replace(/[&<>"']/g, function(ch){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
-    });
-  }
-
-  var pendingUpgradeLine = null;
-
-  function renderLogLine(target, line){
-    if(/<a\s/i.test(line)){
-      target.innerHTML=line;
-    } else {
-      target.innerHTML=escapeHtml(line);
+      target.textContent = line;
     }
   }
 

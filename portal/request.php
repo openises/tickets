@@ -19,16 +19,7 @@ $api_key = get_variable('gmaps_api_key');
 $key_str = (safe_strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps_ok = ($key_str) ? 1 : 0;
 
-function sanitize_coordinate($value) {
-	$value = sanitize_string($value);
-	if($value === '') {
-		return NULL;
-		}
-	if(!is_numeric($value)) {
-		return NULL;
-		}
-	return round((float)$value, 7);
-	}
+// sanitize_coordinate() is now in incs/security.inc.php (loaded via functions.inc.php)
 ?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml">
@@ -645,7 +636,7 @@ if((!empty($_POST)) && (empty($_GET))) {
 		`request_date` = ?,
 		`status` = ?
 		WHERE `id` = ?";
-	$result = db_query($query, [trim($appEmail), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_postcode']), trim($_POST['frm_state']), trim($_POST['frm_patient']), trim($_POST['frm_phone']), trim($_POST['frm_toaddress']), trim($_POST['frm_pickup']), trim($_POST['frm_arrival']), trim($_POST['frm_orig_fac']), trim($_POST['frm_rec_fac']), trim($_POST['frm_scope']), trim($_POST['frm_description']), sanitize_coordinate($_POST['frm_lat'] ?? ''), sanitize_coordinate($_POST['frm_lng'] ?? ''), trim($request_date), trim($_POST['frm_status']), $post_id]);	
+	$result = db_query($query, [trim($appEmail), trim($_POST['frm_street']), trim($_POST['frm_city']), trim($_POST['frm_postcode']), trim($_POST['frm_state']), trim($_POST['frm_patient']), trim($_POST['frm_phone']), trim($_POST['frm_toaddress']), trim($_POST['frm_pickup']), trim($_POST['frm_arrival']), trim($_POST['frm_orig_fac']), trim($_POST['frm_rec_fac']), trim($_POST['frm_scope']), trim($_POST['frm_description']), sanitize_coordinate($_POST['frm_lat'] ?? '', 'lat'), sanitize_coordinate($_POST['frm_lng'] ?? '', 'lng'), trim($request_date), trim($_POST['frm_status']), $post_id]);	
 	$the_ticket = (($_POST['frm_ticket_id'] != NULL) AND ($_POST['frm_ticket_id'] != "0") AND ($_POST['frm_ticket_id'] != "")) ? strip_tags($_POST['frm_ticket_id']) : "0";
 	if($the_ticket != "0") {
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";

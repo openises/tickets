@@ -5,7 +5,7 @@
  * 3/1/2026: Consolidated version source and added legacy detection
  *           for installs where the settings table exists but _version is absent.
  */
-define('TICKETS_CURRENT_VERSION', 'v3.44.0');
+define('TICKETS_CURRENT_VERSION', 'v3.44.1');
 $tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {

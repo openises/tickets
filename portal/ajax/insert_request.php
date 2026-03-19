@@ -25,16 +25,7 @@ function get_requester_details($the_id) {
 	return $the_ret;
 	}
 
-function sanitize_coordinate($value) {
-	$value = sanitize_string($value);
-	if($value === '') {
-		return NULL;
-		}
-	if(!is_numeric($value)) {
-		return NULL;
-		}
-	return round((float)$value, 7);
-	}
+// sanitize_coordinate() is now in incs/security.inc.php (loaded via functions.inc.php)
 
 function get_facname($id) {
 	$the_ret = array();
@@ -69,8 +60,8 @@ if($_GET['frm_patient'] == "") {
 	$city = sanitize_string($_GET['frm_city']);
 	$postcode = sanitize_string($_GET['frm_postcode']);
 	$state = sanitize_string($_GET['frm_state']);
-	$lat = sanitize_coordinate($_GET['frm_lat'] ?? '');
-	$lng = sanitize_coordinate($_GET['frm_lng'] ?? '');
+	$lat = sanitize_coordinate($_GET['frm_lat'] ?? '', 'lat');
+	$lng = sanitize_coordinate($_GET['frm_lng'] ?? '', 'lng');
 	$description = sanitize_string($_GET['frm_description']);
 	$request_date = sanitize_string($_GET['frm_request_date']);
 	$request_date = mysql_format_date(safe_strtotime($request_date));

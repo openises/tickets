@@ -2035,7 +2035,7 @@ $INSTALL_SCHEMA_SEED = array(
     'INSERT INTO `settings` VALUES
 (1,\'_aprs_time\',\'1772361207\'),
 (2,\'_sleep\',\'5\'),
-(3,\'_version\',\'v3.44.0\'),
+(3,\'_version\',\'v3.44.1\'),
 (4,\'abbreviate_affected\',\'30\'),
 (5,\'abbreviate_description\',\'30\'),
 (6,\'allow_custom_tags\',\'0\'),

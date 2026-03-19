@@ -32,16 +32,8 @@ if($istest) {print "_POST"; dump($_POST);}
 
 $zoom_tight = FALSE;		// default is FALSE (no tight zoom); replace with a decimal zoom value to over-ride the standard default zoom setting - 3/27/10
 
-function sanitize_coordinate($value) {
-	$value = sanitize_string($value);
-	if($value === '') {
-		return NULL;
-		}
-	if(!is_numeric($value)) {
-		return NULL;
-		}
-	return round((float)$value, 7);
-	}
+// sanitize_coordinate() is now in incs/security.inc.php (loaded via functions.inc.php)
+
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 /*
 11/3/07 added frame jump prevention
@@ -241,8 +233,8 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 				sanitize_string(trim($_POST['frm_to_address'])),
 				sanitize_int(trim($_POST['frm_facility_id'])),
 				sanitize_int(trim($_POST['frm_rec_facility_id'] ?? '0')),
-				sanitize_coordinate($_POST['frm_lat'] ?? ''),
-				sanitize_coordinate($_POST['frm_lng'] ?? ''),
+				sanitize_coordinate($_POST['frm_lat'] ?? '', 'lat'),
+				sanitize_coordinate($_POST['frm_lng'] ?? '', 'lng'),
 				sanitize_string(trim($_POST['frm_scope'])),
 				sanitize_int(trim($post_frm_owner)),
 				sanitize_int(trim($_POST['frm_severity'])),

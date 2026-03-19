@@ -130,6 +130,36 @@ function sanitize_string($value): string
 }
 
 /**
+ * Sanitize a latitude or longitude value for DECIMAL(10,7) storage.
+ *
+ * Returns a rounded float, or NULL if the value is empty, non-numeric,
+ * or outside valid coordinate range.
+ *
+ * @param mixed  $value     Raw coordinate value
+ * @param string $axis      'lat' or 'lng' (for range validation)
+ * @return float|null       Sanitized coordinate or NULL
+ * @since v3.44.1
+ */
+function sanitize_coordinate($value, $axis = '') {
+    $value = sanitize_string($value);
+    if ($value === '') {
+        return null;
+    }
+    if (!is_numeric($value)) {
+        return null;
+    }
+    $coord = round((float) $value, 7);
+    // Range validation
+    if ($axis === 'lat' && ($coord < -90.0 || $coord > 90.0)) {
+        return null;
+    }
+    if ($axis === 'lng' && ($coord < -180.0 || $coord > 180.0)) {
+        return null;
+    }
+    return $coord;
+}
+
+/**
  * Hash a password using PHP's built-in password_hash with bcrypt.
  *
  * Use this for ALL new password storage. Never use md5() for passwords.
