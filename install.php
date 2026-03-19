@@ -630,7 +630,27 @@ $isInstallerApiCall = ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action
 if ($detection['exists'] && !$isInstallerApiCall) {
     $isAdmin = isset($_SESSION['level']) && ((int)$_SESSION['level'] === 0 || (int)$_SESSION['level'] === 1);
     if (!$isAdmin) {
-        header('Location: ./incs/login.inc.php');
+        // Show a styled login-required message instead of redirecting to an include file
+        require_once __DIR__ . '/incs/versions.inc.php';
+        $iv = htmlspecialchars($installerVersion, ENT_QUOTES, 'UTF-8');
+        ?><!doctype html>
+<html><head>
+<meta charset="utf-8"><title>ticketsCAD Installer — Login Required</title>
+<style>
+body{background:#1a1a2e;color:#e0e0e0;font-family:Arial,sans-serif;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{background:#16213e;border:1px solid #0f3460;border-radius:12px;padding:32px 40px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.4);text-align:center}
+h1{margin:0 0 8px;font-size:22px;color:#e94560}
+p{color:#8899aa;line-height:1.6;margin:16px 0}
+.btn{display:inline-block;background:#1570ef;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:16px;margin-top:8px}
+.btn:hover{background:#1259c4}
+</style>
+</head><body>
+<div class="card">
+    <h1>Administrator Login Required</h1>
+    <p>The ticketsCAD installer requires an administrator account to proceed. Please log in first, then return to the installer.</p>
+    <a class="btn" href="index.php">Log In</a>
+</div>
+</body></html><?php
         exit();
     }
 }
@@ -680,9 +700,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     );
 
     $mode = isset($_POST['mode']) ? $_POST['mode'] : 'install_clean';
-    $adminUser = trim((string)$_POST['admin_user']);
-    $adminPass = (string)$_POST['admin_pass'];
-    $adminName = trim((string)$_POST['admin_name']);
+    $adminUser = trim((string)($_POST['admin_user'] ?? ''));
+    $adminPass = (string)($_POST['admin_pass'] ?? '');
+    $adminName = trim((string)($_POST['admin_name'] ?? ''));
 
     if ($mode === 'install_clean' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
         emit_line('ERROR: Super admin user, name, and password (min 6 chars) are required.');
@@ -708,9 +728,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     );
 
     $mode = isset($_POST['mode']) ? $_POST['mode'] : 'install_clean';
-    $adminUser = trim((string)$_POST['admin_user']);
-    $adminPass = (string)$_POST['admin_pass'];
-    $adminName = trim((string)$_POST['admin_name']);
+    $adminUser = trim((string)($_POST['admin_user'] ?? ''));
+    $adminPass = (string)($_POST['admin_pass'] ?? '');
+    $adminName = trim((string)($_POST['admin_name'] ?? ''));
     $step = isset($_POST['step']) ? max(0, (int)$_POST['step']) : 0;
 
     if ($mode === 'install_clean' && ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '')) {
@@ -849,9 +869,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     );
 
     $mode = isset($_POST['mode']) ? $_POST['mode'] : 'install_clean';
-    $adminUser = trim((string)$_POST['admin_user']);
-    $adminPass = (string)$_POST['admin_pass'];
-    $adminName = trim((string)$_POST['admin_name']);
+    $adminUser = trim((string)($_POST['admin_user'] ?? ''));
+    $adminPass = (string)($_POST['admin_pass'] ?? '');
+    $adminName = trim((string)($_POST['admin_name'] ?? ''));
 
     if ($mode === 'install_clean') {
         if ($adminUser === '' || strlen($adminPass) < 6 || $adminName === '') {
@@ -904,6 +924,23 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
     <h1>ticketsCAD Installer <span class="badge"><?php echo h($installerVersion); ?></span></h1>
     <p class="muted">Installed version: <strong><?php echo h($detection['installed_version'] === null ? 'not detected' : $detection['installed_version']); ?></strong></p>
     <?php if ($detection['legacy']) { ?><div class="notice">Detected settings table without a _version value. This appears to be an unknown legacy install.</div><?php } ?>
+    <?php
+    $reason = isset($_GET['reason']) ? $_GET['reason'] : '';
+    if ($reason === 'version_mismatch') {
+        $instVer = isset($_GET['installed']) ? h($_GET['installed']) : '?';
+        $currVer = isset($_GET['current']) ? h($_GET['current']) : '?';
+        echo '<div class="notice" style="background:#fef3f2;border-color:#fecdca;color:#b42318;">';
+        echo '<strong>Version mismatch detected.</strong> ';
+        echo 'Your database is at <strong>' . $instVer . '</strong> but the application files are <strong>' . $currVer . '</strong>. ';
+        echo 'Please run an <strong>Upgrade</strong> to sync the database schema with the current release.';
+        echo '</div>';
+    } elseif ($reason === 'no_database') {
+        echo '<div class="notice" style="background:#fef3f2;border-color:#fecdca;color:#b42318;">';
+        echo '<strong>No database configuration found.</strong> ';
+        echo 'Please configure your database connection and run a clean install.';
+        echo '</div>';
+    }
+    ?>
     <p class="muted">System details: PHP <?php echo h(PHP_VERSION); ?> · OS <?php echo h(PHP_OS); ?> · Web <?php echo h($serverSoftware); ?> · DB <?php echo h($detection['db_version'] ? $detection['db_version'] : 'not connected'); ?></p>
 
     <form id="installerForm">
