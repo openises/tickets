@@ -15,6 +15,8 @@ if (!file_exists('./incs/mysql.inc.php')) {
 
 // Version gate — must run BEFORE functions.inc.php which loads login.inc.php
 require_once './incs/versions.inc.php';
+// Load DB credentials into global scope (versions.inc.php loaded them inside a function)
+require './incs/mysql.inc.php';
 
 $versions = tickets_get_versions();
 $version = $versions['installer'];
@@ -27,7 +29,6 @@ if ($installedVersion === null) {
 
 // Version mismatch — show upgrade notice with embedded admin login
 if (!$versions['match'] && $installedVersion !== 'unknown (legacy)') {
-    require './incs/mysql.inc.php';       // use require (not require_once) — versions.inc.php already loaded it in a function scope
     require_once './incs/security.inc.php';
 
     // Handle login POST
