@@ -23,6 +23,10 @@ require_once('./incs/functions.inc.php');
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 require_once($the_inc);
+$refresh_top_once = !empty($_SESSION['refresh_top_once']);
+if ($refresh_top_once) {
+	unset($_SESSION['refresh_top_once']);
+}
 $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
@@ -162,5 +166,14 @@ $alt_sit = (intval(get_variable('alternate_sit')) == 1) ? true : false;
 			}
 
 		}
+
+if ($refresh_top_once) echo"<script>
+	try {
+		if (parent && parent.frames && parent.frames['upper']) {
+			parent.frames['upper'].location.replace('top.php?login_refresh=<?php print time(); ?>');
+		}
+	} catch (e) {}
+</script>";
+
 exit();
 ?>
