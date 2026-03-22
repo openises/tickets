@@ -923,6 +923,7 @@ label{font-weight:bold;display:block;margin-bottom:4px} input,select{width:100%;
   <div class="card">
     <h1>ticketsCAD Installer <span class="badge"><?php echo h($installerVersion); ?></span></h1>
     <p class="muted">Installed version: <strong><?php echo h($detection['installed_version'] === null ? 'not detected' : $detection['installed_version']); ?></strong></p>
+    <p class="muted">Latest GitHub release: <strong><?php echo h(getLatestGitHubRelease('openises', 'tickets')); ?></strong></p>      
     <?php if ($detection['legacy']) { ?><div class="notice">Detected settings table without a _version value. This appears to be an unknown legacy install.</div><?php } ?>
     <?php
     $reason = isset($_GET['reason']) ? $_GET['reason'] : '';
