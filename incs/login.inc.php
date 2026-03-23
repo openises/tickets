@@ -421,24 +421,24 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				}
 
 				if($level == $GLOBALS['LEVEL_UNIT']) {	//	3/1/12
-						$extra = 'mobile.php';
+					$extra = 'mobile.php';
 					} else if($level == $GLOBALS['LEVEL_STATS']) {
-						$extra = 'stats_scr.php?stats=stats';
+					$extra = 'stats_scr.php?stats=stats';
 					} else if($level == $GLOBALS['LEVEL_SERVICE_USER']) {	//	10/11/12
-						$extra = 'portal.php';
+					$extra = 'portal.php';
 					} else if($level == $GLOBALS['LEVEL_FACILITY']) {	//	10/11/12
-						$extra = 'facility_board.php';
+					$extra = 'facility_board.php';
 					} else if($level == $GLOBALS['LEVEL_MEMBER']){
-						$_SESSION = array();
-						@session_destroy();
-						// 3/14/26 - Start fresh session so login form CSRF token is valid
-						configure_secure_session();
-						session_start();
-						session_regenerate_id(true);
-						$extra = 'main.php?logout=1';
+					$_SESSION = array();
+					@session_destroy();
+					// 3/14/26 - Start fresh session so login form CSRF token is valid
+					configure_secure_session();
+					session_start();
+					session_regenerate_id(true);
+					$extra = 'main.php?logout=1';
 					} else {
-						$extra = 'main.php?log_in=1';
-						$_SESSION['refresh_top_once'] = true;
+					$extra = 'main.php?log_in=1';
+					$_SESSION['refresh_top_once'] = true;
 					}
 
 				$protocol = ($https) ? "https" : "http";

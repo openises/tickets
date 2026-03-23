@@ -6,6 +6,16 @@ function getLatestGitHubRelease(
     string $mode = 'latest',
     ?string $token = null
 ): ?string {
+    // Cache results for 1 hour to avoid GitHub API rate limits (60/hr unauthenticated)
+    $cacheKey = 'gh_release_' . md5($owner . $repo . $mode);
+    $cacheFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $cacheKey . '.txt';
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 3600) {
+        $cached = @file_get_contents($cacheFile);
+        if ($cached !== false) {
+            return $cached === '' ? null : $cached;
+        }
+    }
+
     if (!function_exists('curl_init')) {
         return null;
     }
@@ -69,7 +79,9 @@ function getLatestGitHubRelease(
             return null;
         }
 
-        return trim($data['tag_name']);
+        $tag = trim($data['tag_name']);
+        @file_put_contents($cacheFile, $tag);
+        return $tag;
     }
 
     $bestTag = null;
@@ -115,6 +127,7 @@ function getLatestGitHubRelease(
         }
     }
 
+    @file_put_contents($cacheFile, $bestTag ?? '');
     return $bestTag;
 }
 

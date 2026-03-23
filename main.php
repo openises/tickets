@@ -167,13 +167,9 @@ $alt_sit = (intval(get_variable('alternate_sit')) == 1) ? true : false;
 
 		}
 
-if ($refresh_top_once) echo"<script>
-	try {
-		if (parent && parent.frames && parent.frames['upper']) {
-			parent.frames['upper'].location.replace('top.php?login_refresh=<?php print time(); ?>');
-		}
-	} catch (e) {}
-</script>";
+if ($refresh_top_once) {
+	echo '<script>try { if (parent && parent.frames && parent.frames["upper"]) { parent.frames["upper"].location.replace("top.php?login_refresh=' . time() . '"); } } catch (e) {}</script>';
+}
 
 exit();
 ?>
