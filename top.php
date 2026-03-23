@@ -100,6 +100,9 @@ for ($i = 0; $i < $count-1; $i++) {
 <HTML>
 <HEAD>
 <TITLE>Tickets - Main Module</TITLE>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <META NAME="Author" CONTENT="Tickets CAD" />
 <META NAME="Keywords" CONTENT="CAD, Dispatch, EMS" />
 <META NAME="Description" CONTENT="Open Source Computer Aided Dispatch" />

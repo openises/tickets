@@ -75,6 +75,9 @@ if (!$versions['match'] && $installedVersion !== 'unknown (legacy)') {
     ?><!doctype html>
 <html><head>
 <meta charset="utf-8">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <title>ticketsCAD — Update Required</title>
 <style>
 body{background:#1a1a2e;color:#e0e0e0;font-family:Arial,sans-serif;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}
@@ -172,6 +175,9 @@ $buster = isset($_POST['logout']) ? (strval(rand()) . '&logout=1') : strval(rand
     <meta http-equiv="expires" content="Wed, 26 Feb 1997 08:21:57 GMT" />
     <meta http-equiv="Content-Script-Type" content="application/x-javascript" />
     <title>Tickets <?php print $dispVersion; ?></title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 </head>
 <?php if (get_variable('call_board') == 2) { ?>
 <frameset id="the_frames" rows="<?php print (get_variable('framesize') + 25); ?>, 0,*" border="<?php print get_variable('frameborder'); ?>" bordercolor="#ff0000">
