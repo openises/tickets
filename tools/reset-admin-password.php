@@ -89,9 +89,29 @@ try {
     }
 } catch (Exception $e) {}
 
+// Detect which columns exist in the user table
+$hasName = in_array('name', $colNames);
+$hasLevel = in_array('level', $colNames);
+$hasUser = in_array('user', $colNames);
+$hasUsername = in_array('username', $colNames);
+$userCol = $hasUser ? 'user' : ($hasUsername ? 'username' : 'id');
+
+$selectCols = "`id`, `{$userCol}` AS `user`";
+if ($hasName) $selectCols .= ", `name`";
+if ($hasLevel) $selectCols .= ", `level`";
+$selectCols .= ", `{$passCol}` AS pass_hash";
+
+$orderBy = $hasLevel ? "`level` ASC, `{$userCol}` ASC" : "`{$userCol}` ASC";
+
 try {
-    $stmt = $pdo->query("SELECT `id`, `user`, `name`, `level`, `{$passCol}` AS pass_hash FROM `{$prefix}user` ORDER BY `level` ASC, `user` ASC");
+    $stmt = $pdo->query("SELECT {$selectCols} FROM `{$prefix}user` ORDER BY {$orderBy}");
     $users = $stmt->fetchAll();
+    // Ensure name and level keys exist for display
+    foreach ($users as &$u) {
+        if (!isset($u['name'])) $u['name'] = '';
+        if (!isset($u['level'])) $u['level'] = '?';
+    }
+    unset($u);
 } catch (Exception $e) {
     $users = [];
     $message = "Error reading users: " . $e->getMessage();
