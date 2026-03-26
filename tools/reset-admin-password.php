@@ -120,9 +120,12 @@ try {
 // Identify hash type
 function detect_hash_type($hash) {
     if (empty($hash)) return 'EMPTY';
-    if (strpos($hash, '$2y$') === 0 || strpos($hash, '$2a$') === 0 || strpos($hash, '$2b$') === 0) return 'bcrypt';
+    if (strpos($hash, '$2y$') === 0 || strpos($hash, '$2a$') === 0 || strpos($hash, '$2b$') === 0) return 'bcrypt (modern)';
+    if (strlen($hash) === 41 && $hash[0] === '*') return 'MySQL PASSWORD()';
+    if (strlen($hash) === 16 && ctype_xdigit($hash)) return 'MySQL OLD_PASSWORD()';
     if (strlen($hash) === 32 && ctype_xdigit($hash)) return 'MD5';
     if (strlen($hash) === 40 && ctype_xdigit($hash)) return 'SHA1';
+    if (strlen($hash) < 30 && !ctype_xdigit($hash) && $hash[0] !== '$') return 'PLAIN TEXT (insecure!)';
     return 'unknown (' . strlen($hash) . ' chars)';
 }
 

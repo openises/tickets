@@ -185,7 +185,12 @@ function hash_password(string $password): string
  */
 function verify_password(string $password, string $storedHash): array
 {
-    // Try modern password_verify first (bcrypt)
+    // Empty hash — never valid
+    if ($storedHash === '') {
+        return ['valid' => false, 'needs_rehash' => false];
+    }
+
+    // 1. Modern bcrypt (password_hash output: $2y$, $2a$, $2b$)
     if (password_verify($password, $storedHash)) {
         return [
             'valid' => true,
@@ -193,12 +198,40 @@ function verify_password(string $password, string $storedHash): array
         ];
     }
 
-    // Fallback: check legacy MD5 hashes (case-insensitive and case-sensitive)
-    if ($storedHash === md5(strtolower($password)) || $storedHash === md5($password)) {
-        return [
-            'valid' => true,
-            'needs_rehash' => true  // Always rehash MD5 passwords
-        ];
+    // 2. Legacy MD5 hashes (32-char hex) — used in versions ~3.0–3.40
+    //    Check both case-sensitive and case-insensitive (some versions lowercased first)
+    if (strlen($storedHash) === 32 && ctype_xdigit($storedHash)) {
+        if ($storedHash === md5($password) || $storedHash === md5(strtolower($password))) {
+            return ['valid' => true, 'needs_rehash' => true];
+        }
+    }
+
+    // 3. MySQL PASSWORD() hashes (41-char starting with *) — used in very old versions
+    //    MySQL 4.1+ PASSWORD() = '*' + SHA1(SHA1(password)) uppercase hex
+    if (strlen($storedHash) === 41 && $storedHash[0] === '*') {
+        $mysqlHash = '*' . strtoupper(sha1(sha1($password, true)));
+        if ($storedHash === $mysqlHash) {
+            return ['valid' => true, 'needs_rehash' => true];
+        }
+    }
+
+    // 4. MySQL OLD_PASSWORD() hashes (16-char hex) — pre-4.1 MySQL
+    //    We can't easily replicate OLD_PASSWORD() in PHP, but we can try
+    //    a DB query if available. For now, skip this and let the reset tool handle it.
+
+    // 5. SHA1 hashes (40-char hex) — some custom installs used this
+    if (strlen($storedHash) === 40 && ctype_xdigit($storedHash)) {
+        if ($storedHash === sha1($password) || $storedHash === sha1(strtolower($password))) {
+            return ['valid' => true, 'needs_rehash' => true];
+        }
+    }
+
+    // 6. Plain text comparison (very old or misconfigured installs)
+    //    Only check if hash doesn't look like any known hash format
+    if (strlen($storedHash) < 30 && !ctype_xdigit($storedHash) && $storedHash[0] !== '$') {
+        if ($storedHash === $password) {
+            return ['valid' => true, 'needs_rehash' => true];
+        }
     }
 
     return ['valid' => false, 'needs_rehash' => false];
