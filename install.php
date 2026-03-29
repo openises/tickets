@@ -9,6 +9,7 @@ error_reporting(E_ALL);
 if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
 
 require_once __DIR__ . '/incs/versions.inc.php';
+require_once __DIR__ . '/incs/release_version.inc.php';
 require_once __DIR__ . '/incs/install_schema.inc.php';
 
 function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
