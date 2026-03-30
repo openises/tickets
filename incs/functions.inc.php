@@ -1,4 +1,8 @@
 <?php
+// Load PHP version compatibility layer FIRST — polyfills removed functions
+// for PHP 7.0 through 8.4+ (utf8_encode, each, create_function, etc.)
+require_once(__DIR__ . '/compat.inc.php');
+
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 // Suppress display of errors in AJAX endpoints to prevent PHP warnings from

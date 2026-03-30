@@ -5,7 +5,8 @@
  * - Supports clean install, upgrade sync, and write-config modes.
  * - Streams step-by-step progress and records installed _version for parity checks.
  */
-error_reporting(E_ALL);
+require_once(__DIR__ . '/incs/compat.inc.php');
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
 
 require_once __DIR__ . '/incs/versions.inc.php';

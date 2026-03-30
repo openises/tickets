@@ -138,7 +138,8 @@
 7/10/13 Revisions to function show_actions( to correct failure to show patients if no actions.
 9/10/13 Added function show_unit_log()
 */
-error_reporting(E_ALL);
+require_once(__DIR__ . '/compat.inc.php');
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 //	{						-- dummy
 //
