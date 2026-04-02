@@ -10,24 +10,10 @@
 //		Example smtp settings; 	smtp.gmail.com/465/ssl/shoreas@gmail.com/&^%$#@
 //								outgoing.verizon.net/587//ashore3/&^%$#@ - works at KA and local *** note empty security position! ***
 //
-	if(file_exists('./lib/phpmailer/PHPMailerAutoload.php')) {
-		require './lib/phpmailer/PHPMailerAutoload.php';
-		}
-	if(file_exists('./lib/phpmailer/class.phpmailer.php')) {
-		require './lib/phpmailer/class.phpmailer.php';
-		}
-	if(file_exists('./lib/phpmailer/class.smtp.php')) {
-		require './lib/phpmailer/class.smtp.php';
-		}
-	if(file_exists('../lib/phpmailer/PHPMailerAutoload.php')) {
-		require '../lib/phpmailer/PHPMailerAutoload.php';
-		}
-	if(file_exists('../lib/phpmailer/class.phpmailer.php')) {
-		require '../lib/phpmailer/class.phpmailer.php';
-		}
-	if(file_exists('../lib/phpmailer/class.smtp.php')) {
-		require '../lib/phpmailer/class.smtp.php';
-		}
+	require_once(dirname(__DIR__) . '/lib/phpmailer/autoload.php');
+	use PHPMailer\PHPMailer\PHPMailer;
+	use PHPMailer\PHPMailer\SMTP;
+	use PHPMailer\PHPMailer\Exception;
 
 function callbackAction($result, $to, $cc, $bcc, $subject, $body) {
     echo "Message subject: \"$subject\"\n";

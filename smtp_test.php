@@ -10,9 +10,10 @@ error_reporting(E_ALL);
 session_write_close();
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
 
-require './lib/phpmailer/PHPMailerAutoload.php';
-require './lib/phpmailer/class.phpmailer.php';
-require './lib/phpmailer/class.smtp.php';
+require_once __DIR__ . '/lib/phpmailer/autoload.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 /* enter known good values here - as a convemience */
 

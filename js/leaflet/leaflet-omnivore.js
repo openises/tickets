@@ -302,6 +302,8 @@ process.nextTick = (function () {
     if (canPost) {
         window.addEventListener('message', function (ev) {
             var source = ev.source;
+            // Security: verify message origin matches our own window origin
+            if (ev.origin !== window.location.origin) return;
             if ((source === window || source === null) && ev.data === 'process-tick') {
                 ev.stopPropagation();
                 if (queue.length > 0) {
@@ -313,7 +315,8 @@ process.nextTick = (function () {
 
         return function nextTick(fn) {
             queue.push(fn);
-            window.postMessage('process-tick', '*');
+            // Security: specify target origin instead of wildcard
+            window.postMessage('process-tick', window.location.origin);
         };
     }
 
