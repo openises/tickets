@@ -50,7 +50,21 @@ All `mkdir()` and `chmod()` calls have been tightened from `0777` to `0755`.
 
 ## PHP Compatibility
 
-### Supports PHP 7.0 through 8.4+
+### Verified Test Matrix
+
+Automated testing was performed against 5 PHP versions on April 2, 2026:
+
+| PHP Version | HTTP | Tables | Auto-Install | Compat Layer | Password Formats | XSS Protection | Fatals | Result |
+|-------------|------|--------|-------------|-------------|-----------------|---------------|--------|--------|
+| **8.4.19** | 200 | 110 | OK | OK | 3/3 | Safe | 0 | **PASS** |
+| **8.3.30** | 200 | 110 | OK | OK | 3/3 | Safe | 0 | **PASS** |
+| **8.2.30** | 200 | 110 | OK | OK | 3/3 | Safe | 0 | **PASS** |
+| **8.1.33** | 200 | 110 | OK | OK | 3/3 | Safe | 0 | **PASS** |
+| **8.0.30** | 200 | 110 | OK | OK | 3/3 | Safe | 0 | **PASS** |
+
+PHP 7.4 is supported on existing installations (XAMPP, shared hosting) but cannot be Docker-tested due to archived Debian Buster repositories.
+
+### Compatibility Layer
 
 A new **compatibility layer** (`incs/compat.inc.php`) automatically polyfills functions removed in newer PHP versions:
 
