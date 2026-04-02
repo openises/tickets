@@ -63,15 +63,15 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 	<TR><TH class='heading'>Module Deletion - Confirmation</TH></TR>
 	<TR><TD>&nbsp;</TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
-	<FORM NAME="delete_2" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
-	<TR><TD style='font-size: 14px; font-weight: bold; background-color: #AEAEAE; text-align: center;'>Selected Module: <?php print $_POST['module_choice'];?></TD></TR>
+	<FORM NAME="delete_2" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post">
+	<TR><TD style='font-size: 14px; font-weight: bold; background-color: #AEAEAE; text-align: center;'>Selected Module: <?php print htmlspecialchars($_POST['module_choice'], ENT_QUOTES, 'UTF-8');?></TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
 	<TR><TD>&nbsp;</TD></TR>
 	<TR><TD>&nbsp;</TD></TR>	
 	<TR><TD CLASS="td_label">Click Submit to confirm module deletion or Cancel to abort</TD></TR>	
 	<TR><TD>&nbsp;</TD></TR>
 	<TR><TD>&nbsp;</TD></TR>	
-	<INPUT TYPE='hidden' NAME='confirmation' VALUE='<?php print $_POST['module_choice'];?>'>
+	<INPUT TYPE='hidden' NAME='confirmation' VALUE='<?php print htmlspecialchars($_POST['module_choice'], ENT_QUOTES, 'UTF-8');?>'>
 	<INPUT TYPE='hidden' NAME='flag' VALUE='Confirmation Received'>	
 	<TR><TD ALIGN="center"><INPUT TYPE="button" VALUE="Cancel" onClick="window.location.href='config.php'" >&nbsp;&nbsp;<input type="submit" name="submit" value="Submit" /></TD></TR>
 	</FORM></TABLE>	
@@ -102,8 +102,8 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 		
 ?>
 	<DIV style='background-color:#CECECE; position: absolute; width: 60%; height: 60%; left: 20%; top: 10%; border:2px inset #FFF2BF; display: block; text-align: center'>
-	<BR /><BR /><BR /><BR /><?php	print $_POST['flag'];?><BR /><BR />
-	Deleting Tickets Module........<?php print $_POST['confirmation'];?><BR /><BR />
+	<BR /><BR /><BR /><BR /><?php	print htmlspecialchars($_POST['flag'], ENT_QUOTES, 'UTF-8');?><BR /><BR />
+	Deleting Tickets Module........<?php print htmlspecialchars($_POST['confirmation'], ENT_QUOTES, 'UTF-8');?><BR /><BR />
 	Dropping Table........<?php print $table;?>...........	
 <?php	
 	$query	= "DROP table `{$GLOBALS['mysql_prefix']}" . $table ."`";
@@ -115,7 +115,7 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 		}
 ?>	
 
-	Removing Directory and files /modules/<?php print $_POST['confirmation'];?>..........
+	Removing Directory and files /modules/<?php print htmlspecialchars($_POST['confirmation'], ENT_QUOTES, 'UTF-8');?>..........
 <?php
 	$directory = $tickets_dir . "/modules/" . $module_name;
 	$rem_dir = rmdir_recurse($directory);
@@ -162,7 +162,7 @@ if (isset($_POST['module_choice'])) { // Handle the form.
 	<DIV style='background-color:#CECECE; position: absolute; width: 40%; height: 20%; left: 5%; top: 10%; border:2px inset #FFF2BF; display: block'>
 	<TABLE BORDER="0">
 	<TH COLSPAN="2">Delete a Tickets Module<BR /></TH>
-	<FORM NAME="delete_1" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+	<FORM NAME="delete_1" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post">
 	<TR CLASS="even"><TD CLASS="td_label">Module: </TD><TD><?php print $choice;?></TD>
 	<TR CLASS="even"><TD COLSPAN="2" ALIGN="center"><input type="submit" name="submit" value="Submit" /></TD></TR>
 	</FORM></TABLE>

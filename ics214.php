@@ -214,7 +214,7 @@ switch ($step) {
 	echo template_ics ($item);		// fills form with default $item entries
 ?>
 <input type = 'hidden' name = 'step' value = 2 />
-<input type = 'hidden' name = 'frm_add_str' value = '<?php echo $_POST['frm_add_str'];?>'/>
+<input type = 'hidden' name = 'frm_add_str' value = '<?php echo htmlspecialchars($_POST['frm_add_str'], ENT_QUOTES, 'UTF-8');?>'/>
 </form>
 <script>
 	function validate(our_form) {		// ics form name check

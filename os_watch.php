@@ -318,7 +318,7 @@ switch ($mode) {
 	</tr>
 </table>
 <input type = hidden name = "mode"	value = 11 /> <!-- do_LOG_DB  -->
-<input type = hidden name = "ref" 	value = "<?php echo $_POST['ref'];?>" />
+<input type = hidden name = "ref" 	value = "<?php echo htmlspecialchars($_POST['ref'], ENT_QUOTES, 'UTF-8');?>" />
 </form>
 
 </body>
@@ -384,7 +384,7 @@ switch ($mode) {
 
 <form name='osw_form' method='post' action = '<?php echo basename(__FILE__) ;?>'>
 <input type = hidden name = "mode" 			value = "13" />									<!-- do_NOTE_DB -->
-<input type = hidden name = "ref" 			value = "<?php echo $_POST['ref'];?>" />
+<input type = hidden name = "ref" 			value = "<?php echo htmlspecialchars($_POST['ref'], ENT_QUOTES, 'UTF-8');?>" />
 <input type = hidden name = 'frm_type' 		value='' />
 <textarea name='frm_text' cols=70 rows = 2 placeholder = "Enter note text"></textarea>
 <br />
@@ -434,9 +434,9 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 ?>
 <BODY onload = "setTimeout(function(){ do_can(); }, 1500);">		<!-- 1/14/10 -->
 <form name = "osw_form" method = "post" 	action = "<?php echo basename(__FILE__); ?>">
-<input type = hidden name = "mode" 		value = "<?php echo $_POST['mode_orig'];?>" /> <!-- original entry  -->
-<input type = hidden name = "mode_orig" value = "<?php echo $_POST['mode_orig'];?>" />
-<input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
+<input type = hidden name = "mode" 		value = "<?php echo htmlspecialchars($_POST['mode_orig'], ENT_QUOTES, 'UTF-8');?>" /> <!-- original entry  -->
+<input type = hidden name = "mode_orig" value = "<?php echo htmlspecialchars($_POST['mode_orig'], ENT_QUOTES, 'UTF-8');?>" />
+<input type = hidden name = "ref" 		value = "<?php echo htmlspecialchars($_POST['ref'], ENT_QUOTES, 'UTF-8');?>" />
 </form>
 
 <center>
@@ -546,7 +546,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 
 <form name = 'osw_form' method = post 	action = "<?php echo basename(__FILE__); ?>">
 <input type = hidden name = "mode" 		value = 15 /> 	<!-- do_MAIL_SEND -->
-<input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
+<input type = hidden name = "ref" 		value = "<?php echo htmlspecialchars($_POST['ref'], ENT_QUOTES, 'UTF-8');?>" />
 <center>
 			<TABLE ALIGN='center' BORDER = 0 style = 'margin-top:20px;'>
 				<TR CLASS='odd'><TH COLSPAN=2>Mail to: <?php print $row['handle']; ?></TH></TR> <!-- 7/2/10 -->
@@ -625,7 +625,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
 <CENTER><BR /><BR /><BR /><H3>Message sent - window closing</H3>
 <form name = 'osw_form' method = post 	action = "<?php echo basename(__FILE__); ?>">
 <input type = hidden name = "mode" 		value = "" />
-<input type = hidden name = "ref" 		value = "<?php echo $_POST['ref'];?>" />
+<input type = hidden name = "ref" 		value = "<?php echo htmlspecialchars($_POST['ref'], ENT_QUOTES, 'UTF-8');?>" />
 </form>
 
 <?php

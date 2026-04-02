@@ -150,16 +150,16 @@ switch($mode) {
 			</CENTER>
 		</DIV>
 		<FORM NAME='dodelete_Form' METHOD="post" ACTION = "ticketsmdb_import.php?mode=dodelete">
-		<INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print $_POST['mdbhost'];?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print $_POST['mdbdb'];?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print $_POST['mdbuser'];?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print $_POST['mdbpassword'];?>" />
-		<INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print $_POST['mdbprefix'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print $_POST['ticketshost'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print $_POST['ticketsdb'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print $_POST['ticketsuser'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print $_POST['ticketspassword'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print $_POST['ticketsprefix'];?>" />
+		<INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print htmlspecialchars($_POST['mdbhost'], ENT_QUOTES, 'UTF-8');?>"/>
+		<INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print htmlspecialchars($_POST['mdbdb'], ENT_QUOTES, 'UTF-8');?>"/>
+		<INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print htmlspecialchars($_POST['mdbuser'], ENT_QUOTES, 'UTF-8');?>"/>
+		<INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print htmlspecialchars($_POST['mdbpassword'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print htmlspecialchars($_POST['mdbprefix'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>" />
 		</FORM>
 		<FORM NAME='nodelete_Form' METHOD="post" ACTION = "config.php"></FORM>
 <?php
@@ -319,16 +319,16 @@ switch($mode) {
 		</CENTER>
 	</DIV>
 		<FORM NAME='go_Form' METHOD="post" ACTION = "ticketsmdb_import.php?mode=go">
-		<INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print $_POST['mdbhost'];?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print $_POST['mdbdb'];?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print $_POST['mdbuser'];?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print $_POST['mdbpassword'];?>" />
-		<INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print $_POST['mdbprefix'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print $_POST['ticketshost'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print $_POST['ticketsdb'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print $_POST['ticketsuser'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print $_POST['ticketspassword'];?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print $_POST['ticketsprefix'];?>" />
+		<INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print htmlspecialchars($_POST['mdbhost'], ENT_QUOTES, 'UTF-8');?>"/>
+		<INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print htmlspecialchars($_POST['mdbdb'], ENT_QUOTES, 'UTF-8');?>"/>
+		<INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print htmlspecialchars($_POST['mdbuser'], ENT_QUOTES, 'UTF-8');?>"/>
+		<INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print htmlspecialchars($_POST['mdbpassword'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print htmlspecialchars($_POST['mdbprefix'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>" />
+		<INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>" />
 		</FORM>
 <?php
 	break;

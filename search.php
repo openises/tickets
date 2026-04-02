@@ -349,7 +349,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 <TABLE CELLPADDING="2" BORDER="0" STYLE = 'margin-left:80px;'>
 	<TR CLASS = "even">
 		<TD VALIGN="top" CLASS="td_label text">Search for: &nbsp;</TD>
-		<TD CLASS='td_data text'><INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print $post_frm_query;?>" NAME="frm_query"></TD>
+		<TD CLASS='td_data text'><INPUT TYPE="text" SIZE="40" MAXLENGTH="255" VALUE="<?php print htmlspecialchars($post_frm_query, ENT_QUOTES, 'UTF-8');?>" NAME="frm_query"></TD>
 	</TR>
 	<TR CLASS = "odd">
 		<TD VALIGN="top" CLASS="td_label text">In: &nbsp;</TD>

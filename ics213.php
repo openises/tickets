@@ -35,7 +35,7 @@ function template_213_t () {	// table-only portion of page
 	global $item;
 	$out_str = "<TABLE DIR='LTR' BORDER=1 BORDERCOLOR='#000000' CELLPADDING=0 CELLSPACING=0 STYLE='width: 20.32cm; border:2px solid black; background-color: white;'>";
 	$out_str .= "\n<FORM NAME = 'ics213_form' METHOD = 'post' ACTION = '" . basename(__FILE__) . "' >\n";
-	$out_str .= "\n<INPUT TYPE = 'hidden' NAME = 'frm_add_str' VALUE = '{$_POST['frm_add_str']}'/>\n";
+	$out_str .= "\n<INPUT TYPE = 'hidden' NAME = 'frm_add_str' VALUE = '" . htmlspecialchars($_POST['frm_add_str'], ENT_QUOTES, 'UTF-8') . "'/>\n";
 	$out_str .= "<INPUT TYPE = 'hidden' NAME = 'step' VALUE = 2>
 		<COL WIDTH=46*>
 		<COL WIDTH=54*>

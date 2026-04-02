@@ -68,7 +68,7 @@ require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 <?php
 			if (!(is_guest())) {
 ?>
-				<SPAN id='edit_but' class='plain text' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.opener.parent.frames["main"].location="edit.php?id=<?php print $_GET['ticket_id'];?>";'><SPAN STYLE='float: left;'><?php print get_text("Edit");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
+				<SPAN id='edit_but' class='plain text' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.opener.parent.frames["main"].location="edit.php?id=<?php print intval($_GET['ticket_id']);?>";'><SPAN STYLE='float: left;'><?php print get_text("Edit");?></SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>
 <?php
 				}
 ?>
@@ -78,7 +78,7 @@ require_once($_SESSION['fmp']);		// 7/28/10, 8/10/10
 			if (!(empty($row_ticket))) {								// 4/30/10
 				print do_ticket_wm($row_ticket, $the_width, FALSE, FALSE);
 				} else {
-				print "<CENTER><H3>No data for Ticket # {$_GET['ticket_id']} </H3>";
+				print "<CENTER><H3>No data for Ticket # " . htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8') . " </H3>";
 				}
 ?>
 		</DIV>

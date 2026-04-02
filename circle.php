@@ -1342,7 +1342,7 @@ else {
 <BODY onload = 'document.dummy.submit();'>
 <FORM NAME='dummy' METHOD = 'post' ACTION = '<?php echo basename(__FILE__);?>'>
 <INPUT TYPE = 'hidden' NAME = '_func' VALUE = 'r' />
-<INPUT TYPE = 'hidden' NAME = 'id' VALUE = '<?php echo $_POST['frm_id'];?>' />
+<INPUT TYPE = 'hidden' NAME = 'id' VALUE = '<?php echo intval($_POST['frm_id']);?>' />
 </FORM></BODY></HTML>
 
 <?php

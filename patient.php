@@ -466,7 +466,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$row = stripslashes_deep($result->fetch_assoc());
 ?>
 		<SPAN STYLE='margin-left:83px;'><FONT CLASS="header">Edit <?php print get_text('Patient');?> Record</FONT></SPAN><BR /><BR />
-		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
+		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print intval($_GET['id']);?>&ticket_id=<?php print intval($_GET['ticket_id']);?>&action=update"><TABLE BORDER="0">
 		<TABLE BORDER="0">
 			<TR CLASS='even'>
 				<TD CLASS='td_label text'>
@@ -686,7 +686,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 				$pulldown .= "<option value=\"{$row_fc['id']}\">" . $row_fc['name'] . "</option>\n";
 				}		
 ?>
-		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="patient.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
+		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="patient.php?ticket_id=<?php print intval($_GET['ticket_id']);?>&action=add">
 		<TABLE BORDER="0">
 			<TR CLASS='header'>
 				<TD COLSPAN='99' ALIGN='center'>
@@ -822,7 +822,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		}
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
-<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
+<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print intval($_GET['ticket_id']);?>">
 </FORM>
 <SCRIPT LANGUAGE="Javascript">
 if (typeof window.innerWidth != 'undefined') {

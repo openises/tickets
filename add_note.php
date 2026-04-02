@@ -103,7 +103,7 @@ if (empty($_POST)) {
 				<B>Apply to</B>&nbsp;:&nbsp;&nbsp;
 				Description &raquo; <INPUT TYPE = 'radio' NAME='frm_add_to' value='0' CHECKED />&nbsp;&nbsp;&nbsp;&nbsp;
 				<?php print $disposition;?> &raquo; <INPUT TYPE = 'radio' NAME='frm_add_to' value='1' />
-				<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print $_GET['ticket_id']; ?>' />
+				<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8'); ?>' />
 				</FORM>				
 			</DIV>
 		</DIV>

@@ -653,7 +653,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_main.submit();'>Main</SPAN><BR />
 			<BR />
 			<FORM NAME='to_routes' METHOD='get' ACTION='<?php print $_SESSION['routesfile'];?>'>
-			<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print $_POST['ticket_id'];?>' />
+			<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print intval($_POST['ticket_id']);?>' />
 			</FORM>
 			<SPAN id='sub_but' class='plain text' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.to_routes.submit();'>Routes</SPAN>
 			</CENTER>

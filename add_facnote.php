@@ -137,7 +137,7 @@ if (empty($_POST)) {
 						<TD class='td_data'><TEXTAREA NAME='frm_notes' tabindex=4 COLS=60 ROWS = 3><?php print $notes;?></TEXTAREA></TD>
 					</TR>
 				</TABLE>
-				<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print $_GET['ticket_id']; ?>' />
+				<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8'); ?>' />
 				<INPUT TYPE = 'hidden' NAME = 'frm_existing' VALUE='<?php print $existing;?>' />
 				</FORM>
 			</DIV>

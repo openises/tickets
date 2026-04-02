@@ -235,11 +235,11 @@ function doReset() {
 			<DIV ID="directions" STYLE="width: <?php print get_variable('map_width');?>"></DIV>
 		</TD></TR></TABLE><!-- end outer -->
 	<FORM NAME='can_Form' ACTION="main.php">
-	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
-	</FORM>	
+	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print intval($_GET['ticket_id']);?>">
+	</FORM>
 	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print basename( __FILE__); ?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db'>
-	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>
+	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print intval($_GET['ticket_id']); ?>'>
 	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>">
 	<INPUT TYPE='hidden' NAME='frm_id_str' 		VALUE= "">
 	<INPUT TYPE='hidden' NAME='frm_name_str' 	VALUE= "">
@@ -247,7 +247,7 @@ function doReset() {
 	<INPUT TYPE='hidden' NAME='frm_comments' 	VALUE= "New">
 	</FORM>
 	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
-	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>'>
+	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print intval($_GET['ticket_id']); ?>'>
 	</FORM>	
 	
 	</BODY>

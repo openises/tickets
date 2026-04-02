@@ -66,7 +66,7 @@ if ((!(empty($_GET))) && (array_key_exists('name', $_GET))) {	//	10/23/12
 	} elseif((!(empty($_GET))) && (array_key_exists('the_ticket', $_GET)) && $_GET['the_ticket'] == "doselect")  {	//	10/23/12
 	$step = 1;
 	} elseif((!(empty($_GET))) && (array_key_exists('the_ticket', $_GET)) && $_GET['the_ticket'] != "undefined" && $_GET['the_ticket'] != "doselect")  {	//	10/23/12
-	$tik_id = $_GET['the_ticket'];
+	$tik_id = intval($_GET['the_ticket']);
 	$step = (((integer) $_GET['the_ticket'])==0)? 0 : 2 ;
 	} else {
 //	dump(__LINE__);

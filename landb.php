@@ -771,7 +771,7 @@ function buildMap_c() {															// 'create' version - 691
 			<INPUT TYPE='hidden' NAME = '_func' VALUE='cp' />
 			<INPUT TYPE='hidden' NAME = 'frm_line_status' VALUE='0' />	
 			<INPUT TYPE='hidden' NAME = 'frm_line_cat_id' VALUE='0' />	
-			<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='<?php echo $_POST['_type'];?>' />
+			<INPUT TYPE='hidden' NAME = 'frm_line_type' VALUE='<?php echo htmlspecialchars($_POST['_type'], ENT_QUOTES, 'UTF-8');?>' />
 			<INPUT TYPE='hidden' NAME = 'frm_line_data' VALUE='' />
 			<INPUT TYPE='hidden' NAME = 'frm_filled' VALUE='0' />
 			<INPUT TYPE='hidden' NAME = 'frm_use_with_bm' VALUE='0' />

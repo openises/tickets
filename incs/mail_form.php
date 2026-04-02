@@ -533,7 +533,7 @@ switch($func) {
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder`	 `r` ON (`a`.`responder_id` = `r`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status`	 `s` ON (`r`.`un_status_id` = `s`.`id`)
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON (`a`.`ticket_id` = `t`.`id`)
-			WHERE `ticket_id` = {$_GET['ticket_id']} AND (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> ''))
+			WHERE `ticket_id` = " . intval($_GET['ticket_id']) . " AND (LOCATE('@', `contact_via`) > 1 || (`smsg_id` IS NOT NULL AND `smsg_id` <> ''))
 			AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))
 			ORDER BY `name` ASC ";
 		$tik_id = $_GET['ticket_id'];

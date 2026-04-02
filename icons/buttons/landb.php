@@ -632,7 +632,7 @@ function waiter() {
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "waiter();">
-<DIV align="center" ID = 'c_id'><BR /><BR /><BR/><H3>'<?php echo $_POST['frm_name'];?>' added</H3></DIV>
+<DIV align="center" ID = 'c_id'><BR /><BR /><BR/><H3>'<?php echo htmlspecialchars($_POST['frm_name'], ENT_QUOTES, 'UTF-8');?>' added</H3></DIV>
 </BODY></HTML>
 <?php
 	break;			// end case "c"
@@ -979,14 +979,14 @@ else {
 <SCRIPT>
 function waiter() {
 	document.navform._func.value="r";
-	document.navform.id.value=<?php echo $_POST['frm_id'];?>
+	document.navform.id.value=<?php echo intval($_POST['frm_id']);?>
 //	fade("up_id;")	
 	setTimeout("document.navform.submit()",2000);
 	}
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "waiter();">
-<DIV align="center" ID = 'up_id'><BR /><BR /><BR/><H3>'<?php echo $_POST['frm_name'];?>' update complete</H3></DIV>
+<DIV align="center" ID = 'up_id'><BR /><BR /><BR/><H3>'<?php echo htmlspecialchars($_POST['frm_name'], ENT_QUOTES, 'UTF-8');?>' update complete</H3></DIV>
 </BODY>
 </HTML>
 <?php

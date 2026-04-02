@@ -378,7 +378,7 @@ echo template ($item);
 	<SPAN ID='sub_but' class='plain text' style='float: none; width: 120px;; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="validate(this.form);"><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN><BR />
 </div>
 <input type = 'hidden' name = 'step' value = 2 />
-<input type = 'hidden' name = 'frm_add_str' value = '<?php echo $_POST["frm_add_str"];?>'/>
+<input type = 'hidden' name = 'frm_add_str' value = '<?php echo htmlspecialchars($_POST["frm_add_str"], ENT_QUOTES, 'UTF-8');?>'/>
 </form>
 <script>
 	function validate(our_form) {		// ics form name check

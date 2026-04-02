@@ -9,7 +9,7 @@
 error_reporting(E_ALL);				//10/1/08
 require_once('./incs/functions.inc.php');		//7/28/10
 
-$call = (empty($_GET))? "": $_GET['frm_call'];				// 10/1/08
+$call = (empty($_GET))? "": htmlspecialchars($_GET['frm_call'], ENT_QUOTES, 'UTF-8');				// 10/1/08
 	
 ?>
 
@@ -60,7 +60,7 @@ if (!empty($_GET)) {
 		print "<BR /><H3>Test with aprs.fi succeeds!</H3>";
 		$temp = ($data->found );			// match count
 		if($temp==0) {
-			print "<BR /><H3>No data for '{$_GET['frm_call']}'</H3><BR />";		
+			print "<BR /><H3>No data for '" . htmlspecialchars($_GET['frm_call'], ENT_QUOTES, 'UTF-8') . "'</H3><BR />";		
 			}
 		else {			
 			$entry = (object) $data->entries[0];

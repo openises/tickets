@@ -209,7 +209,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	function do_notify() {
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "TICKET - PATIENT: ";
-		var theId = '<?php print $_GET['ticket_id'];?>';
+		var theId = '<?php print intval($_GET['ticket_id']);?>';
 //			 mail_it ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
 		
 		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId) + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
@@ -326,7 +326,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 //		dump(stripslashes($row['description']));
 ?>
 		<FONT CLASS="header">Edit <?php print get_text("Patient");?> Record</FONT><BR /><BR />
-		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
+		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print intval($_GET['id']);?>&ticket_id=<?php print intval($_GET['ticket_id']);?>&action=update"><TABLE BORDER="0">
 		<TR CLASS='even' >
 		  <TD><B>Patient Number: <font color='red' size='-1'>*</font></B></TD><TD><INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32"></TD></TR>
 		<TR CLASS='odd'  VALIGN='top'><TD><B>Description:</B> <font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA></TD></TR>
@@ -346,7 +346,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	else {
 ?>
 		<BR /><BR /><FONT CLASS="header">Add <?php print get_text("Patient");?> Record</FONT><BR /><BR />
-		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="patient.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add"><TABLE BORDER="0">
+		<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="patient.php?ticket_id=<?php print intval($_GET['ticket_id']);?>&action=add"><TABLE BORDER="0">
 		<TR CLASS='even' >
 		  <TD><B>Patient Number:</B> <font color='red' size='-1'>*</font></TD><TD><INPUT TYPE="text" NAME="frm_name" value="" size="32"></TD></TR>
 		<TR CLASS='odd' ><TD><B>Description: </B><font color='red' size='-1'>*</font></TD><TD><TEXTAREA ROWS="8" COLS="45" NAME="frm_description" WRAP="virtual"></TEXTAREA></TD></TR> <!-- 10/19/08 -->
@@ -362,7 +362,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		}
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
-<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
+<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print intval($_GET['ticket_id']);?>">
 </FORM>
 </HTML>
 <?php

@@ -844,7 +844,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 								</TD>
 							</TR>
 						</TABLE>
-						<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />
+						<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8'); ?>' />
 						<INPUT TYPE='hidden' NAME='unit_id' 	VALUE='<?php print $unit_id; ?>' />
 						</FORM>
 
@@ -893,7 +893,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 		</DIV>
 	</DIV>
 	<FORM NAME='can_Form' ACTION="main.php">
-	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>"/>	
+	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8');?>"/>	
 	</FORM>	
 
 <?php
@@ -901,7 +901,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 ?>
 	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print $theAction;?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db' />
-	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />
+	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8'); ?>' />
 	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>" />
 	<INPUT TYPE='hidden' NAME='frm_id_str' 		VALUE= "" />
 	<INPUT TYPE='hidden' NAME='frm_name_str' 	VALUE= "" />
@@ -912,7 +912,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 	<INPUT TYPE='hidden' NAME='frm_allow_dirs' 	VALUE = <?php print $_SESSION['allow_dirs']; ?> />	<!-- 11/21/09 -->
 	</FORM>
 	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
-	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />	<!-- 10/25/08 -->
+	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8'); ?>' />	<!-- 10/25/08 -->
 	</FORM>
 <?php
 	$user_level = is_super() ? 9999 : $_SESSION['user_id']; 
@@ -922,7 +922,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 	$al_groups = $_SESSION['user_groups'];
 ?>				
 	<FORM NAME='reLoad_Form' METHOD = 'get' ACTION="<?php print basename( __FILE__); ?>">
-	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />	<!-- 10/25/08 -->
+	<INPUT TYPE='hidden' NAME='ticket_id' 	VALUE='<?php print htmlspecialchars($_GET['ticket_id'], ENT_QUOTES, 'UTF-8'); ?>' />	<!-- 10/25/08 -->
 	</FORM>
 
 	</BODY>
@@ -935,7 +935,7 @@ $theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
 	function do_notify() {
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "ATTENTION - New Ticket: ";
-		var theId = '<?php print $_GET['ticket_id'];?>';
+		var theId = '<?php print intval($_GET['ticket_id']);?>';
 		
 //		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + escape(theId);		// ($to_str, $text, $ticket_id)   10/15/08
 		var params = "frm_to="+ theAddresses + "&frm_text=" + theText + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08

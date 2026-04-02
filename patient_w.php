@@ -338,7 +338,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 			$row = stripslashes_deep($result->fetch_assoc());
 			print "<FONT CLASS='header text_large'>Really delete " . $patient . " record '" . shorten($row['description'], 24) . "' ? </FONT><BR /><BR />";
 ?>
-			<FORM METHOD='post' NAME='delfrm' ACTION='patient_w.php?action=delete&id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&confirm=1'>
+			<FORM METHOD='post' NAME='delfrm' ACTION='patient_w.php?action=delete&id=<?php print intval($_GET['id']);?>&ticket_id=<?php print intval($_GET['ticket_id']);?>&confirm=1'>
 			<SPAN ID='sub_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.delfrm.submit();'><SPAN STYLE='float: left;'><?php print get_text('Yes');?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0 /></SPAN>
 			<SPAN ID='can_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text('Cancel');?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0 /></SPAN>
 			</FORM>
@@ -479,7 +479,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 					<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_lock(document.patientEd); document.patientEd.reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 					<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.patientEd.submit();'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 				</DIV>
-				<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="<?php echo basename(__FILE__);?>?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update">
+				<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="<?php echo basename(__FILE__);?>?id=<?php print intval($_GET['id']);?>&ticket_id=<?php print intval($_GET['ticket_id']);?>&action=update">
 				<TABLE BORDER="0" STYLE='margin-left: 20px; position: relative; top: 70px;'>
 					<TR CLASS='even' >
 						<TD CLASS='td_label text'><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></TD>
@@ -672,7 +672,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 		</script>
 
 		<FORM NAME = "list_form" METHOD = "get" ACTION = "<?php echo basename(__FILE__);?>">
-		<INPUT TYPE="hidden" NAME = "ticket_id" VALUE = "<?php echo $_GET['ticket_id'];?>">
+		<INPUT TYPE="hidden" NAME = "ticket_id" VALUE = "<?php echo intval($_GET['ticket_id']);?>">
 		<INPUT TYPE="hidden" NAME = "id" VALUE = "">
 		<INPUT TYPE="hidden" NAME = "action" VALUE = "edit">
 		</FORM>
@@ -752,7 +752,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 					<SPAN ID='reset_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_asof(document.patientAdd, false) reset();'><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
 					<SPAN ID='sub_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='validate(document.patientAdd);'><SPAN STYLE='float: left;'><?php print get_text("Next");?></SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
 				</DIV>
-				<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="<?php echo basename(__FILE__);?>?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
+				<FORM METHOD="post" NAME='patientAdd' onSubmit='return validate(document.patientAdd);'  ACTION="<?php echo basename(__FILE__);?>?ticket_id=<?php print intval($_GET['ticket_id']);?>&action=add">
 				<TABLE BORDER="0" STYLE='margin-left: 20px; position: relative; top: 70px;'>
 					<TR CLASS='even' >
 						<TD CLASS='td_label text text'><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></TD>
@@ -908,9 +908,9 @@ function init() {
 </BODY>
 <FORM NAME='next_Form' METHOD='get' ACTION='<?php echo basename(__FILE__); ?>'>
 <INPUT TYPE='hidden' NAME='action' VALUE='list' />
-<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print $_GET['ticket_id'];?>' />
+<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print intval($_GET['ticket_id']);?>' />
 </FORM>
 <FORM NAME='can_Form' ACTION="main.php">
-<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>">
+<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print intval($_GET['ticket_id']);?>">
 </FORM>
 </HTML>

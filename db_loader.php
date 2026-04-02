@@ -633,12 +633,12 @@ if(empty($_GET)) {
 			</DIV>
 		</DIV>
 
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $_POST['ticketshost'];?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $_POST['ticketsdb'];?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $_POST['ticketsuser'];?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $_POST['ticketspassword'];?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $_POST['ticketsprefix'];?>' />			
-		<INPUT name='db_schema' type='hidden' VALUE='<?php print $_POST['db_schema'];?>' />
+		<INPUT name='ticketshost' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>' />
+		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>' />
+		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>' />
+		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>' />
+		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>' />
+		<INPUT name='db_schema' type='hidden' VALUE='<?php print htmlspecialchars($_POST['db_schema'], ENT_QUOTES, 'UTF-8');?>' />
 		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
 		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
 		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />

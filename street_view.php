@@ -37,8 +37,8 @@ $api_key = get_variable('gmaps_api_key');
 	
 	
 	var myPano;
-	var lat = <?php print $_GET['thelat'];?>;
-	var lng =  <?php print $_GET['thelng'];?>;
+	var lat = <?php print floatval($_GET['thelat']);?>;
+	var lng =  <?php print floatval($_GET['thelng']);?>;
 	function do_the_view() {
 		var the_loc = new GLatLng(lat,lng);
 		panoramaOptions = { latlng:the_loc 	};

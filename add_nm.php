@@ -344,7 +344,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "TICKET - New: ";
-		var theId = '<?php print $_POST['ticket_id'];?>';
+		var theId = '<?php print intval($_POST['ticket_id']);?>';
 		
 //		mail_it ($to_str, $text, $theId, $text_sel=1;, $txt_only = FALSE)
 
@@ -423,7 +423,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	</FORM>
 
 	<FORM NAME='to_routes' METHOD='get' ACTION='routes.php'>
-	<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print $_POST['ticket_id'];?>' />
+	<INPUT TYPE='hidden' NAME='ticket_id' VALUE='<?php print intval($_POST['ticket_id']);?>' />
 	<INPUT TYPE='submit' VALUE='Routes' /></CENTER>
 	</FORM>
 <?php
