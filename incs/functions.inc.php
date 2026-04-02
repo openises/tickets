@@ -424,6 +424,14 @@ $evenodd = array ("even", "odd", "heading");	// class names for alternating tabl
 /* connect to mysql database */
 
 $GLOBALS['db_handle'] = mysqli_connect($GLOBALS['mysql_host'], $GLOBALS['mysql_user'], $GLOBALS['mysql_passwd'], $GLOBALS['mysql_db']);
+
+// MySQL 8.0+ strict mode compatibility: disable ONLY_FULL_GROUP_BY (legacy
+// queries use SELECT * with GROUP BY) and STRICT_TRANS_TABLES (legacy code
+// uses '' for DATETIME columns instead of NULL)
+if ($GLOBALS['db_handle']) {
+	mysqli_query($GLOBALS['db_handle'], "SET SESSION sql_mode = 'ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+}
+
 /* if (!$connect) {
 	die ("Connection attempt to MySQL failed - correction required in order to continue.");
 	} */

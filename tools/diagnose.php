@@ -143,7 +143,12 @@ if (!file_exists($configFile)) {
         echo "<h2>5. Version Info</h2>";
         $settingsTable = $prefix . 'settings';
         if (in_array($settingsTable, $existing)) {
-            $res = $conn->query("SELECT `value` FROM `$settingsTable` WHERE `key` = '_version' LIMIT 1");
+            // Settings table uses 'name' column in legacy schema, 'key' in some newer installs
+            $res = $conn->query("SELECT `value` FROM `$settingsTable` WHERE `name` = '_version' LIMIT 1");
+            if (!$res || !$res->num_rows) {
+                // Try 'key' column as fallback
+                $res = @$conn->query("SELECT `value` FROM `$settingsTable` WHERE `key` = '_version' LIMIT 1");
+            }
             if ($res && $row = $res->fetch_assoc()) {
                 echo "<p>Database version: <strong>" . htmlspecialchars($row['value']) . "</strong></p>";
             } else {

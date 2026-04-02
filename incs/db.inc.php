@@ -76,6 +76,12 @@ function db(): mysqli
 
     $conn->set_charset('utf8mb4');
 
+    // MySQL 8.0+ enables ONLY_FULL_GROUP_BY by default, which breaks legacy
+    // queries that use SELECT * with GROUP BY. Disable it for compatibility.
+    // Also disable STRICT_TRANS_TABLES to allow empty string '' for DATETIME
+    // columns (legacy code uses '' instead of NULL).
+    $conn->query("SET SESSION sql_mode = 'ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+
     // Share connection with the mysql2i shim so legacy mysql_*() calls
     // (mysql_num_fields, mysql_field_name, etc.) still work during migration
     if (class_exists('mysql2i', false)) {
