@@ -99,7 +99,12 @@ if [ "${AUTO_INSTALL:-true}" = "true" ] && [ -n "$DB_HOST" ]; then
             \$mysqli->query(\"INSERT IGNORE INTO user (id, user, passwd, info, level, status, open_at, sort_desc, reporting) VALUES (2, 'guest', '\" . \$mysqli->real_escape_string(\$guestPass) . \"', 'Guest', 3, 'approved', 'd', 1, 0)\");
 
             // Set version
-            \$mysqli->query(\"INSERT INTO settings (\" . chr(96) . \"key\" . chr(96) . \", \" . chr(96) . \"value\" . chr(96) . \") VALUES ('_version', '3.44.1') ON DUPLICATE KEY UPDATE \" . chr(96) . \"value\" . chr(96) . \" = '3.44.1'\");
+            \$k = chr(96) . 'key' . chr(96);
+            \$v = chr(96) . 'value' . chr(96);
+            \$mysqli->query(\"INSERT INTO settings (\$k, \$v) VALUES ('_version', '3.44.1') ON DUPLICATE KEY UPDATE \$v = '3.44.1'\");
+
+            // Set tile mode to proxy (avoids OSM Referer block in Docker/containers)
+            \$mysqli->query(\"INSERT INTO settings (\$k, \$v) VALUES ('tile_mode', 'proxy') ON DUPLICATE KEY UPDATE \$v = 'proxy'\");
 
             \$mysqli->close();
             echo 'Auto-install complete.' . PHP_EOL;

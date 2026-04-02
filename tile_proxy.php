@@ -127,13 +127,21 @@ if (function_exists('curl_init')) {
     curl_setopt($ch, CURLOPT_TIMEOUT, 15);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    // Send Referer header — required by OSM tile usage policy
+    curl_setopt($ch, CURLOPT_REFERER, 'https://ticketscad.com/');
 
     // Conditional request if we have a stale cached copy
+    $headers = [];
     if ($stale_exists) {
         $if_modified = gmdate('D, d M Y H:i:s', filemtime($cache_file)) . ' GMT';
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'If-Modified-Since: ' . $if_modified
-        ));
+        $headers[] = 'If-Modified-Since: ' . $if_modified;
+    }
+    // Accept header for tile servers
+    $headers[] = 'Accept: image/png,image/*;q=0.9,*/*;q=0.5';
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    if (false && $stale_exists) {
+        // Original conditional block preserved but disabled — merged into $headers above
     }
 
     $tile_data = curl_exec($ch);

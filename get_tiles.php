@@ -497,8 +497,8 @@ if((!directory_empty($local)) && (!isset($_GET['getgo']))) {
 		<SCRIPT>
 		var map;
 		map = L.map('map_canvas').setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 1);
-		L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery � <a href="http://cloudmade.com">CloudMade</a>[�]',
+		L.tileLayer('<?php echo get_tile_url(); ?>', {
+		attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		maxZoom: 18
 		}).addTo(map);
 		</SCRIPT>
