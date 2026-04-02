@@ -255,9 +255,9 @@ function createstdMarker(lat, lon) {
 function init_map(lat, lng) {
 		var latLng;
 		var in_local_bool = <?php print get_variable('local_maps');?>;
-		var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-		var	cmAttr = '';
-		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr});
+		var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+		var	cmAttr = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+		var OSM = L.tileLayer(osmUrl, {attribution: cmAttr, referrerPolicy: 'origin'});
 		if(!map) { map = L.map('map_canvas',
 			{
 			zoom: 13,

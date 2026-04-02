@@ -1788,8 +1788,8 @@ var latLng;
 var def_lng = <?php print get_variable('def_lng');?>;
 var def_lat = <?php print get_variable('def_lat');?>;
 
-var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-var minimal = L.tileLayer(osmUrl, {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
+var osmUrl = (in_local_bool=="1")? "../_osm/tiles/{z}/{x}/{y}.png":	"https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+var minimal = L.tileLayer(osmUrl, {attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors', referrerPolicy: 'origin'});
 var dark = L.tileLayer.provider('Thunderforest.TransportDark');
 
 function do_day() {
@@ -1814,11 +1814,7 @@ function do_night() {
 	
 function initialise() {
 	map = L.map('map_canvas',{ zoomControl:false }).setView([def_lat, def_lng], 13);
-//	if(https) {
-//		minimal = L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
-//		} else {
-		minimal = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
-//		}
+		minimal = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors', referrerPolicy: 'origin'}).addTo(map);
 	dark = L.tileLayer.provider('Thunderforest.TransportDark');
 	$('toggle_tracks_off_but').style.display = 'none';
 	$('toggle_tracks_but').style.display = 'none';
