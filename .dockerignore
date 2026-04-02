@@ -1,0 +1,17 @@
+.git
+.github
+.gitignore
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+*.md
+LICENSE
+tests/
+tools/reset-admin-password.php
+tools/diagnose.php
+tools/sqli_audit.php
+tools/clone_db.php
+docs/
+sonar-project.properties
+.phpunit.result.cache

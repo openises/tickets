@@ -1,0 +1,61 @@
+# TicketsCAD Docker Compose
+#
+# Quick start:
+#   docker compose up -d
+#   Open http://localhost:8080
+#   Login: admin / admin (change immediately!)
+#
+# Custom admin password:
+#   ADMIN_PASS=MySecurePass docker compose up -d
+#
+# Environment variables:
+#   DB_HOST     - Database hostname (default: db)
+#   DB_USER     - Database username (default: tickets)
+#   DB_PASS     - Database password (default: tickets)
+#   DB_NAME     - Database name (default: tickets)
+#   ADMIN_USER  - Admin username (default: admin)
+#   ADMIN_PASS  - Admin password (default: admin)
+#   ADMIN_NAME  - Admin display name (default: Super Administrator)
+
+services:
+  web:
+    build: .
+    image: ghcr.io/openises/ticketscad:latest
+    container_name: ticketscad
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-tickets}
+      DB_PASS: ${DB_PASS:-tickets}
+      DB_NAME: ${DB_NAME:-tickets}
+      DB_PREFIX: ${DB_PREFIX:-}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASS:-admin}
+      ADMIN_NAME: ${ADMIN_NAME:-Super Administrator}
+      AUTO_INSTALL: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10.11
+    container_name: ticketscad_db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS:-ticketscad_root_2026}
+      MARIADB_DATABASE: ${DB_NAME:-tickets}
+      MARIADB_USER: ${DB_USER:-tickets}
+      MARIADB_PASSWORD: ${DB_PASS:-tickets}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  db_data:
