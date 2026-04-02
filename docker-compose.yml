@@ -34,6 +34,10 @@ services:
       ADMIN_PASS: ${ADMIN_PASS:-admin}
       ADMIN_NAME: ${ADMIN_NAME:-Super Administrator}
       AUTO_INSTALL: "true"
+    volumes:
+      - uploads:/var/www/html/uploads
+      - tile_cache:/var/www/html/_tile_cache
+      - config:/var/www/html/incs/config_persist
     depends_on:
       db:
         condition: service_healthy
@@ -59,3 +63,6 @@ services:
 
 volumes:
   db_data:
+  uploads:
+  tile_cache:
+  config:

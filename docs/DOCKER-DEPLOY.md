@@ -264,7 +264,16 @@ WEB_PORT=9090 docker compose up -d
 
 ### Persistent Data
 
-Database data is stored in a Docker volume (`db_data`). Your data survives container restarts and upgrades.
+All important data is stored in Docker volumes that survive container restarts and upgrades:
+
+| Volume | Contents | Purpose |
+|--------|----------|---------|
+| `db_data` | MariaDB database files | All incidents, users, settings, history |
+| `uploads` | File attachments | Photos, documents uploaded by users |
+| `tile_cache` | Map tile cache | Cached OSM tiles for faster map loading |
+| `config` | MySQL config file | Database connection settings |
+
+**Your data is safe.** Restarting or upgrading containers does not lose data. Only `docker compose down -v` (with the `-v` flag) removes volumes — never run this on production.
 
 ### Backup
 

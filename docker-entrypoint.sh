@@ -115,5 +115,40 @@ if [ "${AUTO_INSTALL:-true}" = "true" ] && [ -n "$DB_HOST" ]; then
     fi
 fi
 
+# ── Persistent storage setup ──
+
+# Ensure uploads directory exists and is writable
+mkdir -p /var/www/html/uploads
+chown www-data:www-data /var/www/html/uploads
+chmod 775 /var/www/html/uploads
+
+# Set up tile cache directory (persistent volume)
+TILE_CACHE_DIR="/var/www/html/_tile_cache"
+mkdir -p "$TILE_CACHE_DIR"
+chown www-data:www-data "$TILE_CACHE_DIR"
+chmod 775 "$TILE_CACHE_DIR"
+
+# Symlink tile cache if the app expects it elsewhere
+if [ -d /var/www/html/tile_cache ] && [ ! -L /var/www/html/tile_cache ]; then
+    rm -rf /var/www/html/tile_cache
+fi
+if [ ! -e /var/www/html/tile_cache ]; then
+    ln -sf "$TILE_CACHE_DIR" /var/www/html/tile_cache
+fi
+
+# Persist the mysql config across container restarts
+CONFIG_PERSIST="/var/www/html/incs/config_persist"
+mkdir -p "$CONFIG_PERSIST"
+if [ -f "$CONFIG_PERSIST/mysql.inc.php" ] && [ -n "$DB_HOST" ]; then
+    # Config exists in persistent volume — use it
+    cp "$CONFIG_PERSIST/mysql.inc.php" /var/www/html/incs/mysql.inc.php
+    chown www-data:www-data /var/www/html/incs/mysql.inc.php
+    echo "TicketsCAD: Restored config from persistent volume."
+elif [ -f /var/www/html/incs/mysql.inc.php ]; then
+    # Save current config to persistent volume
+    cp /var/www/html/incs/mysql.inc.php "$CONFIG_PERSIST/mysql.inc.php"
+    echo "TicketsCAD: Saved config to persistent volume."
+fi
+
 echo "TicketsCAD: Starting Apache..."
 exec "$@"
