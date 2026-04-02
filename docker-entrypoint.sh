@@ -9,19 +9,30 @@ MYSQL_CONFIG="/var/www/html/incs/mysql.inc.php"
 # Wait for database to be ready
 if [ -n "$DB_HOST" ]; then
     echo "TicketsCAD: Waiting for database at $DB_HOST..."
-    for i in $(seq 1 30); do
-        if php -r "
-            \$c = @new mysqli('$DB_HOST', '${DB_USER:-tickets}', '${DB_PASS:-tickets}', '${DB_NAME:-tickets}');
-            if (\$c->connect_error) exit(1);
-            echo 'OK';
-            \$c->close();
-        " 2>/dev/null | grep -q OK; then
+    # Write a temp PHP script to test connection (avoids shell escaping issues)
+    cat > /tmp/dbtest.php << 'DBTEST'
+<?php
+$host = getenv('DB_HOST') ?: 'db';
+$user = getenv('DB_USER') ?: 'tickets';
+$pass = getenv('DB_PASS') ?: 'tickets';
+$db   = getenv('DB_NAME') ?: 'tickets';
+$c = @new mysqli($host, $user, $pass, $db);
+if ($c->connect_error) { exit(1); }
+echo 'OK';
+$c->close();
+DBTEST
+    for i in $(seq 1 60); do
+        if php /tmp/dbtest.php 2>/dev/null | grep -q OK; then
             echo "TicketsCAD: Database is ready."
             break
         fi
-        echo "TicketsCAD: Waiting for database... ($i/30)"
+        if [ $i -eq 60 ]; then
+            echo "TicketsCAD: WARNING — Database not reachable after 120 seconds. Starting Apache anyway."
+        fi
+        echo "TicketsCAD: Waiting for database... ($i/60)"
         sleep 2
     done
+    rm -f /tmp/dbtest.php
 fi
 
 # Write MySQL config if environment variables are set and config doesn't exist or is default
@@ -44,76 +55,14 @@ fi
 
 # Auto-install if database is empty (no settings table)
 if [ "${AUTO_INSTALL:-true}" = "true" ] && [ -n "$DB_HOST" ]; then
-    TABLE_EXISTS=$(php -r "
-        \$c = @new mysqli('$DB_HOST', '${DB_USER:-tickets}', '${DB_PASS:-tickets}', '${DB_NAME:-tickets}');
-        if (\$c->connect_error) { echo 'error'; exit; }
-        \$r = \$c->query('SHOW TABLES LIKE \"settings\"');
-        echo \$r && \$r->num_rows > 0 ? 'yes' : 'no';
-        \$c->close();
-    " 2>/dev/null)
+    TABLE_EXISTS=$(php /var/www/html/docker-autoinstall.php check 2>/dev/null)
 
     if [ "$TABLE_EXISTS" = "no" ]; then
         echo "TicketsCAD: No tables found. Running auto-install..."
-        # Use the installer in CLI mode
-        php -r "
-            require_once '/var/www/html/incs/compat.inc.php';
-            require_once '/var/www/html/incs/db.inc.php';
-            require_once '/var/www/html/incs/security.inc.php';
-
-            // Source the installer schema
-            require_once '/var/www/html/incs/install_schema.inc.php';
-
-            // Load installer functions
-            \$installerCode = file_get_contents('/var/www/html/install.php');
-
-            // Connect
-            \$mysqli = new mysqli('$DB_HOST', '${DB_USER:-tickets}', '${DB_PASS:-tickets}', '${DB_NAME:-tickets}');
-            if (\$mysqli->connect_error) {
-                echo 'Database connection failed: ' . \$mysqli->connect_error . PHP_EOL;
-                exit(1);
-            }
-
-            // Create tables from schema
-            foreach (\$INSTALL_SCHEMA_TABLES as \$name => \$sql) {
-                if (!\$mysqli->query(\$sql)) {
-                    echo 'Warning creating ' . \$name . ': ' . \$mysqli->error . PHP_EOL;
-                } else {
-                    echo 'Created table: ' . \$name . PHP_EOL;
-                }
-            }
-
-            // Seed data
-            foreach (\$INSTALL_SCHEMA_SEED as \$sql) {
-                \$mysqli->query(\$sql);
-            }
-
-            // Create admin user
-            \$adminUser = '${ADMIN_USER:-admin}';
-            \$adminPass = hash_password('${ADMIN_PASS:-admin}');
-            \$adminName = '${ADMIN_NAME:-Super Administrator}';
-            \$mysqli->query(\"DELETE FROM user WHERE id = 1\");
-            \$mysqli->query(\"INSERT INTO user (id, user, passwd, info, level, status, open_at, sort_desc, reporting) VALUES (1, '\" . \$mysqli->real_escape_string(\$adminUser) . \"', '\" . \$mysqli->real_escape_string(\$adminPass) . \"', '\" . \$mysqli->real_escape_string(\$adminName) . \"', 0, 'approved', 'd', 1, 0)\");
-
-            // Create guest user
-            \$guestPass = md5('guest');
-            \$mysqli->query(\"INSERT IGNORE INTO user (id, user, passwd, info, level, status, open_at, sort_desc, reporting) VALUES (2, 'guest', '\" . \$mysqli->real_escape_string(\$guestPass) . \"', 'Guest', 3, 'approved', 'd', 1, 0)\");
-
-            // Set version (settings table uses 'name' column, not 'key')
-            \$mysqli->query(\"UPDATE settings SET value = '3.44.1' WHERE name = '_version'\");
-            if (\$mysqli->affected_rows === 0) {
-                \$mysqli->query(\"INSERT INTO settings (name, value) VALUES ('_version', '3.44.1')\");
-            }
-
-            // Set tile mode to proxy (avoids OSM Referer block in Docker/containers)
-            \$mysqli->query(\"UPDATE settings SET value = 'proxy' WHERE name = 'tile_mode'\");
-            if (\$mysqli->affected_rows === 0) {
-                \$mysqli->query(\"INSERT INTO settings (name, value) VALUES ('tile_mode', 'proxy')\");
-            }
-
-            \$mysqli->close();
-            echo 'Auto-install complete.' . PHP_EOL;
-        " 2>&1 || echo "TicketsCAD: Auto-install had warnings (check logs)"
-        echo "TicketsCAD: Installation finished. Login with ${ADMIN_USER:-admin} / ${ADMIN_PASS:-admin}"
+        php /var/www/html/docker-autoinstall.php install 2>&1
+        echo "TicketsCAD: Login with ${ADMIN_USER:-admin} / ${ADMIN_PASS:-admin}"
+    elif [ "$TABLE_EXISTS" = "error" ]; then
+        echo "TicketsCAD: WARNING — Could not check database. Starting Apache anyway."
     else
         echo "TicketsCAD: Database already initialized."
     fi
