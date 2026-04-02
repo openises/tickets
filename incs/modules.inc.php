@@ -22,9 +22,17 @@ function get_modules($calling_file) {
 		$numb_rows = @$result2->num_rows;
 		while ($row2 = stripslashes_deep($result2->fetch_assoc())){
 			$name = $row2['mod_name']; $status=$row2['mod_status'] ;
+			// SECURITY: Sanitize module name to prevent directory traversal via LFI.
+			// Only allow alphanumeric, underscore, and hyphen characters.
+			if (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
+				continue; // skip modules with suspicious names
+			}
 			$inc_path="./modules/" . $name . "/helper.php";
+			if (!file_exists($inc_path)) {
+				continue; // skip if module helper file doesn't exist
+			}
 			$display="get_display_" . $name;
-			include($inc_path);	
+			include($inc_path);
 			$display($calling_file);
 			}
 		}

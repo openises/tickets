@@ -46,16 +46,16 @@ function checkInput(myform, mybutton) {
 			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="128" SIZE="48" type="text" NAME="frm_description" VALUE="<?php print e($row['description']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Address:</TD>
-			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="128" SIZE="48" type="text" NAME="frm_address" VALUE="<?php print e($row['address']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
+			<TD><INPUT ID="ID2_addr" CLASS="dirty" MAXLENGTH="128" SIZE="48" type="text" NAME="frm_address" VALUE="<?php print e($row['address']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Type:</TD>
 			<TD><?php print get_types($row['conditions']);?></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd">
 			<TD CLASS="td_label" ALIGN="right">Latitude:</TD>
-			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_lat" VALUE="<?php print e($row['lat']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
+			<TD><INPUT ID="ID2_lat" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_lat" VALUE="<?php print e($row['lat']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="even">
 			<TD CLASS="td_label" ALIGN="right">Longitude:</TD>
-			<TD><INPUT ID="ID2" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_lng" VALUE="<?php print e($row['lng']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
+			<TD><INPUT ID="ID2_lng" CLASS="dirty" MAXLENGTH="48" SIZE="48" type="text" NAME="frm_lng" VALUE="<?php print e($row['lng']);?>" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> <SPAN class='warn' >text</SPAN></TD></TR>
 		<TR>
 			<TD COLSPAN="99">
 				<DIV id = "map_canvas" style = "width: 500px; height: 500px; text-align: center;"></DIV>

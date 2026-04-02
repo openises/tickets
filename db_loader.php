@@ -411,8 +411,8 @@ if(empty($_GET)) {
 				</FORM>
 				<CENTER>
 				<SPAN id='del_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='confirm_delete();'>Delete Selected<IMG id='del_img' style='float: right;' SRC='./images/delete.png' /></SPAN>
-				<SPAN id='backup_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.do_backup.submit();'>Backup Database<IMG id='del_img' style='float: right;' SRC='./images/save.png' /></SPAN>
-				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.start_restore.submit();'>Restore a Backup<IMG id='can_img' style='float: right;' SRC='./images/restore_small.png' /></SPAN>
+				<SPAN id='backup_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.do_backup.submit();'>Backup Database<IMG id='backup_img' style='float: right;' SRC='./images/save.png' /></SPAN>
+				<SPAN id='restore_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.start_restore.submit();'>Restore a Backup<IMG id='restore_img' style='float: right;' SRC='./images/restore_small.png' /></SPAN>
 				</CENTER>
 			</DIV>
 		</DIV>
@@ -454,7 +454,7 @@ if(empty($_GET)) {
 		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
 			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%; height: 90%;'>
 				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Backing-up Tickets Database</SPAN>
+					<SPAN ID='theHeading_backup' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Backing-up Tickets Database</SPAN>
 				</DIV>
 				<BR />
 				<FIELDSET id='backupstatuswrapper' style='display: none;'>
@@ -464,7 +464,7 @@ if(empty($_GET)) {
 					<BR />
 				</FIELDSET>
 				<CENTER>
-				<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='can_img' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
+				<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='fin_img_backup' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
 				</CENTER>
 			</DIV>
 		</DIV>
@@ -498,7 +498,7 @@ if(empty($_GET)) {
 		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
 			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
 				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Tickets Database Backups</SPAN>
+					<SPAN ID='theHeading_delete' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Tickets Database Backups</SPAN>
 				</DIV>
 				<BR />
 				<BR />
@@ -520,7 +520,7 @@ if(empty($_GET)) {
 					</DIV>		
 				</FIELDSET>		
 				<CENTER>
-				<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.continue_form.submit();'>Continue<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+				<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.continue_form.submit();'>Continue<IMG id='continue_del_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
 				</CENTER>
 			</DIV>
 		</DIV>
@@ -547,7 +547,7 @@ if(empty($_GET)) {
 		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
 			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
 				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restore Tickets DB Backup</SPAN>
+					<SPAN ID='theHeading_restore' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restore Tickets DB Backup</SPAN>
 				</DIV>
 				<BR />
 				<BR />
@@ -586,8 +586,8 @@ if(empty($_GET)) {
 				<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
 				</FORM>
 				<CENTER>
-				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restore_form.submit();'>Submit<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				<SPAN id='can_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_form.submit();'>Cancel<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+				<SPAN id='sub_but_restore' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restore_form.submit();'>Submit<IMG id='sub_img_restore' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+				<SPAN id='can_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_form.submit();'>Cancel<IMG id='can_img_restore' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
 				</CENTER>
 			</DIV>
 		</DIV>
@@ -614,7 +614,7 @@ if(empty($_GET)) {
 		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
 			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
 				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Check existing Data</SPAN>
+					<SPAN ID='theHeading_check' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Check existing Data</SPAN>
 				</DIV>
 				<FORM METHOD="POST" NAME= "go_form" ACTION="db_loader.php?mode=go">
 				<FIELDSET>
@@ -625,10 +625,10 @@ if(empty($_GET)) {
 					<BR />
 				</FIELDSET>
 				<div style="text-align: center;">
-				<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_form.submit();'>Submit<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+				<SPAN id='sub_but_check' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_form.submit();'>Submit<IMG id='sub_img_check' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
 				</div>
 				<div style="text-align: center;">
-				<SPAN id='restart_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restart_form.submit();'>Submit<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+				<SPAN id='restart_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restart_form.submit();'>Submit<IMG id='restart_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
 				</div>
 			</DIV>
 		</DIV>
@@ -694,8 +694,8 @@ if(empty($_GET)) {
 			$('status').innerHTML += "<?php print $output;?><BR />";
 			$('status').innerHTML += "<label for='do_backup'>Backup Database First?</label>";
 			$('status').innerHTML += "<input type='checkbox' name='do_backup' value=1 CHECKED>";
-			$('sub_but').innerHTML = "Continue <IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' />";
-			$('sub_but').style.display = "block";
+			$('sub_but_check').innerHTML = "Continue <IMG id='continue_img' style='float: right;' SRC='./images/submit_small.png' />";
+			$('sub_but_check').style.display = "block";
 </SCRIPT>
 <?php
 			} else {
@@ -703,8 +703,8 @@ if(empty($_GET)) {
 ?>
 <SCRIPT>
 			$('status').innerHTML += "<?php print $output;?><BR />";
-			$('sub_but').innerHTML = "Go fo it <IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' />";
-			$('sub_but').style.display = "block";
+			$('sub_but_check').innerHTML = "Go fo it <IMG id='go_img' style='float: right;' SRC='./images/submit_small.png' />";
+			$('sub_but_check').style.display = "block";
 </SCRIPT>
 <?php			
 			}
@@ -724,7 +724,7 @@ if(empty($_GET)) {
 		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
 			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%; height: 90%;'>
 				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restoring Database Backup</SPAN>
+					<SPAN ID='theHeading_progress' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restoring Database Backup</SPAN>
 				</DIV>
 				<BR />
 				<FIELDSET id='backupstatuswrapper' style='display: none;'>
@@ -740,7 +740,7 @@ if(empty($_GET)) {
 					<BR />
 				</FIELDSET>
 				<CENTER>
-				<SPAN id='progress_img' style='display: none; z-index: 9999;'><IMG id='can_img' SRC='./images/owmloading.gif' /></SPAN><BR />
+				<SPAN id='progress_img' style='display: none; z-index: 9999;'><IMG id='loading_img' SRC='./images/owmloading.gif' /></SPAN><BR />
 				</CENTER>
 				<FIELDSET id='statuswrapper' style='display: none;'>
 					<LEGEND class='text_large text_bold'>Restoring Backup</LEGEND>
@@ -750,7 +750,7 @@ if(empty($_GET)) {
 					<BR />
 				</FIELDSET>
 				<CENTER>
-				<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='can_img' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
+				<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='fin_img_go' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
 				</CENTER>
 			</DIV>
 		</DIV>

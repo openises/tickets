@@ -71,7 +71,7 @@ if (!file_exists($configFile)) {
     echo "<p class='info'>Run the installer first to create this file.</p>";
 } else {
     echo "<p><span class='pass'>✓</span> Config file exists</p>";
-    include($configFile);
+    include($configFile); // NOSONAR — $configFile is hardcoded to __DIR__.'/../incs/mysql.inc.php', no user input
 
     $host = isset($mysql_host) ? $mysql_host : '(not set)';
     $user = isset($mysql_user) ? $mysql_user : '(not set)';

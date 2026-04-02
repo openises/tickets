@@ -102,13 +102,16 @@ if (!function_exists('each')) {
 //  PHP 8.0+ — create_function() REMOVED
 //  Polyfill wraps eval() — not ideal but maintains BC.
 //  New code should never use this.
+//  SECURITY: eval() here is inherent to the create_function() API.
+//  $args and $code come from internal callers only (no user input).
+//  No current call sites exist — this polyfill is kept for BC safety.
 // ═══════════════════════════════════════════════════════════════
 
 if (!function_exists('create_function')) {
     function create_function($args, $code) {
         static $counter = 0;
         $funcName = '__compat_lambda_' . (++$counter);
-        eval("function {$funcName}({$args}) { {$code} }");
+        eval("function {$funcName}({$args}) { {$code} }"); // NOSONAR — BC polyfill, no user input reaches here
         return $funcName;
     }
 }

@@ -13,12 +13,13 @@ function getServerMemoryUsage($getPercentage=true) {
 
 	if (stristr(PHP_OS, "win")) {
 		// Get total physical memory (this is in bytes)
+		// SECURITY: exec() commands are hardcoded strings — no user input involved
 		$cmd = "wmic ComputerSystem get TotalPhysicalMemory";
-		@exec($cmd, $outputTotalPhysicalMemory);
+		@exec($cmd, $outputTotalPhysicalMemory); // NOSONAR — hardcoded command, no user input
 
 		// Get free physical memory (this is in kibibytes!)
 		$cmd = "wmic OS get FreePhysicalMemory";
-		@exec($cmd, $outputFreePhysicalMemory);
+		@exec($cmd, $outputFreePhysicalMemory); // NOSONAR — hardcoded command, no user input
 
 		if ($outputTotalPhysicalMemory && $outputFreePhysicalMemory) {
 			// Find total value
@@ -129,7 +130,7 @@ function getServerLoad() {
 	$load = null;
 	if (stristr(PHP_OS, "win")) {
 		$cmd = "wmic cpu get loadpercentage /all";
-		@exec($cmd, $output);
+		@exec($cmd, $output); // NOSONAR — hardcoded command, no user input
 		if ($output) {
 			foreach ($output as $line) {
 				if ($line && preg_match("/^[0-9]+\$/", $line)) {

@@ -185,7 +185,7 @@ $buster = isset($_POST['logout']) ? (strval(rand()) . '&logout=1') : strval(rand
     <frame src="board.php?stuff=<?php print $buster; ?>" id="what" name="calls" scrolling="AUTO" />
     <frame src="main.php?stuff=<?php print $buster; ?><?php print $noforward_string; ?>" name="main" />
 <?php } else { ?>
-<frameset id="the_frames" rows="<?php print (get_variable('framesize') + 25); ?>, *" border="<?php print get_variable('frameborder'); ?>">
+<frameset id="the_frames_noboard" rows="<?php print (get_variable('framesize') + 25); ?>, *" border="<?php print get_variable('frameborder'); ?>">
     <frame src="top.php?stuff=<?php print $buster; ?>" name="upper" scrolling="no" />
     <frame src="main.php?stuff=<?php print $buster; ?><?php print $noforward_string; ?>" name="main" />
 <?php } ?>
