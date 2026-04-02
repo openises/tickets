@@ -122,8 +122,11 @@ function get_instam_device($key) {				// 2/14/2014
 		$temp = get_object_vars($arr[0]);
 		extract ( $temp );
 		if ( ( isset ( $lat) ) && ( isset ( $lng ) ) ) {
-			$where_clause = "WHERE (`instam` = 1 AND `callsign` = '{$key}')";
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `lat` = '{$lat}', `lng` = '{$lng}' {$where_clause}";
+			$safe_lat = floatval($lat);
+			$safe_lng = floatval($lng);
+			$safe_key = db()->real_escape_string($key);
+			$where_clause = "WHERE (`instam` = 1 AND `callsign` = '{$safe_key}')";
+			$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `lat` = '{$safe_lat}', `lng` = '{$safe_lng}' {$where_clause}";
 			db_query($query); //11/15/11
 			if ( $GLOBALS['db_handle']->affected_rows > 0 ) {						// if movement
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `updated` = '" . now_ts() . "'{$where_clause}";
@@ -218,20 +221,28 @@ function do_gtrack() {			//7/29/09
 				$resultd = db_query($query);
 				unset($resultd);
 																			// 11/21/10, 11/15/11
+				// Sanitize external XML data before SQL use
+				$safe_gt_lat = floatval($lat);
+				$safe_gt_lng = floatval($lng);
+				$safe_gt_uid = db()->real_escape_string($user_id);
+				$safe_gt_mph = floatval($mph);
+				$safe_gt_alt = db()->real_escape_string($alt);
+				$safe_gt_updated = db()->real_escape_string($updated);
+
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
-					`lat` = '$lat', `lng` ='$lng', updated	= '" . now_ts() . "'
+					`lat` = '{$safe_gt_lat}', `lng` ='{$safe_gt_lng}', updated	= '" . now_ts() . "'
 					WHERE `gtrack` = 1
-					AND  (`lat` != '{$lat}' OR `lng` != '{$lng}' )
-					AND  `callsign` = '$user_id'";
+					AND  (`lat` != '{$safe_gt_lat}' OR `lng` != '{$safe_gt_lng}' )
+					AND  `callsign` = '{$safe_gt_uid}'";
 				$result_temp = db_query($query);
 
-				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE source = '$user_id'";	// remove prior track this device
+				$query = "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE source = '{$safe_gt_uid}'";	// remove prior track this device
 				$result_temp = db_query($query);				// 7/28/10
 
-				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh` (source, latitude, longitude, speed, altitude, updated) VALUES ('$user_id', '$lat', '$lng', round({$mph}), '$alt', '$updated')";		// 6/24/10
+				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh` (source, latitude, longitude, speed, altitude, updated) VALUES ('{$safe_gt_uid}', '{$safe_gt_lat}', '{$safe_gt_lng}', round({$safe_gt_mph}), '{$safe_gt_alt}', '{$safe_gt_updated}')";		// 6/24/10
 				$result_temp = db_query($query);
 
-				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks` (source, latitude, longitude, speed, altitude, packet_date, updated) VALUES ('$user_id', '$lat', '$lng', '$mph', '$alt', '$updated', '$updated')";
+				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks` (source, latitude, longitude, speed, altitude, packet_date, updated) VALUES ('{$safe_gt_uid}', '{$safe_gt_lat}', '{$safe_gt_lng}', '{$safe_gt_mph}', '{$safe_gt_alt}', '{$safe_gt_updated}', '{$safe_gt_updated}')";
 				$result_temp = db_query($query);
 				}	//end if
 			}	//end if
@@ -416,19 +427,28 @@ function do_aprs() {				// 7/2/2013 - 6/20/2015 -  populates the APRS tracks tab
 					$packet_date = $entry->lasttime;
 					if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) && ( is_recent($packet_date) ) ) {
 						$the_time = mysql_format_date($packet_date - $time_offset);		// adjust per aprs.fi observation
+						// Sanitize external APRS data
+						$safe_aprs_lat = floatval($lat);
+						$safe_aprs_lng = floatval($lng);
+						$safe_aprs_cs = db()->real_escape_string($callsign_in_rev);
+						$safe_aprs_callsign = db()->real_escape_string($callsign_in);
+						$safe_aprs_mph = floatval($mph);
+						$safe_aprs_course = floatval($course);
+						$safe_aprs_alt = floatval($alt);
+						$safe_aprs_pd = intval($packet_date);
 						$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder`
-							SET `lat` = '{$lat}', `lng` = '{$lng}'
-							WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+							SET `lat` = '{$safe_aprs_lat}', `lng` = '{$safe_aprs_lng}'
+							WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$safe_aprs_cs}') )";				// note LIKE argument
 						$result = db_query($query); //11/15/11
 						if ( $GLOBALS['db_handle']->affected_rows > 0 ) {									// movement ?
 							$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `updated` = '{$now_ts}'
-								WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+								WHERE ( (`aprs` = 1) AND (`callsign` LIKE '{$safe_aprs_cs}') )";				// note LIKE argument
 							$result = db_query($query); //11/15/11
-							$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;	// a hash - use tbd
+							$our_hash = $safe_aprs_callsign . (string) (abs($safe_aprs_lat) + abs($safe_aprs_lng)) ;	// a hash - use tbd
 							$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks` (
 								`packet_id`, `source`, `latitude`, `longitude`, `speed`, `course`, `altitude`, `packet_date`, `updated`)
 								VALUES (
-								'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$mph}', '{$course}', '{$alt}', FROM_UNIXTIME({$packet_date}), '{$now}')";
+								'{$our_hash}', '{$safe_aprs_callsign}', '{$safe_aprs_lat}', '{$safe_aprs_lng}', '{$safe_aprs_mph}', '{$safe_aprs_course}', '{$safe_aprs_alt}', FROM_UNIXTIME({$safe_aprs_pd}), '{$now}')";
 							$result = db_query($query);		// 6/17/2015
 							}
 						}			// end if (sane( ... ))
@@ -544,11 +564,15 @@ function do_ogts() {			// 3/24/12
 				$addr_sql = "";
 				}
 																				// 4/2/12
+				$safe_ogts_lat = floatval($lat);
+				$safe_ogts_lng = floatval($lng);
+				$safe_ogts_id = db()->real_escape_string($ogts_id);
+				$safe_ogts_updated = db()->real_escape_string($updated);
 				$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
-					`lat` = '{$lat}', `lng` ='{$lng}', `updated` = '" . now_ts() . "'  {$addr_sql}
+					`lat` = '{$safe_ogts_lat}', `lng` ='{$safe_ogts_lng}', `updated` = '" . now_ts() . "'  {$addr_sql}
 					WHERE ((`ogts` = 1)
-					AND  (`callsign` LIKE '%{$ogts_id}')
-					AND (`updated` <> '{$updated}'))";
+					AND  (`callsign` LIKE '%{$safe_ogts_id}')
+					AND (`updated` <> '{$safe_ogts_updated}'))";
 
 				db_query($query);							// 5/12/2014
 				switch (intval($GLOBALS['db_handle']->affected_rows) ) {
@@ -600,16 +624,23 @@ function do_t_tracker() {		//	6/10/11
 				$query3	= "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks` WHERE packet_date < (NOW() - INTERVAL 14 DAY)"; // remove ALL expired track records
 				$result3 = db_query($query3);
 
-				$query4 = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `lat` = '$ic_lat', `lng` ='$ic_lng', `updated` = '" . now_ts() . "' WHERE `t_tracker` = 1 AND `callsign` = '$tracking_id'";
+				$safe_ic_lat = floatval($ic_lat);
+				$safe_ic_lng = floatval($ic_lng);
+				$safe_tracking_id = db()->real_escape_string($tracking_id);
+				$safe_ic_speed = floatval($ic_speed);
+				$safe_ic_altitude = floatval($ic_altitude);
+				$safe_ic_time = db()->real_escape_string($ic_time);
+
+				$query4 = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `lat` = '{$safe_ic_lat}', `lng` ='{$safe_ic_lng}', `updated` = '" . now_ts() . "' WHERE `t_tracker` = 1 AND `callsign` = '{$safe_tracking_id}'";
 				$result4 = db_query($query4);
 
-				$query5 = "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE `source` = '$tracking_id'";		// remove prior track this device
+				$query5 = "DELETE FROM `{$GLOBALS['mysql_prefix']}tracks_hh` WHERE `source` = '{$safe_tracking_id}'";		// remove prior track this device
 				$result5 = db_query($query5);
 
-				$query6 = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh` (source, latitude, longitude, speed, altitude, updated) VALUES ('$tracking_id', '$ic_lat', '$ic_lng', round({$ic_speed}), $ic_altitude, '$ic_time')";		// 6/24/10
+				$query6 = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks_hh` (source, latitude, longitude, speed, altitude, updated) VALUES ('{$safe_tracking_id}', '{$safe_ic_lat}', '{$safe_ic_lng}', round({$safe_ic_speed}), {$safe_ic_altitude}, '{$safe_ic_time}')";		// 6/24/10
 				$result6 = db_query($query6);
 
-				$query7 = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks` (source, latitude, longitude, speed, altitude, packet_date, updated) VALUES ('$tracking_id', '$ic_lat', '$ic_lng', round({$ic_speed}), $ic_altitude, '$ic_time', '$ic_time')";
+				$query7 = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks` (source, latitude, longitude, speed, altitude, packet_date, updated) VALUES ('{$safe_tracking_id}', '{$safe_ic_lat}', '{$safe_ic_lng}', round({$safe_ic_speed}), {$safe_ic_altitude}, '{$safe_ic_time}', '{$safe_ic_time}')";
 				$result7 = db_query($query7);
 				$response_code7 = ($result7) ? 700 : 799;
 				}	//end if
@@ -774,23 +805,32 @@ function do_followmee() {
 				$packet_date = $entry->Date;
 				if ( sane ( floatval ($lat), floatval ($lng), intval (safe_strtotime($updated)) ) && ( is_recent($packet_date) ) ) {
 					$the_time = mysql_format_date(safe_strtotime($packet_date) - $time_offset);
+					// Sanitize external FollowMee data
+					$safe_fm_lat = floatval($lat);
+					$safe_fm_lng = floatval($lng);
+					$safe_fm_cs = db()->real_escape_string($callsign_in_rev);
+					$safe_fm_callsign = db()->real_escape_string($callsign_in);
+					$safe_fm_kph = floatval($kph);
+					$safe_fm_course = isset($course) ? floatval($course) : 0;
+					$safe_fm_alt = floatval($alt);
+					$safe_fm_pd = db()->real_escape_string($packet_date);
 					$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder`
-						SET `lat` = '{$lat}', `lng` = '{$lng}'
-						WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+						SET `lat` = '{$safe_fm_lat}', `lng` = '{$safe_fm_lng}'
+						WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$safe_fm_cs}') )";				// note LIKE argument
 
 						$result = db_query($query); //11/15/11
 					if ( $GLOBALS['db_handle']->affected_rows > 0 ) {									// movement ?
 
 						$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `updated` = '{$now_ts}'
-							WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$callsign_in_rev}') )";				// note LIKE argument
+							WHERE ( (`followmee_tracker` = 1) AND (`callsign` LIKE '{$safe_fm_cs}') )";				// note LIKE argument
 							$result = db_query($query); //11/15/11
 
-						$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;	// a hash - use tbd
+						$our_hash = $safe_fm_callsign . (string) (abs($safe_fm_lat) + abs($safe_fm_lng)) ;	// a hash - use tbd
 
 						$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}tracks` (
 							`packet_id`, `source`, `latitude`, `longitude`, `speed`, `course`, `altitude`, `packet_date`, `updated`)
 							VALUES (
-									'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$kph}', '{$course}', '{$alt}', '{$packet_date}', '{$now}')";
+									'{$our_hash}', '{$safe_fm_callsign}', '{$safe_fm_lat}', '{$safe_fm_lng}', '{$safe_fm_kph}', '{$safe_fm_course}', '{$safe_fm_alt}', '{$safe_fm_pd}', '{$now}')";
 
 						$result = db_query($query);		// 6/17/2015
 						}

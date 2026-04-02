@@ -1149,7 +1149,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 			$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00') order by responding";
+				WHERE `ticket_id` = " . intval($tick_id) . " AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00') order by responding";
 			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 			while ($row_01 = $result_01->fetch_assoc()) {
 				$disptime = safe_strtotime($row['problemstart']);
@@ -1184,7 +1184,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00')";
+				WHERE `ticket_id` = " . intval($tick_id) . " AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00')";
 			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 			while ($row_01 = $result_01->fetch_assoc()) {
 				$disptime = $row_01['dispatched'];
@@ -1218,7 +1218,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 						UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`,				
 						UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`on_scene`) as `on_scene`				
 						FROM `$GLOBALS[mysql_prefix]assigns` 
-						WHERE `ticket_id` = $tick_id AND (`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00')";
+						WHERE `ticket_id` = " . intval($tick_id) . " AND (`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00')";
 			$result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 			while ($row_01 = $result_01->fetch_assoc()) {
 				$disptime = $row_01['dispatched'];

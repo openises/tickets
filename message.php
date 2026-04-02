@@ -321,8 +321,8 @@ function go_to(id, screen) {
 <?php
 if(!empty($_POST)) {
 	if((isset($_POST['frm_disp'])) && ($_POST['frm_disp'] == 1)) {
-		$tick_id = $_POST['frm_ticket_id'];
-		$resp_id = $_POST['frm_resp_id'];
+		$tick_id = sanitize_int($_POST['frm_ticket_id']);
+		$resp_id = sanitize_int($_POST['frm_resp_id']);
 		$user_id = $_SESSION['user_id'];
 		$respname = get_respname($resp_id);
 		$tickname = get_tickname($tick_id);

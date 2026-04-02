@@ -134,13 +134,13 @@ $can_edit = ((is_super()) || (is_administrator()) || (get_variable('oper_can_edi
 
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $func      = $_POST['func']      ?? 'l';         // CRUD function: l=list, v=view, a=add, e=edit, d=delete, s=select
-$tablename = $_POST['tablename'] ?? '';           // selected table name
-$indexname = $_POST['indexname'] ?? '';            // table index/key column
+$tablename = isset($_POST['tablename']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['tablename']) : '';  // sanitize table name — alphanumeric + underscores only
+$indexname = isset($_POST['indexname']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['indexname']) : '';   // sanitize index name
 $id        = $_POST['id']        ?? '';           // record ID for view/edit/delete
 $page      = isset($_POST['page'])    ? intval($_POST['page'])    : 0;  // pagination: current page number
 $numrows   = isset($_POST['numrows']) ? intval($_POST['numrows']) : 0;  // pagination: total row count
 $srch_str  = $_POST['srch_str']  ?? '';           // search filter string (pipe-delimited)
-$sortby    = (!empty($_POST['sortby']))  ? $_POST['sortby']  : 'id';   // sort column
+$sortby    = isset($_POST['sortby']) && !empty($_POST['sortby']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['sortby']) : 'id';   // sanitize sort column
 $sortdir   = isset($_POST['sortdir']) ? intval($_POST['sortdir']) : 0;  // sort direction (0=ASC, 1=DESC)
 //$sortby = (!(isset($index)) || empty($index))?			 "id" : $index;
 function get_comments($the_table) {  				// returns array key=> name, value=> comment - 10/31/10
@@ -1230,9 +1230,11 @@ switch ($func) {		// ================================== case "c" ===============
 	else {
 		$where = " WHERE (";
 		$ary_srch = explode ("|", $srch_str);
+		$safe_search_term = db()->real_escape_string($ary_srch[0]);
 		$the_or = "";
 		for ($i=1; $i< count($ary_srch); $i++) {
-			$where .= "{$the_or} (`{$ary_srch[$i]}` REGEXP '{$ary_srch[0]}')";
+			$safe_col = preg_replace('/[^a-zA-Z0-9_]/', '', $ary_srch[$i]);  // sanitize column name
+			$where .= "{$the_or} (`{$safe_col}` REGEXP '{$safe_search_term}')";
 			$the_or = " OR ";
 			}				// end for ($i=...)
 		$where .= ")";
@@ -1807,10 +1809,11 @@ case "u":	// =======================================  Update 	==================
 	$query = "UPDATE $mysql_prefix$tablename SET ";
 	foreach ($_POST as $VarName=>$VarValue) {
 		if ((substr($VarName, 0, 4)=="frm_") && ($VarName != $indexname)) {
+			$safe_col_name = preg_replace('/[^a-zA-Z0-9_]/', '', substr($VarName, 4, 99));  // sanitize column name from POST key
 			if (((boolean) strpos( " double float real ",  $types[substr($VarName, 4, 99)])) && (empty($VarValue))){
-				$query .= "`" . substr($VarName, 4, 99) . "` = NULL,";
+				$query .= "`" . $safe_col_name . "` = NULL,";
 				} else {
-				$query .= "`" . substr($VarName, 4, 99) . "` = " . fnQuote_Smart($VarValue) . ",";		// 6/21/10
+				$query .= "`" . $safe_col_name . "` = " . fnQuote_Smart($VarValue) . ",";		// 6/21/10
 				}
 
 			}		// field names - note tic's

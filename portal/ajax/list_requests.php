@@ -3,8 +3,10 @@
 require_once('../../incs/functions.inc.php');
 require_once('../incs/portal.inc.php');
 include('../../incs/html2text.php');
-$sortby = (!(array_key_exists('sort', $_GET))) ? "request_date" : $_GET['sort'];
-$sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
+// Whitelist allowed sort columns to prevent SQL injection via ORDER BY
+$allowed_sorts = array('request_date', 'requester_name', 'status', 'request_type', 'id', 'phone', 'street', 'city', 'ticket_id');
+$sortby = (array_key_exists('sort', $_GET) && in_array($_GET['sort'], $allowed_sorts, true)) ? $_GET['sort'] : 'request_date';
+$sortdir = (array_key_exists('dir', $_GET) && strtoupper($_GET['dir']) === 'DESC') ? 'DESC' : 'ASC';
 
 function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);

@@ -79,7 +79,8 @@ function ticket_details($id, $theWidth, $search=FALSE, $dist=TRUE) {						// ret
 		dump($_POST);
 		}
 
-	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'")) {	/* sanity check */
+	$id = intval($id);
+	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id=?", [$id])) {	/* sanity check */
 		print "Invalid Ticket ID: '$id'<BR />";
 		return;
 		}

@@ -13,7 +13,7 @@ $sortdir = (!(array_key_exists('dir', $_GET))) ? "ASC" : $_GET['dir'];
 $func = (!(array_key_exists('func', $_GET))) ? 0 : $_GET['func'];
 $sort_by_field = (!(array_key_exists('sortbyfield', $_GET))) ? "" : $_GET['sortbyfield'];
 $sort_value = (!(array_key_exists('sort_value', $_GET))) ? "" : $_GET['sort_value'];
-$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : $_GET['my_offset'];
+$my_offset = (!(array_key_exists('my_offset', $_GET))) ? 0 : sanitize_int($_GET['my_offset']);
 $istest = FALSE;
 $iw_width= "270px";					// map infowindow with
 $nature = get_text("Nature");			// 12/03/10
@@ -88,11 +88,13 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 																				//fix limits according to setting "ticket_per_page"
 	$limit = "";
 	if ($_SESSION['ticket_per_page'] && (check_for_rows("SELECT id FROM `$GLOBALS[mysql_prefix]ticket`") > $_SESSION['ticket_per_page']))	{
-		if ($_GET['offset']) {
-			$limit = "LIMIT $_GET[offset],$_SESSION[ticket_per_page]";
+		$safe_offset = isset($_GET['offset']) ? sanitize_int($_GET['offset'], 0) : 0;
+		$safe_per_page = sanitize_int($_SESSION['ticket_per_page'], 25);
+		if ($safe_offset > 0) {
+			$limit = "LIMIT {$safe_offset},{$safe_per_page}";
 			}
 		else {
-			$limit = "LIMIT 0,$_SESSION[ticket_per_page]";
+			$limit = "LIMIT 0,{$safe_per_page}";
 			}
 		}
 	$restrict_ticket = (get_variable('restrict_user_tickets') && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";

@@ -242,7 +242,7 @@ while ($row = $result->fetch_assoc()) {
 	$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`
 				FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `ticket_id` = $tick_id AND (`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00')";
+				WHERE `ticket_id` = " . intval($tick_id) . " AND (`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00')";
 	$result_01 = db_query($query_01);
 	while ($row_01 = $result_01->fetch_assoc()) {
 		$disptime = $row_01['dispatched'];
@@ -266,7 +266,7 @@ while ($row = $result->fetch_assoc()) {
 	$query_01 = "SELECT *,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`
 				FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `ticket_id` = $f_tick_id AND (`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00')";
+				WHERE `ticket_id` = " . intval($f_tick_id) . " AND (`dispatched` IS NOT NULL OR DATE_FORMAT(`dispatched`,'%y') != '00')";
 	$result_01 = db_query($query_01);
 	while ($row_01 = $result_01->fetch_assoc()) {
 		$f_disptime = $row_01['dispatched'];
@@ -288,7 +288,7 @@ while ($row = $result->fetch_assoc()) {
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`dispatched`) as `dispatched`,
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `ticket_id` = $tick_id AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00')";
+				WHERE `ticket_id` = " . intval($tick_id) . " AND (`responding` IS NOT NULL OR DATE_FORMAT(`responding`,'%y') != '00')";
 	$result_01 = db_query($query_01);
 	while ($row_01 = $result_01->fetch_assoc()) {
 		$disptime = $row_01['dispatched'];
@@ -311,7 +311,7 @@ while ($row = $result->fetch_assoc()) {
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`responding`) as `responding`,				
 				UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]assigns`.`on_scene`) as `on_scene`				
 				FROM `$GLOBALS[mysql_prefix]assigns` 
-				WHERE `ticket_id` = $tick_id AND (`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00')";
+				WHERE `ticket_id` = " . intval($tick_id) . " AND (`on_scene` IS NOT NULL OR DATE_FORMAT(`on_scene`,'%y') != '00')";
 	$result_01 = db_query($query_01);
 	while ($row_01 = $result_01->fetch_assoc()) {
 		$disptime = $row_01['dispatched'];

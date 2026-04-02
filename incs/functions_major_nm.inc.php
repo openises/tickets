@@ -1491,7 +1491,8 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 	$can_edit = get_can_edit();
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09
 
-	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id='$id'")) {	/* sanity check */
+	$id = intval($id);
+	if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id])) {	/* sanity check */
 		print "Invalid Ticket ID: '$id'<BR />";
 		return;
 		}
