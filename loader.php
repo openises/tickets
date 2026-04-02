@@ -214,10 +214,16 @@ $sql_query = split_sql_file($sql_query, ';');
 //	$mysql_prefix 	= '';
 
 */
-$host = 'localhost';
-$user = 'tickets';
-$pass = 'lucky123';
-$db = 'tickets_jody';
+// Database credentials - load from environment variables or set in a local config file
+// Copy loader_config.sample.php to loader_config.php and set your values there
+if (file_exists(__DIR__ . '/loader_config.php')) {
+	require __DIR__ . '/loader_config.php';
+} else {
+	$host = getenv('TICKETS_DB_HOST') ?: 'localhost';
+	$user = getenv('TICKETS_DB_USER') ?: 'tickets';
+	$pass = getenv('TICKETS_DB_PASS') ?: '';
+	$db   = getenv('TICKETS_DB_NAME') ?: 'tickets';
+}
 
 $mysqli = new mysqli($host, $user, $pass, $db);
 if ($mysqli->connect_errno) { die('error connection'); }

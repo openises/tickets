@@ -111,7 +111,7 @@ $istest 			= FALSE;			// TRUE displays form variables for trouble-shooting atop 
 /* maps irv_settings for use IF you are implementing maps */
 
 $maps 				= TRUE;
-$api_key			= "ABQIAAAAiLlX5dJnXCkZR5Yil2cQ5BQOqXXamPs-BOuxLXsFgzG1vgHGdBTx978MQ0RymVQmZOPJN5XuAFdftw";	// AS local opensara
+$api_key			= getenv('TICKETS_MAPS_API_KEY') ?: ""; // NOSONAR - user-configurable Google Maps API key, set via environment variable or replace this value
 
 $def_state			= "10";				// Florida
 $def_county			= "58";				// Sarasota

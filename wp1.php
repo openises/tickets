@@ -35,7 +35,7 @@ require_once('incs/functions.inc.php');		//7/28/10
 header('Content-Type: text/html'); // For demo use only -- output to browser will be html
 
 $apidomain = "api.whitepages.com";
-$apikey = "729c1a751fd3d2428cfe2a7b43442c64"; // Put your API key here
+$apikey = getenv('TICKETS_WHITEPAGES_API_KEY') ?: ""; // Set your WhitePages API key via environment variable TICKETS_WHITEPAGES_API_KEY
 $apisearch = "reverse_phone"; // The search type, from WP API docs
 //$apiphone = "2125867000"; // The phone number to reverse-search -- New York Hilton -- many listings
 //$apiphone = "4103533986"; // The phone number to reverse-search -- UPS Store -- one listing

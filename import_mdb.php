@@ -176,10 +176,15 @@ $sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('
 $sql_query = remove_remarks($sql_query);
 $sql_query = split_sql_file($sql_query, ';');
 
-$host = 'localhost';
-$user = 'tickets';
-$pass = '';
-$db = 'tickets_320';
+// Database credentials - load from environment variables or set in a local config file
+if (file_exists(__DIR__ . '/loader_config.php')) {
+	require __DIR__ . '/loader_config.php';
+} else {
+	$host = getenv('TICKETS_DB_HOST') ?: 'localhost';
+	$user = getenv('TICKETS_DB_USER') ?: 'tickets';
+	$pass = getenv('TICKETS_DB_PASS') ?: '';
+	$db   = getenv('TICKETS_DB_NAME') ?: 'tickets';
+}
 
 $conn = new mysqli($host,$user,$pass,$db);
 if ($conn->connect_error) { die('error connection'); }

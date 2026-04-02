@@ -60,8 +60,9 @@ function check_conn_mob () {				// returns TRUE/FALSE
 		curl_setopt($ch, CURLOPT_HEADER, true);
 	
 		if($parts['scheme']=='https'){
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  1);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			$verify_ssl = function_exists('get_variable') ? (get_variable('verify_ssl') !== '0') : true; // Default: verify SSL
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_ssl ? 2 : 0);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_ssl);
 		}
 	
 		$response = curl_exec($ch);

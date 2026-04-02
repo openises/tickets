@@ -67,7 +67,9 @@ $htmlfooter = "</DIV></BODY></HTML>";
 		$api = get_variable('gmaps_api_key');
 		$url = "https://maps.googleapis.com/maps/api/directions/json?origin=" . $start . "&destination=" . $end . "&key=" . $api;
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Disable SSL verification
+		$verify_ssl = get_variable('verify_ssl') !== '0'; // Default: verify SSL. Set verify_ssl=0 in settings to disable.
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_ssl);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_ssl ? 2 : 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_URL,$url);
 		$result=curl_exec($ch);

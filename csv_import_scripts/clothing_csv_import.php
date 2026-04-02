@@ -161,9 +161,9 @@ if(empty($_POST)) {	//	Upload a file for import
 		$errmsg = "";	
 		$upload_directory = "./tmp_uploads/";
 		if (!(file_exists($upload_directory))) {				
-			mkdir ($upload_directory, 0777);
+			mkdir ($upload_directory, 0755);
 			}
-		chmod($upload_directory, 0777);		
+		chmod($upload_directory, 0755);		
 		$file = $upload_directory . "import.csv";
 		if (move_uploaded_file($_FILES['the_file']['tmp_name'], $file)) {	// If file uploaded OK
 			if (safe_strlen(filesize($file)) < 2000000) {

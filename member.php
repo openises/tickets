@@ -707,9 +707,9 @@ function linkFromSumm(table, index) {
 			if (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] === UPLOAD_ERR_OK) {
 				$upload_directory = "./mdb_pictures/" . $_POST['frm_id'] . "/";
 				if (!(file_exists($upload_directory))) {
-					mkdir ($upload_directory, 0777);
+					mkdir ($upload_directory, 0755);
 					}
-				chmod($upload_directory, 0777);
+				chmod($upload_directory, 0755);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
 					if (filesize($file) < 149000) {		// 3/14/26 - was safe_strlen(filesize()) which always passed
@@ -870,9 +870,9 @@ function linkFromSumm(table, index) {
 			if (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] === UPLOAD_ERR_OK) {
 				$upload_directory = "./mdb_pictures/" . $_POST['frm_id'] . "/";
 				if (!(file_exists($upload_directory))) {
-					mkdir ($upload_directory, 0777);
+					mkdir ($upload_directory, 0755);
 					}
-				chmod($upload_directory, 0777);
+				chmod($upload_directory, 0755);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
 					if (filesize($file) < 149000) {		// 3/14/26 - was safe_strlen(filesize())
@@ -1016,9 +1016,9 @@ function linkFromSumm(table, index) {
 			if (isset($_FILES['frm_field5']) && $_FILES['frm_field5']['error'] === UPLOAD_ERR_OK) {
 				$upload_directory = "./mdb_pictures/" . $new_id . "/";
 				if (!(file_exists($upload_directory))) {
-					mkdir ($upload_directory, 0777);
+					mkdir ($upload_directory, 0755);
 					}
-				chmod($upload_directory, 0777);
+				chmod($upload_directory, 0755);
 				$file = $upload_directory . "id.jpg";
 				if (move_uploaded_file($_FILES['frm_field5']['tmp_name'], $file)) {	// If file uploaded OK
 					if (filesize($file) < 149000) {		// 3/14/26 - was safe_strlen(filesize())
@@ -1247,14 +1247,14 @@ function linkFromSumm(table, index) {
 			$owner = get_member_name($_POST['frm_id']);
 			if (isset($_FILES['frm_file'])) {
 				$base_uploads = "./mdb_files/";
-				chmod ($base_uploads, 0777);
+				chmod ($base_uploads, 0755);
 				$file_arr = explode(".", $_FILES['frm_file']['name']);			
 				$extension = end($file_arr);
 				$upload_directory = "./mdb_files/" . $_POST['frm_id'] . "/";
 				if (!(file_exists($upload_directory))) {				
-					mkdir ($upload_directory, 0777);
+					mkdir ($upload_directory, 0755);
 					}
-				chmod($upload_directory, 0777);	
+				chmod($upload_directory, 0755);	
 
 				$file = $upload_directory . $_POST['frm_id'] . "_" . rand() . "." . $extension;
 				$shortname = $_POST['frm_shortname'];

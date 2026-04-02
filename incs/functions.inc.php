@@ -4455,7 +4455,9 @@ function get_remote($url, $json=TRUE) {				// 11/26/10	, 4/23/11
 		$ch = curl_init();
 		$timeout = 10;
 		curl_setopt($ch,CURLOPT_URL,$url);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		$verify_ssl = get_variable('verify_ssl') !== '0'; // Default: verify SSL. Set verify_ssl=0 in settings to disable.
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_ssl);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_ssl ? 2 : 0);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,$timeout);
 		curl_setopt($ch,CURLOPT_TIMEOUT,$timeout);

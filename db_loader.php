@@ -682,7 +682,7 @@ if(empty($_GET)) {
 		$existingDataCount = 0;
 		$ext_conn->select_db($_POST['ticketsdb']);
 		for($i = 0; $i < $tableCount; $i++) {
-			$result = $ext_conn->query("SELECT 1 FROM `" . $ext_conn->real_escape_string($tables[$i]) . "` LIMIT 1");
+			$result = $ext_conn->query("SELECT 1 FROM `" . $ext_conn->real_escape_string($tables[$i]) . "` LIMIT 1"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
 			if($result && $result->num_rows > 0) {
 				$existingDataCount++;
 				}
@@ -822,7 +822,7 @@ if(empty($_GET)) {
 			$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], $_POST['ticketsdb']);
 			if(!$ext_conn->connect_error) {
 				for($i = 0; $i < $tableCount; $i++) {
-					$result = $ext_conn->query("DROP TABLE `" . $ext_conn->real_escape_string($tables[$i]) . "`");
+					$result = $ext_conn->query("DROP TABLE `" . $ext_conn->real_escape_string($tables[$i]) . "`"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
 					if($result) {
 						$output = $_POST['ticketsdb'] . " Database " . $tables[$i] . " Table dropped successfully<BR />";
 ?>
