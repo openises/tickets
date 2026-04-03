@@ -1,0 +1,43 @@
+# Gitleaks configuration for TicketsCAD
+# https://github.com/gitleaks/gitleaks
+#
+# Scan: gitleaks detect --source . --config .gitleaks.toml
+# Pre-commit: gitleaks protect --staged --config .gitleaks.toml
+
+title = "TicketsCAD Secret Scanning"
+
+[extend]
+useDefault = true
+
+# Allow these paths (vendor libraries, test fixtures)
+[allowlist]
+paths = [
+    '''lib/phpmailer/''',
+    '''lib/xpm/''',
+    '''lib/twitter/''',
+    '''js/leaflet/''',
+    '''js/geoxml_v3\.js''',
+    '''js/jscolor/''',
+    '''tests/''',
+    '''tools/diagnose\.php''',
+    '''tools/reset-admin-password\.php''',
+]
+
+# Custom rules for TicketsCAD-specific patterns
+[[rules]]
+id = "mysql-root-empty"
+description = "MySQL root with empty password"
+regex = '''['"]root['"]\s*,\s*['']['"]'''
+tags = ["credential", "mysql"]
+
+[[rules]]
+id = "google-maps-api-key"
+description = "Google Maps API Key"
+regex = '''ABQI[A-Za-z0-9_-]{30,}'''
+tags = ["api-key", "google"]
+
+[[rules]]
+id = "hardcoded-db-password"
+description = "Hardcoded database password in connection string"
+regex = '''new\s+(?:mysqli|PDO)\s*\([^)]*['"][^'"]{6,}['"]\s*\)'''
+tags = ["credential", "database"]
