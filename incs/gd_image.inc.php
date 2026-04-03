@@ -597,8 +597,9 @@ class Image {
 
         // Note to self: "topanchor" is deprecated after we changed the
         // bopunding box stuff.
-        if( $this->text_halign=="right" || $this->text_halign=="topanchor" )
+        if( $this->text_halign=="right" || $this->text_halign=="topanchor" ) {
         $x -= $bbox[2]-$bbox[0];
+        }
         elseif( $this->text_halign=="center" ) $x -= ($bbox[2]-$bbox[0])/2;
 
         if( $this->text_valign=="top" ) $y += abs($bbox[5])+$bbox[1];
@@ -664,16 +665,18 @@ class Image {
         $nl = count($tmp);
         $h = $nl * $fh;
 
-        if( $this->text_halign=="right")
+        if( $this->text_halign=="right") {
         $x -= $dir==0 ? $w : $h;
+        }
         elseif( $this->text_halign=="center" ) {
         $x -= $dir==0 ? $w/2 : $h/2;
         }
 
-        if( $this->text_valign=="top" )
+        if( $this->text_valign=="top" ) {
         $y +=    $dir==0 ? $h : $w;
-        elseif( $this->text_valign=="center" )
+        } elseif( $this->text_valign=="center" ) {
         $y +=    $dir==0 ? $h/2 : $w/2;
+        }
 
         // Here comes a tricky bit.
         // Since we have to give the position for the string at the
@@ -774,8 +777,9 @@ class Image {
     $this->plotwidth=$this->width - $this->left_margin-$this->right_margin ;
     $this->plotheight=$this->height - $this->top_margin-$this->bottom_margin ;
     if( $this->width  > 0 && $this->height > 0 ) {
-        if( $this->plotwidth < 0  || $this->plotheight < 0 )
+        if( $this->plotwidth < 0  || $this->plotheight < 0 ) {
         JpGraphError::raise("To small plot area. ($lm,$rm,$tm,$bm : $this->plotwidth x $this->plotheight). With the given image size and margins there is to little space left for the plot. Increase the plot size or reduce the margins.");
+        }
     }
     }
 
@@ -900,8 +904,9 @@ class Image {
     // Set line style dashed, dotted etc
     function SetLineStyle($s) {
     if( is_numeric($s) ) {
-        if( $s<1 || $s>4 )
+        if( $s<1 || $s>4 ) {
         JpGraphError::RaiseL(25101,$s);//(" Illegal numeric argument to SetLineStyle(): ($s)");
+        }
     }
     elseif( is_string($s) ) {
         if( $s == "solid" ) $s=1;
@@ -1012,8 +1017,9 @@ class Image {
         $oldx = $p[$i];
         $oldy = $p[$i+1];
         }
-        if( $closed )
+        if( $closed ) {
         $this->StyleLine($oldx,$oldy,$p[0],$p[1]);
+        }
     }
     }
 
@@ -1258,18 +1264,19 @@ class Image {
     $tst = true;
     $supported = imagetypes();
     if( $aFormat=="auto" ) {
-        if( $supported & IMG_PNG )
+        if( $supported & IMG_PNG ) {
         $this->img_format="png";
-        elseif( $supported & IMG_JPG )
+        } elseif( $supported & IMG_JPG ) {
         $this->img_format="jpeg";
-        elseif( $supported & IMG_GIF )
+        } elseif( $supported & IMG_GIF ) {
         $this->img_format="gif";
-        elseif( $supported & IMG_WBMP )
+        } elseif( $supported & IMG_WBMP ) {
         $this->img_format="wbmp";
-        elseif( $supported & IMG_XPM )
+        } elseif( $supported & IMG_XPM ) {
         $this->img_format="xpm";
-        else
-        JpGraphError::RaiseL(25109);//("Your PHP (and GD-lib) installation does not appear to support any known graphic formats. You need to first make sure GD is compiled as a module to PHP. If you also want to use JPEG images you must get the JPEG library. Please see the PHP docs for details.");
+        } else {
+        JpGraphError::RaiseL(25109);
+        }//("Your PHP (and GD-lib) installation does not appear to support any known graphic formats. You need to first make sure GD is compiled as a module to PHP. If you also want to use JPEG images you must get the JPEG library. Please see the PHP docs for details.");
 
         return true;
     }
@@ -1290,10 +1297,12 @@ class Image {
             return true;
         }
         }
-        else
+        else {
         $tst=false;
-        if( !$tst )
-        JpGraphError::RaiseL(25110,$aFormat);//(" Your PHP installation does not support the chosen graphic format: $aFormat");
+        }
+        if( !$tst ) {
+        JpGraphError::RaiseL(25110,$aFormat);
+        }//(" Your PHP installation does not support the chosen graphic format: $aFormat");
     }
     }
 } // CLASS
@@ -1503,8 +1512,9 @@ class ImgStreamCache {
     }
 
     if( $aStrokeFileName!="" ) {
-        if( $aStrokeFileName == "auto" )
+        if( $aStrokeFileName == "auto" ) {
         $aStrokeFileName = GenImgName();
+        }
         if( file_exists($aStrokeFileName) ) {
         // Delete the old file
         if( !@unlink($aStrokeFileName) )
@@ -1523,10 +1533,12 @@ class ImgStreamCache {
             // and the file exists and is still valid (no timeout)
             // then do nothing, just return.
             $diff=time()-filemtime($aCacheFileName);
-            if( $diff < 0 )
+            if( $diff < 0 ) {
             JpGraphError::RaiseL(25112,$aCacheFileName);//(" Cached imagefile ($aCacheFileName) has file date in the future!!");
-            if( $this->timeout>0 && ($diff <= $this->timeout*60) )
+            }
+            if( $this->timeout>0 && ($diff <= $this->timeout*60) ) {
             return;
+            }
         }
         if( !@unlink($aCacheFileName) )
             JpGraphError::RaiseL(25113,$aStrokeFileName);//(" Can't delete cached image $aStrokeFileName. Permission problem?");
@@ -1542,12 +1554,15 @@ class ImgStreamCache {
 
         $res=true;
         // Set group to specified
-        if( CACHE_FILE_GROUP != "" )
+        if( CACHE_FILE_GROUP != "" ) {
         $res = @chgrp($aCacheFileName,CACHE_FILE_GROUP);
-        if( CACHE_FILE_MOD != "" )
+        }
+        if( CACHE_FILE_MOD != "" ) {
         $res = @chmod($aCacheFileName,CACHE_FILE_MOD);
-        if( !$res )
-        JpGraphError::RaiseL(25115,$aStrokeFileName);//(" Can't set permission for cached image $aStrokeFileName. Permission problem?");
+        }
+        if( !$res ) {
+        JpGraphError::RaiseL(25115,$aStrokeFileName);
+        }//(" Can't set permission for cached image $aStrokeFileName. Permission problem?");
 
         $aImage->Destroy();
         if( $aInline ) {
@@ -1600,8 +1615,9 @@ class ImgStreamCache {
         $aFile = dirname($aFile);
     }
     for ($i = sizeof($dirs)-1; $i>=0; $i--) {
-        if(! @mkdir($dirs[$i],0777) )
-        JpGraphError::RaiseL(25118,$aFile);//(" Can't create directory $aFile. Make sure PHP has write permission to this directory.");
+        if(! @mkdir($dirs[$i],0777) ) {
+        JpGraphError::RaiseL(25118,$aFile);
+        }//(" Can't create directory $aFile. Make sure PHP has write permission to this directory.");
         // We also specify mode here after we have changed group.
         // This is necessary if Apache user doesn't belong the
         // default group and hence can't specify group permission
@@ -1617,6 +1633,3 @@ class ImgStreamCache {
     return true;
     }
 } // CLASS Cache
-
-
-?>

@@ -260,8 +260,9 @@ function GenImgName() {
     elseif( $supported & IMG_XPM ) $img_format="xpm";
 
 
-    if( !isset($_SERVER['PHP_SELF']) )
+    if( !isset($_SERVER['PHP_SELF']) ) {
     JpGraphError::RaiseL(25005);
+    }
 //(" Can't access PHP_SELF, PHP global variable. You can't run PHP from command line if you want to use the 'auto' naming of cache or image files.");
     $fname = basename($_SERVER['PHP_SELF']);
     if( !empty($_SERVER['QUERY_STRING']) ) {
@@ -687,8 +688,9 @@ class Graph {
 
     function AddTable($aTable) {
     if( is_array($aTable) ) {
-        for($i=0; $i < count($aTable); ++$i )
+        for($i=0; $i < count($aTable); ++$i ) {
         $this->iTables[]=$aTable[$i];
+        }
     }
     else {
         $this->iTables[] = $aTable ;
@@ -697,8 +699,9 @@ class Graph {
 
     function AddIcon($aIcon) {
     if( is_array($aIcon) ) {
-        for($i=0; $i < count($aIcon); ++$i )
+        for($i=0; $i < count($aIcon); ++$i ) {
         $this->iIcons[]=$aIcon[$i];
+        }
     }
     else {
         $this->iIcons[] = $aIcon ;
@@ -749,19 +752,21 @@ class Graph {
         JpGraphError::RaiseL(25014);//("Graph::AddText() You tried to add a null text to the graph.");
     if( $aToY2 ) {
         if( is_array($aTxt) ) {
-        for($i=0; $i < count($aTxt); ++$i )
+        for($i=0; $i < count($aTxt); ++$i ) {
             $this->y2texts[]=$aTxt[$i];
         }
-        else
+        } else {
         $this->y2texts[] = $aTxt;
+        }
     }
     else {
         if( is_array($aTxt) ) {
-        for($i=0; $i < count($aTxt); ++$i )
+        for($i=0; $i < count($aTxt); ++$i ) {
             $this->texts[]=$aTxt[$i];
         }
-        else
+        } else {
         $this->texts[] = $aTxt;
+        }
     }
     }
 
@@ -772,19 +777,21 @@ class Graph {
 
     if( $aToY2 ) {
          if( is_array($aLine) ) {
-        for($i=0; $i < count($aLine); ++$i )
+        for($i=0; $i < count($aLine); ++$i ) {
             $this->y2lines[]=$aLine[$i];
         }
-        else
+        } else {
         $this->y2lines[] = $aLine;
+        }
     }
     else {
          if( is_array($aLine) ) {
-        for($i=0; $i<count($aLine); ++$i )
+        for($i=0; $i<count($aLine); ++$i ) {
             $this->lines[]=$aLine[$i];
         }
-        else
+        } else {
         $this->lines[] = $aLine;
+        }
     }
     }
 
@@ -2696,7 +2703,7 @@ class Graph {
             for ($j=0; $j < $m; $j++) {
             $this->img->LineTo($pts[1][$j],$pts[2][$j]);
             }
-        } else if ($coords[1][$i]=="rect") {
+        } elseif ($coords[1][$i]=="rect") {
             $pts = preg_split('/,/', $coords[2][$i]);
             $this->img->SetStartPoint($pts[0],$pts[1]);
             $this->img->LineTo($pts[2],$pts[1]);
@@ -6388,4 +6395,3 @@ class PlotLine {
 }
 
 // <EOF>
-?>
