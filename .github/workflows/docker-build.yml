@@ -61,15 +61,39 @@ jobs:
           # Start the stack
           docker compose up -d
 
-          # Wait for services
-          sleep 30
+          # Wait for auto-install to complete (DB health check + table creation + Apache start)
+          echo "Waiting for TicketsCAD to start..."
+          for i in $(seq 1 40); do
+            if docker logs ticketscad 2>&1 | grep -q "Starting Apache"; then
+              echo "Apache started after ~$((i*5)) seconds"
+              sleep 5
+              break
+            fi
+            if [ $i -eq 40 ]; then
+              echo "TIMEOUT: Apache did not start in 200 seconds"
+              docker compose logs
+              exit 1
+            fi
+            sleep 5
+          done
 
           # Verify web server responds
-          curl -f http://localhost:8080/ || (docker compose logs && exit 1)
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          echo "HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "FAILED: Expected HTTP 200, got $HTTP_CODE"
+            docker compose logs
+            exit 1
+          fi
 
-          # Verify installer works
-          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/install.php)
-          echo "Installer HTTP code: $HTTP_CODE"
+          # Verify database was initialized
+          TABLES=$(docker exec ticketscad_db mariadb -u tickets -ptickets tickets -N -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='tickets'" 2>/dev/null)
+          echo "Tables: $TABLES"
+          if [ "${TABLES:-0}" -lt 50 ]; then
+            echo "FAILED: Expected 50+ tables, got $TABLES"
+            docker compose logs
+            exit 1
+          fi
 
           # Cleanup
           docker compose down -v
