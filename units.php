@@ -189,7 +189,7 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 */
 $remotes = get_current();        // returns array - 3/16/09
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";
     exit();
     }

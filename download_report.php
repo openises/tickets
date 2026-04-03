@@ -47,7 +47,7 @@ if (function_exists("curl_init")) {
     $thePage = preg_replace("#(<\s*a\s+[^>]*href\s*=\s*[\"'])(?!http)([^\"'>]+)  ([\"'>]+)#",'$1'.$url.'$2$3', $thePage);
     curl_close($ch);
     } else {                // no CURL
-    if ($fp = @fopen($url, "r")) {
+    if ($fp = fopen($url, "r")) {
         while (!feof($fp) && (safe_strlen($thePage)<9000)) $thePage .= fgets($fp, 128);
         fclose($fp);
         }

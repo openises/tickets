@@ -11,7 +11,7 @@ $sit_version = (intval(get_variable('full_sit_v2')) == 0) ? 1 : 2;
 
 do_login(basename(__FILE__));
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";
     exit();
     }

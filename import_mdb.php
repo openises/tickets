@@ -172,7 +172,13 @@ function split_sql_file($sql, $delimiter) {
 
 //$dbms_schema = 'jb.sql';
 
-$sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
+if (!file_exists($dbms_schema) || !is_readable($dbms_schema)) {
+    die('problem: cannot read schema file');
+}
+$sql_query = file_get_contents($dbms_schema);
+if ($sql_query === false) {
+    die('problem reading schema file');
+}
 $sql_query = remove_remarks($sql_query);
 $sql_query = split_sql_file($sql_query, ';');
 
@@ -196,5 +202,3 @@ foreach($sql_query as $sql){
     ";
     $conn->query($sql) or die('error in query');
 }
-
-?>

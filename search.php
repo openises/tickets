@@ -28,7 +28,7 @@ require_once($_SESSION['fmp']);                    // 9/29/10
 //    dump ($_GET);
 //    }
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";
     exit();
     }

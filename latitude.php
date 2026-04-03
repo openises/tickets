@@ -66,7 +66,7 @@ function do_glat_test($user) {                // given user id,  returns Google 
         }
     else {                                        // not CURL
         $data = "";
-        if ($fp = @fopen($the_url, "r")) {
+        if ($fp = fopen($the_url, "r")) {
             while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
             fclose($fp);
             }

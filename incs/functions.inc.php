@@ -1820,7 +1820,7 @@ function is_closed($id){/* is ticket closed? */
  * @since v3.0
  */
 function is_super(){
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']));        // 5/11/10, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_SUPER']));        // 5/11/10, 4/29/14 — strict compare: "anystring" == 0 is true in PHP
     }
 /**
  * Check if the current user has administrator or super-admin privileges.
@@ -1832,7 +1832,7 @@ function is_super(){
  * @since v3.0
  */
 function is_administrator(){
-    return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER'])));        // 5/11/10, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] === $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] === $GLOBALS['LEVEL_SUPER'])));        // 5/11/10, 4/29/14
     }
 /**
  * Check if the current user is an admin (but not super-admin).
@@ -1841,7 +1841,7 @@ function is_administrator(){
  * @since v3.0
  */
 function is_admin(){        /* is user admin but not super? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']));        // 10/26/11, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_ADMINISTRATOR']));        // 10/26/11, 4/29/14
     }
 /**
  * Check if the current user is a guest or member (lowest access levels).
@@ -1850,7 +1850,7 @@ function is_admin(){        /* is user admin but not super? */
  * @since v3.0
  */
 function is_guest(){                /* is user guest? */
-    return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_GUEST']) || ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER'])));                // 6/25/10, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] === $GLOBALS['LEVEL_GUEST']) || ($_SESSION['level'] === $GLOBALS['LEVEL_MEMBER'])));                // 6/25/10, 4/29/14
     }
 /**
  * Check if the current user is a member.
@@ -1859,7 +1859,7 @@ function is_guest(){                /* is user guest? */
  * @since v3.0
  */
 function is_member(){                /* is user member? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER']));                // 7/2/10, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_MEMBER']));                // 7/2/10, 4/29/14
     }
 /**
  * Check if the current user is an operator/dispatcher.
@@ -1868,7 +1868,7 @@ function is_member(){                /* is user member? */
  * @since v3.0
  */
 function is_user(){                    /* is user operator/dispatcher? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_USER']));        // 5/11/10, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_USER']));        // 5/11/10, 4/29/14
     }
 /**
  * Check if the current user is a unit (responder).
@@ -1877,7 +1877,7 @@ function is_user(){                    /* is user operator/dispatcher? */
  * @since v3.0
  */
 function is_unit(){                    /* is user unit? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']));                        // 7/12/10, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']));                        // 7/12/10, 4/29/14
     }
 /**
  * Check if the current user is a facility.
@@ -1886,19 +1886,19 @@ function is_unit(){                    /* is user unit? */
  * @since v3.0
  */
 function is_facility(){                    /* is user facility? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_FACILITY']));                        // 5/26/16
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_FACILITY']));                        // 5/26/16
     }
 function is_statistics(){                    /* is user statistics? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_STATISTICS']));                        // 10/23/12, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_STATISTICS']));                        // 10/23/12, 4/29/14
     }
 function is_service_user(){                    /* is user service user? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_SERVICE_USER']));                        // 10/23/12, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_SERVICE_USER']));                        // 10/23/12, 4/29/14
     }
 function is_manager(){                    /* is user service user? */
-    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] == $GLOBALS['LEVEL_MANAGER']));                        // 10/23/12, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && ($_SESSION['level'] === $GLOBALS['LEVEL_MANAGER']));                        // 10/23/12, 4/29/14
     }
 function see_buttons() {
-    return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']) || ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) || ($_SESSION['level'] == $GLOBALS['LEVEL_USER']) || ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER'])));        // 10/11/12, 4/29/14
+    return ((array_key_exists('level', $_SESSION)) && (($_SESSION['level'] === $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] === $GLOBALS['LEVEL_SUPER']) || ($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) || ($_SESSION['level'] === $GLOBALS['LEVEL_USER']) || ($_SESSION['level'] === $GLOBALS['LEVEL_MEMBER'])));        // 10/11/12, 4/29/14
     }
 function may_email() {
     return (!(is_guest()) || (is_member() || is_unit())) ;                        // members, units  allowed
@@ -4478,7 +4478,7 @@ function get_remote($url, $json=true) {                // 11/26/10    , 4/23/11
             }
         } else {                // no CURL
         $data = "";
-        if ($fp = @fopen($url, "r")) {
+        if ($fp = fopen($url, "r")) {
             while (!feof($fp) && (strlen($data)<9000)) $data .= fgets($fp, 128);
             fclose($fp);
             }

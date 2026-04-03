@@ -1015,7 +1015,7 @@ function set_size() {
                 }
             }
         exit();
-        } else if (isset($_GET['delete'])) {                            //delete ticket
+        } elseif (isset($_GET['delete'])) {                            //delete ticket
         if ($_POST['frm_confirm']) {
             /* remove ticket and ticket actions */
             $result = db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE ID= ?", [sanitize_int($id)]);
@@ -1845,7 +1845,7 @@ function set_size() {
             document.edit.frm_lng.value = document.edit.show_lng.value = obj_bldg.bldg_lon.toString();
             }
         if (obj_bldg.bldg_info.length > 0 ) {
-            var close_str = "<span onclick = \"$('bldg_info').style = 'display:none';\"><b><center><u>X</u></center></b></span>";
+            var close_str = "<span onclick = \"$('bldg_info').style = 'display:none';\" style='display:block;text-align:center;'><b><u>X</u></b></span>";
             $('bldg_info').innerHTML = obj_bldg.bldg_info + close_str;        //
             $('bldg_info').style.display = "inline";
             }

@@ -93,12 +93,12 @@ else {
         "Reply-To: {$_POST['frm_reply_to']}" . "\r\n" .
         "X-Mailer: PHP/" . phpversion();
 
-    if (@mail($to, $subject, $message, $headers)) {
-        echo "<br/><br/><center><h3>Server reports success!</h3><br/><br/>";
-        echo "<center><h4>(delivery can take minutes depending on ... )</h4><br/><br/>";
+    if (mail($to, $subject, $message, $headers)) {
+        echo "<br/><br/><div style='text-align:center'><h3>Server reports success!</h3><br/><br/>";
+        echo "<h4>(delivery can take minutes depending on ... )</h4></div><br/><br/>";
         }
     else {
-        echo "<br/><br/><center><h3>Server reports failure!</h3><br/><br/>";
+        echo "<br/><br/><div style='text-align:center'><h3>Server reports failure!</h3></div><br/><br/>";
         }
 ?>
     <p align='center'>

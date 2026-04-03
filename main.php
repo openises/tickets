@@ -109,7 +109,7 @@ if ($istest) {
 
 $protocol = ($https) ? "https" : "http";
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     $host  = $_SERVER['HTTP_HOST'];
     $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $extra = 'mobile.php';
@@ -117,7 +117,7 @@ if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restr
     exit();
     }
 
-if($_SESSION['level'] == $GLOBALS['LEVEL_SERVICE_USER']) {
+if($_SESSION['level'] === $GLOBALS['LEVEL_SERVICE_USER']) {
     $host  = $_SERVER['HTTP_HOST'];
     $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $extra = 'portal.php';
@@ -139,7 +139,7 @@ $alt_sit = (intval(get_variable('alternate_sit')) == 1) ? true : false;
             require_once('./forms/ticket_view_screen_NM.php');
             print "<BR /><P ALIGN='left'>";
             }
-        } else if ($get_id) {
+        } elseif ($get_id) {
         if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
             require_once('./forms/ticket_view_screen.php');
             } else {
@@ -148,7 +148,7 @@ $alt_sit = (intval(get_variable('alternate_sit')) == 1) ? true : false;
             print "<BR /><P ALIGN='left'>";
             }
 
-        } else if ($get_sort_by_field && $get_sort_value) {
+        } elseif ($get_sort_by_field && $get_sort_value) {
         if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
             require_once('./forms/sit_screen.php');
             } else {
@@ -172,4 +172,3 @@ if ($refresh_top_once) {
 }
 
 exit();
-?>

@@ -785,22 +785,22 @@ function is_closed($id){/* is ticket closed? */
     }
 
 function is_super(){                // added 6/9/08
-    return ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']);        // 5/11/10
+    return ($_SESSION['level'] === $GLOBALS['LEVEL_SUPER']);        // 5/11/10
     }
 function is_administrator(){        /* is user admin or super? */
-    return (($_SESSION['level'] == $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] == $GLOBALS['LEVEL_SUPER']));        // 5/11/10
+    return (($_SESSION['level'] === $GLOBALS['LEVEL_ADMINISTRATOR']) || ($_SESSION['level'] === $GLOBALS['LEVEL_SUPER']));        // 5/11/10
     }
 function is_guest(){                /* is user guest? */
-    return (($_SESSION['level'] == $GLOBALS['LEVEL_GUEST']) || ($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER']));                // 6/25/10
+    return (($_SESSION['level'] === $GLOBALS['LEVEL_GUEST']) || ($_SESSION['level'] === $GLOBALS['LEVEL_MEMBER']));                // 6/25/10
     }
 function is_member(){                /* is user member? */
-    return (($_SESSION['level'] == $GLOBALS['LEVEL_MEMBER']));                // 7/2/10
+    return (($_SESSION['level'] === $GLOBALS['LEVEL_MEMBER']));                // 7/2/10
     }
 function is_user(){                    /* is user operator/dispatcher? */
-    return ($_SESSION['level'] == $GLOBALS['LEVEL_USER']);        // 5/11/10
+    return ($_SESSION['level'] === $GLOBALS['LEVEL_USER']);        // 5/11/10
     }
 function is_unit(){                    /* is user unit? */
-    return ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']);                        // 7/12/10
+    return ($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']);                        // 7/12/10
     }
 function may_email() {
     return (!(is_guest()) || (is_member() || is_unit())) ;                        // members, units  allowed

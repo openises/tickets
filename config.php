@@ -124,7 +124,7 @@ if ($istest) {
 // Forms served by this page have tokens auto-injected via JS; cross-page navigation POSTs don't
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
     if (!csrf_verify($_POST['csrf_token'])) {
-        print '<br><br><center><b>Security Error:</b> Your session has expired or the form token is invalid. Please <a href="' . e(basename(__FILE__)) . '">go back</a> and try again.</center>';
+        print '<br><br><div style="text-align:center"><b>Security Error:</b> Your session has expired or the form token is invalid. Please <a href="' . e(basename(__FILE__)) . '">go back</a> and try again.</div>';
         exit();
     }
 }
@@ -1168,7 +1168,7 @@ function dump_db()
 exit();
 }                // end (array_key_exists('id', ($_GET)))
 
-else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
+elseif ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
     for ($i = 0; $i < count($_POST["frm_id"]); $i++) {
 
         if (isset($_POST['frm_delete'][$i])) {
@@ -1211,7 +1211,7 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
     print "<FONT CLASS='header'>$msg</FONT><BR /><BR />";
 }                // end array_key_exists('save')
 
-else if ((array_key_exists('add', ($_GET))) && ($_GET['add'] == 'true')) {    //email validation check
+elseif ((array_key_exists('add', ($_GET))) && ($_GET['add'] == 'true')) {    //email validation check
     $email = validate_email($_POST['frm_email']);
     if ((!$email['status']) && ($_POST['frm_mailgroup'] == 0)) {
         print "<FONT CLASS='warn'>Error: email validation failed for '" . $_POST['frm_email'] . "', " . $email['msg'] . ". Go back and check this email address.</FONT>";
@@ -2786,7 +2786,7 @@ case 'user' :
         } else {
             print '<FONT CLASS="warn">Not authorized.</FONT><BR /><BR />';
         }
-    } else if ((array_key_exists('edit', ($_GET))) && ($_GET['edit'] == 'true') && (array_key_exists('func', ($_GET))) && ($_GET['func'] == 'user')) {
+    } elseif ((array_key_exists('edit', ($_GET))) && ($_GET['edit'] == 'true') && (array_key_exists('func', ($_GET))) && ($_GET['func'] == 'user')) {
 
         if ((array_key_exists('frm_remove', $_POST)) && ($_POST['frm_remove'] == 'yes')) {
             $ctr = 0;
@@ -2893,7 +2893,7 @@ case 'user' :
         }
     }        // end if ($_GET['edit']
 
-    else if (($_GET['func'] == 'user') && ($_GET['add'] == 'true')) {
+    elseif (($_GET['func'] == 'user') && ($_GET['add'] == 'true')) {
         if (is_administrator()) {
             if ((array_key_exists('go', ($_GET))) && ($_GET['go'] == 'true')) {
                 if ($_POST['frm_passwd'] == $_POST['frm_passwd_confirm']) {                        // 11/30/08

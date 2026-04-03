@@ -127,7 +127,7 @@ function get_structure($structurefile) {
         curl_close($ch);
         }
     else {                // not CURL
-        if ($fp = @fopen($xml_file, "r")) {
+        if ($fp = fopen($xml_file, "r")) {
             while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
             fclose($fp);
             }

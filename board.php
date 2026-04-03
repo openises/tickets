@@ -152,7 +152,7 @@ $result = db_query($query) ;
 $from_top = 0;        // position of floating div, pixels from  top of frame
 
 if($istest) { dump($_POST); }
-if((isset($_SESSION['level'])) && ($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if((isset($_SESSION['level'])) && ($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";
     exit();
     }

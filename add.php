@@ -629,7 +629,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
         if($in_win) {
             if((intval(get_variable('auto_route'))==1) && ($in_win == 0)) {
                 $onloadStr = "setTimeout(function(){ document.to_routes.submit();}, 8000);";
-                } else if((intval(get_variable('auto_route'))==0) && ($in_win == 0)) {
+                } elseif((intval(get_variable('auto_route'))==0) && ($in_win == 0)) {
 //                $onloadStr = "setTimeout(function(){ document.to_main.submit();}, 8000);";
                 $onloadStr = "";
                 }
@@ -1657,7 +1657,7 @@ $heading = "Add Ticket - " . get_variable('map_caption');
 $from_left = 500;
 $from_top = 150;                // 11/22/2012
 $cid_lat = isset($cid_lat) ? $cid_lat : ""; // 8/8/11
-$cid_lng = isset($cid_llng) ? $cid_lng : ""; // 8/8/11
+$cid_lng = isset($cid_lng) ? $cid_lng : ""; // 8/8/11
 $onload_str = "load(" .  get_variable('def_lat') . ", " . get_variable('def_lng') . "," . get_variable('def_zoom') . ");";
 $onload_str .= (is_float($cid_lat))? " pt_to_map( add, {$cid_lat} ,{$cid_lng});": "";
 $doloc = intval(get_variable('add_uselocation'));
@@ -1710,7 +1710,7 @@ function do_bldg(in_val) {                                    // called with zer
         document.add.show_lng.value = theLng.toString();
         }
     if (obj_bldg.bldg_info.length > 0 ) {
-        var close_str = "<span onclick = \"$('bldg_info').style.display = 'none';\"><b><center><u>X</u></center></b></span>";
+        var close_str = "<span onclick = \"$('bldg_info').style.display = 'none';\" style='display:block;text-align:center;'><b><u>X</u></b></span>";
         $('bldg_info').innerHTML = obj_bldg.bldg_info + close_str;        //
         $('bldg_info').style.display = "inline";
         }

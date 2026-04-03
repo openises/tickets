@@ -58,7 +58,7 @@ $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
 if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";
     exit();
     }

@@ -49,7 +49,7 @@ function do_gt($user, $url) {
             curl_close($ch);
             }
         else {                // not CURL
-            if ($fp = @fopen($request_url, "r")) {
+            if ($fp = fopen($request_url, "r")) {
                 while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
                 fclose($fp);
                 }

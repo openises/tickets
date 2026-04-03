@@ -65,7 +65,7 @@ if (function_exists("curl_init")) {
     $thePage = curl_exec($ch);
     curl_close($ch);
 } else {
-    if ($fp = @fopen($url, "r")) {
+    if ($fp = fopen($url, "r")) {
         while (!feof($fp)) { $thePage .= fgets($fp, 4096); }
         fclose($fp);
     }

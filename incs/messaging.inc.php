@@ -242,7 +242,7 @@ function get_cellphone($id) {
     }
 
 function can_delete_msg(){
-    if($_SESSION['level'] ==  $GLOBALS['LEVEL_SUPER']) {
+    if($_SESSION['level'] ===  $GLOBALS['LEVEL_SUPER']) {
         $ret = 1;
         } else {
         $ret = 0;
@@ -1155,7 +1155,7 @@ function do_smsg_send($orgcode,$apipin,$subject,$message,$reciptype,$recipients,
                 $count = 0;
                 }
             }
-        } else if (return_provider_name(get_msg_variable('smsg_provider')) == "SMS Broadcast") {
+        } elseif (return_provider_name(get_msg_variable('smsg_provider')) == "SMS Broadcast") {
         $result = send_message_smsbroadcast($message,$recipients,$replyto);
         $response_lines = explode("\n", $result);
            $count = 0;
@@ -1173,13 +1173,13 @@ function do_smsg_send($orgcode,$apipin,$subject,$message,$reciptype,$recipients,
                         echo "There was an error with this request. Reason: ".$message_data[1]."\n";
                 }
             }
-        } else if (return_provider_name(get_msg_variable('smsg_provider')) == "MOTOTRBO Text Message") {
+        } elseif (return_provider_name(get_msg_variable('smsg_provider')) == "MOTOTRBO Text Message") {
         $count = send_message_mototrbo($message,$recipients);
         if($count >= 1) {
             $datestring = date("Y-m-d H:i:s", $now);
             store_msg($recipients, "N/A", $subject, $message, 'TICKETS', $ticket_id, $datestring, $datestring, 3, 0);
             }
-        } else if (return_provider_name(get_msg_variable('smsg_provider')) == "Txt Local") {
+        } elseif (return_provider_name(get_msg_variable('smsg_provider')) == "Txt Local") {
         $sentTimestamp = (get_msg_variable('append_timestamp') == "1") ? "Sent: " . $thesentTime : "";
         $textMessage = $message . $sentTimestamp;
         $server = get_msg_variable('txtlocal_ogserver');
@@ -1322,9 +1322,9 @@ function do_smsg_retrieve($orgcode,$apipin,$mode) {    // retrieves responses fr
                     }
                 }
             }
-        } else if (return_provider_name(get_msg_variable('smsg_provider')) == "SMS Broadcast") {
+        } elseif (return_provider_name(get_msg_variable('smsg_provider')) == "SMS Broadcast") {
         // Not implemented!
-        } else if (return_provider_name(get_msg_variable('smsg_provider')) == "Txt Local") {
+        } elseif (return_provider_name(get_msg_variable('smsg_provider')) == "Txt Local") {
         $theResponse = xml2array(get_txtlocal_inboxes());
         $numInboxes = $theResponse['response']['num_inboxes'];
         $inboxes = $theResponse['response']['inboxes'];

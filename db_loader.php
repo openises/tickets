@@ -847,7 +847,13 @@ if(empty($_GET)) {
                 $pass = $_POST['ticketspassword'];
                 $db = $_POST['ticketsdb'];
                 $dbms_schema = $dir . "/" . $_POST['db_schema'];
-                $sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
+                if (!file_exists($dbms_schema) || !is_readable($dbms_schema)) {
+                    die('problem: cannot read schema file');
+                }
+                $sql_query = file_get_contents($dbms_schema);
+                if ($sql_query === false) {
+                    die('problem reading schema file');
+                }
                 $sql_query = remove_remarks($sql_query);
                 $sql_query = split_sql_file($sql_query, ';');
                 // 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
@@ -905,7 +911,13 @@ if(empty($_GET)) {
             $pass = $_POST['ticketspassword'];
             $db = $_POST['ticketsdb'];
             $dbms_schema = $dir . "/" . $_POST['db_schema'];
-            $sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
+            if (!file_exists($dbms_schema) || !is_readable($dbms_schema)) {
+                die('problem: cannot read schema file');
+            }
+            $sql_query = file_get_contents($dbms_schema);
+            if ($sql_query === false) {
+                die('problem reading schema file');
+            }
             $sql_query = remove_remarks($sql_query);
             $sql_query = split_sql_file($sql_query, ';');
             // 3/14/26 - Migrated from mysql_* to mysqli for external DB restore

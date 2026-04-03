@@ -19,7 +19,7 @@ do_login(basename(__FILE__));
 // Phase 2 security cleanup: replaced extract with explicit variable assignments
 $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";
     exit();
     }
