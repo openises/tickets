@@ -1067,7 +1067,7 @@ function get_fac_status_cols($id) {
 
 function show_log($theid, $show_cfs=false) {                                // 11/20/09, 10/20/12, 5/8/14
     global $evenodd ;    // class names for alternating table row colors
-    require_once('log_codes.inc.php');                                     // 9/29/10
+    require_once 'log_codes.inc.php';                                      // 9/29/10
     $query = "
         SELECT `{$GLOBALS['mysql_prefix']}log`.`id` AS `log_id`,
         `{$GLOBALS['mysql_prefix']}log`.`who` AS `who`,
@@ -1122,7 +1122,7 @@ function show_log($theid, $show_cfs=false) {                                // 1
 
 function show_unit_log ($theid, $show_cfs=false) {                                // 9/10/13
     global $evenodd ;    // class names for alternating table row colors
-    require_once('./incs/log_codes.inc.php');
+    require_once './incs/log_codes.inc.php';
 
     $query = "
         SELECT *,

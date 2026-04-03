@@ -538,7 +538,7 @@ function show_actions ($the_id, $theSort="date", $links="", $display="", $mode="
 
 function show_log ($theid, $show_cfs=false) {                                // 11/20/09
     global $evenodd ;    // class names for alternating table row colors
-    require_once('./incs/log_codes.inc.php');                                     // 9/29/10
+    require_once './incs/log_codes.inc.php';                                     // 9/29/10
 
     $query = "
         SELECT *, UNIX_TIMESTAMP(`when`) AS `when`,
@@ -585,7 +585,7 @@ function show_log ($theid, $show_cfs=false) {                                // 
 
 function show_unit_log ($theid, $show_cfs=false) {                                // 9/10/13
     global $evenodd ;    // class names for alternating table row colors
-    require_once('./incs/log_codes.inc.php');
+    require_once './incs/log_codes.inc.php';
 
     $query = "
         SELECT *,
