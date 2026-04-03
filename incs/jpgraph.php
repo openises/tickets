@@ -805,16 +805,18 @@ class Graph {
         for($i=0; $i < count($aBand); ++$i )
             $this->y2bands[] = $aBand[$i];
         }
-        else
+        else {
         $this->y2bands[] = $aBand;
+        }
     }
     else {
         if( is_array($aBand) ) {
         for($i=0; $i < count($aBand); ++$i )
             $this->bands[] = $aBand[$i];
         }
-        else
+        else {
         $this->bands[] = $aBand;
+        }
     }
     }
 
@@ -1159,8 +1161,9 @@ class Graph {
             fpassthru($fh);
             return true;
             }
-            else
+            else {
             JpGraphError::RaiseL(25027,$basecsim);//(" Can't open cached CSIM \"$basecsim\" for reading.");
+            }
         }
         }
     }
@@ -1385,8 +1388,9 @@ class Graph {
         else
             $btotrequired = $this->xaxis->title->GetTextHeight($this->img) + 5 ;
         }
-        else
+        else {
         $btotrequired = 0;
+        }
 
         if( $this->img->a == 90 ) {
         $this->img->SetFont($this->yaxis->font_family,$this->yaxis->font_style,
@@ -2619,8 +2623,9 @@ class Graph {
     }
     elseif( $this->title->halign == 'right' ) {
         $indent = 0;
-        if( $this->doshadow )
+        if( $this->doshadow ) {
         $indent = $this->shadow_width+2;
+        }
         $this->title->SetPos($this->img->width-$this->title->margin-$indent,$y,'right');
     }
     $this->title->Stroke($this->img);
