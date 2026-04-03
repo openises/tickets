@@ -49,8 +49,8 @@ function is_my_null($inchar) {
     }
 
 function get_low($in_date) {        // ex:2008-08-26 21:31:09
-    $ar1 = str_split(" ", $in_date);
-    $ar2 = str_split(":", $ar1[1]);        // time
+    $ar1 = explode(" ", $in_date);
+    $ar2 = explode(":", $ar1[1]);        // time
     $ar2[0] = floor ($ar2[0]/4)*4;
     $ar2[0] = str_pad ($ar2[0], 2,"0" , STR_PAD_LEFT);    // pad ldg 0 if needed
     $ar2[1] = $ar2[2] = "00";
@@ -125,4 +125,3 @@ $graph->SetShadow();
 $graph->xaxis->SetTextLabelInterval(4);
 $graph->SetTickDensity(TICKD_DENSE);
 $graph->Stroke();                                    // Display the graph
-?>

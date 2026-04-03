@@ -1067,7 +1067,7 @@ function get_fac_status_cols($id) {
 
 function show_log($theid, $show_cfs=false) {                                // 11/20/09, 10/20/12, 5/8/14
     global $evenodd ;    // class names for alternating table row colors
-    require('log_codes.inc.php');                                     // 9/29/10
+    require_once('log_codes.inc.php');                                     // 9/29/10
     $query = "
         SELECT `{$GLOBALS['mysql_prefix']}log`.`id` AS `log_id`,
         `{$GLOBALS['mysql_prefix']}log`.`who` AS `who`,
@@ -1122,7 +1122,7 @@ function show_log($theid, $show_cfs=false) {                                // 1
 
 function show_unit_log ($theid, $show_cfs=false) {                                // 9/10/13
     global $evenodd ;    // class names for alternating table row colors
-    require('./incs/log_codes.inc.php');
+    require_once('./incs/log_codes.inc.php');
 
     $query = "
         SELECT *,
@@ -2843,11 +2843,11 @@ function ezDate($d) {
     if (($ts < 0) || ($ts > 315360000)) {return false;}                            // sanity check
 
     if($ts>31536000) $val = round($ts/31536000,0).' year';
-    else if($ts>2419200) $val = round($ts/2419200,0).' month';
-    else if($ts>604800) $val = round($ts/604800,0).' week';
-    else if($ts>86400) $val = round($ts/86400,0).' day';
-    else if($ts>3600) $val = round($ts/3600,0).' hour';
-    else if($ts>60) $val = round($ts/60,0).' minute';
+    elseif($ts>2419200) $val = round($ts/2419200,0).' month';
+    elseif($ts>604800) $val = round($ts/604800,0).' week';
+    elseif($ts>86400) $val = round($ts/86400,0).' day';
+    elseif($ts>3600) $val = round($ts/3600,0).' hour';
+    elseif($ts>60) $val = round($ts/60,0).' minute';
       else $val = $ts.' second';
     if(!($val==1)) $val .= 's';
     $val .= " ago";

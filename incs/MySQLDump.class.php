@@ -5,15 +5,15 @@ MySQL Dump PHP class by CubeScripts, www.cubescripts.com
 
 class MySQLDump {
 
-    var $tables = array();
-    var $connected = false;
-    var $output;
-    var $droptableifexists = false;
-    var $mysql_error;
-    var $conn = null;
-    var $fields = array();
+    public $tables = array();
+    public $connected = false;
+    public $output;
+    public $droptableifexists = false;
+    public $mysql_error;
+    public $conn = null;
+    public $fields = array();
 
-    function connect($host,$user,$pass,$db) {
+    public function connect($host,$user,$pass,$db) {
         $return = true;
         $conn = @mysqli_connect($host,$user,$pass,$db);
         if (!$conn) { $this->mysql_error = mysqli_connect_error(); $return = false;     }
@@ -22,7 +22,7 @@ class MySQLDump {
         return $return;
         }
 
-    function list_tables() {
+    public function list_tables() {
         $return = true;
         if (!$this->connected) { $return = false;     }
         $this->tables = array();
@@ -33,7 +33,7 @@ class MySQLDump {
         return $return;
         }
 
-    function list_values($tablename) {
+    public function list_values($tablename) {
         $sql = $this->conn->query("SELECT * FROM `$tablename`");
         $this->output .= "\n\n-- Dumping data for table: $tablename\n\n";
         while ($row = $sql->fetch_array()) {
@@ -43,7 +43,7 @@ class MySQLDump {
             for ($i=0;$i < $broj_polja;$i++) {
                 $vrednost = $row[$i];
                 if ($vrednost === null) { $vrednost = 'NULL'; }
-                elseif (!is_integer($vrednost)) { $vrednost = "'".addslashes((string)$vrednost)."'";     }
+                elseif (!is_integer($vrednost)) { $vrednost = "'".$this->conn->real_escape_string((string)$vrednost)."'";     }
                 $buffer .= $vrednost.', ';
                 }
             $buffer = substr($buffer,0,strlen($buffer)-2);
@@ -51,15 +51,16 @@ class MySQLDump {
             }
         }
 
-    function dump_table($tablename) {
+    public function dump_table($tablename) {
         $this->output = "";
         $this->get_table_structure($tablename);
         $this->list_values($tablename);
         }
 
-    function get_table_structure($tablename) {
+    public function get_table_structure($tablename) {
     //    snap(__LINE__, $tablename);
         $arr = array("NO" => "NOT NULL", "YES" => "NULL");
+        $primary = '';
 
         $this->output .= "\n\n-- Dumping structure for table: $tablename\n\n";
         if ($this->droptableifexists) { $this->output .= "DROP TABLE IF EXISTS `$tablename`;\nCREATE TABLE `$tablename` (\n";     }
@@ -78,8 +79,11 @@ class MySQLDump {
             if ($extra !== "") { $extra .= ' ';     } //makeup
             $this->output .= "  `$name` $type $null $extra,\n";
             }
-        $this->output .= "  PRIMARY KEY  (`$primary`)\n);\n";
+        if ($primary !== '') {
+            $this->output .= "  PRIMARY KEY  (`$primary`)\n);\n";
+        } else {
+            $this->output .= ");\n";
+        }
         }
 
     }
-?>

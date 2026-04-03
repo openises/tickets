@@ -8,10 +8,10 @@
 
     class HTML_TO_DOC
     {
-        var $docFile="";
-        var $title="";
-        var $htmlHead="";
-        var $htmlBody="";
+        public $docFile="";
+        public $title="";
+        public $htmlHead="";
+        public $htmlBody="";
 
 
         /**
@@ -32,7 +32,7 @@
          * @param String $docfile
          */
 
-        function setDocFileName($docfile)
+        public function setDocFileName($docfile)
         {
             $this->docFile=$docfile;
             if(!preg_match("/\.doc$/i",$this->docFile))
@@ -40,7 +40,7 @@
             return;
         }
 
-        function setTitle($title)
+        public function setTitle($title)
         {
             $this->title=$title;
         }
@@ -50,7 +50,7 @@
          *
          * @return String
          */
-        function getHeader()
+        public function getHeader()
         {
             $return  = <<<EOH
              <html xmlns:v="urn:schemas-microsoft-com:vml"
@@ -139,7 +139,7 @@ EOH;
          *
          * @return String
          */
-        function getFotter()
+        public function getFotter()
         {
             return "</body></html>";
         }
@@ -153,7 +153,7 @@ EOH;
          * @return boolean
          */
 
-        function createDocFromURL($url,$file,$download=false)
+        public function createDocFromURL($url,$file,$download=false)
         {
             if(!preg_match("/^http:/",$url))
                 $url="http://".$url;
@@ -170,7 +170,7 @@ EOH;
          * @return boolean
          */
 
-        function createDoc($html,$file,$download=false)
+        public function createDoc($html,$file,$download=false)
         {
             if(is_file($html))
                 $html=@file_get_contents($html);
@@ -204,7 +204,7 @@ EOH;
          * @access Private
          */
 
-        function _parseHtml($html)
+        private function _parseHtml($html)
         {
             $html=preg_replace("/<!DOCTYPE((.|\n)*?)>/ims","",$html);
             $html=preg_replace("/<script((.|\n)*?)>((.|\n)*?)<\/script>/ims","",$html);
@@ -231,7 +231,7 @@ EOH;
          * @access boolean True on success else false
          */
 
-        function write_file($file,$content,$mode="w")
+        private function write_file($file,$content,$mode="w")
         {
             $fp=@fopen($file,$mode);
             if(!is_resource($fp))
@@ -242,5 +242,3 @@ EOH;
         }
 
     }
-
-?>

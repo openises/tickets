@@ -37,23 +37,23 @@ define( "BIT_30", 536870912 );
 define( "BIT_31", 1073741824 );
 
 class CBitField {
-  var $bitfield = 0;
-  function CBitField () {
+  public $bitfield = 0;
+  public function __construct () {
       $this -> bitfield = ($this -> bitfield | 0);
   }
-  function QueryBit ($bit) {
+  public function QueryBit ($bit) {
     if (($this -> bitfield & $bit) > 0 )
       return 1;
     else
       return 0;
   }
-  function SetBit ($bit, $boolean) {
+  public function SetBit ($bit, $boolean) {
     if ($boolean == 1)
       $this -> bitfield |= $bit;
     else
       $this -> bitfield &= ~$bit;
   }
-  function FlipBit ($bit) {
+  public function FlipBit ($bit) {
     $this -> bitfield ^= $bit;
   }
 }
@@ -68,4 +68,3 @@ echo $bits -> QueryBit(BIT_1).",";
 echo $bits -> QueryBit(BIT_2).",";
 echo $bits -> QueryBit(BIT_3);
 */
-?>

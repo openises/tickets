@@ -1,6 +1,6 @@
 <?php
 require_once('./incs/functions.inc.php');
-include("./incs/html_to_doc.inc.php");
+include_once("./incs/html_to_doc.inc.php");
 $randomnumber = rand(0000000 , 9999999);
 $currDate = date('m,d,Y');
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
@@ -32,6 +32,7 @@ function curPageURL() {
 
 $serverpath = curPageURL();
 $url = $serverpath . "/ajax/reports.php?report=" . urlencode($report) . "&func=" . urlencode($func) . "&date=" . urlencode($date) . "&tick_sel=" . urlencode($ticksel) . "&resp_sel=" . urlencode($respsel) . "&organisation=" . urlencode($organisation) . "&startdate=" . urlencode($startdate) . "&enddate=" . urlencode($enddate) . "&dohtml=true&version=$randomnumber";
+$thePage = '';
 if (function_exists("curl_init")) {
     $ch = curl_init();
     $timeout = 20;
@@ -83,4 +84,3 @@ if($mode == "doc") {
     header("Expires: 0");
     }
 echo $thePage;
-?>
