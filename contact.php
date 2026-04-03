@@ -26,7 +26,7 @@ function genRandomString() {
 	$strLength = safe_strlen($characters)-1;
 	$string = '';
 	for ($p = 0; $p < $length; $p++) {
-		$string .= $characters[mt_rand(0, $strLength)];
+		$string .= $characters[random_int(0, $strLength)];
 		}
     $_SESSION["req_security_code"] = $string;
     return $string;

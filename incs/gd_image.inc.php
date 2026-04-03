@@ -179,14 +179,14 @@ class Image {
 	}
     }
 
-    static function GetWidth($aImg=null) {
-	if( $aImg === null ) 
+    function GetWidth($aImg=null) {
+	if( $aImg === null )
 	    $aImg = $this->img;
 	return imagesx($aImg);
     }
 
-    static function GetHeight($aImg=null) {
-	if( $aImg === null ) 
+    function GetHeight($aImg=null) {
+	if( $aImg === null )
 	    $aImg = $this->img;
 	return imagesy($aImg);
     }

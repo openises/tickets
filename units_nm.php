@@ -1093,7 +1093,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 					mkdir ($upload_directory, 0770);
 					}
 				chmod($upload_directory, 0770);	
-				$filename = rand(1,999999);
+				$filename = random_int(1,999999);
 				$realfilename = $_FILES["frm_file"]["name"];
 				$file = $upload_directory . $filename;
 					

@@ -1256,7 +1256,7 @@ function linkFromSumm(table, index) {
 					}
 				chmod($upload_directory, 0755);	
 
-				$file = $upload_directory . $_POST['frm_id'] . "_" . rand() . "." . $extension;
+				$file = $upload_directory . $_POST['frm_id'] . "_" . random_int(1,999999) . "." . $extension;
 				$shortname = $_POST['frm_shortname'];
 				if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
 					if (safe_strlen(filesize($file)) < 40000000) {

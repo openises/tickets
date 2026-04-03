@@ -1710,10 +1710,10 @@ function generatePassword() {
 		}
 	if(document.user_add_Form) {document.user_add_Form.frm_passwd.value = retVal;}
 	if(document.user_add_Form) {document.user_add_Form.frm_passwd_confirm.value = retVal;}
-	if($('view_password')) {$('view_password').style.display="inline-block"; $('view_password').innerHTML = retVal;}
+	if($('view_password')) {$('view_password').style.display="inline-block"; $('view_password').innerHTML = retVal;} // NOSONAR — DOM element reference, not a hardcoded credential
 	if(document.editProf) {document.editProf.frm_passwd.value = retVal;}
 	if(document.editProf) {document.editProf.frm_passwd_confirm.value = retVal;}
-	if($('view_password')) {$('view_password').style.display="inline-block"; $('view_password').innerHTML = retVal;}
+	if($('view_password')) {$('view_password').style.display="inline-block"; $('view_password').innerHTML = retVal;} // NOSONAR — DOM element reference, not a hardcoded credential
     return retVal;
 	}
 	

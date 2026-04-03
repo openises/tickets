@@ -214,7 +214,7 @@ function encode($payload, $type = 'text', $masked = false) {
         // generate a random mask:
         $mask = array();
         for ($i = 0; $i < 4; $i++) {
-            $mask[$i] = chr(rand(0, 255));
+            $mask[$i] = chr(random_int(0, 255));
         }
 
         $frameHead = array_merge($frameHead, $mask);

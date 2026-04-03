@@ -74,7 +74,7 @@ RUN { \
 } > /etc/apache2/conf-available/ticketscad.conf \
     && a2enconf ticketscad
 
-# Copy application code
+# Copy application code (sensitive files excluded via .dockerignore)
 COPY . /var/www/html/
 
 # Set proper permissions
@@ -89,6 +89,9 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
+
+# Run as non-root user for security (www-data is the Apache user)
+USER www-data
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

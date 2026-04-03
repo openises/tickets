@@ -809,11 +809,11 @@ var buttons_html = "";
 					mkdir ($upload_directory, 0770);
 					}
 				chmod($upload_directory, 0770);	
-				$filename = rand(1,999999);
+				$filename = random_int(1,999999);
 				$realfilename = $_FILES["frm_file"]["name"];
 				$file = $upload_directory . $filename;
-					
-//	Does the file already exist in the files table		
+
+//	Does the file already exist in the files table
 
 				$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
 				$result = db_query($query, [$realfilename]);	
