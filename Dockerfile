@@ -90,8 +90,9 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
 
-# Run as non-root user for security (www-data is the Apache user)
-USER www-data
+# Note: entrypoint runs as root to write config files and create directories.
+# Apache itself runs as www-data via its own configuration.
+# The USER directive is intentionally omitted — the entrypoint handles permissions.
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
